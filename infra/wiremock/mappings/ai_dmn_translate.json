@@ -1,0 +1,15 @@
+{
+    "request": {
+        "method": "POST",
+        "urlPattern": "/api/v1/ai/dmn/translate.*"
+    },
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "jsonBody": {
+            "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<definitions xmlns=\"https://www.omg.org/spec/DMN/20191111/MODEL/\" id=\"Definitions_Decision\" name=\"RiesgoCrediticio\" namespace=\"http://camunda.org/schema/1.0/dmn\">\n  <decision id=\"Decision_Risk\" name=\"EvaluacionRiesgo\">\n    <decisionTable id=\"DecisionTable_Risk\">\n      <input id=\"Input_Score\">\n        <inputExpression id=\"InputExpression_Score\" typeRef=\"integer\">\n          <text>scoreCrediticio</text>\n        </inputExpression>\n      </input>\n      <output id=\"Output_Risk\" name=\"nivelRiesgo\" typeRef=\"string\" />\n      <rule id=\"Rule_1\">\n        <inputEntry id=\"InputEntry_1\">\n          <text>&gt;= 700</text>\n        </inputEntry>\n        <outputEntry id=\"OutputEntry_1\">\n          <text>\"BAJO\"</text>\n        </outputEntry>\n      </rule>\n      <rule id=\"Rule_2\">\n        <inputEntry id=\"InputEntry_2\">\n          <text>&lt; 700</text>\n        </inputEntry>\n        <outputEntry id=\"OutputEntry_2\">\n          <text>\"ALTO\"</text>\n        </outputEntry>\n      </rule>\n    </decisionTable>\n  </decision>\n</definitions>"
+        }
+    }
+}

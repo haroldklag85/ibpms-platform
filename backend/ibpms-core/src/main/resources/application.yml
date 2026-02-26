@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: ibpms-core
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ibpms}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate # Control absoluto por Liquibase
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    show-sql: true
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+
+camunda:
+  bpm:
+    database:
+      type: mysql
+    deployment-resource-pattern: classpath:/processes/*.bpmn
+    job-execution:
+      enabled: true
+    history-level: full
+
+app:
+  storage:
+    path: ./uploads
+
+jwt:
+  secret: ${JWT_SECRET:changeMe}
+  expiration: 3600
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

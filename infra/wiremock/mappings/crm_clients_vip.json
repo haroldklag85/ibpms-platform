@@ -1,0 +1,13 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPath": "/api/crm/clients/vip"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "status": "ok",
+            "clients": []
+        }
+    }
+}

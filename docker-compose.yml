@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. Base de Datos Central (MySQL 8)
+  # ==========================================
+  ibpms-db:
+    image: mysql:8.0
+    container_name: ibpms-mysql-core
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_dev
+      MYSQL_DATABASE: ibpms_core
+      MYSQL_USER: ibpms_user
+      MYSQL_PASSWORD: ibpms_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ibpms-db-data:/var/lib/mysql
+      # Script de inicialización automatizada
+      - ./infra/local/mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - ibpms-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  wiremock:
+    image: wiremock/wiremock:3.2.0
+    container_name: wiremock
+    ports:
+      - "8089:8080"
+    volumes:
+      - ./infra/wiremock:/home/wiremock
+    command: [ "--verbose" ]
+    networks:
+      - ibpms-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/__admin/mappings" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - ./infra/azurite:/data
+    networks:
+      - ibpms-network
+  # ==========================================
+  # 2. Motor Backend / Core Monolítico (Spring Boot + Camunda)
+  # ==========================================
+  # Nota: En un inicio, los developers correrán el backend desde 
+  # su IDE nativo (IntelliJ/Eclipse). Este servicio se descomenta 
+  # cuando se requiera empaquetar el .jar final para pruebas e2e locales.
+
+  ibpms-backend:
+    image: ibpms-backend:local
+    build:
+      context: ./backend/ibpms-core
+      dockerfile: Dockerfile
+    container_name: ibpms-java-core
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://ibpms-db:3306/ibpms_core?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=ibpms_user
+      - SPRING_DATASOURCE_PASSWORD=ibpms_password
+    # ports:
+    #   - "8080:8080" # Ya no es necesario exponerlo al host, el Gateway lo hace
+    depends_on:
+      ibpms-db:
+        condition: service_healthy
+    networks:
+      - ibpms-network
+
+  # ==========================================
+  # 3. Gateway HTTP / Ingress (Nginx TLS + CORS)
+  # ==========================================
+  ibpms-gateway:
+    image: nginx:alpine
+    container_name: ibpms-nginx-gateway
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - ibpms-backend
+    networks:
+      - ibpms-network
+
+  # ==========================================
+  # 5. Frontend: Workspace SPA (Monolith)
+  # ==========================================
+  workspace-spa:
+    build:
+      context: ./frontend/workspace-spa
+      dockerfile: Dockerfile
+    container_name: ibpms-workspace-spa
+    ports:
+      - "3000:80"
+    networks:
+      - ibpms-network
+
+volumes:
+  ibpms-db-data:
+
+
+networks:
+  ibpms-network:
+    driver: bridge

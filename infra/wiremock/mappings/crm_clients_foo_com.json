@@ -1,0 +1,16 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPath": "/api/crm/clients/foo.com"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "isVip": true,
+            "accountManager": "Juan Perez"
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

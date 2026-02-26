@@ -1,0 +1,315 @@
+openapi: 3.0.3
+info:
+  title: iBPMS Platform Core API (PoC)
+  description: API Central para la Plataforma de Automatización Inteligente (iBPMS + Case Management). Expone los Driving Adapters del Hexágono.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Servidor de Desarrollo Local (Spring Boot)
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    PaginationLimit:
+      name: limit
+      in: query
+      description: Número máximo de resultados a devolver.
+      required: false
+      schema:
+        type: integer
+        default: 20
+    PaginationOffset:
+      name: offset
+      in: query
+      description: Desplazamiento inicial para paginación.
+      required: false
+      schema:
+        type: integer
+        default: 0
+  schemas:
+    Caso:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        definitionKey:
+          type: string
+          description: "Llave de definición (ej: prestamo-hipotecario o reclamo-cliente)"
+        status:
+          type: string
+          enum: [ACTIVE, COMPLETED, SUSPENDED, CANCELLED]
+        businessKey:
+          type: string
+          description: Identificador visible de negocio (Ej. REQ-2026-001)
+        variables:
+          type: object
+          description: Payload dinámico JSON con el contexto de negocio
+        createdAt:
+          type: string
+          format: date-time
+    Tarea:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Nombre legible de la tarea (Ej. Validar Identidad)
+        caseId:
+          type: string
+          format: uuid
+        assignee:
+          type: string
+          description: UUID del usuario asignado actualmente (o null si está en cola)
+        candidateGroups:
+          type: array
+          items:
+            type: string
+          description: Colas/Roles autorizados para tomar la tarea (RBAC)
+        priority:
+          type: integer
+        dueDate:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+
+paths:
+  /cases:
+    post:
+      summary: Iniciar un nuevo Caso / Proyecto
+      description: Inicia una nueva instancia de proceso o expediente de Case Management. Todo Gateway APIM exigirá Idempotency-Key.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - definitionKey
+              properties:
+                definitionKey:
+                  type: string
+                businessKey:
+                  type: string
+                variables:
+                  type: object
+      responses:
+        '201':
+          description: Caso creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
+        '400':
+          description: Error de validación en los Inputs
+        '409':
+          description: Conflicto - Idempotency-Key ya fue procesado
+  
+  /cases/{caseId}:
+    get:
+      summary: Obtener resumen del Caso
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detalle del caso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
+        '404':
+          description: Caso no encontrado
+          
+  /cases/{caseId}/documents:
+    post:
+      summary: Adjuntar Documento Oficial al Caso (Vincula con SGDEA)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                documentType:
+                  type: string
+                  description: "Tipo Documental (ej: Contrato, Cédula)"
+      responses:
+        '201':
+          description: Documento referenciado e inyectado al caso
+          
+  /tasks:
+    get:
+      summary: Bandeja Universal de Tareas (Tasklist)
+      description: Retorna las tareas del usuario autenticado aplicando filtros ABAC/RBAC cruzando el JWT contra la BD Interna.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PaginationLimit'
+        - $ref: '#/components/parameters/PaginationOffset'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, CLAIMED, COMPLETED]
+            default: PENDING
+        - name: priority
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de tareas filtrada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tarea'
+
+  /tasks/{taskId}/complete:
+    post:
+      summary: Completar Tarea
+      description: Envía los JSON estructurados del Formulario MFE para avanzar de paso.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: "UUID generado por el frontend (Pantalla 2) para prevenir ejecución duplicada (doble clic) en la UI de Vue 3."
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                variables:
+                  type: object
+                  description: "Payload JSON con el output del formulario"
+      responses:
+        '204':
+          description: Tarea completada y el motor avanzó al siguiente estado.
+        '403':
+          description: No estás autorizado para completar esta tarea (ABAC fail).
+
+  /inbound/email-webhook:
+    post:
+      summary: Recibir Notificación de Microsoft Graph (O365)
+      description: Endpoint interno para ingestar el payload de O365, parsearlo e iniciar procesos o inyectar a SGDEA de forma automática. Exige validación de secreto nativa de Graph.
+      parameters:
+        - name: ClientState
+          in: header
+          required: true
+          description: "Secret Token compartido entre MS Graph y el motor iBPMS para evitar Spoofing (Verificación de Origen)."
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '202':
+          description: Payload aceptado para procesamiento asíncrono en Event Broker.
+
+  /catalogs/{catalogId}:
+    get:
+      summary: Obtener Catálogo Maestro (Reference Data)
+      description: Endpoint esencial para que los Micro-Frontends carguen dinámicamente sus selectores/comboboxes (Ej. Tipos de Documento, Jurisdicciones).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: catalogId
+          in: path
+          required: true
+          schema:
+            type: string
+            description: "ID lógico del catálogo (Ej. TIPO_DOCUMENTO)"
+      responses:
+        '200':
+          description: Arreglo de opciones de catálogo (KVP)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                    label:
+                      type: string
+
+  /deployments:
+    post:
+      summary: Desplegar Modelo de Reglas o Procesos (DMN/BPMN)
+      description: API administrativa para instanciar nuevos "Workflows XML" directamente en el Engine empotrado, sin requerir re-encolado desde el App Server.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Documento XML estándar tipo OMG (BPMN 2.0 o DMN 1.3)
+      responses:
+        '201':
+          description: Definición subida y parseada de forma exitosa.

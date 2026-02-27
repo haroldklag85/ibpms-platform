@@ -106,13 +106,13 @@ services:
       - ibpms-network
 
   # ==========================================
-  # 5. Frontend: Workspace SPA (Monolith)
+  # 5. Frontend: Micro-Frontends (MFE) Hub
   # ==========================================
-  workspace-spa:
+  ibpms-mfe-portal:
     build:
-      context: ./frontend/workspace-spa
+      context: ./frontend/mfe
       dockerfile: Dockerfile
-    container_name: ibpms-workspace-spa
+    container_name: ibpms-mfe-portal
     ports:
       - "3000:80"
     networks:

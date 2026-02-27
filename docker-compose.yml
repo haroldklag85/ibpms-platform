@@ -118,6 +118,27 @@ services:
     networks:
       - ibpms-network
 
+  # ==========================================
+  # 6. RPA Worker Efímero (Sprint 7)
+  # ==========================================
+  ibpms-judicial-scraper:
+    build:
+      context: ./rpa/judicial-scraper
+      dockerfile: Dockerfile
+    container_name: ibpms-python-rpa
+    restart: "no" # ¡CRÍTICO! Política "no" para evitar demonios
+    env_file:
+      - ./rpa/judicial-scraper/.env.example
+    depends_on:
+      - ibpms-gateway
+    networks:
+      - ibpms-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
 volumes:
   ibpms-db-data:
 

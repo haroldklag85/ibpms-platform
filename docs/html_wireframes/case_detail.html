@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iBPMS - Detalle de Tarea</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Alpine.js for interactions -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body class="bg-slate-100 flex flex-col h-screen overflow-hidden text-gray-800">
+
+    <!-- Top Header specific to Task -->
+    <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm shrink-0">
+        <div class="flex items-center">
+            <a href="inbox.html"
+                class="mr-4 text-gray-500 hover:text-blue-600 transition-colors flex items-center text-sm font-medium">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Volver al Inbox
+            </a>
+            <div class="h-6 border-l border-gray-300 mx-2"></div>
+            <h1 class="text-lg font-bold text-gray-900 ml-2">Tarea: Revisión Financiera Vuelo Comercial</h1>
+            <span class="ml-4 px-2.5 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                EN PROGRESO
+            </span>
+        </div>
+        <div class="flex items-center space-x-3 text-sm">
+            <span class="text-gray-500 font-mono">ID: VI-2026-991</span>
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+                H</div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex overflow-hidden p-4 gap-4">
+
+        <!-- PANEL IZQUIERDO: CONTEXTO & CHECKLIST -->
+        <div class="w-1/3 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-gray-100 bg-gray-50 font-bold text-gray-700 flex items-center">
+                <i class="fa-solid fa-info-circle text-blue-500 mr-2"></i> Contexto Operativo
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-5 space-y-6">
+                <!-- Tu Desempeño -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center"><i
+                            class="fa-solid fa-stopwatch mr-1"></i> Desempeño SLA</h3>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-600">SLA Asignado:</span>
+                        <span class="font-medium">24 Horas</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Tiempo Ejecutando:</span>
+                        <span class="font-bold text-green-600">2h 15m (🟢 Excelente)</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                        <div class="bg-green-500 h-2 rounded-full" style="width: 15%"></div>
+                    </div>
+                </div>
+
+                <!-- Documentos -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i
+                            class="fa-solid fa-file-pdf mr-1"></i> Archivos Adjuntos</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li
+                            class="flex items-center justify-between p-2 hover:bg-gray-50 rounded border border-transparent hover:border-gray-200 cursor-pointer group">
+                            <div class="flex items-center text-blue-600">
+                                <i class="fa-regular fa-file-pdf text-red-500 text-lg mr-2"></i> Factura_Aerolinea.pdf
+                            </div>
+                            <i class="fa-solid fa-download text-gray-300 group-hover:text-blue-500"></i>
+                        </li>
+                        <li
+                            class="flex items-center justify-between p-2 hover:bg-gray-50 rounded border border-transparent hover:border-gray-200 cursor-pointer group">
+                            <div class="flex items-center text-blue-600">
+                                <i class="fa-regular fa-envelope text-blue-400 text-lg mr-2"></i> Solicitud_Original.eml
+                            </div>
+                            <i class="fa-solid fa-download text-gray-300 group-hover:text-blue-500"></i>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Minitareas Kanban -->
+                <div
+                    x-data="{ tasks: [{id:1, text:'Validar firma de cliente', done:true}, {id:2, text:'Cruzar contra presupuesto ERP', done:false}, {id:3, text:'Adjuntar pantallazo validación', done:false}] }">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i
+                            class="fa-solid fa-list-check mr-1"></i> Minitareas (Pre-requisitos)</h3>
+                    <ul class="space-y-2 text-sm">
+                        <template x-for="task in tasks" :key="task.id">
+                            <label class="flex items-start p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                <input type="checkbox" x-model="task.done"
+                                    class="mt-1 mr-3 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                <span :class="{'line-through text-gray-400': task.done, 'text-gray-700': !task.done}"
+                                    x-text="task.text"></span>
+                            </label>
+                        </template>
+                    </ul>
+                </div>
+
+                <!-- Historial -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i
+                            class="fa-solid fa-clock-rotate-left mr-1"></i> Historial del Caso</h3>
+                    <div class="relative border-l-2 border-gray-200 ml-2 space-y-4">
+                        <div class="relative pl-4 text-sm">
+                            <div class="absolute w-3 h-3 bg-gray-200 rounded-full -left-[7px] top-1"></div>
+                            <p class="text-xs text-gray-500">Hoy 10:05am</p>
+                            <p class="text-gray-700 font-medium">✨ Bot IA validó el formato OCR de la factura.</p>
+                        </div>
+                        <div class="relative pl-4 text-sm">
+                            <div class="absolute w-3 h-3 bg-gray-200 rounded-full -left-[7px] top-1"></div>
+                            <p class="text-xs text-gray-500">Hoy 10:00am</p>
+                            <p class="text-gray-700">Iniciado por Regla de Correo O365.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL DERECHO: FORMULARIO DINÁMICO JSON -->
+        <div class="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col overflow-hidden relative"
+            x-data="{ saving: false, rejecting: false }">
+            <div
+                class="p-4 border-b border-gray-100 bg-gray-50 font-bold text-gray-700 flex justify-between items-center">
+                <span><i class="fa-regular fa-rectangle-list text-blue-500 mr-2"></i> Formulario de Ejecución</span>
+                <button class="text-xs font-medium text-gray-500 hover:text-blue-600"><i
+                        class="fa-solid fa-code mr-1"></i> Ver JSON</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-8 bg-white">
+                <form class="max-w-xl mx-auto space-y-6">
+
+                    <!-- Campo Amount -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Monto Aprobado (USD) <span
+                                class="text-red-500">*</span></label>
+                        <div class="relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" value="1500.00"
+                                class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 py-2 sm:text-sm border-gray-300 rounded-md border text-gray-900"
+                                placeholder="0.00">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Vinculado a variable: `fin_monto_aprobado`</p>
+                    </div>
+
+                    <!-- Comandos -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Centro de Costo</label>
+                        <select
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border text-gray-900">
+                            <option>Marketing</option>
+                            <option selected>IT-900 (Laboratorio)</option>
+                            <option>Ventas</option>
+                            <option>RRHH</option>
+                        </select>
+                    </div>
+
+                    <!-- Area texto -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Comentarios de decisión (Obligatorio
+                            en rechazo)</label>
+                        <div class="mt-1">
+                            <textarea rows="4"
+                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 border rounded-md p-2 text-gray-900"></textarea>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Botonera Acciones (Footer) -->
+            <div class="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between shrink-0">
+                <button
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> Guardar Borrador
+                </button>
+
+                <div class="flex space-x-3">
+                    <button class="text-gray-500 hover:text-gray-700 px-3 py-2"
+                        title="Opciones Adicionales (Reasignar, Chat)">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    <button @click="rejecting = true; setTimeout(() => window.location.href='inbox.html', 1500)"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none">
+                        <span x-show="rejecting" class="mr-2"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+                        <i x-show="!rejecting" class="fa-solid fa-xmark mr-2"></i> RECHAZAR
+                    </button>
+                    <button @click="saving = true; setTimeout(() => window.location.href='inbox.html', 1500)"
+                        class="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <span x-show="saving" class="mr-2"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+                        <i x-show="!saving" class="fa-solid fa-check mr-2"></i> APROBAR TAREA
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+</body>
+
+</html>

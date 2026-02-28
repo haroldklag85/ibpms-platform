@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iBPMS - Bandeja Unificada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 flex h-screen overflow-hidden text-gray-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col h-full border-r border-slate-700">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <i class="fa-solid fa-layer-group text-blue-500 text-2xl mr-3"></i>
+            <span class="text-xl font-bold tracking-wide">iBPMS</span>
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+            <ul class="space-y-1">
+                <li><a href="index.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-house w-6"></i> Inicio</a></li>
+                <li><a href="inbox.html"
+                        class="flex items-center px-6 py-2.5 bg-blue-600/20 text-blue-400 border-r-4 border-blue-500 font-medium">
+                        <div class="relative"><i class="fa-solid fa-inbox w-6"></i><span
+                                class="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">12</span>
+                        </div> Inbox
+                    </a></li>
+                <li><a href="kanban.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-folder-open w-6"></i> Proyectos</a></li>
+                <li><a href="dashboard.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-chart-pie w-6"></i> Dashboards</a></li>
+                <li class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4">Admin</li>
+                <li><a href="process_designer.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-diagram-project w-6"></i> Diseño BPMN</a></li>
+                <li><a href="form_builder.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-file-pen w-6"></i> Formularios</a></li>
+                <li><a href="dmn_copilot.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-brain w-6"></i> Reglas IA</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-full relative">
+        <!-- Top Navbar -->
+        <header
+            class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-10 shrink-0">
+            <div class="flex-1 flex max-w-2xl">
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text"
+                        class="w-full bg-gray-100 border-transparent rounded-lg pl-10 pr-4 py-2 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
+                        placeholder="Buscar tarea, caso, ID...">
+                </div>
+            </div>
+            <div class="flex items-center space-x-6 ml-6">
+                <!-- Navigation to Advanced Inbox -->
+                <a href="inbox_advanced.html" class="text-sm font-medium text-blue-600 hover:underline">Ir a Inbox
+                    Avanzado (Docketing)</a>
+                <div class="flex items-center cursor-pointer">
+                    <div
+                        class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                        H</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Page Area (Inbox Layout) -->
+        <main class="flex-1 flex overflow-hidden">
+
+            <!-- Inbox List Area -->
+            <div class="w-full md:w-5/12 lg:w-4/12 flex flex-col border-r border-gray-200 bg-white">
+                <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50 shrink-0">
+                    <div class="flex space-x-2">
+                        <select
+                            class="text-sm font-medium bg-white border border-gray-300 text-gray-700 py-1.5 px-3 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+                            <option>Mi Bandeja (12)</option>
+                            <option>Urgentes (3)</option>
+                            <option>Borradores (2)</option>
+                            <option>Todas (Team)</option>
+                        </select>
+                    </div>
+                    <button class="text-gray-400 hover:text-blue-500"><i class="fa-solid fa-filter"></i></button>
+                </div>
+
+                <!-- Tareas List -->
+                <div class="flex-1 overflow-y-auto">
+
+                    <!-- Borrador Item -->
+                    <div class="p-4 border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors border-l-4 border-l-gray-400"
+                        onclick="selectItem('borrador')">
+                        <div class="flex justify-between items-start mb-1">
+                            <span
+                                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-800">
+                                <i class="fa-solid fa-pencil mr-1"></i> BORRADOR
+                            </span>
+                            <span class="text-xs text-gray-500">Hace 1 hora</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-gray-900 mb-1">Req. de Compra < $5000</h4>
+                                <p class="text-xs text-gray-500 truncate">Equipo TI - Compra de licencias de software
+                                </p>
+                    </div>
+
+                    <!-- Tarea Urgente Item -->
+                    <div class="p-4 border-b border-gray-100 bg-red-50 hover:bg-red-100 cursor-pointer transition-colors border-l-4 border-l-red-500"
+                        onclick="selectItem('urgente')">
+                        <div class="flex justify-between items-start mb-1">
+                            <div class="flex space-x-2">
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 border border-red-200">
+                                    <i class="fa-solid fa-fire mr-1"></i> URGENTE
+                                </span>
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-800">
+                                    SLA: 2 Hrs
+                                </span>
+                            </div>
+                            <span class="text-xs text-gray-500">Hoy 09:00</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-gray-900 mb-1">Aprobar Contrato Legal 001</h4>
+                        <p class="text-xs text-gray-500 truncate">Proceso: Onboarding Cliente X - Iniciado por: Juan P.
+                        </p>
+                        <div class="mt-2 flex items-center text-xs text-gray-400">
+                            <i class="fa-solid fa-paperclip mr-1"></i> 2 Adjuntos
+                        </div>
+                    </div>
+
+                    <!-- Tarea Normal Item (Selected) -->
+                    <div class="p-4 border-b border-gray-100 bg-blue-50 cursor-pointer transition-colors border-l-4 border-l-blue-600"
+                        onclick="selectItem('normal')">
+                        <div class="flex justify-between items-start mb-1">
+                            <span
+                                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800">
+                                SLA: 1 Día
+                            </span>
+                            <span class="text-xs text-gray-500">Ayer 15:30</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-gray-900 mb-1">Revisión Financiera Vuelo Comercial</h4>
+                        <p class="text-xs text-gray-500 truncate">Proceso: Viáticos y Viajes - ID: VI-2026-991</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Detail Area (Empty State or Action Area) -->
+            <div class="hidden md:flex flex-1 flex-col bg-gray-50 items-center justify-center p-8">
+                <i class="fa-regular fa-hand-pointer text-6xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-medium text-gray-500">Seleccione una tarea</h3>
+                <p class="text-sm text-gray-400 mt-2 text-center max-w-sm">Haga clic en un ítem de la izquierda para ver
+                    su detalle, reclamar la tarea (Claim) o continuar su ejecución.</p>
+
+                <!-- Demo Action -->
+                <a href="case_detail.html"
+                    class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm font-medium transition-colors">
+                    Simular Clic en "Revisión Financiera" ->
+                </a>
+                <a href="email_copilot.html"
+                    class="mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm font-medium transition-colors">
+                    Simular Ver Correo con IA (Pantalla 2C) ->
+                </a>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+
+</html>

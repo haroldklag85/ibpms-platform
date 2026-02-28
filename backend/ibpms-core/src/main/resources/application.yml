@@ -45,3 +45,14 @@ management:
     web:
       exposure:
         include: health,info,metrics
+
+resilience4j.circuitbreaker:
+  instances:
+    crmService:
+      registerHealthIndicator: true
+      slidingWindowSize: 10              # Evalúa fallos en las últimas 10 llamadas
+      minimumNumberOfCalls: 5            # Espera 5 llamadas antes de calcular el ratio de error
+      permittedNumberOfCallsInHalfOpenState: 3
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+      waitDurationInOpenState: 15s       # En caso de falla, asume apertura de 15 segundos
+      failureRateThreshold: 50           # Activa modo degradado si fallan el 50% de las llamadas

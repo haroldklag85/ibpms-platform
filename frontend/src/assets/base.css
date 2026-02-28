@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reglas UI Base del Workspace Corporativo */
+@layer base {
+  body {
+    @apply antialiased text-gray-900 bg-ibpms-light;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}

@@ -41,6 +41,7 @@ erDiagram
         varchar(255) name "Nombre legible. Ej: Validar Identidad"
         varchar(100) definition_key "ID técnico en el BPMN. Ej: task_validar_id"
         varchar(100) assignee "UUID del usuario asignado"
+        char(36) parent_task_id FK "Si es Sub-Tarea Ad-hoc (Intake Kanban)"
         json candidate_groups "Array JSON de Roles ABAC/RBAC. Ej: ['Jefe_Ventas']"
         varchar(50) status "PENDING, CLAIMED, COMPLETED"
         int priority "1 al 100"
@@ -48,6 +49,15 @@ erDiagram
         varchar(100) camunda_task_id "Binding con la tarea del motor"
         timestamp created_at
         timestamp completed_at
+    }
+
+    ibpms_ui_template {
+        char(36) id PK "UUID"
+        varchar(100) name "Ej: iform_maestro_compras"
+        varchar(50) type "VUE_COMPONENT, ZOD_SCHEMA, JSON"
+        text raw_code "El código Vue3 / Typings bruto"
+        varchar(50) version "v1.0"
+        timestamp created_at
     }
 
     ibpms_document {
@@ -73,9 +83,11 @@ erDiagram
 
     %% Relaciones (Foreign Keys Lógicas o Físicas)
     ibpms_case ||--o{ ibpms_task : "contiene (1:N)"
+    ibpms_task ||--o{ ibpms_task : "delega sub-tareas (1:N ad-hoc)"
     ibpms_case ||--o{ ibpms_document : "consolida (1:N)"
-    ibpms_case ||--o{ ibpms_audit_log : "registra historial (1:N)"
-    ibpms_task ||--o{ ibpms_audit_log : "registra historial (1:N)"
+    ibpms_case ||--o{ ibpms_audit_log : "registra historial (1:N) vía Javers"
+    ibpms_task ||--o{ ibpms_audit_log : "registra historial (1:N) vía Javers"
+    ibpms_case ||--o| ibpms_ui_template : "usa vista (N:1)"
 ```
 
 ---
@@ -146,11 +158,22 @@ A continuación se detalla la estructura física de las tablas del esquema princ
 | `source_type` | `VARCHAR(50)` | | NO | Conector de API subyacente de origen (`BPMN` o `KANBAN`). |
 | `ref_id` | `VARCHAR(100)` | | NO | ID real en la capa oscura de Camunda o la tarjeta ágil. |
 | `assignee` | `VARCHAR(100)` | | SÍ | UUID OIDC (Log-in de correo) o persona física vinculada. |
+| `parent_task_id`| `CHAR(36)` | FK | SÍ | Soporte explícito para "Delegación Ad-Hoc" de sub-tareas Kanban, atadas a otra tarea Padre. |
 | `candidate_groups`| `JSON` | | SÍ | Matriz literal de ABAC roles permitidos (Ej. `["Admin", "Revisor"]`). |
 | `status` | `VARCHAR(50)` | | NO | Ciclo de acción (`PENDING`, `CLAIMED`, `COMPLETED`). |
 | `due_date` | `TIMESTAMP` | | SÍ | Fecha lógicia de expiramiento o caducidad roja para escalamientos operacionales (SLA). Indexado. |
 | `created_at` | `TIMESTAMP` | | NO | Timestmap milisegundo de disponibilidad generacional a Bandeja. |
 | `deleted_at` | `TIMESTAMP` | | SÍ | Indicador de eliminación lógica de tarea caducada. |
+
+**Tabla:** `ibpms_ui_template` (Nuevo - V1.5)
+| Columna | Tipo de Dato | Llave | Nulable | Descripción |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `CHAR(36)` | PK | NO | UUID v4. |
+| `name` | `VARCHAR(100)` | | NO | Identificador único del template Pro-Code. |
+| `type` | `VARCHAR(50)` | | NO | Enum: `VUE`, `ZOD`, `JSON`. |
+| `raw_code` | `TEXT` | | NO | Código crudo editable desde el IDE web/Monaco. |
+| `version` | `VARCHAR(50)` | | NO | SemVer de la UI. |
+| `created_at` | `TIMESTAMP` | | NO | Default current time. |
 
 ### 4.3. Esquema de Metadatos y Optimización
 
@@ -186,5 +209,5 @@ A continuación se detalla la estructura física de las tablas del esquema princ
 | `entity_id` | `CHAR(36)` | | NO | Vínculo físico sobre dicha entidad superior. |
 | `event_type` | `VARCHAR(100)` | | NO | Tipo textual preprogramado de la alteración (`STATUS_CHANGED`, etc) |
 | `performed_by`| `VARCHAR(100)` | | NO | Sujeto ejecutor final, puede ser `Auto-Timer` o `User UUID`. |
-| `event_data` | `JSON` | | SÍ | Archivo instantáneo para viajar en el tiempo o pintar `Before/After` Diff values. |
+| `event_data` | `JSON` | | SÍ | **Potenciado por Javers:** Guarda las instantáneas exactas del Payload ("Before/After") para certificar inmutabilidad ISO. |
 | `created_at` | `TIMESTAMP` | | NO | **Regla DDL de Interfaz Física: MYSQL TABLE PARTITION KEY BY RANGE.** Fecha. |

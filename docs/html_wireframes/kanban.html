@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iBPMS - Tablero Kanban</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar for Kanban board to make it subtle */
+        .kanban-scroll::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .kanban-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .kanban-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .kanban-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 flex flex-col h-screen overflow-hidden text-gray-800">
+
+    <!-- Top Navbar -->
+    <header
+        class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-10 shrink-0">
+        <div class="flex items-center">
+            <a href="index.html" class="mr-4 text-blue-600 hover:text-blue-800"><i class="fa-solid fa-house"></i></a>
+            <div class="h-6 border-l border-gray-300 mx-2"></div>
+            <i class="fa-solid fa-folder-open text-gray-400 mr-2 text-lg"></i>
+            <div>
+                <p class="text-xs text-gray-500 leading-tight">Proyecto Operativo</p>
+                <h1 class="text-lg font-bold text-gray-900 leading-tight">Implementación Cliente Alpha</h1>
+            </div>
+            <a href="agile_hub.html"
+                class="ml-4 text-xs font-medium text-blue-600 hover:underline border border-blue-200 px-2.5 py-1 rounded bg-blue-50">
+                Ver Backlog Ágil ->
+            </a>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div class="flex -space-x-2">
+                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white"
+                    src="https://ui-avatars.com/api/?name=Maria&background=random" alt="" />
+                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white"
+                    src="https://ui-avatars.com/api/?name=Carlos&background=random" alt="" />
+                <div
+                    class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs ring-2 ring-white z-10">
+                    H</div>
+            </div>
+            <button
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm ml-4">
+                <i class="fa-solid fa-plus mr-1"></i> Tarjeta Kanban
+            </button>
+        </div>
+    </header>
+
+    <!-- Kanban Board Area -->
+    <main class="flex-1 overflow-x-auto overflow-y-hidden kanban-scroll p-6">
+        <div class="flex h-full items-start space-x-6 min-w-max pb-4">
+
+            <!-- Column 1: TO DO -->
+            <div class="w-80 flex flex-col max-h-full bg-slate-200/50 rounded-xl border border-slate-200">
+                <div class="p-4 flex items-center justify-between cursor-grab active:cursor-grabbing">
+                    <h3 class="font-bold text-slate-700 text-sm flex items-center">
+                        <span class="w-3 h-3 rounded-full bg-slate-400 mr-2"></span> TO DO
+                        <span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-xs ml-2">2</span>
+                    </h3>
+                    <button class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-3 kanban-scroll">
+                    <!-- Card 1 -->
+                    <div
+                        class="bg-white p-3.5 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 cursor-pointer transition-all border-l-4 border-l-red-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <span
+                                class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200">URGENTE</span>
+                            <span class="text-xs text-slate-400">#TK-001</span>
+                        </div>
+                        <h4 class="text-sm font-semibold text-slate-800 mb-2">Firma de SLA Legal</h4>
+                        <div class="flex justify-between items-center mt-3">
+                            <div class="flex items-center text-xs text-slate-500">
+                                <i class="fa-regular fa-calendar mr-1"></i> Hoy
+                            </div>
+                            <img class="h-6 w-6 rounded-full"
+                                src="https://ui-avatars.com/api/?name=Maria&background=random" title="@Maria" alt="" />
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div
+                        class="bg-white p-3.5 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 cursor-pointer transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <span
+                                class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">REUNIÓN</span>
+                        </div>
+                        <h4 class="text-sm font-semibold text-slate-800 mb-2">Kickoff Operativo Equipo Ext.</h4>
+                        <div class="flex justify-between items-center mt-3">
+                            <div class="flex items-center text-xs text-slate-500">
+                            </div>
+                            <div class="w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] border border-dashed border-slate-400"
+                                title="Sin asignar">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Add Card Button internal -->
+                <div class="p-3 pt-0">
+                    <button
+                        class="w-full text-left px-3 py-2 text-sm text-slate-500 hover:bg-slate-300 hover:text-slate-700 rounded transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> Añadir tarjeta
+                    </button>
+                </div>
+            </div>
+
+            <!-- Column 2: IN PROGRESS -->
+            <div class="w-80 flex flex-col max-h-full bg-slate-200/50 rounded-xl border border-slate-200">
+                <div class="p-4 flex items-center justify-between cursor-grab active:cursor-grabbing">
+                    <h3 class="font-bold text-slate-700 text-sm flex items-center">
+                        <span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> IN PROGRESS
+                        <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs ml-2">1</span>
+                    </h3>
+                    <button class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-3 kanban-scroll">
+                    <!-- Card 3 -->
+                    <div
+                        class="bg-white p-3.5 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 cursor-pointer transition-all border-l-4 border-l-blue-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <span
+                                class="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded border border-purple-200">TECNOLOGÍA</span>
+                            <span class="text-xs text-slate-400">#TK-002</span>
+                        </div>
+                        <h4 class="text-sm font-semibold text-slate-800 mb-2">Configuración Azure AD Auth</h4>
+
+                        <!-- Progress / Subtasks -->
+                        <div class="mb-3 mt-1">
+                            <div class="flex justify-between text-[10px] text-slate-500 mb-1">
+                                <span><i class="fa-solid fa-list-check mr-1"></i> 1/3 Subtareas</span>
+                                <span>33%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-1.5">
+                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 33%"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center mt-2">
+                            <div class="flex items-center text-xs text-orange-500 font-medium"> <!-- Warning date -->
+                                <i class="fa-regular fa-calendar mr-1"></i> Mañana
+                            </div>
+                            <img class="h-6 w-6 rounded-full"
+                                src="https://ui-avatars.com/api/?name=Carlos&background=random" title="@Carlos"
+                                alt="" />
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 pt-0">
+                    <button
+                        class="w-full text-left px-3 py-2 text-sm text-slate-500 hover:bg-slate-300 hover:text-slate-700 rounded transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> Añadir tarjeta
+                    </button>
+                </div>
+            </div>
+
+            <!-- Column 3: DONE -->
+            <div class="w-80 flex flex-col max-h-full bg-slate-200/50 rounded-xl border border-slate-200 opacity-80">
+                <div class="p-4 flex items-center justify-between cursor-grab active:cursor-grabbing">
+                    <h3 class="font-bold text-slate-700 text-sm flex items-center">
+                        <span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span> DONE
+                        <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs ml-2">5</span>
+                    </h3>
+                    <button class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-3 kanban-scroll">
+                    <!-- Card 4 (Done) -->
+                    <div
+                        class="bg-white p-3.5 rounded-lg shadow-sm border border-slate-200 cursor-pointer transition-all border-l-4 border-l-green-500">
+                        <h4 class="text-sm font-semibold text-slate-600 mb-1 line-through">Crear repositorio base</h4>
+                        <div class="flex justify-between items-center mt-2">
+                            <span
+                                class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded">Completado
+                                ayer</span>
+                            <div
+                                class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px]">
+                                H</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 pt-0">
+                    <button
+                        class="w-full text-left px-3 py-2 text-sm text-slate-500 hover:bg-slate-300 hover:text-slate-700 rounded transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> Añadir tarjeta
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add new column -->
+            <div class="w-80 flex-shrink-0">
+                <button
+                    class="w-full bg-slate-200/50 hover:bg-slate-300/80 border border-dashed border-slate-300 text-slate-600 font-medium p-3 rounded-xl flex items-center transition-colors">
+                    <i class="fa-solid fa-plus mr-2"></i> Añadir otra lista
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+
+</html>

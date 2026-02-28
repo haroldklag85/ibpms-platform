@@ -6,16 +6,16 @@ Este documento contiene las Historias de Usuario formales para el MVP Táctico (
 ---
 
 ## ÉPICA 1: Orquestación y Workbenches (El Motor Core)
-Esta épica aborda la capacidad fundamental del sistema: recibir un requerimiento, enrutarlo como una tarea (Task) y permitir que el usuario la gestione en su Bandeja Unificada (Inbox).
+Esta épica aborda la capacidad fundamental del sistema: recibir un requerimiento, enrutarlo como una tarea (Task) y permitir que el usuario la gestione en su Workdesk (Escritorio de Tareas).
 
-### US-001: Obtener Tareas Pendientes en la Bandeja Unificada (Inbox)
+### US-001: Obtener Tareas Pendientes en el Workdesk
 **Como** Analista / Usuario de Negocio
-**Quiero** visualizar una lista consolidada de mis tareas pendientes (BPMN o Kanban) al ingresar a la plataforma
+**Quiero** visualizar una lista consolidada de mis tareas pendientes (BPMN o Kanban) al ingresar a la plataforma (Workdesk)
 **Para** saber exactamente qué gestiones operativas debo priorizar y resolver hoy.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Unified Inbox Loading
+Feature: Workdesk Loading
   Scenario: Un usuario autenticado solicita sus tareas pendientes
     Given que el usuario "juan.perez" ha iniciado sesión exitosamente con el rol "Analista_Legal"
     And existen 3 tareas activas asignadas a él y 2 tareas asignadas al grupo "Analista_Legal" en la base de datos
@@ -24,7 +24,7 @@ Feature: Unified Inbox Loading
     And el payload JSON debe contener un arreglo de objetos tipo "Task" bajo el nodo "content" (Paginación Spring)
     And cada objeto "Task" debe incluir "id" (UUID), "titulo" (String), "fecha_vencimiento_sla" (ISO-8601), "origen" (BPMN o Kanban) y "estado"
 ```
-**Trazabilidad UX:** Wireframes Pantalla 1 (Bandeja Unificada).
+**Trazabilidad UX:** Wireframes Pantalla 1 (Workdesk - Escritorio de Tareas).
 
 ---
 
@@ -54,13 +54,56 @@ Feature: Task Claiming
 
 ---
 
-## ÉPICA 2: Generación Dinámica de Formularios (Data to JSON)
-Aborda la capacidad para abstraer la UI del código, permitiendo que las tareas rendericen formularios inyectables según su configuración.
+## ÉPICA 2: IDE Web Pro-Code para Formularios (Vue 3, Zod & Dual-Pattern)
+Aborda la capacidad para diseñar interfaces de usuario mediante herramientas visuales que, por debajo, compilan archivos `.vue` y esquemas de validación estrictos en lugar de JSON interpretado. También exige elegir el patrón de diseño arquitectónico del formulario.
 
-### US-003: Completar una Tarea con Payload de Formulario JSON
+### US-003: Instanciar y Generar un Formulario "iForm Maestro" vs "Simple"
+**Como** Arquitecto Frontend / Administrador
+**Quiero** elegir el tipo de formulario y ver cómo el sistema genera código Vue 3 y Zod en tiempo real mientras arrastro componentes
+**Para** no tener deudas técnicas (Vendor Lock-in) y construir expedientes (iForm Maestros) que manejen etapas dinámicamente.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Web IDE Form Code Generation
+  Scenario: Seleccionar Patrón de Formulario
+    Given que el desarrollador crea un nuevo recurso en la sección "Formularios"
+    When el modal pregunta "¿Qué arquitectura de formulario desea?"
+    Then el usuario puede elegir "Patrón B: iForm Maestro (Expediente Multi-Etapa)"
+    And el lienzo visual se estructura para basar el renderizado en la variable "Current_Stage" de Camunda
+
+  Scenario: Análisis Bidireccional de Código en Tiempo Real
+    Given que el usuario está en el Canvas del "iForm Maestro"
+    When arrastra un "Input Text (Monto Aprobado)" y marca "Requerido"
+    Then el panel derecho "Mónaco IDE" de código actualizado escribe automáticamente:
+      """javascript
+      const schema = z.object({ monto_aprobado: z.number().positive() })
+      """
+    And si el usuario borra la línea de Zod en el panel de código, el componente visual pierde instantáneamente su validación de Requerido.
+```
+**Trazabilidad UX:** Wireframes Pantalla 7 (IDE Web Pro-Code para Formularios).
+
+---
+
+### US-028: Auto-Generación de Test Suites (Zod / Jest)
+**Como** Ingeniero de Calidad (QA)
+**Quiero** que el diseñador de formularios exponga un botón para generar los test unitarios y e2e
+**Para** asegurar en mi CI/CD que el comportamiento complejo del "iForm Maestro" no se rompa antes de compilar el frontal.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Automated Form Testing Generation
+  Scenario: Descargar/Copiar Suite de Pruebas
+    Given el usuario ha finalizado el diseño del "iForm Maestro_Credito.vue"
+    When hace clic en el botón "[⚡ GENERADOR DE TESTS]"
+    Then el IDE lee la estructura Zod
+    And genera y muestra un script de prueba `.spec.ts` (Jest) que inyecta payloads intencionalmente rotos para asegurar que Zod emita un "HTTP 400 Bad Request" local en cliente.
+```
+**Trazabilidad UX:** Wireframes Pantalla 7 (Botones Inferiores).
+
+### US-029: Ejecución y Envío de Formulario (iForm Maestro o Simple)
 **Como** Analista / Usuario de Negocio
-**Quiero** diligenciar la información requerida de mi caso en una vista estructurada y enviarlos
-**Para** finalizar exitosamente la actividad y que el motor continúe al siguiente paso del flujo.
+**Quiero** diligenciar la información de mi sección habilitada en la vista de la tarea (Pantalla 2) y presionar "Enviar"
+**Para** finalizar exitosamente mi actividad y que el motor continúe al siguiente paso del proceso.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
@@ -135,6 +178,15 @@ Feature: BPMN Process Deployment
     Then el motor debe denegar el despliegue
     And el sistema debe retornar HTTP STATUS 422 Unprocessable Entity
     And el payload debe contener el mensaje parseado: "El diagrama no es instanciable. Falta End Event."
+
+  Scenario: Análisis Semántico en "Pre-Flight" de un diagrama complejo (Ejecutabilidad)
+    Given el Arquitecto importa un diagrama BPMN 2.0 ("Proceso_Core.bpmn") que contiene Subprocesos, Start Events de Mensaje y Tareas de Servicio
+    When el usuario solicita la validación previa al despliegue ("Pre-Flight Analyze")
+    Then el motor semántico debe parsear los componentes avanzados
+    And identificar si alguna `ServiceTask` carece de su propiedad `Delegate Expression` (Ejecución de código)
+    And identificar si alguna `UserTask` carece de una vinculación de `Form Key`
+    And identificar si alguna `ExclusiveGateway` carece de un flujo por defecto (`Default Flow`)
+    And el sistema debe renderizar en Pantalla 6 la lista de Errores (❌) y Advertencias (⚠️) para que el Arquitecto los corrija antes del despliegue.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN Integrado / CRUD de Procesos).
 
@@ -156,6 +208,25 @@ Feature: Project Template Builder
     And el "Project Template ID" debe guardarse en la BD listo para ser instanciado por el usuario operativo
 ```
 **Trazabilidad UX:** Wireframes Pantalla 8 (Project Builder).
+
+---
+
+### US-027: Copiloto IA Tutor (Auditoría BPMN 2.0 e ISO 9001)
+**Como** Arquitecto Modelador de Procesos
+**Quiero** un asistente IA embebido en el diseñador (Pantalla 6) que evalúe mi diagrama en tiempo real
+**Para** recibir sugerencias de mejora de arquitectura, identificar antipatrones (Ej. dead-ends) y confirmar que el flujo cumple principios de calidad tipo ISO 9001.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: AI Copilot para Diseño BPMN y Auditoría ISO
+  Scenario: Diagnóstico de calidad y sugerencia de ISO 9001
+    Given que el Arquitecto está dibujando un proceso en el lienzo y hace clic en "Consultar a IA Copilot"
+    When el sistema envía el XML en memoria y el contexto semántico al LLM API
+    Then el Agente IA debe analizar la estructura devolviendo un reporte en la UI
+    And destacar áreas de mejora (Ej: "La compuerta no tiene validación humana, lo cual es riesgoso bajo control ISO 9001")
+    And sugerir componentes correctos de BPMN 2.0 para reemplazar antipatrones.
+```
+**Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN).
 
 ---
 
@@ -282,54 +353,312 @@ Feature: Advanced Relational Inbox Filtering
 
 ---
 
-### US-012: Extracción de Intención y Enriquecimiento CRM Bilingüe (Copiloto AI)
-**Como** Gestor de Casos (Human-in-the-Loop)
-**Quiero** que al abrir un ticket/correo (Pantalla 2C), la IA ya haya procesado el texto para clasificar la intención, inferir el cliente cruzando el dominio con el CRM interno, y proponer un borrador en el idioma original del correo
-**Para** tener contexto operacional inmediato sin necesidad de navegar al CRM ni traducir la petición manualmente.
+### US-012: Propuesta de respuesta para correo entrante (con revisión humana)
+**Como** gestor de un buzón corporativo
+**Quiero** recibir un borrador de respuesta basado en el contexto del hilo y precedentes
+**Para** contestar más rápido y con consistencia.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: AI Semantic Extraction and Draft Generation
-  Scenario: Extracción de CRM y generación de Borrador Bilingüe (Inglés)
-    Given que el listener de O365 recibe un correo en Inglés ("We are very angry about the downtime...") desde "cto@bancoalpha.com"
-    And el demonio Backend-AI intercepta el payload antes de mostrarlo en el Inbox
-    When la IA analiza el texto del correo
-    Then el sistema debe extraer el dominio "bancoalpha.com" y consultar la API del CRM ONS
-    And debe etiquetar el correo con 'Cliente: Banco Alpha', 'Sentimiento: Severo/Negativo'
-    And el LLM debe generar un borrador de disculpa formal estandarizado estrictamente en Inglés (detectando el idioma base)
-    And el borrador debe guardarse temporalmente en caché y renderizarse en el "Panel Recomendado de IA" (Pantalla 2C) bloqueado hasta revisión
-
-  Scenario: Identificación de Fechas Clave (Deadlines OCR/NLP)
-    Given el correo contiene el string literal "We grant you an extension until Nov 30, 2024"
-    When la IA analiza el texto
-    Then la IA debe generar una tarjeta atómica de "Sugerencia: Cambiar SLA" con el payload '{"new_deadline": "2024-11-30T23:59:59Z"}'
+Feature: Generación de Borradores de Respuesta Interactivos
+  Scenario: Sistema genera borrador bilingüe esperando revisión humana
+    Given un correo electrónico entrante recibido en el buzón corporativo
+    When la IA analiza el contexto y detecta el idioma (Ej: ES o EN)
+    Then el sistema debe generar al menos 1 borrador de respuesta en el mismo idioma detectado
+    And presentar el borrador en la interfaz bloqueando el envío automático
+    And permitir al usuario "Aprobar", "Editar" o "Rechazar" el borrador
+    And el sistema no debe enviar el correo hasta que el usuario ejecute una acción afirmativa
+    And el sistema debe conservar un identificador de trazabilidad (conversation_id)
 ```
 **Trazabilidad UX:** Prototipos UI1.html y UI4.html / Pantalla 2C.
 
 ---
 
-### US-013: Orquestación Asistida (Aceptación/Rechazo Human-in-the-Loop)
-**Como** Analista Legal / Supervisor de Operaciones
-**Quiero** revisar atómicamente cada sugerencia construida por la IA (Fechas, Borradores, Recomendación de Creación de Proyecto) usando botones explícitos de "Aceptar" o "Rechazar"
-**Para** mantener el control absoluto sobre las acciones ejecutadas, garantizando el cumplimiento de políticas corporativas y alimentando el sistema MLOps con mis rechazos.
+### US-013: Identificación automática de cliente y enriquecimiento desde CRM (ONS)
+**Como** gestor de un buzón corporativo
+**Quiero** que el asistente identifique el cliente por el dominio del remitente y consulte el CRM ONS
+**Para** contextualizar la respuesta y adaptar el tono.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Human-in-the-Loop Orchestration
-  Scenario: Aprobación de Borrador y Envío Síncrono MS Graph API
-    Given el analizador IA propuso un borrador de respuesta
-    And el usuario se encuentra leyendo el detalle del Inbox (Pantalla 2C)
-    When el usuario modifica manualmente 3 palabras del borrador
-    And el usuario presiona el botón [🚀 Aprobar y Enviar Respuesta]
-    Then el backend debe actualizar el payload final
-    And debe consumir la MS Graph API (/users/{id}/sendMail) asumiendo la identidad corporativa
-    And el caso se marca como "CERRADO" en la bandeja del usuario
-
-  Scenario: Rechazo de Tarjeta Atómica (Feedback RAG)
-    Given la IA recomendó "Crear Tarea: Iniciar Devolución de Dinero"
-    When el usuario presiona [❌ Rechazar] en esa tarjeta individual
-    Then el sistema requiere que el usuario seleccione un motivo de exclusión genérico (Dropdown: "Falso Positivo", "Política no Aplica")
-    And el registro de auditoría (ibpms_audit_log) guarda el flag de "IA_REJECTED" para re-entrenamiento del modelo
-    And el usuario puede continuar operando la tarea manualmente sin que se bloquee el flujo
+Feature: Enriquecimiento CRM de Hilos de Correo
+  Scenario: Match exitoso con CRM ONS
+    Given un correo entrante con dominio '@cliente.com'
+    When el sistema consulta la API del CRM ONS usando el dominio
+    Then si existe coincidencia, asocia el correo a un 'client_profile' (account/contact)
+    And el LLM ajusta el nivel de formalidad del borrador basado en la data del perfil del cliente
+  
+  Scenario: Cliente no identificado
+    Given un correo entrante donde el dominio no existe en CRM ONS
+    Then el sistema marca el correo visualmente como "Cliente no identificado"
+    And sugiere una tarjeta atómica para solicitar datos o registrar al cliente nuevo en CRM
 ```
-**Trazabilidad UX:** Prototipos UI3.html, UI1.html y UI4.html / Pantalla 2C.
+
+---
+
+### US-014: Sugerencia de acciones (tareas) sin ejecución automática
+**Como** gestor de un buzón corporativo
+**Quiero** que el asistente sugiera acciones asociadas al correo (crear tarea, asignar responsable, solicitar info)
+**Para** acelerar el flujo de trabajo sin perder control.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Sugerencia de Acciones Atómicas (Human-in-the-Loop)
+  Scenario: Presentación y ejecución de acciones sugeridas
+    Given un análisis de correo completado
+    Then el sistema configura y genera una lista de N acciones sugeridas
+    And cada acción exhibe: tipo, descripción, responsable sugerido, prioridad y fecha
+    And el usuario puede explícitamente "Aprobar" o "Rechazar" cada tarjeta individual
+    And si el usuario aprueba "Crear Tarea", el sistema llama la API interna confirmando el task_id
+    And si el usuario no aprueba explícitamente, no se ejecuta ninguna alteración en el sistema interno
+```
+
+---
+
+### US-015: Feedback y aprendizaje supervisado
+**Como** gestor de un buzón corporativo
+**Quiero** que el sistema aprenda de mis ediciones y rechazos
+**Para** que las propuestas mejoren con el tiempo.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Feedback Loop para Aprendizaje Automático
+  Scenario: Registro de correcciones y rechazos humanos
+    Given un borrador propuesto por la IA
+    When el usuario edita el texto del borrador antes de enviarlo
+    Then el sistema registra en auditoría la versión original vs la versión final (Delta)
+    When el usuario presiona "Rechazar" sobre una propuesta
+    Then el sistema debe solicitar un motivo de rechazo de un catálogo predefinido
+    And el sistema debe almacenar métricas de tasas de aceptación, edición y rechazo categorizadas para re-entrenamiento
+```
+
+---
+
+### US-016: Gestión multi-buzón con políticas por buzón
+**Como** administrador del asistente
+**Quiero** configurar políticas por buzón (tono, idioma por defecto, categorías, aprobadores)
+**Para** adaptar el comportamiento a cada canal corporativo.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Configuración de 'Mailbox Policy' Dinámicas
+  Scenario: Aplicación de políticas diferenciadas sin reiniciar el sistema
+    Given múltiples buzones corporativos registrados
+    When el administrador define un 'mailbox_policy' configurando idioma, nivel de formalidad, disclaimers y escalamiento
+    Then las propuestas generadas por el LLM aplican inmediatamente este contexto en sus prompts
+    And los nuevos cambios de política operan sobre el siguiente correo entrante sin requerir 'redeploy' de código
+```
+
+---
+
+### US-017: Trazabilidad y alineación con eDiscovery (M365)
+**Como** auditor o compliance officer
+**Quiero** trazabilidad de decisiones y acciones, alineada a eDiscovery
+**Para** asegurar cumplimiento y auditoría.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Integridad Operacional de Datos M365
+  Scenario: Auditoría de Custodia de Correos
+    Given el procesamiento de un correo corporativo
+    Then el sistema inserta un registro 'audit_id' inmutable
+    And captura el timestamp, buzón de origen, intención inferida, acciones sugeridas y decisión humana
+    And el sistema debe mantener referencias y metadatos del correo original sin duplicar innecesariamente el cuerpo completo
+    And permite exportar reportes respetando eDiscovery sin romper la cadena de custodia
+```
+
+---
+
+### US-018: Métricas de desempeño y calidad
+**Como** líder de operación/servicio
+**Quiero** ver métricas de desempeño del asistente
+**Para** medir Retorno de Inversión (ROI) y mejora continua.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Cuadro de Mando de Desempeño Inteligente (AI Dashboards)
+  Scenario: Consolidación de retorno y eficiencia
+    Given el Líder de Operación ingresa al dashboard
+    Then puede reportar la tasa de aceptación, edición, rechazo, y tiempo medio de respuesta
+    And visualizar las acciones orgánicas creadas segmentadas por buzón y por idioma
+    And configurar comparativas "antes vs después" mediante un 'baseline' histórico
+    And visualizar en un panel de control la telemetría de fallos de integración (Graph/CRM)
+```
+
+---
+
+## ÉPICA 10: Service Delivery (Catálogo de Servicios CRM Federado)
+Implementar el paradigma de Delivery separando la "Definición Comercial" (CRM) de la "Ejecución Operativa" (iBPMS) mediante un catálogo consultado en tiempo real.
+
+### US-019: Conectividad Resiliente y Modo Degradado
+**Como** Arquitecto de Plataforma
+**Quiero** conectar el sistema iBPMS a un catálogo en un CRM externo con caché intermedio
+**Para** garantizar que los clientes puedan iniciar procesos incluso si el CRM sufre caídas.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Conectividad y Resiliencia CRM
+  Scenario: Consulta base de servicios (CA-1)
+    Given el conector CRM (Outbound Adapter) está configurado con autenticación OAuth2
+    When el subsistema iBPMS consulta el catálogo por API
+    Then el CRM devuelve los servicios incluyendo obligatoriamente su 'service_ref_id' y metadata comercial esencial (Nombre, Descripción)
+    
+  Scenario: Activación de Modo Degradado por caída de CRM (CA-2)
+    Given el backend del CRM externo se encuentra inalcanzable (Timeout o HTTP 5xx)
+    And existe sincronización previa en caché Redis
+    When un cliente final abre el Portal de Catálogo de Servicios
+    Then el iBPMS debe mostrar el catálogo cacheado
+    And debe advertir visualmente la "última fecha de actualización"
+    And debe permitir iniciar el requerimiento de servicio sin bloquear el Frontend
+```
+
+---
+
+### US-020: Estrategias de Sincronización Flexible
+**Como** Administrador del Sistema
+**Quiero** habilitar múltiples estrategias de refresco del catálogo CRM (Schedulers)
+**Para** balancear la carga de red sin perder la precisión de la oferta comercial.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: CRON y Event-Driven Sync
+  Scenario: Sincronización calendarizada automática (CA-3)
+    Given que la política de 'scheduled sync' está activada (Ej. "Cada 1 Hora")
+    When se alcanza el 'cron trigger' en el backend
+    Then el motor iBPMS refresca la tabla interna o el 'Redis Cache' con el catálogo del CRM
+    And registra el resultado del lote (OK/FAIL) en la tabla 'ibpms_audit_log'
+```
+
+---
+
+### US-021: Mapeo de Variables y Tolerance (Fricción Cero)
+**Como** Administrador de Integraciones
+**Quiero** mapear campos variables visualmente entre lo que dicta el CRM y lo que espera mi BPMN
+**Para** que la operación fluya sin requerir modificar código Java cuando cambie una promoción.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Mapeo Configurable CRM a iBPMS
+  Scenario: Trazabilidad de versiones de mapeo (CA-4)
+    Given que el Administrador configuró un 'CRM Mapping JSON v1'
+    When el Administrador publica una nueva configuración 'Mapping v2'
+    Then todas las nuevas instancias (casos) iniciadas heredarán y utilizarán el 'Mapping v2'
+    And el caso específico mantendrá la trazabilidad inmutable apuntando a qué versión de variables usó al nacer
+    
+  Scenario: Tolerancia a catálogos incompletos (CA-5)
+    Given que el objeto 'Servicio' recuperado del CRM omite un campo no-crítico (Ej: 'URL_Imagen_Promocional')
+    When el cliente presiona "Iniciar Nuevo Caso" en el portal (Pantalla 0)
+    Then el iBPMS verifica si los 'campos mínimos requeridos' (service_id, cliente) existen
+    And si se cumplen los mínimos, permite la instanciación e ignora el campo no-crítico faltante sin lanzar HTTP 500
+```
+**Trazabilidad UX:** Afecta a la **Pantalla 0: Service Catalog** y la **Pantalla 11: Hub de Integraciones**.
+
+---
+
+## ÉPICA 11: Intelligent Intake y Vistas Híbridas por Rol (Service Delivery)
+Definir un modelo controlado de instanciación de procesos ("Plan A" vía correo y "Plan B" manual restrictivo), eliminando el anti-patrón de crear procesos BPMN basura ante simples respuestas de correo electrónico o alertas SPAM.
+
+### US-022: Disparo 'Confirm-to-Create' por Correo (Plan A)
+**Como** Analista o Gestor
+**Quiero** enviar un correo de confirmación de servicio a un Cliente desde un buzón corporativo en el iBPMS
+**Para** notificarlo, dejar evidencia auditable, y generar una tarea encolada ("Solicitud de Creación SD") sin instanciar ciegamente un proceso basura.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Intake Controlado Plan A (Email Trigger)
+  Scenario: Creación de Tarea Administrativa en vez de Service Delivery (CA-1)
+    Given un Gestor envía un correo de confirmación a un cliente desde un buzón (Ej: auditorias@ibpms.com) indicando un servicio (Plantilla TO-BE)
+    When el correo saliente se envía satisfactoriamente
+    Then el sistema registra el correo como evento auditable
+    And genera un 'correlation id' asociando al Cliente (CRM ID) y al 'template_id'
+    And el sistema no inicia una instancia BPMN en Camunda
+    And el sistema crea una Tarea de Usuario ("Crear Service Delivery") asignada a un Responsable Admin
+```
+
+---
+
+### US-023: Correlación Continua del Hilo
+**Como** Sistema Core ONS
+**Quiero** mantener un Tracking/Threading ininterrumpido a lo largo del correo entrante/saliente
+**Para** que la comunicación con el cliente nunca se pierda y quede subsumida en el Service Delivery una vez éste nazca.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Threads y Message-ID Tracking
+  Scenario: Concatenación de respuestas al Contexto Pre-SD (CA-2)
+    Given el sistema envió un correo "Confirm-to-Create" (US-022) y el cliente responde a dicho email
+    When el Webhook entrante de M365 captura el correo
+    Then vincula la respuesta al 'correlation id' previo
+    And cuando el Admin finalmente ejecuta "Crear Service Delivery", vincula todo ese hilo previo de correos (Pre-SD Context) a la instancia madre del BPMN (SD).
+```
+
+---
+
+### US-024: Creación Global Restringida (Plan B)
+**Como** Administrador del Sistema
+**Quiero** un botón de instanciación manual forzada
+**Para** arrancar un proceso (SD) sin requerir el paso del correo (Plan A), con validación estricta de mis permisos.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Intake Manual Plan B (Seguridad)
+  Scenario: Prevención de instanciación no autorizada (CA-3)
+    Given que el usuario autenticado tiene un rol de 'Colaborador_Operativo'
+    When busca instanciar un Service Delivery globalmente sin correo
+    Then la interfaz bloquea la acción o el API rechaza la solicitud (HTTP 403 Forbidden)
+    
+  Scenario: Creación Exitoso bajo Administrador
+    Given un Administrador ocluye el botón de [ Crear Servicio/Case ] (Pantalla 0 / 9)
+    And selecciona la Plantilla TO-BE y asocia el ID de Cliente
+    When presiona el botón crear
+    Then el sistema inicializa la instancia BPMN en el motor (Camunda)
+    And registra una auditoría de inicialización manual con trigger_type=MANUAL
+```
+
+---
+
+### US-025: Experiencia de 'Cards' Dinámicas por Rol
+**Como** Arquitecto de Producto UI
+**Quiero** segmentar las Tarjetas Kanban y Dashboards por el rol específico del que mira
+**Para** evitar ruido cognitivo y entregar exactamente lo que cada persona necesita (Visibilidad, Ejecución o Seguimiento).
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Vistas UX Segregadas por Intención
+  Scenario: Renderizado de Card de 'Embudos de Creación' para el Admin
+    Given un usuario 'Administrador' (Rol: admin_sd) ingresa al Dashboard (Home)
+    Then la Interfaz presenta una "Card: Servicios por Crear" agrupando las llamadas del Plan A ("12 Pendientes de creación")
+    
+  Scenario: Renderizado de Card Operativa para Ejecutor de Trincheras
+    Given un usuario 'Colaborador' (Rol: auditor_senior) ingresa al Workflow (Inbox)
+    Then la interfaz NO le muestra el botón "Crear Servicios"
+    And presenta tarjetas agrupadas estrictamente por 'Plantillas', ejemplo: "Auditoría Express — 7 Tareas pendientes en rojo".
+
+  Scenario: Renderizado de Vista 360 para Cuenta / Cliente
+    Given un Ejecutivo de Cuenta navega el perfil de un Cliente Específico en su directorio
+    Then la interfaz agrupa y presenta TODAS las tareas BPMN y Ágiles atadas a ese CRM_ID 
+    And permite resolver la clásica duda del cliente: "¿En qué etapa exacta va mío?"
+```
+
+---
+
+### US-026: Portal del Cliente Externo (Vistas Tácticas y Estratégicas)
+**Como** Cliente Externo (B2B/B2C)
+**Quiero** ingresar a un portal web autenticado para ver el estado de mis Peticiones/Servicios
+**Para** no tener que llamar al contact center y tener trazabilidad total (Táctica y Estratégica) de mis trámites.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: External Customer Portal (Service Delivery)
+  Scenario: Acceso a Vista Táctica (Estado en Tiempo Real)
+    Given un Cliente Externo autenticado (Ej: portal.ibpms.com) mediante Azure AD B2C
+    When el cliente ingresa a su panel principal
+    Then el sistema debe renderizar una lista con sus Service Deliveries "En Curso"
+    And mostrar en qué etapa exacta del proceso se encuentra visualmente (Tracker)
+
+  Scenario: Acceso a Vista Estratégica (Dashboard y SLAs)
+    Given el mismo cliente navegando en la pestaña "Histórico y Desempeño"
+    Then el sistema renderizará métricas de "Servicios Finalizados a Tiempo" vs "Retrasados"
+    And listará todos los Service Deliveries concluidos permitiendo la descarga de su respectivo PDF (SGDEA)
+```
+**Trazabilidad UX:** Wireframes Pantalla 18 (Portal B2B/B2C del Cliente).

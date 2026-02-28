@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iBPMS - Taller DMN con IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body class="bg-gray-50 flex h-screen overflow-hidden text-gray-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col h-full border-r border-slate-700 z-20">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <i class="fa-solid fa-layer-group text-blue-500 text-2xl mr-3"></i>
+            <span class="text-xl font-bold tracking-wide">iBPMS</span>
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+            <ul class="space-y-1">
+                <li><a href="index.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-house w-6"></i> Inicio</a></li>
+                <li class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4">Admin</li>
+                <li><a href="process_designer.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-diagram-project w-6"></i> Diseño BPMN</a></li>
+                <li><a href="form_builder.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-file-pen w-6"></i> Formularios</a></li>
+                <li><a href="dmn_copilot.html"
+                        class="flex items-center px-6 py-2.5 bg-blue-600/20 text-blue-400 border-r-4 border-blue-500 font-medium"><i
+                            class="fa-solid fa-brain w-6"></i> Reglas IA</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-full relative"
+        x-data="{ generating: false, generated: false, simulating: false }">
+
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-10">
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">Taller de Reglas de Negocio DMN</h1>
+                <p class="text-xs text-gray-500">Generación dinámica mediante Traducción Natural -> Decision Model &
+                    Notation</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button
+                    class="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium text-sm rounded-lg transition-colors">Descartar</button>
+                <button
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-sm transition-colors flex items-center"
+                    :disabled="!generated" :class="!generated ? 'opacity-50 cursor-not-allowed' : ''">
+                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Guardar y Desplegar
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="flex-1 flex overflow-hidden p-6 gap-6">
+
+            <!-- Panel Izquierdo: Chat IA -->
+            <div
+                class="w-1/3 flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden shrink-0">
+                <div class="px-4 py-3 border-b border-gray-200 bg-indigo-50 flex items-center">
+                    <i class="fa-solid fa-wand-magic-sparkles text-indigo-600 mr-2"></i>
+                    <h3 class="font-bold text-sm text-indigo-900">Asistente Copilot DMN</h3>
+                </div>
+
+                <div class="flex-1 p-4 flex flex-col">
+                    <p class="text-sm text-gray-600 mb-4">Describe la política del negocio en lenguaje natural. Copilot
+                        estructurará las Entradas, Salidas y las Tablas de Decisión.</p>
+
+                    <div class="flex-1 flex flex-col">
+                        <textarea
+                            class="w-full h-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none text-sm text-gray-800"
+                            placeholder="Ejemplo: Si el monto del vuelo es mayor a 1000 dólares y el solicitante es Analista, entonces requiere aprobación_jefe=true, sino aprobación_jefe=false..."></textarea>
+                    </div>
+                </div>
+
+                <div class="p-4 border-t border-gray-200 bg-gray-50">
+                    <button @click="generating = true; setTimeout(() => { generating = false; generated = true }, 2000)"
+                        class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-lg shadow-sm transition-colors flex items-center justify-center">
+                        <span x-show="generating" class="mr-2"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+                        <i x-show="!generating" class="fa-solid fa-bolt mr-2"></i>
+                        <span x-text="generating ? 'Analizando Lógica...' : 'Generar Tabla DMN'"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel Derecho: Resultados DMN -->
+            <div class="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-table-list text-gray-500 mr-2"></i>
+                        <h3 class="font-bold text-sm text-gray-700">Lienzo Generado (dmn-js)</h3>
+                    </div>
+                </div>
+
+                <!-- Estado Vacío -->
+                <div x-show="!generated && !generating"
+                    class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50">
+                    <i class="fa-solid fa-arrow-left text-gray-300 transform -scale-x-100 text-5xl mb-4"></i>
+                    <p class="text-gray-500">Ingresa una regla en el Copiloto para visualizar la tabla de decisiones.
+                    </p>
+                </div>
+
+                <!-- Skeleton / Cargando -->
+                <div x-show="generating" class="flex-1 flex flex-col items-center justify-center p-8 bg-gray-50/50">
+                    <div class="animate-pulse flex flex-col items-center w-full max-w-lg">
+                        <div class="h-8 bg-gray-200 rounded w-3/4 mb-6"></div>
+                        <div class="h-32 bg-gray-200 rounded w-full mb-4"></div>
+                        <div class="h-8 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+
+                <!-- Tabla DMN Resultante -->
+                <div x-show="generated" class="flex-1 flex flex-col relative" style="display: none;">
+
+                    <div class="p-6 overflow-auto kanban-scroll flex-1">
+                        <div class="inline-block min-w-full">
+
+                            <table class="min-w-full bg-white border border-gray-300">
+                                <thead>
+                                    <!-- Header Hit Policy -->
+                                    <tr class="bg-gray-100 border-b border-gray-300">
+                                        <th
+                                            class="border-r border-gray-300 w-12 text-center text-xs font-bold text-gray-500">
+                                            U</th>
+                                        <th colspan="2"
+                                            class="border-r border-blue-400 py-3 text-center text-sm font-bold bg-blue-50 text-blue-900 shadow-[inset_0_-2px_0_#60a5fa] cursor-pointer hover:bg-blue-100">
+                                            Entradas (Inputs)
+                                        </th>
+                                        <th
+                                            class="border-r border-orange-400 py-3 text-center text-sm font-bold bg-orange-50 text-orange-900 shadow-[inset_0_-2px_0_#fb923c] cursor-pointer hover:bg-orange-100">
+                                            Salidas (Outputs)
+                                        </th>
+                                        <th class="w-12"></th>
+                                    </tr>
+                                    <!-- Column Names -->
+                                    <tr class="bg-white border-b-2 border-gray-400">
+                                        <th class="border-r border-gray-300 bg-gray-50"></th>
+                                        <th
+                                            class="border-r border-gray-300 p-2 text-center text-sm font-semibold text-gray-800">
+                                            Monto (Number)
+                                        </th>
+                                        <th
+                                            class="border-r border-blue-400 p-2 text-center text-sm font-semibold text-gray-800">
+                                            Rol (String)
+                                        </th>
+                                        <th
+                                            class="border-r border-orange-400 p-2 text-center text-sm font-semibold text-gray-800">
+                                            Req_Aprobacion_Jefe (Boolean)
+                                        </th>
+                                        <th class="bg-gray-50"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-gray-200 hover:bg-gray-50 group">
+                                        <td
+                                            class="border-r border-gray-300 text-center text-xs text-gray-400 font-mono">
+                                            1</td>
+                                        <td
+                                            class="border-r border-gray-300 p-2 text-center text-sm font-mono text-blue-700">
+                                            > 1000</td>
+                                        <td
+                                            class="border-r border-blue-400 p-2 text-center text-sm font-mono text-blue-700">
+                                            "Analista"</td>
+                                        <td
+                                            class="border-r border-orange-400 p-2 text-center text-sm font-mono font-bold text-green-600">
+                                            true</td>
+                                        <td class="text-center text-gray-300 group-hover:text-blue-500 cursor-pointer">
+                                            <i class="fa-solid fa-pen-to-square"></i></td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 hover:bg-gray-50 group">
+                                        <td
+                                            class="border-r border-gray-300 text-center text-xs text-gray-400 font-mono">
+                                            2</td>
+                                        <td
+                                            class="border-r border-gray-300 p-2 text-center text-sm font-mono text-blue-700">
+                                            <= 1000</td>
+                                        <td
+                                            class="border-r border-blue-400 p-2 text-center text-sm font-mono text-blue-700">
+                                            "Analista"</td>
+                                        <td
+                                            class="border-r border-orange-400 p-2 text-center text-sm font-mono font-bold text-red-600">
+                                            false</td>
+                                        <td class="text-center text-gray-300 group-hover:text-blue-500 cursor-pointer">
+                                            <i class="fa-solid fa-pen-to-square"></i></td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 hover:bg-gray-50 group">
+                                        <td
+                                            class="border-r border-gray-300 text-center text-xs text-gray-400 font-mono">
+                                            3</td>
+                                        <td
+                                            class="border-r border-gray-300 p-2 text-center text-sm font-mono text-gray-400">
+                                            -</td>
+                                        <td
+                                            class="border-r border-blue-400 p-2 text-center text-sm font-mono text-blue-700">
+                                            "Gerente"</td>
+                                        <td
+                                            class="border-r border-orange-400 p-2 text-center text-sm font-mono font-bold text-red-600">
+                                            false</td>
+                                        <td class="text-center text-gray-300 group-hover:text-blue-500 cursor-pointer">
+                                            <i class="fa-solid fa-pen-to-square"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <button
+                                class="mt-4 px-3 py-1 bg-white border border-dashed border-gray-300 text-gray-500 rounded text-sm hover:border-blue-400 hover:text-blue-500 transition-colors">
+                                <i class="fa-solid fa-plus mr-1"></i> Añadir Regla (Fila)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Prueba de Regla -->
+                    <div
+                        class="h-32 border-t border-gray-200 bg-emerald-50/50 p-4 shrink-0 flex flex-col justify-center">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i
+                                    class="fa-solid fa-flask mr-1"></i> Simulador de Reglas de Negocio</h4>
+                        </div>
+                        <div
+                            class="flex items-center space-x-4 bg-white p-2 rounded-lg border border-emerald-100 shadow-sm">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs font-semibold text-gray-600">Monto:</span>
+                                <input type="number" value="6000"
+                                    class="w-20 p-1 border border-gray-300 rounded text-sm text-center">
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs font-semibold text-gray-600">Rol:</span>
+                                <input type="text" value="Analista"
+                                    class="w-24 p-1 border border-gray-300 rounded text-sm text-center">
+                            </div>
+                            <span class="text-gray-400"><i class="fa-solid fa-arrow-right-long"></i></span>
+                            <button @click="simulating = true; setTimeout(() => simulating = false, 800)"
+                                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium transition-colors w-32 flex justify-center items-center">
+                                <span x-show="!simulating">Ejecutar Prueba</span>
+                                <span x-show="simulating"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                            </button>
+                            <div class="flex-1 flex justify-end">
+                                <span x-show="!simulating"
+                                    class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded font-mono font-bold border border-emerald-200 shadow-inner">
+                                    -> TRUE
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>

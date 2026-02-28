@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iBPMS - Constructor de Formularios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 flex h-screen overflow-hidden text-gray-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col h-full border-r border-slate-700 z-20 shrink-0">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <i class="fa-solid fa-layer-group text-blue-500 text-2xl mr-3"></i>
+            <span class="text-xl font-bold tracking-wide">iBPMS</span>
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+            <ul class="space-y-1">
+                <li><a href="index.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-house w-6"></i> Inicio</a></li>
+                <li class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4">Admin</li>
+                <li><a href="process_designer.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-diagram-project w-6"></i> Diseño BPMN</a></li>
+                <li><a href="form_builder.html"
+                        class="flex items-center px-6 py-2.5 bg-blue-600/20 text-blue-400 border-r-4 border-blue-500 font-medium"><i
+                            class="fa-solid fa-file-pen w-6"></i> Formularios</a></li>
+                <li><a href="dmn_copilot.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-brain w-6"></i> Reglas IA</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-full relative border-l border-gray-200">
+
+        <!-- Header -->
+        <header
+            class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm shrink-0">
+            <div class="flex items-center">
+                <i class="fa-regular fa-rectangle-list text-indigo-500 mr-3 text-xl"></i>
+                <h1 class="text-lg font-bold text-gray-900">Formulario: Ingreso de Factura V2</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button class="text-sm text-gray-500 hover:text-blue-600 font-medium px-3 py-1"><i
+                        class="fa-solid fa-code mr-1"></i> Ver JSON Schema</button>
+                <div class="h-6 border-l border-gray-300 mx-1"></div>
+                <button
+                    class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-lg shadow-sm transition-colors flex items-center">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> Guardar Form
+                </button>
+            </div>
+        </header>
+
+        <!-- Builder Layout -->
+        <div class="flex-1 flex overflow-hidden">
+
+            <!-- Paleta de Componentes (Left) -->
+            <div class="w-64 bg-white border-r border-gray-200 flex flex-col pt-4 overflow-y-auto z-10">
+                <div class="px-4 mb-3">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Campos Básicos</h3>
+                    <div class="space-y-2">
+                        <div
+                            class="border border-gray-200 rounded p-2 text-sm flex items-center cursor-grab hover:border-indigo-400 hover:bg-indigo-50 transition-colors bg-white">
+                            <i class="fa-solid fa-font text-gray-400 w-6 text-center"></i> Text Field
+                        </div>
+                        <div
+                            class="border border-gray-200 rounded p-2 text-sm flex items-center cursor-grab hover:border-indigo-400 hover:bg-indigo-50 transition-colors bg-white">
+                            <i class="fa-solid fa-hashtag text-gray-400 w-6 text-center"></i> Number
+                        </div>
+                        <div
+                            class="border border-gray-200 rounded p-2 text-sm flex items-center cursor-grab hover:border-indigo-400 hover:bg-indigo-50 transition-colors bg-white">
+                            <i class="fa-solid fa-square-check text-gray-400 w-6 text-center"></i> Checkbox
+                        </div>
+                        <div
+                            class="border border-gray-200 rounded p-2 text-sm flex items-center cursor-grab hover:border-indigo-400 hover:bg-indigo-50 transition-colors bg-white">
+                            <i class="fa-regular fa-calendar text-gray-400 w-6 text-center"></i> Date Picker
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-4 mb-3 mt-4">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Estructura & Avanzado</h3>
+                    <div class="space-y-2">
+                        <div
+                            class="border border-gray-200 rounded p-2 text-sm flex items-center cursor-grab hover:border-indigo-400 hover:bg-indigo-50 transition-colors bg-white border-dashed">
+                            <i class="fa-solid fa-table-columns text-gray-400 w-6 text-center"></i> Columnas (Grid)
+                        </div>
+                        <div
+                            class="border border-gray-200 rounded p-2 text-sm flex items-center cursor-grab hover:border-indigo-400 hover:bg-indigo-50 transition-colors bg-white border-dashed">
+                            <i class="fa-solid fa-folder-closed text-gray-400 w-6 text-center"></i> Sección / Panel
+                        </div>
+                        <div
+                            class="border border-gray-200 rounded p-2 text-sm flex items-center cursor-grab hover:border-indigo-400 hover:bg-indigo-50 transition-colors bg-white">
+                            <i class="fa-solid fa-file-arrow-up text-gray-400 w-6 text-center"></i> File Upload (SGDEA)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas (Center Preview) -->
+            <div class="flex-1 bg-gray-100 p-8 overflow-y-auto relative outline-none focus:outline-none">
+
+                <!-- Droppable Area Mockup -->
+                <div
+                    class="max-w-3xl mx-auto bg-white border border-gray-200 shadow-sm rounded-xl min-h-[500px] p-8 pb-32">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 border-b border-gray-100 pb-3">Detalle de la Factura
+                        Comercial</h2>
+
+                    <div class="space-y-6">
+                        <!-- Select Field in Canvas -->
+                        <div
+                            class="relative group border border-transparent hover:border-blue-300 hover:bg-blue-50/30 p-3 -mx-3 rounded transition-colors cursor-pointer">
+                            <!-- Drag Handle & Controls -->
+                            <div
+                                class="absolute -left-3 top-0 bottom-0 flex flex-col justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="fa-solid fa-grip-vertical text-gray-400 cursor-grab text-lg"></i>
+                            </div>
+                            <div
+                                class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white shadow-sm border border-gray-200 rounded flex overflow-hidden">
+                                <button class="px-2 py-1 text-gray-500 hover:text-blue-500 hover:bg-gray-50"><i
+                                        class="fa-regular fa-copy"></i></button>
+                                <button
+                                    class="px-2 py-1 text-gray-500 hover:text-red-500 hover:bg-gray-50 border-l border-gray-200"><i
+                                        class="fa-solid fa-trash"></i></button>
+                            </div>
+
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Documento <span
+                                    class="text-red-500">*</span></label>
+                            <select
+                                class="w-full text-sm border border-gray-300 rounded p-2 focus:outline-none bg-gray-50 focus:ring-1 focus:ring-blue-500">
+                                <option>Factura Electrónica</option>
+                                <option>Nota de Crédito</option>
+                                <option>Recibo por Honorarios</option>
+                            </select>
+                        </div>
+
+                        <!-- 2-Column Grid -->
+                        <div
+                            class="relative group border border-blue-400 bg-blue-50/10 p-4 -mx-4 rounded shadow-sm transition-colors cursor-pointer">
+                            <div
+                                class="absolute -top-3 left-4 bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-200 z-10">
+                                ROW 2 COLUMNS</div>
+
+                            <!-- Actively selected controls -->
+                            <div
+                                class="absolute right-2 -top-3 bg-white shadow-sm border border-gray-200 rounded flex overflow-hidden z-10">
+                                <button class="px-2 py-1 text-blue-500 hover:bg-gray-50"><i
+                                        class="fa-solid fa-gear"></i></button>
+                                <button
+                                    class="px-2 py-1 text-gray-500 hover:text-red-500 hover:bg-gray-50 border-l border-gray-200"><i
+                                        class="fa-solid fa-trash"></i></button>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mt-2">
+                                <!-- Col 1: Number Field -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Monto Total</label>
+                                    <div class="relative">
+                                        <div
+                                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 text-sm">
+                                            $</div>
+                                        <input type="number"
+                                            class="w-full text-sm border border-gray-300 rounded pl-7 pr-3 py-2 focus:outline-none bg-white font-mono"
+                                            placeholder="0.00">
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-1 font-mono">key: var_monto_total</p>
+                                </div>
+                                <!-- Col 2: Date Field -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Emisión</label>
+                                    <input type="date"
+                                        class="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none bg-white text-gray-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Textarea Field -->
+                        <div
+                            class="relative group border border-transparent hover:border-blue-300 hover:bg-blue-50/30 p-3 -mx-3 rounded transition-colors cursor-pointer">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Concepto / Glosa</label>
+                            <textarea rows="3"
+                                class="w-full text-sm border border-gray-300 rounded p-2 focus:outline-none bg-gray-50 text-gray-500"
+                                placeholder="Escriba la justificación..."></textarea>
+                        </div>
+
+                        <!-- Dropzone placeholder -->
+                        <div
+                            class="border-2 border-dashed border-indigo-200 bg-indigo-50/50 rounded-lg p-6 flex flex-col items-center justify-center text-indigo-400 mt-8 mb-4">
+                            <i class="fa-solid fa-down-long mb-2 text-xl"></i>
+                            <span class="text-sm font-medium">Arrastra componentes aquí</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Propiedades del Campo Seleccionado (Right) -->
+            <div class="w-72 bg-white border-l border-gray-200 flex flex-col z-10 overflow-y-auto">
+                <div class="p-4 border-b border-gray-200 bg-blue-50/50 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-sm text-gray-800">Propiedades del Campo</h3>
+                        <p class="text-xs text-blue-600 font-mono">NumberField</p>
+                    </div>
+                </div>
+
+                <div class="p-4 space-y-5">
+
+                    <!-- Basic Tab -->
+                    <div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Label</label>
+                                <input type="text" value="Monto Total"
+                                    class="w-full text-sm border border-gray-300 rounded p-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1 flex justify-between">
+                                    <span>Variable Key (JSON)</span>
+                                    <i class="fa-solid fa-lock text-gray-300 text-[10px]"></i>
+                                </label>
+                                <input type="text" value="var_monto_total"
+                                    class="w-full text-sm border border-gray-300 rounded p-2 focus:border-indigo-500 focus:ring-1 outline-none font-mono text-gray-500 bg-gray-50">
+                                <p class="text-[10px] text-gray-400 mt-1 leading-tight">Esta es la variable que
+                                    procesará Camunda.</p>
+                            </div>
+
+                            <!-- Validation toggles -->
+                            <div class="pt-2 border-t border-gray-100">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Validación
+                                </h4>
+
+                                <label class="flex items-center space-x-3 mb-2 cursor-pointer">
+                                    <input type="checkbox" checked
+                                        class="form-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                    <span class="text-sm font-medium text-gray-700">Requerido</span>
+                                </label>
+
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox"
+                                        class="form-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                    <span class="text-sm font-medium text-gray-700">Solo lectura</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>

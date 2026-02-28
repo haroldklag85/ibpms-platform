@@ -8,24 +8,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.Customizer;
 
 /**
- * Configuración de Spring Security.
- * – Stateless (sin sesión HTTP ni cookies de sesión).
- * – JWT Bearer Token obligatorio en todos los endpoints protegidos.
- * – Rutas públicas: /actuator/health, /api/v1/inbound/email-webhook
- * (autenticado por ClientState).
+ * Configuración de Spring Security OIDC (OAuth2 Resource Server).
+ * Delega la validación de tokens al IdP corporativo (Ej. Entra ID).
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    private final JwtAuthFilter jwtAuthFilter;
-
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
-        this.jwtAuthFilter = jwtAuthFilter;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,15 +31,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Actuator health (monitoreo sin autenticación)
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        // Webhook de M365 — autenticado por cabecera ClientState, no por JWT
+                        // Webhook de M365 autenticado por lógica propia
                         .requestMatchers(HttpMethod.POST, "/api/v1/inbound/email-webhook").permitAll()
-                        // Camunda Cockpit y APIs internas (si se exponen en el mismo server)
-                        .requestMatchers("/engine-rest/**").hasRole("ADMIN")
-                        // Todo lo demás requiere autenticación JWT
                         .anyRequest().authenticated())
 
-                // Añadir filtro JWT antes del filtro estándar de usuario/contraseña
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                // Habilitamos OAUTH2 JWT Validation delegando al Issuer-URI (Properties)
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         return http.build();
     }

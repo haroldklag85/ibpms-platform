@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iBPMS - Hub Ágil (Roadmap)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col h-screen overflow-hidden text-gray-800" x-data="{ issueModalOpen: false }">
+
+    <!-- Header -->
+    <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm shrink-0">
+        <div class="flex items-center">
+            <a href="project_manager.html"
+                class="mr-4 text-gray-500 hover:text-blue-600 transition-colors flex items-center text-sm font-medium">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Volver a Proyectos
+            </a>
+            <div class="h-6 border-l border-gray-300 mx-2"></div>
+            <h1 class="text-lg font-bold text-gray-900 inline-flex items-center">
+                Hub Ágil / Backlog
+                <span class="ml-2 px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-bold rounded">P. Cliente
+                    Alpha</span>
+            </h1>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div class="flex rounded-md shadow-sm" role="group">
+                <button type="button"
+                    class="px-4 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-l-lg hover:bg-blue-100 z-10 focus:ring-2 focus:ring-blue-700">
+                    <i class="fa-solid fa-list-ul mr-1"></i> Backlog
+                </button>
+                <button type="button"
+                    class="px-4 py-1.5 text-sm font-medium text-gray-900 bg-white border-t border-b border-r border-gray-200 hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-blue-700">
+                    <i class="fa-solid fa-calendar-week mr-1"></i> Active Sprint
+                </button>
+            </div>
+            <button
+                class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                @click="issueModalOpen = true">
+                Crear Issue
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex overflow-hidden">
+
+        <!-- Backlog List -->
+        <div class="flex-1 overflow-y-auto p-8 bg-white max-w-5xl mx-auto w-full">
+
+            <!-- Sprint Activo Banner -->
+            <div class="mb-8 border border-blue-200 rounded-xl overflow-hidden shadow-sm">
+                <div class="bg-blue-50 px-4 py-3 border-b border-blue-100 flex justify-between items-center">
+                    <div class="flex items-center">
+                        <h3 class="font-bold text-blue-900 text-sm"><i
+                                class="fa-solid fa-person-running mr-2 text-blue-600"></i> Sprint 4 - Integración API
+                        </h3>
+                        <span class="ml-3 text-xs text-blue-600 font-medium">10 Oct - 24 Oct</span>
+                    </div>
+                    <div class="flex space-x-2 text-xs">
+                        <span class="px-2 py-1 bg-gray-200 text-gray-700 rounded-full font-bold">12 Issues</span>
+                        <span class="px-2 py-1 bg-blue-600 text-white rounded-full font-bold">24 pts</span>
+                        <button
+                            class="ml-2 text-gray-500 hover:text-blue-600 border border-gray-300 rounded px-2 py-0.5 bg-white">Completar
+                            Sprint</button>
+                    </div>
+                </div>
+
+                <div class="divide-y divide-gray-100 bg-white">
+                    <!-- Issue 1 -->
+                    <div class="px-4 py-3 flex items-center hover:bg-gray-50 cursor-pointer"
+                        @click="issueModalOpen = true">
+                        <i class="fa-solid fa-bookmark text-green-500 mr-3 text-sm" title="Story"></i>
+                        <span class="text-xs font-mono text-gray-500 mr-3 w-16">ALPH-42</span>
+                        <span
+                            class="text-sm font-medium text-gray-900 flex-1 hover:text-blue-600 hover:underline truncate">Como
+                            usuario, quiero ver el saldo en tiempo real antes de pagar</span>
+
+                        <div class="flex items-center space-x-3 ml-4 shrink-0">
+                            <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded">IN
+                                PROGRESS</span>
+                            <div class="w-6 h-6 rounded-full bg-gray-200 text-xs font-semibold flex items-center justify-center text-gray-600"
+                                title="Story Points">5</div>
+                            <img class="h-6 w-6 rounded-full" src="https://ui-avatars.com/api/?name=C&background=random"
+                                alt="" />
+                        </div>
+                    </div>
+                    <!-- Issue 2 -->
+                    <div class="px-4 py-3 flex items-center hover:bg-gray-50 cursor-pointer">
+                        <i class="fa-solid fa-bug text-red-500 mr-3 text-sm" title="Bug"></i>
+                        <span class="text-xs font-mono text-gray-500 mr-3 w-16">ALPH-48</span>
+                        <span
+                            class="text-sm font-medium text-gray-900 flex-1 hover:text-blue-600 hover:underline truncate line-through">Error
+                            CORS al consumir endpoint de validación (Producción)</span>
+
+                        <div class="flex items-center space-x-3 ml-4 shrink-0">
+                            <span
+                                class="px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded">DONE</span>
+                            <div class="w-6 h-6 rounded-full bg-gray-200 text-xs font-semibold flex items-center justify-center text-gray-600"
+                                title="Story Points">2</div>
+                            <img class="h-6 w-6 rounded-full" src="https://ui-avatars.com/api/?name=H&background=random"
+                                alt="" />
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-2 text-center border-t border-gray-100">
+                    <button class="text-xs text-gray-500 hover:text-blue-600 font-medium">+ Crear issue</button>
+                </div>
+            </div>
+
+            <!-- Backlog Banner -->
+            <div class="mt-8 border border-dashed border-gray-300 rounded-xl overflow-hidden">
+                <div
+                    class="bg-transparent px-4 py-3 border-b border-dashed border-gray-300 flex justify-between items-center">
+                    <div class="flex items-center">
+                        <h3 class="font-bold text-gray-700 text-sm"><i
+                                class="fa-solid fa-layer-group mr-2 text-gray-400"></i> Backlog General</h3>
+                    </div>
+                    <div class="flex space-x-2 text-xs">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-bold">140 Issues</span>
+                        <button
+                            class="ml-2 text-gray-500 hover:text-blue-600 border border-gray-300 rounded px-2 py-0.5 bg-white">Crear
+                            Sprint</button>
+                    </div>
+                </div>
+
+                <div class="divide-y divide-gray-100 bg-white/50">
+                    <!-- Issue -->
+                    <div class="px-4 py-2 flex items-center hover:bg-white cursor-pointer opacity-75 hover:opacity-100">
+                        <i class="fa-solid fa-list-check text-blue-500 mr-3 text-sm" title="Task"></i>
+                        <span class="text-xs font-mono text-gray-500 mr-3 w-16">ALPH-89</span>
+                        <span
+                            class="text-sm text-gray-700 flex-1 hover:text-blue-600 hover:underline truncate">Configurar
+                            webhook secundario para RPA fallback</span>
+                        <div class="flex items-center space-x-3 ml-4 shrink-0">
+                            <div
+                                class="w-6 h-6 rounded-full bg-gray-100 text-xs font-semibold flex items-center justify-center text-gray-400 border border-dashed border-gray-300">
+                                -</div>
+                            <div
+                                class="w-6 h-6 rounded-full bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-[10px]">
+                                <i class="fa-solid fa-user"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal Drawer (Right Side) -->
+    <div x-show="issueModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-hidden"
+        aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+        <div class="absolute inset-0 overflow-hidden">
+            <!-- Background overlay -->
+            <div x-show="issueModalOpen" x-transition.opacity
+                class="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="issueModalOpen = false">
+            </div>
+
+            <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+                <!-- Drawer panel -->
+                <div x-show="issueModalOpen"
+                    x-transition:enter="transform transition ease-in-out duration-300 sm:duration-500"
+                    x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+                    x-transition:leave="transform transition ease-in-out duration-300 sm:duration-500"
+                    x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
+                    class="pointer-events-auto w-screen max-w-2xl">
+
+                    <div class="flex h-full flex-col bg-white shadow-xl">
+                        <!-- Drawer Content -->
+                        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                            <div class="flex items-center text-sm font-mono text-gray-500">
+                                <i class="fa-solid fa-bookmark text-green-500 mr-2 text-lg"></i> ALPH-42
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="text-gray-400 hover:text-gray-500 px-2"><i
+                                        class="fa-regular fa-copy"></i></button>
+                                <button @click="issueModalOpen = false"
+                                    class="text-gray-400 hover:text-gray-500 px-2"><i
+                                        class="fa-solid fa-xmark text-lg"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto p-6">
+                            <!-- Title editable -->
+                            <textarea
+                                class="w-full text-2xl font-bold text-gray-900 border-transparent focus:border-blue-400 focus:ring-0 resize-none rounded bg-transparent hover:bg-gray-50 p-2 -ml-2 mb-4"
+                                rows="2">Como usuario, quiero ver el saldo en tiempo real antes de pagar</textarea>
+
+                            <!-- Action Bar -->
+                            <div class="flex space-x-2 mb-8">
+                                <button
+                                    class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded font-medium flex items-center transition-colors">
+                                    <i class="fa-solid fa-paperclip mr-1"></i> Adjuntar
+                                </button>
+                                <button
+                                    class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded font-medium flex items-center transition-colors">
+                                    <i class="fa-solid fa-link mr-1"></i> Vincular Caso
+                                </button>
+                                <button
+                                    class="text-xs bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded font-medium flex items-center transition-colors">
+                                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generar Subtareas IA
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-6">
+                                <!-- Main Column (Details) -->
+                                <div class="col-span-2 space-y-6">
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-700 mb-2">Descripción</h4>
+                                        <div
+                                            class="border border-gray-200 rounded-lg p-3 min-h-[150px] text-sm text-gray-600 bg-gray-50 cursor-text hover:bg-white transition-colors prose">
+                                            <p><strong>Contexto:</strong> Durante el checkout, el usuario no sabe si
+                                                tiene crédito suficiente.</p>
+                                            <p><strong>Criterios de Aceptación:</strong></p>
+                                            <ul class="list-disc pl-5">
+                                                <li>Debe consumir el API <code>/api/v1/credits/balance</code>.</li>
+                                                <li>Si el endpoint falla o da timeout (>2s), mostrar mensaje de grilla
+                                                    normal.</li>
+                                                <li>Aplicar spinner de carga en el botón durante el fetch.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-700 mb-2">Comentarios</h4>
+                                        <div class="flex space-x-3 mb-4">
+                                            <div
+                                                class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-1">
+                                                H</div>
+                                            <textarea
+                                                class="flex-1 text-sm border border-gray-300 rounded-lg p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none h-16"
+                                                placeholder="Añade un comentario... (Menciona con @)"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Side Column (Metadata) -->
+                                <div class="space-y-4 pt-1 border-t md:border-t-0 md:border-l border-gray-200 md:pl-4">
+
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Estado</label>
+                                        <select
+                                            class="w-full text-sm bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded p-1.5 focus:outline-none">
+                                            <option>TO DO</option>
+                                            <option selected>IN PROGRESS</option>
+                                            <option>IN REVIEW</option>
+                                            <option>DONE</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Asignado
+                                            a</label>
+                                        <div
+                                            class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 -ml-1 rounded">
+                                            <img class="h-6 w-6 rounded-full"
+                                                src="https://ui-avatars.com/api/?name=Carlos&background=random"
+                                                alt="" />
+                                            <span class="text-sm text-gray-700">Carlos Dev</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Story
+                                            Points</label>
+                                        <input type="number" value="5"
+                                            class="w-16 text-sm border border-gray-300 rounded p-1 text-center bg-gray-50 font-semibold focus:outline-none">
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Sprint</label>
+                                        <span
+                                            class="text-sm text-blue-600 hover:underline cursor-pointer font-medium">Sprint
+                                            4 - Integración API</span>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

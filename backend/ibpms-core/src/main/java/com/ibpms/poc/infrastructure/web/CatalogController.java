@@ -14,34 +14,23 @@ import java.util.Map;
  * Endpoint requerido por la UI dinámica (Server-Driven UI) para llenar combos.
  * En V1 PoC responde datos estáticos en memoria (dummy data).
  */
+import com.ibpms.poc.application.port.out.CrmFederationPort;
+
 @RestController
-@RequestMapping("/catalogs")
+@RequestMapping("/api/v1/catalogs")
 public class CatalogController {
 
-    @GetMapping("/{catalogId}")
-    public ResponseEntity<List<Map<String, String>>> getCatalogItems(@PathVariable String catalogId) {
+    private final CrmFederationPort crmPort;
 
-        switch (catalogId.toLowerCase()) {
-            case "countries":
-                return ResponseEntity.ok(List.of(
-                        Map.of("code", "CO", "label", "Colombia"),
-                        Map.of("code", "MX", "label", "México"),
-                        Map.of("code", "AR", "label", "Argentina")));
+    public CatalogController(CrmFederationPort crmPort) {
+        this.crmPort = crmPort;
+    }
 
-            case "customer_types":
-                return ResponseEntity.ok(List.of(
-                        Map.of("code", "FISICA", "label", "Persona Física"),
-                        Map.of("code", "JURIDICA", "label", "Persona Jurídica")));
-
-            case "document_types":
-                return ResponseEntity.ok(List.of(
-                        Map.of("code", "CC", "label", "Cédula de Ciudadanía"),
-                        Map.of("code", "CE", "label", "Cédula de Extranjería"),
-                        Map.of("code", "PA", "label", "Pasaporte")));
-
-            default:
-                // Retornar vacío si no existe, como fallback amigable
-                return ResponseEntity.ok(List.of());
-        }
+    @GetMapping(value = "/{catalogId}", produces = "application/json")
+    public ResponseEntity<String> getCatalog(@PathVariable String catalogId) {
+        // Enrutado abstracto: El Facade delega al Adaptador.
+        // Si el CRM cae, Resonance4J abrirá el circuito y devolverá de la BD local
+        String catalogData = crmPort.fetchCatalogFromCrm(catalogId);
+        return ResponseEntity.ok(catalogData);
     }
 }

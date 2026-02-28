@@ -35,17 +35,20 @@ Desarrollar una plataforma integral de gestión de procesos y proyectos que perm
 ## 4. Requerimientos Core del Dominio
 
 *   **Gestión de Procesos y Proyectos (CRUD & Permisos):** Permitir la creación, edición, eliminación y visualización de procesos (secuenciales, paralelos, Kanban) y proyectos. Todo el ciclo de vida incluye la asignación de permisos granulares a otros usuarios para interactuar con la configuración y metadata asociada.
+*   **Gestión de Ciclo de Vida BPMN (Versiones y Despliegues):** El sistema permite importar/crear modelos BPMN, versionarlos sistemáticamente (v1.0, v1.1, v2.0) y publicar/despublicar versiones de instancias activas sin afectar los flujos ya en ejecución.
+*   **Plantillas Reutilizables (Templates):** Capacidad de guardar y reutilizar componentes operativos como plantillas de flujos, fragmentos DMN, esquemas de formularios dinámicos, configuraciones de SLA, plantillas de notificaciones y layouts de dashboards.
+*   **Delegación y Sub-Tareas Ad-hoc:** Permite a un "Assignee" (Usuario asignado) crear sub-tareas dinámicas y asignarlas a terceros, las cuales deben resolverse para desbloquear o completar la Actividad/Tarea padre original. Incluye opciones de reasignación fluida.
 *   **Medición de Desempeño:** Capacidad funcional, como parte del modelo base, para medir el desempeño y la eficiencia en la ejecución de actividades, equipos y flujos.
 *   **IA de Metadatos Operativos:** Creación automática (mediante IA) de metadatos asociados a las partes y objetos del proceso, permitiendo enriquecer la información y facilitar la gestión interna de la plataforma.
-*   **Formularios Inteligentes (Data to JSON):** Un *Form Engine* que convierte inputs humanos en estructurados (JSON) para evaluar reglas.
-*   **Experiencia (Workbenches):** Bandeja unificada con filtros nativos por Estado/Prioridad/Tiempo, consulta de adjuntos e historial de decisión.
-*   **Alertas y SLAs:** Notificaciones proactivas sobre eventos del ciclo de vida (ej. fechas de finalización, inputs de colegas) y alertas corporativas exclusivas (Correo electrónico y Notificaciones In-app).
-*   **Integración O365 (Bidireccional):** Plugin de Outlook para convertir correos en expedientes y responder desde la plataforma.
-*   **Generador Documental Jurídico (SGDEA):** Inyectar el JSON en plantillas para generar contratos PDF inmutables con validez de *Record*.
-*   **Seguridad (ABAC):** RBAC avanzado, SSO con IAM y Bitácora de Auditoría inmutable.
-*   **Analítica Operativa (BAM - V1):** Dashboards de "Process Health" para visualizar cuellos de botella en vuelo.
-*   **Consultor Digital AI & Mejora Continua (V2):** La plataforma no solo orquesta, sino que ingiere el histórico de operaciones a través de Machine Learning para: (1) Diagnosticar fricciones, (2) Proponer proactivamente rediseños de procesos con métricas objetivas de eficiencia, y (3) Evolucionar la automatización basado en datos reales (Continuous Learning Profile), generando valor de consultoría sostenida.
-*   **Auditor Digital AI (ISO 9001 Compliance - V2):** Módulo tipo Plug-in que audita de forma continua procesos inter-sistema y evalúa operaciones manuales complementarias. Identifica desviaciones métricas, riesgos operativos y oportunidades normativa, autogenerando "hallazgos y recomendaciones accionables" sin intervención humana, asegurando la calidad y el cumplimiento normativo (Compliance-as-a-Service).
+*   **IDE Pro-Code de Formularios (Vue 3/Zod):** Un *Form Engine* web embebido (Low-Code/Pro-Code con Mónaco Editor) que diseña visualmente pero compila archivos Vue 3 nativos y esquemas Zod en vez de JSON. Define lógicas avanzadas usando el patrón "iForm Maestro".
+*   **Gestión Documental Avanzada (Archivos & Metadatos):** Permite adjuntar documentos directamente al "Caso" (Process Instance) o a la "Tarea" específica, aplicando versionado, clasificación categórica (metadata) e inmutabilidad (Hash).
+*   **Catálogo Federado de Servicios (CRM Sync):** Sincronización dinámica de catálogos desde el CRM.
+*   **Experiencia (Workbenches):** Bandeja unificada con filtros.
+*   **Generador Documental Jurídico (SGDEA):** Inyectar JSON en PDF.
+*   **Seguridad, Auditoría Estricta y Trazabilidad (Bitácora):** Registra explícitamente "Quién hizo qué, cuándo (Timestamp exacto), el estado anterior/nuevo (Before/After), qué reglas DMN se aplicaron y qué decisión humana se tomó". Permite la exportación tabular asíncrona de la auditoría para entes de control interno.
+*   **Analítica Operativa (BAM - V1):** Dashboards de "Process Health".
+*   **Consultor Digital AI & Mejora Continua (V2):** ML para diagnosticar fricciones.
+*   **Auditor Digital AI (ISO 9001 Compliance - V2):** Plug-in que audita automáticamente.
 
 ## 5. Backlog Management (Épicas V1)
 
@@ -53,10 +56,28 @@ Desarrollar una plataforma integral de gestión de procesos y proyectos que perm
 *   **US 1.1:** *Como usuario*, quiero ver una lista consolidada de mis tareas y proyectos ordenados por SLA.
 *   **US 1.2:** *Como sistema (ABAC)*, debo filtrar las tareas basándome en los permisos del usuario final.
 
-### Épica 2: Orquestación, Reglas e IA
-*   **US 2.1:** *Como Administrador*, quiero subir versiones de modelos BPMN/DMN desde una interfaz web sin despliegues técnicos.
-*   **US 2.2:** *Como usuario*, quiero escribir en lenguaje natural una nueva política de riesgos y que la IA la traduzca a DMN (IA Natural Flow).
+### Épica 2: Generación de Formularios Ide-Based (Vue 3 & Zod)
+*   **US 2.1:** *Como Administrador/Desarrollador*, quiero elegir si voy a diseñar un "Formulario Simple" o un "iForm Maestro" al iniciar el Canvas.
+*   **US 2.2:** *Como Desarrollador*, quiero una pestaña "Código" al lado de la visual que me muestre en tiempo real el código Vue 3 y Zod generado, permitiendo bindings con Swagger.
 
-### Épica 3: Captura Inbound y Generación Documental
-*   **US 3.1:** *Como usuario*, quiero usar un Plugin de O365 para convertir un correo entrante en un proceso formal.
-*   **US 3.2:** *Como sistema*, al aprobar un expediente, quiero generar un PDF contractual y enviarlo por correo directamente desde el WorkBench.
+### Épica 3: Captura Inbound AI y Generación Documental
+*   **US 3.1:** *Como Gestor de Casos (Human-in-the-Loop)*, quiero que un Asistente Virtual clasifique los correos corporativos, identifique al cliente vía CRM y me proponga un borrador de respuesta bilingüe.
+*   **US 3.2:** *Como Auditor*, quiero que las decisiones sobre las sugerencias de la IA mantengan cadena de custodia intacta (eDiscovery) y provean métricas de eficiencia.
+*   **US 3.3:** *Como sistema*, al aprobar un expediente, quiero generar un PDF contractual y enviarlo por correo directamente desde el WorkBench.
+
+### Épica 4: Modelado BPMN, Proyectos y Catálogo Federado
+*   **US 4.1:** *Como Arquitecto*, quiero un lienzo visual integrado (bpmn-js) para dibujar, importar y desplegar procesos sin compilar código Java.
+*   **US 4.2:** *Como Administrador*, quiero configurar un mapa JSON sin tocar código que vincule los campos del CRM con las variables operativas de mi proceso BPMN.
+*   **US 4.3:** *Como Usuario Final/Cliente*, quiero ver el catálogo disponible incluso si el CRM está caído temporalmente (Modo Degradado).
+*   **US 4.4:** *Como Arquitecto Modelador*, quiero un "Copiloto IA Tutor" empotrado en el lienzo BPMN que audite en tiempo real mi diseño, me alerte de antipatrones BPMN 2.0 y sugiera mejoras basadas en ISO 9001.
+
+### Épica 5: Service Delivery Intake Inteligente y Portal B2B
+*   **US 5.1:** *Como Operador*, quiero enviar correos desde el iBPMS que "abran" la puerta al cliente pero *sin* instanciar un proceso, sino creando una tarea controlada ("Plan A") para evitar instancias BPMN basura.
+*   **US 5.2:** *Como Administrador*, quiero tener un botón global protegido por rol ("Plan B") para crear Servicios Operativos manualmente asociando un cliente y una plantilla.
+*   **US 5.3:** *Como Ejecutivo de Cuenta Interno*, quiero una Vista 360 (Card de Cliente) que me permita auditar todas las actividades pendientes consolidadas por servicio y etapa para responder dudas del cliente.
+*   **US 5.4:** *Como Cliente Externo (B2B/B2C)*, quiero un Portal Web seguro para auto-consultar el estado (Táctico) de mis solicitudes activas y descargar el histórico finalizado (Estratégico).
+
+### Épica 6: Ejecución, Reglas (DMN) e IA Analítica
+*   **US 6.1:** *Como usuario*, quiero que el motor Camunda evalúe reglas DMN automáticamente (ej. derivar a VPE o auto-aprobar) según el payload del iForm maestro.
+*   **US 6.2:** *Como usuario de negocio sin nociones de programación*, quiero escribir en lenguaje natural qué decisión quiero, y que la plataforma cree una tabla DMN usando IA.
+*   **US 6.3:** *Como Analista*, quiero ver el Historial Causal (Audit Trail visual de Camunda) de por qué se tomó una decisión (Qué regla exacta hizo match).

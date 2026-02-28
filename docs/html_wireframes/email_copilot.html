@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iBPMS - Detalle de Correo con IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body class="bg-gray-100 flex flex-col h-screen overflow-hidden text-gray-800" x-data="{ showCopilot: true }">
+
+    <!-- Top Header -->
+    <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm shrink-0">
+        <div class="flex items-center">
+            <a href="inbox_advanced.html"
+                class="mr-4 text-gray-500 hover:text-blue-600 transition-colors flex items-center text-sm font-medium">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Volver a Inbox Avanzado
+            </a>
+            <div class="h-6 border-l border-gray-300 mx-2"></div>
+            <h1 class="text-lg font-bold text-gray-900 ml-2">Project Update & Next Steps</h1>
+            <span class="ml-4 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                De: John Doe (Client Corp)
+            </span>
+        </div>
+        <div class="flex items-center space-x-3 text-sm">
+            <button @click="showCopilot = !showCopilot"
+                class="flex items-center space-x-2 px-3 py-1.5 rounded-lg border font-medium transition-colors"
+                :class="showCopilot ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'">
+                <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i>
+                <span x-text="showCopilot ? 'Ocultar Copiloto' : 'Activar Copiloto'"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main View -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+
+        <!-- Email Content (Top Panel) -->
+        <div class="flex-1 overflow-y-auto p-6 bg-white" :class="showCopilot ? 'pb-4' : 'pb-8'">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                    <div class="flex items-center">
+                        <div
+                            class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold mr-3">
+                            JD</div>
+                        <div>
+                            <p class="font-bold text-gray-900">John Doe <span
+                                    class="text-sm font-normal text-gray-500">&lt;john.doe@clientcorp.com&gt;</span></p>
+                            <p class="text-xs text-gray-500">Para: equipo.legal@empresa.com • Hoy, 10:30 AM</p>
+                        </div>
+                    </div>
+                    <div class="text-gray-400 space-x-2">
+                        <button class="hover:text-gray-600"><i class="fa-solid fa-reply"></i></button>
+                        <button class="hover:text-gray-600"><i class="fa-solid fa-ellipsis-vertical px-2"></i></button>
+                    </div>
+                </div>
+
+                <div class="prose max-w-none text-gray-700 text-sm leading-relaxed mb-8">
+                    <p>Hi team,</p>
+                    <p>Following up on our discussion yesterday regarding the new contract clauses.</p>
+                    <p>I've attached the finalized financial report for Q3 along with the updated MSA draft. Our legal
+                        team has already reviewed the redlines from your side.</p>
+                    <p>Please review it and provide your final approval by EOD Friday, October 28th, 2024, so we can
+                        proceed with the signing next week.</p>
+                    <p>Best regards,<br>John</p>
+                </div>
+
+                <div class="flex space-x-3">
+                    <div
+                        class="border border-gray-200 rounded-lg p-3 flex items-center bg-gray-50 w-64 hover:bg-gray-100 cursor-pointer transition-colors">
+                        <div class="bg-red-100 text-red-600 p-2 rounded mr-3">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <div class="truncate">
+                            <p class="text-sm font-bold text-gray-800 truncate">Q3_Financial_Report.pdf</p>
+                            <p class="text-xs text-gray-500">2.4 MB</p>
+                        </div>
+                    </div>
+                    <div
+                        class="border border-gray-200 rounded-lg p-3 flex items-center bg-gray-50 w-64 hover:bg-gray-100 cursor-pointer transition-colors">
+                        <div class="bg-blue-100 text-blue-600 p-2 rounded mr-3">
+                            <i class="fa-solid fa-file-word"></i>
+                        </div>
+                        <div class="truncate">
+                            <p class="text-sm font-bold text-gray-800 truncate">MSA_Draft_v2.docx</p>
+                            <p class="text-xs text-gray-500">1.1 MB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Copilot Panel (Bottom, Collapsible) -->
+        <div x-show="showCopilot" x-transition:enter="transition ease-out duration-300 transform"
+            x-transition:enter-start="translate-y-full opacity-0" x-transition:enter-end="translate-y-0 opacity-100"
+            x-transition:leave="transition ease-in duration-200 transform"
+            x-transition:leave-start="translate-y-0 opacity-100" x-transition:leave-end="translate-y-full opacity-0"
+            class="h-96 shrink-0 bg-slate-50 border-t-2 border-indigo-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex flex-col z-20">
+
+            <div class="px-6 py-2 bg-indigo-900 text-white flex justify-between items-center text-sm font-medium">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-wand-magic-sparkles text-indigo-300 mr-2"></i> Sugerencias Inteligentes de IA
+                    (Copiloto)
+                </div>
+                <button @click="showCopilot = false" class="text-indigo-300 hover:text-white"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Tarjetas de Extracción Semántica -->
+                <div>
+                    <h4 class="text-xs font-bold text-indigo-800 uppercase tracking-wider mb-3">Extracción de Metadatos
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                        <!-- Card 1 -->
+                        <div class="bg-white border border-indigo-100 rounded-lg p-3 shadow-sm relative group"
+                            x-data="{ accepted: false }">
+                            <p class="text-xs text-gray-500 mb-1">Clasificación</p>
+                            <p class="text-sm font-bold text-gray-900" :class="accepted ? 'text-green-600' : ''">Informe
+                                Financiero / Legal</p>
+                            <div class="mt-3 flex space-x-2" x-show="!accepted">
+                                <button @click="accepted = true"
+                                    class="flex-1 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 py-1 rounded border border-indigo-200 transition-colors"><i
+                                        class="fa-solid fa-check mr-1"></i> Aceptar</button>
+                                <button
+                                    class="flex-1 text-xs bg-gray-50 text-gray-600 hover:bg-gray-100 py-1 rounded border border-gray-200 transition-colors"><i
+                                        class="fa-solid fa-xmark mr-1"></i> Rechazar</button>
+                            </div>
+                            <div x-show="accepted" class="mt-2 text-xs text-green-600 font-medium"><i
+                                    class="fa-solid fa-circle-check"></i> Metadato Guardado</div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="bg-white border border-indigo-100 rounded-lg p-3 shadow-sm"
+                            x-data="{ accepted: false }">
+                            <p class="text-xs text-gray-500 mb-1">Cliente Asociado</p>
+                            <p class="text-sm font-bold text-gray-900" :class="accepted ? 'text-green-600' : ''">Client
+                                Corp (CRM ID: 9481)</p>
+                            <div class="mt-3 flex space-x-2" x-show="!accepted">
+                                <button @click="accepted = true"
+                                    class="flex-1 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 py-1 rounded border border-indigo-200 transition-colors"><i
+                                        class="fa-solid fa-check mr-1"></i> Aceptar</button>
+                                <button
+                                    class="flex-1 text-xs bg-gray-50 text-gray-600 hover:bg-gray-100 py-1 rounded border border-gray-200 transition-colors"><i
+                                        class="fa-solid fa-xmark mr-1"></i> Rechazar</button>
+                            </div>
+                            <div x-show="accepted" class="mt-2 text-xs text-green-600 font-medium"><i
+                                    class="fa-solid fa-circle-check"></i> Vinculado al Cliente</div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="bg-white border border-indigo-100 rounded-lg p-3 shadow-sm"
+                            x-data="{ accepted: false }">
+                            <p class="text-xs text-gray-500 mb-1">Fecha Límite (Deadline)</p>
+                            <p class="text-sm font-bold text-gray-900" :class="accepted ? 'text-green-600' : ''"><i
+                                    class="fa-regular fa-calendar-check text-red-500 mr-1"></i> 28 Octubre, 2024</p>
+                            <div class="mt-3 flex space-x-2" x-show="!accepted">
+                                <button @click="accepted = true"
+                                    class="flex-1 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 py-1 rounded border border-indigo-200 transition-colors"><i
+                                        class="fa-solid fa-check mr-1"></i> Aceptar</button>
+                                <button
+                                    class="flex-1 text-xs bg-gray-50 text-gray-600 hover:bg-gray-100 py-1 rounded border border-gray-200 transition-colors"><i
+                                        class="fa-solid fa-xmark mr-1"></i> Rechazar</button>
+                            </div>
+                            <div x-show="accepted" class="mt-2 text-xs text-green-600 font-medium"><i
+                                    class="fa-solid fa-circle-check"></i> Fecha Guardada</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Tareas Sugeridas -->
+                <div class="flex space-x-6">
+
+                    <!-- Integracion BPMN -->
+                    <div class="flex-1 bg-white border border-indigo-200 rounded-xl overflow-hidden shadow-sm flex flex-col"
+                        x-data="{ done: false }">
+                        <div class="bg-indigo-50 p-3 border-b border-indigo-100 flex items-center justify-between">
+                            <span class="text-xs font-bold text-indigo-800 uppercase tracking-wider"><i
+                                    class="fa-solid fa-diagram-project mr-1"></i> Integración BPMN / Workflow</span>
+                        </div>
+                        <div class="p-4 flex-1">
+                            <p class="text-sm text-gray-700 font-medium mb-1">Crear Tarea: "Revisión informe financiero
+                                Q3 y MSA"</p>
+                            <p class="text-xs text-gray-500 mb-3">Asignar a: Grupo Legal • Vence: 28 Oct 2024</p>
+
+                            <div class="flex justify-between items-center mt-auto" x-show="!done">
+                                <button class="text-xs text-gray-500 hover:text-red-500 font-medium">Descartar</button>
+                                <button @click="done = true"
+                                    class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                    <i class="fa-solid fa-rocket mr-1"></i> Crear Tarea Operativa
+                                </button>
+                            </div>
+                            <div x-show="done"
+                                class="mt-4 flex items-center text-sm text-green-600 bg-green-50 p-2 rounded">
+                                <i class="fa-solid fa-circle-check mr-2"></i> Tarea enviada al Inbox del equipo
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Borrador de Respuesta -->
+                    <div class="flex-1 bg-white border border-indigo-200 rounded-xl overflow-hidden shadow-sm flex flex-col"
+                        x-data="{ done: false }">
+                        <div class="bg-indigo-50 p-3 border-b border-indigo-100 flex items-center justify-between">
+                            <span class="text-xs font-bold text-indigo-800 uppercase tracking-wider"><i
+                                    class="fa-solid fa-envelope-open-text mr-1"></i> Borrador M365 (Respuesta
+                                Bilingüe)</span>
+                        </div>
+                        <div class="p-4 flex-1">
+                            <div
+                                class="bg-gray-50 border border-gray-200 rounded p-3 text-xs text-gray-600 italic mb-3">
+                                "Hello John, Thank you for the update. We have received the financial report for Q3 and
+                                the MSA draft. Our team will review it and get back to you by the deadline this
+                                Friday..."
+                            </div>
+
+                            <div class="flex justify-between items-center mt-auto" x-show="!done">
+                                <button class="text-xs text-gray-500 hover:text-red-500 font-medium">Descargar</button>
+                                <button @click="done = true"
+                                    class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                    <i class="fa-regular fa-paper-plane mr-1"></i> Insertar y Abrir Modal
+                                </button>
+                            </div>
+                            <div x-show="done"
+                                class="mt-4 flex items-center text-sm text-green-600 bg-green-50 p-2 rounded">
+                                <i class="fa-solid fa-circle-check mr-2"></i> Borrador inyectado en O365
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+</body>
+
+</html>

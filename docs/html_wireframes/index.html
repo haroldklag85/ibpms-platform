@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iBPMS - Service Catalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden text-gray-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col h-full border-r border-slate-700">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <i class="fa-solid fa-layer-group text-blue-500 text-2xl mr-3"></i>
+            <span class="text-xl font-bold tracking-wide">iBPMS</span>
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+            <ul class="space-y-1">
+                <li><a href="index.html" class="flex items-center px-6 py-2.5 bg-blue-600/20 text-blue-400 border-r-4 border-blue-500 font-medium"><i class="fa-solid fa-house w-6"></i> Inicio</a></li>
+                <li><a href="inbox.html" class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><div class="relative"><i class="fa-solid fa-inbox w-6"></i><span class="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">12</span></div> Inbox</a></li>
+                <li><a href="kanban.html" class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i class="fa-solid fa-folder-open w-6"></i> Proyectos</a></li>
+                <li><a href="dashboard.html" class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i class="fa-solid fa-chart-pie w-6"></i> Dashboards</a></li>
+                <li class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4">Admin</li>
+                <li><a href="process_designer.html" class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i class="fa-solid fa-diagram-project w-6"></i> Diseño BPMN</a></li>
+                <li><a href="form_builder.html" class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i class="fa-solid fa-file-pen w-6"></i> Formularios</a></li>
+                <li><a href="dmn_copilot.html" class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i class="fa-solid fa-brain w-6"></i> Reglas IA</a></li>
+                <li><a href="integrations.html" class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i class="fa-solid fa-plug w-6"></i> Integración</a></li>
+                <li><a href="rbac.html" class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i class="fa-solid fa-shield-halved w-6"></i> Seguridad</a></li>
+                <li><a href="dev_portal.html" class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i class="fa-solid fa-box-open w-6"></i> Extensión</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-full relative">
+        <!-- Top Navbar -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-10">
+            <div class="flex-1 flex max-w-2xl">
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" class="w-full bg-gray-100 border-transparent rounded-lg pl-10 pr-4 py-2 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none" placeholder="Buscar procesos, políticas, casos...">
+                </div>
+            </div>
+            <div class="flex items-center space-x-6 ml-6">
+                <button class="relative text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <span class="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-white text-[9px] font-bold items-center justify-center border-2 border-white">3</span>
+                    </span>
+                </button>
+                <div class="flex items-center cursor-pointer">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">H</div>
+                    <span class="ml-2 text-sm font-medium text-gray-700 hidden md:block">Harolt</span>
+                    <i class="fa-solid fa-chevron-down text-xs ml-2 text-gray-400"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Page Area -->
+        <main class="flex-1 overflow-y-auto p-8 bg-gray-50">
+            
+            <div class="mb-8 flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Portal de Servicios</h1>
+                    <p class="text-gray-500 mt-1">👋 Buenos días, Harolt. ¿Qué necesitas iniciar hoy?</p>
+                </div>
+                <div class="flex space-x-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200 transition-colors">
+                        ⭐ Mis Frecuentes: 🏖️ Vacaciones
+                    </span>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 transition-colors">
+                        ⭐ 🛒 Req. Compra
+                    </span>
+                </div>
+            </div>
+
+            <!-- Category Section -->
+            <div class="mb-10">
+                <h2 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">RECURSOS HUMANOS</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    
+                    <!-- Tile 1 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-300 transition-all group flex flex-col h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center text-orange-500 text-2xl">
+                                🏖️
+                            </div>
+                            <button class="text-gray-300 hover:text-yellow-400 transition-colors"><i class="fa-solid fa-star"></i></button>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">Vacaciones</h3>
+                        <p class="text-gray-500 text-sm mt-2 flex-1">Solicitar días de descanso legales. Requiere aprobación de jefe directo.</p>
+                        <button onclick="startProcess('Vacaciones')" class="mt-6 w-full py-2 bg-gray-50 hover:bg-blue-50 text-blue-600 font-medium text-sm rounded-lg border border-gray-200 hover:border-blue-200 transition-colors flex items-center justify-center">
+                            <i class="fa-solid fa-rocket mr-2"></i> INICIAR
+                        </button>
+                    </div>
+
+                    <!-- Tile 2 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-300 transition-all group flex flex-col h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-500 text-2xl">
+                                🤝
+                            </div>
+                            <button class="text-gray-300 hover:text-yellow-400 transition-colors"><i class="fa-regular fa-star"></i></button>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">Onboarding</h3>
+                        <p class="text-gray-500 text-sm mt-2 flex-1">Ingreso de nuevo empleado. Proceso multi-departamental (IT, HR, Facilities).</p>
+                        <button onclick="startProcess('Onboarding')" class="mt-6 w-full py-2 bg-gray-50 hover:bg-blue-50 text-blue-600 font-medium text-sm rounded-lg border border-gray-200 hover:border-blue-200 transition-colors flex items-center justify-center">
+                            <i class="fa-solid fa-rocket mr-2"></i> INICIAR
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Category Section -->
+            <div class="mb-10">
+                <h2 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">COMPRAS Y LEGAL</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    
+                    <!-- Tile 3 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-300 transition-all group flex flex-col h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center text-green-500 text-2xl">
+                                🛒
+                            </div>
+                            <button class="text-yellow-400 hover:text-yellow-500 transition-colors"><i class="fa-solid fa-star"></i></button>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">Req. de Compra</h3>
+                        <p class="text-gray-500 text-sm mt-2 flex-1">Aprobación para compras de bienes o servicios menores a $5000 USD.</p>
+                        <button onclick="startProcess('Requisición de Compra')" class="mt-6 w-full py-2 bg-gray-50 hover:bg-blue-50 text-blue-600 font-medium text-sm rounded-lg border border-gray-200 hover:border-blue-200 transition-colors flex items-center justify-center">
+                            <i class="fa-solid fa-rocket mr-2"></i> INICIAR
+                        </button>
+                    </div>
+
+                    <!-- Tile 4 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-300 transition-all group flex flex-col h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center text-purple-500 text-2xl">
+                                ⚖️
+                            </div>
+                            <button class="text-gray-300 hover:text-yellow-400 transition-colors"><i class="fa-regular fa-star"></i></button>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">Revisión NDA</h3>
+                        <p class="text-gray-500 text-sm mt-2 flex-1">Aprobación legal de acuerdos de confidencialidad estándar con terceros.</p>
+                        <button onclick="startProcess('Revisión NDA')" class="mt-6 w-full py-2 bg-gray-50 hover:bg-blue-50 text-blue-600 font-medium text-sm rounded-lg border border-gray-200 hover:border-blue-200 transition-colors flex items-center justify-center">
+                            <i class="fa-solid fa-rocket mr-2"></i> INICIAR
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Process Start Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center">
+        <i class="fa-solid fa-circle-check text-xl mr-3"></i>
+        <div>
+            <h4 class="font-bold">Proceso Iniciado</h4>
+            <p class="text-sm text-green-100" id="toast-message">Se ha creado el caso exitosamente.</p>
+        </div>
+    </div>
+
+    <script>
+        function startProcess(processName) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = `Se ha instanciado un nuevo caso para '${processName}'.`;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                
+                // Redirect to inbox after starting
+                if (confirm(`¿Ir a la bandeja unificada para ver el nuevo caso de ${processName}?`)) {
+                    window.location.href = 'inbox.html';
+                }
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iBPMS - Portafolio de Proyectos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 flex h-screen overflow-hidden text-gray-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col h-full border-r border-slate-700">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <i class="fa-solid fa-layer-group text-blue-500 text-2xl mr-3"></i>
+            <span class="text-xl font-bold tracking-wide">iBPMS</span>
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+            <ul class="space-y-1">
+                <li><a href="index.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-house w-6"></i> Inicio</a></li>
+                <li><a href="inbox.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-inbox w-6"></i> Inbox</a></li>
+                <li><a href="project_manager.html"
+                        class="flex items-center px-6 py-2.5 bg-blue-600/20 text-blue-400 border-r-4 border-blue-500 font-medium"><i
+                            class="fa-solid fa-folder-open w-6"></i> Proyectos</a></li>
+                <li><a href="dashboard.html"
+                        class="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"><i
+                            class="fa-solid fa-chart-pie w-6"></i> Dashboards</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-full overflow-y-auto">
+        <!-- Top Header -->
+        <header
+            class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-10 sticky top-0">
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">Portafolio Operativo</h1>
+                <p class="text-xs text-gray-500">Gestión macro de iniciativas y casos agrupados</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
+                    <i class="fa-solid fa-plus mr-1"></i> Nuevo Proyecto
+                </button>
+            </div>
+        </header>
+
+        <main class="p-6 max-w-7xl mx-auto w-full space-y-6">
+
+            <!-- Project Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Project 1 (Active) -->
+                <div
+                    class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden">
+                    <div class="h-2 bg-blue-500 w-full"></div>
+                    <div class="p-5 flex-1 flex flex-col">
+                        <div class="flex justify-between items-start mb-2">
+                            <span
+                                class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-200">IMPLEMENTACIÓN
+                                B2B</span>
+                            <button class="text-gray-400 hover:text-gray-600"><i
+                                    class="fa-solid fa-ellipsis-vertical"></i></button>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">Cliente Corporativo Alpha</h3>
+                        <p class="text-xs text-gray-500 mb-4 line-clamp-2">Desarrollo e integración de la pasarela de
+                            pagos B2B según SLA firmado. Fase 1 y 2 en paralelo.</p>
+
+                        <!-- Progress -->
+                        <div class="mb-4 mt-auto">
+                            <div class="flex justify-between text-xs text-gray-500 mb-1 font-medium">
+                                <span>Progreso (Casos/Tareas)</span>
+                                <span>65%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 65%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div class="flex -space-x-2">
+                                <img class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+                                    src="https://ui-avatars.com/api/?name=Maria&background=random" alt="" />
+                                <img class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+                                    src="https://ui-avatars.com/api/?name=Carlos&background=random" alt="" />
+                                <div
+                                    class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-[10px] ring-2 ring-white z-10">
+                                    +3</div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="kanban.html" class="text-gray-400 hover:text-blue-600 transition-colors"
+                                    title="Tablero Kanban"><i class="fa-solid fa-table-columns"></i></a>
+                                <a href="agile_hub.html" class="text-gray-400 hover:text-blue-600 transition-colors"
+                                    title="Hub Ágil (Roadmap)"><i class="fa-solid fa-bullseye"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2 (At Risk) -->
+                <div
+                    class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden">
+                    <div class="h-2 bg-red-500 w-full animate-pulse"></div>
+                    <div class="p-5 flex-1 flex flex-col">
+                        <div class="flex justify-between items-start mb-2">
+                            <span
+                                class="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded border border-purple-200">INTERNO
+                                - AUDITORÍA</span>
+                            <button class="text-gray-400 hover:text-gray-600"><i
+                                    class="fa-solid fa-ellipsis-vertical"></i></button>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">Certificación ISO 27001</h3>
+                        <p class="text-xs text-gray-500 mb-4 line-clamp-2">Recopilación de evidencias SGDEA y validación
+                            de controles PAM. Fase de revisión externa.</p>
+
+                        <!-- Progress -->
+                        <div class="mb-4 mt-auto">
+                            <div class="flex justify-between text-xs text-red-600 mb-1 font-bold">
+                                <span>¡En Riesgo por SLA! (40%)</span>
+                                <span>40%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-red-500 h-1.5 rounded-full" style="width: 40%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div class="flex -space-x-2">
+                                <img class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+                                    src="https://ui-avatars.com/api/?name=Luz&background=random" alt="" />
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="sgdea_vault.html" class="text-gray-400 hover:text-red-500 transition-colors"
+                                    title="Bóveda SGDEA"><i class="fa-solid fa-vault"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Project Card -->
+                <div
+                    class="bg-transparent rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50/50 transition-colors flex flex-col items-center justify-center p-8 cursor-pointer text-gray-400 hover:text-blue-500 min-h-[200px]">
+                    <i class="fa-solid fa-folder-plus text-3xl mb-2"></i>
+                    <span class="font-medium text-sm">Crear Nuevo Proyecto</span>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+</body>
+
+</html>

@@ -1,8 +1,8 @@
 package com.ibpms.poc.infrastructure.web;
 
-import com.ibpms.poc.application.dto.DmnTranslationRequestDTO;
-import com.ibpms.poc.application.dto.DmnTranslationResponseDTO;
-import com.ibpms.poc.application.port.in.GenerarDmnAiUseCase;
+import com.ibpms.dmn.DmnTranslationRequestDTO;
+import com.ibpms.dmn.DmnTranslationResponseDTO;
+import com.ibpms.dmn.GenerarDmnAiUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

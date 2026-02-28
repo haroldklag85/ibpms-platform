@@ -10,8 +10,9 @@ Muestra los actores que interactúan con la plataforma bajo el esquema de integr
 C4Context
     title Diagrama de Contexto (V1) - Plataforma iBPMS Táctica
     
-    Person(usuario_negocio, "Usuario de Negocio", "Procesa tareas en bandeja. Consulta Dashboards BAM.")
-    Person(admin_reglas, "Funcional / Admin", "Configura flujos (BPMN/DMN) y reglas en NLP.")
+    Person(usuario_negocio, "Usuario Interno", "Procesa tareas en Workdesk/Mailbox. Consulta Dashboards.")
+    Person(cliente_externo, "Cliente B2B/B2C", "Consulta estatus en Portal Seguro (Pantalla 18).")
+    Person(admin_reglas, "Arquitecto / Admin", "Usa IDE Pro-Code (Vue/Zod), diseña flujos y entrena tutor IA.")
     
     System(ibpms, "Plataforma iBPMS (V1 Monolítica)", "Orquestador unificado sobre Azure VMs.")
     
@@ -21,10 +22,11 @@ C4Context
     System_Ext(crm, "CRM (Customer Rel. Mgmt)", "Datos de clientes para cruce de IA.")
     System_Ext(iam, "Proveedor de Identidad", "Directorio Activo / VPN.")
 
-    Rel(usuario_negocio, ibpms, "Pull Bandeja / BAM", "HTTPS (WAF)")
+    Rel(usuario_negocio, ibpms, "Opera Casos/Bandejas", "HTTPS (WAF)")
+    Rel(cliente_externo, ibpms, "Autoconsulta Portal", "HTTPS / RLS Seguro")
     Rel(usuario_negocio, plugin_o365, "Convierte correos a casos", "Clic")
     Rel(plugin_o365, ibpms, "Inicia Procesos y Adjuntos", "REST/HTTPS")
-    Rel(admin_reglas, ibpms, "Dicta reglas IA / Sube BPMN", "HTTPS")
+    Rel(admin_reglas, ibpms, "Sube BPMN / Diseña iForms", "HTTPS")
     Rel(o365_graph, ibpms, "Avisa llegada de correo", "Webhook Push")
     Rel(ibpms, o365_graph, "Gestiona borradores y mails", "REST/Graph API")
     Rel(ibpms, erp, "Ejecuta Transacciones síncronas", "REST/SOAP")
@@ -40,30 +42,32 @@ Abre la iBPMS mostrando el monolito transaccional obligado por el uso del motor 
 C4Container
     title Diagrama de Contenedores (V1) - Limitado a VMs y MySQL
     
-    Person(usuario, "Usuarios (Vía WAF/VPN)", "Acceso seguro.")
+    Person(cliente, "Cliente B2B/B2C", "Acceso segregado.")
     Container(plugin_o365, "Plugin Outlook", "Vue/JS", "Iframe dentro de Outlook.")
     
     System_Boundary(c1, "VNet Azure (QA/Prod) - VMs IaaS") {
         Container(apim, "Azure APIM", "Gateway Facade", "Punto de entrada único.")
-        Container(webapp, "Frontend SPA", "Vue 3 / Vite", "Bandejas y UI Principal.")
+        Container(webapp, "Frontend Unificado", "Vue 3 / Vite", "IDE Pro-Code, Workdesk, y Portal B2B Autónomo.")
         Container(grafana, "Dashboard BAM", "Grafana", "Embebido por iframe en Frontend para analítica en vivo.")
         
         System_Boundary(be_vm, "Backend Monolítico (Spring Boot 3)") {
-            Container(backend, "API Backend Core", "REST/Java", "Lógica, reglas y webhooks receptores.")
-            Container(engine, "Motor BPM/DMN Empotrado", "Camunda 7 (.jar)", "Motor acoplado.")
-            Container(doc_gen, "Generador Docs Oficiales", "FOP/PDFBox (.jar)", "Embebido. Combina Templates + Data.")
+            Container(backend, "API Backend Core", "REST/Java", "Orquesta Vue, Zod, SLAs y delegaciones.")
+            Container(engine, "Motor BPM/DMN", "Camunda 7 (.jar)", "Motor empotrado.")
+            Container(doc_gen, "Generador Docs Oficiales", "FOP/PDFBox (.jar)", "Imprime PDFs.")
+            Container(cache_db, "Catálogo Caché (Resilience)", "PostgreSQL/Redis", "Modo degradado de CRM.")
         }
         
-        Container(llm_local, "Motor IA Perimetral", "Llama 3 / vLLM", "Hospedado en VM Privada GPU/CPU.")
+        Container(llm_local, "Motor AI & Tutor", "Llama 3 / OpenAI", "Copiloto M365 y Tutor Pre-Flight BPMN.")
         
         ContainerDb(db, "Base de Datos Consolidada", "MySQL 8", "Operativa y Estado BPM.")
         ContainerDb(blob, "Almacenamiento Discos", "Azure Managed Disks", "Bóveda física.")
     }
     
     System_Ext(o365_graph, "MS Graph", "Webhooks y REST API.")
-    System_Ext(crm_sys, "CRM Corporativo", "REST API.")
+    System_Ext(crm_sys, "CRM Corporativo", "REST API (Catálogo Federado).")
     
-    Rel(usuario, apim, "Solicita vistas", "HTTPS")
+    Rel(usuario, apim, "Opera Plataforma", "HTTPS")
+    Rel(cliente, apim, "Consulta Portal B2B", "HTTPS")
     Rel(plugin_o365, apim, "Comandos Push", "HTTPS")
     Rel(apim, webapp, "Sirve UI", "HTTPS")
     Rel(webapp, apim, "Consume APIs", "JSON/HTTPS")
@@ -72,8 +76,9 @@ C4Container
     
     Rel(backend, engine, "Integra Tareas", "Memoria Java API")
     Rel(backend, doc_gen, "Ordena fabricar PDF", "Memoria")
-    Rel(doc_gen, blob, "Salva Original Legal (Hash)", "Java IO")
-    Rel(backend, llm_local, "Traduce NLP / Infiriendo Intents", "HTTPS Interno")
+    Rel(doc_gen, blob, "Salva Original", "Java IO")
+    Rel(backend, cache_db, "Lee/Escribe Catálogos Caché", "TCP")
+    Rel(backend, llm_local, "Audita XML (Tutor) / Infiriendo Intents", "HTTPS Interno")
     
     Rel(o365_graph, apim, "Push Webhook Nuevo Correo", "HTTPS")
     Rel(backend, o365_graph, "Crea Drafts / Envía Mail", "HTTPS (Graph API)")
@@ -99,11 +104,11 @@ C4Component
         }
 
         System_Boundary(aplicacion, "Application UseCases") {
-            Component(cm_usecase, "CaseManagement UseCase", "Interface", "IniciarCaso()")
-            Component(auth_usecase, "Security Policy (ABAC)", "Interface", "Valida matrices locales.")
-            Component(rule_usecase, "Rule Builder IA", "Interface", "Genera DMN.")
-            Component(ff_usecase, "Feature Flags Service", "Interface", "Evalúa Toggles Multi-tenant.")
-            Component(tx_manager, "Shared Transaction Manager", "Spring PlatformTx", "Controlador ACID Atómico.")
+            Component(cm_usecase, "CaseManagement UseCase", "Interface", "Casos estructurados e Intake Kanban.")
+            Component(auth_usecase, "Security & RLS (ABAC)", "Interface", "Protege Workdesk vs Portal B2B.")
+            Component(template_usecase, "App Builder UseCase", "Interface", "Compila y sirve iForms de Vue/Zod.")
+            Component(ff_usecase, "Circuit Breaker Manager", "Interface", "Alterna entre CRM Vivo y Caché.")
+            Component(tx_manager, "Javers Audit & TX", "Spring Javers/Tx", "Audita Before/After e inmutabilidad.")
         }
 
         System_Boundary(dominio, "Dominio Core") {

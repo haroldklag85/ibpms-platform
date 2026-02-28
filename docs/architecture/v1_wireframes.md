@@ -39,8 +39,8 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 
 ---
 
-## Pantalla 1: Bandeja Unificada (Unified Inbox)
-**Objetivo:** El buzón consolidado. A diferencia de la Pantalla 0 (donde se *inician* cosas), aquí es donde el usuario *recibe* el trabajo que otras personas o sistemas le asignaron, o donde *retoma* procesos que dejó guardados como Borradores.
+## Pantalla 1: Workdesk (Escritorio de Tareas)
+**Objetivo:** El escritorio consolidado. A diferencia de la Pantalla 0 (donde se *inician* cosas), aquí es donde el usuario *recibe* el trabajo que otras personas o sistemas le asignaron, o donde *retoma* procesos que dejó guardados como Borradores.
 
 ```text
 +-----------------------------------------------------------------------------------+
@@ -48,7 +48,7 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 +-----------------------------------------------------------------------------------+
 |  [🏠] Inicio      |  Filtros: [Bandeja] [Urgentes] [Mis Procesos] [Borradores]    |
 |  ---------------  |---------------------------------------------------------------|
-|  Inbox (12)       |  TARJETAS DE TAREAS (Lista Vertical)  [✅ Aprobar Seleccionados]|
+|  Workdesk (12)    |  TARJETAS DE TAREAS (Lista Vertical)  [✅ Aprobar Seleccionados]|
 |  Borradores (2)<--|                                                               |
 |  Proyectos / KB   |  +---------------------------------------------------------+  |
 |  Mis Procesos     |  | [✏️] [BORRADOR]    [ GUARDADO: Hace 1 hr ]              |  |
@@ -57,16 +57,24 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 |  Admin / Setup    |  +---------------------------------------------------------+  |
 |                   |                                                               |
 |                   |  +---------------------------------------------------------+  |
-|                   |  | [x] [SLA: 2 Hrs] [URGENTE]                              |  |
+|                   |  | [x] [🟢 SD EXTERNO] [SLA: 2 Hrs] [URGENTE]              |  |
 |                   |  |     Tarea: Aprobar Contrato Legal 001                   |  |
-|                   |  |     Proceso: Onboarding Cliente X - Iniciado por: Juan P|  |
+|                   |  |     Servicio: Onboarding Cliente -> 🏢 Banco Alpha      |  |
 |                   |  |     [ Ver Adjuntos (2) ]  [ Asignarme Tarea / Claim ]   |  |
 |                   |  +---------------------------------------------------------+  |
 |                   |                                                               |
 |                   |  +---------------------------------------------------------+  |
-|                   |  | [ ] [SLA: 1 Día] [NORMAL]                               |  |
+|                   |  | [ ] [🏢 INTERNO] [SLA: 1 Día] [NORMAL]                  |  |
 |                   |  |     Tarea: Revisión Financiera Vuelo Comercial          |  |
+|                   |  |     Proceso: Flujo RRHH -> 👤 Solicitante: Carlos Dev   |  |
 |                   |  |     [ Ver Adjuntos (0) ]  [ ↩️ Liberar (Unclaim) ] -----> |  | << Clic abre Formulario Dinámico (Pantalla 2)
+|                   |  +---------------------------------------------------------+  |
+|                   |                                                               |
+|                   |  +---------------------------------------------------------+  |
+|                   |  | [ ] [⚡ ÁGIL] [SLA: 30 Mins] [CRÍTICA]                  |  |
+|                   |  |     Ticket: Reiniciar Servidor X (No BPMN)              |  |
+|                   |  |     Tablero: Incidencias Nivel 2                        |  |
+|                   |  |     [ Ver Comentarios ]   [ Mover a 'Done' ]            |  |
 |                   |  +---------------------------------------------------------+  |
 +-----------------------------------------------------------------------------------+
 ```
@@ -78,68 +86,40 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 
 ---
 
-## Pantalla 1B: Bandeja de Entrada Avanzada (Filtros Docketing / M365)
-**Objetivo:** Vista evolucionada del Inbox para usuarios "Power Users" (Ej: Legal, Operaciones) que gestionan altos volúmenes y requieren filtros cruzados avanzados importados de los prototipos UI2.html.
+## Pantalla 1B: Mailbox Corporativo & Copiloto IA (Split View)
+**Objetivo:** Vista evolucionada del Buzón de Correo (Master-Detail) para roles "Power Users". La pantalla se divide verticalmente (Panel Izquierdo para la lista de correos y filtros, Panel Derecho para leer el correo activo y gestionar el Copiloto IA). Esta es la entrada principal del *Intelligent Intake* (Plan A).
 
 ```text
-+-----------------------------------------------------------------------------------+
-|  [LOGO Docketing/iBPMS]  |  🔍 Buscar en todos los campos...       |  🔔 | 👤 Perfil|
-|-----------------------------------------------------------------------------------|
-|  [🏠] Bandeja Entrada |  [ Filtro Cliente v ] [ Filtro Proyecto v ] [ 📅 Rango ]  |
-|  [🧠] Config. IA      |  -------------------------------------------------------  |
-|  [🔍] Búsqueda Avz.   |  Actividades: [x] Acuse Enviado [ ] Tarea [ ] Proy Creado |
-|  [📄] Plantillas      |  [ Limpiar Filtros ]                                      |
-|  ---------------      |-----------------------------------------------------------|
-|                       |  | Remitente | Asunto | Previsualización | Fecha | Cliente|
-|                       |  |-----------|--------|------------------|-------|--------|
-|                       |  | John Doe  | Update | Hi team, ...     | 5:45p | ClientC|
-|                       |  | Jane S.   | Re: M..| Sounds good...   | 4:30p | Innovat|
-|                       |  | alert@sys | Alert! | Cambio de Deadl..| 6:15p | GlobalT|
-+-----------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------+
+|  [LOGO iBPMS]  |  🔍 Buscar en todos los campos, adjuntos o remitentes...          |  🔔 | 👤 Perfil|
+|-------------------------------------------------------------------------------------------------------|
+|  [🏠] Buzón     |                    MASTER PANE (Lista de Correos) |      DETAIL PANE (Lector & IA)   |
+|  [🧠] Config IA | [ Filtro Cliente v ] [Proyecto v] [ 📅 Rango ] | [< Volver] Subject: Project Update |
+|  [📄] Plantillas| Actividades: [x] Tarea [ ] Proy [ ] Intake SGDEA | -------------------------------- |
+|  ---------------|--------------------------------------------------| (Remitente: John Doe)            |
+|                 |  Remitente | Asunto          | Fecha | Cliente | Hi team,                         |
+|                 |  ----------|-----------------|-------|---------| Following up on our discussion,  |
+|                 | >John Doe  | Project Update  | 5:45p | ClientC | I've attached the Q3 report.     |
+|                 |  Jane S.   | Re: Milestone 1 | 4:30p | Innovat | Please review by EOD Friday.    |
+|                 |  alert@sys | Deadline Passed | 6:15p | GlobalT |                                  |
+|                 |                                                  | ================================ |
+|                 |                                                  | [✨] COPILOTO IA (Sugerencias)   |
+|                 |                                                  | ================================ |
+|                 |                                                  | [ Extracción: Informe Finan. ]   |
+|                 |                                                  | [ Cliente: Client Corp. ]        |
+|                 |                                                  | [ Fecha Clave: Viernes_Q3 ]      |
+|                 |                                                  | [✔️ Aprobar Extracción IA]       |
+|                 |                                                  | -------------------------------- |
+|                 |                                                  | [ RESPUESTA SUGERIDA (Borrador) ]|
+|                 |                                                  | "Hello John, thank you..."       |
+|                 |                                                  | [ ❌ Rechazar ] [ 🚀 Responder ] |
+|                 |                                                  | -------------------------------- |
+|                 |                                                  | [ ➕ CREAR SERVICE DELIVERY ]    |
+|                 |                                                  | "Pasa este correo al Embudo."    |
++-------------------------------------------------------------------------------------------------------+
 ```
 
 ---
-
-## Pantalla 2C: Detalle de Correo con Copiloto IA (Smart Suggestions)
-**Objetivo:** Materialización del asistente "Human-in-the-Loop" derivado de los prototipos UI1, UI3 y UI4. La vista se divide horizontalmente: arriba el correo original, y anclado abajo un panel colapsable de Inteligencia Artificial que desmenuza recomendaciones atómicas accionables y borradores de respuesta.
-
-```text
-+-----------------------------------------------------------------------------------+
-|  [< Volver]   Project Update & Next Steps  (De: John Doe)                         |
-|-----------------------------------------------------------------------------------|
-|  (Panel Superior - Renderizado del Correo)                                        |
-|  Hi team,                                                                         |
-|  Following up on our discussion, I've attached the financial report for Q3.       |
-|  Please review it by EOD Friday, October 28th, 2024.                              |
-|                                                                                   |
-|  ===============================================================================  |
-|  [v] SUGERENCIAS INTELIGENTES DE IA (Panel Inferior Colapsable - UI4)             |
-|  ===============================================================================  |
-|                                                                                   |
-|  [ TARJETAS DE EXTRACCIÓN SEMÁNTICA ]                                             |
-|  +--------------------+  +--------------------+  +-----------------------------+  |
-|  | Clasificación      |  | Cliente Asociado   |  | Fechas Clave                |  |
-|  | [ Informe Finan. ] |  | [ Client Corp. ]   |  | [ 28 de Octubre, 2024 ]     |  |
-|  | [✔️ Aceptar] [❌ R]|  | [✔️ Aceptar] [❌ R]|  | [✔️ Aceptar] [❌ Rechazar ] |  |
-|  +--------------------+  +--------------------+  +-----------------------------+  |
-|                                                                                   |
-|  [ RESPUESTA SUGERIDA M365 (Bilingual Draft) ]                                    |
-|  +-----------------------------------------------------------------------------+  |
-|  | ✨ "Hello John, Thank you for the update. We have received the financial    |  |
-|  | report for Q3 and will review it by the deadline this Friday..."            |  |
-|  |                                                                             |  |
-|  | [ ❌ Rechazar ]                              [ 🚀 Aceptar y Enviar Email ]  |  |
-|  +-----------------------------------------------------------------------------+  |
-|                                                                                   |
-|  [ INTEGRACIÓN CON GESTOR DE PROYECTOS (BPMN / Kanban) ]                          |
-|  +-----------------------------------------------------------------------------+  |
-|  | Crear tarea: "Revisar informe financiero Q3"                                |  |
-|  | Fecha de vencimiento: 28 de Octubre, 2024                                   |  |
-|  |                                                                             |  |
-|  |                                [ ❌ Rechazar ] [ 🚀 Aceptar y Crear Tarea ] |  |
-|  +-----------------------------------------------------------------------------+  |
-+-----------------------------------------------------------------------------------+
-```
 
 ---
 
@@ -252,27 +232,38 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 
 ---
 
-## Pantalla 6: CRUD de Procesos y Diseñador BPMN
-**Objetivo:** Interfaz administrativa para la gestión del ciclo de vida de los procesos (Crear, Editar, Desplegar) e importar/dibujar flujos BPMN mediante bpmn-js integrado.
+## Pantalla 6: Diseñador Avanzado BPMN 2.0 (Model & Analyze)
+**Objetivo:** Interfaz administrativa para la gestión del ciclo de vida de los procesos (Crear, Editar, Desplegar) e importar diagramas BPMN complejos. Incluye un *Analizador Semántico* que verifica si el diagrama importado es "Ejecutable" (Executable=true) dentro del motor, validando variables, integraciones y reglas antes del despliegue.
 
 ```text
 +-----------------------------------------------------------------------------------+
-|  Admin > Gestión de Procesos (BPMN)                     [+ Crear Nuevo Proceso]   |
+|  Admin > Diseño de Procesos > "Solicitud de Crédito v2"         [ ⚙️ Propiedades ]|
 +-----------------------------------------------------------------------------------+
 |                                                                                   |
-|  [⬆️ Importar .bpmn] | [⬇️ Exportar] | [⏪ Revertir a V1.x] | [🚀 Desplegar Producción]|
+|  [⬆️ Importar .bpmn] | [⬇️ Exportar] | [🧠 Consultar Copiloto IA] | [🚀 DESPLEGAR]|
 |  -------------------------------------------------------------------------------  |
 |                                                                                   |
-|   HERRAMIENTAS   |  LIENZO DE DIBUJO BPMN (Integración bpmn-js)                     |
-|                  |  +------------------------------------------------------------+  |
-|   (o) Evento     |  | Pool: Solicitud de Crédito                                 |  |
-|   [ ] Tarea      |  +------------------------------------------------------------+  |
-|   < > Compuerta  |  | Lane: Radicador  | (Inicio) -> [ Llenar Info ] ->          |  |
-|   [=] Carril     |  +------------------------------------------------------------+  |
-|                  |  | Lane: Aprobador  |          -> [ Validar ] -> (Fin)        |  |
-|                  |  +------------------------------------------------------------+  |
-|                  |                                                                |
-|  -------------------------------------------------------------------------------  |
+|   PALETA BPMN 2.0|  LIENZO DE DIBUJO (bpmn-js Integrado)                          |
+|   ---------------|  +----------------------------------------------------------+  |
+|   (o) Eventos    |  | Pool: Solicitud de Crédito                               |  |
+|       - Start/End|  +----------------------------------------------------------+  |
+|       - Timer    |  | Radicador  | (Inicio) -> [ Llenar Form ] -> < >          |  |
+|       - Message  |  |            |                                 |           |  |
+|       - Error    |  +----------------------------------------------|-----------+  |
+|   [ ] Tareas     |  | Analista   |              [ Servicio CRM ] <-+           |  |
+|       - User Task|  |            |                    |                        |  |
+|       - Serv.Task|  |            |             [[ Sub-Proceso Riesgo ]]        |  |
+|       - Call Act.|  |            |                    |                        |  |
+|   < > Compuertas |  |            |                 ( ) Timer Event (24h)       |  |
+|       - Exclusiva|  +----------------------------------------------------------+  |
+|       - Paralela |                                                                |
+|   [📄] Datos     |  ------------------------------------------------------------  |
+|                  |  [ 🔎 PRE-FLIGHT ANALYZER & 🧠 AI AUDITOR FEEDBACK        ]    |
+|                  |  [ ❌ Semántica ] User Task "Llenar Form" no tiene Form Key    |
+|                  |  [ 🤖 Auditor IA] ISO 9001: Sugiero agregar un "User Task"     |
+|                  |                   de aprobación manual después del Servicio    |
+|                  |                   CRM para asegurar control de calidad (QMS).  |
++-----------------------------------------------------------------------------------+
 |  PANEL DE PROPIEDADES (Pestañas de Configuración)                                 |
 |                                                                                   |
 |  [ Pestaña: Propiedades del Carril ("Aprobador") ]                                |
@@ -287,34 +278,39 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 
 ---
 
-## Pantalla 7: Constructor de Formularios Inteligentes (JSON Form Builder)
-**Objetivo:** Interfaz administrativa (drag and drop) para crear los formularios que visualizará el usuario final en cada tarea. El motor detrás genera y valida un JSON Schema estándar.
+## Pantalla 7: IDE Web Pro-Code para Formularios (iForm Builder)
+**Objetivo:** Interfaz administrativa dual (Low-Code/Pro-Code) integrada con Mónaco Editor (VS Code engine). El usuario diseña arrastrando componentes, pero por debajo el IDE genera archivos `.vue` puros, tipado estricto y esquemas de validación Zod. A diferencia de otros iBPMS, aquí no hay cajas negras.
 
 ```text
 +-----------------------------------------------------------------------------------+
-|  Admin > Formularios                                        [+ Crear Formulario]  |
+|  Admin > Formularios > Nuevo Formulario                     [💾 Guardar Versión]  |
 +-----------------------------------------------------------------------------------+
-|  Nombre del Formulario: [ Form_Aprobacion_Credito_V1   ]    [💾 Guardar Versión]  |
-|  Vista Previa Responsiva:  [ 💻 Escritorio ]  [ 📱 Móvil ]                        |
+|  [ 🏛️ ARQUITECTURA DEL FORMULARIO ]                                               |
+|  ¿Qué tipo de Formulario deseas crear?                                            |
+|  ( ) Formulario de Tarea Simple (Aplica solo a un paso del flujo)                 |
+|  (x) iForm Maestro (Expediente) (Un solo componente reactivo que muestra u oculta |
+|      secciones dependiendo del "Current_Stage" y el "User_Role" de Camunda).      |
+|                                                                                   |
+|  [ Vista: 🎨 DISEÑADOR VISUAL ]  |  [ Vista: 💻 CÓDIGO VUE 3 / ZOD (Mónaco IDE) ] |
 |  -------------------------------------------------------------------------------  |
 |                                                                                   |
-|  COMPONENTES DISPONIBLES |  LIENZO DEL FORMULARIO (Drag & Drop)                   |
-|                          |                                                        |
-|  [T] Texto Corto         |  +--------------------------------------------------+  |
-|  [===] Párrafo Largo     |  | [T] Ingrese Monto Aprobado                       |  |
-|  [123] Número            |  | Variable JSON (key): `monto_aprobado`            |  |
-|  [📅] Fecha              |  | Obligatorio: (x) Sí  ( ) No                      |  |
-|  [v] Desplegable         |  +--------------------------------------------------+  |
-|  [(x)] Radio Button      |                                                        |
-|  [[x]] Checkbox          |  +--------------------------------------------------+  |
-|  [📎] Subir Archivos     |  | [v] Seleccione el Centro de Costos               |  |
-|  [H1] Título Sección     |  | Variable JSON (key): `centro_costos`             |  |
-|                          |  | Opciones: [ IT, Ventas, Legal ]                  |  |
-|                          |  +--------------------------------------------------+  |
-|                          |                                                        |
+|  COMPONENTES |  LIENZO DEL FORMULARIO (Secciones basadas en Etapas)               |
+|              |                                                                    |
+|  [H1] Título |  +--------------------------------------------------------------+  |
+|  [T] Texto   |  | v-if="stage === 'comercial' || stage === 'riesgos'"          |  |
+|  [num] Número|  | [ Section: Datos del Cliente (Solo Lectura para Riesgos) ]   |  |
+|  [v] Select  |  | [T] Nombre Empresa: [__________________________]             |  |
+|  [📎] Archivo|  | [num] Monto Solicitado: [______________________]             |  |
+|              |  +--------------------------------------------------------------+  |
+|              |                                                                    |
+|  [⬇️ Swagger]|  +--------------------------------------------------------------+  |
+|  (Auto bind) |  | v-if="stage === 'riesgos'"                                   |  |
+|              |  | [ Section: Análisis Financiero (Editable) ]                  |  |
+|              |  | [v] Nivel de Riesgo (Zod: Requerido)                         |  |
+|              |  +--------------------------------------------------------------+  |
+|                                                                                   |
 |  -------------------------------------------------------------------------------  |
-|  VISTA PREVIA DE DATOS (JSON Generado en tiempo de ejecución):                    |
-|  { "monto_aprobado": 1500, "centro_costos": "IT" }                                |
+|  [ ⚡ GENERADOR DE TESTS ] [🧪 Crear spec.ts (Jest)] [🤖 Crear Prueba e2e (Cypress)]|
 +-----------------------------------------------------------------------------------+
 ```
 
@@ -566,5 +562,108 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 |  - (BPMN) Hace 2h: @Maria completó Formulario de Viabilidad Técnica.              |
 |  - (AGIL) Hace 5h: @Carlos movió "Req. de Cajas" a IN PROGRESS.                   |
 |  - (CORE) Ayer: Proyecto iniciado por API Webhook O365.                           |
++-----------------------------------------------------------------------------------+
+```
+
+---
+
+## Pantalla 16: Intelligent Intake y Embudo Administrativo (Plan A/B)
+**Objetivo:** El "Centro de Cuarentena" para el rol Administrador. Aquí aterrizan las "Intenciones de Servicio" (Plan A) capturadas por el correo antes de ensuciar el motor BPMN. El Admin puede forzar creaciones manuales (Plan B). Evita el anti-patrón de instanciación basura.
+
+```text
++-----------------------------------------------------------------------------------+
+|  Service Delivery > Intake y Creación (Vista Solo Administrador)                  |
++-----------------------------------------------------------------------------------+
+|  [ 🌐 CREACIÓN MANUAL (PLAN B) ]                                                |
+|  [ + Iniciar Nuevo Service Delivery Vía Formulario Seguro ]                       |
+|  -------------------------------------------------------------------------------  |
+|                                                                                   |
+|  [ 📥 EMBUDO DE INTAKE ACTIVO (PLAN A - Correos Salientes en Cuarentena) ]        |
+|  "Tickets esperando validación humana para convertirse en un Proceso Real".       |
+|  -------------------------------------------------------------------------------  |
+|                                                                                   |
+|  [ Card 1: Confirmación de Auditoría ]                                            |
+|  - Cliente Identificado (CRM_ID): 🏢 InnovateTech Corp.                           |
+|  - Plantilla (TO-BE) Sugerida: Auditoría Express_v2                               |
+|  - Origen: Correo enviado por @John desde `auditorias@ibpms.com`                  |
+|  - Hilo de Conversación (Thread): Activo (2 Correos)                              |
+|                                                                                   |
+|  [ 🗑️ Descartar (Es Spam/Conversación) ]      [ 🚀 CREAR SERVICE DELIVERY (BPMN) ]|
+|                                                                                   |
+|  -------------------------------------------------------------------------------  |
+|                                                                                   |
+|  [ Card 2: Falso Positivo ]                                                       |
+|  - Cliente Identificado (CRM_ID): Pendiente (No match)                            |
+|  - Plantilla (TO-BE) Sugerida: Desconocida                                        |
+|  - Origen: Respuesta de "Fuera de la oficina" a `legal@ibpms.com`                 |
+|                                                                                   |
+|  [ 🗑️ Descartar (Es Spam/Conversación) ]      [ ✏️ Forzar Mapeo Manual ]          |
++-----------------------------------------------------------------------------------+
+```
+
+---
+
+## Pantalla 17: Vista 360 del Cliente (Customer Card Account Management)
+**Objetivo:** Consolidar el ruido operativo en un reporte digerible para Ejecutivos C-Level o Key Account Managers. Responde a la pregunta "Dónde está el trámite de este cliente".
+
+```text
++-----------------------------------------------------------------------------------+
+|  CRM / Clientes > 🏢 Detalle: Banco Alpha (ID: CRM-8891)                          |
++-----------------------------------------------------------------------------------+
+|  [ 📞 Contactos ]   [ 💼 Contratos ]   [ 📊 SLA Histórico: 98% Cumplimiento ]     |
+|  -------------------------------------------------------------------------------  |
+|                                                                                   |
+|  [ 🟢 SERVICE DELIVERIES ACTIVOS (BPMN) ]                                         |
+|  1. Implementación Core Transaccional V2                                          |
+|     - SLA Prometido: 90 Días  |   Llevamos: 45 Días                               |
+|     - Estado Actual: 🚦 EN PROGRESO -> [ Tarea Actual: Pruebas de Carga 10k ]     |
+|     - Cuello de Botella Detectado: Ninguno.                                       |
+|                                                                                   |
+|  2. Revisión Legal de Contrato de Mantenimiento Anual                             |
+|     - SLA Prometido: 5 Días   |   Llevamos: 6 Días                                |
+|     - Estado Actual: 🔴 ATRASADO -> [ Tarea Actual: Firma de VPE Finanzas ]       |
+|                                                                                   |
+|  -------------------------------------------------------------------------------  |
+|  [ ⚡ KANBANS ÁGILES ASOCIADOS (Incidencias Rápidas) ]                            |
+|  - Ticket de Soporte 098: Falla de login en portal (En progreso por Nivel 2)      |
+|                                                                                   |
+|  -------------------------------------------------------------------------------  |
+|  [ 📥 INTAKES EN CUARENTENA (Esperando Instanciación Plan A) ]                    |
+|  - Correo: "Revisar cotización anexa..." (Esperando validación de Administrador)  |
++-----------------------------------------------------------------------------------+
+```
+
+---
+
+## Pantalla 18: Portal del Cliente Externo (Customer Portal B2B/B2C)
+**Objetivo:** Interfaz de solo lectura y autoatención para los clientes externos (Ej. Representantes Legales de empresas o ciudadanos). Resuelve el autorreporte para "Service Delivery" logrando total transparencia de extremo a extremo (Vista Táctica y Estratégica). Autenticado vía Azure AD B2C.
+
+```text
++-----------------------------------------------------------------------------------+
+|  [LOGO iBPMS Customer Portal]            | Hola, María Gómez (Banco Alpha) [🚪] |
++-----------------------------------------------------------------------------------+
+|                                                                                   |
+|  [ 📈 VISTA ESTRATÉGICA: Tu Resumen Histórico ]                                   |
+|  Servicios Solicitados: 15  |  Finalizados con Éxito: 14  |  En Ejecución: 1  |
+|                                                                                   |
+|  -------------------------------------------------------------------------------  |
+|                                                                                   |
+|  [ 🔍 VISTA TÁCTICA: Seguimiento en Tiempo Real ]                                 |
+|                                                                                   |
+|  📋 Radicado: SD-2024-9981 (Auditoría Trimestral Q3)                              |
+|  Asignado a: Equipo Legal iBPMS                                                   |
+|  SLA Objetivo: 15 de Noviembre, 2024                                              |
+|                                                                                   |
+|  [Progreso del Servicio - Tracker Simplificado]                                   |
+|  ( ✔️ ) 1. Recibimos tu solicitud          [ Oct 20 ]                             |
+|  ( ✔️ ) 2. Validación Documental           [ Oct 22 ]                             |
+|  ( 🏃 ) 3. Ejecución de la Auditoría       <-- [ USTED ESTÁ AQUÍ ]                |
+|  (    ) 4. Emisión Final del Documento                                            |
+|                                                                                   |
+|  -------------------------------------------------------------------------------  |
+|                                                                                   |
+|  [ 📂 TUS DOCUMENTOS (SGDEA Exportables) ]                                        |
+|  📄 Auditoría_Q2_Final.pdf (Firmado el 15/Ago) [ ⬇️ Descargar Copia Certificada ] |
+|  📄 Contrato_Marco_Firmado.pdf                 [ ⬇️ Descargar Copia Certificada ] |
 +-----------------------------------------------------------------------------------+
 ```

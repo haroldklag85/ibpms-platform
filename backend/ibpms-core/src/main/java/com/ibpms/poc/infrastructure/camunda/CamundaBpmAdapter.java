@@ -52,7 +52,7 @@ public class CamundaBpmAdapter implements ProcesoBpmPort {
     @Override
     public void desplegarDefinicion(String resourceName, byte[] bpmnContent) {
         repositoryService.createDeployment()
-                .addBytes(resourceName, bpmnContent)
+                .addString(resourceName, new String(bpmnContent, java.nio.charset.StandardCharsets.UTF_8))
                 .enableDuplicateFiltering(true)
                 .deploy();
     }

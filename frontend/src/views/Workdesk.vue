@@ -137,4 +137,10 @@ const handleClaim = async (taskId: string) => {
 onMounted(() => {
   loadBothQueues();
 });
-</scr
+</script>
+
+<style scoped>
+[v-cloak] {
+  display: none;
+}
+</style>

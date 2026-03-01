@@ -10,8 +10,6 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import org.javers.core.metamodel.annotation.JaversAuditable;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +17,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "ibpms_task")
-@JaversAuditable
 public class KanbanTaskEntity {
 
     @Id

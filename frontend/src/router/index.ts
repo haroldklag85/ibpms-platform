@@ -26,8 +26,73 @@ const router = createRouter({
                     path: 'workdesk',
                     name: 'Workdesk',
                     component: Workdesk, // Pantalla 1
+                },
+                {
+                    path: 'kanban',
+                    name: 'KanbanBoard',
+                    component: () => import('@/views/kanban/KanbanView.vue'),
+                },
+                {
+                    path: 'admin',
+                    name: 'AdminSettings',
+                    component: () => import('@/views/admin/SettingsView.vue'),
+                },
+                {
+                    path: 'admin/modeler/bpmn',
+                    name: 'BpmnDesigner',
+                    component: () => import('@/views/admin/Modeler/BpmnDesigner.vue'),
+                },
+                {
+                    path: 'admin/modeler/forms',
+                    name: 'FormDesigner',
+                    component: () => import('@/views/admin/Modeler/FormDesigner.vue'),
+                },
+                {
+                    path: 'admin/modeler/dmn',
+                    name: 'DmnIntelligence',
+                    component: () => import('@/views/admin/Modeler/DmnIntelligence.vue'),
                 }
             ]
+        },
+        {
+            path: '/inbox',
+            name: 'InboxMailbox',
+            component: () => import('@/views/inbox/InboxView.vue'),
+            meta: { requiresAuth: true }
+        },
+        // --- Bloque 3: Service Delivery Intake ---
+        {
+            path: '/admin/intake',
+            name: 'IntakeManual',
+            component: () => import('@/views/admin/ServiceDelivery/IntakeManual.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/admin/customer360',
+            name: 'Customer360',
+            component: () => import('@/views/admin/ServiceDelivery/Customer360.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/portal/tracking',
+            name: 'CustomerPortal',
+            component: () => import('@/views/public/CustomerPortal.vue'),
+            // No auth required
+            meta: { requiresAuth: false }
+        },
+        // --- Bloque A: Project Builder ---
+        {
+            path: '/admin/project-builder',
+            name: 'ProjectBuilder',
+            component: () => import('@/views/admin/ProjectBuilder/ProjectBuilder.vue'),
+            meta: { requiresAuth: true }
+        },
+        // --- Bloque C: Dashboards BAM & Analytics ---
+        {
+            path: '/admin/analytics/bam',
+            name: 'DashboardBAM',
+            component: () => import('@/views/admin/Analytics/DashboardBAM.vue'),
+            meta: { requiresAuth: true }
         }
     ]
 });

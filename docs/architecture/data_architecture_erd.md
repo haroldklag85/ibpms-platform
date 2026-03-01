@@ -71,6 +71,14 @@ erDiagram
         timestamp uploaded_at
     }
 
+    sys_role {
+        char(36) id PK "UUID"
+        varchar(100) name "Nombre del Rol. Ej: BPMN_Credito_Analista"
+        varchar(50) type "GLOBAL o PROCESS_GENERATED (Por Hook)"
+        varchar(100) process_definition_id "NULL para globales"
+        varchar(100) lane_id "ID del carril BPMN"
+    }
+
     ibpms_audit_log {
         char(36) id PK "UUID"
         varchar(50) entity_type "CASE o TASK"
@@ -88,6 +96,7 @@ erDiagram
     ibpms_case ||--o{ ibpms_audit_log : "registra historial (1:N) vía Javers"
     ibpms_task ||--o{ ibpms_audit_log : "registra historial (1:N) vía Javers"
     ibpms_case ||--o| ibpms_ui_template : "usa vista (N:1)"
+    ibpms_task }o--o{ sys_role : "asignado a grupos lógicos"
 ```
 
 ---

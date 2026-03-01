@@ -12,14 +12,12 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 |  [LOGO iBPMS]  |  🔍 Buscar procesos, políticas...    |  🔔 (3) | 👤 Mi Perfil  |
 +-----------------------------------------------------------------------------------+
 |  [🏠] Inicio      |   ⭐ Mis Procesos Frecuentes: [🏖️ Vacaciones] [🛒 Req. Compra]|
-|  [📥] Inbox (12)  |   ----------------------------------------------------------  |
-|  [📂] Proyectos   |   👋 Buenos días, @Harolt. ¿Qué necesitas iniciar hoy?        |
-|  [📊] Dashboards  |   ----------------------------------------------------------  |
-|                   |   [ RECURSOS HUMANOS ]                                        |
-|  --- ADMIN ---    |   +-------------------+  +-------------------+                |
-|  [⚙️] Diseño BPMN |   | 🏖️ Vacaciones    |  | 🤝 Onboarding     |                |
-|  [📝] Formularios |   | Solicitar días de |  | Ingreso de nuevo  |                |
-|  [🧠] Reglas IA   |   | descanso legales. |  | empleado.         |                |
+|  [�] Workdesk(12)|   ----------------------------------------------------------  |
+|  [📥] Inbox (5)   |   👋 Buenos días, @Harolt. ¿Qué necesitas iniciar hoy?        |
+|  [📂] Proyectos   |   ----------------------------------------------------------  |
+|  [📊] Dashboards  |   [ RECURSOS HUMANOS ]                                        |
+|                   |   +-------------------+  +-------------------+                |
+|  --- ADMIN ---    |   | 🏖️ Vacaciones    |  | 🤝 Onboarding     |                |
 |  [🔌] Integración |   |                   |  |                   |                |
 |  [🛡️] Seguridad   |   | [ 🚀 INICIAR ]    |  | [ 🚀 INICIAR ]    |                |
 |  [📦] Extensión   |   +-------------------+  +-------------------+                |
@@ -48,10 +46,10 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 +-----------------------------------------------------------------------------------+
 |  [🏠] Inicio      |  Filtros: [Bandeja] [Urgentes] [Mis Procesos] [Borradores]    |
 |  ---------------  |---------------------------------------------------------------|
-|  Workdesk (12)    |  TARJETAS DE TAREAS (Lista Vertical)  [✅ Aprobar Seleccionados]|
-|  Borradores (2)<--|                                                               |
-|  Proyectos / KB   |  +---------------------------------------------------------+  |
-|  Mis Procesos     |  | [✏️] [BORRADOR]    [ GUARDADO: Hace 1 hr ]              |  |
+|  [📋] Workdesk(12)|  TARJETAS DE TAREAS (Lista Vertical)  [✅ Aprobar Seleccionados]|
+|  [📥] Inbox (5)   |                                                               |
+|  [📂] Proyectos   |  +---------------------------------------------------------+  |
+|  [📊] Mis Procesos|  | [✏️] [BORRADOR]    [ GUARDADO: Hace 1 hr ]              |  |
 |  Dashboards (BI)  |  |     Proceso: Req. de Compra < $5000                     |  |
 |  Reglas IA (DMN)  |  |     [ 🗑️ Descartar Borrador ]  [ ▶️ Retomar Proceso ] -------> |  | << Clic abre Pantalla 2
 |  Admin / Setup    |  +---------------------------------------------------------+  |
@@ -86,14 +84,14 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 
 ---
 
-## Pantalla 1B: Mailbox Corporativo & Copiloto IA (Split View)
-**Objetivo:** Vista evolucionada del Buzón de Correo (Master-Detail) para roles "Power Users". La pantalla se divide verticalmente (Panel Izquierdo para la lista de correos y filtros, Panel Derecho para leer el correo activo y gestionar el Copiloto IA). Esta es la entrada principal del *Intelligent Intake* (Plan A).
+## Pantalla 1B: Inbox Corporativo & Copiloto IA (Split View)
+**Objetivo:** Vista evolucionada del Buzón de Correo (Master-Detail) reservada estrictamente para el rol **Líder de SAC (Servicio al Cliente)** u homólogos de Intake. La pantalla se divide verticalmente (Panel Izquierdo para la lista de correos y filtros, Panel Derecho para leer el correo activo y gestionar el Copiloto IA). Esta es la entrada principal del *Intelligent Intake* (Plan A).
 
 ```text
 +-------------------------------------------------------------------------------------------------------+
 |  [LOGO iBPMS]  |  🔍 Buscar en todos los campos, adjuntos o remitentes...          |  🔔 | 👤 Perfil|
 |-------------------------------------------------------------------------------------------------------|
-|  [🏠] Buzón     |                    MASTER PANE (Lista de Correos) |      DETAIL PANE (Lector & IA)   |
+|  [📥] Inbox     |                    MASTER PANE (Lista de Correos) |      DETAIL PANE (Lector & IA)   |
 |  [🧠] Config IA | [ Filtro Cliente v ] [Proyecto v] [ 📅 Rango ] | [< Volver] Subject: Project Update |
 |  [📄] Plantillas| Actividades: [x] Tarea [ ] Proy [ ] Intake SGDEA | -------------------------------- |
 |  ---------------|--------------------------------------------------| (Remitente: John Doe)            |
@@ -512,22 +510,25 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 |  [🔗 Sincronizar con AD / EntraID ]      [ 🎭 Ver Sistema Como: @Seleccionar... v]|
 |  -------------------------------------------------------------------------------  |
 |                                                                                   |
-|  [ ROLES DEL SISTEMA (Perfiles que pueden amarrarse a un Carril BPMN) ]           |
+|  [ ROLES GLOBALES DE SISTEMA (Creados Manualmente) ]                              |
 |                                                                                   |
 |  [ 🛡️ VPE_Finanzas ]                                  [ Editar ] [ Desactivar ]   |
 |  - Nivel de Jerarquía: 2 (Director)                                               |
 |  - Miembros Asignados: 👤 @Juan_CFO, 👤 @Maria_Treasury                           |
 |  - Permisos Globales: `dashboard.view_all`, `process.override_sla`                |
 |                                                                                   |
-|  [ 🛡️ Radicador_Oficina ]                             [ Editar ] [ Desactivar ]   |
-|  - Nivel de Jerarquía: 5 (Operativo)                                              |
+|  -------------------------------------------------------------------------------  |
+|  [ ROLES DE PROCESO (Autogenerados por Diseñador BPMN - Pantalla 6) ]             |
+|                                                                                   |
+|  [ ⚙️ BPMN_Credito_Analista_Riesgos ]                 [ Asignar Usuarios ]        |
+|  - Origen: Carril "Analista_Riesgos" en Proceso "Credito_Hipotecario_v2"          |
 |  - Miembros Asignados: (Grupo de AD: `oficinas_bogota`)                           |
-|  - Permisos Globales: `task.create`, `task.read_own`                              |
+|  - Permisos Automáticos: Ejecutar Tarea `task_validar`, Leer/Escribir `iForm_A`   |
 |                                                                                   |
 |  -------------------------------------------------------------------------------  |
 |  [ AUDITORÍA DE ACCESOS INMUTABLE ]                                               |
 |  - 10:45am: Administrador añadió a @Pedro al rol "VPE_Finanzas"                   |
-|  - 09:30am: Rol "Radicador_Oficina" fue asignado al Carril 1 del Proceso Crédito  |
+|  - 09:30am: Al desplegar BPMN_Crédito, el sistema autogeneró el rol "BPMN_Credito_Analista_Riesgos".|
 +-----------------------------------------------------------------------------------+
 ```
 

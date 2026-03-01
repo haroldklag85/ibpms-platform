@@ -60,14 +60,15 @@
     *   **HU:** *"Como Administrador, quiero dibujar flujos conectando actividades (Sequence Flows) en un lienzo para definir el estándar operativo..."*
 
 ## 6. Swimlanes (Piscinas y Carriles)
-*Gobierno de Idenitdad (Segregación y Asignación).*
+*Gobierno de Identidad (Segregación y Asignación).*
 
 *   **Implementación iBPMS:**
     *   **Pools:** Definen un caso aislado (`ibpms_case.id`). Las variables JSON de la piscina de "Recursos Humanos" no ensucian las variables de la piscina de "Compras".
-    *   **Lanes (Carriles):** Como lo definimos antes, mapean directamente a los Array de Roles (`candidate_groups`) de nuestra arquitectura relacional. Si mueves una tarea al "Lane: VP Finanzas", la tarea se le oculta en la UI a los demás empleados por reglas del Token OIDC (Pantalla 14).
+    *   **Lanes (Carriles):** Mapean directamente a los Array de Roles (`candidate_groups`) de nuestra arquitectura relacional. **[NUEVO ALCANCE PO]**: Cuando un archivo BPMN es desplegado, el sistema ejecutará un *Deployment Hook* (Analizador XML) que leerá automáticamente los Lanes y creará de forma dinámica **Roles de Proceso** (Ej: `BPMN_NombreProceso_NombreCarril`). 
+    *   Si mueves una tarea al "Lane: VP Finanzas", la tarea se oculta en la UI a los demás empleados por reglas del Token OIDC, cruzándose con los roles Auto-generados en Pantalla 14.
 *   **Gestión en Historias de Usuario / PRD:**
     *   `Épica: Seguridad, Autenticación y RBAC`.
-    *   **HU:** *"Como Administrador, quiero vincular los carriles (Lanes) del diagrama con los grupos de EntraID para asignar responsables masivamente..."*
+    *   **HU:** *"Como Administrador, quiero vincular los carriles (Lanes) autogenerados del diagrama con los grupos de EntraID para asignar responsables masivamente..."*
 
 ## 7. Artefactos (Artifacts)
 *Documentación colaborativa del sistema.*

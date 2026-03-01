@@ -42,6 +42,7 @@ Desarrollar una plataforma integral de gestión de procesos y proyectos que perm
 *   **IA de Metadatos Operativos:** Creación automática (mediante IA) de metadatos asociados a las partes y objetos del proceso, permitiendo enriquecer la información y facilitar la gestión interna de la plataforma.
 *   **IDE Pro-Code de Formularios (Vue 3/Zod):** Un *Form Engine* web embebido (Low-Code/Pro-Code con Mónaco Editor) que diseña visualmente pero compila archivos Vue 3 nativos y esquemas Zod en vez de JSON. Define lógicas avanzadas usando el patrón "iForm Maestro".
 *   **Gestión Documental Avanzada (Archivos & Metadatos):** Permite adjuntar documentos directamente al "Caso" (Process Instance) o a la "Tarea" específica, aplicando versionado, clasificación categórica (metadata) e inmutabilidad (Hash).
+*   **Auto-Generación RBAC desde BPMN (Lanes):** Cuando se despliega un modelo BPMN, el sistema genera automáticamente "Roles de Proceso" correspondiendo a los "Lanes" (Carriles) dibujados. El sistema asocia automáticamente a estos roles los permisos de ejecución sobre las tareas y permisos de lectura/escritura sobre los formularios (UI/UX) contenidos estrictamente en dicho carril, eliminando la configuración manual de permisos operativos.
 *   **Catálogo Federado de Servicios (CRM Sync):** Sincronización dinámica de catálogos desde el CRM.
 *   **Experiencia (Workbenches):** Bandeja unificada con filtros.
 *   **Generador Documental Jurídico (SGDEA):** Inyectar JSON en PDF.
@@ -61,7 +62,7 @@ Desarrollar una plataforma integral de gestión de procesos y proyectos que perm
 *   **US 2.2:** *Como Desarrollador*, quiero una pestaña "Código" al lado de la visual que me muestre en tiempo real el código Vue 3 y Zod generado, permitiendo bindings con Swagger.
 
 ### Épica 3: Captura Inbound AI y Generación Documental
-*   **US 3.1:** *Como Gestor de Casos (Human-in-the-Loop)*, quiero que un Asistente Virtual clasifique los correos corporativos, identifique al cliente vía CRM y me proponga un borrador de respuesta bilingüe.
+*   **US 3.1:** *Como Líder de SAC (Servicio al Cliente)*, quiero que un Asistente Virtual clasifique los correos corporativos, identifique al cliente vía CRM y me proponga un borrador de respuesta bilingüe.
 *   **US 3.2:** *Como Auditor*, quiero que las decisiones sobre las sugerencias de la IA mantengan cadena de custodia intacta (eDiscovery) y provean métricas de eficiencia.
 *   **US 3.3:** *Como sistema*, al aprobar un expediente, quiero generar un PDF contractual y enviarlo por correo directamente desde el WorkBench.
 

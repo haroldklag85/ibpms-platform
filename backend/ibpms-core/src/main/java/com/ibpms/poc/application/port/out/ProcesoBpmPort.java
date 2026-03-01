@@ -1,5 +1,6 @@
 package com.ibpms.poc.application.port.out;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,4 +47,13 @@ public interface ProcesoBpmPort {
      * @param bpmnContent  bytes del archivo BPMN
      */
     void desplegarDefinicion(String resourceName, byte[] bpmnContent);
+
+    /**
+     * Consulta el historial de instancias de proceso filtrando por una variable.
+     * 
+     * @param variableName  Nombre de la variable (Ej. "crmId")
+     * @param variableValue Valor de la variable
+     * @return Lista de mapas con la metadata del proceso
+     */
+    List<Map<String, Object>> obtenerHistorialPorVariable(String variableName, String variableValue);
 }

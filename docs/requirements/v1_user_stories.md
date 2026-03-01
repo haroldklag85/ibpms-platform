@@ -187,8 +187,17 @@ Feature: BPMN Process Deployment
     And identificar si alguna `UserTask` carece de una vinculación de `Form Key`
     And identificar si alguna `ExclusiveGateway` carece de un flujo por defecto (`Default Flow`)
     And el sistema debe renderizar en Pantalla 6 la lista de Errores (❌) y Advertencias (⚠️) para que el Arquitecto los corrija antes del despliegue.
+
+  Scenario: Autogeneración de Roles RBAC desde Carriles (Lanes)
+    Given el Arquitecto importa un diagrama interactivo BPMN ("Flujo_Onboarding.bpmn")
+    And el diagrama contiene un Carril (Lane) llamado "Aprobadores_Legales"
+    And dentro de ese carril existe la Tarea "Firmar_Contrato" asociada al template "Form_Firma"
+    When el usuario realiza el POST a "/api/v1/design/processes/deploy" con éxito
+    Then el backend debe crear automáticamente el Rol de Sistema "BPMN_Flujo_Onboarding_Aprobadores_Legales"
+    And el sistema debe asociar automáticamente a este Rol los permisos de escritura sobre "Form_Firma" y ejecución sobre la tarea "Firmar_Contrato"
+    And el Rol autogenerado queda disponible en el Módulo de Seguridad (Pantalla 14) para asignarle usuarios.
 ```
-**Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN Integrado / CRUD de Procesos).
+**Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).
 
 ---
 
@@ -559,7 +568,7 @@ Feature: Mapeo Configurable CRM a iBPMS
 Definir un modelo controlado de instanciación de procesos ("Plan A" vía correo y "Plan B" manual restrictivo), eliminando el anti-patrón de crear procesos BPMN basura ante simples respuestas de correo electrónico o alertas SPAM.
 
 ### US-022: Disparo 'Confirm-to-Create' por Correo (Plan A)
-**Como** Analista o Gestor
+**Como** Líder de SAC (Servicio al Cliente)
 **Quiero** enviar un correo de confirmación de servicio a un Cliente desde un buzón corporativo en el iBPMS
 **Para** notificarlo, dejar evidencia auditable, y generar una tarea encolada ("Solicitud de Creación SD") sin instanciar ciegamente un proceso basura.
 
@@ -567,12 +576,12 @@ Definir un modelo controlado de instanciación de procesos ("Plan A" vía correo
 ```gherkin
 Feature: Intake Controlado Plan A (Email Trigger)
   Scenario: Creación de Tarea Administrativa en vez de Service Delivery (CA-1)
-    Given un Gestor envía un correo de confirmación a un cliente desde un buzón (Ej: auditorias@ibpms.com) indicando un servicio (Plantilla TO-BE)
+    Given el Líder de SAC envía un correo de confirmación a un cliente desde un buzón (Ej: auditorias@ibpms.com) indicando un servicio (Plantilla TO-BE)
     When el correo saliente se envía satisfactoriamente
     Then el sistema registra el correo como evento auditable
     And genera un 'correlation id' asociando al Cliente (CRM ID) y al 'template_id'
     And el sistema no inicia una instancia BPMN en Camunda
-    And el sistema crea una Tarea de Usuario ("Crear Service Delivery") asignada a un Responsable Admin
+    And el sistema crea una Tarea de Usuario ("Crear Service Delivery") asignada al Líder de SAC o Admin
 ```
 
 ---
@@ -662,3 +671,29 @@ Feature: External Customer Portal (Service Delivery)
     And listará todos los Service Deliveries concluidos permitiendo la descarga de su respectivo PDF (SGDEA)
 ```
 **Trazabilidad UX:** Wireframes Pantalla 18 (Portal B2B/B2C del Cliente).
+
+---
+
+## ÉPICA 12: Gobierno de Identidad y Accesos (RBAC Multirrol)
+Garantizar que la plataforma soporta el modelo corporativo real donde un usuario ejerce múltiples funciones simultáneamente mediante asignación de múltiples roles y grupos de EntraID.
+
+### US-030: Asignación Multi-Rol y Sincronización EntraID
+**Como** Administrador de Seguridad
+**Quiero** asignar o sincronizar múltiples roles (Globales y de Proceso) a un mismo usuario autenticado
+**Para** que pueda acceder a las distintas bandejas y tareas correspondientes a todos sus 'sombreros' operativos sin necesidad de tener cuentas separadas.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Multitenant RBAC & Multiple Roles Assignment
+  Scenario: Resolución de permisos híbridos (Global + Proceso)
+    Given que el usuario "maria.lider" está autenticada vía Azure AD (OIDC)
+    And tiene sincronizado el Rol Global "Líder de SAC"
+    And tiene sincronizado el Rol de Proceso "BPMN_Credito_Aprobador"
+    When el usuario solicita su menú de navegación
+    Then el sistema debe renderizar el botón de "Inbox" (Pantalla 1B) basado en su Rol Global
+    And el sistema debe renderizar el botón de "Workdesk"
+    When el usuario abre el "Workdesk"
+    Then el backend debe retornar en la lista de tareas pendientes (US-001) los casos asignados explícitamente a "maria.lider", Y ADEMÁS los asignados al candidato "BPMN_Credito_Aprobador"
+    And el usuario puede ejecutar exitosamente acciones derivadas de ambos roles en una sola sesión sin conflicto.
+```
+**Trazabilidad UX:** Wireframes Pantalla 14 (Seguridad RBAC).

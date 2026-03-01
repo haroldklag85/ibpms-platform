@@ -5,7 +5,9 @@ import com.ibpms.poc.application.dto.TaskDTO;
 import com.ibpms.poc.application.port.in.CompletarTareaUseCase;
 import com.ibpms.poc.application.port.in.ListarTareasUseCase;
 import com.ibpms.poc.application.port.in.ObtenerFormularioUseCase;
+import com.ibpms.poc.application.port.in.ReclamarTareaUseCase;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,13 +23,16 @@ public class TaskController {
     private final ListarTareasUseCase listarTareasUseCase;
     private final CompletarTareaUseCase completarTareaUseCase;
     private final ObtenerFormularioUseCase obtenerFormularioUseCase;
+    private final ReclamarTareaUseCase reclamarTareaUseCase;
 
     public TaskController(ListarTareasUseCase listarTareasUseCase,
             CompletarTareaUseCase completarTareaUseCase,
-            ObtenerFormularioUseCase obtenerFormularioUseCase) {
+            ObtenerFormularioUseCase obtenerFormularioUseCase,
+            ReclamarTareaUseCase reclamarTareaUseCase) {
         this.listarTareasUseCase = listarTareasUseCase;
         this.completarTareaUseCase = completarTareaUseCase;
         this.obtenerFormularioUseCase = obtenerFormularioUseCase;
+        this.reclamarTareaUseCase = reclamarTareaUseCase;
     }
 
     @GetMapping
@@ -64,5 +69,19 @@ public class TaskController {
 
         // Endpoint que retorna HTTP 204 No Content
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{taskId}/claim")
+    public ResponseEntity<Void> claimTask(@PathVariable String taskId) {
+        String username;
+        if (SecurityContextHolder.getContext() != null
+                && SecurityContextHolder.getContext().getAuthentication() != null) {
+            username = SecurityContextHolder.getContext().getAuthentication().getName();
+        } else {
+            username = "maria.lopez"; // Mock default para entorno sin Security context activo
+        }
+
+        reclamarTareaUseCase.reclamar(taskId, username);
+        return ResponseEntity.ok().build();
     }
 }

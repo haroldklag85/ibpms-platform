@@ -1,16 +1,20 @@
 <template>
-  <div>
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Portal de Servicios (App Launcher)</h2>
+  <div class="max-w-7xl mx-auto">
+    <!-- Procesos Frecuentes Quick Links -->
+    <div class="mb-6 flex items-center space-x-4 bg-white p-3 rounded-lg border shadow-sm">
+      <span class="font-bold text-gray-700">⭐ Mis Procesos Frecuentes:</span>
+      <button class="px-3 py-1.5 bg-gray-50 border rounded shadow-sm hover:bg-gray-100 text-sm font-medium text-gray-700 transition">🏖️ Vacaciones</button>
+      <button class="px-3 py-1.5 bg-gray-50 border rounded shadow-sm hover:bg-gray-100 text-sm font-medium text-gray-700 transition">🛒 Req. Compra</button>
+    </div>
     
-    <div class="bg-blue-50 border-l-4 border-ibpms-brand p-4 mb-8">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <span class="text-xl">👋</span>
-        </div>
-        <div class="ml-3">
-          <p class="text-sm text-blue-700">
-            Buenos días. ¿Qué necesitas iniciar hoy? Selecciona un proceso de tu catálogo.
+    <div class="bg-blue-50 border-l-4 border-ibpms-brand p-5 mb-8 rounded-r-lg shadow-sm">
+      <div class="flex items-center">
+        <span class="text-3xl mr-4">👋</span>
+        <div>
+          <p class="text-lg text-blue-900 font-bold">
+            Buenos días, @{{ authStore.user?.username || 'Usuario' }}. ¿Qué necesitas iniciar hoy?
           </p>
+          <p class="text-sm text-blue-700 mt-1">Selecciona un proceso de tu catálogo a continuación.</p>
         </div>
       </div>
     </div>
@@ -64,6 +68,18 @@
           </button>
         </div>
 
+        <!-- Tarjeta de Proceso -->
+        <div class="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition">
+          <div class="flex items-center mb-4">
+            <span class="text-3xl mr-3">⚖️</span>
+            <h4 class="text-lg font-bold text-ibpms">Revisión NDA</h4>
+          </div>
+          <p class="text-gray-600 text-sm mb-6">Aprobación legal confidencialidad (Non-Disclosure Agreement).</p>
+          <button class="w-full bg-gray-100 hover:bg-gray-200 text-ibpms font-medium py-2 px-4 rounded transition">
+            🚀 Iniciar Proceso
+          </button>
+        </div>
+
       </div>
     </div>
 
@@ -71,5 +87,8 @@
 </template>
 
 <script setup lang="ts">
+import { useAuthStore } from '@/stores/authStore';
+
+const authStore = useAuthStore();
 // Esta pantalla en el futuro listará ProcessDefinitions desde el backend
 </script>

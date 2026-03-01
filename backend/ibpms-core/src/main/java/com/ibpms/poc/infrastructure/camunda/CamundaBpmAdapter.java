@@ -4,10 +4,15 @@ import com.ibpms.poc.application.port.out.ProcesoBpmPort;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.RepositoryService;
+import org.camunda.bpm.engine.HistoryService;
 import org.springframework.stereotype.Component;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
+import org.camunda.bpm.engine.history.HistoricProcessInstance;
 
+import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Adaptador Driven — Motor BPM Camunda 7.
@@ -20,13 +25,16 @@ public class CamundaBpmAdapter implements ProcesoBpmPort {
     private final RuntimeService runtimeService;
     private final TaskService taskService;
     private final RepositoryService repositoryService;
+    private final HistoryService historyService;
 
     public CamundaBpmAdapter(RuntimeService runtimeService,
             TaskService taskService,
-            RepositoryService repositoryService) {
+            RepositoryService repositoryService,
+            HistoryService historyService) {
         this.runtimeService = runtimeService;
         this.taskService = taskService;
         this.repositoryService = repositoryService;
+        this.historyService = historyService;
     }
 
     @Override
@@ -68,5 +76,23 @@ public class CamundaBpmAdapter implements ProcesoBpmPort {
         } catch (Exception e) {
             throw new IllegalArgumentException("Error al desplegar modelo en el motor BPM: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public List<Map<String, Object>> obtenerHistorialPorVariable(String variableName, String variableValue) {
+        List<HistoricProcessInstance> instances = historyService.createHistoricProcessInstanceQuery()
+                .variableValueEquals(variableName, variableValue)
+                .list();
+
+        return instances.stream().map(inst -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("processInstanceId", inst.getId());
+            map.put("definitionKey", inst.getProcessDefinitionKey());
+            map.put("businessKey", inst.getBusinessKey());
+            map.put("state", inst.getState());
+            map.put("startTime", inst.getStartTime());
+            map.put("endTime", inst.getEndTime());
+            return map;
+        }).collect(Collectors.toList());
     }
 }

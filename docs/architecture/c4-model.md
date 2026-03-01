@@ -11,8 +11,9 @@ C4Context
     title Diagrama de Contexto (V1) - Plataforma iBPMS Táctica
     
     Person(usuario_negocio, "Usuario Interno", "Procesa tareas en Workdesk/Mailbox. Consulta Dashboards.")
+    Person(usuario_negocio, "Usuario Interno", "Procesa tareas en Workdesk/Mailbox. Consulta Dashboards.")
     Person(cliente_externo, "Cliente B2B/B2C", "Consulta estatus en Portal Seguro (Pantalla 18).")
-    Person(admin_reglas, "Arquitecto / Admin", "Usa IDE Pro-Code (Vue/Zod), diseña flujos y entrena tutor IA.")
+    Person(admin_reglas, "Arquitecto / Admin", "Sube BPMN (Auto-generando Roles), diseña UI y entrena IA.")
     
     System(ibpms, "Plataforma iBPMS (V1 Monolítica)", "Orquestador unificado sobre Azure VMs.")
     
@@ -47,12 +48,17 @@ C4Container
     
     System_Boundary(c1, "VNet Azure (QA/Prod) - VMs IaaS") {
         Container(apim, "Azure APIM", "Gateway Facade", "Punto de entrada único.")
-        Container(webapp, "Frontend Unificado", "Vue 3 / Vite", "IDE Pro-Code, Workdesk, y Portal B2B Autónomo.")
+        
+        System_Boundary(fe_apps, "Plataforma Frontend V1 (Vue 3 / Vite)") {
+             Container(webapp, "Workdesk & Portal B2B", "Vue 3", "Gestión operativa e Inbox.")
+             Container(web_modelers, "Modeladores Web (IDE)", "bpmn-js / dmn-js / Zod", "Diseño de Procesos, Reglas DMN y Formularios (iForms Maestro).")
+        }
+        
         Container(grafana, "Dashboard BAM", "Grafana", "Embebido por iframe en Frontend para analítica en vivo.")
         
         System_Boundary(be_vm, "Backend Monolítico (Spring Boot 3)") {
-            Container(backend, "API Backend Core", "REST/Java", "Orquesta Vue, Zod, SLAs y delegaciones.")
-            Container(engine, "Motor BPM/DMN", "Camunda 7 (.jar)", "Motor empotrado.")
+            Container(backend, "API Backend Core", "REST/Java", "Orquesta Vue, Zod, SLAs, y Auto-Genera Roles BPMN (Hook).")
+            Container(engine, "Motor BPM/DMN", "Camunda 7 (.jar)", "Motor empotrado que gatilla despliegues.")
             Container(doc_gen, "Generador Docs Oficiales", "FOP/PDFBox (.jar)", "Imprime PDFs.")
             Container(cache_db, "Catálogo Caché (Resilience)", "PostgreSQL/Redis", "Modo degradado de CRM.")
         }
@@ -66,11 +72,13 @@ C4Container
     System_Ext(o365_graph, "MS Graph", "Webhooks y REST API.")
     System_Ext(crm_sys, "CRM Corporativo", "REST API (Catálogo Federado).")
     
-    Rel(usuario, apim, "Opera Plataforma", "HTTPS")
+    Rel(usuario, apim, "Opera Plataforma y Diseña", "HTTPS")
     Rel(cliente, apim, "Consulta Portal B2B", "HTTPS")
     Rel(plugin_o365, apim, "Comandos Push", "HTTPS")
-    Rel(apim, webapp, "Sirve UI", "HTTPS")
+    Rel(apim, webapp, "Sirve UI Operativa", "HTTPS")
+    Rel(apim, web_modelers, "Sirve Modeler IDEs", "HTTPS")
     Rel(webapp, apim, "Consume APIs", "JSON/HTTPS")
+    Rel(web_modelers, apim, "Consume APIs y Despliega XML", "JSON/Base64/HTTPS")
     Rel(webapp, grafana, "Carga Iframe", "HTTPS")
     Rel(apim, backend, "Enruta peticiones y Webhooks", "HTTPS (TLS 1.2+ Interno)")
     
@@ -105,7 +113,7 @@ C4Component
 
         System_Boundary(aplicacion, "Application UseCases") {
             Component(cm_usecase, "CaseManagement UseCase", "Interface", "Casos estructurados e Intake Kanban.")
-            Component(auth_usecase, "Security & RLS (ABAC)", "Interface", "Protege Workdesk vs Portal B2B.")
+            Component(auth_usecase, "Security & RBAC UseCase", "Interface", "Protege Endpoints y auto-genera roles XML.")
             Component(template_usecase, "App Builder UseCase", "Interface", "Compila y sirve iForms de Vue/Zod.")
             Component(ff_usecase, "Circuit Breaker Manager", "Interface", "Alterna entre CRM Vivo y Caché.")
             Component(tx_manager, "Javers Audit & TX", "Spring Javers/Tx", "Audita Before/After e inmutabilidad.")
@@ -139,10 +147,11 @@ C4Component
     
     Rel(ff_usecase, jpa_adapter, "Lee Toggles V1", "Query")
     Rel(camunda_adapter, cm_usecase, "Implementa Workflow", "DI")
+    Rel(camunda_adapter, auth_usecase, "Gatilla XML Role Hook", "DeploymentEvent")
     Rel(ai_adapter, cm_usecase, "Infiriendo intenciones/datos", "DI")
     Rel(ai_adapter, rule_usecase, "Implementa Cerebro NLP a DMN", "DI")
     Rel(doc_adapter, cm_usecase, "Imprime Contratos/Cartas", "DI")
-    Rel(jpa_adapter, auth_usecase, "Carga Matrices ABAC", "Spring Data")
+    Rel(jpa_adapter, auth_usecase, "Carga/Guarda Matrices ABAC & Roles Auto-Generados", "Spring Data")
     Rel(erp_adapter, cm_usecase, "Sincroniza External", "DI")
     Rel(crm_adapter, cm_usecase, "Enriquece expediente", "DI")
     Rel(graph_adapter, cm_usecase, "Envía Drafts al Usuario", "DI")

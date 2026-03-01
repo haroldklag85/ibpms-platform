@@ -60,7 +60,7 @@
           <p v-if="task.description" class="text-gray-500 text-xs italic mb-4">"{{ task.description }}"</p>
           
           <div class="flex justify-between items-center">
-            <button v-if="currentTab === 'MINE'" class="px-4 py-2 bg-ibpms-brand text-white text-sm font-bold rounded shadow-sm hover:bg-blue-600 transition">
+            <button v-if="currentTab === 'MINE'" @click.stop="openForm(task)" class="px-4 py-2 bg-ibpms-brand text-white text-sm font-bold rounded shadow-sm hover:bg-blue-600 transition">
               Abrir Formulario
             </button>
             
@@ -93,6 +93,24 @@
       </div>
 
     </div>
+
+    <!-- Modal Formulario Dinámico -->
+    <div v-if="selectedSchema" class="fixed inset-0 bg-black/50 z-50 flex justify-end transition-opacity">
+      <div class="w-full max-w-2xl bg-white h-full shadow-2xl overflow-y-auto animate-slide-in p-6">
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+          <h2 class="text-xl font-bold text-gray-800">Tarea en Progreso</h2>
+          <button @click="selectedSchema = null" class="text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+        </div>
+        
+        <!-- Renderizador Inteligente -->
+        <DynamicForm 
+           :schema="selectedSchema" 
+           @submit="onSolveTask" 
+           @cancel="selectedSchema = null" 
+        />
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -100,8 +118,43 @@
 import { ref, computed, onMounted } from 'vue';
 import { useTasks } from '@/composables/useTasks';
 import type { TaskDto } from '@/types/Task';
+import type { FormSchema } from '@/types/FormSchema';
+import DynamicForm from '@/components/forms/DynamicForm.vue';
 
 const { tasks, candidates, isLoading, error, fetchMyTasks, fetchCandidateTasks, claimTask } = useTasks();
+
+// Form Modal State
+const selectedSchema = ref<FormSchema | null>(null);
+
+// Mock Schema de Prueba (Hasta que llegue del backend por tarea)
+const mockupSchema: FormSchema = {
+  formId: "test_form_01",
+  title: "Aprobación de Expediente",
+  description: "Diligencie las variables extraídas de la solicitud.",
+  fields: [
+    { key: "solicitante", label: "Nombre del Solicitante", type: "string", required: true, disabled: true, defaultValue: "Pedro Pérez" },
+    { key: "monto", label: "Monto Aprobado (USD)", type: "number", required: true, metadata: { min: 0, max: 10000 } },
+    { key: "estado", label: "Decisión", type: "select", required: true, options: [
+        { label: "Aprobar Expediente", value: "APROBADO" },
+        { label: "Rechazar por Faltantes", value: "RECHAZADO" }
+    ]},
+    { key: "fechaFirma", label: "Fecha de Formalización", type: "date", required: true },
+    { key: "esUrgente", label: "Marcar Notificación Prioritaria", type: "boolean" }
+  ]
+};
+
+const openForm = (_task: TaskDto) => {
+  // En el futuro: await TaskService.getSchemaForTask(_task.processDefinitionId)
+  selectedSchema.value = mockupSchema;
+};
+
+const onSolveTask = async (payload: any) => {
+  // En el futuro: await TaskService.completeTask(taskId, payload)
+  console.log("📝 JSON PAYLOAD GENERADO POR EL MOTOR:", payload);
+  alert("Tarea enviada al backend exitosamente. Revisa la consola (F12) para ver el Payload JSON resultante.");
+  selectedSchema.value = null; // Cerrar Modal
+  await fetchMyTasks(); // Refrescar Bandeja
+};
 
 // Tabs UI State
 const currentTab = ref<'MINE' | 'CANDIDATES'>('MINE');

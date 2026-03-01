@@ -29,6 +29,10 @@ public class SecurityRole {
         return name;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     public String getType() {
         return type;
     }
@@ -48,6 +52,10 @@ public class SecurityRole {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public void setType(String type) {

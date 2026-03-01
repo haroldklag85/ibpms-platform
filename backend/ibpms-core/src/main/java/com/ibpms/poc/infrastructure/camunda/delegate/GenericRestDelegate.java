@@ -5,6 +5,7 @@ import com.ibpms.poc.infrastructure.jpa.repository.OutboundConfigRepository;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.camunda.bpm.engine.delegate.Expression;
+
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -68,11 +69,12 @@ public class GenericRestDelegate implements JavaDelegate {
         HttpMethod method = HttpMethod.valueOf(config.getHttpMethod());
 
         // Disparar invocación externa asíncrona
-        ResponseEntity<Map> response = restTemplate.exchange(
+        @SuppressWarnings("unchecked")
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                 config.getEndpointUrl(),
                 method,
                 entity,
-                Map.class);
+                (Class<Map<String, Object>>) (Class<?>) Map.class);
 
         // Guardar la respuesta como variable del motor BPMN en caso de querer enrutar
         // "Si hay error o no"

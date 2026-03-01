@@ -1,6 +1,5 @@
 package com.ibpms.poc.application.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibpms.poc.application.dto.ExpedienteDTO;
 import com.ibpms.poc.application.port.out.CrmClientPort;
@@ -103,7 +102,7 @@ class CreateExpedienteServiceTest {
         Expediente savedExpediente = Expediente.iniciarNuevo("proceso_gestion_legal", "RAD-2026-001", "LEGAL", crmData);
         savedExpediente = savedExpediente.vincularProceso("camunda-proc-inst-777");
         // Reflection o setter no disponible, pero mockearemos la respuesta del save directamente
-        final Expediente expedienteResponse = savedExpediente; 
+
         when(repositoryPort.save(any(Expediente.class))).thenAnswer(invocation -> {
             Expediente e = invocation.getArgument(0);
             return e; // En un test real, podríamos inyectar un ID UUID válido aquí

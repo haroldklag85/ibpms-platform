@@ -39,7 +39,6 @@ public class CrmWebClientAdapter implements CrmClientPort {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Map<String, Object> obtenerMetadatosCliente(String clienteId) {
         try {
             return webClient.get()
@@ -64,10 +63,11 @@ public class CrmWebClientAdapter implements CrmClientPort {
 
         try {
             // Emulando la ruta /api/crm/clients/{domain} del requerimiento
+            @SuppressWarnings("unchecked")
             Map<String, Object> response = webClient.get()
                     .uri("/api/crm/clients/domain/{domain}", domain)
                     .retrieve()
-                    .bodyToMono(Map.class)
+                    .bodyToMono((Class<Map<String, Object>>) (Class<?>) Map.class)
                     .onErrorResume(e -> {
                         // Dummy Logic: Si falla el CRM o no existe, miramos si el dominio es "vip.com"
                         boolean fallbackVip = domain.equalsIgnoreCase("gob.co") || domain.equalsIgnoreCase("vip.com");

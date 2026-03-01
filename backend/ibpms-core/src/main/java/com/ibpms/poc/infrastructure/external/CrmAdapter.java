@@ -44,7 +44,6 @@ public class CrmAdapter implements CrmFederationPort {
      * por exceso de fallos, o si la llamada síncrona en fetchCatalogFromCrm lanza
      * excepción.
      */
-    @SuppressWarnings("unused")
     public String fetchCatalogFallback(String catalogId, Throwable t) {
         log.warn(
                 "CRM Inaccesible. Circuit Breaker actuando para el catálogo: {}. Causa: {}. Entrando a MODO DEGRADADO desde DB Local.",

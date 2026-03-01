@@ -55,9 +55,9 @@ public class ServiceDeliveryControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "asesor", roles = {"Funcionario"})
+    @WithMockUser(username = "asesor", roles = { "Funcionario" })
     void shouldForbidManualStartWithoutAdminRole() throws Exception {
-        String payload = """{"definitionKey": "flujo-pqr"}""";
+        String payload = "{\"definitionKey\": \"flujo-pqr\"}";
 
         mockMvc.perform(post("/service-delivery/manual-start")
                 .with(csrf())

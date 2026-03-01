@@ -181,7 +181,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+
 
 const isLoading = ref(true);
 const processHealth = ref<any>(null);

@@ -1,7 +1,7 @@
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.infrastructure.jpa.entity.IbpmsProfileEntity;
-import com.ibpms.poc.infrastructure.jpa.entity.IdpGroupMappingEntity;
+
 import com.ibpms.poc.infrastructure.jpa.entity.ProfileBpmnAssignmentEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.IbpmsProfileRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.IdpGroupMappingRepository;

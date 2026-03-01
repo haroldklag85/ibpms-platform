@@ -39,7 +39,7 @@ public class ObtenerMetricasService implements ObtenerMetricasUseCase {
 
         // 2. Tareas Activas y Tareas Atrasadas (Overdue)
         long activeTasks = taskService.createTaskQuery().active().count();
-        long overdueTasks = taskService.createTaskQuery().taskDueBefore(new Date()).count();
+        long overdueTasks = taskService.createTaskQuery().dueBefore(new Date()).count();
 
         return new ProcessHealthDTO(activeCases, completedCases, activeTasks, overdueTasks);
     }

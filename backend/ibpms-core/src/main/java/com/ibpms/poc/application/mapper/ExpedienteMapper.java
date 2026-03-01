@@ -20,6 +20,7 @@ public interface ExpedienteMapper {
     @Mapping(target = "id", source = "id")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "idempotencyKey", ignore = true)
     ExpedienteDTO toDto(Expediente domain);
 
     // DTO -> Domain (for creation)

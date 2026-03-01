@@ -37,12 +37,6 @@ public class RpaWebhookController {
                 payload.getOrigen(), payload.getTramiteId());
 
         try {
-            // TODO: (Sprint 7) Orquestación.
-            // 1. Invocar al Caso de Uso "ProcesarNotificacionExternaUseCase".
-            // 2. Este caso de uso guardará la metadata en BD y levantará un Evento en
-            // Camunda (MessageEvent).
-            // 3. En la fase V2, esto publicará el DTO en un tópico de Kafka para
-            // procesamiento Stream.
 
             // Respuesta inmediata para que el Script Python muera (Contenedor Efímero).
             String tracingId = UUID.randomUUID().toString();

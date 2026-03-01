@@ -1,8 +1,5 @@
 package com.ibpms.dmn;
 
-import com.ibpms.dmn.DmnTranslationRequestDTO;
-import com.ibpms.dmn.DmnTranslationResponseDTO;
-
 public interface GenerarDmnAiUseCase {
     /**
      * Genera un esquema DMN 1.3 en base a solicitudes en lenguaje natural.

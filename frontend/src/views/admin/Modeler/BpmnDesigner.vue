@@ -369,9 +369,24 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 
+// ── Types ────────────────────────────────────────────────────
+interface BpmnElement {
+  id: string;
+  type: string;
+  name?: string;
+  props: Record<string, any>;
+}
+
 // ── Canvas ───────────────────────────────────────────────────
 const canvasContainer = ref<HTMLElement | null>(null);
 let modelerInstance: any = null;
+
+// ── Selection State ──────────────────────────────────────────
+const selectedElement = ref<BpmnElement>({
+  id: '',
+  type: '',
+  props: {}
+});
 
 // ── Process State ────────────────────────────────────────────
 const currentProcessName = ref('Crédito de Consumo V1');
@@ -475,6 +490,7 @@ const emptyBpmn = `<?xml version="1.0" encoding="UTF-8"?>
 onMounted(async () => {
   try {
     const { default: BpmnModeler } = await import('bpmn-js/lib/Modeler');
+    // @ts-ignore
     const minimapModule = (await import('diagram-js-minimap')).default;
 
     modelerInstance = new BpmnModeler({
@@ -577,7 +593,7 @@ const confirmDeploy = async () => {
   isDeploying.value = true;
   try {
     if (modelerInstance) {
-      const { xml } = await modelerInstance.saveXML({ format: true });
+      const { xml: _xml } = await modelerInstance.saveXML({ format: true });
       console.log('[Deploy] Sending XML to /api/v1/deployments', { strategy: deployStrategy.value });
       // POST /api/v1/deployments
     }
@@ -623,7 +639,7 @@ const loadProcess = (p: any) => {
 const sendCopilotMessage = async () => {
   if (!copilotInput.value.trim()) return;
   copilotMessages.value.push({ role: 'user', text: copilotInput.value });
-  const query = copilotInput.value;
+  const _query = copilotInput.value;
   copilotInput.value = '';
   copilotLoading.value = true;
 

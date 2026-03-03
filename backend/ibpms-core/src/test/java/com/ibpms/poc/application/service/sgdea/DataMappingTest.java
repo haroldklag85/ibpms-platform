@@ -1,4 +1,4 @@
-package com.ibpms.poc.application.service;
+package com.ibpms.poc.application.service.sgdea;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DataMappingTest {
 
     private final WebClient.Builder mockBuilder = WebClient.builder();
-    private final SharePointAdapter adapter = new SharePointAdapter(mockBuilder);
+    private final SharePointAdapterService adapter = new SharePointAdapterService(mockBuilder);
 
     // ── QA Instruction: Large Stream Uploads (50MB OOM Guard) ──
     @Test

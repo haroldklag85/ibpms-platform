@@ -112,6 +112,13 @@ const router = createRouter({
             name: 'VisualMapper',
             component: () => import('@/views/admin/Integration/VisualMapper.vue'),
             meta: { requiresAuth: true }
+        },
+        // --- Bloque G: SGDEA (Pantalla 12) ---
+        {
+            path: '/sgdea/vault',
+            name: 'DocumentGrid',
+            component: () => import('@/views/admin/SGDEA/DocumentGrid.vue'),
+            meta: { requiresAuth: true }
         }
     ]
 });

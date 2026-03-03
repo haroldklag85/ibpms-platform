@@ -1188,7 +1188,59 @@ Feature: Vistas UX Segregadas por Intención
     Given un usuario 'Colaborador' (Rol: auditor_senior) ingresa al Workflow (Inbox)
     Then la interfaz NO le muestra el botón "Crear Servicios"
     And presenta tarjetas agrupadas estrictamente por 'Plantillas', ejemplo: "Auditoría Express — 7 Tareas pendientes en rojo".
+```
 
+---
+
+## ÉPICA 8: Extensiones Cognitivas AI-Native (Cognitive BPMN)
+Aborda la integración nativa de Inteligencia Artificial (LLMs, RAG) en el modelado BPMN (Pantalla 6) y la ejecución del iBPMS, evolucionando de procesos secuenciales estáticos a procesos aumentados cognitivamente.
+
+### US-032: Orquestación de IA y Generative Task (RAG)
+**Como** Arquitecto Funcional
+**Quiero** disponer de tareas especializadas en IA dentro del diseñador BPMN
+**Para** modelar flujos donde un Agente de IA analiza documentos y redacta contenido estructurado sin interrumpir el motor lógico de Camunda.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Componentes AI-Native BPMN y Controles
+  Scenario: Output Estricto basado en Schema JSON (CA-1 - Opción A)
+    Given el Arquitecto configura una "Generative Task (RAG)" en la Pantalla 6
+    Then el motor de IA tiene prohibido generar formato visual (HTML/Docs) directamente
+    And está forzado a devolver la información estructurada mediante un Esquema JSON (Extraer y Rellenar)
+    And el iBPMS fusiona ese JSON con la plantilla inmutable oficial antes de mostrársela al usuario final.
+
+  Scenario: Desbloqueo de Conocimiento PII con Políticas Estrictas (CA-2)
+    Given la tarea "Generative Task (RAG)" necesita consultar la Bóveda SGDEA
+    When el LLM busca contexto en documentos clasificados como Privados o PII
+    Then se permite la lectura para la generación de la respuesta
+    But la política de seguridad (RBAC/DLP) enmascara o prohíbe exponer directamente estos datos sensibles al usuario que no tiene dichos privilegios.
+    
+  Scenario: Vectorización de Conocimiento a Demanda (CA-3)
+    Given el Administrador de Conocimiento sube archivos al SGDEA
+    Then dispone de un botón "[Actualizar Memoria IA (Embeddings)]"
+    And la vectorización a la base de datos vectorial (Ej: Milvus/Pinecone) no ocurre automáticamente en cada subida de archivo para no degradar el rendimiento, sino de forma controlada y explícita.
+
+  Scenario: Botón de Pánico Anti-Alucinaciones (CA-4)
+    Given un usuario humano revisa un borrador generado por la IA en su formulario (Pantalla 7)
+    Then dispone de un botón global estilo "[👎 Reportar Alucinación / Error IA]"
+    And al accionarlo, se cancela el comportamiento automático, se emite una alerta al "Ingeniero de Prompts" y el proceso se redirige al flujo manual por defecto.
+
+  Scenario: Trazabilidad a las Fuentes (Citas Interactivas) (CA-5)
+    Given la "Generative Task (RAG)" emite una respuesta argumentativa
+    Then el texto debe incluir referencias o hipervínculos a los IDs documentales usados como contexto
+    And cuando el usuario hace clic, el iBPMS lo redirige al visor del SGDEA con la sección exacta resaltada, garantizando verificación humana.
+
+  Scenario: Budget Configurable de Tokens LLM (CA-6)
+    Given el Arquitecto configura la tarea cognitiva en la Pantalla 6
+    Then existe un parámetro limitante de "Budget de Tokens / Consumo Mensual"
+    And si el proceso agota su cuota asiganada, se corta el acceso a la IA y el motor enruta a las ramas B (flujos manuales alternativos) automáticamente.
+
+  Scenario: Gobernanza de Prompts Centralizada (CA-7)
+    Given la necesidad de alterar las instrucciones base de los Agentes RAG
+    Then existe una pantalla separada llamada "Enterprise Prompt Library"
+    And solo los usuarios con el rol especializado `prompt_engineer` tienen permisos CRUD sobre estos prompts globales, dejando a los Arquitectos BPMN únicamente con la facultad de consumirlos.
+```
+**Trazabilidad UX:** Pantalla 6 (BPMN Designer Palette), Pantalla 12 (SGDEA), Pantalla 7 (Form Builder UI).
   Scenario: Renderizado de Vista 360 para Cuenta / Cliente
     Given un Ejecutivo de Cuenta navega el perfil de un Cliente Específico en su directorio
     Then la interfaz agrupa y presenta TODAS las tareas BPMN y Ágiles atadas a ese CRM_ID 
@@ -1243,3 +1295,481 @@ Feature: Multitenant RBAC & Multiple Roles Assignment
     And el usuario puede ejecutar exitosamente acciones derivadas de ambos roles en una sola sesión sin conflicto.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 14 (Seguridad RBAC).
+
+---
+
+## ÉPICA 8: Extensiones Cognitivas AI-Native (Cognitive BPMN)
+Aborda la integración nativa de Inteligencia Artificial (LLMs, RAG) en el modelado BPMN (Pantalla 6) y la ejecución del iBPMS, evolucionando de procesos secuenciales estáticos a procesos aumentados cognitivamente.
+
+### US-032: Orquestación de IA y Generative Task (RAG)
+**Como** Arquitecto Funcional
+**Quiero** disponer de tareas especializadas en IA dentro del diseñador BPMN
+**Para** modelar flujos donde un Agente de IA analiza documentos y redacta contenido estructurado sin interrumpir el motor lógico de Camunda.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Componentes AI-Native BPMN y Controles
+  Scenario: Output Estricto basado en Schema JSON (CA-1 - Opción A)
+    Given el Arquitecto configura una "Generative Task (RAG)" en la Pantalla 6
+    Then el motor de IA tiene prohibido generar formato visual (HTML/Docs) directamente
+    And está forzado a devolver la información estructurada mediante un Esquema JSON (Extraer y Rellenar)
+    And el iBPMS fusiona ese JSON con la plantilla inmutable oficial antes de mostrársela al usuario final.
+
+  Scenario: Desbloqueo de Conocimiento PII con Políticas Estrictas (CA-2)
+    Given la tarea "Generative Task (RAG)" necesita consultar la Bóveda SGDEA
+    When el LLM busca contexto en documentos clasificados como Privados o PII
+    Then se permite la lectura para la generación de la respuesta
+    But la política de seguridad (RBAC/DLP) enmascara o prohíbe exponer directamente estos datos sensibles al usuario que no tiene dichos privilegios.
+    
+  Scenario: Vectorización de Conocimiento a Demanda (CA-3)
+    Given el Administrador de Conocimiento sube archivos al SGDEA
+    Then dispone de un botón "[Actualizar Memoria IA (Embeddings)]"
+    And la vectorización a la base de datos vectorial (Ej: Milvus/Pinecone) no ocurre automáticamente en cada subida de archivo para no degradar el rendimiento, sino de forma controlada y explícita.
+
+  Scenario: Botón de Pánico Anti-Alucinaciones (CA-4)
+    Given un usuario humano revisa un borrador generado por la IA en su formulario (Pantalla 7)
+    Then dispone de un botón global estilo "[👎 Reportar Alucinación / Error IA]"
+    And al accionarlo, se cancela el comportamiento automático, se emite una alerta al "Ingeniero de Prompts" y el proceso se redirige al flujo manual por defecto.
+
+  Scenario: Trazabilidad a las Fuentes (Citas Interactivas) (CA-5)
+    Given la "Generative Task (RAG)" emite una respuesta argumentativa
+    Then el texto debe incluir referencias o hipervínculos a los IDs documentales usados como contexto
+    And cuando el usuario hace clic, el iBPMS lo redirige al visor del SGDEA con la sección exacta resaltada, garantizando verificación humana.
+
+  Scenario: Budget Configurable de Tokens LLM (CA-6)
+    Given el Arquitecto configura la tarea cognitiva en la Pantalla 6
+    Then existe un parámetro limitante de "Budget de Tokens / Consumo Mensual"
+    And si el proceso agota su cuota asiganada, se corta el acceso a la IA y el motor enruta a las ramas B (flujos manuales alternativos) automáticamente.
+
+  Scenario: Gobernanza de Prompts Centralizada (CA-7)
+    Given la necesidad de alterar las instrucciones base de los Agentes RAG
+    Then existe una pantalla separada llamada "Enterprise Prompt Library"
+    And solo los usuarios con el rol especializado `prompt_engineer` tienen permisos CRUD sobre estos prompts globales, dejando a los Arquitectos BPMN únicamente con la facultad de consumirlos.
+
+  Scenario: Tolerancia a Fallos Multi-LLM (Failover Pattern) (CA-8)
+    Given la tarea "Generative Task (RAG)" está configurada para consumir un modelo principal (Ej: Azure OpenAI GPT-4o)
+    When este proveedor primario sufre una caída (Downtime / HTTP 503)
+    Then el Agente Orquestador del iBPMS no detiene el proceso inmediatamente
+    And realiza un salto automático transparente (Failover) a un modelo de respaldo configurado (Ej: AWS Bedrock Claude 3.5) para garantizar la continuidad operativa.
+
+  Scenario: Auditoría Transparente de IA sin Marcas de Agua (CA-9)
+    Given un PDF oficial generado a partir de una plantilla con texto redactado por IA
+    When el usuario humano aprueba el texto y el sistema emite el documento final
+    Then el documento PDF NO incluye advertencias públicas ni marcas de agua de "Generado por IA" para conservar la imagen corporativa
+    And el iBPMS persiste en su base de auditoría interna un registro estricto inmutable indicando "Borrador Generado por IA - Validado y Aceptado bajo responsabilidad del usuario [Nombre] con ID [X]".
+
+  Scenario: Parametrización de Límites de Lectura Comprensiva (CA-10)
+    Given un expediente que incluye anexos documentales extremadamente extensos (+500 páginas)
+    When el proceso pasa los anexos como contexto al Agente RAG
+    Then el Arquitecto BPMN puede haber parametrizado "Límites de Extracción" en la configuración de la tarea cognitiva
+    And el sistema recorta inteligentemente el contexto a enviar (Ej: "Evaluar solo las primeras 20 páginas" o "Límite: 100k tokens") previniendo gastos desmesurados de cómputo.
+
+  Scenario: Control Bidireccional de Tono Redaccional (CA-11)
+    Given el Arquitecto BPMN arrastra una Generative Task al lienzo en Pantalla 6
+    Then el panel de propiedades incluye un Dropdown "Tono de Comunicación" (Ej: Empático, Formal/Legal, Comercial)
+    And esta instrucción se inyecta dinámicamente como Sistema al Prompt principal sin requerir que el Arquitecto reescriba el Prompt base de la librería.
+
+  Scenario: Validación Invisible de Doble Agente (Self-Reflection) (CA-12)
+    Given el modelo LLM principal genera un borrador de respuesta
+    Then en flujos de criticidad alta, el iBPMS enruta temporalmente ese borrador a un segundo "Agente Validador Invisible"
+    And si el Validador detecta Alucinaciones graves o violaciones de PII, obliga al modelo principal a reescribir la respuesta internamente antes de presentársela al analista humano en su Workdesk.
+
+  Scenario: Auditoría Legal del Prompt Exacto (CA-13)
+    Given que el "Ingeniero de Prompts" altera el prompt oficial corporativo frecuentemente
+    When un proceso cognitivo finaliza y guarda la respuesta generada
+    Then la base de datos almacena el texto íntegro e inmutable del Prompt específico que se usó en ese milisegundo exacto
+    And permitiendo auditorías forenses (¿Qué le ordenamos a la IA ese día?) años después del evento de ejecución.
+
+  Scenario: Bucle de Retroalimentación Humana (RLHF) (CA-14)
+    Given el Abogado recibe un borrador generado por la IA en su formulario
+    When el Abogado rechaza el texto y lo reescribe manualmente antes de enviar
+    Then el iBPMS guarda el par de datos "[Borrador IA Original] vs [Texto Humano Final]" en una base de datos de telemetría MLOps
+    And este corpus queda disponible para futuras sesiones de ajuste fino (Fine-tuning) del modelo base corporativo.
+
+  Scenario: Aseguramiento DLP e IT Security en Nube Pública (CA-15)
+    Given que el LLM está hospedado fuera de la infraestructura local (Ej: Azure, OpenAI)
+    When el iBPMS emite el llamado de red con el contexto (Cuerpo de PQRS)
+    Then un interceptor de Seguridad IT / DLP (Data Loss Prevention) evalúa y enmascara PII (Nombres, Cédulas, Tags) reemplazándolos por Hash-Tokens pseudo-anonimizados
+    And la IA procesa los hashes, y al devolver la respuesta redactada, el interceptor re-hidrata los Hashes a su valor original PII dentro del perímetro seguro local.
+
+  Scenario: Traducción Activa de Salida (CA-16 - Diferido a V2)
+    Given el cliente escribe en un idioma extranjero (Ej: Inglés)
+    # NOTA: Diferido a V2. En V1 la IA entiende el inglés pero la instrucción general del Prompt fuerza la respuesta en Español.
+
+  Scenario: Adjuntos Generativos y Bucle de RLHF Documental (CA-17)
+    Given una tarea "Generative Task (RAG)" configurada para exportar un archivo .DOCX
+    When la IA redacta el contenido y genera el documento asociado al proceso
+    Then si el humano no lo acepta y edita el archivo Word subiéndolo de nuevo (o haciendo comentarios)
+    And el iBPMS captura el "Delta" (diferencias) entre el documento IA y la corrección humana para usarlo como métrica de retroalimentación de calidad.
+
+  Scenario: Bucle Iterativo por Notas o Comentarios (CA-18)
+    Given el usuario revisa el borrador generado por la IA y no está satisfecho
+    When en lugar de editarlo manualmente, opta por la revisión guiada
+    Then utiliza un panel de "Notas / Comentarios" para instruir correcciones (Ej: "Hazlo más corto y cordial")
+    And la tarea cognitiva vuelve a ejecutarse tomando ese comentario humano como contexto mandatorio para el re-intento.
+
+  Scenario: Selección de Modelo a Nivel de Ejecución (CA-19)
+    Given el Arquitecto BPMN ha parametrizado "Metadatos de Sugerencia" indicando qué IA usar (Ej: Nivel Inferior)
+    When la tarea cognitiva llega al Workdesk del usuario final
+    Then el Usuario Ejecutor es quien tiene la potestad final en la UI para elegir qué modelo exacto procesará la solicitud, utilizando la sugerencia como base.
+
+  Scenario: Termómetro de Seguridad (Confidence Score) (CA-20)
+    Given el modelo LLM genera una respuesta
+    Then el sistema debe mostrar visualmente en el Workdesk un "Confidence Score" (Nivel de Certeza)
+    And advirtiendo al revisor humano si la certidumbre matemática de la IA es peligrosamente baja.
+
+  Scenario: Transparencia Cognitiva Continua (Chain of Thought visible) (CA-21)
+    Given que el LLM estructura un argumento complejo
+    Then el sistema debe solicitar y capturar el "Chain of Thought" (Paso a paso lógico de la IA)
+    And exponerlo como un log oculto pero auditable en la metadata de la instancia para que el administrador/humano entienda el "por qué" de la decisión.
+
+  Scenario: Contexto Humano Ad-Hoc en Vivo (CA-22)
+    Given la memoria base de la IA (SGDEA) está limitada
+    Then el usuario final que está revisando la tarea puede, en tiempo real, adjuntar un PDF local desde su PC
+    And ordenar a la IA que reevalúe y genere un nuevo borrador incluyendo ese documento exclusivo y saltándose el RAG tradicional.
+
+  Scenario: Versionamiento y Máquina del Tiempo de Prompts (CA-23)
+    Given el modulo Enterprise Prompt Library
+    When el Ingeniero de Prompts realiza alteraciones al texto de instrucción
+    Then el sistema crea versiones inmutables al estilo Git (v1, v2)
+    And existe un mecanismo de reversión instantánea (Rollback) por si el nuevo prompt causa degradación operativa generalizada.
+
+  Scenario: Cola de Procesamiento por Lotes (Batch Dispatcher) (CA-24)
+    Given un volumen alto de invocaciones a la IA
+    Then el sistema enruta estas tareas a una "Cola de Despacho" paramétrizable por el Administrador de Prompts
+    And esta cola maneja límites de concurrencia, reintentos por falla de la API, y estrategias Backoff automáticas.
+
+  Scenario: Interfaz Asíncrona sin Bloqueo de Navegación (CA-25)
+    Given la generación de IA está ejecutándose en la Cola de Despacho (CA-24)
+    Then la Interfaz de UI presenta un mensaje personalizado indicando que el proceso "Está siendo procesado por IA"
+    And NO bloquea al usuario, permitiéndole paralelamente atender otras tareas u operar otras pantallas del iBPMS libremente.
+
+  Scenario: Gatillo Exclusivamente Imperial (Acción Humana) (CA-26)
+    Given un flujo de procesamiento que involucra el componente de IA
+    Then el sistema tiene una regla arquitectónica imperativa: la invocación a la IA no puede ocurrir por auto-transición 100% de fondo de Camunda
+    And exige siempre que el Gatillo (Trigger) originario haya sido el "Clic" explícito de un Usuario Humano en la pantalla precedente o actual, impidiendo escapes automatizados ciegos.
+
+  Scenario: UX de Carga Asíncrona (Prevención de Streaming) (CA-27)
+    Given la generación de un documento IA
+    Then la interfaz de usuario utiliza un "Loading Spinner" tradicional y peticiones HTTP estándar en lugar de WebSockets (Efecto Máquina de Escribir)
+    And priorizando la eficiencia de memoria del servidor web B2B frente a la espectacularidad visual.
+
+  Scenario: Regeneración Parcial por Fragmentos (CA-28)
+    Given un borrador extenso generado por la IA en la pantalla del analista
+    When el usuario selecciona únicamente un párrafo y hace clic en "Comentar / Corregir"
+    Then el iBPMS enruta a la IA exclusivamente el fragmento seleccionado junto con la instrucción humana (Ej: "Haz este párrafo más formal")
+    And la IA devuelve el fragmento modificado, fusionándose in-place sin necesidad de reescribir ni gastar tokens en el texto adyacente que ya fue aprobado.
+
+  Scenario: Privacidad de Auditoría Cognitiva (CA-29)
+    Given que el proceso generó métricas de "Confidence Score" y "Chain of Thought"
+    Then estas métricas son de consumo estrictamente interno
+    And por ningún motivo se exponen al Ciudadano Externo en la Pantalla 18 (Portal B2B/B2C).
+
+  Scenario: RAG Multimodal Controlado (V1) (CA-30)
+    Given la ingesta de documentos anexos para contextualizar a la IA
+    Then el Agente RAG soporta en su V1 la lectura de documentos PDF, DOCX e Imágenes (OCR integrado a la API de visión)
+    And excluyendo formalmente notas de voz o video (Diferido a V2).
+
+  Scenario: Eficiencia de Contexto Pre-Empaquetado (IA Amarrada) (CA-31)
+    Given una tarea generativa que requiere datos externos (Ej: Saldos ERP)
+    Then la IA tiene prohibido usar "Function Calling" autónomo para ir a buscar datos por su cuenta (Gasto excesivo de tokens y memoria de razonamiento)
+    And la arquitectura dicta que Camunda Engine, mediante Service Tasks previas y baratas, extraiga la data y se la entregue pre-empaquetada en el Prompt a la IA para que esta se limite únicamente a redactar.
+```
+**Trazabilidad UX:** Pantalla 6 (BPMN Designer Palette), Pantalla 12 (SGDEA), Pantalla 7 (Form Builder UI).
+
+---
+
+## ÉPICA 9: Hub de Integraciones y Conectores (Integration Hub - Pantalla 11)
+Gobierna la comunicación bidireccional entre el motor iBPMS y los sistemas externos (CRM, ERP, SGDEA de terceros como SharePoint), garantizando resiliencia y estandarización mediante conectores reutilizables.
+
+### US-033: Catálogo de API y Mapeo Visual
+**Como** Arquitecto Técnico / Interfaz
+**Quiero** disponer de un Hub centralizado para configurar conectores HTTP
+**Para** asociar de forma visual las variables de procesos BPMN con endpoints externos, gestionando tolerancia a fallos y reglas de seguridad de nivel Enterprise.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: API Connector Configuration and Resiliency
+  Scenario: Exclusividad Rest JSON (Delegación a APIM) (CA-1)
+    Given la necesidad de interactuar con un sistema Core de tecnología antigua (Ej: SOAP XML)
+    Then el Integration Hub del iBPMS emite su comunicación internamente en formato estándar `REST JSON`
+    And la arquitectura delega imperativamente la conversión de protocolos a la capa de API Management (APIM) middleware corporativo, manteniendo el iBPMS libre de librerías legacy.
+
+  Scenario: Compatibilidad de Autenticación Segura (CA-2)
+    Given que el Arquitecto configura un nuevo Conector en la Pantalla 11
+    Then el formulario debe disponer de soporte imperativo para inyección de Headers `Basic Auth` y credenciales `OAuth 2.0 / JWT`
+    And estos credenciales deberán estar almacenados en la Bóveda de Secretos encriptada, jamás en texto plano.
+
+  Scenario: Ausencia de Agentes Locales On-Premise (CA-3)
+    Given la necesidad de conectar el iBPMS en la Nube con el ERP interno corporativo
+    Then el iBPMS no provee "Agentes VPN Inversos" ni demonios de instalación local
+    And la arquitectura asume que el acceso infraestructural está resuelto mediante puertos habilitados en el FireWall corporativo bajo responsabilidad exclusiva del área de IT.
+
+  Scenario: Tolerancia a Caídas y Retry Asíncrono (CA-4)
+    Given la invocación a la API externa de SharePoint que retorna error HTTP 500
+    Then el motor encola la petición fallida en base de datos (Dead Letter Queue controlada)
+    And realiza intentos de backoff silenciosos (Ej: cada 5 minutos por 1 hora)
+    And si persisten los fallos, enruta el task a modalidad de "Fallback" alertando al analista humano en el Workdesk de la interrupción integrativa.
+
+  Scenario: Data Mapping Gráfico (Drag and Drop) (CA-5)
+    Given la configuración de un catálogo de retorno (Ej: CRM devuelve el perfil del cliente)
+    Then la interfaz expone visualmente un árbol JSON de variables de entrada a la izquierda vs variables del BPMN a la derecha
+    And permite dibujar conexiones (Drag & Drop mapping) sin requerir que el Arquitecto estructure JSONPath a mano.
+
+  Scenario: Trazabilidad y Logs Híbridos (CA-6)
+    Given una prueba de conexión fallida por Timeout
+    Then la Pantalla 11 emite en su consola técnica el Log Raw inmediato del error para el diseñador
+    And las ejecuciones fallidas en producción se delegan adicionalmente al sistema APIM o a la bitácora interna de Kibana para trazabilidad forense.
+
+  Scenario: Validación Profunda de Payload Fantasma (CA-7)
+    Given una API mal implementada que devuelve un estatus `HTTP 200 OK` pero el cuerpo del JSON incluye el key `{"error": true, "code": "USER_NOT_FOUND"}`
+    Then el Hub permite al Arquitecto declarar "Reglas Límite de Payload" para que el iBPMS separe visualmente si una petición fue exitosa lógicamente (no solo analizando el status header HTTP).
+
+  Scenario: Censura DLP en Logs del Sistema (CA-8)
+    Given que la API devuelve inintencionalmente la llave primaria secreta o contraseña de una transacción
+    Then la política general de censura y DLP intercepta el contenido saliente hacia el log (`stdout`/Kibana/Pantalla11)
+    And enmascara los atributos coincidentes (Hashes visuales ocultos `***`) bloqueando la exposición a un desarrollador o Arquitecto BPMN no autorizado.
+
+  Scenario: Directorio Global Reutilizable de Contenedores (CA-9)
+    Given un Arquitecto a punto de conectar la extracción del SharePoint en un proceso
+    Then la UI de "Agregar Conector" en la Pantalla 6 ofrece primero un buscador sobre el "Directorio de Conectores Registrados" 
+    And permite re-utilizar el conector genérico sin volver a ingresar claves ni endpoints globales, favoreciendo el reciclaje.
+
+  Scenario: Componente Playground de Pruebas (CA-10)
+    Given que el Arquitecto terminó el Mapping Drag and Drop
+    Then dispone de un botón `[▶️ Run / Probar Conector]` en la misma Pantalla 11
+    And puede inyectar variables estáticas Dummy obteniendo el Raw Response de SharePoint/CRM en ese instante para verificar funcionamiento antes de comitear al catálogo.
+
+  Scenario: Parametrización Humana de Timeouts (CA-11)
+    Given un conector que apunta a un ERP legacy lento
+    Then la interfaz de Pantalla 11 expone un input para definir `Timeout (ms)` exacto por Conector
+    And previene que un solo API sature el motor Camunda por quedarse en estado colgante esperando infinitamente.
+
+  Scenario: Lista Negra de Seguridad de Red (SSRF Prevention) (CA-12)
+    Given un Arquitecto intentando mapear un Endpoint hacia un host interno malicioso (Ej: `localhost`, `127.0.0.1` o IPs locales de la BD)
+    Then el sistema de Validación de Guardrails de IT intercepta el guardado
+    And rechaza conectores que apunten a dominios listados en la "Blacklist Confidencial" configurada por el equipo de ciberseguridad.
+
+  Scenario: Parseo Inteligente de Fechas (CA-13)
+    Given una respuesta de CRM en donde el campo `birth_date` llega formateado de forma exótica (`20241231`)
+    When el usuario arrastra la variable al Drag & Drop
+    Then el Hub ofrece una opción "Forzar Formateo de Fecha"
+    And convierte automáticamente el valor al estándar corporativo ISO-8601 impidiendo errores de parseo en el motor BPMN más adelante.
+
+  Scenario: Interfaz Multipart/Form-Data para Anexos Pesados (CA-14)
+    Given la necesidad imperativa de recuperar y enviar PDFs al SharePoint
+    Then el Hub de Integración no se limita únicamente al Content-Type `application/json`
+    And provee soporte técnico transparente para subida y descarga asíncrona de Binary Large Objects (BLOBs) mediante `multipart/form-data`.
+
+  Scenario: Agresivo Ahorro de Red por Caché en Memoria (CA-15)
+    Given 50 procesos BPMN simultáneos pidiendo un catálogo inmutable (Ej: Catálogo de Sucursales ERP)
+    Then el Arquitecto puede encender el "Switch de Caché" interactivo en el Conector
+    And parametrizar un TTL (Ej: Valid for 10 min) para que el iBPMS responda instantáneamente desde RAM local evadiendo 49 llamadas de red innecesarias al ERP.
+
+  Scenario: Despliegue Manual de Entornos V1 / Variables V2 (CA-16)
+    Given la necesidad de apuntar conectores a Producción (Ej: de `crm-qa` a `crm-prod`)
+    Then en el alcance de V1, el Arquitecto de integraciones debe actualizar las URLs manualmente
+    # NOTA: Diferido a V2: Orquestación automática transversal mediante Variables de Entorno (`{{crm_base_url}}`).
+
+  Scenario: Autonomía de Firmas Criptográficas de Payload (CA-17)
+    Given una integración hacia una pasarela bancaria que exige firma HMAC-SHA256
+    Then la configuración del Conector exhibe un panel de `Security Signatures`
+    And permite auto-firmar ciegamente el payload adjuntando la rúbrica matemática en los Headers garantizando no-repudio técnico.
+
+  Scenario: Traversado Nativo de Paginación Recursiva (CA-18)
+    Given que el CRM expone un listado masivo en páginas pequeñas (offset/limit de a 100)
+    Then el Conector es consciente de estructuras de paginación
+    And permite configurar la navegación automática "NextPage" hasta obtener el dataset completo sin que el Arquitecto deba modelar un 'For Loop' grotesco en el BPMN.
+
+  Scenario: Versionamiento Estricto No Destructivo (CA-19)
+    Given un Arquitecto modificando el Conector "CRM Cliente v1" que está amarrado ya a 50 procesos vivos
+    When agrega un campo obligatorio nuevo 
+    Then el iBPMS prohíbe el Sobre-escritura instantánea (la cual rompería la empresa)
+    And fuerza el guardado estricto como nueva reliquia inmutable "CRM Cliente v2", forzando una migración gradual proceso por proceso.
+
+  Scenario: Refreshing Invisible de Identidades Temporales (CA-20)
+    Given una conexión JWT/OAuth2 donde el token de acceso expira a los 60 minutos
+    When un proceso se despierta a las 2 horas intentando conectar
+    Then el Hub ejecuta internamente, sin intervención humana, el `refresh_token` contra el Identity Provider
+    And obtiene un nuevo Token válido, emite la invocación y mantiene el flujo operativo limpio ininterrumpidamente.
+
+  Scenario: Habilitación de Entradas Inbound (Webhooks) (CA-21)
+    Given la necesidad de que el iBPMS sea un ente reactivo a sistemas externos (Ej: CRM actualiza un dato on-demand)
+    Then la interfaz de Pantalla 11 expone la capacidad de generar dinámicamente "URLs de Webhooks Inbound"
+    And asignando tokens generados nativamente para que sistemas externos llamen al iBPMS e interactúen con instancias de proceso activas (Signal Events / Message Events).
+
+  Scenario: Transformación mediante Inyección de Código Custom (CA-22)
+    Given una respuesta legacy en XML con estructuras irregulares inmanejables por el mapeo Drag & Drop simple
+    Then el conector habilita opcionalmente un editor integrado "Code Injector" (JS/Python seguro - Sandboxed)
+    And permitiendo al Arquitecto escribir scripts deterministas obligados a transformar el payload crudo hacia el JSON esperado por el Engine de forma manual.
+
+  Scenario: Tercerización de Tráfico y Encolamiento (Throttling) (CA-23)
+    Given picos de transaccionalidad donde 10,000 procesos invocan a un SharePoint externo simultáneamente
+    Then el iBPMS delega la contención (Rate Limiting) a la Cola de Mensajería corporativa (Ej: RabbitMQ / Apache Kafka)
+    And no asume internamente la gestión masiva de peticiones limitantes para evitar caídas de servidor.
+
+  Scenario: Aislamiento por Seguridad Condicionada (CA-24 - Diferido a V2)
+    Given la existencia de Conectores clasificados como "Altamente Confidenciales" (Saldos ERP)
+    Then en el alcance actual de V1 todos los arquitectos autenticados en el BPM Designer tienen visibilidad transversal del catálogo de conectores
+    # NOTA: Diferido a V2 la securización del catálogo de conectores por roles estrictos de RBAC.
+
+  Scenario: Encriptación de Payload Militar (CA-25)
+    Given el mandato de transferir payloads (Cuerpos HTTP) ultra-sensibles (Ej: Historias Clínicas)
+    Then el Hub además de forzar TLS (HTTPS) en tránsito
+    And posee soporte de auto-cifrado y descifrado nivel Payload utlizando criptografía asimétrica (PGP) garantizando impenetrabilidad absoluta incluso en reposo en logs intermedios de APIM del proveedor.
+```
+**Trazabilidad UX:** Wireframes Pantalla 11 (Integration Hub).
+
+  Scenario: Privacidad de Auditoría Cognitiva (CA-29)
+    Given que el proceso generó métricas de "Confidence Score" y "Chain of Thought"
+    Then estas métricas son de consumo estrictamente interno
+    And por ningún motivo se exponen al Ciudadano Externo en la Pantalla 18 (Portal B2B/B2C).
+
+  Scenario: RAG Multimodal Controlado (V1) (CA-30)
+    Given la ingesta de documentos anexos para contextualizar a la IA
+    Then el Agente RAG soporta en su V1 la lectura de documentos PDF, DOCX e Imágenes (OCR integrado a la API de visión)
+    And excluyendo formalmente notas de voz o video (Diferido a V2).
+
+  Scenario: Eficiencia de Contexto Pre-Empaquetado (IA Amarrada) (CA-31)
+    Given una tarea generativa que requiere datos externos (Ej: Saldos ERP)
+    Then la IA tiene prohibido usar "Function Calling" autónomo para ir a buscar datos por su cuenta (Gasto excesivo de tokens y memoria de razonamiento)
+    And la arquitectura dicta que Camunda Engine, mediante Service Tasks previas y baratas, extraiga la data y se la entregue pre-empaquetada en el Prompt a la IA para que esta se limite únicamente a redactar.
+```
+**Trazabilidad UX:** Pantalla 6 (BPMN Designer Palette), Pantalla 12 (SGDEA), Pantalla 7 (Form Builder UI).
+
+---
+
+## ÉPICA 10: Event Driven Architecture & Central Message Broker
+Formaliza la infraestructura de encolamiento transversal del iBPMS asegurando que tareas de alta latencia o llamadas a sistemas masivos (Cognitive RAG, APIs externas) no saturen la base de datos relacional ni el pool de hilos de Camunda.
+
+### US-034: Orquestación a través de RabbitMQ
+**Como** Administrador de Infraestructura / Backend
+**Quiero** delegar el rate-limiting y el encolamiento asíncrono a un Message Broker de grado Enterprise (RabbitMQ)
+**Para** garantizar resiliencia extrema frente a picos transaccionales, evitando desbordamientos de memoria (OOM) y caídas de subsistemas.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Central Message Queue Orchestration
+  Scenario: Broker Exclusivo de Alta Demanda (CA-1)
+    Given la necesidad de procesar transacciones asíncronas pesadas (IA, Mails, Integraciones)
+    Then el iBPMS enruta estos eventos imperativamente a `RabbitMQ` (o Kafka) configurado como clúster
+    And prohíbe explícitamente el uso de tablas relacionales (SQL) como mecanismo de encolamiento de alto tráfico para prevenir bloqueos de base de datos (Database Deadlocks).
+
+  Scenario: Dashboard Técnico de DLQ (Monitor Visual) (CA-2)
+    Given un fallo masivo en un proveedor externo que atasca 5,000 mensajes en la cola de errores
+    Then el iBPMS provee una pantalla de monitoreo transversal para el Rol de Administrador IT
+    And permite visualizar el tamaño de la 'Dead Letter Queue' (DLQ)
+    And expone botones críticos de acción masiva: `[Purgar Cola]` y `[Reintentar Mensajes Forzosamente]`.
+
+  Scenario: Jerarquización de Supervivencia (Priority Queues) (CA-3)
+    Given una saturación temporal de procesamiento en los Workers del sistema
+    When ingresan simultáneamente eventos VIP (Ej: Notificaciones de aprobaciones financieras críticas) y eventos de latencia tolerable (Ej: Generación RAG de resúmenes)
+    Then RabbitMQ clasifica el tráfico en "Priority Queues" pre-configuradas basándose en metadatos del evento
+    And asegura que los procesos de Nivel 1 (Críticos) sean desencolados y procesados antes que las tareas de Nivel 3 (Batch), garantizando el SLA de negocio intacto a pesar del cuello de botella global.
+```
+
+---
+
+## ÉPICA 11: Bóveda Documental SGDEA (Pantalla 12)
+Define la arquitectura de almacenamiento, inmutabilidad y recuperación de documentos (Expedientes y Anexos), integrándose nativamente con SharePoint como gestor documental primario en V1, sentando las bases para Tablas de Retención (TRD) y firmas digitales.
+
+### US-035: Integración SharePoint y Auditoría Documental
+**Como** Analista / Auditor de Cumplimiento
+**Quiero** que el iBPMS gestione los expedientes en SharePoint manteniendo trazabilidad matemática estricta
+**Para** garantizar que la evidencia aportada por clientes o generada por IA sea inmutable, centralizada y legalmente auditable.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: SharePoint Vault and Single Source of Truth
+  Scenario: Almacenamiento Delegado Basado en Enlaces (CA-1)
+    Given la subida de un documento de 10MB en la Pantalla 16 (Intake)
+    Then la arquitectura postula a SharePoint como "Single Source of Truth" físico de los PDFs
+    And el iBPMS únicamente almacena en su base de datos relacional la URL directa del activo, su ID referencial y la Metadata de auditoría, evadiendo duplicación de costos de Storage (S3).
+
+  Scenario: Creación Dinámica de Taxonomía Sub-Carpetas (CA-2)
+    Given un Arquitecto modelando una captura documental en la Pantalla 6
+    When configura la actividad paramétricamente para generar "Casos Independientes"
+    Then el iBPMS expone un Pop-Up para definir la ruta base en SharePoint
+    And en tiempo de ejecución, el motor invoca el API de SharePoint creando proactivamente la sub-carpeta unívoca para ese expediente (Ej: `/ProcesoA/Caso1234/`) antes de inyectar los documentos.
+
+  Scenario: Elusión de Seguridad Perimetral SharePoint (Service Account) (CA-3)
+    Given un Usuario de Negocio que posee Rol de Lectura en el iBPMS pero carece de licencia SharePoint
+    Then el módulo documental utiliza un App Registration (Súper Cuenta de Servicios - EntraID) para extraer el PDF del repositorio
+    And lo proyecta en la Pantalla 12 evadiendo los bloqueos nativos de SharePoint frente al usuario final.
+    # NOTA: Diferido a V2 el "RBAC Cruzado" (User Delegation OAuth2).
+
+  Scenario: Marcado Metadato para Tablas de Retención V1 (CA-4)
+    Given la necesidad legal de destruir tutelas tras 5 años (TRD)
+    Then en la V1, el iBPMS inyecta una Fecha de Expiración como Metadato estructurado directo a la taxonomía de SharePoint
+    And delega la incineración automatizada (Deletion Policies) al motor nativo de Microsoft 365.
+    # NOTA: Diferido a V1.2 el cronómetro destructor interno propio del iBPMS.
+
+  Scenario: Inmutabilidad por Versionamiento Incremental (CA-5)
+    Given un analista intentando "Reemplazar" un contrato que quedó mal redactado en el sistema
+    Then en el expediente de la Pantalla 12 el botón de sobre-escritura destructiva está censurado
+    And forcejea la obligatoriedad funcional de subir el nuevo archivo bajo el mecanismo de "Nueva Versión" (v1.1) reteniendo acceso forense e inmutable al borrador v1.0.
+
+  Scenario: Despacho de Integración E-Signature (CA-6)
+    Given un documento generado que requiere validez legal del firmante
+    Then el Módulo Documental posee el andamiaje (Hooks) para interactuar vía API con proveedores de Firma Digital (Ej: DocuSign/AdobeSign)
+    And actualiza el estado del expediente en la Pantalla 12 a "Firmado" una vez los Webhooks Inbound confirman el OTP legal del ciudadano.
+
+  Scenario: Componente Visor Empotrado (Iframe Preview) (CA-7)
+    Given la necesidad de leer un anexo para tomar una decisión en un proceso
+    Then la interfaz de Tareas (Pantalla 12 empotrada en Workdesk) renderiza un Visor de Documentos Nativos asíncrono
+    And impide obligar al analista a descargar el PDF ciegamente hacia las carpetas `Descargas/` locales de su Sistema Operativo, reteniendo el foco en el flujo iBPMS.
+
+  Scenario: Blindaje Criptográfico Anti-Fraude (SHA-256) (CA-8)
+    Given la delegación del archivo físico hacia el servidor SharePoint de TI (CA-1)
+    Then en el milisegundo anterior a la carga, el iBPMS calcula el HASH criptográfico SHA-256 del binario original
+    And sella esta huella matemática inmutablemente en la Base de Datos transaccional del iBPMS para detectar futuras y silenciosas alteraciones directamente en SharePoint.
+
+  Scenario: Lector Óptico Diferido (OCR Zonal) (CA-9)
+    Given imágenes de documentos de identidad (Cédulas) escaneadas
+    Then en V1 estas se gestionan como Binary/Image objects convencionales
+    # NOTA: Diferido a V2 el procesamiento neuronal OCR para extracción estructurada de texto zonal.
+
+  Scenario: Inyección Activa de Metadata de Negocio (CA-10)
+    Given el traspaso exitoso del documento PDF hacia la granja SharePoint
+    Then el iBPMS adjunta un Payload extendido de Propiedades Personalizadas (Ej: `ibpms_processName`, `ibpms_caseStatus`) al nodo del documento
+    And permitiendo a los usuarios externos buscar documentos utilizando las herramientas de búsqueda Nativas de O365 mediante filtros semánticos del negocio.
+
+  Scenario: Límite Infraestructural de Carga y Silencio Parcial (CA-11)
+    Given un usuario intentando subir un archivo estúpidamente pesado (Ej: Video 4K de 5GB)
+    Then la Pantalla 12 intercepta la carga en el Fronend guiada por un parámetro global `MAX_FILE_SIZE` (Ej: 50MB) configurado por IT
+    And emite un error de UI "genérico" o "silencioso" al usuario final (Ej: "Error en la Carga, archivo muy pesado")
+    And simultáneamente dispara una alerta técnica detallada en el Log del Administrador del Sistema para auditoría de abusos.
+
+  Scenario: Lista Blanca Estricta de Extensiones (MIME Types) (CA-12)
+    Given el riesgo inminente de inyección de Malware (Ej: `.exe`, `.bat`)
+    Then la Bóveda SGDEA opera exclusivamente bajo arquitectura de "Lista Blanca" (Whitelist)
+    And rechaza radicalmente cualquier archivo que no esté explícitamente parametrizado (Ej: `application/pdf`, `image/jpeg`, `application/msword`).
+
+  Scenario: Visibilidad Transparente de Atributos de Auditoría (CA-13)
+    Given la Tabla/Grilla visual del expediente en Pantalla 12
+    Then el diseño UI no esconde la data legal
+    And expone nativamente en columnas primarias la "Fecha Extrema (Vencimiento TRD)" y el "Hash SHA-256" para que el analista confirme la inmutabilidad física con un solo vistazo.
+    # NOTA: Opciones de "Botón del Pánico/Censura de archivos erróneos" diferido a V2.
+
+  Scenario: Consolidación Multi-Anexo (PDF Merge Tool) (CA-14)
+    Given un expediente con 10 archivos PDF fragmentados que deben enviarse a una Superintendencia
+    Then la Pantalla 12 posee un botón de acción masiva `[Combinar PDFs (Merge)]`
+    And el iBPMS compila transitoriamente las páginas de los archivos seleccionados en un único documento maestro PDF sin corromper los originales.
+
+  Scenario: Delegación de Escaneo Anti-Malware (CA-15)
+    Given el ingreso de nuevos documentos a la Bóveda
+    Then la arquitectura V1 asume ciegamente la robustez de los Defensores Nativos de Microsoft
+    And confía en que SharePoint 365 interceptará virus silenciosamente, librando al iBPMS de conectar con AntiVirus dedicados en este MVP.
+    # NOTA: Herramientas de "Anotación Gráfica (Highlighting)" sobre PDFs diferidas a V1.2.
+
+  Scenario: Búsqueda Semántica Delegada (Full-Text Search) (CA-16)
+    Given un analista utilizando el buscador global del iBPMS para buscar la palabra "Tornillo"
+    Then el iBPMS delega la consulta profunda al motor nativo de indexación de SharePoint
+    And este último busca el término *dentro del contenido textual* de los PDFs y devuelve los matches, inyectando los resultados en la UI del iBPMS.
+
+  Scenario: Orquestación SGDEA a Inteligencia RAG (Vectorización Segura) (CA-17)
+    Given un analista en Pantalla 12 que decide oprimir `[Usar para IA]` sobre un contrato de 100 páginas
+    Then el módulo documental envía asíncronamente el ID de ese archivo a la "Cola de Eventos IA (RabbitMQ - CA-34)"
+    And el cerebro LLM procede a desencolar y devorar el contenido (si es PDF o WORD habilitado) para poblar su memoria de Embeddings sin congelar la ventana del usuario.
+```
+**Trazabilidad UX:** Wireframes Pantallas 12, 16 y 6.

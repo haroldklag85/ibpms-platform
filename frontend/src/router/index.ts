@@ -93,6 +93,25 @@ const router = createRouter({
             name: 'DashboardBAM',
             component: () => import('@/views/admin/Analytics/DashboardBAM.vue'),
             meta: { requiresAuth: true }
+        },
+        // --- Bloque F: Integration Hub (Pantalla 11) ---
+        {
+            path: '/admin/integration/catalog',
+            name: 'ConnectorCatalog',
+            component: () => import('@/views/admin/Integration/ConnectorCatalog.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/admin/integration/builder',
+            name: 'ConnectorBuilder',
+            component: () => import('@/views/admin/Integration/ConnectorBuilder.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/admin/integration/mapper',
+            name: 'VisualMapper',
+            component: () => import('@/views/admin/Integration/VisualMapper.vue'),
+            meta: { requiresAuth: true }
         }
     ]
 });

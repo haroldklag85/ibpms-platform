@@ -7,3 +7,9 @@ databaseChangeLog:
       file: db/changelog/06-create-task-audit-log.sql
   - include:
       file: db/changelog/07-create-bpmn-design-tables.sql
+  - include:
+      file: db/changelog/08-create-form-engine-tables.sql
+  - include:
+      file: db/changelog/09-create-integration-hub-tables.sql
+  - include:
+      file: db/changelog/10-create-sgdea-tables.sql

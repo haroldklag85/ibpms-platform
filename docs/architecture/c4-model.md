@@ -19,6 +19,7 @@ C4Context
     
     System_Ext(plugin_o365, "Plugin Office 365", "Web Add-in nativo en el correo del usuario.")
     System_Ext(o365_graph, "Microsoft Graph / Webhooks", "Push asíncrono y API (Lectura/Escritura).")
+    System_Ext(sharepoint, "Microsoft SharePoint API Graph", "Documentos Colaborativos MS.")
     System_Ext(erp, "ERP Local", "Sistema corporativo transaccional (SOAP/REST).")
     System_Ext(crm, "CRM (Customer Rel. Mgmt)", "Datos de clientes para cruce de IA.")
     System_Ext(iam, "Proveedor de Identidad", "Directorio Activo / VPN.")
@@ -30,6 +31,7 @@ C4Context
     Rel(admin_reglas, ibpms, "Sube BPMN / Diseña iForms", "HTTPS")
     Rel(o365_graph, ibpms, "Avisa llegada de correo", "Webhook Push")
     Rel(ibpms, o365_graph, "Gestiona borradores y mails", "REST/Graph API")
+    Rel(ibpms, sharepoint, "Carga/Descarga Archivos", "HTTPS / EntraID Super Service Account")
     Rel(ibpms, erp, "Ejecuta Transacciones síncronas", "REST/SOAP")
     Rel(ibpms, crm, "Consulta vista 360 cliente", "REST")
     Rel_U(ibpms, iam, "Autentica usuarios", "SAML")
@@ -64,12 +66,15 @@ C4Container
         }
         
         Container(llm_local, "Motor AI & Tutor", "Llama 3 / OpenAI", "Copiloto M365 y Tutor Pre-Flight BPMN.")
+        Container(rag_engine, "RAG Embedder Engine", "Python / Vector DB", "Generador de Embeddings AI.")
+        Container(rabbitmq, "Message Broker", "RabbitMQ", "Bus asíncrono de mensajería.")
         
         ContainerDb(db, "Base de Datos Consolidada", "MySQL 8", "Operativa y Estado BPM.")
-        ContainerDb(blob, "Almacenamiento Discos", "Azure Managed Disks", "Bóveda física.")
+        ContainerDb(doc_vault, "Document Vault", "Azure Managed Disks/Blob", "Bóveda física segura.")
     }
     
     System_Ext(o365_graph, "MS Graph", "Webhooks y REST API.")
+    System_Ext(sharepoint, "Microsoft SharePoint API Graph", "Documentos Colaborativos MS.")
     System_Ext(crm_sys, "CRM Corporativo", "REST API (Catálogo Federado).")
     
     Rel(usuario, apim, "Opera Plataforma y Diseña", "HTTPS")
@@ -84,13 +89,17 @@ C4Container
     
     Rel(backend, engine, "Integra Tareas", "Memoria Java API")
     Rel(backend, doc_gen, "Ordena fabricar PDF", "Memoria")
-    Rel(doc_gen, blob, "Salva Original", "Java IO")
+    Rel(doc_gen, doc_vault, "Salva Original", "Java IO")
     Rel(backend, cache_db, "Lee/Escribe Catálogos Caché", "TCP")
     Rel(backend, llm_local, "Audita XML (Tutor) / Infiriendo Intents", "HTTPS Interno")
     
     Rel(o365_graph, apim, "Push Webhook Nuevo Correo", "HTTPS")
     Rel(backend, o365_graph, "Crea Drafts / Envía Mail", "HTTPS (Graph API)")
+    Rel(backend, sharepoint, "API Llamadas", "HTTPS (EntraID Super Service Account)")
     Rel(backend, crm_sys, "Pide Perfil Cliente", "HTTPS")
+    
+    Rel(doc_vault, rabbitmq, "Publica evento de documento", "Async Flow / AMQP")
+    Rel(rabbitmq, rag_engine, "Consume para indexación vectorial", "Async Flow / AMQP")
     
     Rel(engine, db, "Escribe Estado (JDBC)", "TCP/3306 (TLS)")
     Rel(grafana, db, "Consulta Panel Analítico", "TCP/3306")

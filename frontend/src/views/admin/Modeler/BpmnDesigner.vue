@@ -113,6 +113,31 @@
           <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded">
             <label class="block text-xs font-bold text-blue-800 dark:text-blue-300 mb-1">⏱ SLA Global (Horas)</label>
             <input type="number" v-model.number="globalSla" min="1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" placeholder="72" />
+            <!-- Propiedades: Tarea de Usuario (Intake / Approval) -->
+            <div v-if="selectedElement.type === 'bpmn:UserTask'" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Formulario Asignado (FormKey)</label>
+                <select v-model="selectedElement.props.formKey" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 max-w-[200px]">
+                  <option value="">-- Sin Formulario --</option>
+                  <option value="form_solicitud_v1">form_solicitud_v1 (Simple)</option>
+                  <option value="iform_maestro_credito">iform_maestro_credito (Dual)</option>
+                </select>
+              </div>
+              <div class="pt-3 border-t border-gray-200">
+                <label class="block text-xs font-bold text-gray-700 mb-2 flex items-center gap-1">⏱️ SLA Timeout (ISO 8601)</label>
+                <input type="text" v-model="selectedElement.props.sla" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 font-mono" placeholder="Ej: P2D (2 Días)" />
+              </div>
+
+              <!-- SharePoint Integration Checkbox (CA-2) -->
+              <div v-if="selectedElement.name && selectedElement.name.toLowerCase().includes('intake')" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <div class="flex items-start gap-2">
+                  <input type="checkbox" id="spFolderCheck" v-model="selectedElement.props.createSharepointFolder" class="mt-0.5 text-blue-600 rounded border-blue-300 focus:ring-blue-500 shadow-sm" />
+                  <label for="spFolderCheck" class="text-[11px] font-bold text-blue-900 cursor-pointer leading-tight">
+                    Create Unique SharePoint Sub-folder for this generic Process Instance (CA-2)
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Process Pattern -->

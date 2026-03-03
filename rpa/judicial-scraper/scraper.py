@@ -67,7 +67,7 @@ def scrape_judicial_notifications():
         
     return notifications
 
-def send_to_webhook(payloads):
+def send_to_webhook(payloads: list) -> bool:
     """
     Envía los resúmenes jurídicos al backend Java mediante solicitudes POST HTTP síncronas.
     """
@@ -75,7 +75,7 @@ def send_to_webhook(payloads):
         print("ℹ️ [RPA] No se encontraron nuevas notificaciones en esta ejecución.")
         return True
 
-    success_count = 0
+    success_list = []
     headers = {'Content-Type': 'application/json'}
     
     print(f"🚀 [RPA] Enviando {len(payloads)} notificaciones al Webhook: {WEBHOOK_URL}")
@@ -87,7 +87,7 @@ def send_to_webhook(payloads):
             
             if response.status_code == 202:
                 print(f"✅ [RPA] Éxito enviando radicado {item.get('tramiteId')}. TracingID: {response.json().get('tracingId')}")
-                success_count += 1
+                success_list.append(1)
             else:
                 print(f"⚠️ [RPA] Fallo en API (Status {response.status_code}): {response.text}")
                 
@@ -95,7 +95,7 @@ def send_to_webhook(payloads):
             print(f"❌ [RPA] Error fatal de red enviando al Webhook: {e}")
             return False # Falla rápida: abortar si la red está caída
             
-    return success_count == len(payloads)
+    return len(success_list) == len(payloads)
 
 def main():
     """Punto de entrada orquestal del contenedor"""

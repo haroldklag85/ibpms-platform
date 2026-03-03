@@ -1,34 +1,29 @@
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.application.port.in.ReclamarTareaUseCase;
-import org.camunda.bpm.engine.TaskService;
-import org.camunda.bpm.engine.TaskAlreadyClaimedException;
-import org.camunda.bpm.engine.task.Task;
+import com.ibpms.poc.application.port.out.ProcesoBpmPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ReclamarTareaService implements ReclamarTareaUseCase {
 
-    private final TaskService taskService;
+    private final ProcesoBpmPort procesoBpmPort;
 
-    public ReclamarTareaService(TaskService taskService) {
-        this.taskService = taskService;
+    public ReclamarTareaService(ProcesoBpmPort procesoBpmPort) {
+        this.procesoBpmPort = procesoBpmPort;
     }
 
     @Override
     @Transactional
     public void reclamar(String taskId, String username) {
-        Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
-
-        if (task == null) {
-            throw new jakarta.persistence.EntityNotFoundException("La tarea no existe.");
-        }
-
-        try {
-            taskService.claim(taskId, username);
-        } catch (TaskAlreadyClaimedException e) {
-            throw new IllegalStateException("La tarea ya fue asignada a otro usuario.");
-        }
+        // La validación de si la tarea existe debe recaer en el adaptador o una query
+        // específica.
+        // Asumiendo que ProcesoBpmPort maneja NotFound o lo asume, para esto la
+        // delegación va directa.
+        // Si es necesario validar, idealmente sería con `TareaRepositoryPort`.
+        // Para simplificar y cumplir Hexagonal, delegamos la operación al motor nativo
+        // que fallará si no existe.
+        procesoBpmPort.reclamarTarea(taskId, username);
     }
 }

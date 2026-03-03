@@ -3,8 +3,10 @@ package com.ibpms.poc.infrastructure.web;
 import com.ibpms.poc.application.dto.FormSchemaDTO;
 import com.ibpms.poc.application.dto.TaskDTO;
 import com.ibpms.poc.application.port.in.CompletarTareaUseCase;
+import com.ibpms.poc.application.port.in.LiberarTareaUseCase;
 import com.ibpms.poc.application.port.in.ListarTareasUseCase;
 import com.ibpms.poc.application.port.in.ObtenerFormularioUseCase;
+import com.ibpms.poc.application.port.in.ReasignarTareaUseCase;
 import com.ibpms.poc.application.port.in.ReclamarTareaUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,15 +26,21 @@ public class TaskController {
     private final CompletarTareaUseCase completarTareaUseCase;
     private final ObtenerFormularioUseCase obtenerFormularioUseCase;
     private final ReclamarTareaUseCase reclamarTareaUseCase;
+    private final LiberarTareaUseCase liberarTareaUseCase;
+    private final ReasignarTareaUseCase reasignarTareaUseCase;
 
     public TaskController(ListarTareasUseCase listarTareasUseCase,
             CompletarTareaUseCase completarTareaUseCase,
             ObtenerFormularioUseCase obtenerFormularioUseCase,
-            ReclamarTareaUseCase reclamarTareaUseCase) {
+            ReclamarTareaUseCase reclamarTareaUseCase,
+            LiberarTareaUseCase liberarTareaUseCase,
+            ReasignarTareaUseCase reasignarTareaUseCase) {
         this.listarTareasUseCase = listarTareasUseCase;
         this.completarTareaUseCase = completarTareaUseCase;
         this.obtenerFormularioUseCase = obtenerFormularioUseCase;
         this.reclamarTareaUseCase = reclamarTareaUseCase;
+        this.liberarTareaUseCase = liberarTareaUseCase;
+        this.reasignarTareaUseCase = reasignarTareaUseCase;
     }
 
     @GetMapping
@@ -82,6 +90,59 @@ public class TaskController {
         }
 
         reclamarTareaUseCase.reclamar(taskId, username);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{taskId}/unclaim")
+    public ResponseEntity<Void> unclaimTask(@PathVariable String taskId,
+            @RequestBody(required = false) Map<String, Object> payload) {
+        String username;
+        if (SecurityContextHolder.getContext() != null
+                && SecurityContextHolder.getContext().getAuthentication() != null) {
+            username = SecurityContextHolder.getContext().getAuthentication().getName();
+        } else {
+            username = "maria.lopez";
+        }
+
+        String reason = null;
+        Map<String, Object> variables = null;
+        if (payload != null) {
+            reason = (String) payload.get("reason");
+
+            // Supresión temporal: Safe cast
+            @SuppressWarnings("unchecked")
+            Map<String, Object> v = payload.containsKey("variables")
+                    ? (Map<String, Object>) payload.get("variables")
+                    : payload;
+
+            variables = v;
+            if (variables.containsKey("reason")) {
+                variables.remove("reason");
+            }
+        }
+
+        liberarTareaUseCase.liberar(taskId, username, variables, reason);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{taskId}/reassign")
+    public ResponseEntity<Void> reassignTask(@PathVariable String taskId, @RequestBody Map<String, Object> payload) {
+        String currentUsername;
+        if (SecurityContextHolder.getContext() != null
+                && SecurityContextHolder.getContext().getAuthentication() != null) {
+            currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        } else {
+            currentUsername = "maria.lopez";
+        }
+
+        String newUserId = (String) payload.get("newUserId");
+        String reason = (String) payload.get("reason");
+
+        if (newUserId == null || newUserId.trim().isEmpty()) {
+            throw new IllegalArgumentException("El campo 'newUserId' es obligatorio para reasignar una tarea.");
+        }
+
+        reasignarTareaUseCase.reasignar(taskId, currentUsername, newUserId, reason);
         return ResponseEntity.ok().build();
     }
 }

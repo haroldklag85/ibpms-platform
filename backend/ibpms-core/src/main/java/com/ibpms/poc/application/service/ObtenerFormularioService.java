@@ -63,7 +63,18 @@ public class ObtenerFormularioService implements ObtenerFormularioUseCase {
         textAreaAi.setRows(6);
         textAreaAi.setDefaultValue("Por favor modifique este texto generado por el LLM antes de aprobar...");
 
-        schema.setComponents(List.of(inputRut, inputCountry, textAreaAi));
+        List<FormComponentDTO> componentsList = java.util.Arrays.asList(inputRut, inputCountry, textAreaAi);
+
+        // CA-27: Data Binding -> Inject Camunda instance variables into form
+        // DefaultValues
+        java.util.Map<String, Object> processVariables = taskService.getVariables(taskId);
+        for (FormComponentDTO comp : componentsList) {
+            if (processVariables.containsKey(comp.getId())) {
+                comp.setDefaultValue(processVariables.get(comp.getId()));
+            }
+        }
+
+        schema.setComponents(componentsList);
 
         FormActionDTO btnSubmit = new FormActionDTO();
         btnSubmit.setId("btn_submit");

@@ -62,7 +62,7 @@ Desarrollar una plataforma integral de gestión de procesos y proyectos que perm
 *   **US 2.2:** *Como Desarrollador*, quiero una pestaña "Código" al lado de la visual que me muestre en tiempo real el código Vue 3 y Zod generado, permitiendo bindings con Swagger.
 
 ### Épica 3: Captura Inbound AI y Generación Documental
-*   **US 3.1:** *Como Líder de SAC (Servicio al Cliente)*, quiero que un Asistente Virtual clasifique los correos corporativos, identifique al cliente vía CRM y me proponga un borrador de respuesta bilingüe.
+*   **US 3.1:** *Como Líder de SAC (Servicio al Cliente)*, quiero que un Asistente Virtual clasifique los correos corporativos, identifique al cliente vía CRM y me proponga un borrador de respuesta bilingüe, **enmascarando siempre datos sensibles (PII)** antes de inyectarlos como Intake.
 *   **US 3.2:** *Como Auditor*, quiero que las decisiones sobre las sugerencias de la IA mantengan cadena de custodia intacta (eDiscovery) y provean métricas de eficiencia.
 *   **US 3.3:** *Como sistema*, al aprobar un expediente, quiero generar un PDF contractual y enviarlo por correo directamente desde el WorkBench.
 
@@ -73,10 +73,12 @@ Desarrollar una plataforma integral de gestión de procesos y proyectos que perm
 *   **US 4.4:** *Como Arquitecto Modelador*, quiero un "Copiloto IA Tutor" empotrado en el lienzo BPMN que audite en tiempo real mi diseño, me alerte de antipatrones BPMN 2.0 y sugiera mejoras basadas en ISO 9001.
 
 ### Épica 5: Service Delivery Intake Inteligente y Portal B2B
-*   **US 5.1:** *Como Operador*, quiero enviar correos desde el iBPMS que "abran" la puerta al cliente pero *sin* instanciar un proceso, sino creando una tarea controlada ("Plan A") para evitar instancias BPMN basura.
-*   **US 5.2:** *Como Administrador*, quiero tener un botón global protegido por rol ("Plan B") para crear Servicios Operativos manualmente asociando un cliente y una plantilla.
-*   **US 5.3:** *Como Ejecutivo de Cuenta Interno*, quiero una Vista 360 (Card de Cliente) que me permita auditar todas las actividades pendientes consolidadas por servicio y etapa para responder dudas del cliente.
-*   **US 5.4:** *Como Cliente Externo (B2B/B2C)*, quiero un Portal Web seguro para auto-consultar el estado (Táctico) de mis solicitudes activas y descargar el histórico finalizado (Estratégico).
+*   **US 5.1:** *Como Operador*, quiero enviar correos desde el iBPMS que "abran" la puerta al cliente pero *sin* instanciar un proceso, sino creando una tarea controlada en Cuarentena ("Plan A") para evitar instancias BPMN basura.
+*   **US 5.2:** *Como Administrador*, quiero tener una Pantalla de Control de Intake protegido por rol ("Plan B") para aprobar, descartar o forzar la creación de Servicios Operativos manualmente asociando plantillas (Pantalla 16).
+*   **US 5.3:** *Como Sistema (Control y SLAs)*, quiero que los Intake en cuarentena soporten 'Virtual Scroll' o paginación dura (25/50/100), manejen métricas de SLA límite **basadas en un Calendario Comercial Parametrizable**, feedback automático de reentrenamiento MLOps al descartarse, esquemas de CRM opcionales, y rechazos seguros por concurrencia u omisión de variables obligatorias iniciales.
+*   **US 5.4:** *Como Ejecutivo de Cuenta Interno*, quiero una Vista 360 (Card de Cliente) que me permita auditar todas las actividades pendientes consolidadas por servicio y etapa para responder dudas del cliente.
+*   **US 5.5:** *Como Cliente Externo (B2B/B2C)*, quiero un Portal Web seguro para auto-consultar el estado (Táctico) de mis solicitudes activas y descargar el histórico finalizado (Estratégico).
+*   **US 5.6:** *Como Operador*, quiero un botón de **Deshacer (Undo)** con ventana de gracia posterior a la orden de Creación de un Service Delivery, y quiero que la vista reaccione a mis permisos para ver correos completos (Link a Inbox) vs textos puros en los Intake.
 
 ### Épica 6: Ejecución, Reglas (DMN) e IA Analítica
 *   **US 6.1:** *Como usuario*, quiero que el motor Camunda evalúe reglas DMN automáticamente (ej. derivar a VPE o auto-aprobar) según el payload del iForm maestro.

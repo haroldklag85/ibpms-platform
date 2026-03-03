@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/001-initial-schema.xml
   - include:
       file: db/changelog/05-create-project-template.sql
+  - include:
+      file: db/changelog/06-create-task-audit-log.sql
+  - include:
+      file: db/changelog/07-create-bpmn-design-tables.sql

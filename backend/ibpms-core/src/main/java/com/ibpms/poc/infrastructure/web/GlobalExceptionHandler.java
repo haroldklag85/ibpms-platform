@@ -60,6 +60,26 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /** 409 — Conflicto de Tarea ya Asignada */
+    @ExceptionHandler(com.ibpms.poc.domain.exception.TaskAlreadyClaimedException.class)
+    public ProblemDetail handleTaskAlreadyClaimed(com.ibpms.poc.domain.exception.TaskAlreadyClaimedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problem.setType(URI.create("https://ibpms.com/errors/task-claimed"));
+        problem.setTitle("Tarea ya reclamada");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 400 — Límite de Rebotes Superado */
+    @ExceptionHandler(com.ibpms.poc.domain.exception.TaskReassignmentLimitException.class)
+    public ProblemDetail handleReassignmentLimit(com.ibpms.poc.domain.exception.TaskReassignmentLimitException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setType(URI.create("https://ibpms.com/errors/task-reassignment-limit"));
+        problem.setTitle("Límite de Reasignaciones Excedido");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
     /** 500 — Error interno genérico */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {

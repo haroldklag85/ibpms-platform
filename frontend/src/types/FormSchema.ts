@@ -1,4 +1,4 @@
-export type FieldType = 'string' | 'number' | 'boolean' | 'date' | 'select' | 'radio' | 'group' | 'array';
+export type FieldType = 'string' | 'number' | 'boolean' | 'date' | 'select' | 'radio' | 'group' | 'array' | 'typeahead' | 'gps';
 
 export interface SelectOption {
     label: string;
@@ -22,6 +22,7 @@ export interface FormField {
     required?: boolean;
     disabled?: boolean;
     defaultValue?: any;
+    stage?: string; // CA-2: Dual Pattern iForm Stage
     options?: SelectOption[]; // Solo para selects o radios
     metadata?: FieldMetadata;
     fields?: FormField[]; // Solo para tipos 'group' o 'array' (recursividad)

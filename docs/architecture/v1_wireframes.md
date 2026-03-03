@@ -236,31 +236,62 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 ```text
 +-----------------------------------------------------------------------------------+
 |  Admin > Diseño de Procesos > "Solicitud de Crédito v2"         [ ⚙️ Propiedades ]|
+|  🔒 Editando: maria.lopez (desde 10:15 AM)       ✅ Auto-Guardado: hace 5s       |
 +-----------------------------------------------------------------------------------+
 |                                                                                   |
-|  [⬆️ Importar .bpmn] | [⬇️ Exportar] | [🧠 Consultar Copiloto IA] | [🚀 DESPLEGAR]|
+|  [⬆️ Importar .bpmn] | [⬇️ Exportar .bpmn] | [🧠 Copiloto IA] | [🧪 Sandbox]   |
+|  [� Historial Versiones (v1, v2, v3)]    | [�🚀 DESPLEGAR] *(Solo Release Mgr)*  |
 |  -------------------------------------------------------------------------------  |
 |                                                                                   |
-|   PALETA BPMN 2.0|  LIENZO DE DIBUJO (bpmn-js Integrado)                          |
-|   ---------------|  +----------------------------------------------------------+  |
-|   (o) Eventos    |  | Pool: Solicitud de Crédito                               |  |
-|       - Start/End|  +----------------------------------------------------------+  |
-|       - Timer    |  | Radicador  | (Inicio) -> [ Llenar Form ] -> < >          |  |
-|       - Message  |  |            |                                 |           |  |
-|       - Error    |  +----------------------------------------------|-----------+  |
-|   [ ] Tareas     |  | Analista   |              [ Servicio CRM ] <-+           |  |
-|       - User Task|  |            |                    |                        |  |
-|       - Serv.Task|  |            |             [[ Sub-Proceso Riesgo ]]        |  |
-|       - Call Act.|  |            |                    |                        |  |
-|   < > Compuertas |  |            |                 ( ) Timer Event (24h)       |  |
-|       - Exclusiva|  +----------------------------------------------------------+  |
-|       - Paralela |                                                                |
-|   [📄] Datos     |  ------------------------------------------------------------  |
-|                  |  [ 🔎 PRE-FLIGHT ANALYZER & 🧠 AI AUDITOR FEEDBACK        ]    |
-|                  |  [ ❌ Semántica ] User Task "Llenar Form" no tiene Form Key    |
-|                  |  [ 🤖 Auditor IA] ISO 9001: Sugiero agregar un "User Task"     |
-|                  |                   de aprobación manual después del Servicio    |
-|                  |                   CRM para asegurar control de calidad (QMS).  |
+|   PALETA BPMN 2.0  |  LIENZO DE DIBUJO (bpmn-js Integrado)                       |
+|   (Estándar Compl.) |  +----------------------------------------------------------+|
+|   ------------------|  | Pool: Solicitud de Crédito                              ||
+|   (o) EVENTOS       |  +----------------------------------------------------------+|
+|       - Start (None)|  | Radicador  | (Inicio) -> [ Llenar Form ] -> < >         ||
+|       - Start (Msg) |  |            |                                 |          ||
+|       - Start (Timer|  +----------------------------------------------|-----------+|
+|       - Intermediate|  | Analista   |              [ Servicio CRM ] <-+          ||
+|         - Catch/Thrw|  |            |                    |                       ||
+|         - Timer     |  |            |             [[ Sub-Proceso Riesgo ]]       ||
+|         - Message   |  |            |                    |                       ||
+|         - Signal    |  |            |                 ( ) Timer Event (24h)      ||
+|         - Error     |  +----------------------------------------------------------+|
+|         - Escalation|                                                              |
+|         - Compnstion|  ------------------------------------------------------------+|
+|       - End (None)  |  [ 🔎 PRE-FLIGHT ANALYZER & 🧠 AI AUDITOR FEEDBACK        ] |
+|       - End (Error) |  [ ❌ Semántica ] User Task "Llenar Form" no tiene Form Key  |
+|       - End (Termin)|  [ ❌ Timer   ] Timer Event (24h) sin expresión ISO 8601    |
+|   ------------------|  [ ⚠️ CallAct ] Sub-Proceso "Riesgo" no existe en motor     |
+|   [ ] TAREAS        |  [ 🤖 Auditor IA] ISO 9001: Sugiero agregar un "User Task" |
+|       - User Task   |                   de aprobación manual después del Servicio |
+|       - Service Task|                   CRM para asegurar control de calidad.     |
+|       - Script Task |  ------------------------------------------------------------+|
+|       - Send Task   |                                                              |
+|       - Receive Task|                                                              |
+|       - Business Rul|                                                              |
+|       - Manual Task |                                                              |
+|       - Call Activity|                                                             |
+|   ------------------|                                                              |
+|   < > COMPUERTAS    |                                                              |
+|       - Exclusiva   |                                                              |
+|       - Paralela    |                                                              |
+|       - Inclusiva   |                                                              |
+|       - Basada Evnts|                                                              |
+|   ------------------|                                                              |
+|   [📄] DATOS        |                                                              |
+|       - Data Object |                                                              |
+|       - Data Store  |                                                              |
+|   ------------------|                                                              |
+|   [─] CONECTORES    |                                                              |
+|       - Seq. Flow   |                                                              |
+|       - Msg. Flow   |                                                              |
+|       - Association |                                                              |
+|   ------------------|                                                              |
+|   [▭] CONTENEDORES  |                                                              |
+|       - Pool        |                                                              |
+|       - Lane        |                                                              |
+|       - Sub-Proceso |                                                              |
+|       - Transaction |                                                              |
 +-----------------------------------------------------------------------------------+
 |  PANEL DE PROPIEDADES (Pestañas de Configuración)                                 |
 |                                                                                   |
@@ -270,6 +301,8 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 |  [ Pestaña: Propiedades de la Tarea ("[ Validar ]") ]                             |
 |  - 📄 Formulario Asociado: [ Form_Aprobacion_Credito_V1.json v ]                  |
 |  - ⏱️ SLA (Tiempo de Resolución): [ 24 Horas ]                                    |
+|  - ⬆️ Nivel de Escalamiento Permitido: [ Gerente_Area v ]                        |
+|  - 🔄 Límite de Rebotes (Ping-Pong): [ 2 ] veces (-1 = Ilimitado)                 |
 |  - 🤖 Regla DMN (Pre-Condición): [ Ninguna ]                                      |
 +-----------------------------------------------------------------------------------+
 ```
@@ -576,29 +609,34 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 |  Service Delivery > Intake y Creación (Vista Solo Administrador)                  |
 +-----------------------------------------------------------------------------------+
 |  [ 🌐 CREACIÓN MANUAL (PLAN B) ]                                                |
-|  [ + Iniciar Nuevo Service Delivery Vía Formulario Seguro ]                       |
+|  [ + Iniciar Nuevo Service Delivery Vía Formulario Seguro ] (CRM Opcional)        |
 |  -------------------------------------------------------------------------------  |
 |                                                                                   |
 |  [ 📥 EMBUDO DE INTAKE ACTIVO (PLAN A - Correos Salientes en Cuarentena) ]        |
 |  "Tickets esperando validación humana para convertirse en un Proceso Real".       |
+|  Filtros: [ Todos v ] [ Solo Atrasados ]     | Mostrando Pág 1 (1-25 de 150)  >   |
 |  -------------------------------------------------------------------------------  |
 |                                                                                   |
-|  [ Card 1: Confirmación de Auditoría ]                                            |
+|  [ Card 1: Confirmación de Auditoría ] 🔴 SLA Vencido (+48h)                      |
 |  - Cliente Identificado (CRM_ID): 🏢 InnovateTech Corp.                           |
 |  - Plantilla (TO-BE) Sugerida: Auditoría Express_v2                               |
 |  - Origen: Correo enviado por @John desde `auditorias@ibpms.com`                  |
-|  - Hilo de Conversación (Thread): Activo (2 Correos)                              |
+|  - Hilo de Conversación (Thread): Activo (2 Correos)   [🔗 Ver Correo en Inbox]   |
 |                                                                                   |
-|  [ 🗑️ Descartar (Es Spam/Conversación) ]      [ 🚀 CREAR SERVICE DELIVERY (BPMN) ]|
+|  [ 🗑️ Descartar y Enseñar a ML ]             [ 🚀 CREAR SERVICE DELIVERY (BPMN) ]|
+|                                                   *(Genera Toast: Deshacer ⏱️10s)*|
 |                                                                                   |
 |  -------------------------------------------------------------------------------  |
 |                                                                                   |
-|  [ Card 2: Falso Positivo ]                                                       |
-|  - Cliente Identificado (CRM_ID): Pendiente (No match)                            |
+|  [ Card 2: Falso Positivo ] 🟢 A tiempo                                           |
+|  - Cliente Identificado (CRM_ID): Pendiente (No match - Flexible)                 |
 |  - Plantilla (TO-BE) Sugerida: Desconocida                                        |
 |  - Origen: Respuesta de "Fuera de la oficina" a `legal@ibpms.com`                 |
 |                                                                                   |
-|  [ 🗑️ Descartar (Es Spam/Conversación) ]      [ ✏️ Forzar Mapeo Manual ]          |
+|  [ 🗑️ Descartar y Enseñar a ML ]             [ ✏️ Forzar Mapeo Manual ]          |
+|                                                                                   |
+|  -------------------------------------------------------------------------------  |
+|  < Pág Anterior [1] [2] [3] ... [6] Pág Siguiente >    Visualizar: [ 25 v]        |
 +-----------------------------------------------------------------------------------+
 ```
 
@@ -666,5 +704,37 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 |  [ 📂 TUS DOCUMENTOS (SGDEA Exportables) ]                                        |
 |  📄 Auditoría_Q2_Final.pdf (Firmado el 15/Ago) [ ⬇️ Descargar Copia Certificada ] |
 |  📄 Contrato_Marco_Firmado.pdf                 [ ⬇️ Descargar Copia Certificada ] |
++-----------------------------------------------------------------------------------+
+```
+
+---
+
+## Pantalla 19: Configuración de Calendario SLA (Business Matrix)
+**Objetivo:** Panel de parametrización para administradores que permite alinear el motor interno de Tiempos/Alertas con la realidad del país o empresa. Resuelve que un Intake o Tarea no se venza durante el fin de semana.
+
+```text
++-----------------------------------------------------------------------------------+
+|  Configuraciones > ⏱️ Motor de SLAs y Días Hábiles (Business Calendar)            |
++-----------------------------------------------------------------------------------+
+|  [ 🌍 HUSO HORARIO PRINCIPAL ]                                                    |
+|  Timezone Base: [ America/Bogota (UTC-5) v ]                                      |
+|  -------------------------------------------------------------------------------  |
+|                                                                                   |
+|  [ ⏰ MATRIZ DE HORARIO COMERCIAL ]                                               |
+|  Lunes:      [x] Habilitado   |   08:00 AM  a  06:00 PM                           |
+|  Martes:     [x] Habilitado   |   08:00 AM  a  06:00 PM                           |
+|  Miércoles:  [x] Habilitado   |   08:00 AM  a  06:00 PM                           |
+|  Jueves:     [x] Habilitado   |   08:00 AM  a  06:00 PM                           |
+|  Viernes:    [x] Habilitado   |   08:00 AM  a  05:00 PM                           |
+|  Sábado:     [ ] Deshabilitado|   --:--     a  --:--                              |
+|  Domingo:    [ ] Deshabilitado|   --:--     a  --:--                              |
+|                                                                                   |
+|  -------------------------------------------------------------------------------  |
+|  [ 🏖️ EXCEPCIONES Y FESTIVIDADES (Holidays) ]                                      |
+|  + Añadir Festividad                                                              |
+|  - 01/Ene/2026 : Año Nuevo           [ 🗑️ Borrar ]                                |
+|  - 01/May/2026 : Día del Trabajo     [ 🗑️ Borrar ]                                |
+|                                                                                   |
+|  [ 💾 GUARDAR POLÍTICA DE CALENDARIO ]                                            |
 +-----------------------------------------------------------------------------------+
 ```

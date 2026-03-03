@@ -95,4 +95,28 @@ public class CamundaBpmAdapter implements ProcesoBpmPort {
             return map;
         }).collect(Collectors.toList());
     }
+
+    @Override
+    public void reclamarTarea(String taskId, String username) {
+        try {
+            taskService.claim(taskId, username);
+        } catch (org.camunda.bpm.engine.TaskAlreadyClaimedException e) {
+            throw new com.ibpms.poc.domain.exception.TaskAlreadyClaimedException(
+                    "La tarea " + taskId + " ya fue asignada a otro usuario.");
+        }
+    }
+
+    @Override
+    public void liberarTarea(String taskId, Map<String, Object> variables) {
+        // En Camunda, liberar una tarea se logra seteando el assignee a null
+        taskService.setAssignee(taskId, null);
+        if (variables != null && !variables.isEmpty()) {
+            taskService.setVariablesLocal(taskId, variables); // Actualizar como Draft
+        }
+    }
+
+    @Override
+    public void reasignarTarea(String taskId, String newUserId) {
+        taskService.setAssignee(taskId, newUserId);
+    }
 }

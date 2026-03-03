@@ -56,4 +56,28 @@ public interface ProcesoBpmPort {
      * @return Lista de mapas con la metadata del proceso
      */
     List<Map<String, Object>> obtenerHistorialPorVariable(String variableName, String variableValue);
+
+    /**
+     * Reclama una tarea para un usuario, evitando problemas de concurrencia.
+     * 
+     * @param taskId   ID de la tarea
+     * @param username Usuario al que se le asignará la tarea
+     */
+    void reclamarTarea(String taskId, String username);
+
+    /**
+     * Libera una tarea y actualiza sus variables locales para guardar como "Draft".
+     * 
+     * @param taskId    ID de la tarea
+     * @param variables Payload parcial
+     */
+    void liberarTarea(String taskId, Map<String, Object> variables);
+
+    /**
+     * Reasigna directamente una tarea a otro usuario sin completar.
+     * 
+     * @param taskId    ID de la tarea
+     * @param newUserId El nuevo usuario asignado
+     */
+    void reasignarTarea(String taskId, String newUserId);
 }

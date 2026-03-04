@@ -408,6 +408,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
+import { api } from '@/services/apiClient';
 
 // ── Types ────────────────────────────────────────────────────
 interface BpmnElement {
@@ -590,9 +591,11 @@ const saveDraft = async () => {
   if (!modelerInstance) return;
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
-    console.log('[AutoSave] Draft XML saved', xml?.substring(0, 80));
-    // In production: PUT /api/v1/design/processes/{id}/draft
+    
+    await api.saveProcessDraft(processId.value, { xml });
+    console.log('[AutoSave] Draft XML saved to Backend API successfully');
   } catch (err) {
+    showToast('Fallback Guardado Local', 'error');
     console.error('[AutoSave] Failed:', err);
   }
 };
@@ -655,9 +658,15 @@ const requestDeploy = () => {
   showToast('📩 Solicitud de despliegue enviada al Release Manager');
 };
 
-const runSandbox = () => {
-  showToast('🧪 Sandbox: Ejecutando simulación del proceso con datos dummy...');
-  // In production: POST /api/v1/design/processes/{id}/sandbox
+const runSandbox = async () => {
+  try {
+    showToast('🧪 Sandbox: Iniciando simulación...');
+    const { xml } = await modelerInstance.saveXML({ format: true });
+    await api.deployToSandbox(processId.value, { xml });
+    showToast('🧪 Sandbox: Simulación exitosa. Revisa la consola para logs.', 'success');
+  } catch (err) {
+    showToast('🧪 Error conectando al Sandbox', 'error');
+  }
 };
 
 const createNewProcess = () => {
@@ -682,7 +691,6 @@ const loadProcess = (p: any) => {
 const sendCopilotMessage = async () => {
   if (!copilotInput.value.trim()) return;
   copilotMessages.value.push({ role: 'user', text: copilotInput.value });
-  const _query = copilotInput.value;
   copilotInput.value = '';
   copilotLoading.value = true;
 

@@ -182,9 +182,7 @@ const submitWbs = async () => {
   
   successMessage.value = '';
   try {
-    // Si el backend aún no expone /api/v1/projects/templates se usa mock local
-    await new Promise(resolve => setTimeout(resolve, 800));
-    // throw new Error("Mocked throw") para probar fallback catch si quisiermos.
+    await store.saveProjectTemplate();
     
     successMessage.value = `¡Plantilla "${store.draft.title}" guardada exitosamente en Arquitectura!`;
     console.log("WBS Payload Generated:", JSON.parse(JSON.stringify(store.draft)));

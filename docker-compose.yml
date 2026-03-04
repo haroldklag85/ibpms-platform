@@ -80,8 +80,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://ibpms-db:3306/ibpms_core?useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=ibpms_user
       - SPRING_DATASOURCE_PASSWORD=ibpms_password
-    # ports:
-    #   - "8080:8080" # Ya no es necesario exponerlo al host, el Gateway lo hace
+    ports:
+      - "8080:8080"
     depends_on:
       ibpms-db:
         condition: service_healthy

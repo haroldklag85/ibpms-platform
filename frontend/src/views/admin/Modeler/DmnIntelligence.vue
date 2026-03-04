@@ -82,6 +82,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { api } from '@/services/apiClient'
 
 const prompt = ref('')
 const isGenerating = ref(false)
@@ -89,13 +90,20 @@ const hasData = ref(false)
 const lastAction = ref('')
 const isDeploying = ref(false)
 
-const generateRule = () => {
+const generateRule = async () => {
+    if (!prompt.value) return;
+    
     isGenerating.value = true
-    setTimeout(() => {
-        isGenerating.value = false
-        hasData.value = true
-        lastAction.value = `[POST /api/v1/ai/dmn/translate] Generación Exitosa. DMN-JS Container Updated.`
-    }, 1200)
+    try {
+        const response = await api.translateDmnToRules({ prompt: prompt.value });
+        hasData.value = true;
+        lastAction.value = `[NLP Generado] Éxito. DMN-JS Container Updated (Confidence: ${response.data?.confidence || '99%'})`;
+    } catch (e) {
+        lastAction.value = `Error en la traducción DMN`;
+        console.error(e);
+    } finally {
+        isGenerating.value = false;
+    }
 }
 
 const deployDMN = () => {

@@ -25,7 +25,7 @@
     <textarea 
       v-if="field.type === 'string'"
       :id="field.key"
-      :value="modelValue"
+      :value="modelValue as string"
       @input="updateValue(($event.target as HTMLTextAreaElement).value)"
       @mouseup="handleTextSelection"
       :placeholder="field.metadata?.placeholder || ''"
@@ -41,7 +41,7 @@
       v-else-if="field.type === 'number'"
       :id="field.key"
       type="number"
-      :value="modelValue"
+      :value="modelValue as number"
       @input="updateValue(Number(($event.target as HTMLInputElement).value))"
       :min="field.metadata?.min"
       :max="field.metadata?.max"
@@ -54,7 +54,7 @@
     <select 
       v-else-if="field.type === 'select'"
       :id="field.key"
-      :value="modelValue"
+      :value="modelValue as string"
       @change="updateValue(($event.target as HTMLSelectElement).value)"
       :required="field.required"
       :disabled="field.disabled"
@@ -99,7 +99,7 @@
       <input
         :id="field.key"
         type="text"
-        :value="modelValue"
+        :value="modelValue as string"
         @input="handleTypeaheadInput"
         @focus="typeaheadOpen = true"
         :placeholder="field.metadata?.placeholder || 'Buscar...'"
@@ -120,7 +120,7 @@
       <input 
         :id="field.key"
         type="text"
-        :value="modelValue"
+        :value="modelValue as string"
         readonly
         placeholder="Coordenadas GPS"
         class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500"
@@ -145,6 +145,7 @@
 
 <script setup lang="ts">
 import { PropType, ref, computed } from 'vue';
+import { api } from '@/services/apiClient';
 import type { FormField } from '@/types/FormSchema';
 
 const props = defineProps({
@@ -233,18 +234,25 @@ const handleTextSelection = (e: MouseEvent) => {
 const requestAiCorrection = async () => {
   if (!correctionPrompt.value.trim()) return;
   
-  // En un entorno real, enviar al backend: 
-  // POST /api/v1/ai/correct { original: selectedText, prompt: correctionPrompt }
-  console.log('[RAG Partial Correction] En route:', { text: selectedText.value, prompt: correctionPrompt.value });
-  
-  // Simular la respuesta corrigiendo la cadena
-  const originalFullText = String(props.modelValue || '');
-  const fakeCorrection = `[IA Mejorado: ${correctionPrompt.value}]`;
-  const newText = originalFullText.replace(selectedText.value, fakeCorrection);
-  
-  updateValue(newText);
-  showCorrectionToolbar.value = false;
-  correctionPrompt.value = '';
-  alert('✨ Regeneración Parcial Aplicada.');
+  try {
+    const response = await api.correctAiText({ 
+      text: selectedText.value, 
+      delta: correctionPrompt.value 
+    });
+    
+    // El backend (AI) retorna el texto con la corrección aplicada
+    const correctedText = response.data?.correctedText || `[IA Mejorado: ${correctionPrompt.value}]`;
+    
+    const originalFullText = String(props.modelValue || '');
+    const newText = originalFullText.replace(selectedText.value, correctedText);
+    
+    updateValue(newText);
+    showCorrectionToolbar.value = false;
+    correctionPrompt.value = '';
+    
+  } catch (error) {
+    console.error('[RAG Partial Correction] Fallo de red/IA', error);
+    alert('Error aplicando regeneración.');
+  }
 };
 </script>

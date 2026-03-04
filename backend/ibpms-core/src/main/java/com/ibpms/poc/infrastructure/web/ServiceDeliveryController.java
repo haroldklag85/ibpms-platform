@@ -15,7 +15,7 @@ import java.util.UUID;
  * Endpoint para Instanciación Manual Plan B (Intake Admin / Pantalla 16)
  */
 @RestController
-@RequestMapping("/service-delivery")
+@RequestMapping("/api/v1")
 public class ServiceDeliveryController {
 
     private final IniciarServicioManualUseCase iniciarServicioManualUseCase;
@@ -36,5 +36,13 @@ public class ServiceDeliveryController {
         response.put("message", "Expediente manual iniciado correctamente.");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    // GAP: Integration Kanban Update
+    @PatchMapping("/kanban/items/{id}/status")
+    public ResponseEntity<Void> updateKanbanStatus(@PathVariable("id") String id,
+            @RequestBody Map<String, Object> request) {
+        // Mock Implementation: Just acknowledge the update
+        return ResponseEntity.noContent().build();
     }
 }

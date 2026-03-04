@@ -33,6 +33,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { api } from '@/services/apiClient';
 import type { KanbanBoard, KanbanItem } from '@/types/Kanban';
 import KanbanColumn from '@/components/kanban/KanbanColumn.vue';
 
@@ -62,19 +63,25 @@ const getItemsForColumn = (columnId: string) => {
 
 // Evento emitido cuando un Item es soltado (Dropped) en una Columna Diferente.
 const handleItemMove = async ({ item, newStatus }: { item: KanbanItem, newStatus: string }) => {
-  // 1. Mostrar estado de sincronización.
-  syncStatus.value = `Sincronizando Muvimiento T-${item.id}...`;
-  
-  // 2. Simulamos la llamada Axios que actualiza esto en Backend (PATCH /api/v1/kanban/items/{id}/status)
-  setTimeout(() => {
+  try {
+    // 1. Mostrar estado de sincronización.
+    syncStatus.value = `Sincronizando Muvimiento T-${item.id}...`;
+    
+    // 2. Ejecutar la llamada Axios que actualiza esto en Backend (PATCH /api/v1/kanban/items/{id}/status)
+    await api.updateKanbanStatus(item.id, newStatus);
+
     // 3. Modificamos el estado Local Reactivo si el Service responde OK.
     const targetItem = board.value.items.find(i => i.id === item.id);
     if(targetItem) {
       targetItem.status = newStatus;
     }
     syncStatus.value = `Guardado OK`;
+  } catch(error) {
+    console.error('No se pudo mover la tarea en remoto Kanban', error);
+    syncStatus.value = `Error Sincronización`;
+  } finally {
     setTimeout(() => syncStatus.value = '', 2000);
-  }, 500);
+  }
 };
 
 const loadBoard = () => {

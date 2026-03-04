@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import axios from 'axios';
+import { api } from '@/services/apiClient';
 
 export interface WbsTask {
     id: string;
@@ -77,7 +77,7 @@ export const useProjectBuilderStore = defineStore('projectBuilder', () => {
                 }))
             };
 
-            const response = await axios.post('/api/v1/projects/templates', payload);
+            const response = await api.createProjectTemplate(payload);
 
             // Reset draft after success
             draft.value = {

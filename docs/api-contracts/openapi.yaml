@@ -313,3 +313,130 @@ paths:
       responses:
         '201':
           description: Definición subida y parseada de forma exitosa.
+  /ai/correct:
+    post:
+      summary: Corrección de texto con Inteligencia Artificial
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                original:
+                  type: string
+                prompt:
+                  type: string
+      responses:
+        '200':
+          description: Texto corregido con IA
+  /service-delivery/manual-start:
+    post:
+      summary: Iniciar Intake Manualmente
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Proceso de servicio iniciado
+  /customers/{id}/360:
+    get:
+      summary: Obtener perfil 360 del cliente
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Perfil 360 del Cliente desde CRM
+  /projects/templates:
+    post:
+      summary: Crear o instanciar un template de proyecto (WBS)
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Template de Proyecto clonado/procesado
+  /design/processes/{id}/draft:
+    put:
+      summary: Guardar borrador del proceso BPMN (Auto-Save)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Borrador guardado exitosamente
+  /design/processes/{id}/sandbox:
+    post:
+      summary: Ejecutar el proceso en modo Sandbox
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Motor Sandbox ejecutado (In-memory)
+  /analytics/process-health:
+    get:
+      summary: Métricas BAM (Salud de los procesos)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: KPIs de salud de procesos para Grafana
+  /analytics/ai-metrics:
+    get:
+      summary: Panel de Rendimiento de la IA (Tokens/Costos)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Métricas AI
+  /kanban/items/{id}/status:
+    patch:
+      summary: Actualizar estado de tarjeta Kanban
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stage de Tarjeta Kanban Actualizado
+  /ai/dmn/translate:
+    post:
+      summary: NLP a DMN (Traducir Lenguaje Natural a Reglas de Negocio XML)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: XML Generado
+  /public/tracking/{trackingCode}:
+    get:
+      summary: Seguimiento en Portal Público B2B/B2C
+      parameters:
+        - name: trackingCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Status público del expediente

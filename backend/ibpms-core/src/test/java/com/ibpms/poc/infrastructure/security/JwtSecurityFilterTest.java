@@ -2,7 +2,6 @@ package com.ibpms.poc.infrastructure.security;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;

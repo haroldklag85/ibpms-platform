@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  * C)
  */
 @RestController
-@RequestMapping("/analytics")
+@RequestMapping("/api/v1/analytics")
 @PreAuthorize("hasRole('Directivo') or hasRole('Admin_Intake')")
 public class AnalyticsController {
 

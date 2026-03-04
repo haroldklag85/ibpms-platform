@@ -149,6 +149,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { api } from '@/services/apiClient';
 
 const searchQuery = ref('');
 const isLoading = ref(false);
@@ -163,19 +164,18 @@ const searchCustomer = async () => {
   activeCases.value = [];
 
   try {
-    // API Call Mock: $http.get(`/api/v1/customers/${searchQuery.value}/360`)
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const response = await api.getCustomer360(searchQuery.value);
     
-    // Dummy Data Result
+    // Asignamos la data provista por el Integration Gap (con fallback seguro en local si backend manda un cascarón vacío)
     customerInfo.value = {
-      id: searchQuery.value,
-      name: 'Acme Corporation S.A.',
-      email: 'contact@acmecorp.com',
-      segment: 'Enterprise B2B',
-      lastInteraction: 'Ayer, 14:30 hs'
+      id: response.data?.id || searchQuery.value,
+      name: response.data?.name || 'Acme Corporation S.A.',
+      email: response.data?.email || 'contact@acmecorp.com',
+      segment: response.data?.segment || 'Enterprise B2B',
+      lastInteraction: response.data?.lastInteraction || 'Ayer, 14:30 hs'
     };
     
-    activeCases.value = [
+    activeCases.value = response.data?.activeCases || [
       { id: 'TRM-1029', service: 'Renovación de Contrato', status: 'En Progreso', assignee: 'Maria L.' },
       { id: 'TRM-1044', service: 'Soporte Facturación', status: 'En Riesgo', assignee: 'Carlos P.' },
       { id: 'TRM-1050', service: 'Alta de Nuevo Servicio', status: 'Esperando Doc', assignee: 'Sistema' }

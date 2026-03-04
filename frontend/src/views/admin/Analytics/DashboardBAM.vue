@@ -181,8 +181,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-
-
+import { api } from '@/services/apiClient';
 const isLoading = ref(true);
 const processHealth = ref<any>(null);
 const aiMetrics = ref<any>(null);
@@ -191,24 +190,13 @@ const fetchMetrics = async () => {
   isLoading.value = true;
   
   try {
-    // API Call Mock: Simulating GET /api/v1/analytics/process-health en el backend
-    // En un entorno real se usaría: const [healthRes, aiRes] = await Promise.all([ axios.get('/api/v1/analytics/process-health'), axios.get('/api/v1/analytics/ai-metrics') ])
+    const [healthRes, aiRes] = await Promise.all([
+      api.getProcessHealth(),
+      api.getAiMetrics()
+    ]);
     
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    
-    processHealth.value = {
-      activeCases: 120,
-      completedCases: 3400,
-      activeTasks: 450,
-      overdueTasks: 15
-    };
-
-    aiMetrics.value = {
-      totalAiEvents: 2540,
-      generatedDmns: 421,
-      autoRoutedEmails: 2119,
-      averageSimilarityScore: 0.942
-    };
+    processHealth.value = healthRes.data;
+    aiMetrics.value = aiRes.data;
 
   } catch (err) {
     console.error("Hubo un error cargando las métricas de BAM", err);

@@ -178,6 +178,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
+import { api } from '@/services/apiClient';
 
 const isSubmitting = ref(false);
 const successMessage = ref('');
@@ -201,11 +202,10 @@ const submitIntake = async () => {
   successMessage.value = '';
   
   try {
-    // Simulating API Call: $http.post('/api/v1/service-delivery/manual-start')
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const response = await api.manualStart(form);
     
-    console.log('Intake payload submitted:', { ...form });
-    successMessage.value = `Trámite Iniciado Exitosamente. Caso asignado ID: CASE-${Math.floor(Math.random() * 10000)}`;
+    console.log('Intake payload submitted:', { ...response.data });
+    successMessage.value = `Trámite Iniciado Exitosamente. Caso asignado ID: ${response.data.id || 'Generado'}`;
     
     // Reset form after success
     form.customerId = '';

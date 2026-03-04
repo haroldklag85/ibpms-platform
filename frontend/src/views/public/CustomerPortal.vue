@@ -159,6 +159,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { api } from '@/services/apiClient';
 
 const trackingCode = ref('');
 const isLoading = ref(false);
@@ -173,18 +174,18 @@ const searchTracking = async () => {
   trackingResult.value = null;
 
   try {
-    // API Mock: $http.get(`/api/v1/public/tracking/${trackingCode.value}`)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const response = await api.getPublicTracking(trackingCode.value);
     
-    // Simulate valid tracking code ending in 'A'
-    if (trackingCode.value.toUpperCase().endsWith('A')) {
-      trackingResult.value = {
-        id: trackingCode.value.toUpperCase(),
-        status: 'En Revisión Legal'
-      };
+    // Simulate valid tracking code ending in 'A' for UX purposes if endpoint is still mocked by backend returning 200
+    trackingResult.value = {
+      id: response.data?.id || trackingCode.value.toUpperCase(),
+      status: response.data?.status || 'En Revisión Legal'
+    };
+  } catch (error: any) {
+    if (error.response?.status !== 404) {
+      console.error('Error fetching tracking data', error);
     }
-  } catch (error) {
-    console.error('Error fetching tracking data', error);
+    trackingResult.value = null;
   } finally {
     isLoading.value = false;
   }

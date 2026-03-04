@@ -253,11 +253,30 @@
         </div>
     </div>
 
+    <!-- 4. Pantalla 7 (FormDesigner.vue) - Modal de Confirmación de Reset Dual (CA-43) -->
+    <div v-if="showResetModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm animate-slide-in">
+      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full border border-gray-200">
+        <div class="flex items-center gap-3 mb-4 text-red-600">
+           <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+           </svg>
+           <h3 class="text-lg font-bold">Confirmar Reset</h3>
+        </div>
+        <p class="text-sm text-gray-600 mb-6">
+           ¿Está seguro que desea borrar todo el diseño del formulario? <b>Esta acción no se puede deshacer</b> y todo el código generado se perderá.
+        </p>
+        <div class="flex justify-end gap-3">
+          <button @click="showResetModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
+          <button @click="executeReset" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow transition">Sí, Borrar</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import VueDraggable from 'vuedraggable';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
 
@@ -284,6 +303,8 @@ const activeStageSim = ref('ALL');
 
 const activeCodeTab = ref<'TEMPLATE' | 'SCRIPT' | 'ZOD'>('TEMPLATE');
 const editingField = ref<FormField | null>(null);
+
+const showResetModal = ref(false); // Modal de Reset CA-43
 
 // ── Modals / Toasts ──────────────────────────────────────────────
 const showResultModal = ref(false);
@@ -344,11 +365,14 @@ const selectPattern = (pattern: 'SIMPLE' | 'IFORM_MAESTRO') => {
 };
 
 const confirmReset = () => {
-  if (confirm('¿Estás seguro de restablecer el formulario (CA-43)? Se perderán todos los datos actuales.')) {
-    canvasFields.value = [];
-    idCounter = 1;
-    showPatternModal.value = true;
-  }
+  showResetModal.value = true;
+};
+
+const executeReset = () => {
+  canvasFields.value = [];
+  idCounter = 1;
+  showResetModal.value = false;
+  showPatternModal.value = true;
 };
 
 const removeField = (index: number) => {

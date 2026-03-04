@@ -13,3 +13,7 @@ databaseChangeLog:
       file: db/changelog/09-create-integration-hub-tables.sql
   - include:
       file: db/changelog/10-create-sgdea-tables.sql
+  - include:
+      file: db/changelog/11-create-cognitive-bpmn-tables.sql
+  - include:
+      file: db/changelog/12-create-identity-rbac-tables.sql

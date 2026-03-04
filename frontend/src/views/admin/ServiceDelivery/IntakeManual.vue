@@ -5,8 +5,15 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Service Delivery: Intake Manual</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ingreso de casos Plan B / Soporte Operativo</p>
       </div>
-      <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold tracking-wide">
-        Role_Admin_Intake
+      <div class="flex gap-3 items-center">
+        <!-- Mock toggle for Role -->
+        <label class="flex items-center gap-2 text-xs bg-gray-100 px-3 py-1 rounded border">
+          <input type="checkbox" v-model="isSacLeader" class="rounded text-blue-600 focus:ring-blue-500">
+          Rol Emulado: SAC_Leader
+        </label>
+        <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold tracking-wide">
+          Role_Admin_Intake
+        </div>
       </div>
     </div>
 
@@ -101,6 +108,71 @@
         </button>
       </div>
     </form>
+
+    <!-- 1. Pantalla 16 (IntakeManual.vue) - Modal de Lectura Plana (CA-10) -->
+    <div class="mt-8 border-t pt-8">
+       <h2 class="text-xl font-bold text-gray-800 mb-4">Cola de Correos Pendientes de Radicación</h2>
+       <div class="bg-white border rounded-lg overflow-hidden shadow-sm">
+          <table class="min-w-full divide-y divide-gray-200">
+             <thead class="bg-gray-50">
+               <tr>
+                 <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Origen</th>
+                 <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Asunto</th>
+                 <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">Acción</th>
+               </tr>
+             </thead>
+             <tbody class="divide-y divide-gray-200">
+               <tr v-for="mail in mockEmails" :key="mail.id" class="hover:bg-gray-50">
+                 <td class="px-4 py-3 text-sm text-gray-900">{{ mail.sender }}</td>
+                 <td class="px-4 py-3 text-sm text-gray-500 truncate max-w-xs">{{ mail.subject }}</td>
+                 <td class="px-4 py-3 text-right">
+                    <button v-if="!isSacLeader" @click="openReadonlyMail(mail)" class="text-indigo-600 hover:text-indigo-900 text-xs font-bold bg-indigo-50 px-3 py-1.5 rounded transition inline-flex items-center gap-1 border border-indigo-100">
+                      🔍 Ver Correo
+                    </button>
+                    <span v-else class="text-xs text-gray-400 italic">Acceso Total Disponible</span>
+                 </td>
+               </tr>
+             </tbody>
+          </table>
+       </div>
+    </div>
+
+    <!-- Modal (Overlay) Lectura Plana -->
+    <div v-if="readonlyMailModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl overflow-hidden animate-slide-in">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+          <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+            📧 Vista Restringida de Correo (Texto Plano)
+          </h3>
+          <button @click="readonlyMailModal = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+        <div class="p-6 space-y-4">
+           <div v-if="selectedMail">
+              <div class="mb-4">
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Asunto</p>
+                <p class="text-base font-semibold text-gray-900">{{ selectedMail.subject }}</p>
+              </div>
+              <div class="mb-4">
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Remitente</p>
+                <p class="text-sm text-gray-700">{{ selectedMail.sender }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Cuerpo del Mensaje</p>
+                <div class="bg-gray-50 border border-gray-200 rounded p-4 text-sm text-gray-700 whitespace-pre-wrap font-mono min-h-[150px]">
+                  {{ selectedMail.body }}
+                </div>
+              </div>
+              <p class="text-xs text-red-500 font-bold mt-4 flex items-center gap-1">
+                 ⚠️ Anexos bloqueados por Políticas de DLP. Visualización modo solo lectura (Non-Leader).
+              </p>
+           </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+           <button @click="readonlyMailModal = false" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-bold rounded hover:bg-gray-300 transition">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -146,4 +218,32 @@ const submitIntake = async () => {
     isSubmitting.value = false;
   }
 };
+
+// ==========================================
+// Modal Lectura Plana (CA-10) Lógica
+// ==========================================
+const readonlyMailModal = ref(false);
+const isSacLeader = ref(false); // Mock de rol SAC_Leader
+const selectedMail = ref<null | { id: string, sender: string, subject: string, body: string }>(null);
+
+const mockEmails = ref([
+  { id: 'MAIL-1', sender: 'cliente1@empresa.com', subject: 'Solicitud de Crédito Corporativo', body: 'Adjunto mis extractos bancarios para la solicitud del crédito. Quedo atento.' },
+  { id: 'MAIL-2', sender: 'soporte@external.com', subject: 'Falla en acceso al portal Docusign', body: 'No puedo ver los expedientes desde ayer. Arroja HTTP 500.' }
+]);
+
+const openReadonlyMail = (mail: any) => {
+  selectedMail.value = mail;
+  readonlyMailModal.value = true;
+};
+
 </script>
+
+<style scoped>
+.animate-slide-in {
+  animation: slideInDown 0.3s ease-out forwards;
+}
+@keyframes slideInDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+</style>

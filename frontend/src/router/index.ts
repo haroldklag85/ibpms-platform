@@ -2,6 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router';
 import MainLayout from '@/layouts/MainLayout.vue';
 import Workdesk from '@/views/Workdesk.vue';
 import Portal from '@/views/Portal.vue';
+import DocumentGrid from '@/views/admin/SGDEA/DocumentGrid.vue';
+import PromptLibrary from '@/views/admin/AI/PromptLibrary.vue';
+import IdentityGovernance from '@/views/admin/Security/IdentityGovernance.vue';
+
+// ── Interceptors ─────────────────────────────────────────────
+import { rbacGuard } from './RouteGuards';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -116,22 +122,27 @@ const router = createRouter({
         // --- Bloque G: SGDEA (Pantalla 12) ---
         {
             path: '/sgdea/vault',
-            name: 'DocumentGrid',
-            component: () => import('@/views/admin/SGDEA/DocumentGrid.vue'),
-            meta: { requiresAuth: true }
+            name: 'SGD_Vault',
+            component: DocumentGrid,
+            meta: { title: 'Bóveda Documental', requiresAuth: true }
+        },
+        {
+            path: '/ai/prompts',
+            name: 'AI_PromptLibrary',
+            component: PromptLibrary,
+            meta: { title: 'Librería de Prompts', requiresAuth: true, roles: ['Global Admin', 'prompt_engineer'] } // CA-7 Role guard futuro
+        },
+        // --- Bloque J: Identity Governance (Pantalla 14) ---
+        {
+            path: '/admin/security/identity',
+            name: 'IdentityGovernance',
+            component: IdentityGovernance,
+            meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['Global Admin'] }
         }
     ]
 });
 
-// Navigation Guard estricto (Temporal mock)
-router.beforeEach((to, _from, next) => {
-    const isAuthenticated = localStorage.getItem('ibpms_token'); // TODO: Conectar a Pinia
-
-    if (to.meta.requiresAuth && !isAuthenticated) {
-        next('/login');
-    } else {
-        next();
-    }
-});
+// Navigation Guard estricto
+router.beforeEach(rbacGuard);
 
 export default router;

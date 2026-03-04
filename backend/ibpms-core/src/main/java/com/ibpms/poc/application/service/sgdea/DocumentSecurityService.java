@@ -1,9 +1,6 @@
 package com.ibpms.poc.application.service.sgdea;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import org.springframework.web.HttpMediaTypeNotSupportedException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,33 +17,26 @@ import java.util.HexFormat;
 @Service
 public class DocumentSecurityService {
 
-    // Magic Numbers comunes (Hex Signatures)
-    private static final byte[] MAGIC_PDF = { 0x25, 0x50, 0x44, 0x46 }; // %PDF
-    private static final byte[] MAGIC_PNG = { (byte) 0x89, 0x50, 0x4E, 0x47 }; // PNG
-    private static final byte[] MAGIC_JPEG_1 = { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF };
-    private static final byte[] MAGIC_ZIP_DOCX = { 0x50, 0x4B, 0x03, 0x04 }; // PK.. (DOCX is a zip)
-
-    public void validateMimeRules(MultipartFile file) throws IOException, HttpMediaTypeNotSupportedException {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("El archivo está vacío o no fue enviado.");
+    public void validateMagicBytes(InputStream inputStream, String originalFilename) throws IOException {
+        byte[] magicBytes = new byte[4];
+        if (inputStream.read(magicBytes, 0, 4) < 2) {
+            throw new SecurityException("No se pudieron leer los Magic Bytes suficientes.");
         }
 
-        byte[] header = new byte[4];
-        try (InputStream is = file.getInputStream()) {
-            if (is.read(header) < 4) {
-                throw new HttpMediaTypeNotSupportedException(
-                        "Archivo corrupto o demasiado pequeño para inspección MIME.");
+        // Verifica si es un archivo ejecutable DOS/Windows (Magic Bytes: 'MZ' -> 0x4D
+        // 0x5A)
+        if (magicBytes[0] == 0x4D && magicBytes[1] == 0x5A) {
+            throw new SecurityException(
+                    "¡Falsificación de MIME (Magic Bytes: MZ)! Archivo ejecutable malicioso detectado.");
+        }
+
+        // Verifica archivos marcados como .pdf
+        if (originalFilename != null && originalFilename.toLowerCase().endsWith(".pdf")) {
+            // La firma binaria de PDF es '%PDF' -> 0x25 0x50 0x44 0x46
+            if (magicBytes[0] != 0x25 || magicBytes[1] != 0x50 || magicBytes[2] != 0x44 || magicBytes[3] != 0x46) {
+                throw new SecurityException(
+                        "Falsificación de extensión detectada: El archivo indica ser .pdf pero sus Magic Bytes no corresponden a %PDF.");
             }
-        }
-
-        boolean isValid = matchMagicNumber(header, MAGIC_PDF) ||
-                matchMagicNumber(header, MAGIC_PNG) ||
-                matchMagicNumber(header, MAGIC_JPEG_1) ||
-                matchMagicNumber(header, MAGIC_ZIP_DOCX);
-
-        if (!isValid) {
-            throw new HttpMediaTypeNotSupportedException(
-                    "Tipo de archivo bloqueado por directiva de Seguridad. Extensiones permitidas: PDF, PNG, JPG/JPEG, DOCX.");
         }
     }
 
@@ -66,14 +56,4 @@ public class DocumentSecurityService {
         return HexFormat.of().formatHex(hashBytes);
     }
 
-    private boolean matchMagicNumber(byte[] header, byte[] signature) {
-        if (header.length < signature.length)
-            return false;
-        for (int i = 0; i < signature.length; i++) {
-            if (header[i] != signature[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

@@ -1,23 +1,40 @@
 <template>
   <div class="mb-4">
-    <!-- Label -->
-    <label v-if="field.label" :for="field.key" class="block text-sm font-medium text-gray-700 mb-1">
-      {{ field.label }}
-      <span v-if="field.required" class="text-red-500">*</span>
-    </label>
+    <!-- Label & Cognitive Badges (CA-29) -->
+    <div class="flex items-center justify-between mb-1">
+      <label v-if="field.label" :for="field.key" class="block text-sm font-medium text-gray-700">
+        {{ field.label }}
+        <span v-if="field.required" class="text-red-500">*</span>
+      </label>
+      
+      <!-- Secret Score Badge (Solo visible si metadata.aiScore existe) -->
+      <span v-if="field.metadata?.aiScore" class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-200" title="Score de Confianza Generativo (CA-29)">
+        🤖 {{ field.metadata.aiScore }}% Confidence
+      </span>
+    </div>
+
+    <!-- Partial Regeneration Toolbar (CA-28) -->
+    <div v-if="showCorrectionToolbar" class="absolute z-50 bg-gray-900 text-white rounded shadow-2xl p-2 flex gap-2 items-center text-xs animate-slide-in" :style="{ top: toolbarPos.y + 'px', left: toolbarPos.x + 'px' }">
+      <span class="font-bold text-emerald-400">⚡ Corregir Selección:</span>
+      <input v-model="correctionPrompt" @keyup.enter="requestAiCorrection" type="text" placeholder="Instrucción Rápida..." class="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white focus:outline-none focus:border-emerald-500 w-40" />
+      <button @click="requestAiCorrection" class="bg-emerald-600 hover:bg-emerald-700 px-2 py-1 rounded font-bold transition">Enviar</button>
+      <button @click="showCorrectionToolbar = false" class="text-gray-400 hover:text-white px-1">&times;</button>
+    </div>
 
     <!-- TYPE: STRING / TEXT -->
-    <input 
+    <textarea 
       v-if="field.type === 'string'"
       :id="field.key"
-      type="text"
       :value="modelValue"
-      @input="updateValue(($event.target as HTMLInputElement).value)"
+      @input="updateValue(($event.target as HTMLTextAreaElement).value)"
+      @mouseup="handleTextSelection"
       :placeholder="field.metadata?.placeholder || ''"
       :required="field.required"
       :disabled="field.disabled"
-      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ibpms-brand focus:border-ibpms-brand disabled:bg-gray-100 disabled:text-gray-500"
-    />
+      rows="3"
+      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ibpms-brand focus:border-ibpms-brand disabled:bg-gray-100 disabled:text-gray-500 transition-colors"
+      :class="{ 'bg-emerald-50 border-emerald-200 focus:ring-emerald-500 focus:border-emerald-500': field.metadata?.aiScore }"
+    ></textarea>
 
     <!-- TYPE: NUMBER -->
     <input 
@@ -184,5 +201,50 @@ const requestGeolocation = () => {
   } else {
     alert("Geolocalización no soportada.");
   }
+};
+// --- Partial Regeneration CA-28 ---
+const showCorrectionToolbar = ref(false);
+const toolbarPos = ref({ x: 0, y: 0 });
+const correctionPrompt = ref('');
+const selectedText = ref('');
+
+const handleTextSelection = (e: MouseEvent) => {
+  // Solo activar si es un campo generado por IA
+  if (!props.field.metadata?.aiScore) return;
+  
+  const textarea = e.target as HTMLTextAreaElement;
+  const selection = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
+  
+  if (selection.trim().length > 0) {
+    selectedText.value = selection;
+    showCorrectionToolbar.value = true;
+    
+    // Posicionar encima del cursor
+    const rect = textarea.getBoundingClientRect();
+    toolbarPos.value = {
+      x: e.clientX - rect.left,
+      y: (e.clientY - rect.top) - 50 // 50px above cursor
+    };
+  } else {
+    showCorrectionToolbar.value = false;
+  }
+};
+
+const requestAiCorrection = async () => {
+  if (!correctionPrompt.value.trim()) return;
+  
+  // En un entorno real, enviar al backend: 
+  // POST /api/v1/ai/correct { original: selectedText, prompt: correctionPrompt }
+  console.log('[RAG Partial Correction] En route:', { text: selectedText.value, prompt: correctionPrompt.value });
+  
+  // Simular la respuesta corrigiendo la cadena
+  const originalFullText = String(props.modelValue || '');
+  const fakeCorrection = `[IA Mejorado: ${correctionPrompt.value}]`;
+  const newText = originalFullText.replace(selectedText.value, fakeCorrection);
+  
+  updateValue(newText);
+  showCorrectionToolbar.value = false;
+  correctionPrompt.value = '';
+  alert('✨ Regeneración Parcial Aplicada.');
 };
 </script>

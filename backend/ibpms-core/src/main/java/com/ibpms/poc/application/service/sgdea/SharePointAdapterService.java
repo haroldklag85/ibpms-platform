@@ -33,6 +33,22 @@ public class SharePointAdapterService {
     }
 
     /**
+     * Valida el Token de EntraID y los límites de dominio para conexiones seguras a
+     * SharePoint.
+     * Requerimiento QA CA-14.
+     */
+    public void validateEntraIdTokenAndBounds(String bearerToken, String targetUrl) {
+        if (bearerToken == null || !bearerToken.startsWith("Bearer ") || bearerToken.length() < 10) {
+            throw new SecurityException("Falla de Autenticación: Token Bearer de EntraID inválido o ausente.");
+        }
+
+        if (targetUrl == null || !targetUrl.startsWith("https://graph.microsoft.com/v1.0/drives/")) {
+            throw new SecurityException("Límites de Seguridad Excedidos: La URL de destino (" + targetUrl
+                    + ") no pertenece a un origin de Microsoft Graph autorizado.");
+        }
+    }
+
+    /**
      * Crea una carpeta dinámica en SharePoint basada en el proceso y el ID del caso
      * (CA-2).
      */

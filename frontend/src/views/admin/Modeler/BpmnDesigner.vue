@@ -200,6 +200,46 @@
               🧠 Auditoría ISO-9001 (Copilot)
             </button>
           </div>
+
+          <!-- ═══════ Módulo Cognitivo (CA-10 / CA-11) ═══════ -->
+          <div v-if="selectedElement.name && selectedElement.name.toLowerCase().includes('rag')" class="p-4 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-lg shadow-inner mt-4">
+            <h4 class="text-xs font-bold text-emerald-800 dark:text-emerald-400 mb-3 flex items-center gap-2">
+              <span class="text-lg">🤖</span> Cognitive Task Settings
+            </h4>
+            <div class="space-y-4">
+              
+              <!-- Tone Selector (CA-11) -->
+              <div>
+                <label class="block text-[10px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-widest mb-1">Tone Override</label>
+                <select v-model="selectedElement.props.aiTone" class="w-full text-xs font-medium border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded p-1.5 focus:ring-emerald-500">
+                  <option value="NEUTRAL">Neutral / Objetivo</option>
+                  <option value="EMPATHETIC">Empático (Servicio al Cliente)</option>
+                  <option value="FORMAL">Formal (Legal / Regulatorio)</option>
+                  <option value="COMMERCIAL">Comercial (Ventas / Persuasivo)</option>
+                </select>
+              </div>
+
+              <!-- Reading Limits (CA-10) Cost Control -->
+              <div class="pt-2 border-t border-emerald-100 dark:border-emerald-800/50">
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block text-[10px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-widest">Max Context (Tokens)</label>
+                  <span class="text-[10px] font-mono font-bold text-emerald-900 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-800 px-1 rounded">{{ selectedElement.props.aiTokenLimit || 2000 }}</span>
+                </div>
+                <input type="range" v-model.number="selectedElement.props.aiTokenLimit" min="500" max="32000" step="500" class="w-full accent-emerald-600" />
+                <p class="text-[9px] text-emerald-600 dark:text-emerald-500 mt-1 leading-tight">Limita la cantidad de texto extraído del SGDEA para evitar facturación excesiva del LLM en documentos gigantes (Pre-Packaged Context).</p>
+              </div>
+
+              <!-- Target Output Schema -->
+              <div class="pt-2 border-t border-emerald-100 dark:border-emerald-800/50">
+                <label class="block text-[10px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-widest mb-1">JSON Target Schema</label>
+                <input type="text" v-model="selectedElement.props.aiSchemaId" placeholder="Ej: schema_risk_matrix_v2" class="w-full text-[11px] font-mono border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded p-1.5" />
+                <p class="text-[9px] text-emerald-600 dark:text-emerald-500 mt-1 leading-tight">Fuerza a la IA a responder con un layout compatible con Pantalla 7.</p>
+              </div>
+
+            </div>
+          </div>
+          <!-- ════════════════════════════════════════════════ -->
+
         </div>
       </aside>
     </main>
@@ -385,7 +425,10 @@ let modelerInstance: any = null;
 const selectedElement = ref<BpmnElement>({
   id: '',
   type: '',
-  props: {}
+  props: {
+    aiTokenLimit: 4000,
+    aiTone: 'NEUTRAL'
+  }
 });
 
 // ── Process State ────────────────────────────────────────────

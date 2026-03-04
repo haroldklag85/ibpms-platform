@@ -930,21 +930,50 @@ Feature: Sugerencia de Acciones Atómicas (Human-in-the-Loop)
 
 ---
 
-### US-015: Feedback y aprendizaje supervisado
-**Como** gestor de un buzón corporativo
-**Quiero** que el sistema aprenda de mis ediciones y rechazos
-**Para** que las propuestas mejoren con el tiempo.
+### US-015: Feedback y aprendizaje supervisado (Human-in-the-loop MLOps)
+**Como** Analista del Área de Servicio (SAC)
+**Quiero** que el agente inteligente me proponga respuestas y acciones, permitiéndome editarlas, aprobarlas o rechazarlas
+**Para** garantizar que la máquina no tome decisiones autónomas erróneas y aprenda continuamente de mis correcciones en la Pantalla 1B.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Feedback Loop para Aprendizaje Automático
-  Scenario: Registro de correcciones y rechazos humanos
-    Given un borrador propuesto por la IA
-    When el usuario edita el texto del borrador antes de enviarlo
-    Then el sistema registra en auditoría la versión original vs la versión final (Delta)
-    When el usuario presiona "Rechazar" sobre una propuesta
-    Then el sistema debe solicitar un motivo de rechazo de un catálogo predefinido
-    And el sistema debe almacenar métricas de tasas de aceptación, edición y rechazo categorizadas para re-entrenamiento
+Feature: Asistente SAC y Triaje con Aprobación Humana Obligatoria
+  Scenario: Disparador Diferido del Acuse de Recibo (CA-1)
+    Given la llegada de un correo electrónico de un cliente al buzón parametrizado
+    When el Agente Inteligente 3 analiza el contenido y genera un borrador de Respuesta
+    Then el iBPMS NO envía el correo automáticamente al cliente
+    And retiene el borrador en la Pantalla 1B hasta que el humano lo revise y presione específicamente el botón `[Enviar Acuse]` o `[Cancelar Propuesta]`.
+
+  Scenario: Tolerancia al Riesgo y Declaración de Incertidumbre (CA-2)
+    Given un correo electrónico confuso o ininteligible
+    When la red neuronal calcula un Confidence Score por debajo del umbral parametrizado
+    Then el Agente 3 se declara incompetente explícitamente y deja la tarea en blanco para el humano
+    And expone un botón amarillo de `[Retroalimentar IA]` que despliega un Modal para que el analista (opcionalmente) le enseñe a clasificar ese caso anómalo.
+
+  Scenario: Consumo Contextual de Historial Cliente (Exchange API) (CA-3)
+    Given la necesidad de redactar una respuesta útil al cliente
+    Then el Agente 3 se conecta vía API a Microsoft Exchange (O365) para recuperar el hilo de correos recientes del cliente
+    And utiliza este contexto para generar el borrador, ignorando la Bóveda SGDEA (SharePoint) para este propósito específico.
+
+  Scenario: Tono Dinámico Inyectado por Administrador (CA-4)
+    Given la generación de texto natural (NLG) hacia un ciudadano
+    Then el tono (Formal, Empático, Urgente) no está hardcodeado en la lógica
+    And hereda las directrices directamente del *System Prompt* parametrizado previamente por el Administrador del Buzón en la configuración global.
+
+  Scenario: Creación Exclusiva de Tareas Sugeridas (CA-5)
+    Given una solicitud de cliente que requiere múltiples acciones inter-área
+    Then el Agente 3 NO instancia los procesos subyacentes mágicamente en el backend
+    And se limita a proponer la lista de "Tareas / Actividades a Instanciar" en la Pantalla 1B, requiriendo el click humano de `[Aprobar Lista]`.
+
+  Scenario: Resiliencia ante Archivos Densos (Ceguera V1) (CA-6)
+    Given un correo con un anexo `.xlsx` de 40 MB lleno de macros financieras
+    Then en el alcance de la V1, el Agente 3 ignora el contenido computacional profundo de los anexos (Excel, XMLs)
+    And basa su razonamiento exclusivamente en el texto del cuerpo del correo y los PDFs/Word básicos.
+
+  Scenario: Trazabilidad Operativa sin Reporte Formal (CA-7)
+    Given una acción sugerida por la IA y aprobada por un analista
+    Then el iBPMS guarda el registro transaccional "Aprobado por: X, Sugerido por: IA" en la base de datos para trazabilidad forense
+    And no la proyecta como una "Etiqueta Policial de Auditoría" perturbadora en los informes comerciales diarios.
 ```
 
 ---
@@ -962,24 +991,6 @@ Feature: Configuración de 'Mailbox Policy' Dinámicas
     When el administrador define un 'mailbox_policy' configurando idioma, nivel de formalidad, disclaimers y escalamiento
     Then las propuestas generadas por el LLM aplican inmediatamente este contexto en sus prompts
     And los nuevos cambios de política operan sobre el siguiente correo entrante sin requerir 'redeploy' de código
-```
-
----
-
-### US-017: Trazabilidad y alineación con eDiscovery (M365)
-**Como** auditor o compliance officer
-**Quiero** trazabilidad de decisiones y acciones, alineada a eDiscovery
-**Para** asegurar cumplimiento y auditoría.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Integridad Operacional de Datos M365
-  Scenario: Auditoría de Custodia de Correos
-    Given el procesamiento de un correo corporativo
-    Then el sistema inserta un registro 'audit_id' inmutable
-    And captura el timestamp, buzón de origen, intención inferida, acciones sugeridas y decisión humana
-    And el sistema debe mantener referencias y metadatos del correo original sin duplicar innecesariamente el cuerpo completo
-    And permite exportar reportes respetando eDiscovery sin romper la cadena de custodia
 ```
 
 ---
@@ -1773,3 +1784,109 @@ Feature: SharePoint Vault and Single Source of Truth
     And el cerebro LLM procede a desencolar y devorar el contenido (si es PDF o WORD habilitado) para poblar su memoria de Embeddings sin congelar la ventana del usuario.
 ```
 **Trazabilidad UX:** Wireframes Pantallas 12, 16 y 6.
+
+---
+
+## ÉPICA 12: Identity Governance & Control de Acceso (Pantalla 14)
+Define la arquitectura centralizada de seguridad, delegación y segregación de datos. Establece a la Pantalla 14 como el único "Cuartel General" donde el Súper Administrador orquesta qué Humanos, APIs y Roles pueden interactuar con los procesos modelados en el iBPMS.
+
+### US-036: Matriz de Control de Acceso Basado en Roles (RBAC)
+**Como** Oficial de Seguridad de la Información (CISO) / Super Admin
+**Quiero** gestionar centralizadamente todos los permisos, perfiles y delegaciones en la Pantalla 14
+**Para** garantizar cumplimiento ISO 27001, prevenir accesos no autorizados a datos sensibles y auditar la segregación de funciones (SoD).
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Identity Governance & RBAC Architecture
+  Scenario: Hibridación de Roles EntraID vs Locales (CA-1)
+    Given una organización iniciando el iBPMS
+    Then la Pantalla 14 soporta doble motor de mapeo de identidades
+    And permite importar automáticamente Roles/Grupos desde Microsoft EntraID (SSO) 
+    And provee un "Fallback" interno para crear y asignar Roles 100% locales en la BD del iBPMS si el cliente tiene baja madurez corporativa.
+
+  Scenario: El Guardián Absoluto (Root Super Admin) (CA-2)
+    Given el despliegue inicial (Día Cero) del iBPMS
+    Then el sistema inyecta por defecto un único usuario `[Super_Administrador]` inborrable a nivel de base de datos
+    And este rol es el único con potestad absoluta para ingresar a la Pantalla 14 y delegar poder (crear otros administradores).
+
+  Scenario: Clonación de Perfiles por Plantilla (CA-3)
+    Given la necesidad de dar el mismo set de 15 permisos a 50 asesores nuevos
+    Then la Pantalla 14 permite la creación de un `[Rol Plantilla]` lógico que atrapa esos permisos
+    And permite asignar ese `[Rol Plantilla]` en bloque a los 50 usuarios con un solo click (Mass Assignment).
+
+  Scenario: Segregación Iniciador vs Ejecutor (CA-4)
+    Given la matriz de permisos de la Pantalla 14
+    Then expone casillas de verificación (Checkboxes) granulares y explícitas para cada Proceso BPMN publicado
+    And diferencia a nivel de base de datos el permiso booleano `can_initiate_process` (Cliente) vs `can_execute_tasks` (Cocinero).
+
+  Scenario: Privacidad Visual de Colas (Data Segregation Local) (CA-5)
+    Given dos analistas (Juan y María) pertenecientes al mismo Rol "Analista_Créditos"
+    Then al ingresar a su Workdesk (Pantalla 5), la arquitectura forza un filtro de base de datos a nivel de registro (Row-Level Security)
+    And garantiza que María SOLO visualice los folios/casos asignados a ella, ocultando tajantemente el trabajo de sus pares a menos que sea una "Cola Compartida Pública".
+
+  Scenario: Herencia de Roles Piramidal (CA-6)
+    Given una estructura jerárquica corporativa
+    Then la Pantalla 14 permite que el rol `[Gerente_Riesgo]` sea configurado para "Heredar" atómicamente el 100% de los permisos subyacentes del rol `[Analista_Riesgo]` minimizando la redundancia de clics en la matriz.
+
+  Scenario: Inmutabilidad por Desactivación Suave (Soft-Delete) (CA-7)
+    Given que el empleado Juan renuncia a la empresa y es desconectado del SSO
+    Then el Súper Admin en Pantalla 14 NO puede borrar físicamente (DELETE SQL) la identidad de Juan 
+    And el sistema le asigna un sello de `[Usuario Inactivo]`, congelando su estado pero preservando eternamente su nombre en los registros de auditoría de los casos que resolvió en el pasado.
+
+  Scenario: Aprovisionamiento de Transeúntes (Ciudadano Interno) (CA-8)
+    Given un empleado recién contratado que se loguea en el iBPMS vía SSO por primera vez
+    Then el motor RBAC le auto-provisiona un perfil inofensivo por defecto llamado `[Ciudadano_Interno]`
+    And este perfil arranca con capacidades nulas hasta que el Súper Admin configure explícitamente en Pantalla 14 qué Procesos Generales (Ej: Vacaciones) tienen permitida "Autogestión por defecto".
+
+  Scenario: Módulo de Delegación Autónoma Temporal (CA-9)
+    Given un Gerente que se marcha a vacaciones por 15 días
+    Then la Pantalla 14 le provee un panel de Autogestión (Delegación) para cedar sus poderes a un suplente (Ej: Su asistente)
+    And esta cesión de Rol requiere obligatoriamente estampar el `[Rango_de_Fechas]` (Fecha Inicio / Fin) para revocarse automáticamente.
+    And toda la transacción de traspaso de poder queda flaggeada transaccionalmente para la bitácora del CISO.
+
+  Scenario: Creación de Robots de Integración (API Keys / Service Accounts) (CA-10)
+    Given la necesidad de que el ERP corporativo lance casos en el iBPMS 24/7 sin interacción humana
+    Then la Pantalla 14 posee un módulo paralelo de "Cuentas de Servicio M2M"
+    And permite generar Tokens Criptográficos (API Keys) atándolos a Roles específicos, prohibiendo que los sistemas externos operen con credenciales de humanos vulnerables.
+    
+  Scenario: Respeto ciego al Autenticador Perimetral (EntraID MFA) (CA-11)
+    Given una tarea crítica que un gerente va a ejecutar en su bandeja
+    Then la arquitectura de seguridad V1 asume 100% de confianza en el Token emitido por Microsoft EntraID
+    And el iBPMS NO reconstruye un componente duplicado de Doble Factor (MFA) propio en pantalla, delegando esta validación criptográfica al Identity Provider original.
+
+  Scenario: Exclusión de Ocultamiento de Campos (Scope Limit) (CA-12)
+    Given un usuario intentando ocultar la columna "Salario" de un formulario en base al rol
+    Then la directriz aclara que la Pantalla 14 administra accesos a la "Instancia Completa" (El Formulario entero)
+    And delega la responsabilidad técnica de ocultar campos individuales a la algoritmia del Pro-Code Builder (Pantalla 7) durante el diseño del Vue Component.
+
+  Scenario: Desacoplamiento de Roles Estáticos vs Dinámicos (BPMN Lanes) (CA-13)
+    Given la asignación de trabajo en el motor Camunda
+    Then el módulo de Permisos reconoce y respeta dos vías de asignación: 
+    Los Roles Estáticos (Asignados en la Pantalla 14 manualmente de por vida al usuario) y los Roles Dinámicos/Variables (Inyectados en tiempo real por el BPMN a través de *Expression Lanes*).
+
+  Scenario: El Botón Táctico de Exorcismo (Kill-Session) (CA-14)
+    Given un evento de despido disciplinario hostil a mediodía
+    Then la Pantalla 14 expone un botón rojo `[Revocar Todo y Matar Sesión]` en la ficha del empleado
+    And la arquitectura exige que el Backend destruya activamente los JWT almacenados en caché/Redis de ese analista forzando su deslogueo TCP instantáneo, sin tener que esperar que su Token de 1 hora expire.
+
+  Scenario: Bypass Anónimo de Procesos (URLs Públicas) (CA-15)
+    Given la necesidad ciudadana de radicar PQRS sin crear cuentas
+    Then la Pantalla 14 (y la Configuración del Proceso) cuenta con un Switch Especial `[Permitir Trámite Público]`
+    And al activarse, el generador de Formularios expone un endpoint/URL sin requerimiento de Bearer Token en las rutas de Vue Router, posibilitando el inicio ciego de instancias BPMN por navegadores anónimos en internet.
+
+  Scenario: Informes Densos de Fiscalización (Auditoría CISO) (CA-16)
+    Given la temporada de Auditoría ISO 27001
+    Then la Pantalla 14 permite generar el reporte matrizal de *Identity Governance*
+    And compila una sábana CSV / Excel descargable cruzando `[Todos los Usuarios/Robots]` contra `[Todos los Roles Activos]` y `[Todos los Procesos Iniciables/Ejecutables]`.
+
+  Scenario: Traza Indeleble de Otorgamiento (CA-17)
+    Given un practicante que misteriosamente amanece con el rol `[Gerente_Financiero]`
+    Then la Pestaña de Auditoría de Seguridad de Pantalla 14 muestra el JSON delta exacto
+    And expone qué Administrador Ejecutante (ID Humano), en qué milisegundo UTC (Timestamp), inyectó la sobre-escritura de permisos.
+
+  Scenario: Omisión Estricta de Segregación de Funciones Automática (SoD) (CA-18)
+    Given la ley del "Quien hace no aprueba"
+    Then para el MVP V1, el motor iBPMS NO frena estructuralmente a un humano si el BPMN le enruta "Crear Cheque" y "Aprobar Cheque" al mismo tiempo
+    And asume este riesgo operativo difiriendo los motores complejos de "Conflict of Interest Avoidance" a V2, confiando en que el diseño del proceso en Pantalla 6 asigne humanos distintos para el flujo iterativo.
+```
+**Trazabilidad UX:** Wireframes Pantallas 14, 6, 7 y Workdesk (5).

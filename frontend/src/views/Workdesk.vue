@@ -77,7 +77,7 @@
           
           <div class="flex justify-between items-center">
             <!-- ═══ Botones pestaña "Mis Tareas" ═══ -->
-            <div v-if="currentTab === 'MINE'" class="flex items-center space-x-3">
+            <div v-if="currentTab === 'MINE'" class="flex items-center space-x-3 mt-4">
               <button @click.stop="openForm(task)" class="px-4 py-2 bg-ibpms-brand text-white text-sm font-bold rounded shadow-sm hover:bg-blue-600 transition">
                 Abrir Formulario
               </button>
@@ -90,9 +90,16 @@
             </div>
 
             <!-- ═══ Botón pestaña "Cola Grupal" ═══ -->
-            <button v-if="currentTab === 'CANDIDATES'" @click.stop="handleClaim(task.id)" class="px-4 py-2 bg-ibpms shadow text-white text-sm font-bold rounded hover:bg-gray-800 transition">
-              Asignarmela (Claim)
-            </button>
+            <div v-if="currentTab === 'CANDIDATES'" class="flex items-center justify-between w-full mt-4">
+              <button @click.stop="handleClaim(task.id)" class="px-4 py-2 bg-ibpms shadow text-white text-sm font-bold rounded hover:bg-gray-800 transition">
+                Asignarmela (Claim)
+              </button>
+              
+              <!-- Botón Agente 3 MLOps -> Modal Retroalimentación -->
+              <button @click.stop="openAiFeedback(task)" class="px-3 py-2 bg-yellow-100 border border-yellow-300 text-yellow-800 text-xs font-bold rounded hover:bg-yellow-200 transition inline-flex items-center space-x-1">
+                <span>⚠️</span> <span>Retroalimentar IA</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -124,6 +131,14 @@
           <button @click="selectedSchema = null" class="text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
         </div>
         
+        <!-- 2. Pantalla 12 / Workdesk - Popup de Configuración SharePoint SGDEA (CA-2) -->
+        <div class="mb-4 p-4 bg-indigo-50 border border-indigo-100 rounded-lg flex items-start gap-3">
+           <input type="checkbox" id="spCheckbox" v-model="createSpFolder" class="mt-1 h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+           <label for="spCheckbox" class="text-sm font-bold text-indigo-900 cursor-pointer">
+              📁 Crear sub-carpeta dedicada en SharePoint para esta Instancia (Bóveda Documental)
+           </label>
+        </div>
+
         <!-- Renderizador Inteligente -->
         <DynamicForm 
            :schema="selectedSchema" 
@@ -204,6 +219,44 @@
       </div>
     </div>
 
+    <!-- 3. Agente 3 MLOps - Modal de Retroalimentación Humana -->
+    <div v-if="aiFeedbackModalTask" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-in">
+        <div class="px-6 py-4 bg-yellow-50 border-b border-yellow-200 flex items-center justify-between">
+          <h3 class="text-lg font-bold text-yellow-900 flex items-center space-x-2">
+            <span>⚠️</span> <span>Retroalimentar Router IA</span>
+          </h3>
+          <button @click="aiFeedbackModalTask = null" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+        <div class="p-6 space-y-4">
+          <p class="text-sm text-gray-700">
+            El Agente 3 falló al enrutar. Seleccione la Categoría/Proceso correcto para el caso <span class="font-bold text-gray-900">"{{ aiFeedbackModalTask.name }}"</span>.
+          </p>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Proceso Correcto:</label>
+            <select 
+              v-model="aiFeedbackProcess" 
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-sm p-2.5 border"
+            >
+              <option value="" disabled>-- Seleccione categoría real --</option>
+              <option value="credito">Crédito Consumo</option>
+              <option value="hipotecario">Hipotecario</option>
+              <option value="pqrs">Queja / Reclamo (PQRS)</option>
+              <option value="soporte">Soporte Técnico</option>
+            </select>
+          </div>
+          <div class="flex justify-end space-x-3 pt-2">
+            <button @click="aiFeedbackModalTask = null" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+              Cancelar
+            </button>
+            <button @click="submitAiFeedback" :disabled="isLoading || !aiFeedbackProcess" class="px-4 py-2 text-sm font-medium text-yellow-900 bg-yellow-400 hover:bg-yellow-500 border border-yellow-500 rounded-lg shadow transition disabled:opacity-50">
+              Enviar Feedback
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -234,6 +287,13 @@ const unclaimReason = ref('');
 const reassignModalTask = ref<TaskDto | null>(null);
 const reassignTargetUserId = ref('');
 
+// CA-2 SharePoint Folder Checkbox
+const createSpFolder = ref(false);
+
+// Agente 3 MLOps State
+const aiFeedbackModalTask = ref<TaskDto | null>(null);
+const aiFeedbackProcess = ref('');
+
 // Mock Schema de Prueba (Hasta que llegue del backend por tarea)
 const mockupSchema: FormSchema = {
   formId: "test_form_01",
@@ -242,6 +302,7 @@ const mockupSchema: FormSchema = {
   fields: [
     { key: "solicitante", label: "Nombre del Solicitante", type: "string", required: true, disabled: true, defaultValue: "Pedro Pérez" },
     { key: "monto", label: "Monto Aprobado (USD)", type: "number", required: true, metadata: { min: 0, max: 10000 } },
+    { key: "analisis_riesgo", label: "Análisis de Riesgo Crediticio (IA RAG)", type: "string", required: true, defaultValue: "El cliente presenta un ratio de endeudamiento del 45%, rozando el límite permitido. Sin embargo, su historial de pagos en los últimos 24 meses es impecable. Se recomienda aprobación condicionada.", metadata: { aiScore: 92 } },
     { key: "estado", label: "Decisión", type: "select", required: true, options: [
         { label: "Aprobar Expediente", value: "APROBADO" },
         { label: "Rechazar por Faltantes", value: "RECHAZADO" }
@@ -252,11 +313,15 @@ const mockupSchema: FormSchema = {
 };
 
 const openForm = (_task: TaskDto) => {
+  createSpFolder.value = false; // reset
   selectedSchema.value = mockupSchema;
 };
 
 const onSolveTask = async (payload: any) => {
-  console.log("📝 JSON PAYLOAD GENERADO POR EL MOTOR:", payload);
+  // Inject the CA-2 variable into the payload
+  const finalPayload = { ...payload, __createSharePointFolder: createSpFolder.value };
+  
+  console.log("📝 JSON PAYLOAD GENERADO POR EL MOTOR:", finalPayload);
   alert("Tarea enviada al backend exitosamente. Revisa la consola (F12) para ver el Payload JSON resultante.");
   selectedSchema.value = null;
   await fetchMyTasks();
@@ -294,6 +359,22 @@ const confirmReassign = async () => {
   } catch {
     // Error ya manejado por toast en composable
   }
+};
+
+const openAiFeedback = (task: TaskDto) => {
+  aiFeedbackProcess.value = '';
+  aiFeedbackModalTask.value = task;
+};
+
+const submitAiFeedback = () => {
+  if (!aiFeedbackModalTask.value || !aiFeedbackProcess.value) return;
+  // Simular envío a VectorDB/MLOps
+  console.log(`[MLOps] Feedback enviado para tarea ${aiFeedbackModalTask.value.id}. Categoría correcta: ${aiFeedbackProcess.value}`);
+  toastSuccess.value = "Retroalimentación enviada al Modelo IA.";
+  setTimeout(() => { toastSuccess.value = ''; }, 3000);
+  aiFeedbackModalTask.value = null;
+  
+  // Opcionalmente podemos despachar claimTask auto y reasignarlo
 };
 
 // Tabs UI State

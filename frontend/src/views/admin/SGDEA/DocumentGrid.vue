@@ -88,7 +88,15 @@
                     Firma Verificada
                   </div>
                 </td>
-                <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end gap-3 h-full">
+                  <!-- RAG Indexing Toggle (CA-3) -->
+                  <div class="flex items-center gap-2" :title="isIndexable(doc.type) ? 'Añadir a Memoria IA' : 'Formato no soportado por RAG multimodal (CA-30)'">
+                    <label class="relative inline-flex items-center" :class="{ 'cursor-pointer': isIndexable(doc.type), 'cursor-not-allowed opacity-50': !isIndexable(doc.type) }">
+                      <input type="checkbox" class="sr-only peer" :disabled="!isIndexable(doc.type)" @change="toggleIndex(doc)">
+                      <div class="w-7 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-500"></div>
+                      <span class="ml-2 text-[10px] font-bold" :class="isIndexable(doc.type) ? 'text-gray-700' : 'text-gray-400'">RAG</span>
+                    </label>
+                  </div>
                   <button @click="viewDocument(doc)" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1.5 rounded text-xs font-bold border border-indigo-100 hover:border-indigo-300 transition">
                     Ver Archivo
                   </button>
@@ -161,6 +169,19 @@ const toast = ref<{ msg: string; type: 'success' | 'error' }>({ msg: '', type: '
 const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
   toast.value = { msg, type };
   setTimeout(() => { toast.value.msg = ''; }, 5000);
+};
+
+// ==========================================
+// RAG Indexing Logic (CA-3 / CA-30)
+// ==========================================
+const isIndexable = (fileType: string): boolean => {
+  const supported = ['PDF', 'IMAGE', 'DOCX']; // CA-30
+  return supported.includes(fileType.toUpperCase());
+};
+
+const toggleIndex = (doc: DocumentFile) => {
+  // Simular envío a VectorDB FastAPI
+  showToast(`[VectorDB] Documento ${doc.id} encolado para indexado generativo.`, 'success');
 };
 
 // ==========================================

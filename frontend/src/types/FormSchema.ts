@@ -13,6 +13,7 @@ export interface FieldMetadata {
     maxLength?: number;
     pattern?: string;
     customClass?: string;
+    aiScore?: number; // CA-29: Confidence Score para sugerencias IA
 }
 
 export interface FormField {

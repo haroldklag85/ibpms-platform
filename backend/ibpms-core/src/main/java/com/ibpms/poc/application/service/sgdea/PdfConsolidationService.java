@@ -1,6 +1,7 @@
 package com.ibpms.poc.application.service.sgdea;
 
-import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.io.IOUtils;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.springframework.stereotype.Service;
 
@@ -36,11 +37,11 @@ public class PdfConsolidationService {
         pdfMerger.setDestinationStream(outputStream);
 
         for (InputStream is : documentStreams) {
-            pdfMerger.addSource(is);
+            pdfMerger.addSource(new RandomAccessReadBuffer(is));
         }
 
-        // Se usa setup de uso de memoria equilibrada (cache on disk if exceeded memory)
-        pdfMerger.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 10)); // 10 MB límite en RAM
+        // Setup the stream cache creation function for PDFBox 3.0
+        pdfMerger.mergeDocuments(IOUtils.createMemoryOnlyStreamCache());
 
         return new ByteArrayInputStream(outputStream.toByteArray());
     }

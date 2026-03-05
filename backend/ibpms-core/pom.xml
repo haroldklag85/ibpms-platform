@@ -56,10 +56,14 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- New dependencies for backend implementation -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<!-- Redis para DistributedLock de Polling de Buzones -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 		<!-- RabbitMQ / AMQP Message Broker para Throttling de Integraciones (Pantalla 8) -->
 		<dependency>

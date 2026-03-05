@@ -25,7 +25,12 @@
           </li>
           <li>
             <router-link to="/kanban" class="flex items-center px-4 py-3 rounded-lg hover:bg-white/10 transition" active-class="bg-ibpms-brand text-white font-bold shadow">
-              <span class="text-xl mr-3">📂</span> Proyectos
+              <span class="text-xl mr-3">📂</span> Proyectos (Kanban)
+            </router-link>
+          </li>
+          <li>
+            <router-link to="/admin/project-builder" class="flex items-center px-4 py-3 rounded-lg hover:bg-white/10 transition" active-class="bg-ibpms-brand text-white font-bold shadow">
+              <span class="text-xl mr-3">🏗️</span> Plantillas Proyectos
             </router-link>
           </li>
           <li>
@@ -53,19 +58,34 @@
             </router-link>
           </li>
           <li>
-            <router-link to="/admin" class="flex items-center px-4 py-2.5 rounded hover:bg-white/10 transition text-gray-300 text-sm" active-class="bg-white/20 text-white font-bold">
+            <router-link to="/admin/integration/catalog" class="flex items-center px-4 py-2.5 rounded hover:bg-white/10 transition text-gray-300 text-sm" active-class="bg-white/20 text-white font-bold">
               <span class="text-lg mr-3">🔌</span> Integración
             </router-link>
           </li>
           <li>
-             <router-link to="/admin" class="flex items-center px-4 py-2.5 rounded hover:bg-white/10 transition text-gray-300 text-sm" active-class="bg-white/20 text-white font-bold">
+             <router-link to="/admin/security/identity" class="flex items-center px-4 py-2.5 rounded hover:bg-white/10 transition text-gray-300 text-sm" active-class="bg-white/20 text-white font-bold">
               <span class="text-lg mr-3">🛡️</span> Seguridad (RBAC)
             </router-link>
           </li>
           <li>
-             <a href="#" class="flex items-center px-4 py-2.5 rounded hover:bg-white/10 transition text-gray-300 text-sm">
+             <router-link to="/admin/integration/builder" class="flex items-center px-4 py-2.5 rounded hover:bg-white/10 transition text-gray-300 text-sm" active-class="bg-white/20 text-white font-bold">
               <span class="text-lg mr-3">📦</span> Extensión
-            </a>
+            </router-link>
+          </li>
+          <li>
+             <router-link to="/admin/projects/manager" class="flex items-center px-4 py-2.5 rounded hover:bg-white/10 transition text-gray-300 text-sm" active-class="bg-white/20 text-white font-bold">
+              <span class="text-lg mr-3">📁</span> Gestor Proyectos
+            </router-link>
+          </li>
+          <li>
+             <router-link to="/admin/projects/agile-hub" class="flex items-center px-4 py-2.5 rounded hover:bg-white/10 transition text-gray-300 text-sm" active-class="bg-white/20 text-white font-bold">
+              <span class="text-lg mr-3">⚡</span> Hub Ágil
+            </router-link>
+          </li>
+          <li>
+             <router-link to="/admin/mailboxes" class="flex items-center px-4 py-2.5 rounded hover:bg-white/10 transition text-gray-300 text-sm" active-class="bg-white/20 text-white font-bold">
+              <span class="text-lg mr-3">📬</span> Buzones SAC
+            </router-link>
           </li>
         </ul>
       </nav>

@@ -2,18 +2,6 @@ import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import BpmnDesigner from '@/views/admin/Modeler/BpmnDesigner.vue';
 
-// Rigorous Axios Mocking as per Architectural Auditor requirements
-vi.mock('axios', () => {
-    return {
-        default: {
-            get: vi.fn(),
-            post: vi.fn(),
-            put: vi.fn(),
-            delete: vi.fn(),
-        }
-    };
-});
-
 // Mocking bpmn-js dynamic imports to completely avoid JSDOM SVG canvas failures
 vi.mock('bpmn-js/lib/Modeler', () => {
     return {

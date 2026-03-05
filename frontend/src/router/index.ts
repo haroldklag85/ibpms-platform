@@ -1,10 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import MainLayout from '@/layouts/MainLayout.vue';
-import Workdesk from '@/views/Workdesk.vue';
-import Portal from '@/views/Portal.vue';
-import DocumentGrid from '@/views/admin/SGDEA/DocumentGrid.vue';
-import PromptLibrary from '@/views/admin/AI/PromptLibrary.vue';
-import IdentityGovernance from '@/views/admin/Security/IdentityGovernance.vue';
+// Importaciones perezosas (Lazy-Loading) para evitar ciclos síncronos de resolución de módulos
 
 // ── Interceptors ─────────────────────────────────────────────
 import { rbacGuard } from './RouteGuards';
@@ -19,19 +14,19 @@ const router = createRouter({
         },
         {
             path: '/',
-            component: MainLayout,
+            component: () => import('@/layouts/MainLayout.vue'),
             // Requiere autenticación
             meta: { requiresAuth: true },
             children: [
                 {
                     path: '',
                     name: 'Portal',
-                    component: Portal, // Pantalla 0
+                    component: () => import('@/views/Portal.vue'), // Pantalla 0
                 },
                 {
                     path: 'workdesk',
                     name: 'Workdesk',
-                    component: Workdesk, // Pantalla 1
+                    component: () => import('@/views/Workdesk.vue'), // Pantalla 1
                 },
                 {
                     path: 'kanban',
@@ -93,6 +88,18 @@ const router = createRouter({
             component: () => import('@/views/admin/ProjectBuilder/ProjectBuilder.vue'),
             meta: { requiresAuth: true }
         },
+        {
+            path: '/admin/projects/manager',
+            name: 'ProjectManager',
+            component: () => import('@/views/admin/ProjectBuilder/ProjectManager.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/admin/projects/agile-hub',
+            name: 'AgileHub',
+            component: () => import('@/views/admin/ProjectBuilder/AgileHub.vue'),
+            meta: { requiresAuth: true }
+        },
         // --- Bloque C: Dashboards BAM & Analytics ---
         {
             path: '/admin/analytics/bam',
@@ -123,20 +130,27 @@ const router = createRouter({
         {
             path: '/sgdea/vault',
             name: 'SGD_Vault',
-            component: DocumentGrid,
+            component: () => import('@/views/admin/SGDEA/DocumentGrid.vue'),
             meta: { title: 'Bóveda Documental', requiresAuth: true }
         },
         {
             path: '/ai/prompts',
             name: 'AI_PromptLibrary',
-            component: PromptLibrary,
+            component: () => import('@/views/admin/AI/PromptLibrary.vue'),
             meta: { title: 'Librería de Prompts', requiresAuth: true, roles: ['Global Admin', 'prompt_engineer'] } // CA-7 Role guard futuro
+        },
+        // --- Epic 13: SacConfigManager (Pantalla 15) ---
+        {
+            path: '/admin/mailboxes',
+            name: 'SacConfigManager',
+            component: () => import('@/views/admin/AI/SacConfigManager.vue'),
+            meta: { title: 'Buzones Inbound Graph', requiresAuth: true, roles: ['Global Admin'] }
         },
         // --- Bloque J: Identity Governance (Pantalla 14) ---
         {
             path: '/admin/security/identity',
             name: 'IdentityGovernance',
-            component: IdentityGovernance,
+            component: () => import('@/views/admin/Security/IdentityGovernance.vue'),
             meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['Global Admin'] }
         }
     ]

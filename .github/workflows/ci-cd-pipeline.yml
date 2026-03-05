@@ -12,6 +12,9 @@ on:
 env:
   BACKEND_IMAGE_NAME: ibpms-core
   FRONTEND_IMAGE_NAME: ibpms-frontend
+  # Epic 13: Identity and Key Vault Access (DevOps)
+  AZURE_KEY_VAULT_URI: ${{ secrets.AZURE_KEY_VAULT_URI }}
+  MS_GRAPH_TENANT_ID: ${{ secrets.MS_GRAPH_TENANT_ID }}
 
 jobs:
   # 1. QUALITY GATE: Backend Build & Test

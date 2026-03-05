@@ -701,22 +701,87 @@ Feature: BPMN Process Deployment
 
 ---
 
-### US-006: Diseñar la Estructura (WBS) de un Proyecto (Templates)
-**Como** Director de Proyectos / Administrador
-**Quiero** crear una Plantilla de Proyecto definiendo Fases (Sprints/Etapas) y pre-asignando Formularios a tareas genéricas
-**Para** que cuando el negocio inicie un proyecto real, se instancie automáticamente toda la estructura y la gente sepa qué formularios debe llenar en cada fase.
+### US-006: Diseñar la Estructura Base (WBS) de una Plantilla de Proyecto
+**Como** PMO / Director de Proyectos / Administrador
+**Quiero** crear una Plantilla Maestra definiendo jerárquicamente las Fases y Tareas Secuenciales, y pre-asignar Formularios a cada tarea genérica
+**Para** que exista un molde estandarizado (WBS) que evite re-trabajo cuando un Gerente desee instanciar un proyecto nuevo (ya sea usando metodología Tradicional/Gantt o metodología Ágil).
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Project Template Builder
-  Scenario: Creación de un esqueleto de proyecto (WBS) con hitos y formularios mapeados
-    Given que el administrador está configurando el "Template de Apertura de Tienda"
-    When el usuario envía un POST a "/api/v1/design/projects/templates"
-    And el body JSON incluye 2 Fases ("Pre-Obra", "Obra") y 1 Tarea ("Presupuesto") en la Fase 1, enlazada al formulario "Form_Presupuesto"
+Feature: Standalone Project Template Builder (WBS)
+  Scenario: Creación de un esqueleto de proyecto (WBS) agnóstico a la ejecución
+    Given que el administrador está en el "Template Builder" (Pantalla 8) configurando la Plantilla "Apertura de Sucursal"
+    When el usuario define una jerarquía de 2 niveles: Fase 1 ("Pre-Obra") y Fase 2 ("Ejecución")
+    And añade "Tarea Genérica 1" bajo la Fase 1, enlazándola al "Form_Presupuesto"
+    And envía el POST a "/api/v1/design/projects/templates"
     Then el sistema debe retornar HTTP STATUS 201 Created
-    And el "Project Template ID" debe guardarse en la BD listo para ser instanciado por el usuario operativo
+    And el "Project_Template_ID" debe guardarse en la base de datos relacional como una estructura maestra
+    And esta plantilla debe quedar disponible en el catálogo global de Pantalla 9 para ser consumida como base (Huesos) por futuros proyectos.
 ```
-**Trazabilidad UX:** Wireframes Pantalla 8 (Project Builder).
+**Trazabilidad UX:** Wireframes Pantalla 8 (Project Template Builder).
+
+---
+
+### US-030: Instanciar y Planificar un Proyecto Ágil (Sprints/Kanban)
+**Como** Scrum Master / Agile Coach
+**Quiero** instanciar un nuevo proyecto Ágil utilizando una estructura base (WBS) y gestionar su Backlog
+**Para** poder planificar iteraciones, asignar responsables directos y liberar tareas hacia los tableros Kanban operativos (Pantalla 3).
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Agile Project Instantiation and Planning
+  Scenario: Instanciación de un Proyecto Ágil desde una Plantilla
+    Given que el Gerente está en la Pantalla 9 (Gestor de Proyectos)
+    When oprime "Nuevo Proyecto" y selecciona metodología "Ágil"
+    And elige la plantilla base "Apertura de Sucursal" (Creada en P8)
+    And define el presupuesto general y las fechas estimadas del proyecto
+    Then el sistema genera el "Agile_Project_Instance_ID"
+    And despliega la vista de planificación táctica en el Agile Hub (Pantalla 10).
+
+  Scenario: Planificación y envíó al Kanban de Operaciones
+    Given que el Scrum Master visualiza el proyecto en el Agile Hub (Pantalla 10)
+    Then la pantalla renderiza el Backlog extraído de la Plantilla (Fases y Tareas Genéricas)
+    When el Scrum Master arrastra la "Tarea Genérica 1" de la Fase 1 hacia el Sprint Activo
+    And le asigna la persona responsable ("juan.perez")
+    Then el sistema dispara la tarjeta hacia la columna "TODO" del Tablero Kanban Global (Pantalla 3)
+    And la tarjeta queda visible en el Workdesk personal de "juan.perez" lista para ejecución.
+    
+  Scenario: Directorio de Proyectos Ágiles Compartidos
+    Given existen 3 Proyectos Ágiles instanciados donde el grupo "Dev_Team" tiene participación
+    When un usuario del grupo "Dev_Team" (Líder o Analista) navega a la sección de "Mis Proyectos"
+    Then el sistema renderiza una lista consolidada (Cards o Grilla) con todos los Proyectos Ágiles a los que tiene acceso
+    And puede seleccionar un proyecto específico para navegar a la Pantalla 10 (si es Líder) o para ver el Tablero Kanban filtrado (si es operador)
+    And garantizando así la visibilidad y gestión cruzada del portafolio ágil.
+```
+**Trazabilidad UX:** Wireframes Pantalla 9 (Gestor de Proyectos) y Pantalla 10 (Hub Ágil).
+
+---
+
+### US-031: Planificación y Ejecución de Proyecto Tradicional (Gantt)
+**Como** Project Manager (Tradicional)
+**Quiero** visualizar un proyecto instanciado como un diagrama de Gantt, asignar mis recursos, presupuestos y fijar la Línea Base
+**Para** que el motor de orquestación (Camunda) inicie la ejecución automática del proyecto despachando la primera secuencia de tareas a las bandejas (Workdesk) de los asignados.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Traditional Project Planning and Baseline Execution
+  Scenario: Asignación de Recursos y Fechas en el Planner Gantt
+    Given que el PM navega a la Pantalla 10.B (Planner Tradicional) de un proyecto "En Planificación"
+    Then el sistema renderiza el árbol completo (Fases > Hitos > Tareas) heredado de la Pantalla 8 en un formato Gantt Visual
+    When el PM selecciona una Tarea y le asigna un usuario responsable ("pedro.martinez") y un presupuesto
+    And el PM ajusta las fechas calendario reales de inicio y fin moviendo la barra en el lienzo
+    Then el sistema recalcula dinámicamente el desplazamiento de las tareas sucesoras basándose en sus dependencias (FS, FF)
+    And guarda el estado del "Plan" sin notificar aún a los empleados.
+
+  Scenario: Fijación de la Línea Base y Despegue del Proyecto (Big Bang)
+    Given que el PM ha terminado de estructurar el Gantt en la Pantalla 10.B
+    When el PM oprime el botón maestro "🚀 FIJAR LÍNEA BASE"
+    Then el backend bloquea la edición del modelo geométrico del proyecto temporalmente
+    And el sistema evalúa la red matemática, detecta las tareas iniciales (sin predecesoras)
+    And dispara los comandos al motor (Camunda) para instanciar dichas tareas usando el Formulario Key parametrizado (Ej. Generico_Base_V1)
+    And deposita de inmediato estas instacias en la bandeja "Workdesk" (Pantalla 1) de sus respectivos asignados originando la ejecución real.
+```
+**Trazabilidad UX:** Wireframes Pantalla 10.B (Planner Tradicional - Gantt) y Pantalla 1 (Workdesk).
 
 ---
 
@@ -1200,58 +1265,6 @@ Feature: Vistas UX Segregadas por Intención
     Then la interfaz NO le muestra el botón "Crear Servicios"
     And presenta tarjetas agrupadas estrictamente por 'Plantillas', ejemplo: "Auditoría Express — 7 Tareas pendientes en rojo".
 ```
-
----
-
-## ÉPICA 8: Extensiones Cognitivas AI-Native (Cognitive BPMN)
-Aborda la integración nativa de Inteligencia Artificial (LLMs, RAG) en el modelado BPMN (Pantalla 6) y la ejecución del iBPMS, evolucionando de procesos secuenciales estáticos a procesos aumentados cognitivamente.
-
-### US-032: Orquestación de IA y Generative Task (RAG)
-**Como** Arquitecto Funcional
-**Quiero** disponer de tareas especializadas en IA dentro del diseñador BPMN
-**Para** modelar flujos donde un Agente de IA analiza documentos y redacta contenido estructurado sin interrumpir el motor lógico de Camunda.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Componentes AI-Native BPMN y Controles
-  Scenario: Output Estricto basado en Schema JSON (CA-1 - Opción A)
-    Given el Arquitecto configura una "Generative Task (RAG)" en la Pantalla 6
-    Then el motor de IA tiene prohibido generar formato visual (HTML/Docs) directamente
-    And está forzado a devolver la información estructurada mediante un Esquema JSON (Extraer y Rellenar)
-    And el iBPMS fusiona ese JSON con la plantilla inmutable oficial antes de mostrársela al usuario final.
-
-  Scenario: Desbloqueo de Conocimiento PII con Políticas Estrictas (CA-2)
-    Given la tarea "Generative Task (RAG)" necesita consultar la Bóveda SGDEA
-    When el LLM busca contexto en documentos clasificados como Privados o PII
-    Then se permite la lectura para la generación de la respuesta
-    But la política de seguridad (RBAC/DLP) enmascara o prohíbe exponer directamente estos datos sensibles al usuario que no tiene dichos privilegios.
-    
-  Scenario: Vectorización de Conocimiento a Demanda (CA-3)
-    Given el Administrador de Conocimiento sube archivos al SGDEA
-    Then dispone de un botón "[Actualizar Memoria IA (Embeddings)]"
-    And la vectorización a la base de datos vectorial (Ej: Milvus/Pinecone) no ocurre automáticamente en cada subida de archivo para no degradar el rendimiento, sino de forma controlada y explícita.
-
-  Scenario: Botón de Pánico Anti-Alucinaciones (CA-4)
-    Given un usuario humano revisa un borrador generado por la IA en su formulario (Pantalla 7)
-    Then dispone de un botón global estilo "[👎 Reportar Alucinación / Error IA]"
-    And al accionarlo, se cancela el comportamiento automático, se emite una alerta al "Ingeniero de Prompts" y el proceso se redirige al flujo manual por defecto.
-
-  Scenario: Trazabilidad a las Fuentes (Citas Interactivas) (CA-5)
-    Given la "Generative Task (RAG)" emite una respuesta argumentativa
-    Then el texto debe incluir referencias o hipervínculos a los IDs documentales usados como contexto
-    And cuando el usuario hace clic, el iBPMS lo redirige al visor del SGDEA con la sección exacta resaltada, garantizando verificación humana.
-
-  Scenario: Budget Configurable de Tokens LLM (CA-6)
-    Given el Arquitecto configura la tarea cognitiva en la Pantalla 6
-    Then existe un parámetro limitante de "Budget de Tokens / Consumo Mensual"
-    And si el proceso agota su cuota asiganada, se corta el acceso a la IA y el motor enruta a las ramas B (flujos manuales alternativos) automáticamente.
-
-  Scenario: Gobernanza de Prompts Centralizada (CA-7)
-    Given la necesidad de alterar las instrucciones base de los Agentes RAG
-    Then existe una pantalla separada llamada "Enterprise Prompt Library"
-    And solo los usuarios con el rol especializado `prompt_engineer` tienen permisos CRUD sobre estos prompts globales, dejando a los Arquitectos BPMN únicamente con la facultad de consumirlos.
-```
-**Trazabilidad UX:** Pantalla 6 (BPMN Designer Palette), Pantalla 12 (SGDEA), Pantalla 7 (Form Builder UI).
   Scenario: Renderizado de Vista 360 para Cuenta / Cliente
     Given un Ejecutivo de Cuenta navega el perfil de un Cliente Específico en su directorio
     Then la interfaz agrupa y presenta TODAS las tareas BPMN y Ágiles atadas a ese CRM_ID 
@@ -1286,7 +1299,7 @@ Feature: External Customer Portal (Service Delivery)
 ## ÉPICA 12: Gobierno de Identidad y Accesos (RBAC Multirrol)
 Garantizar que la plataforma soporta el modelo corporativo real donde un usuario ejerce múltiples funciones simultáneamente mediante asignación de múltiples roles y grupos de EntraID.
 
-### US-030: Asignación Multi-Rol y Sincronización EntraID
+### US-038: Asignación Multi-Rol y Sincronización EntraID
 **Como** Administrador de Seguridad
 **Quiero** asignar o sincronizar múltiples roles (Globales y de Proceso) a un mismo usuario autenticado
 **Para** que pueda acceder a las distintas bandejas y tareas correspondientes a todos sus 'sombreros' operativos sin necesidad de tener cuentas separadas.
@@ -1890,3 +1903,70 @@ Feature: Identity Governance & RBAC Architecture
     And asume este riesgo operativo difiriendo los motores complejos de "Conflict of Interest Avoidance" a V2, confiando en que el diseño del proceso en Pantalla 6 asigne humanos distintos para el flujo iterativo.
 ```
 **Trazabilidad UX:** Wireframes Pantallas 14, 6, 7 y Workdesk (5).
+
+---
+
+## ÉPICA 13: Configuración Administrativa de Buzones SAC (Pantalla 15)
+Cubre la brecha arquitectónica de la gestión de conexiones de los orígenes de datos (Correos Electrónicos). Permite al Súper Administrador registrar físicamente las cuentas de "Atención al Cliente" para que el iBPMS pueda succionar los reclamos y aplicar la IA.
+
+### US-037: CRUD de Conexiones de Buzones (Intake API)
+**Como** Súper Administrador del Sistema
+**Quiero** registrar y administrar libremente las cuentas de correo corporativo conectadas al iBPMS
+**Para** definir de dónde el motor saca la información, qué protocolo usar, con qué frecuencia y a qué proceso BPMN enruta por defecto cuando la Inteligencia Artificial (Agente 3) no logra deducirlo.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Configuración de Orígenes SAC (Mailbox CRUD)
+  Scenario: Soporte Multi-Protocolo de Conexión (Arch. Abierta) (CA-1)
+    Given la ventana de registro de un nuevo Buzón SAC
+    Then el Administrador tiene la opción de elegir el tipo de Conector
+    And soporta autenticación moderna (OAuth 2.0 / MS Graph API) para ecosistemas Microsoft
+    And soporta simultáneamente configuración legacy (IMAP / SMTP) con usuario y contraseña genéricos (Ej: Gmail, cPanel) para una arquitectura V1 abierta.
+
+  Scenario: Centralización del Poder Organizacional (CA-2)
+    Given el formulario de gestión de cuentas (Pantalla 15)
+    Then este módulo está fuertemente bloqueado y pertenece exclusivamente al Súper Administrador
+    And un "Líder de Área SAC" NO puede agregar un correo nuevo de forma autónoma, forzando un esquema de gobierno centralizado por IT.
+
+  Scenario: Trazabilidad de Fallo (BPMN Default Rule) (CA-3)
+    Given un correo altamente ininteligible donde el Agente MLOps (Agente 3) falla en deducir su categoría
+    Then la configuración del buzón cuenta con un campo obligatorio: `[Proceso BPMN de Caída por Defecto]`
+    And el iBPMS enrutará ciegamente este correo hacia ese proceso genérico pre-seleccionado (Ej: "Trámite de Reclamo Manual") para no dejar correos "en el limbo".
+
+  Scenario: Sincronización Programada (Polling) y Manual (CA-4)
+    Given la infraestructura de recolección de correos
+    Then el sistema utiliza un Job de Polling configurado bajo mejores prácticas (Ej: cada 5 minutos) para evitar ahogar al servidor
+    And expone adicionalmente un botón táctico `[🔄 Sincronizar Buzón Ahora]` en el Frontend para que el Administrador fuerce la lectura a demanda inmediata.
+
+  Scenario: Ping de Conexión en Vivo Obligatorio (CA-5)
+    Given el administrador registrando credenciales de MS Graph (OAuth)
+    When oprime el botón de Guardar
+    Then el iBPMS pausa el registro y dispara un ping transaccional en caliente contra el tenant de Microsoft
+    And solo permite crear formalmente el Origen de Datos si Microsoft responde con un token 200 OK, abortando el proceso si las credenciales fallan.
+
+  Scenario: Réplica Operativa iBPMS vs Exchange (No Destructiva) (CA-6)
+    Given el proceso de "chupar" correos (Ingesta)
+    Then el iBPMS NUNCA ejecuta comandos de `DELETE` físico contra el Exchange de origen por el simple hecho de leerlos
+    And genera un folio replicado en la base de datos propia. Si un Súper Admin decide borrar (Hard-Delete) el caso en el iBPMS, el motor envía una instrucción de *Soft-Delete* hacia Microsoft (Mover a Papelera / Archivo) manteniendo la paridad.
+
+  Scenario: Gobernalización Central del Blacklist en V1 (CA-7)
+    Given la necesidad de bloquear SPAM o dominios maliciosos
+    Then en el MVP (V1) la Pantalla 15 NO reconstruye formularios de Blacklist/Whitelist
+    And delega el filtrado anti-spam 100% a las políticas perimetrales nativas configuradas por IT en Microsoft Exchange. (Reglas bidireccionales por API diferidas a V2).
+
+  Scenario: Silenciador de Emergencia Táctil (CA-8)
+    Given un ataque de SPAM o falla lógica en el enrutamiento de un Buzón
+    Then la grilla del CRUD expone un Toggle Switch `[En Vivo / Pausado]` de desconexión inmediata
+    And permite suspender temporalmente el Job de Polling para ese buzón en específico sin borrar permanentemente el registro ni sus tokens almacenados.
+
+  Scenario: Excepción de Límites de Carga por Dominio (CA-9)
+    Given que el límite global de archivos adjuntos del iBPMS es de 50MB
+    Then el formulario del Buzón permite configurar un `Override`
+    And otorga la capacidad de definir un límite en Megabytes customizado exclusivo para los correos succionados por esa cuenta en particular (Ej: 100MB para `planos@`).
+
+  Scenario: Auditoría de Caducidad de Tokens M2M (CA-10)
+    Given que los Secretos de Cliente OAuth en Entra ID caducan cada 6 meses
+    Then la Pantalla 15 debe calcular el tiempo de vida de la conexión
+    And si las credenciales fallan, el iBPMS inyecta una alerta en el Log de Auditoría y envía una notificación estructurada a los Administradores advirtiendo la desconexión del SAC.
+```
+**Trazabilidad UX:** Pantalla 15 (Configuraciones Genéricas / Logs).

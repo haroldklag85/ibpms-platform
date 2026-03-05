@@ -2,7 +2,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import BpmnDesigner from './BpmnDesigner.vue';
 
-// Mock console.error to keep tests clean from bpmn-js errors in test env
+// Mock consol.error to keep tests clean from bpmn-js errors in test env
 vi.stubGlobal('console', {
     ...console,
     error: vi.fn(),

@@ -1,8 +1,10 @@
 package com.ibpms.poc.infrastructure.jpa.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
@@ -25,9 +27,6 @@ public class ProjectTemplateEntity {
     @Column(name = "category")
     private String category;
 
-    @Column(name = "phases_json", columnDefinition = "JSON")
-    private String phasesJson; // Almacenaremos las fases como payload JSON (Dual Schema Data Architecture)
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -37,7 +36,9 @@ public class ProjectTemplateEntity {
     @Column(name = "created_by")
     private String createdBy;
 
-    // Getters and Setters...
+    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<ProjectPhaseEntity> phases = new java.util.ArrayList<>();
+
     public UUID getId() {
         return id;
     }
@@ -70,12 +71,12 @@ public class ProjectTemplateEntity {
         this.category = category;
     }
 
-    public String getPhasesJson() {
-        return phasesJson;
+    public java.util.List<ProjectPhaseEntity> getPhases() {
+        return phases;
     }
 
-    public void setPhasesJson(String phasesJson) {
-        this.phasesJson = phasesJson;
+    public void setPhases(java.util.List<ProjectPhaseEntity> phases) {
+        this.phases = phases;
     }
 
     public LocalDateTime getCreatedAt() {

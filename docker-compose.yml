@@ -104,6 +104,15 @@ services:
       - ibpms-backend
     networks:
       - ibpms-network
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -N -s -H 'Accept: text/event-stream' http://localhost/api/v1/execution/projects/health/stream || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    sysctls:
+      net.ipv4.tcp_keepalive_time: 60
+      net.ipv4.tcp_keepalive_intvl: 10
+      net.ipv4.tcp_keepalive_probes: 6
 
   # ==========================================
   # 5. Frontend: Micro-Frontends (MFE) Hub

@@ -8,6 +8,7 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
+            'frappe-gantt/dist/frappe-gantt.css': path.resolve(__dirname, './src/tests/dummy.css'),
         },
     },
     server: {
@@ -24,6 +25,8 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'jsdom',
+        css: true,
+        setupFiles: ['./src/tests/setupVitest.ts'],
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
         deps: {
             inline: ['element-plus', 'vue-router']

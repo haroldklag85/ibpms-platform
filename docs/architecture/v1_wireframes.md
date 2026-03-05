@@ -342,6 +342,88 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 |                                                                                   |
 |  -------------------------------------------------------------------------------  |
 |  [ ⚡ GENERADOR DE TESTS ] [🧪 Crear spec.ts (Jest)] [🤖 Crear Prueba e2e (Cypress)]|
+|                            [🔄 Restablecer Formulario (Reset)]                    |
++-----------------------------------------------------------------------------------+
+
+>>> Clic en [🔄 Restablecer Formulario (Reset)] abre el siguiente Modal Seguro (CA-43):
+
++-----------------------------------------------------------------------------------+
+|  [⚠️] Confirmación de Borrado (Reset Dual)                                 [ x ]  |
+|  -------------------------------------------------------------------------------  |
+|  ¿Está seguro que desea borrar todo el diseño del formulario?                     |
+|  Esta acción depurará los objetos Vue reactivos y el Canvas. No se puede deshacer.|
+|                                                                                   |
+|                                            [ CANCELAR ]   [ 🗑️ SÍ, BORRAR TODO ]  |
++-----------------------------------------------------------------------------------+
+```
+
+## Pantalla 7.B: Formulario Genérico Base (Inyectado)
+**Objetivo:** Interfaz pre-construida (out-of-the-box) que actúa como el formulario por defecto para toda tarea (Ágil o Tradicional) a la que no se le asigne un diseño específico. Evita que el PMO tenga que diseñar decenas de formularios para tareas de simple seguimiento.
+
+```text
++-----------------------------------------------------------------------------------+
+|  [📄] Tarea General: Excavación Fase 2                      [💾 Guardar Cambios]  |
+|  Proyecto: Apertura de Sucursal Tipo A         ID Instancia: #PROJ-102            |
++-----------------------------------------------------------------------------------+
+|  [ 📌 METADATA INYECTADA DEL PROYECTO (Heredada de P9) ]                          |
+|  - Presupuesto Total: $150,000 | Cliente: Banco Alpha | Prioridad: Alta           |
+|  *(Cualquier metadato adicional configurado por el PM aparecerá aquí como lectura)*|
+|  -------------------------------------------------------------------------------  |
+|                                                                                   |
+|  [ ⚙️ DETALLES DE EJECUCIÓN ]                                                     |
+|  Responsable:    [ 👤 @Contratista_Alpha v ]                                      |
+|  Fecha Inicio:   [ 2026-08-12 📅 ]        Fecha Fin: [ 2026-08-14 📅 ]            |
+|  Esfuerzo Plan:  [ 5 Días ] *(Heredado y bloqueado si viene de la Plantilla P8)*  |
+|                                                                                   |
+|  [ 📊 ESTADO Y PROGRESO ]                                                         |
+|  Estado Actual:  [ En Progreso v ] (No Iniciado / En Progreso / Finalizado / Bloqueo)|
+|  % de Avance:    [ 45 % ]                                                         |
+|                                                                                   |
+|  [ 📎 EVIDENCIA Y CIERRE ]                                                        |
+|  Comentarios / Bitácora:                                                          |
+|  [ Se avanzó con la retroexcavadora en el sector norte...                      ]  |
+|                                                                                   |
+|  Adjuntos (Evidencia):                                                            |
+|  [⬆️ Subir Archivo] -> 📎 Foto_Excavacion.jpg                                     |
+|                                                                                   |
+|                                           [ FINALIZAR TAREA ]                     |
++-----------------------------------------------------------------------------------+
+```
+
+---
+
+## Pantalla 8: Constructor de Plantillas de Proyecto (Template Builder / WBS)
+**Objetivo:** Interfaz administrativa exclusiva para modelar la "Estructura Base" (WBS) de proyectos Tradicionales (Gantt). Aquí se definen Fases, Hitos y Tareas genéricas con sus dependencias, esfuerzos relativos y recolección de datos (Formularios simples).
+
+```text
++-----------------------------------------------------------------------------------+
+|  Admin > Proyectos > Plantillas                             [💾 Guardar Borrador] |
+|  Estado: [🟢 PUBLICADA v]                                                           |
++-----------------------------------------------------------------------------------+
+|  Nombre de la Plantilla: [ Apertura de Sucursal Tipo A                      ]     |
+|  [⬆️ Importar desde Excel/CSV]     |      [📑 Clonar desde otra Plantilla]        |
+|  -------------------------------------------------------------------------------  |
+|                                                                                   |
+|  [ 🌳 ESTRUCTURA DEL PROYECTO (Work Breakdown Structure) ]        [+ Añadir Fase] |
+|                                                                                   |
+|  🗂️ FASE 1: Trabajos Preliminares (Pre-Obra)                                       |
+|  ├── 🚩 Hito: Permisos Aprobados             [⚙️ Stage-Gate: Activo (Bloquea)]     |
+|  │   ├── 📋 Tarea: Solicitar Licencia (2 d)  [ 🔗 Depende de: Ninguna ]           |
+|  │   │   └─ Formulario: [ Form_Aprobacion_Licencia.json v ]  | [x] Booleana (100%)|
+|  │   ├── 📋 Tarea: Pago de Tasas (1 d)       [ 🔗 Depende de: Solicitud (FS+0) ]  |
+|  │   │   └─ Formulario: [ Formulario_Base_Generico.json v ]  | [ ] Porcentaje (%) |
+|                                                                                   |
+|  🗂️ FASE 2: Obra Civil e Infraestructura                           [+ Añadir Hito]|
+|  ├── 🚩 Hito: Cimentación Terminada                                               |
+|  │   ├── 📋 Tarea: Excavación (5 d)          [ 🔗 Depende de: Permisos (FS+2d) ]  |
+|  │   │   └─ Formulario: [ Ninguno (Solo % de Avance) v ]                          |
+|                                                                                   |
+|  -------------------------------------------------------------------------------  |
+|  [⚙️] PANEL DE PROPIEDADES (Al hacer clic en una Tarea/Hito)                      |
+|  - Esfuerzo / Duración Estimada:  [ 5 ] [ Días v ]                                |
+|  - Roles Asignados por Defecto:   [ "Equipo de Proyecto" (Sistema) ]              |
+|  - Dependencia Avanzada:          [ FS (Fin a Inicio) v ] Lag/Lead: [+2 días]     |
+|  - Restricción de Tiempo (Const): [ MFO (Must Finish On) ] -> [ 30 días post INC] |
 +-----------------------------------------------------------------------------------+
 ```
 
@@ -427,6 +509,41 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 |                                            [ CANCELAR ]   [ 💾 GUARDAR TAREA ]    |
 +-----------------------------------------------------------------------------------+
 ```
+
+---
+
+## Pantalla 10.B: Planner Tradicional (Ejecución Gantt)
+**Objetivo:** Interfaz exclusiva y apartada del Hub Ágil (P10). Esta es la propiedad absoluta del Project Manager (PM) Tradicional. Aquí se visualiza la estructura (WBS) instanciada desde la Pantalla 8, pero cobrando vida en un Diagrama de Gantt real. El PM asigna recursos reales, presupuestos y declara la **Línea Base** para poner a marchar el motor.
+
+```text
++-----------------------------------------------------------------------------------+
+|  Proyectos > 📁 Apertura de Sucursal Tipo A                    [ ⚙️ Configurar ]  |
++-----------------------------------------------------------------------------------+
+|  Líder: @Harolt   |   Estado: [ 📝 En Planificación ]                             |
+|  -------------------------------------------------------------------------------  |
+|  [ 💾 Guardar Plan ]    [ 🚀 FIJAR LÍNEA BASE (Iniciar Ejecución en Motor) ]      |
+|                                                                                   |
+|  +---------------------------------------+--------------------------------------+ |
+|  | WBS (Heredado de la P8)     | Recurso |      AGOSTO 2026      |  SEPTIEMBRE  | |
+|  |                             | Asignado| 12  19  26  02  09  16  23  30  06   | |
+|  +---------------------------------------+--------------------------------------+ |
+|  | 🗂️ FASE 1: Trabajos Pre.   |         | [====[       ]                       | |
+|  | ├── 🚩 Hit: Permisos Aprob |         |      ♦                               | |
+|  | │   ├── 📋 Solicitar Lice  | @Maria  | [====] --->                          | |
+|  | │   ├── 📋 Pago de Tasas   | @Pedro  |           [==]                       | |
+|  | 🗂️ FASE 2: Obra Civil      |         |                       [======]       | |
+|  | ├── 🚩 Hit: Cimentación    |         |                              ♦       | |
+|  | │   ├── 📋 Excavación      | Contrat.|                       [======]       | |
+|  +---------------------------------------+--------------------------------------+ |
+|                                                                                   |
+|  [ PANEL DE GESTION DE RECURSOS ] (Al seleccionar una Tarea)                      |
+|  - Asignar Persona o Grupo: [ @Pedro Martinez v ]                                 |
+|  - Inyectar Presupuesto ($): [ 5,000.00 ]                                         |
+|  - Ajustar Fechas Reales: Inicio [ 2026-08-12 📅 ] Fin [ 2026-08-14 📅 ]          |
++-----------------------------------------------------------------------------------+
+```
+
+>>> Cuando el PM oprime [🚀 FIJAR LÍNEA BASE]: El diagrama pasa a ser inmutable temporalmente y Camunda toma el control. Enruta la primera tarea ("Solicitar Licencia") y la deposita automáticamente en la Pantalla 0 (Workdesk) del usuario "@Maria" para su ejecución.
 
 ---
 
@@ -633,10 +750,52 @@ Este documento define la estructura visual y de experiencia de usuario (UX) para
 |  - Plantilla (TO-BE) Sugerida: Desconocida                                        |
 |  - Origen: Respuesta de "Fuera de la oficina" a `legal@ibpms.com`                 |
 |                                                                                   |
-|  [ 🗑️ Descartar y Enseñar a ML ]             [ ✏️ Forzar Mapeo Manual ]          |
+|  [ ⚠️ Retroalimentar IA ]      [ 🗑️ Descartar ]       [ ✏️ Forzar Mapeo Manual ]   |
 |                                                                                   |
 |  -------------------------------------------------------------------------------  |
 |  < Pág Anterior [1] [2] [3] ... [6] Pág Siguiente >    Visualizar: [ 25 v]        |
++-----------------------------------------------------------------------------------+
+
+>>> Clic en [🔗 Ver Correo en Inbox] (Para usuarios SIN Rol SAC_Leader) abre Modal de Lectura Plana (CA-10):
+
++-----------------------------------------------------------------------------------+
+|  [✉️] Lectura de Correo (Texto Plano Restringido)                          [ x ]  |
+|  -------------------------------------------------------------------------------  |
+|  Remitente: @John (auditorias@ibpms.com)   |  Fecha: 2026-10-22 10:45 AM          |
+|  Asunto: Confirmación de Auditoría                                                |
+|  -------------------------------------------------------------------------------  |
+|  Hola equipo,                                                                     |
+|  Adjunto la confirmación. (Los archivos o formatos HTML no están disponibles en   |
+|  esta vista de seguridad básica).                                                 |
+|  -------------------------------------------------------------------------------  |
+|                                                                    [ CERRAR ]     |
++-----------------------------------------------------------------------------------+
+
+>>> Clic en [🚀 CREAR SERVICE DELIVERY (BPMN)] abre Modal de Radicación SGDEA (CA-2):
+
++-----------------------------------------------------------------------------------+
+|  [🚀] Confirmar Radicación de Service Delivery                             [ x ]  |
+|  -------------------------------------------------------------------------------  |
+|  Se iniciará el proceso "Auditoría Express_v2" para el cliente InnovateTech Corp. |
+|                                                                                   |
+|  Configuración Documental (SGDEA):                                                |
+|  [x] 📁 Crear sub-carpeta dedicada en SharePoint para esta Instancia (CA-2)       |
+|                                                                                   |
+|                                             [ CANCELAR ]   [ ✅ CONFIRMAR INICIO ]|
++-----------------------------------------------------------------------------------+
+
+>>> Clic en [⚠️ Retroalimentar IA] abre Modal de Entrenamiento MLOps (Agente 3):
+
++-----------------------------------------------------------------------------------+
+|  [⚠️] Retroalimentación de Inteligencia Artificial                         [ x ]  |
+|  -------------------------------------------------------------------------------  |
+|  El Agente falló o erró en la clasificación lógica de este correo.                |
+|  Por favor, seleccione el enrutamiento correcto para enseñar al modelo:           |
+|                                                                                   |
+|  Proceso Correspondiente Real: [ Soporte Técnico Nivel 2 v ]                      |
+|  Categoría de Cliente:         [ Cliente Activo Empresarial v ]                   |
+|                                                                                   |
+|                                             [ CANCELAR ]   [ 🧠 ENVIAR FEEDBACK ] |
 +-----------------------------------------------------------------------------------+
 ```
 

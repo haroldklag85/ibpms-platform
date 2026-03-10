@@ -5,6 +5,47 @@ Este documento contiene las Historias de Usuario formales para el MVP Táctico (
 
 ---
 
+## ÉPICA TRANSVERSAL 0: Gobernanza de Errores y Seguridad Global
+*(MUST HAVE)* - Reglas arquitectónicas universales (Manejo de Excepciones y PII) que aplican transversalmente a TODAS las interacciones del iBPMS para evitar redundancias en historias individuales.
+
+### US-000: Resiliencia Integrada y Enmascaramiento PII Visual
+**Como** Arquitecto de Plataforma
+**Quiero** establecer reglas globales de comportamiento ante fallos HTTP y datos sensibles
+**Para** proteger la estabilidad de la UX y blindar datos como TC/SSN en la capa de vista pública.
+
+**Criterios de Aceptación Universales (Gherkin):**
+```gherkin
+Feature: Universal Error Handling and Privacy Governance
+  Scenario: Degradar Grácilmente ante Fallas HTTP 500/503 (Cortes Integración)
+    Given una pantalla intentando cargar data externa (Ej: API de Camunda, Grafana, CRM)
+    When el subsistema no responda al 'Timeout' o el Nginx devuelva HTTP 5xx
+    Then el Frontend interceptará globalmente la falla impidiendo "Pantallas Blancas de la Muerte"
+    And montará un componente de estado fallido `[ErrorStateGlobal]` instando a reintentar
+    And el Backend arrojará el dump íntegro a los logs ELK sin devolver su stacktrace JSON al puerto cliente.
+
+  Scenario: Triage Semántico de Validaciones UI (HTTP 400/422)
+    Given un usuario disparando un 'Submit' de guardado
+    When el validador Zod/DTO repela la petición porque faltan propiedades estrictas
+    Then la API vomitará HTTP 400 devolviendo un array DTO estandarizado: `{field, issue, translatedMessage}`
+    And la vista SPA identificará e inyectará los bordes rojos explícitamente y solo en los `<inputs>` culpables.
+
+  Scenario: Bloqueo de Concurrencia Optimista (HTTP 409)
+    Given un registro siendo observado por el Usuario A y el Usuario B a la vez
+    When el Usuario A estampa su guardado subiendo y persistiendo la `Version N`
+    And el Usuario B pulsa 'Guardar' microsegundos después manteniendo la `Version N-1` local
+    Then el motor DB ejecutará control de concurrencia optimista rechazando la inyección
+    And la API responderá un HTTP 409 Conflict, obligando a repintar el browser del Usuario B con un aviso: "Datos oxidados, registro alterado reciéntemente".
+
+  Scenario: Enmascaramiento Dinámico de Identidad Personal (PII Redaction)
+    Given la captura de texto libre no estructurado (Ej. Emails entrantes desde Exchange o comentarios)
+    When el string se despache desde la API hacia la pantalla interactiva de un operario (Sin superpoderes)
+    Then un interceptor regex o LLM hallará secuencias numéricas/textuales que referencien Tarjetas de Crédito, Documentos Hipotecarios/Médicos
+    And oscurecerá o mutará perentoriamente esos caracteres por hashes `[CONFIDENCIAL - CLASE PII]` antes de rehidratar el Frontend.
+```
+**Trazabilidad UX:** Transversal a Formularios, Bandejas Docketing (Pantalla 1B) y Grillas del sistema global.
+
+---
+
 ## ÉPICA 1: Orquestación y Workbenches (El Motor Core)
 Esta épica aborda la capacidad fundamental del sistema: recibir un requerimiento, enrutarlo como una tarea (Task) y permitir que el usuario la gestione en su Workdesk (Escritorio de Tareas).
 
@@ -15,14 +56,52 @@ Esta épica aborda la capacidad fundamental del sistema: recibir un requerimient
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Workdesk Loading
-  Scenario: Un usuario autenticado solicita sus tareas pendientes
-    Given que el usuario "juan.perez" ha iniciado sesión exitosamente con el rol "Analista_Legal"
-    And existen 3 tareas activas asignadas a él y 2 tareas asignadas al grupo "Analista_Legal" en la base de datos
-    When el cliente frontend realiza una petición GET a "/api/v1/workbox/pending?page=1&size=50&sort=sla_asc"
-    Then el sistema debe retornar un HTTP STATUS 200 OK
-    And el payload JSON debe contener un arreglo de objetos tipo "Task" bajo el nodo "content" (Paginación Spring)
-    And cada objeto "Task" debe incluir "id" (UUID), "titulo" (String), "fecha_vencimiento_sla" (ISO-8601), "origen" (BPMN o Kanban) y "estado"
+Feature: Workdesk Loading and Real-Time Grid
+  Scenario: Carga Inicial con Paginación y Prioridad SLA (CA-1)
+    Given que el usuario "juan.perez" ingresa al Workdesk
+    When el sistema consulta las tareas pendientes
+    Then el backend retorna estrictamente el primer bloque de tareas (Paginadas, Ej: 50) para proteger el performance
+    And el ordenamiento forzoso por defecto es "SLA más Crítico (Fecha Vencimiento Ascendente) primero", sin importar origen.
+
+  Scenario: Búsqueda Estratégica Híbrida local vs remota (CA-2)
+    Given la barra de búsqueda en el Workdesk
+    When Juan busca el caso "EXP-90X"
+    Then el Frontend filtra inmediatamente sobre las 50 tareas precargadas en memoria
+    And paralelamente dispara una petición asíncrona a la Base de Datos para asegurar que no existan coincidencias en otras páginas ocultas, refrescando el resultado final.
+
+  Scenario: Consolidación UI Unificada de BPMN y Kanban (CA-3)
+    Given la disparidad estructural entre tareas de Proceso (Camunda) y Proyectos (Gantt)
+    When se renderiza la tabla o tarjetas unificadas en la misma pestaña activa
+    Then la interfaz utiliza un patrón de "Data Grid Universal" garantizando 5 columnas estandarizadas: [Nombre, SLA, Estado, Avance, Recurso]
+    And añade un ícono o badge visual a la izquierda del Nombre (Ej: ⚡ Flujo, 📅 Proyecto) permitiendo identificación rápida sin corromper la uniformidad de la tabla.
+
+  Scenario: Alternador de Vistas por Delegación (CA-4)
+    Given que un Asistente le delega permisos temporales a su Jefe (Juan)
+    Then el Workdesk de Juan muestra un Interruptor o Dropdown (Toggle) en la cabecera
+    And permite alternar entre `[Mis Tareas]` y `[Tareas de mi Asistente]` sin mezclar visualmente los contextos, evitando desorden operativo.
+
+  Scenario: Ticking Engine Vivo y Semáforos SLA (CA-5)
+    Given las tarjetas o filas del Workdesk cargadas en pantalla
+    Then el componente visual de SLA actúa como un temporizador dinámico "vivo" (Tick-Tock)
+    And cambia de color forzosamente (Semáforo: Verde, Amarillo, Rojo) en tiempo real al acercarse al límite temporal configurado, sin requerir refresco (F5) ni peticiones de polling constantes.
+
+  Scenario: Desaparición Fantasma por Bloqueo o Asignación Externa (CA-6)
+    Given una tarea visible en la "Cola de Grupo" de Juan
+    When un colega la "Reclama" o un "Project Manager (PM)" asigna forzosamente la tarea a otro especialista
+    Then el sistema mediante WebSockets (o Server-Sent Events) recibe el pulso de asignación
+    And oculta instantáneamente esa tarjeta de la vista de Juan para erradicar colisiones.
+
+  Scenario: Degradación Elegante ante Falla BPMN (CA-7)
+    Given una caída temporal de la API / Base de Datos transaccional de Camunda
+    When el usuario carga su Workdesk en ese instante
+    Then la interfaz carga exitosamente las tareas nativas (Planificador Kanban) que siguen vivas y accesibles
+    And proyecta un Toast/Banner amable alertando: "Sincronización de Procesos (BPMN) degradada temporalmente. Estamos trabajando para solucionarlo".
+
+  Scenario: Intervención Administrativa Anti Cherry-Picking (CA-8)
+    Given que el Administrador Global del cliente detecta sesgos de selección (operarios ignorando tareas complejas)
+    When enciende la bandera del sistema de "Enrutamiento Forzoso" (Feature Toggle)
+    Then la vista de Workdesk de los operarios oculta la tabla/lista selectiva
+    And presenta un único call-to-action gigante: `[Atender Siguiente Tarea]`, forzando a resolver matemáticamente lo más crítico o antiguo.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Workdesk - Escritorio de Tareas).
 
@@ -35,40 +114,60 @@ Feature: Workdesk Loading
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Task Claiming
-  Scenario: Reclamar una tarea exitosamente
-    Given una tarea con ID "TK-099" cuyo estado es "UNASSIGNED" y pertenece al grupo "Soporte_IT"
-    And el usuario "maria.lopez" pertenece al grupo "Soporte_IT"
-    When "maria.lopez" realiza un POST a "/api/v1/workbox/tasks/TK-099/claim"
-    Then el sistema debe retornar un HTTP STATUS 200 OK
-    And el "assignee" de la tarea debe actualizarse a "maria.lopez" en la tabla 'ACT_RU_TASK' (Camunda DB)
-    And la tarea debe desaparecer de la vista "Tareas de Grupo" de los demás usuarios instantáneamente (WebSockets/Polling)
+Feature: Task Claiming and Reassignment
+  Scenario: Reclamo Simultáneo (Condición de Carrera) (CA-1)
+    Given dos analistas visualizan la tarea "TK-099" en la Cola de Grupo
+    When ambos hacen clic en [Reclamar] en el mismo segundo
+    Then el sistema inscribe al primero en llegar a la Base de Datos como `assignee`
+    And al segundo le retorna un HTTP 409 Conflict mostrando un Modal Amable: "Lo sentimos, María se te adelantó por un segundo".
 
-  Scenario: Intento de reclamar una tarea ya asignada a otro (Condición de Carrera)
-    Given la tarea "TK-099" ya fue reclamada por un colega 1 segundo antes
-    When "maria.lopez" realiza un POST a "/api/v1/workbox/tasks/TK-099/claim"
-    Then el sistema debe retornar un HTTP STATUS 409 Conflict
-    And el mensaje de error debe indicar "La tarea ya fue asignada a otro usuario."
+  Scenario: Reclamo Masivo en Lote (Bulk Claim) (CA-2)
+    Given la vista general de cuadrícula en el Workdesk
+    When el analista selecciona múltiples casillas (Ej. 10 tareas) y pulsa [Reclamar Seleccionadas]
+    Then el sistema ejecuta una transacción Batch y asigna en lote a su bandeja
+    And si alguna de esas 10 ya fue tomada, le notifica un resumen de éxito/fallo parcial (Ej. "9 reclamadas exitosamente, 1 ya no disponible").
 
-  Scenario: Liberar una tarea reclamada (Unclaim / CA-3)
-    Given el usuario "maria.lopez" tiene asignada la tarea "TK-099" en la vista de "Mis Tareas"
-    And ha diligenciado parcialmente el formulario (Borrador/Draft)
-    When oprime el botón [ Liberar Tarea ]
-    And opcionalmente rellena el campo "Motivo de Liberación"
-    Then el sistema ejecuta el endpoint `/unclaim` enviando el motivo opcional y el payload actual
-    And la tarea actualiza su `assignee` a null en Camunda pero conserva las variables como "Draft"
-    And reaparece de inmediato en la "Cola Grupal" para los demás compañeros, quienes verán el progreso parcial.
-    And el sistema guarda un log de auditoría (oculto en BD para métricas BAM) indicando la devolución.
+  # NOTA CONTEXTUAL PO: (CA-3) Límite estructural de secuestro simultáneo queda diferido para la V2.
 
-  Scenario: Reasignar o Escalar una tarea (Reassign / CA-4)
-    Given el usuario "maria.lopez" tiene asignada la tarea "TK-099"
-    When oprime el botón [ Reasignar ]
-    Then el Modal de reasignación debe listar compañeros de su mismo grupo Y usuarios de niveles superiores (Escalamiento) basados en la Jerarquía definida en el BPMN Modeler (Pantalla 6).
-    When selecciona a "carlos.gerente", proporciona un motivo y confirma
-    Then el sistema verifica la configuración "Ping-Pong Limit" (Ej. N=1 reasignaciones permitidas). Si se supera, bloquea la acción.
-    And si es válida, ejecuta el endpoint `/reassign` configurando a "carlos.gerente" como nuevo `assignee`
-    And el sistema guarda el log de auditoría para trazabilidad BAM.
-    And NO emite ninguna notificación por correo electrónico, recargándose silenciosamente en el Workdesk del nuevo dueño.
+  Scenario: Liberación con Mensajería Interna (Peer-to-Peer Handoff) (CA-4)
+    Given un analista con una tarea en progreso que desea traspasar a un compañero
+    When pulsa [Liberar Tarea] en la Pantalla 5
+    Then el sistema devuelve la tarea a la Cola Grupal
+    And despliega opcionalmente un campo para adjuntar un Mensaje Interno (Ej: "@Pedro, te liberé este caso para que lo tomes").
+
+  Scenario: Exploración Segura (Modo Sólo Lectura) (CA-5)
+    Given una tarea en la Cola Grupal
+    When el analista hace doble clic para abrir el detalle del caso
+    Then el sistema renderiza el formulario y los anexos en "Modo Sólo Lectura"
+    And NO altera el `assignee` en la Base Datos hasta que pulse explícitamente el botón físico de [Reclamar].
+
+  Scenario: Prevención de Abandono (Ghost Job Timeout) (CA-6)
+    Given que la tarea fue reclamada pero no ha sufrido modificaciones de estado
+    Then un Cron Job estructurado en el Backend rastrea las transacciones con inactividad superior al SLA
+    And ejecuta un "Auto-Unclaim", purgando al `assignee` inactivo y devolviendo el caso a la Cola Grupal para rescate.
+
+  Scenario: Persistencia de Borradores (Draft Savings) (CA-7)
+    Given un formulario parcialmente diligenciado
+    When el analista oprime [Liberar Tarea]
+    Then el motor persiste todo el JSON cargado hasta ese momento usando la API de Variables de Camunda
+    And el siguiente compañero que la reclame encontrará el progreso intacto en su interfaz.
+
+  Scenario: Despojo Forzoso de Tarea por Supervisor (CA-8)
+    Given que la tarea "TK-099" pertenece a Juan, pero él se ausentó
+    When un gerente con Rol de Supervisor ingresa a la vista de monitoreo
+    Then dispone de controles con privilegios elevados para ejecutar un "Forced Unclaim" manual
+    And despojando inmediatamente a Juan y devolviendo la tarea a disponibilidad pública.
+
+  Scenario: Trazabilidad Forense en Pop-Up (Auditoría Profunda) (CA-9)
+    Given las constantes reclamaciones, liberaciones y despojos sobre un mismo Caso
+    Then la interfaz expone la funcionalidad de "Ver Trazabilidad" (Botón de Bitácora)
+    And despliega un Pop-Up cargando el historial completo de rotación cronológica del atributo `assignee` de la base de datos de Auditoría.
+
+  Scenario: Resiliencia Periférica (Offline Local Sync) (CA-10)
+    Given que la red hacia la Base de Datos Core sufre un micro-corte temporal
+    When el analista oprime [Reclamar]
+    Then el Frontend "miente" visualmente colocando la tarea en "Mi Bandeja" (Almacenamiento Local Temporal)
+    And genera procesos automáticos de ruteo/re-intento sincrónico por detrás hasta que confirme físicamente en el Motor (Degradación controlada).
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Botón: Asignarme Tarea / Claim).
 
@@ -105,6 +204,29 @@ Feature: Web IDE Form Code Generation
     Then a la par de las pestañas `<script setup>` y `<style scoped>` debe haber un icono de ayuda [?]
     And al hacer hover, un Tooltip explica de forma concisa la función de cada pestaña (Ej: "Aquí va la lógica de Vue y validaciones Zod" / "Aquí va el CSS del componente").
 
+  Scenario: [Arquitectura] Sandboxing Estricto contra XSS (AST Evaluator)
+    Given que el constructor del iForm inyectó una regla de negocio Javascript en un campo dinámico
+    When el motor de renderizado de la Pantalla 7 interpreta el formulario en el navegador
+    Then la plataforma prohíbe estructuralmente el uso de la función `eval()`
+    And toda expresión JS es analizada y ejecutada internamente mediante un intérprete de gramática seguro (Abstract Syntax Tree Parser) que rechaza cualquier intento de manipulación del `window`, `document` o peticiones `fetch`.
+
+  Scenario: [Arquitectura] Factoría Reactiva de Zod On-The-Fly
+    Given la estructura JSON del formulario generada por el IDE
+    When el motor requiere validar los campos renderizados en pantalla
+    Then el sistema NO emite archivos estáticos de código fuente JS para re-compilar
+    And instanciará dinámicamente el esquema global cruzado utilizando la factoría de validaciones `zod` conectada en tiempo real a la memoria reactiva (`reactive()`) de Vue.
+
+  Scenario: [Arquitectura] Aislamiento Perimetral CSS (Shadow DOM)
+    Given que el usuario redactó reglas exóticas de CSS para colorear botones específicos de su Formulario
+    When la pantalla cliente dibuja el componente en el Workdesk
+    Then el iBPMS encapsulará todo el componente inyectado usando el estándar HTML5 "Shadow DOM"
+    And ninguna de las clases CSS inyectadas podrá sangrar (Style Bleed) hacia el exterior ni distorsionar la barra superior o menús laterales de Tailwind corporativo.
+
+  Scenario: [Arquitectura] Render Functions y Teleportación
+    Given una directriz para renderizar componentes infinitamente anidados (Ej: Grillas dentro de Módulos dentro de Secciones)
+    Then el motor subyacente de Vue prescindirá del HTML rígido (`<template>`) utilizando funciones programáticas puras de Virtual DOM (`h()`) para renderizado ultrarrápido
+    And los Tooltips dinámicos o ventanas emergentes forzarán el uso de la etiqueta nativa `<Teleport to="body">` para romper el encierro del z-index y sobreponerse perfectamente en la jerarquía visual del monitor.
+**Trazabilidad UX:** Wireframes Pantalla 7 (iForm Builder - Web IDE Bidireccional).
   Scenario: Permisos de Sobrescritura en Campos (CA-4)
     Given un usuario en la Etapa 2 abre un iForm Maestro
     Then puede sobrescribir los valores ingresados previamente en la Etapa 1
@@ -410,6 +532,26 @@ Feature: Task Completion with Form Data
 
 ---
 
+### US-039: Formulario Genérico Base (Default Inyectado)
+**Como** PMO / Owner del iBPMS
+**Quiero** disponer de un modelo de formulario genérico pre-asociado a todas las tareas por defecto
+**Para** no tener que invertir tiempo dibujando decenas de formularios básicos en la Pantalla 7 cuando las tareas son únicamente procedimentales (tracking de % avance y adjuntar evidencia).
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Auto-vinculación de Pantalla 7.B a tareas desnudas
+  Scenario: Inyección Automática de Metadata de Proyecto y Reglas de Completitud
+    Given un usuario que apertura una Tarea operativa
+    When la tarea NO tiene un "iForm_Key" dinámico asignado a su diseño (ya sea en BPMN P6 o Gantt P8)
+    Then el motor renderiza la vista de Workdesk inyectando automáticamente la Pantalla 7.B como interfaz de llenado
+    And el formulario debe presentar en modo Solo Lectura la metadata principal heredada de la Instancia de Proyecto (Ej: Presupuesto, Cliente)
+    And el formulario obliga al usuario a diligenciar un campo de "Comentario/Observación" antes de enviar
+    And persiste un Porcentaje (%) de avance numérico. Si es menor a 100%, el estado debe ser 'En Progreso'. Si es 100%, el estado pasa obligatoriamente a 'Terminado'.
+```
+**Trazabilidad UX:** Wireframes Pantalla 7.B (Formulario Genérico Base).
+
+---
+
 ## ÉPICA 3: Inicio y Recepción (Triggers)
 Capacidad de iniciar procesos operacionales tanto de forma manual (Pantalla 0) como reactiva (Webhook).
 
@@ -420,17 +562,60 @@ Capacidad de iniciar procesos operacionales tanto de forma manual (Pantalla 0) c
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Process Instantiation via Webhook
-  Scenario: Webhook O365 válido inicia proceso de Onboarding
-    Given que la definición de proceso BPMN "onboarding_cliente" está activa
-    When se recibe un POST en el APIM a "/api/v1/webhooks/trigger/o365_inbox"
-    And el payload contiene un "id_mensaje_correo" valido
-    Then el sistema debe retornar HTTP STATUS 201 Created
-    And debe retornar el "process_instance_id" del nuevo caso
-    And el motor BPMN arranca en la primera tarea de configuración del proceso
-    And las variables del payload inicial quedan inyectadas al entorno del proceso
+Feature: Secure Webhook Intake and Human Approval
+  Scenario: Idempotencia ante Gatillos Nerviosos (CA-1)
+    Given que la API recibe un Webhook POST con el `id_mensaje: xyz-123`
+    When a los pocos milisegundos recibe un segundo y tercer POST con el mismo `id_mensaje`
+    Then el sistema reconoce la duplicidad en la tabla de transacciones de entrada
+    And procesa solo el primero, devolviendo a los duplicados un HTTP 200 OK silencioso (Idempotencia) sin crear tareas clones.
+
+  Scenario: Bloqueo Duro de Cuentas de Sistema (Auto-responders) (CA-2)
+    Given un correo entrante detectado por el Webhook
+    When el remitente corresponde a un patrón de sistema (Ej. `no-reply@...`, `mailer-daemon@...`)
+    Then el Endpoint de Webhook rechaza la petición en el perímetro (HTTP 400 Bad Request)
+    And no guarda la transacción en Camunda ni notifica, cortando de raíz los ciclos infinitos.
+
+  Scenario: Trazabilidad de Payloads Basura (CA-3)
+    Given un Webhook atacante o malformado (JSON sin la estructura requerida)
+    Then la API de Entrada retorna inmediatamente un HTTP 400 Bad Request
+    And persiste el rastro en una tabla transaccional especial llamada "Payloads Huérfanos/Fallidos" para auditoría forense del equipo IT.
+
+  Scenario: Verificación de Dominio Autorizado (Whitelist) (CA-4)
+    Given un payload válido y bien formado
+    When la API extrae el dominio del remitente (Ej. `@ibm.com`)
+    Then consulta la Base de Datos Core buscando si `@ibm.com` es un cliente matriculado en iBPMS
+    And si no existe coincidencia, el Webhook se rechaza (HTTP 403 Forbidden) antes de despertar a Camunda.
+
+  Scenario: Notificación de Falla Administrativa (CA-5)
+    Given un Webhook válido de un cliente registrado
+    When el motor BPMN (Camunda) sufre un error interno al intentar instanciar la variable
+    Then el sistema aborta la creación
+    And dispara inmediatamente un correo electrónico de alerta de falla crítica al Administrador del Sistema.
+
+  Scenario: Resiliencia Periférica con Colas (RabbitMQ) (CA-6)
+    Given una caída severa del motor BPMN (Camunda Offline)
+    When el Webhook recibe payloads válidos de O365
+    Then el sistema actúa como Buffer, encolando las peticiones en el broker de mensajería (RabbitMQ)
+    And una vez Camunda regresa a estar Online, el Job procesa la cola instaurando los casos de manera diferida, garantizando cero pérdida de información.
+
+  Scenario: Parametrización de Peso y Bloqueo de Límite (CA-7)
+    Given un payload de Webhook con adjuntos anidados
+    When el tamaño global de los archivos supera el límite paramétrico por defecto (Ej: 10MB)
+    Then el Endpoint corta y frena la descarga (`HTTP 413 Payload Too Large`)
+    And es administrable (El límite se puede aumentar a pedido del cliente).
+
+  Scenario: Intake Triage y Aprobación Humana Obligatoria (CA-8 & CA-9)
+    Given un Webhook aprobado y procesado exitosamente por la plataforma
+    Then el motor BPMN NO instancia el proceso oficial definitivo (Ej. "Onboarding")
+    And en su lugar, instancia una "Tarea de Pre-Triaje" visible en la Pantalla 16 (Intake)
+    And obligando por política a que un Operario Humano visualice la solicitud, valide los datos del correo, y oprima físicamente [Aprobar y Crear Caso] para detonar el flujo oficial de negocio.
+
+  Scenario: Seguridad Geométrica Híbrida (HMAC) (CA-10)
+    Given la exposición pública de la URL del Webhook a internet
+    Then por defecto, la API exige validar la firma criptográfica HMAC en los Headers contra un Secreto compartido con Microsoft Graph
+    And el Administrador IT posee un switch en la UI para apagar el requerimiento HMAC y solo usar Bearer Tokens si la integración del cliente es heredada (Legacy).
 ```
-**Trazabilidad UX:** Wireframes Pantalla 11 (Hub de Integraciones: Eventos Entrantes).
+**Trazabilidad UX:** Pantalla 11 (Hub de Integraciones: Eventos Entrantes) y Pantalla 16 (Bandeja Inteligente de Intake).
 
 ---
 
@@ -709,14 +894,35 @@ Feature: BPMN Process Deployment
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Standalone Project Template Builder (WBS)
-  Scenario: Creación de un esqueleto de proyecto (WBS) agnóstico a la ejecución
-    Given que el administrador está en el "Template Builder" (Pantalla 8) configurando la Plantilla "Apertura de Sucursal"
-    When el usuario define una jerarquía de 2 niveles: Fase 1 ("Pre-Obra") y Fase 2 ("Ejecución")
-    And añade "Tarea Genérica 1" bajo la Fase 1, enlazándola al "Form_Presupuesto"
-    And envía el POST a "/api/v1/design/projects/templates"
-    Then el sistema debe retornar HTTP STATUS 201 Created
-    And el "Project_Template_ID" debe guardarse en la base de datos relacional como una estructura maestra
-    And esta plantilla debe quedar disponible en el catálogo global de Pantalla 9 para ser consumida como base (Huesos) por futuros proyectos.
+  Scenario: Profundidad Controlada de WBS (CA-1)
+    Given que el PMO diseña una estructura jerárquica en la Pantalla 8
+    When el usuario intenta anidar tareas de forma vertical ("Sub-fase de Sub-fase de Tarea")
+    Then el sistema restringe estructuralmente la profundidad a un máximo estricto de 5 Niveles
+    And si se intenta exceder, deshabilita el botón "+" y proyecta una advertencia de tope arquitectónico ("Profundidad Máxima Alcanzada").
+
+  Scenario: Versionamiento Seguro de Plantillas Vivas (CA-2)
+    Given una Plantilla V1.0 que está siendo utilizada y consumida por 50 Proyectos Vivos
+    When la PMO edita la plantilla (Ej. Le agrega 3 Fases nuevas) y oprime [Actualizar Producción]
+    Then el sistema NO muta los 50 proyectos vivos (se anclan al Snapshot originario inmutable V1.0)
+    And emite la versión V2.0 exclusivamente disponible para nuevas aperturas de Proyectos, requiriendo en paralelo Aprobación Administrativa mediante un Botón Rojo Fuerte [Pushear Nueva Versión] para forzar validación por partida doble.
+
+  Scenario: Tipificación Estricta de Plantilla (Tradicional vs Ágil) (CA-11)
+    Given que la PMO acciona la creación de una Nueva Plantilla en la Pantalla 8
+    When el sistema levanta el Modal de Creación
+    Then obliga explícitamente a clasificar la plantilla seleccionando un tipo rígido: `[Tradicional (Gantt)]` o `[Ágil (Sprints)]`
+    And esta clasificación gobierna el comportamiento del lienzo: Si elije "Ágil", el botón de relacionar dependencias (Fin-a-Inicio) desaparece permanentemente del UI y se prohíbe crear conceptos estructurales como "Hitos".
+
+  Scenario: Transición Formulario a DONE en Ágil (CA-12)
+    Given una tarea instanciada en el Tablero Kanban (Ágil) originada desde una Plantilla
+    And esta tarea tiene el "Formulario_QA" asociado en su definición maestra
+    When el desarrollador termina el trabajo y oprime enviar el formulario
+    Then el sistema autoevalúa la completitud de la data y, en caso de éxito, arrastra logísticamente la tarjeta a la columna "DONE" del Sprint, aplicando un Definition of Done duro atado a data.
+
+  Scenario: Independencia Evolutiva Locativa (CA-13)
+    Given un Scrum Master que instanció un Proyecto Ágil basado en la Plantilla V1.0
+    When el Scrum Master elimina 5 de las tareas heredadas del Backlog local del proyecto porque no aplican a su Sprint
+    Then el borrado es estrictamente Local (Muta solo el Proyecto Instanciado)
+    And la Plantilla original inmutable "V1.0" no pierde las tareas orgánicamente y futuros proyectos las seguirán heredando intactas.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 8 (Project Template Builder).
 
@@ -730,28 +936,11 @@ Feature: Standalone Project Template Builder (WBS)
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Agile Project Instantiation and Planning
-  Scenario: Instanciación de un Proyecto Ágil desde una Plantilla
-    Given que el Gerente está en la Pantalla 9 (Gestor de Proyectos)
-    When oprime "Nuevo Proyecto" y selecciona metodología "Ágil"
-    And elige la plantilla base "Apertura de Sucursal" (Creada en P8)
-    And define el presupuesto general y las fechas estimadas del proyecto
-    Then el sistema genera el "Agile_Project_Instance_ID"
-    And despliega la vista de planificación táctica en el Agile Hub (Pantalla 10).
-
-  Scenario: Planificación y envíó al Kanban de Operaciones
-    Given que el Scrum Master visualiza el proyecto en el Agile Hub (Pantalla 10)
-    Then la pantalla renderiza el Backlog extraído de la Plantilla (Fases y Tareas Genéricas)
-    When el Scrum Master arrastra la "Tarea Genérica 1" de la Fase 1 hacia el Sprint Activo
-    And le asigna la persona responsable ("juan.perez")
-    Then el sistema dispara la tarjeta hacia la columna "TODO" del Tablero Kanban Global (Pantalla 3)
-    And la tarjeta queda visible en el Workdesk personal de "juan.perez" lista para ejecución.
-    
-  Scenario: Directorio de Proyectos Ágiles Compartidos
-    Given existen 3 Proyectos Ágiles instanciados donde el grupo "Dev_Team" tiene participación
-    When un usuario del grupo "Dev_Team" (Líder o Analista) navega a la sección de "Mis Proyectos"
-    Then el sistema renderiza una lista consolidada (Cards o Grilla) con todos los Proyectos Ágiles a los que tiene acceso
-    And puede seleccionar un proyecto específico para navegar a la Pantalla 10 (si es Líder) o para ver el Tablero Kanban filtrado (si es operador)
-    And garantizando así la visibilidad y gestión cruzada del portafolio ágil.
+  Scenario: Instanciación sin Sprints en V1 (Postergación Táctica) (CA-14)
+    Given un proyecto instanciado bajo metodología Ágil en la Pantalla 9
+    When el líder de proyecto abre el Agile Hub (Pantalla 10)
+    Then el sistema NO utiliza iteraciones con fechas (Sprints) para la Versión 1 del producto
+    And el lienzo funciona como un Tablero General de Kanban Continuo (Flujo sin Timebox) donde las tareas se mapean directamente de ToDo a Done, aplazando el marco Scrum complejo para V2.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 9 (Gestor de Proyectos) y Pantalla 10 (Hub Ágil).
 
@@ -765,21 +954,41 @@ Feature: Agile Project Instantiation and Planning
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Traditional Project Planning and Baseline Execution
-  Scenario: Asignación de Recursos y Fechas en el Planner Gantt
-    Given que el PM navega a la Pantalla 10.B (Planner Tradicional) de un proyecto "En Planificación"
-    Then el sistema renderiza el árbol completo (Fases > Hitos > Tareas) heredado de la Pantalla 8 en un formato Gantt Visual
-    When el PM selecciona una Tarea y le asigna un usuario responsable ("pedro.martinez") y un presupuesto
-    And el PM ajusta las fechas calendario reales de inicio y fin moviendo la barra en el lienzo
-    Then el sistema recalcula dinámicamente el desplazamiento de las tareas sucesoras basándose en sus dependencias (FS, FF)
-    And guarda el estado del "Plan" sin notificar aún a los empleados.
+  Scenario: Geometría Adaptativa por Colisión con Días Festivos (CA-3)
+    Given la tarea X planificada para el lunes 12, con duración de 3 días laborables
+    When el calendario maestro global marca repentinamente el lunes 12 como "Día Festivo Nacional"
+    Then el motor de cálculos del Diagrama de Gantt estira automáticamente la caja visual de la tarea hacia la derecha compensando el día muerto (Fin: Jueves 15) sin requerir re-planificación humana obligatoria.
 
-  Scenario: Fijación de la Línea Base y Despegue del Proyecto (Big Bang)
-    Given que el PM ha terminado de estructurar el Gantt en la Pantalla 10.B
-    When el PM oprime el botón maestro "🚀 FIJAR LÍNEA BASE"
-    Then el backend bloquea la edición del modelo geométrico del proyecto temporalmente
-    And el sistema evalúa la red matemática, detecta las tareas iniciales (sin predecesoras)
-    And dispara los comandos al motor (Camunda) para instanciar dichas tareas usando el Formulario Key parametrizado (Ej. Generico_Base_V1)
-    And deposita de inmediato estas instacias en la bandeja "Workdesk" (Pantalla 1) de sus respectivos asignados originando la ejecución real.
+  Scenario: Protección Estructural contra Deadlocks Circulares (CA-4)
+    Given que el PM crea dependencia "T1 -> T2" (Fin-Inicio) arrastrando flechas en el Lienzo 10.B
+    When el PM arrastra erróneamente la dependencia contraria "T2 -> T1" creando un Ciclo Infinito
+    Then el WebClient bloquea y aborta inmediatamente el cruce relacional (Error Geométrico visual) e impide guardarlo en la Base de Datos para garantizar un motor DAG limpio.
+
+  Scenario: Sobrecarga Permisible con Semáforo Sensorial (CA-5)
+    Given la matriz de 40 horas laborables semanales para un humano
+    When el PM planifica tareas apiladas sobre la empleada "María" superando el 150% de su capacidad en la misma semana cronológica
+    Then el sistema "permite" teóricamente la mala práctica (dejando al PM violar la métrica)
+    And como contramedida, enciende agresivas Balizas Visuales Rojas (Marcador de Recurso Sobrecargado) a un costado del nombre de la analista.
+
+  Scenario: Re-planificación Activa y Multi-Líneas Base (Baseline Rupture) (CA-6)
+    Given un proyecto que lleva 2 meses en Ejecución Viva (Basado sobre Línea Base "V1")
+    When el PM requiera estirar los tiempos un 30% a solicitud formal del cliente
+    Then el sistema permite pausar y "Reprogramar" formalmente el nodo vivo en el lienzo visual de la Pantalla 10.B
+    And fuerza al PM a guardar y pisar una nueva Línea Base Evolutiva (Ej: V2_Reprogramada), preservando en el log histórico la desviación financiera/temporal ocurrida frente al V1 primitivo para auditoría de Gerencia.
+
+  Scenario: Hot-Swaps en Cabina de Mando (Reasignación de Silla Ejecutiva) (CA-7)
+    Given una tarea vital (T4) de Línea Base activa rebotando infructuosamente en el Workdesk del analista 'Pedro' por su ausencia repentina
+    When el Project Manager se adentra en la Pantalla 10.B (Cabina General Gantt Transaccional) e invoca la tarjeta temporal viva (T4)
+    Then el sistema posibilita el borrado nominal en duro de 'Pedro' para inyectar sobre vuelo el usuario 'Luis'
+    And el motor BPMN retira perentoriamente la carta de la delegación de Pedro, materializándola sincrónicamente en el Workdesk de su co-equipero para no frustrar la métrica de entrega del T4.
+
+  Scenario: Modos Flexibles de Reclamo (Pool vs Empleado Directo) (CA-8)
+    Given la responsabilidad del PM de instanciar tareas en el motor Gantt
+    Then el PMo goza del Switch parametrizable de Asignamiento en su UX
+    And ostenta la facultad imperativa de designar nominalmente la Tarea Hacia un Usuario Exacto (`maria.lopez`)
+    And o puede prescindir de asimetrías tácticas y tirarlo en bandeja común al Grupo Jerárquico General ("Equipo Legal"), forzando que ellos ejerzan Auto-Apropiación (US-002: Claim Task) por competencia.
+    
+  # NOTA CONTEXTUAL PO: (CA-9 Camino Crítico PERT) y (CA-10: Avance Financiero EVM) diferidos expresamente a V2 del MVP.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 10.B (Planner Tradicional - Gantt) y Pantalla 1 (Workdesk).
 
@@ -815,15 +1024,100 @@ Permite a los usuarios de negocio (no técnicos) generar reglas lógicas complej
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: NLP to DMN Translation via LLM API
-  Scenario: Traducción exitosa de lenguaje natural a tabla DMN
-    Given que el usuario está en el Taller DMN con IA
-    When el usuario envía una petición POST a "/api/v1/ai/dmn/translate"
-    And incluye el prompt "Si el monto es mayor a 500, requiere 'Aprobacion_Gerente', sino 'Aprobacion_Lider'"
-    Then el sistema debe retornar HTTP STATUS 200 OK
-    And el payload debe contener el string literal del XML DMN validado y parseable por el motor
-    And el DMN debe contener las entradas (Inputs) y salidas (Outputs) inferidas correctamente
+
+  Scenario: Prevención de Variables Fantasma (Diccionario Restringido)
+    Given el Taller DMN con IA (Pantalla 4)
+    When el usuario redacta el prompt con la regla de negocio
+    Then la interfaz obliga al usuario a mapear textualmente sus palabras contra un Dropdown Selectivo de "Variables Disponibles" (Inputs/Outputs extraídos de los Formularios previos)
+    And el LLM rechaza procesar columnas que no existan en el diccionario duro.
+
+  Scenario: Acoplamiento Rígido de Rutas de Salida (BPMN Outputs)
+    Given que la DMN direcciona el flujo BPMN (Ej: "Aprobado" va a Tarea A, "Rechazado" va a Tarea B)
+    When el LLM genera la columna de Output de la Matriz DMN
+    Then el Agente IA Backend restringe el vocabulario de salida del LLM para que coincida 100% con los "Gateway Paths" existentes en el diagrama de la Pantalla 6, previniendo errores de enrutamiento.
+
+  Scenario: El LLM como Auditor Lógico Estructural (Anti-Contradicciones)
+    Given una regla donde el usuario escribe "Rechazar montos >100" y "Aprobar montos >50"
+    When envia el prompt a generar
+    Then el LLM detecta matemáticamente la colisión de los rangos para $150
+    And en vez de generar XML basura, aborta el proceso retornando un "Error de Sintaxis de Negocios" indicándole al humano la contradicción en el chat.
+
+  Scenario: Red de Seguridad por Defecto (Catch-All Rule)
+    Given que el LLM genera exitosamente una tabla DMN de 5 reglas lógicas
+    Then el sistema inyecta incondicional y automáticamente una 6ta regla final (Hit Policy: ANY/UNIQUE)
+    And esta fila actúa como "Catch-All": Si los inputs no hacen match con ninguna de las 5 reglas, el Output forzado será "Requiere Revisión Humana", evitando fallas silenciosas en producción.
+
+  Scenario: Human in the Loop (Aprobación Visual DMN)
+    Given el XML generado por el LLM en el backend
+    When retorna al Frontend
+    Then el usuario no lo inyecta automáticamente a producción
+    And es redirigido a una "Calculadora Visual" (Spreadsheet Mode)
+    And para activarlo, el usuario debe oprimir explícitamente [Sellar y Aprobar DMN].
+
+  Scenario: Edición Analógica Post-IA
+    Given la matriz DMN visual generada en la UI
+    When el usuario detecta que el 95% está bien pero un rango está mal
+    Then puede editar numéricamente la celda de la columna en duro, omitiendo al LLM para afinar el 5% restante sin reprocesar el prompt.
+
+  Scenario: Versionamiento y Gobernanza Viva
+    Given una tabla DMN activa (V1) corriendo en Camunda
+    When el usuario pide a la IA cambiar los topes financieros produciendo V2
+    Then V2 queda en estado "Borrador de DMN"
+    And se requiere la aprobación explícita de un "Administrador del Sistema" mediante un botón maestro para publicar la V2
+    And las tareas en ejecución hoy seguirán transitando bajo las leyes de la V1.
+
+  Scenario: Arquitectura LLM Hexagonal (Agnóstica)
+    Given el llamado del Backend a la API del Modelo de IA
+    Then el código se estructura usando Patrón Adaptador/Puerto
+    And permite cambiar mediante variable de entorno entre `OpenAI GPT-4o`, `Claude 3 Opus` o `Google Gemini` según evolución de leyes de datos sin refactorizar el núcleo del Taller DMN.
+
+  Scenario: Auditoría Forense de Prompts
+    Given la generación final de un archivo `.dmn`
+    Then el sistema graba en BD el XML generado junto con la llave foránea del usuario ejecutor, la estampa de tiempo, y el "Texto Prompt Exacto" que originó esta matriz, como prueba forense ante auditorías legales.
+
+  Scenario: Límites de Complejidad Configurables
+    Given un usuario intentando armar una red de políticas masivas (Ej. 500 ramificaciones)
+    When el sistema detecta que la tabulación excede el límite de N variables (Configurable por Administrador, Ej. max 50 filas)
+    Then bloquea la generación previniendo desbordamiento del contexto del LLM y sugiriendo subdividir el flujo.
+
+  Scenario: Modo Desarrollador (Bypass de IA y Autoría Manual)
+    Given un usuario técnico (Ej. Desarrollador o Arquitecto Avanzado) en la Pantalla 4
+    When decide no utilizar el chat de Inteligencia Artificial
+    Then el sistema debe proveer una pestaña de "Autoría Manual"
+    And permitirle construir la tabla DMN usando la interfaz típica de Spreadsheet (Hoja de cálculo) desde cero
+    And o permitirle hacer un Drag & Drop para importar un archivo `.dmn` externo (Ej. creado en Camunda Modeler de escritorio) directamente al motor.
+
+  Scenario: Reutilización Modular de Reglas DMN (Globales) (CA-12)
+    Given la creación exitosa de un Modelo DMN ("Scoring Riesgo") en la Pantalla 4 conectado al Proceso A
+    When el Analista diseña un Proceso B totalmente distinto en la Pantalla 6
+    Then el sistema le permite invocar y enlazar esa misma tabla DMN "Scoring Riesgo" existente
+    And fomentando la reutilización transversal de políticas sin duplicar lógica en el motor.
+
+  Scenario: Aislamento de Responsabilidad Temporal (Sin Date-Math IA) (CA-13)
+    Given el Taller DMN interactivo
+    When el usuario solicita reglas basadas en intervalos de tiempo complejos (Ej. "Si pasaron 30 días")
+    Then el sistema recomienda en su UI utilizar "Timers" nativos de Camunda (Eventos BPMN)
+    And no exige a la IA inferir operaciones matemáticas de fechas en la V1 protegiendo la fiabilidad.
+
+  Scenario: Política Defensiva Obligatoria en Datos Nulos (CA-14)
+    Given una columna de entrada donde el usuario olvidó digitar el valor en la Pantalla 7
+    When el motor ejecuta el caso evaluando "Null" contra las reglas condicionales
+    Then la tabla DMN autogenerada por la IA debe contener SIEMPRE una directriz que intercepta el valor "Null"
+    And lo redirecciona obligatoriamente por diseño hacia una salida de precaución (Ej. "Revisión Humana").
+
+  Scenario: Política de Restricción Rígida de Choque (Hit Policy UNIQUE) (CA-15)
+    Given la naturaleza abstracta y no determinista de los usuarios de negocio
+    When la IA transita del NLP hacia la estructura DMN formal
+    Then el motor de generación encripta estructuralmente la tabla a Hit Policy "UNIQUE"
+    And garantizando matemáticamente que solo 1 regla podrá ser verdadera a la vez, erradicando fallos catastróficos por traslape numérico de negocio.
+
+  Scenario: Escalabilidad Estructural de Pantallas P6 > P7 > P4 (CA-16)
+    Given que el Arquitecto está diagramando en la Pantalla 6 pero olvidó crear el Formulario (Pantalla 7) antes
+    When selecciona la [Business Rule Task] y necesita variables para armar la red DMN
+    Then el Modal invocado le permite "Crear Nuevo Formulario al Vuelo" (Mini-Pantalla 7) sin perder el progreso de su diagrama
+    And una vez creadas las variables rápidas (P7), el flujo lo salta a la Pantalla 4 (Taller DMN) para mapearlas.
 ```
-**Trazabilidad UX:** Wireframes Pantalla 4 (Taller DMN asitido con IA).
+**Trazabilidad UX:** Wireframes Pantalla 4 (Taller DMN) y su invocación desde Pantalla 6 (Diseñador BPMN).
 
 ---
 
@@ -838,7 +1132,7 @@ Habilita el trabajo no estructurado dentro de la plataforma para proyectos que n
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Kanban Board Task Management
-  Scenario: Mover tarjeta de una columna a otra
+  Scenario: Propagación de Estado en Tiempo Real (Websockets)
     Given el tablero del proyecto "Implementación ERP" con columnas "TODO", "DOING", "DONE"
     And la tarea Kanban "KT-050" está en estado "TODO"
     When el usuario realiza un PATCH a "/api/v1/projects/kanban/tasks/KT-050/status"
@@ -847,6 +1141,77 @@ Feature: Kanban Board Task Management
     And actualizar el timestamp de "last_modified" en la tabla 'ibpms_kanban_tasks'
     And el payload de respuesta debe retornar el objeto completo serializado `{ "id": "KT-050", "status": "DOING", "version": 2 }`
     And la UI debe propagar el evento vía WebSockets para que la tarea "KT-050" se refleje en la columna "DOING" para los demás miembros del equipo conectadas al tablero
+
+  Scenario: Trazabilidad Cualitativa del Bloqueador (CA-1)
+    Given una tarjeta en progreso dentro del Kanban
+    When el desarrollador la arrastra a la columna "Blocked" (Impedimento)
+    Then la interfaz levanta obligatoriamente un Modal exigiendo el Motivo del Bloqueo
+    And el SLA (reloj de entrega) de la tarea NO se congela, continuando su conteo natural para mantener la fidelidad de la métrica operativa.
+
+  Scenario: Inmutabilidad de Formularios en Completitud (CA-2)
+    Given una tarjeta que acaba de aterrizar en la columna "DONE" habiendo validado el formulario
+    When el usuario intenta modificar las variables o el formulario histórico
+    Then el sistema renderiza la data en modo "Solo Lectura" absoluto
+    And rechaza cualquier POST de actualización en el Backend para evitar alteraciones a la historia forense del negocio.
+
+  Scenario: Independencia del Timer (Esfuerzo Humano) vs Reloj SLA (CA-3)
+    Given una tarjeta Kanban que posee un reloj SLA global (Tiempo Total de Entrega) corriendo en contra desde su creación
+    When el operario necesita registrar sus "Horas Sudadas" (Esfuerzo neto / Billable Hours)
+    Then la interfaz provee un módulo de "Time-Tracking" manual (Digitación acumulativa o botón [Start/Stop Timer]) totalmente independiente del SLA
+    And la disponibilidad de este Timer es gobernada rígidamente por la Columna en la que resida la tarjeta:
+    And - En [TODO]: El Timer está oculto y bloqueado (No se puede trabajar sin arrastrarla).
+    And - En [DOING]: El Timer está habilitado para Play/Stop a voluntad cuantas veces requiera.
+    And - En [BLOCKED]: El Timer sigue disponible (Garantizando el cobro del tiempo usado para "des-bloquear" la tarea).
+    And - En [DONE]: El Timer se bloquea y apaga definitivamente, sellando la sumatoria histórica.
+
+  Scenario: Anti-Multitasking de Propiedad (Single-Assignee) (CA-4)
+    Given el despliegue de las tarjetas Kanban extraídas de la Plantilla WBS
+    When la Tribu o el Líder intentan asignar una tarjeta a dos personas para trabajo conjunto
+    Then el motor restringe de raíz la operación, imponiendo una política estricta de 1:1 (Un Solo Dueño por Tarjeta)
+    And garantizando así que no haya dilución de responsabilidad del SLA.
+
+  Scenario: [Arquitectura] Prohibición de Motor CMMN y Reglas de Instanciación Ágil
+    Given un Scrum Master instanciando un Proyecto derivado de la Plantilla Tipificada "Agile Sprint" (US-006)
+    When la plataforma de iBPMS inyecte las tarjetas de tareas ("To Do") en el Motor Transaccional
+    Then el Backend prohíbe la creación de diagramas rígidos `.cmmn` 
+    And persiste la anatomía transaccional de cada tarea "Ágil" como meros registros de Base de Datos Relacional (`Entities`) enlazados a su Proyecto instanciado, usando el poder crudo de Spring Data JPA.
+
+  Scenario: [Arquitectura] Máquina de Estados Pura (State Machine) frente al Salto Anárquico 
+    Given la volatilidad de un Tablero Kanban donde un desarrollador arrastra constantemente su tarjeta ("In Progress" -> "Blocked" -> "In Progress" -> "Done" -> "QA Rejected")
+    Then garantizamos una experiencia de usuario sub-segundo sin overhead BPMN
+    And el iBPMS procesa estas mutaciones de estado en la Entidad (JPA) a través de una API REST ultra veloz (Ej: `PATCH /api/v1/proyectos/{pid}/kanban/{tid}/state`) y registra todas las transiciones como eventos inmutables en la Tabla de Auditoría general de la plataforma transversal.
+
+  Scenario: [Arquitectura] Event-Driven hacia Modelos Estructurados (Salto Híbrido)
+    Given una travesía asíncrona Ágil (La tarea Kanban está en estado "In Progress" o "QA Approval")
+    When el negocio requiere para darla por `Done` ejecutar una Macro-Aprobación Estructurada, Secuencial y Gerencial
+    Then la mutación del Estado Kanban invoca asíncronamente un "Process Instantiation" aislado del Workflow estructurado (BPMN normal)
+    And cuando el flujo clásico de Camunda termine, este orquestador emitirá un evento publicándolo de regreso al componente Ágil marcando la casilla original del Tablero como Finalizada o Aprobada, conectando lo impredecible con lo burocrático de forma pura.
+
+  Scenario: Gobernanza de Estados y Columnas Dinámicas (Opción B)
+    Given la necesidad operativa de adaptar el flujo Kanban añadiendo un nuevo estado al ciclo
+    When el usuario presiona el botón "Añadir Columna" en la Pantalla 3
+    Then el sistema valida que el usuario ostente exclusivamente el Roll de 'Scrum_Master' o 'Lider_Proyecto' en la tabla de miembros
+    And el motor Backend efectúa una validación dura (Hard-Limit) rechazando transacciones que excedan un máximo de 7 columnas por tablero para la Versión 1, previniendo sobrecarga visual.
+
+  Scenario: [Arquitectura] Tabla Polimórfica Única para Consolidación de Esfuerzos (BAM)
+    Given la necesidad corporativa de cruzar costos de horas-hombre transversales en la Pantalla 5
+    When un empleado registre 2 horas en una "Tarea BPMN" y 3 horas en una "Tarjeta Kanban"
+    Then el Backend prohibe guardar dichas horas en las tablas específicas de cada módulo
+    And fuerza al sistema a canalizar el guardado hacia una única tabla polimórfica (`ibpms_time_logs`) 
+    And distinguiéndolas únicamente por la columna `reference_type` (`TASK_BPMN`, `TASK_AGILE`, `TASK_GANTT`), simplificando matemáticamente la reportería financiera.
+
+  Scenario: [Arquitectura] Componente Frontend Agnóstico Universal (`<UniversalSlaTimer>`)
+    Given la disparidad visual entre la Bandeja Workdesk (Pantalla 1), el Tablero Ágil (Pantalla 3) y el Gantt Tradicional (Pantalla 10.B)
+    When el desarrollador deba mostrar el reloj de SLA o el Timer de "Play/Stop"
+    Then el framework del iBPMS le denegará desarrollar HTML/Vue personalizado en cada pantalla
+    And lo obligará a instanciar y re-utilizar el micro-componente atómico transversal `<UniversalSlaTimer>`.
+    And este componente será "Tonto" (Dumb Component), consumiendo APIs centrales de tiempo sin conocer la naturaleza funcional de la tarea que lo aloja.
+
+  Scenario: [Arquitectura] Inmutabilidad de Costos Incurridos (Anti-Manipulación)
+    Given que el empleado ha presionado "Stop" en su temporizador y la plataforma envía el LOG a la base de datos central
+    When el usuario o su jefe intenten editar o borrar ese registro de tiempo (Ej: Modificar de 4 horas a 2 horas)
+    Then la API de Time Tracking denegará el Método DELETE/PUT (Comportamiento *Append-Only*)
+    And el log se convertirá en un asiento financiero inmutable; las correcciones solo podrán hacerse añadiendo asientos contables en negativo mediante un proceso de auditoría superior manual.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 3 (Tableros de Proyecto Kanban).
 
@@ -869,6 +1234,37 @@ Feature: Process Health Analytics
     Then el API Gateway debe emitir un JWT de corta duración (Grafana Auth Proxy) con rol de "Viewer"
     And el iframe debe renderizar correctamente el tablero pasándole variables de entorno `&var-TenantID=T123`
     And el dashboard debe mostrar obligatoriamente un panel de "Tareas Vencidas por SLA" consultando la vista materializada `vw_task_sla_breach`
+
+  Scenario: Aislamiento Estricto de Datos (Multi-Tenancy)
+    Given la arquitectura SaaS multi-cliente de la plataforma iBPMS
+    When el JWT de Grafana es generado por el Backend para renderizar la Pantalla 5
+    Then el token debe inyectar criptográficamente el `Tenant_ID` del usuario activo
+    And la Base de Datos o la consulta subyacente de Grafana debe forzar obligatoriamente el filtrado por este Tenant (Ej. Row-Level Security) previniendo fugas de datos operativos hacia clientes vecinos.
+
+  Scenario: Capacidad de Perforación Interactiva (Drill-Down UI)
+    Given el Dashboard visual en la Pantalla 5 que muestra una alerta de "15 Tareas Bloqueadas"
+    When el gerente hace clic sobre el segmento de la gráfica circular
+    Then el sistema debe interceptar el evento de anclaje de Grafana
+    And redireccionar la UI del iBPMS automáticamente a la Bandeja de Trabajo (Pantalla 1) o Hub Ágil (Pantalla 10)
+    And pre-filtrar la vista exacta con las 15 tarjetas implicadas para tomar acción inmediata.
+
+  Scenario: Segregación de Roles para Monitoreo Activo (RBAC)
+    Given un empleado raso con rol "Analista" o "Ejecutor" intentando acceder a URL de reportes macro
+    When navegue hacia la Pantalla 5 (BAM)
+    Then el Frontend interceptará la ruta y mostrará un mensaje de "Acceso Denegado"
+    And el Backend rechazará la generación del Token de Grafana, reservando esta vista exclusivamente para jerarquías directivas (Ej. `Gerente_Operaciones`, `Scrum_Master`).
+
+  Scenario: Frecuencia de Refresco Asíncrona (Protección Transaccional)
+    Given el inmenso volumen de eventos emitidos en tiempo real por el motor Camunda
+    When Grafana ejecute los queries analíticos pesados para renderizar la Pantalla 5
+    Then NO atacará directamente la base de datos transaccional caliente (Master DB)
+    And leerá de una Base de Datos Analítica o Réplica (Ej. Elasticsearch o DataWarehouse) alimentada por un CronJob/CDC que se actualiza estrictamente cada 10 minutos para proteger la estabilidad del servicio en vivo.
+
+  Scenario: Autoservicio de BI Analítico (Grafana Editor Nativo)
+    Given que los tableros pre-cargados (Vencimientos, Costos, Ciclos) no cubren una métrica atípica solicitada por un cliente
+    When el gerente seleccione la opción "BAM Avanzado" en la Pantalla 5
+    Then el iBPMS cargará la Interfaz Nivel Editor Nativa de Grafana embebida
+    And otorgará permisos formales de "Editor" al usuario, permitiéndole arrastrar bloques, cambiar colores de tortas y personalizar sus propias métricas ad-hoc limitadas a su Tenant_ID.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 5 (Dashboards y Panel de Control - BAM).
 
@@ -893,6 +1289,37 @@ Feature: Legal PDF Generation from Template
     Then el motor Documental (FOP/PDFBox) debe resolver el mapeo inyectando el árbol `json_variables` de la instancia "PI-888" en las etiquetas `<<key>>` de la plantilla
     And el sistema debe registrar el checksum SHA-256 del archivo generado en `ibpms_audit_log` para inmutabilidad legal
     And el sistema retorna HTTP STATUS 200 OK con un link "Signed URL" (AWS S3 Presigned o Azure Blob SAS) expirable en 15 minutos para la descarga del archivo `Contrato_Laboral_V3_PI-888.pdf`
+
+  Scenario: Tolerancia a Fallos por Variables Ausentes (Missing Keys)
+    Given una plantilla `.docx` que incluye la etiqueta `<<segundo_apellido>>` obligatoria en su sintaxis
+    When el motor documental (FOP) sea invocado y la variable no exista o sea NULA en el payload enviado por Camunda
+    Then el motor NO debe abortar la transacción (Evitando HTTP 400 y rotura de flujos de negocio)
+    And debe sobrellevar la carencia inyectando automáticamente la frase "N/A" o un espacio en blanco seguro en el documento final.
+
+  Scenario: Expansión Dinámica de Tablas y Vectores (Bucles)
+    Given que el JSON de entrada contiene un Array de objetos (Ej: Lista de 5 productos comprados)
+    When la plantilla documental contenga sentencias iterativas de tipo `#foreach` en filas de una tabla de Word
+    Then el motor SGDEA clonará la fila tantas veces como elementos existan en el array inyectando sus respectivas propiedades, posibilitando documentos hiper-dinámicos de longitud variable en la V1.
+
+  Scenario: Gobernanza de Persistencia (Almacenamiento Perenne vs Vuelo Efímero)
+    Given la invocación del servicio REST `/api/v1/documents/generate`
+    When el proceso o usuario llamador configure explícitamente el flag `storageMode`
+    Then el Back-End acatará rígidamente la directriz:
+    And Si es `EPHEMERAL`: El documento se renderiza, se entrega el base64/link de 15min y se destruye físicamente de RAM/Disco.
+    And Si es `PERSISTENT`: El PDF se consolida inmutablemente en el Storage (S3/Azure) amarrado al UID del Expediente, garantizando trazabilidad y registro perpetuo exigible por Ley.
+
+  Scenario: Acorazado Forense y Firma Digital del Documento Físico
+    Given la configuración de una plantilla de Alto Riesgo Legal
+    When el motor finaliza el ensamblado del PDF final
+    Then NO se limitará a guardar el Hash SHA-256 en la base de datos (ibpms_audit_log)
+    And incrustará en paralelo un "Certificado Criptográfico PKI" estructural dentro del mismo archivo PDF
+    And y estampará visualmente en los márgenes de las páginas un Código QR (o Sello de Agua Legal) verificable externamente, asegurando la no-repulsa de autoría.
+
+  Scenario: Versión Retroactiva Activa en Auditorías Históricas
+    Given un Cliente instanciado hace 2 años cuando regía el "Contrato Laboral V1"
+    When un auditor re-visite en Pantalla 12 dicho caso y el sistema requiera re-descargar o consultar su contrato
+    Then el motor SGDEA buscará y ensamblará el PDF contra la plantilla V1 almacenada en el repositorio histórico (Time-Travel Rendering)
+    And prohibirá rotundamente la utilización de la plantilla "V4" actual para casos pasados, protegiendo las cláusulas vigentes al momento de la firma original.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 12 (Bóveda Documental y Generación).
 
@@ -922,6 +1349,35 @@ Feature: Advanced Relational Inbox Filtering
     Given la bandeja contiene ítems marcados por la IA con el boolean flag 'is_acknowledgment_sent: true'
     When el usuario marca el checkbox "Actividad: Acuse Enviado"
     Then el sistema debe ocultar todos los correos donde 'is_acknowledgment_sent: false' o nulo
+
+  Scenario: Triage por Sentimiento y Urgencia (Predicción IA)
+    Given la metadata enriquecida del correo proveniente de la US-013 (Ej: `sentiment: URGENCE_HIGH`)
+    When el analista de SAC filtra la bandeja usando el dropdown "Urgencia y Sentimiento"
+    Then el sistema filtra reestructurando la grilla para mostrar primero los correos que contengan quejas operativas o riesgos legales altos
+    And garantizando un enfoque de First-In/First-Out ajustado por criticidad (Weighted FIFO).
+
+  Scenario: Detección de Archivos y Tipificación Estructural
+    Given que el correo contiene múltiples archivos adjuntos
+    When el analista filtra por el concepto "Contiene: Contratos Firmados"
+    Then el filtro de la Pantalla 1B obvia la extensión pura del archivo (.pdf)
+    And cruza la búsqueda contra el tag de clasificación documental `doc_type` generado por la IA, retornando solo los correos cuyo contenido semántico coincida.
+
+  Scenario: Monitoreo Activo de Acuerdos de Nivel de Servicio (SLA)
+    Given los correos entrantes mapeados contra una política de respuesta máxima de 24 horas (SLA)
+    When el analista de SAC aplica el filtro rápido de semáforo "Mostrar: SLA por Vencer (< 2 horas)"
+    Then el sistema expone exclusivamente los correos que están a punto de romper el requerimiento legal de tiempo operativo, ocultando correos recientes de ingreso temprano.
+
+  Scenario: Búsqueda Semántica de Texto Completo (Full-Text Search)
+    Given un analista buscando la aguja en el pajar con la palabra "Indemnización"
+    When digite dicha palabra en la barra de búsqueda global de la Pantalla 1B
+    Then el motor de Backend (Elasticsearch o similar) NO buscará solo en el Asunto
+    And indexará la búsqueda contra el cuerpo del correo, y el texto interior de los anexos (OCR) entregando el correo exacto donde reside dicho patrón.
+
+  Scenario: Control de Concurrencia SAC y Bloqueo de Correos
+    Given un buzón compartido accedido por 5 analistas de SAC simultáneamente
+    When el Analista "A" da clic para leer un nuevo "Correo Huérfano"
+    Then el sistema inscribe un Soft-Lock en la Base de Datos asociando ese correo al `User_ID` del Analista "A"
+    And cuando el Analista "B" filtre la bandeja en la vista "Mis Correos Asignados", no verá el correo del "A", evitando que dos humanos gestionen el mismo ticket y generen respuestas duplicadas.
 ```
 **Trazabilidad UX:** Prototipo UI2.html / Pantalla 1B.
 
@@ -935,14 +1391,50 @@ Feature: Advanced Relational Inbox Filtering
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Generación de Borradores de Respuesta Interactivos
-  Scenario: Sistema genera borrador bilingüe esperando revisión humana
-    Given un correo electrónico entrante recibido en el buzón corporativo
-    When la IA analiza el contexto y detecta el idioma (Ej: ES o EN)
-    Then el sistema debe generar al menos 1 borrador de respuesta en el mismo idioma detectado
-    And presentar el borrador en la interfaz bloqueando el envío automático
-    And permitir al usuario "Aprobar", "Editar" o "Rechazar" el borrador
-    And el sistema no debe enviar el correo hasta que el usuario ejecute una acción afirmativa
-    And el sistema debe conservar un identificador de trazabilidad (conversation_id)
+  Scenario: Doble Borrador (Acuse Inmediato y Respuesta de Fondo)
+    Given la entrada de un correo electrónico al buzón de SAC
+    When el agente IA procesa el contenido exitosamente
+    Then debe generar y presentar dos borradores independientes en la Pantalla 2C:
+    And 1. "Acuse de Recibo": Respuesta corta confirmando radicación.
+    And 2. "Respuesta de Fondo": Borrador técnico para solucionar la petición.
+    And cada borrador tiene un ciclo de vida UI independiente, permitiendo enviar el Acuse hoy y gestionar el Fondo mañana.
+
+  Scenario: Prevención de Alucinaciones en Variables Críticas de Negocio
+    Given la generación del "Borrador de Fondo" por parte del LLM
+    When el motor de IA detecte la necesidad de comprometer fechas, montos económicos o nombres de responsables
+    Then tiene estrictamente PROHIBIDO pre-llenar estos datos asumiéndolos del contexto
+    And el texto generado inyectará placeholders visuales (Ej: `[INGRESAR_MONTO]`)
+    And el Frontend inhabilitará el botón "Aprobar y Enviar" hasta que el analista reemplace manualmente dichos condicionales.
+
+  Scenario: Restricción Bilingüe (Solo EN/ES)
+    Given la recepción de un correo en un idioma diferente a Español o Inglés (Ej. Alemán)
+    When el sistema detecte el idioma origen
+    Then traducirá y mostrará el correo original en Español al analista para su comprensión (Panel Izquierdo)
+    And se ABSTENDRÁ de generar un borrador automático de respuesta en Alemán, mostrando una alerta de "Idioma no soportado para auto-redacción", obligando al humano a escribir la respuesta.
+
+  Scenario: Confianza en la Intervención y Tono Humano
+    Given que el analista decide modificar sustancialmente el borrador de fondo propuesto por la IA
+    When el usuario presione el botón "Guardar Edición y Enviar"
+    Then el sistema confía íntegramente en el criterio del humano y ejecuta el envío sin re-validaciones (Override Total)
+    And el texto final enviado entra al bucle de aprendizaje MLOps (US-015) para alinear futuras propuestas a ese nuevo tono.
+
+  Scenario: Contexto Acotado del Historial (Sliding Window Context)
+    Given un correo que pertenece a un hilo monumental de 60 correos previos
+    When el backend ensamble el "Prompt" para solicitar el borrador de respuesta a la IA
+    Then inyectará únicamente los 5 correos más recientes de la cadena cronológica
+    And truncará el resto para eficientar el consumo de Tokens y evitar degradación de contexto del LLM.
+
+  Scenario: Inyección Dinámica de Disculpas Institucionales (Tone-Matching)
+    Given el análisis de metadata del correo (US-013) que arroja un 'sentiment_score' de Rabia Extrema o Amenaza Legal
+    When el Agente IA redacte el "Borrador de Fondo"
+    Then el System Prompt obligará al modelo a omitir frases comerciales genéricas o "happy-talk"
+    And forzará la inserción de una Disculpa Institucional formal y empática al inicio del texto para desescalar el conflicto.
+
+  Scenario: Ceguera Transaccional (Prohibición de Promesas)
+    Given la redacción de la respuesta de fondo por parte del LLM en la V1
+    When el LLM analice el requerimiento del cliente (Ej: "¿Mi póliza cubre este choque?")
+    Then el motor tiene explícitamente PROHIBIDO afirmar, negar o garantizar estados transaccionales o coberturas que vivan en BD externas (Ej: "Sí lo cubrimos")
+    And el borrador se limitará perentoriamente a indicar que "El caso se encuentra en revisión" y a solicitar información, formatos o documentos adicionales si hacen falta.
 ```
 **Trazabilidad UX:** Prototipos UI1.html y UI4.html / Pantalla 2C.
 
@@ -966,32 +1458,83 @@ Feature: Enriquecimiento CRM de Hilos de Correo
     Given un correo entrante donde el dominio no existe en CRM ONS
     Then el sistema marca el correo visualmente como "Cliente no identificado"
     And sugiere una tarjeta atómica para solicitar datos o registrar al cliente nuevo en CRM
+
+  Scenario: Extracción Masiva de Metadata Operativa (Preparación para Docketing)
+    Given un correo electrónico entrante en crudo
+    When el Motor LLM evalúe su contenido para hallar al Cliente CRM
+    Then PARALELAMENTE DEBE emitir un objeto JSON estandarizado conteniendo metadatos críticos de negocio:
+    And 1. `sentiment_score`: Evaluación de frustración o amenaza legal.
+    And 2. `predicted_service`: El Proyecto SD al que pre-asume pertenece la solicitud.
+    And 3. `attachments_classification`: Un arreglo donde cataloga (Ej. "Es un contrato", "Es un comprobante") el tipo de archivo recibido sin requerir apertura humana.
+    And esta metadata debe persistirse en 'ibpms_metadata_index' para viabilizar los filtros de la US-011.
+
+  Scenario: Fallback a Metadata Interna (Sin CRM)
+    Given la configuración global administrada donde el flag `ENABLE_CRM_INTEGRATION` está apagado o la API del CRM no responde
+    When el sistema intente asociar el correo a un Cliente o Proyecto
+    Then el motor de Backend buscará coincidencias de cruce en el `ibpms_service_delivery_catalog` interno
+    And relacionará el correo con proyectos o instancias previas de Camunda que compartan el mismo dominio, garantizando continuidad operativa en la US-011 sin depender de bases de datos externas.
+
+  Scenario: Enrutado Semántico para Dominios Multi-Proyecto
+    Given un dominio corporativo (Ej. `@amazon.com`) que posee múltiples proyectos/servicios activos en el iBPMS simultáneamente
+    When el Agente IA lea el correo entrante
+    Then el sistema NO etiquetará estúpidamente el correo con todos los proyectos a la vez
+    And el LLM estará obligado a cruzar el texto del cuerpo del mensaje contra las descripciones de los proyectos activos, seleccionando matemáticamente el `predicted_service` más coherente para el analista.
+
+  Scenario: Lista Negra de Dominios Públicos (Blacklist)
+    Given la recepción de un correo proveniente de un proveedor público masivo (Ej. `@gmail.com`, `@outlook.com`, `@yahoo.es`)
+    When el sistema intente ejecutar el motor de "Match por Dominio"
+    Then el backend interceptará la ejecución cotejando el dominio contra la tabla `ibpms_public_domains_blacklist`
+    And anulará la vinculación por dominio para evitar colisiones masivas de privacidad cruzada entre clientes distintos
+    And forzará al Motor IA a buscar identificadores únicos (Cédulas, RUT, Teléfonos, Nombres Completos, Números de Factura) EXCLUSIVAMENTE dentro del cuerpo del mensaje o firmas para establecer el Match.
 ```
+**Trazabilidad UX:** Wireframes Pantalla 1B (Bandeja Docketing).
 
 ---
 
-### US-014: Sugerencia de acciones (tareas) sin ejecución automática
+### US-014: Sugerencia de acciones (tareas) operativas
 **Como** gestor de un buzón corporativo
-**Quiero** que el asistente sugiera acciones asociadas al correo (crear tarea, asignar responsable, solicitar info)
-**Para** acelerar el flujo de trabajo sin perder control.
+**Quiero** que el asistente sugiera acciones operativas (crear tarea, iniciar proceso) asociadas al correo
+**Para** acelerar el flujo de trabajo funcional sin perder el control manual.
+
+> 🧠 **Sinergia Arquitectónica (Ecosistema Inteligente):**
+> Esta historia es el "Sistema Nervioso Central" operativa del buzón y orquesta estrechamente con el siguiente ecosistema:
+>
+> 📌 **Ecosistema Intake (BPMN / SD):**
+> - **Embudo de Cuarentena (US-040):** Si la intención detectada implica arrancar un "Nuevo Proceso SD", la US-014 somete obligatoriamente esta Acción sugerida a la Bandeja de Aprobación de Intakes (Pantalla 16) para que un Líder la despache.
+> - **Confirmación Formal 'Plan A' (US-022):** Si la Acción del Embudo (US-040) se aprueba, la US-022 asume el control enviando un correo de confirmación formal al cliente y consolidando el nacimiento del Flujo en Camunda.
+> - **Escape Manual 'Plan B' (US-024):** Si la IA detrás de la US-014 falla absolutamente y no sugiere ninguna Action Card útil, el subsistema recae grácilmente sobre la US-024, permitiendo al Administrador crear el Proceso a mano.
+>
+> 📌 **Ecosistema de Pre-Procesamiento y Retorno:**
+> - **Entrada de Datos (US-013):** Consume la Metadata pre-calculada (`predicted_service`, `sentiment`). La US-014 es "ciega" sin la US-013.
+> - **Presentación UI (US-011):** Dibuja las "Action Cards" nativamente dentro de la Bandeja Docketing pública de SAC y etiqueta los correos procesados.
+> - **Enrutamiento Atómico (US-030/US-008):** Si la intención detectada es de baja complejidad (Petición simple), inicializa una tarjeta Kanban directamente en el proyecto, saltándose Camunda.
+> - **Workdesk (US-001) y RBAC (US-036):** Despacha la tarea validada al escritorio personal del analista, respetando la estricta matriz de roles y permisos del proyecto.
+> - **Retroalimentación MLOps (US-015):** Si el operador de la US-011 edita o rechaza manualmente a la inteligencia en sus sugerencias, ese evento viaja a la base de datos de entrenamiento continuo del modelo.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Sugerencia de Acciones Atómicas (Human-in-the-Loop)
-  Scenario: Presentación y ejecución de acciones sugeridas
-    Given un análisis de correo completado
-    Then el sistema configura y genera una lista de N acciones sugeridas
-    And cada acción exhibe: tipo, descripción, responsable sugerido, prioridad y fecha
-    And el usuario puede explícitamente "Aprobar" o "Rechazar" cada tarjeta individual
-    And si el usuario aprueba "Crear Tarea", el sistema llama la API interna confirmando el task_id
-    And si el usuario no aprueba explícitamente, no se ejecuta ninguna alteración en el sistema interno
-    
-  Scenario: Detección y Enmascaramiento PII (Seguridad)
-    Given la entrada de un correo electrónico crudo en el buzón (Pantalla 1B)
-    When la IA analiza el cuerpo del mensaje antes de persistirlo para su paso al Embudo Admin (Pantalla 16)
-    Then la IA debe identificar patrones PII (Tarjetas de Crédito, SSN, Datos Médicos) y enmascararlos (`[CONFIDENCIAL]`)
-    And el payload enmascarado será la única versión transferida al Plan A para salvaguardar la privacidad.
+Feature: Action Cards Operativas y Orquestación Funcional (Human-in-the-Loop)
+  Scenario: Bifurcación Sensible al Contexto (Nueva Tarea vs Nuevo Proceso)
+    Given la generación de sugerencias operativas (Action Cards) basadas en metadatos
+    When la Inteligencia Artificial evalúe la intención transaccional del correo
+    Then si este pertenece a un proyecto existente, sugerirá crear una "Nueva Tarea" ligada a ese Proceso/Sprint Kanban
+    And si es una petición huérfana (nuevo requerimiento), sugerirá instanciar un "Nuevo Proceso SD", enviando esta tarjeta de creación forzosamente hacia el Embudo Administrativo (US-040).
+
+  Scenario: Edición Activa de la Tarjeta (Human-in-the-Loop Feedback)
+    Given la presentación visual de una Action Card latente en la Pantalla 1B
+    When el Analista (humano) decida repriorizar o reasignar los datos sugeridos por la máquina antes de aprobar (Ej: Cambiar Urgencia "Media" a "Alta")
+    Then el Frontend habilitará la edición libre e in-situ del payload sugerido
+    And el sistema creará la entidad resultante con los datos humanos (sobreescribiendo los algorítmicos)
+    And transmitirá la rectificación al motor de telemetría MLOps subyacente (US-015) para curar los pesos de inferencia futuros.
+
+  Scenario: Trazabilidad Permanente del Correo Original (Inbox Behavior)
+    Given la aprobación formal de la Action Card (creando la tarea o servicio SD definitivo en el back)
+    When se consolide la mutación externa hacia Camunda o Kanban
+    Then el servidor NO borrará ni desaparecerá forzosamente el correo original de la Bandeja Docketing pública de SAC (Pantalla 1B)
+    And la UI le estampará un badge/etiqueta visual persistente referenciando el `[Status: Actividad Creada]` y el ID destino
+    And un clon/copia del correo original formará obligatoriamente la primera pieza probatoria (Attachment 1) de la hoja de ruta del nuevo caso en el iBPMS.
 ```
+**Trazabilidad UX:** Wireframes Pantalla 1B (Bandeja Docketing) y Pantalla 16 (Intake Administrativo).
 
 ---
 
@@ -1040,6 +1583,7 @@ Feature: Asistente SAC y Triaje con Aprobación Humana Obligatoria
     Then el iBPMS guarda el registro transaccional "Aprobado por: X, Sugerido por: IA" en la base de datos para trazabilidad forense
     And no la proyecta como una "Etiqueta Policial de Auditoría" perturbadora en los informes comerciales diarios.
 ```
+**Trazabilidad UX:** Wireframes Pantalla 1B (Bandeja Docketing).
 
 ---
 
@@ -1057,6 +1601,7 @@ Feature: Configuración de 'Mailbox Policy' Dinámicas
     Then las propuestas generadas por el LLM aplican inmediatamente este contexto en sus prompts
     And los nuevos cambios de política operan sobre el siguiente correo entrante sin requerir 'redeploy' de código
 ```
+**Trazabilidad UX:** Wireframes Pantalla 15 (Configuración de Buzones SAC).
 
 ---
 
@@ -1075,6 +1620,7 @@ Feature: Cuadro de Mando de Desempeño Inteligente (AI Dashboards)
     And configurar comparativas "antes vs después" mediante un 'baseline' histórico
     And visualizar en un panel de control la telemetría de fallos de integración (Graph/CRM)
 ```
+**Trazabilidad UX:** Wireframes Pantalla 5 (Dashboards / BAM).
 
 ---
 
@@ -1102,6 +1648,7 @@ Feature: Conectividad y Resiliencia CRM
     And debe advertir visualmente la "última fecha de actualización"
     And debe permitir iniciar el requerimiento de servicio sin bloquear el Frontend
 ```
+**Trazabilidad UX:** Wireframes Pantalla 0 (Service Catalog).
 
 ---
 
@@ -1119,6 +1666,7 @@ Feature: CRON y Event-Driven Sync
     Then el motor iBPMS refresca la tabla interna o el 'Redis Cache' con el catálogo del CRM
     And registra el resultado del lote (OK/FAIL) en la tabla 'ibpms_audit_log'
 ```
+**Trazabilidad UX:** Tarea Backend (Sin Vista UI requerida).
 
 ---
 
@@ -1165,6 +1713,7 @@ Feature: Intake Controlado Plan A (Email Trigger)
     And el sistema no inicia una instancia BPMN en Camunda
     And el sistema crea una Tarea de Usuario ("Crear Service Delivery") asignada al Líder de SAC o Admin
 ```
+**Trazabilidad UX:** Wireframes Pantalla 2 (Interacciones de Correo) transicionando a Pantalla 16 (Intake).
 
 ---
 
@@ -1182,6 +1731,7 @@ Feature: Threads y Message-ID Tracking
     Then vincula la respuesta al 'correlation id' previo
     And cuando el Admin finalmente ejecuta "Crear Service Delivery", vincula todo ese hilo previo de correos (Pre-SD Context) a la instancia madre del BPMN (SD).
 ```
+**Trazabilidad UX:** Orquestación Backend.
 
 ---
 
@@ -1245,6 +1795,41 @@ Feature: Intake Manual Plan B (Seguridad)
     And si coinciden, lo enruta a la Pantalla 1B para ver el correo íntegro con Anexos descargables
     And si no coinciden, muestra únicamente un 'Summary/Plain Text' en un panel o modal, sin los adjuntos originales.
 ```
+**Trazabilidad UX:** Wireframes Pantalla 16 (Intake Administrativo).
+
+---
+
+### US-040: Embudo Inteligente de Intake (Pre-Triaje y Descarte IA)
+**Como** Administrador / Líder de Service Delivery
+**Quiero** visualizar las Action Cards generadas por IA del Plan A en un formato de embudo de cuarentena
+**Para** decidir si las instancio forzosamente rellenando huecos, si apruebo la intención de la IA (Convirtiéndolos en Service Delivery BPMN) o si los descarto.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Intelligent Intake Funnel Management
+  Scenario: Visualización de Action Card y Triaje
+    Given múltiples correos entrantes procesados por la IA en la Pantalla 1B
+    When el motor genera "Action Cards" marcadas en estado "Pendiente_De_Validacion_Plan_A" (Copias de metadata, No los emails base)
+    Then el Administrador abre la vista de Cuarentena (Embudo)
+    And el sistema muestra las posibles Action Cards listadas con Cliente Sugerido (CRM_ID) y Plantilla sugerida
+    And permite accionar los botones de [Descartar], [Forzar Mapeo Manual] o [Aprobar y Crear Service Delivery].
+
+  Scenario: Completitud Forzosa de Datos Faltantes (Validación Admin)
+    Given que el administrador presiona [Aprobar y Crear Service Delivery]
+    When la IA no logró extraer del correo original un dato obligatorio exigido por el Proceso
+    Then el sistema despliega un Modal bloqueante exigiendo al Administrador diligenciar los campos faltantes obligatoriamente.
+
+  Scenario: Control de Concurrencia Optimista
+    Given dos administradores visualizando el mismo embudo de Action Cards simultáneamente
+    When ambos intentan aprobar la misma tarjeta
+    Then el backend intercepta la segunda petición y devuelve un HTTP 409 Conflict, evitando instanciaciones duplicadas.
+
+  Scenario: Auto-Aprobación MLOps (Feature Toggle Opcional)
+    Given la configuración del sistema global
+    Then el administrador posee una bandera 'Feature Toggle' para encender la "Auto-Instanciación IA"
+    And si está encendido y el modelo supera el 98% de confianza en extracción, la Action Card se aprueba sola saltando el embudo sin intervención.
+```
+**Trazabilidad UX:** Wireframes Pantalla 16 (Intelligent Intake y Embudo Administrativo).
 
 ---
 
@@ -1265,11 +1850,35 @@ Feature: Vistas UX Segregadas por Intención
     Then la interfaz NO le muestra el botón "Crear Servicios"
     And presenta tarjetas agrupadas estrictamente por 'Plantillas', ejemplo: "Auditoría Express — 7 Tareas pendientes en rojo".
 ```
+
+---
+
+### US-041: Vista 360 del Cliente (Consolidación Global Externa)
+**Como** Ejecutivo de Cuenta
+**Quiero** visualizar un perfil consolidado agrupando el progreso de un Cliente Específico
+**Para** saber exactamente el estado en el que se encuentran todos sus requerimientos sin importar en qué proyecto técnico viven (Ágiles o BPMN).
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Consolidación Transversal de Requerimientos y Workflows
   Scenario: Renderizado de Vista 360 para Cuenta / Cliente
     Given un Ejecutivo de Cuenta navega el perfil de un Cliente Específico en su directorio
-    Then la interfaz agrupa y presenta TODAS las tareas BPMN y Ágiles atadas a ese CRM_ID 
-    And permite resolver la clásica duda del cliente: "¿En qué etapa exacta va mío?"
+    Then la interfaz agrupa y presenta TODAS las instancias de procesos BPMN y proyectos Ágiles que posean el mismo CRM_ID
+    And posee un botón toggle para alternar entre la vista de "Operación Activa" y el "Histórico" (Archivado)
+    And consolida el porcentaje de avance global calculado explícitamente por 'Esfuerzo' en un Gauge semaforizado
+    And permite al ejecutivo forzar un [Inicio Rápido de Instancia] manual ahorrando la asociación del CRM_ID pre-quemado.
+
+  Scenario: Segregación de Comentarios Confidenciales
+    Given procesos técnicos e hilos de chat interno que contienen comentarios entre operarios
+    Then la Vista 360 externa omite tajantemente estos comentarios internos, visualizando únicamente status, transiciones y el 'Front-Facing Metadata'.
+
+  Scenario: Degradación Elegante ante falla parcial (Micro-frontends)
+    Given una caída de comunicación (Timeout API) con The CRM Central
+    When se intenta cargar la vista 360 del Customer Account Rule
+    Then se renderiza la información local cacheada de Camunda parcialmente
+    And muestra un banner claro informando: "Se ha tenido algunos inconvenientes en nuestras fuentes, estamos trabajando en solucionarlo" notificando via sistema al Administrador IT.
 ```
+**Trazabilidad UX:** Wireframes Pantalla 17 (Vista 360 del Cliente).
 
 ---
 
@@ -1663,6 +2272,7 @@ Feature: API Connector Configuration and Resiliency
 
 ---
 
+
 ## ÉPICA 10: Event Driven Architecture & Central Message Broker
 Formaliza la infraestructura de encolamiento transversal del iBPMS asegurando que tareas de alta latencia o llamadas a sistemas masivos (Cognitive RAG, APIs externas) no saturen la base de datos relacional ni el pool de hilos de Camunda.
 
@@ -1691,6 +2301,7 @@ Feature: Central Message Queue Orchestration
     Then RabbitMQ clasifica el tráfico en "Priority Queues" pre-configuradas basándose en metadatos del evento
     And asegura que los procesos de Nivel 1 (Críticos) sean desencolados y procesados antes que las tareas de Nivel 3 (Batch), garantizando el SLA de negocio intacto a pesar del cuello de botella global.
 ```
+**Trazabilidad UX:** Operación Backend e Infraestructura (Dead Letter Queue IT Dashboard).
 
 ---
 
@@ -1721,7 +2332,9 @@ Feature: SharePoint Vault and Single Source of Truth
     Then el módulo documental utiliza un App Registration (Súper Cuenta de Servicios - EntraID) para extraer el PDF del repositorio
     And lo proyecta en la Pantalla 12 evadiendo los bloqueos nativos de SharePoint frente al usuario final.
     # NOTA: Diferido a V2 el "RBAC Cruzado" (User Delegation OAuth2).
-
+```
+**Trazabilidad UX:** Wireframes Pantalla 12 (Bóveda Documental SGDEA Central).
+```gherkin
   Scenario: Marcado Metadato para Tablas de Retención V1 (CA-4)
     Given la necesidad legal de destruir tutelas tras 5 años (TRD)
     Then en la V1, el iBPMS inyecta una Fecha de Expiración como Metadato estructurado directo a la taxonomía de SharePoint
@@ -1871,7 +2484,9 @@ Feature: Identity Governance & RBAC Architecture
     Given un usuario intentando ocultar la columna "Salario" de un formulario en base al rol
     Then la directriz aclara que la Pantalla 14 administra accesos a la "Instancia Completa" (El Formulario entero)
     And delega la responsabilidad técnica de ocultar campos individuales a la algoritmia del Pro-Code Builder (Pantalla 7) durante el diseño del Vue Component.
-
+```
+**Trazabilidad UX:** Wireframes Pantalla 14 (Identity & Role Governance).
+```gherkin
   Scenario: Desacoplamiento de Roles Estáticos vs Dinámicos (BPMN Lanes) (CA-13)
     Given la asignación de trabajo en el motor Camunda
     Then el módulo de Permisos reconoce y respeta dos vías de asignación: 
@@ -1970,3 +2585,195 @@ Feature: Configuración de Orígenes SAC (Mailbox CRUD)
     And si las credenciales fallan, el iBPMS inyecta una alerta en el Log de Auditoría y envía una notificación estructurada a los Administradores advirtiendo la desconexión del SAC.
 ```
 **Trazabilidad UX:** Pantalla 15 (Configuraciones Genéricas / Logs).
+
+---
+
+## ÉPICA 14: Configuraciones Globales de Nivel de Servicio (SLA)
+Permite a la PMO establecer las reglas del juego a nivel corporativo paramétricas (Matriz de días hábiles, umbrales de vencimiento).
+
+### US-043: Configuración Global de Service Level Agreements (SLA)
+**Como** PMO / Administrador Estratégico
+**Quiero** disponer de una pantalla matriz de configuración central
+**Para** que el motor de orquestación y el BAM no cuenten domingos o feriados en horas inhábiles ajustando la métrica a las "Horas reales corporativas".
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Business SLA Matrix Configuration
+  Scenario: Definición Efectiva de Calendario Laboral (Horas Hábiles)
+    Given el administrador accede a la sección de Configuración de SLAs o Matriz de Negocio
+    When se habilitan los Días Hábiles forzosamente basados en Horas (Ej: Lunes a Viernes de 8:00 a 17:00) y opcionalmente un listado de Días Feriados
+    Then el motor de temporizadores (Ticking Engine) debe calcular y pausar el contador de "Due Dates" respetando las horas inactivas y de descanso.
+    And posee un toggle de parametrización para dictaminar si este cambio en la matriz recalculará retroactivamente las instancias actualmente vivas, o solo a las nuevas (hacia adelante).
+
+  Scenario: Automatización de Festivos Externos
+    Given la necesidad corporativa de bloquear días de asueto local
+    Then la matriz integra una API Pública para consumir automáticamente el catálogo de Feriados del país del Tenant
+    And si dicha API falla, hace fallback al calendario manual editado en UI por el PMO.
+    
+  Scenario: Alertas Preventivas de Quiebre de Nivel
+    Given que la línea del tiempo matemática (Ticking) se aproxima al 100%
+    Then el motor SLA envía alertas tempranas garantizando un tiempo buffer para el solucionador (Prevención).
+```
+**Trazabilidad UX:** Wireframes Pantalla 19 (Configuración SLA).
+
+---
+
+## Módulo: Developer Portal & Extensibilidad (Zero-Trust)
+
+### US-042: DevPortal: Generación Segura de API Keys y Extensibilidad
+
+**Como** Arquitecto de Software / Desarrollador Integrador
+**Quiero** acceder a un Portal de Desarrolladores (Pantalla 13) para crear API Keys y registrar Módulos Externos
+**Para** poder construir integraciones y "Súper Apps" externas que interactúen con el iBPMS sin comprometer el Performance ni la Seguridad del Core.
+
+**Contexto de Diseño:**
+El DevPortal habilitará el ecosistema "Componible" (V2-Ready). Dado que intervienen humanos creando integraciones, se requiere blindar la red aplicando límites perimetrales directamente asociados al registro de la llave. La arquitectura **no puede ser vulnerada** bajo ninguna circunstancia, garantizando que el desarrollador humano opere exclusivamente dentro de los carriles definidos por el Arquitecto.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Zero-Trust Developer Portal Security
+  Scenario: Autodestrucción del Secreto (OWASP)
+    Given que el desarrollador requiere un Service Principal (API Key) para su módulo externo
+    When el sistema le revela el "Client Secret" en texto plano
+    Then el sistema otorga un máximo de 3 oportunidades (intentos de visualización/copiado)
+    And al agotar el tercer intento, el secreto se oculta permanentemente y "autodestruye" visualmente, obligando a generar uno nuevo si se perdió.
+
+  Scenario: Aislamiento por Cliente (Row-Level Tenancy)
+    Given un Módulo Externo autenticado
+    When envía peticiones de consulta (GET) o mutación (POST)
+    Then la arquitectura forza a nivel de Base de Datos que SÓLO pueda interactuar con la data y expedientes pertenecientes al Cliente que pagó y autorizó dicho Módulo.
+    And tiene prohibición estructural de realizar Borrados Físicos (DELETE) en instacias Core de clientes.
+
+  Scenario: Ceguera Intencional y Sub-scopes restrictivos
+    Given una API Key generada
+    Then su token JWT debe nacer "capado" con un Sub-Scope limitante (Ej: `App_Read_Only`)
+    And garantizando que el módulo pueda listar o leer tareas para su procesamiento, pero matemáticamente el backend rechace cualquier intento de "Edición" (Ceguera Operativa forzada).
+
+  Scenario: Prevención Anti-DDoS y Radar de Tráfico
+    Given un módulo de terceros volviéndose errático y enviando ráfagas masivas
+    Then el Azure APIM Gateway (o Kong local) activa un "Radar de Control" con Rate-Limiting estructurado
+    And retorna HTTP 429 cortando la comunicación en el perímetro, protegiendo a la Base de Datos y al motor Camunda.
+
+  Scenario: Cuarentena de Nuevos Módulos (Sandbox Inyectado)
+    Given un Módulo Externo recién registrado en el DevPortal
+    Then por defecto nace en estado `Quarantine` apuntando a las bases de datos `Sandbox/Mirror`
+    And no puede interactuar con el entorno productivo real del iBPMS hasta que el Administrador Global certifique su comportamiento.
+
+  Scenario: Revocación por Reporte Humano
+    Given una sospecha de brecha de seguridad en un módulo externo
+    When un administrador humano procesa el reporte y oprime `[Revocar Llave]` en la Pantalla 13
+    Then el Token JWT principal del módulo y todos los de refresco caen de inmediato, generando un proceso de desconexión forzosa del entorno.
+
+  Scenario: Fechas de Caducidad y Alertas Administrativas
+    Given que todas las "Llaves de Sistema" nacen con un Time-to-Live (TTL) finito (Fecha de expiración)
+    Then semanas antes del vencimiento, el sistema dispara automáticamente alertas tempranas hacia el correo del Administrador para su gestión oportuna, advirtiendo del inminente apagón del módulo.
+
+  Scenario: Alertas Activas contra "Curiosidad Maliciosa"
+    Given que el token de un módulo intenta ejecutar un Endpoint o tocar una carpeta / archivo fuera de su Scope pre-aprobado (HTTP 403 Forbidden)
+    Then el iBPMS bloquea la petición
+    And dispara inmediatamente una notificación/alerta en tiempo real al correo del Oficial de Seguridad detallando el intento de intrusión.
+
+  Scenario: Trazabilidad Extrema (La Culpa Compartida)
+    Given un Módulo Externo realizando acciones permitidas (Ej. Aprobando un caso)
+    Then el Audit Ledger del sistema guarda el log asociando el autor indudablemente a `[App_De_Tercero: CRM_Bot]`, proveyendo evidencia legal irrefutable de que fue la máquina del proveedor quien manipuló los datos y no un humano de nuestra plantilla.
+
+  Scenario: Sandboxing Frontend (Aislamiento de Módulos Custom)
+    Given que el equipo ha desarrollado un "Súper Módulo" con una UI exótica en React o Angular
+    When este módulo se despliega dentro del ecosistema iBPMS (V1)
+    Then el iBPMS cargará dicha UI de forma dinámica utilizando Iframes aislados (`sandbox`)
+    And cualquier comunicación dinámica entre el Core (Vue 3) y el Iframe externo se realizará de manera controlada usando `window.postMessage()`, garantizando cero colisiones en el DOM, CSS Global o memoria (Pinia).
+
+  Scenario: Tokens OIDC con Audiencia Específica (Extensibility Scope)
+    Given un "Súper Módulo" registrado en el DevPortal
+    When el Módulo obtiene sus credenciales OIDC contra Entra ID
+    Then el JWT generado poseerá internamente Claims distintivos de extensión (Ej: `aud: ibpms.extensibility.supermodules`)
+    And el SecurityFilterChain (Spring Boot) del Core leerá esta audiencia y bifurcará explícitamente los permisos, denegando el acceso a APIs puras de administrador humano.
+
+  Scenario: Obediencia al Hexágono y Prohibición de Bypass JPA
+    Given un Agente de Desarrollo o Humano codificando el Backend funcional de un "Súper Módulo"
+    When intente persistir un nuevo dato asociado al caso o leer una variables
+    Then la arquitectura le prohíbe técnicamente usar Interfaces `JpaRepository` o conectarse por JDBC a la instancia maestra de MySQL del Core
+    And está obligado orgánicamente a instanciar un WebClient/RestTemplate para consumir los "Driving Adapters" (APIs REST Transaccionales en `/api/v1/`) como si fuera un sistema completamente alienígena de internet (Arquitectura Hexagonal Estricta).
+```
+**Trazabilidad UX:** Pantalla 13 (DevPortal).
+
+---
+
+## ÉPICA 15: Parametrización Global y Límites del Sistema (Settings)
+*(MUST HAVE)* - El "Cockpit" centralizado para Súper Administradores, donde se gobiernan los umbrales cognitivos, interruptores y caducidades arquitectónicas de todo el iBPMS en tiempo de ejecución, sin necesidad de despliegues de código o edición en la base de datos directa.
+
+### US-044: Gobernanza de Inteligencia Artificial (AI Limits)
+**Como** Súper Administrador
+**Quiero** una pestaña de configuraciones dedicada al Motor Cognitivo
+**Para** decidir empíricamente el grado de libertad, permisividad y "Tolerance Score" que se le otorga a los LLMs antes de declarar ineficacia.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Centro de Gobernanza IA (Threshold Configurator)
+  Scenario: Ajuste de Confianza Cognitiva y Declaración de Incompetencia (US-015)
+    Given la pestaña "AI & ML Settings" en el panel de administrador
+    When se carga el widget de "Tolerance Thresholds"
+    Then el Administrador puede ingresar matemáticamente (0-100) el `Minimum Confidence Score`
+    And cualquier inferencia heurística del buzón (US-011) que no supere dicho puntaje exacto, se considerará "Anómala" e invocará el `[Fallback Humano]` obligatorio sin adivinar resultados.
+
+  Scenario: Feature Toggle del "Auto-Pilot" de Embudos (US-040)
+    Given el panel de administración
+    Then debe existir un Master Switch de `[Permitir Instanciación Autónoma AI (Zero-Touch)]`
+    And si este interruptor está apagado, por más que la IA tenga 100% de certeza, todas las Action Cards se retendrán forzosamente en el Embudo de la Pantalla 16. Mantenimiento del Principio "Human-in-the-Loop Override".
+
+  Scenario: Lista Negra Corporativa Anti-Adivinación (US-013)
+    Given la necesidad de prevenir emparejamientos indeseados (Ej: `@gmail.com`)
+    Then la interfaz exhibe un componente de tipo "Chip Input"
+    And permite al administrador agregar, listar y eliminar cadenas de dominios públicos bajo la directriz "Ignorar Match por Dominio". Al inyectarlos, se escriben asíncronamente en la BD (`ibpms_public_domains_blacklist`).
+```
+**Trazabilidad UX:** Nueva pestaña en Pantalla 15 (Configuración General).
+
+---
+
+### US-045: Restricciones de Dominio Ágil y Documental (System Limits)
+**Como** PMO / Arquitecto del Sistema
+**Quiero** configurar techos duros (Hard Limits) numéricos a las funcionalidades operativas
+**Para** evitar la degradación de Base de Datos y prevenir malas prácticas gerenciales (como Tableros Ágiles infinitos).
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Governing Agile Entropy and Storage Economics
+  Scenario: Barrera de Densidad Kanban (US-008)
+    Given la configuración de Restricciones UI
+    Then el Administrador debe disponer de un control numérico `Kanban_Max_Columns`
+    And no permitirá exceder el número pactado (Ej: 7) para evitar tableros ágiles inmanejables a nivel de scroll horizontal y UX. Cualquier intento de un Scrum Master para añadir una columna #8 fallará.
+    
+  Scenario: Ventana de Gracia Transaccional (Deshacer Intakes - US-024)
+    Given la necesidad de proteger la creación humana accidental
+    Then el panel expone un selector numérico en Segundos `[Creation_Grace_Period_Secs]`
+    And dictamina universalmente cuánto tiempo dura vivo el Toast de "Deshacer" en todas las creaciones atómicas antes de que el Backend haga un COMMIT real a la base de datos transaccional en Camunda.
+
+  Scenario: Gobernanza Económica de Ligas SGDEA Efímeras (US-010)
+    Given la generación de PDFs Legales de alto costo que el cliente final puede consultar mediante una S3 URL Pre-Firmada
+    When el usuario la comparta con los clientes para validación temporal ("Review Mode")
+    Then el Administrador controla el `[Pre_Signed_URL_TTL_Hours]` dictando globalmente en el sistema la caducidad (TTL) de todos los links transaccionales generados (Volar el acceso al archivo tras 12 o 24 horas por seguridad).
+```
+**Trazabilidad UX:** Nueva pestaña en Pantalla 15 (Restricciones Arquitectónicas).
+
+---
+
+### US-046: Gobernanza de Rendimiento e Integraciones (Data & Perf)
+**Como** Analista de Infraestructura (SysAdmin)
+**Quiero** manipular el comportamiento de lectura/escritura y polling del iBPMS
+**Para** evitar saturar la red y proteger a las bases de datos de colapsos DWH.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: API Polling & Telemetry Thresholds
+  Scenario: Master Switch del CRM ONS (US-013/019 Fallback Toggle)
+    Given una caída nacional o intermitencia catastrófica en el CRM Externo de la empresa
+    When el Administrador entra al Panel de Integraciones (Connections Dashboard)
+    Then debe tener acceso directo a apagar el master switch `[Integración Continua CRM: OFF]`
+    And al hacer esto, ordena inmediatamente al motor IBPM a refugiarse en la Metadata Interna local (Service Delivery Local Catalog) mitigando el error 500 y permitiendo facturar a pesar del CRM caído.
+
+  Scenario: Cadencia de Polling de Dashboards (Anti-DDoS Interno - US-009)
+    Given cientos de líderes de negocio con el "BAM Dashboard" abierto simultáneamente
+    Then para evitar que las pantallas colapsen las réplicas de la Base de Datos con peticiones asíncronas
+    And el Administrador manipula el `[BAM_Refresh_Rate_Ticks]` dictando cada cuántos minutos (Globalmente) el Frontend pedirá repintar gráficas a la BD, anulando comandos de refresco interactivos.
+```
+**Trazabilidad UX:** Nueva pestaña en Pantalla 15 (Performance y Conexiones).

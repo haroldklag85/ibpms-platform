@@ -1,0 +1,58 @@
+spring:
+  config:
+    activate:
+      on-profile: uat
+
+  # Configuración de Base de Datos H2 en Memoria (Sustituye a MySQL/PostgreSQL Local)
+  datasource:
+    url: jdbc:h2:mem:ibpmsdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+
+  # Inicialización de Esquemas
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update # Crea tablas automáticamente basándose en las entidades JPA
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Consola H2 para inspección manual (Opcional, útil para debugear)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        trace: false
+        web-allow-others: false
+
+# Camunda Configuration para sobrevivir en un entorno efímero
+camunda:
+  bpm:
+    database:
+      type: h2
+      schema-update: true
+    generic-properties:
+      properties:
+        history: audit
+
+# Deshabilitar brokers si no están montados localmente (RabbitMQ, Redis) para evitar cuelgues al iniciar
+  redis:
+    repositories:
+      enabled: false
+
+# Configuraciones Dummy de Seguridad JWT para dev/uat
+ibpms:
+  security:
+    jwt:
+      secret: "UAT_SUPER_SECRET_KEY_THAT_IS_VERY_LONG_AND_SECURE_982374982374892374"
+      expiration-ms: 86400000
+
+logging:
+  level:
+    com.ibpms: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG

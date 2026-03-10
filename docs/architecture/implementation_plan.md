@@ -24,17 +24,35 @@ Para asegurar un primer producto funcional costo-efectivo (V1) que apalanque la 
 
 ```mermaid
 graph TD
-    User((Usuario)) --> WAF[WAF / App Gateway]
-    WAF --> APIM[Azure APIM Gateway]
+    %% EXTERNAL ENTITIES
+    User((Usuario / PM))
+    O365[Office 365 / Webhooks]
     
-    subgraph VNet QA/Prod
-        APIM -->|REST v1| FE[Frontend VM: Vue 3 + Vite]
-        FE --> APIM
-        APIM -->|REST v1| BE[Backend VM: Spring Boot 3 + Motor]
-        BE --> DB[(MySQL VM)]
+    %% SECURITY PERIMETER
+    subgraph Perimeter [Escudo de Seguridad Azure]
+        WAF[WAF / App Gateway<br/>Bloquea ataques DDoS/SQLi]
+        APIM[Azure APIM Gateway<br/>Director de Tráfico & JWT Auth]
     end
+
+    %% PRIVATE NETWORK
+    subgraph VNet [VNet Privada QA/Prod - Zero Trust]
+        FE[Frontend VM<br/>Vue 3 + Vite GUI]
+        BE[Backend VM<br/>Spring Boot 3 + Camunda Engine]
+        DB[(MySQL VM<br/>Tablas Jerárquicas & Auditoría)]
+    end
+
+    %% TRAFFIC FLOW (USER)
+    User -- "1. Accede por Navegador" --> WAF
+    WAF -- "2. Tráfico Limpio" --> APIM
+    APIM -- "3. Descarga Interfaz" --> FE
     
-    O365[O365 Webhooks - ONS] <--> APIM
+    %% TRAFFIC FLOW (APP EXECUTION)
+    FE -- "4. Acciones de UI (REST v1)" --> APIM
+    APIM -- "5. Orden Validada (REST v1)" --> BE
+    BE -- "6. Lectura/Escritura" --> DB
+    
+    %% TRAFFIC FLOW (INTEGRATIONS)
+    O365 -- "Push Correos SAC" --> APIM
 ```
 
 **Infraestructura Detallada**

@@ -14,9 +14,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import jakarta.persistence.EntityListeners;
+import com.ibpms.poc.infrastructure.event.KanbanTaskSyncListener;
 
 @Entity
 @Table(name = "ibpms_task")
+@EntityListeners(KanbanTaskSyncListener.class)
 public class KanbanTaskEntity {
 
     @Id

@@ -1892,27 +1892,73 @@ Feature: Intake Manual Plan B (Seguridad)
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Intelligent Intake Funnel Management
-  Scenario: Visualización de Action Card y Triaje
-    Given múltiples correos entrantes procesados por la IA en la Pantalla 1B
-    When el motor genera "Action Cards" marcadas en estado "Pendiente_De_Validacion_Plan_A" (Copias de metadata, No los emails base)
-    Then el Administrador abre la vista de Cuarentena (Embudo)
-    And el sistema muestra las posibles Action Cards listadas con Cliente Sugerido (CRM_ID) y Plantilla sugerida
-    And permite accionar los botones de [Descartar], [Forzar Mapeo Manual] o [Aprobar y Crear Service Delivery].
+  Scenario: SLA Diferenciado para Creación (Semilla)
+    Given múltiples correos entrantes procesados por la IA
+    When el motor genera "Action Cards" en estado "Pendiente_De_Validacion_Plan_A"
+    Then el sistema muestra únicamente tarjetas clasificadas como 'Nueva Instancia (Semilla)'
+    And permite parametrizar acuerdos de nivel de servicio (SLA) para la atención de estas tarjetas en el embudo
+    And nota: Las tarjetas de tipo "Aporte a Caso Vivo (Inyección)" quedan aplazadas para el MVP V2, el sistema V1 no generará sugerencias sobre instancias en vuelo.
 
-  Scenario: Completitud Forzosa de Datos Faltantes (Validación Admin)
-    Given que el administrador presiona [Aprobar y Crear Service Delivery]
-    When la IA no logró extraer del correo original un dato obligatorio exigido por el Proceso
-    Then el sistema despliega un Modal bloqueante exigiendo al Administrador diligenciar los campos faltantes obligatoriamente.
+  Scenario: Agrupación y Filtro por Plantilla Sugerida
+    Given un embudo saturado con centenares de Action Cards
+    Then la interfaz expone filtros multifunción que permiten al Administrador aislar u ordenar las tarjetas
+    And permite filtrar específicamente por la "Plantilla Sugerida" por la IA para procesar en lote todas las tarjetas de un mismo tipo de trámite.
 
-  Scenario: Control de Concurrencia Optimista
-    Given dos administradores visualizando el mismo embudo de Action Cards simultáneamente
-    When ambos intentan aprobar la misma tarjeta
-    Then el backend intercepta la segunda petición y devuelve un HTTP 409 Conflict, evitando instanciaciones duplicadas.
+  Scenario: Alerta de Vencimiento de SLA y Notificación a Jefatura
+    Given una Action Card estacionada en el embudo cuyo temporizador SLA expira
+    Then la tarjeta cambia visualmente a color ROJO en la grilla de la Pantalla 16
+    And el sistema dispara un evento unificado enviando un correo electrónico y una alerta in-app al "Jefe / Supervisor" parametrizado orgánicamente para ese Administrador o Buzón.
+
+  Scenario: Completitud Forzosa, Guardado de Borradores y Continuidad del SLA
+    Given que el administrador presiona [Aprobar] en una tarjeta incompleta
+    Then el sistema despliega un Modal bloqueante exigiendo diligenciar los campos
+    And permite utilizar el botón [Guardar Borrador] para persistir el avance parcial sin perder datos
+    And el reloj del SLA de Cuarentena NO se congela durante este estado de borrador, continuando su conteo natural para mantener la métrica de eficiencia intacta.
+
+  Scenario: Rutas de Asignación (Directa vs Pool)
+    Given el Administrador que completa una Action Card correctamente
+    When procede a confirmarla para crear el Service Delivery
+    Then el formulario le ofrece dos modos de asignación del caso naciente:
+    And 1. Asignación Directa: Escoger en un combo a un operario específico (Ej: Pedro Hernández).
+    And 2. Envío a Pool: Dejar la asignación abierta para que caiga a la bandeja general y sea tomada por demanda.
+
+  Scenario: Delegación de Cuarentena (Reasignación entre Administradores)
+    Given una Action Card en el embudo asignada por defecto a un Administrador Central
+    When este administrador determina que no posee el conocimiento para validarla
+    Then puede usar un botón [Reasignar Tarjeta] para transferir la propiedad exclusiva de esa tarjeta en cuarentena hacia el embudo de otro Administrador perito.
+
+  Scenario: Papelera de Reciclaje Transitoria (Soft Delete temporal)
+    Given el Administrador presiona [Descartar] sobre una Action Card
+    Then la tarjeta desaparece de la vista principal del Embudo
+    And es movida a una vista de "Papelera de Reciclaje" en la Pantalla 16
+    And el sistema ejecuta un Job programado que elimina física y definitivamente (Hard Delete SQL) esta tarjeta tras 2 días hábiles (Time-To-Live).
+
+  Scenario: Recuperación Total desde la Papelera (Restaurar como Nueva)
+    Given un Administrador buscando una Action Card descartada por error en la Papelera de Reciclaje
+    When oprime el botón [Restaurar]
+    Then la tarjeta abandona la papelera y reingresa a la cabecera (inicio) de la vista principal del Embudo
+    And es tratada operativamente como una tarjeta nueva reiniciando o adaptando su contexto de SLA para permitir su procesamiento.
+
+  Scenario: Edición de Datos en Modo Papelera (Admin Override)
+    Given una Action Card descartada habitando temporalmente en la Papelera
+    When un Administrador con los privilegios adecuados accede a inspeccionarla
+    Then este posee el botón de [Editar] activo, permitiéndole alterar y corregir las variables o metadatos extraídos originales antes o durante el acto de restaurarla hacia el embudo principal.
+
+  Scenario: Triunfo del Humano sobre la Máquina (Concurrencia vs IA)
+    Given una tarjeta en el Embudo a punto de auto-aprobarse por la IA en el background tras una re-evaluación
+    When un Administrador humano presiona [Descartar] o interactúa con la misma tarjeta en ese mismo milisegundo
+    Then el motor de base de datos otorga prioridad absoluta a la transacción humana, bloqueando y revirtiendo la auto-instanciación de la IA.
 
   Scenario: Auto-Aprobación MLOps (Feature Toggle Opcional)
     Given la configuración del sistema global
     Then el administrador posee una bandera 'Feature Toggle' para encender la "Auto-Instanciación IA"
-    And si está encendido y el modelo supera el 98% de confianza en extracción, la Action Card se aprueba sola saltando el embudo sin intervención.
+    And si está encendido y el modelo supera el 98% de confianza, la tarjeta se aprueba sola saltando el embudo humano.
+
+  Scenario: Distintivo Visual de Origen IA en Workdesk Operativo
+    Given una Instancia inyectada generada a partir de la aprobación de una Action Card (Manual o Automática)
+    When el operador de Trinchera la recibe y visualiza en su lista del Workdesk (Inbox Pantalla 5)
+    Then el Frontend renderiza un distintivo gráfico inconfundible (Ej: Ícono de IA o Marco de color)
+    And alerta al operador que la existencia de este caso provino originalmente de deducción MLOps.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 16 (Intelligent Intake y Embudo Administrativo).
 

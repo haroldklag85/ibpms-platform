@@ -241,9 +241,46 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
         return [201, payload];
     });
 
-    mock.onPost(/\/api\/v1\/design\/projects\/templates\/.*\/publish$/).reply((config) => {
-        // En un mock real el servidor escudriñaría los nulls, pero el Front también tiene la guardia local
-        return [200, { message: "Template Published Successfully" }];
+    // 15. Pantalla 1 (Epic 1 - Hybrid Workdesk US-001)
+    mock.onGet(/\/api\/v1\/workdesk\/global-inbox/).reply((config) => {
+        // Obtenemos param de url o simulamos
+        // const params = config.params || { page: 0, size: 50 };
+        return [200, {
+            content: [
+                {
+                    unifiedId: "BPMN-9a8b7c",
+                    sourceSystem: "BPMN",
+                    originalTaskId: "9a8b7c",
+                    title: "Aprobación Legal: Contrato ACME",
+                    slaExpirationDate: new Date(Date.now() - 3600000).toISOString(), // Expirado hace 1 hr
+                    status: "URGENT",
+                    assignee: "maria.lopez"
+                },
+                {
+                    unifiedId: "KANBAN-3f2d1a",
+                    sourceSystem: "KANBAN",
+                    originalTaskId: "3f2d1a",
+                    title: "Desarrollo de API Rest",
+                    slaExpirationDate: new Date(Date.now() + 86400000).toISOString(), // Vence en 1 día
+                    status: "PENDING",
+                    assignee: "carlos.dev"
+                },
+                {
+                    unifiedId: "BPMN-1c2b3a",
+                    sourceSystem: "BPMN",
+                    originalTaskId: "1c2b3a",
+                    title: "Revisión Técnica - Componente UI",
+                    slaExpirationDate: new Date(Date.now() + 604800000).toISOString(), // Vence en 7 días
+                    status: "NORMAL",
+                    assignee: null
+                }
+            ],
+            pageable: {
+                pageNumber: 0,
+                pageSize: 50,
+                totalElements: 3
+            }
+        }];
     });
 
     return mock;

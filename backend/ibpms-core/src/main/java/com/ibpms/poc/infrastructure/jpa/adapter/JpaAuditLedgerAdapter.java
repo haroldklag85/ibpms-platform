@@ -1,8 +1,8 @@
 package com.ibpms.poc.infrastructure.jpa.adapter;
 
 import com.ibpms.poc.application.port.out.AiAuditLedgerPort;
-import com.ibpms.poc.infrastructure.jpa.entity.AiAuditLogEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.AiAuditLogRepository;
+import com.ibpms.poc.infrastructure.jpa.entity.ai.AiAuditLogEntity;
+import com.ibpms.poc.infrastructure.jpa.repository.ai.AiAuditLogRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +27,10 @@ public class JpaAuditLedgerAdapter implements AiAuditLedgerPort {
                                                            // falle (Audit)
     public void logAiSuggestion(String businessKey, String aiModel, String systemPrompt, String suggestedText) {
         AiAuditLogEntity log = new AiAuditLogEntity();
-        log.setBusinessKey(businessKey);
-        log.setEventType("AI_DRAFT_SUGGESTED");
-        log.setAiModelVersion(aiModel);
-        log.setAppliedPrompt(systemPrompt);
-        log.setContentPayload(suggestedText);
+        log.setExecutionId(businessKey); // Usado para referenciar el caso de negocio
+        log.setSystemPrompt(systemPrompt);
+        log.setResponsePayload(suggestedText);
+        log.setChainOfThought("AI Model: " + aiModel + " | Event: AI_DRAFT_SUGGESTED");
 
         repository.save(log);
     }
@@ -41,11 +40,10 @@ public class JpaAuditLedgerAdapter implements AiAuditLedgerPort {
     public void logHumanResolution(String businessKey, String operatorId, String finalSentText,
             double similarityScore) {
         AiAuditLogEntity log = new AiAuditLogEntity();
-        log.setBusinessKey(businessKey);
-        log.setEventType("HUMAN_APPROVED");
-        log.setOperatorId(operatorId);
-        log.setContentPayload(finalSentText);
-        log.setSimilarityScore(similarityScore);
+        log.setExecutionId(businessKey);
+        log.setHumanOverride("Operator: " + operatorId + " | Event: HUMAN_APPROVED");
+        log.setResponsePayload(finalSentText);
+        log.setConfidenceScore(similarityScore);
 
         repository.save(log);
     }

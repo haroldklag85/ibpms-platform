@@ -1,15 +1,17 @@
-# Arquitectura de Datos (V1) - Modelo Físico MySQL 8
+# Arquitectura de Datos (V1) - Modelo Físico PostgreSQL 15+ (con pgvector)
 
-Este documento define el diseño de la base de datos relacional (Entity-Relationship Diagram - ERD) para la **Versión 1 (V1)** de la Plataforma iBPMS. 
+> **[AUDITORÍA ARQUITECTURA - ADR 005]:** El modelo físico original estaba diseñado para MySQL 8. Con la introducción de requisitos MLOps y RAG (Sprint 10), se migró oficialmente la persistencia a PostgreSQL 15+ con `pgvector`. Este entorno soporta los expedientes (Data Relacional/JSONB) y la Base de Conocimiento de la IA concurrente en un solo motor (1 VM).
+
+Este documento define el diseño de la base de datos relacional y vectorial (Entity-Relationship Diagram - ERD) para la **Versión 1 (V1)** de la Plataforma iBPMS. 
 
 Al estar fundamentados en **Arquitectura Hexagonal y Domain-Driven Design (DDD)**, es críticamente importante entender la demarcación de responsabilidades entre nuestras "Tablas de Negocio" (Hexágono Core) y las "Tablas del Motor de Procesos" (Camunda 7).
 
 ## 1. Patrón Dual-Schema (Core vs. Motor)
 
-Debido a que hemos "empotrado" el motor Camunda 7 dentro del backend Spring Boot como un adaptador para acelerar el Time-to-Market (TTM), la base de datos MySQL consolidada contendrá dos mundos separados que **nunca interactúan directamente mediante Foreign Keys a nivel de SQL**:
+Debido a que hemos "empotrado" el motor Camunda 7 dentro del backend Spring Boot como un adaptador para acelerar el Time-to-Market (TTM), la base de datos PostgreSQL consolidada contendrá dos mundos separados que **nunca interactúan directamente mediante Foreign Keys a nivel de SQL**:
 
 1.  **Esquema del Motor (Camunda `ACT_*`):** Tablas nativas que el motor BPM usa para la tokenización de flujos y estado (`ACT_RU_EXECUTION`, `ACT_RU_TASK`, `ACT_HI_PROCINST`, etc.). **El equipo de desarrollo NUNCA debe hacer `SELECT` o `INSERT` directo sobre estas tablas.** Toda interacción es mediada por la API Java de Camunda.
-2.  **Esquema de Negocio (iBPMS Core `ibpms_*`):** Las tablas construidas por nosotros para almacenar los Expedientes (Casos de uso agnósticos), los payloads JSON de los formularios (Apalancando la columna `JSON` nativa de MySQL 8) y la referencia documental (SGDEA). 
+2.  **Esquema de Negocio (iBPMS Core `ibpms_*`):** Las tablas construidas por nosotros para almacenar los Expedientes (Casos de uso agnósticos), los payloads JSON de los formularios (Apalancando la columna `JSONB` de PostgreSQL) y la referencia documental (SGDEA). Además de las entidades RAG para vectores de IA.
 
 *Esta separación garantiza que en la V2, cuando reemplacemos Camunda 7 por Kubernetes/Zeebe, nuestra base de datos core `ibpms_*` quedará intacta.*
 
@@ -28,7 +30,7 @@ erDiagram
         varchar(100) definition_key "Ej: prestamo_hipotecario"
         varchar(100) business_key "ID visible por el usuario. Ej: RQ-2026-001"
         varchar(50) status "ACTIVE, COMPLETED, SUSPENDED, CANCELLED"
-        json payload "Variables de negocio capturadas por el frontend. (MySQL 8 Native)"
+        json payload "Variables de negocio capturadas por el frontend. (PostgreSQL JSONB)"
         char(36) process_instance_id "ID del Motor Camunda (UUID)"
         varchar(100) created_by "Usuario/Sistema creador"
         timestamp created_at 
@@ -103,11 +105,11 @@ erDiagram
 
 ## 3. Diccionario Físico y Decisiones Técnicas Clave
 
-### A. Uso del Tipo Nativo `JSON` (MySQL 8)
+### A. Uso del Tipo Nativo `JSONB` (PostgreSQL)
 *   **Columna:** `ibpms_case.payload` e `ibpms_task.candidate_groups`
-*   **Justificación:** Históricamente, las plataformas de procesos sufren del antipatrón *Entity-Attribute-Value (EAV)*, creando tablas gigantescas de clave-valor para guardar las variables del negocio. Al explotar la columna nativa `JSON` de MySQL 8, logramos:
+*   **Justificación:** Históricamente, las plataformas de procesos sufren del antipatrón *Entity-Attribute-Value (EAV)*, creando tablas gigantescas de clave-valor para guardar las variables del negocio. Al explotar la columna nativa `JSONB` de Postgres, logramos:
     1.  Ocultar la estructura dinámica (Formularios "Lego") directamente en una sola fila.
-    2.  Permitir indexación secundaria: MySQL 8 permite generar "Generated Columns" virtuales sobre campos del JSON e indexarlos con B-Trees si necesitamos buscar, por ejemplo, todos los casos donde `$.payload.monto_aprobado > 1000`.
+    2.  Permitir indexación secundaria: PostgreSQL permite generar Índices GIN sobre los campos del JSONB si necesitamos buscar, por ejemplo, todos los casos donde `payload->>'monto_aprobado' > 1000`.
 
 ### B. Llaves Primarias como UUID v4 (`char(36)`)
 *   **Justificación:** Se prohíbe el uso de `BIGINT AUTO_INCREMENT` para los IDs primarios obligando el uso de `UUID`. Esta es una decisión anticipada al ecosistema Cloud-Native (V2) para evitar colisiones en la creación asíncrona de expedientes y prevenir ataques de enumeración (Insecure Direct Object Reference).
@@ -219,4 +221,4 @@ A continuación se detalla la estructura física de las tablas del esquema princ
 | `event_type` | `VARCHAR(100)` | | NO | Tipo textual preprogramado de la alteración (`STATUS_CHANGED`, etc) |
 | `performed_by`| `VARCHAR(100)` | | NO | Sujeto ejecutor final, puede ser `Auto-Timer` o `User UUID`. |
 | `event_data` | `JSON` | | SÍ | **Potenciado por Javers:** Guarda las instantáneas exactas del Payload ("Before/After") para certificar inmutabilidad ISO. |
-| `created_at` | `TIMESTAMP` | | NO | **Regla DDL de Interfaz Física: MYSQL TABLE PARTITION KEY BY RANGE.** Fecha. |
+| `created_at` | `TIMESTAMP` | | NO | **Regla DDL de Interfaz Física: POSTGRESQL TABLE PARTITION BY RANGE.** Fecha. |

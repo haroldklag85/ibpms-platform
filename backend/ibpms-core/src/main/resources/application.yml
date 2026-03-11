@@ -2,26 +2,35 @@ spring:
   application:
     name: ibpms-core
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ibpms}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: ${MYSQL_USER:root}
-    password: ${MYSQL_PASSWORD:root}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:ibpms_db}
+    username: ${POSTGRES_USER:ibpms_user}
+    password: ${POSTGRES_PASSWORD:ibpms_password}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate # Control absoluto por Liquibase
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
   liquibase:
     enabled: true
     change-log: classpath:/db/changelog/db.changelog-master.yaml
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 camunda:
   bpm:
     database:
-      type: mysql
+      type: postgres
     deployment-resource-pattern: classpath:/processes/*.bpmn
     job-execution:
       enabled: true

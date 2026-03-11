@@ -38,7 +38,7 @@ graph TD
     subgraph VNet [VNet Privada QA/Prod - Zero Trust]
         FE[Frontend VM<br/>Vue 3 + Vite GUI]
         BE[Backend VM<br/>Spring Boot 3 + Camunda Engine]
-        DB[(MySQL VM<br/>Tablas Jerárquicas & Auditoría)]
+        DB[(PostgreSQL VM<br/>Vectorial, Relacional, JSONB)]
     end
 
     %% TRAFFIC FLOW (USER)
@@ -60,9 +60,10 @@ La infraestructura actual está montada en Azure (región East US) bajo un enfoq
 El acceso externo está protegido en el perímetro con Application Gateway con WAF y la exposición/consumo de APIs se gobierna mediante Azure API Management (APIM – Basic, 1 unidad), que actúa como puerta de entrada lógica.
 
 El cómputo es principalmente IaaS sobre VMs Linux:
-*   **QA:** 2 VMs (Frontend y Backend).
-*   **Producción:** 3 VMs (Frontend, Backend y Base de Datos).
-La base de datos es MySQL (en la VM de BD en producción) con almacenamiento sobre Managed Disks.
+    *   **QA:** 2 VMs (Frontend y Backend).
+    *   **Producción:** 3 VMs (Frontend, Backend y Base de Datos).
+    La base de datos es PostgreSQL con la extensión `pgvector` (en la VM de BD en producción) con almacenamiento sobre Managed Disks.
+    > **[AUDITORÍA ARQUITECTURA - ADR 005]:** La arquitectura V1 migró oficialmente de MySQL 8 a PostgreSQL 15+ para posibilitar el soporte de Base de Conocimiento Vectorial (RAG) dictada en el Sprint 10, manteniendo la restricción presupuestal de 1 sola VM de base de datos.
 
 **Seguridad y Operación:**
 *   **VPN Gateway (P2S)** para administración orientada a un grupo controlado de equipos.
@@ -83,14 +84,14 @@ Esto deja el “AS-IS” como una arquitectura por capas en VMs, con control per
     > [!TIP]
     > **Validación Positiva (Spring Boot 3):** Decisión óptima. Soporta Virtual Threads (Loom) y compilación nativa (GraalVM). Arrancan en milisegundos, ideal para la V2 Kubernetes.
     >
-    > **[SECURITY FIX] Validación JSON Schema:** Para mitigar el riesgo de *NoSQL/JSON Injection* en la BD MySQL 8, el Backend Java interceptará todo payload dinámico del Frontend pasándolo por un validador fuerte (librería `networknt/json-schema-validator`) contra un catálogo de Schemas de negocio aprobados. Las PII (como tarjetas o diagnósticos) estarán bajo **TDE (Transparent Data Encryption)**.
+    > **[SECURITY FIX] Validación JSON Schema:** Para mitigar el riesgo de *NoSQL/JSON Injection* en la BD PostgreSQL, el Backend Java interceptará todo payload dinámico del Frontend pasándolo por un validador fuerte (librería `networknt/json-schema-validator`) contra un catálogo de Schemas de negocio aprobados.
     >
-    > **[PERFORMANCE FIX] Patrón Metadata Indexing:** Está prohibido buscar nativamente en listas masivas escaneando el interior de los campos JSON. Todo atributo "buscable" será extraído en tiempo de Ingestión hacia tablas relacionales planas para búsquedas B-Tree sub-segundo.
+    > **[PERFORMANCE FIX] Patrón Metadata Indexing:** Está prohibido buscar nativamente en listas masivas escaneando el interior de los campos `JSONB`. Todo atributo "buscable" será extraído en tiempo de Ingestión hacia tablas relacionales planas para búsquedas B-Tree sub-segundo.
     >
-    > **[PERFORMANCE FIX] Auditoría Particionada:** Para prevenir la degradación de Base de Datos por obesidad mórbida del historial de logs transaccionales, el componente de MySQL exigirá **MySQL Table Partitioning por Rango (Fechas)** a nivel DDL, agilizando el Data Archiving.
+    > **[PERFORMANCE FIX] Auditoría Particionada:** Para prevenir la degradación de Base de Datos por obesidad mórbida del historial de logs transaccionales, PostgreSQL exigirá **Table Partitioning por Rango (Fechas)** a nivel DDL, agilizando el Data Archiving.
     >
     > **[ARCHITECTURE FIX] Transaccionalidad Atómica (ACID):** *Validado por Arquitecto de Software.* Es MANDATORIO que Spring Boot y el motor embebido Camunda 7 compartan exactamente el mismo `DataSource` y `PlatformTransactionManager`. Toda operación de Application Service estará anotada con `@Transactional`. Si un estado de negocio explota, Camunda también deshará su avance en la misma transacción aislando inconsistencias.
-*   **Motor:** Desplegado On-VM, conectado a la base MySQL con estrategia de retención de datos **Data Archiving TTL** (ej: vaciado a Cold Storage de procesos concluidos de +90 días).
+*   **Motor:** Desplegado On-VM, conectado a la base PostgreSQL con estrategia de retención de datos **Data Archiving TTL** (ej: vaciado a Cold Storage de procesos concluidos de +90 días).
 
 #### Reglas de Gobierno de Integración (APIM Obligatorio)
 Para garantizar el orden y el futuro desacople (Patrón Strangler), se establecen las siguientes reglas arquitectónicas:
@@ -197,7 +198,7 @@ C4Context
 ### Nivel 2: Diagrama de Contenedores (Container Diagram)
 ```mermaid
 C4Container
-    title Diagrama de Contenedores (V1) - Limitado a VMs y MySQL
+    title Diagrama de Contenedores (V1) - Limitado a VMs y PostgreSQL
     
     Person(usuario, "Usuarios (Vía WAF/VPN)", "Acceso seguro.")
     Container(plugin_o365, "Plugin Outlook", "Vue/JS", "Iframe dentro de Outlook.")
@@ -215,7 +216,7 @@ C4Container
         
         Container(llm_local, "Motor IA Perimetral", "Llama 3 / vLLM", "Hospedado en VM Privada GPU/CPU.")
         
-        ContainerDb(db, "Base de Datos Consolidada", "MySQL 8", "Operativa y Estado BPM.")
+        ContainerDb(db, "Base de Datos Consolidada", "PostgreSQL 15+ & PgVector", "Almacenamiento MLOps y Estado BPM.")
         ContainerDb(blob, "Almacenamiento Discos", "Azure Managed Disks", "Bóveda física.")
     }
     
@@ -266,7 +267,7 @@ C4Component
             Component(camunda_adapter, "Camunda 7 API", "Java API", "Usa RuntimeService local")
             Component(ai_adapter, "Llama 3 Local Adapter", "REST API", "Pide JSON de Reglas")
             Component(doc_adapter, "Template Renderer (.jar)", "Apache FOP", "Fabricante de PDFs Jurídicos")
-            Component(jpa_adapter, "MySQL JPA Repositories", "Spring Data", "Base de datos")
+            Component(jpa_adapter, "PostgreSQL JPA Repositories", "Spring Data", "Base de datos")
             Component(erp_adapter, "ERP / SGDEA Outbounds", "Feign Client", "Gatillos Externos")
         }
     }

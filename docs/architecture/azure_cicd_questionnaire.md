@@ -30,9 +30,9 @@ Dado que el despliegue V1 es sobre Máquinas Virtuales Linux, necesitamos conoce
     *   Ruta Frontend (QA y Prod): `/var/www/html/...` ?
 
 ## 3. Base de Datos (Migraciones Liquibase/Flyway)
-El pipeline backend debe ejecutar los scripts DDL/DML contra MySQL durante el despliegue.
-*   [ ] ¿El runner de CI/CD tiene alcance de red (VNet Peering o Whitelist) al puerto `3306` del servidor MySQL? 
-*   [ ] Si la BD MySQL está alojada en una **Azure Database for MySQL (Flexible Server)** pública restringida o es privada (Private Endpoint), ¿cómo recomiendan acceder desde el pipeline para correr las migraciones?
+El pipeline backend debe ejecutar los scripts DDL/DML contra PostgreSQL durante el despliegue.
+*   [ ] ¿El runner de CI/CD tiene alcance de red (VNet Peering o Whitelist) al puerto `5432` del servidor PostgreSQL? 
+*   [ ] Si la BD PostgreSQL está alojada en un **Azure Database for PostgreSQL (Flexible Server)** público restringido o es privada (Private Endpoint), ¿cómo recomiendan acceder desde el pipeline para correr las migraciones?
 
 ## 4. Gestión de Secretos (Azure Key Vault)
 La arquitectura exige Zero-Trust y ofuscación de secretos (Ej: MS Graph Client Secret).

@@ -20,7 +20,7 @@ Se aplican las siguientes reglas inquebrantables de diseño:
 
 1. **Dominio Aislado (Entities & Domain Services):** El código dentro de la capa `domain` no debe tener absolutamente ninguna dependencia tecnológica. No puede importar `@Entity` de JPA, ni bibliotecas externas (como Kafka, Camunda o APIs Cloud). Solo usará tipos y colecciones primitivas de Java.
 2. **Inversión de Dependencias (Puertos):** La capa de aplicación `application/ports` definirá "Puertos de Entrada" e "Interfaces de Puertos de Salida" para hablar con bases de datos, APIs de red, o el propio motor BPM.
-3. **Adaptadores Descartables:** El código que hable con bases de datos (JPA / MySQL) o los motores de proceso (Zeebe / Flowable) residirá en la periferia `infrastructure/adapters` implementando los puertos. Si mañana cambia Camunda por otro motor, **solo** se borra y repone ese adaptador, protegiendo todo el `domain`.
+3. **Adaptadores Descartables:** El código que hable con bases de datos (JPA / PostgreSQL) o los motores de proceso (Zeebe / Flowable) residirá en la periferia `infrastructure/adapters` implementando los puertos. Si mañana cambia Camunda por otro motor, **solo** se borra y repone ese adaptador, protegiendo todo el `domain`.
 
 ## Consecuencias Positivas
 

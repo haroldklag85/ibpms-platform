@@ -37,7 +37,7 @@ El `ProjectExecutionController` expondrá:
 *   **AC-1 (Fijar Línea Base):** Hasta que el PM no oprima el botón `[ 🚀 FIJAR LÍNEA BASE ]`, NINGÚN empleado es notificado, y el motor de procesos Camunda no sabe que este proyecto existe.
 *   **AC-2 (El "Big Bang" de Camunda - 🛡️ TRANSACCIONALIDAD V1):** Cuando se oprime "Fijar Línea Base", el backend debe:
     1. Evaluar matemáticamente cuáles son las "Primeras Tareas" (sin dependencias entrantes).
-    2. **[REGLA DE ARQUITECTURA]:** INVOCAR directamente el Java API local de Camunda (`RuntimeService.startProcessInstanceByKey()`) dentro de la misma transacción MySQL `@Transactional`. **PROHIBIDO usar llamadas HTTP/REST al propio localhost** para evitar fallas parciales sin Rollback. 
+    2. **[REGLA DE ARQUITECTURA]:** INVOCAR directamente el Java API local de Camunda (`RuntimeService.startProcessInstanceByKey()`) dentro de la misma transacción PostgreSQL `@Transactional`. **PROHIBIDO usar llamadas HTTP/REST al propio localhost** para evitar fallas parciales sin Rollback. 
     3. Depositar mágicamente estas tareas en las bandejas (Workdesk - Pantalla 1) de los asignados seleccionados por el PM.
 *   **AC-3 (Progreso Automático del Gantt - ⚡ EFICIENCIA V1):** La P10.B es solo lectura una vez fijada la Línea Base. Si en la Pantalla 1 un obrero marca "Excavación" al 100%, el sistema notificará a la P10.B para pintar la barra de verde.
     *   **[REGLA DE ARQUITECTURA]:** Queda **PROHIBIDO usar WebSockets** bidireccionales por el overhead en el APIM. El Agente Backend implementará **SSE (Server-Sent Events / text/event-stream)** mediante Spring WebFlux (`Flux<ServerSentEvent>`) o Emitter sincrónico para empujar la actualización visual de forma unilateral y ligera.

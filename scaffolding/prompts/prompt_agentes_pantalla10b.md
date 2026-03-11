@@ -12,7 +12,7 @@ Atención Escuadrón. Queda **ESTRICTAMENTE PROHIBIDO** desviarse del documento 
 📄 `ibpms-platform/docs/architecture/blueprint_pantalla10b_auditado.md`
 
 ### 🛠️ TAREAS DEL AGENTE BACKEND (Java 17 + Spring Boot 3 + Camunda 7 Embebido)
-1. **Modelo de Datos:** Crea las entidades `ProjectTaskExecution` y `ProjectBaseline` en `com.ibpms.core.project.domain`. Repositorios e interfaces de servicio para transaccionalidad con MySQL.
+1. **Modelo de Datos:** Crea las entidades `ProjectTaskExecution` y `ProjectBaseline` en `com.ibpms.core.project.domain`. Repositorios e interfaces de servicio para transaccionalidad con PostgreSQL.
 2. **API Contract FIRST:** Escribe el Contrato API en el archivo `.agentic-sync/epic10b_gantt_api_contract.md`. Define los endpoints:
    - `GET /api/v1/execution/projects/{id}/gantt-tree`
    - `PUT /api/v1/execution/projects/tasks/{taskId}/assign`

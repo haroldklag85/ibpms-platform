@@ -1,157 +1,65 @@
 version: '3.8'
 
 services:
-  # ==========================================
-  # 1. Base de Datos Central (MySQL 8)
-  # ==========================================
-  ibpms-db:
-    image: mysql:8.0
-    container_name: ibpms-mysql-core
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password_dev
-      MYSQL_DATABASE: ibpms_core
-      MYSQL_USER: ibpms_user
-      MYSQL_PASSWORD: ibpms_password
-    ports:
-      - "3306:3306"
-    volumes:
-      - ibpms-db-data:/var/lib/mysql
-      # Script de inicialización automatizada
-      - ./infra/local/mysql-init:/docker-entrypoint-initdb.d
-    networks:
-      - ibpms-network
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      timeout: 20s
-      retries: 10
+  # 1. Base de Datos Relacional y Vectorial (PostgreSQL + PgVector)
+  # Necesaria para guardar transacciones BPM y Vectores del modelo RAG Racional de la IA.
+  ibpms-postgres:
+    image: ankane/pgvector:latest
+    container_name: ibpms-postgres-uat
     restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    read_only: true
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-
-  wiremock:
-    image: wiremock/wiremock:3.2.0
-    container_name: wiremock
+    environment:
+      POSTGRES_USER: ibpms_user
+      POSTGRES_PASSWORD: ibpms_password
+      POSTGRES_DB: ibpms_db
     ports:
-      - "8089:8080"
+      - "5432:5432"
     volumes:
-      - ./infra/wiremock:/home/wiremock
-    command: [ "--verbose" ]
-    networks:
-      - ibpms-network
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/__admin/mappings" ]
-      interval: 30s
-      timeout: 10s
+      test: [ "CMD-SHELL", "pg_isready -U ibpms_user -d ibpms_db" ]
+      interval: 10s
+      timeout: 5s
       retries: 5
 
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
-    container_name: azurite
-    ports:
-      - "10000:10000"
-      - "10001:10001"
-      - "10002:10002"
-    volumes:
-      - ./infra/azurite:/data
-    networks:
-      - ibpms-network
-  # ==========================================
-  # 2. Motor Backend / Core Monolítico (Spring Boot + Camunda)
-  # ==========================================
-  # Nota: En un inicio, los developers correrán el backend desde 
-  # su IDE nativo (IntelliJ/Eclipse). Este servicio se descomenta 
-  # cuando se requiera empaquetar el .jar final para pruebas e2e locales.
-
-  ibpms-backend:
-    image: ibpms-backend:local
-    build:
-      context: ./backend/ibpms-core
-      dockerfile: Dockerfile
-    container_name: ibpms-java-core
+  # 2. Gestor de Colas de Mensajería (RabbitMQ)
+  # Necesario para procesar eventos asíncronos (Correos, Webhooks, Reintentos MLOps nocturnos).
+  ibpms-rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ibpms-rabbitmq-uat
+    restart: unless-stopped
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://ibpms-db:3306/ibpms_core?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=ibpms_user
-      - SPRING_DATASOURCE_PASSWORD=ibpms_password
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "8080:8080"
-    depends_on:
-      ibpms-db:
-        condition: service_healthy
-    networks:
-      - ibpms-network
-
-  # ==========================================
-  # 3. Gateway HTTP / Ingress (Nginx TLS + CORS)
-  # ==========================================
-  ibpms-gateway:
-    image: nginx:alpine
-    container_name: ibpms-nginx-gateway
-    ports:
-      - "80:80"
-      - "443:443"
+      - "5672:5672" # Puerto estándar AMQP para el Backend Spring Boot
+      - "15672:15672" # Interfaz gráfica de administración web (http://localhost:15672)
     volumes:
-      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./infra/nginx/certs:/etc/nginx/certs:ro
-    depends_on:
-      - ibpms-backend
-    networks:
-      - ibpms-network
+      - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: [ "CMD-SHELL", "curl -N -s -H 'Accept: text/event-stream' http://localhost/api/v1/execution/projects/health/stream || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    sysctls:
-      net.ipv4.tcp_keepalive_time: 60
-      net.ipv4.tcp_keepalive_intvl: 10
-      net.ipv4.tcp_keepalive_probes: 6
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # ==========================================
-  # 5. Frontend: Micro-Frontends (MFE) Hub
-  # ==========================================
-  ibpms-mfe-portal:
-    build:
-      context: ./frontend/mfe
-      dockerfile: Dockerfile
-    container_name: ibpms-mfe-portal
+  # 3. Base de Datos en Memoria (Redis Cache)
+  # Necesario para Caching de catálogos paramétricos y Locks Distribuidos de tareas seguras del BPM.
+  ibpms-redis:
+    image: redis:7-alpine
+    container_name: ibpms-redis-uat
+    restart: unless-stopped
     ports:
-      - "3000:80"
-    networks:
-      - ibpms-network
-
-  # ==========================================
-  # 6. RPA Worker Efímero (Sprint 7)
-  # ==========================================
-  ibpms-judicial-scraper:
-    build:
-      context: ./rpa/judicial-scraper
-      dockerfile: Dockerfile
-    container_name: ibpms-python-rpa
-    restart: "no" # ¡CRÍTICO! Política "no" para evitar demonios
-    env_file:
-      - ./rpa/judicial-scraper/.env.example
-    depends_on:
-      - ibpms-gateway
-    networks:
-      - ibpms-network
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  ibpms-db-data:
-
-
-networks:
-  ibpms-network:
-    driver: bridge
+  # Volúmenes persistentes para que los datos no se pierdan al apagar la computadora / detener Docker
+  postgres_data:
+  rabbitmq_data:
+  redis_data:

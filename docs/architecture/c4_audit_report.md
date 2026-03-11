@@ -11,7 +11,7 @@ Como auditor de alineación, he ejecutado un cruce estricto entre los escenarios
 
 ### Escenario 2: Case Management & Vistas Paralelas (Kanban / Agile)
 *   **A) L1 Contexto:** Actor `Usuario de Negocio` monitorea flujos. ✅ **OK**.
-*   **B) L2 Contenedores:** Frontend SPA renderiza; la base `Estado iBPMS` persiste. ⚠️ **GAP-L2**: CQRS prometía una separación de lecturas (Elastic/OpenSearch) vs escrituras. El L2 solo tiene una única base de datos genérica `MySQL / PostgreSQL`. Si 1000 usuarios consultan tableros Kanban pesados, impactarán el log transaccional del motor C8.
+*   **B) L2 Contenedores:** Frontend SPA renderiza; la base `Estado iBPMS` persiste. ⚠️ **GAP-L2**: CQRS prometía una separación de lecturas (Elastic/OpenSearch) vs escrituras. El L2 solo tiene una única base de datos genérica `PostgreSQL`. Si 1000 usuarios consultan tableros Kanban pesados, impactarán el log transaccional del motor C8.
 *   **C) L3 Componentes:** `CaseManagement UseCase` modelado y existe Entidad `Expediente / Caso`. ✅ **OK**.
 
 ### Escenario 3: Motor de Reglas (DMN / Tablas de Decisión)
@@ -39,9 +39,9 @@ Como auditor de alineación, he ejecutado un cruce estricto entre los escenarios
 ## Parte 2: Detección de SOBRANTES
 
 Tras peinar el C4 model, destaco lo siguiente:
-1.  **Sobrante en L2: MySQL / PostgreSQL "Guarda Variables".**
+1.  **Sobrante en L2: PostgreSQL "Guarda Variables".**
     *   **Tensión / ¿Qué outcome soporta?**: Prometimos que usaríamos Zeebe/C8. Estos motores modernos no usan bases relacionales, su arquitectura interna se basa en *RocksDB* embebido más exportación a ElasticSearch (Recordar requerimiento: *Alta Volumetría / CQRS*).
-    *   **Recomendación:** Preguntar si estamos usando Camunda 7 (Relacional) o Camunda 8 (RocksDB + Elastic). Si es el 8, el MySQL en L2 es un falso/sobrante para el estado del motor.
+    *   **Recomendación:** Preguntar si estamos usando Camunda 7 (Relacional) o Camunda 8 (RocksDB + Elastic). Si es el 8, el PostgreSQL en L2 es un falso/sobrante para el estado del motor.
 
 ---
 
@@ -49,7 +49,7 @@ Tras peinar el C4 model, destaco lo siguiente:
 
 Para poder cerrar estos Gaps en C4 y que los YAML de API y el código PoC no nazcan defectuosos, responde por favor lo siguiente:
 
-1.  **Motor BPM (Camunda 7 vs 8):** El documento menciona "Zeebe / C8 / Flowable" pero al lado dibuja un MySQL monolítico. Si usamos un modelo de "Alta Escalabilidad CQRS" en la PoC, ¿Nuestra base relacional MySQL es solo para el *CaseManagement/BusinessData* y el estado del BPM lo delegaremos limpiamente a un NoSQL (o en memoria de Zeebe), o forzaremos C7?
+1.  **Motor BPM (Camunda 7 vs 8):** El documento menciona "Zeebe / C8 / Flowable" pero al lado dibuja un PostgreSQL monolítico. Si usamos un modelo de "Alta Escalabilidad CQRS" en la PoC, ¿Nuestra base relacional PostgreSQL es solo para el *CaseManagement/BusinessData* y el estado del BPM lo delegaremos limpiamente a un NoSQL (o en memoria de Zeebe), o forzaremos C7?
 2.  **Arquitectura DMN:** ¿El motor DMN va a ser completamente síncrono por capa HTTP como un SaaS independiente (`DaaSContainer`), o decidimos integrarlo como una librería empotrada `.jar` dentro de nuestro `API Backend Core` en Spring Boot (lo cual cambiaría radicalmente L2 y L3)?
 3.  **Manejo de Roles (ABAC):** ¿La validación de permisos granulares para *Pull* de tareas en la bandeja las hará el frontend filtrando por token JWT, o necesitamos diseñar un caso de uso estricto de seguridad `SecurityUseCase` en el Backend de Spring? 
 4.  **Capa Documental en PoC:** Dado el GAP-L3 entre el Backend y el SGDEA, para esta PoC táctica de Java... ¿Simulamos el almacenamiento apuntando directamente a un disco/S3, o quieres que ya dejemos diseñado el `EcmOutboundAdapter` formal aunque esté "en blanco"?

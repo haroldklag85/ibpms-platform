@@ -3,7 +3,7 @@ package com.ibpms.poc.application.service;
 import com.ibpms.poc.application.dto.AiMetricsDTO;
 import com.ibpms.poc.application.dto.ProcessHealthDTO;
 import com.ibpms.poc.application.port.in.ObtenerMetricasUseCase;
-import com.ibpms.poc.infrastructure.jpa.repository.AiAuditLogRepository;
+import com.ibpms.poc.infrastructure.jpa.repository.ai.AiAuditLogRepository;
 import org.camunda.bpm.engine.HistoryService;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.TaskService;

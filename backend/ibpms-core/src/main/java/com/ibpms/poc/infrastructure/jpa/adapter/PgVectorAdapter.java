@@ -2,7 +2,7 @@ package com.ibpms.poc.infrastructure.jpa.adapter;
 
 import com.ibpms.poc.application.port.out.VectorDatabasePort;
 import com.ibpms.poc.infrastructure.jpa.entity.AiKnowledgeVectorEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.AiKnowledgeVectorRepository;
+import com.ibpms.poc.infrastructure.jpa.repository.ai.AiKnowledgeVectorRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

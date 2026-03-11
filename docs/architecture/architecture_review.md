@@ -10,7 +10,7 @@ El objetivo es validar fundacionalmente el diseño propuesto e identificar posib
 
 ### Arquitectura Hexagonal (Puertos y Adaptadores)
 *   **Definición:** Patrón de diseño donde el dominio central de negocio (lógica, casos de uso) se aísla de infraestructuras externas (UI, bases de datos, APIs de terceros, motores BPM). Todo entra y sale mediante "Puertos" (interfaces) y convertidores llamados "Adaptadores".
-*   **Cuándo Aplica:** En aplicaciones core duraderas (como un motor iBPMS), donde la lógica comercial sobrevive a múltiples cambios de tecnología (desde MySQL hasta NoSQL, o desde Camunda 7 a Zeebe).
+*   **Cuándo Aplica:** En aplicaciones core duraderas (como un motor iBPMS), donde la lógica comercial sobrevive a múltiples cambios de tecnología (desde PostgreSQL hasta NoSQL, o desde Camunda 7 a Zeebe).
 *   **Beneficios Concretos:** 
     *   **Mantenibilidad extrema:** El código del negocio (`Expediente`, `SLAs`) puede unit-testearse aislando la base de datos o frameworks.
     *   **Desacoplamiento:** Total resiliencia ante el temido "Vendor Lock-in" de herramientas externas (ej. ERP).
@@ -50,10 +50,10 @@ A continuación, validamos de manera cruzada las 6 categorías estructurales det
 2.  **Malla de Servicios (Service Mesh) post-VM:** Para la V1 está bien, pero en la V2 el ruteo interno (APIM -> AKS Kubernetes) carece de una política de visibilidad este-oeste.
 
 ### C. Patrones de Datos (Gaps)
-*   **Patrones presentes:** Polyglot Persistence (MySQL relacional para estado, Azure Storage/Blob para Binarios/ECM documentales), Event Sourcing.
+*   **Patrones presentes:** Polyglot Persistence (PostgreSQL para estado y vectores, Azure Storage/Blob para Binarios/ECM documentales), Event Sourcing.
 #### Brechas Identificadas:
-1.  **Estrategia de Evicción (Data Archiving) para Alto Volumen:** El BPM guarda historial completo (Event Sourcing). En empresas grandes, una tabla de log crece en millones de *rows* en meses, destrozando la V1 en MySQL si no se ataca agresivamente.
-    *   **Solución:** Definir desde ya la política de *Data History TTL (Time-To-Live)*. Por ejemplo, trasladar la metadata de procesos cerrados de +90 días a *Cold Storage* y vaciar MySQL activo.
+1.  **Estrategia de Evicción (Data Archiving) para Alto Volumen:** El BPM guarda historial completo (Event Sourcing). En empresas grandes, una tabla de log crece en millones de *rows* en meses, destrozando la V1 en PostgreSQL si no se ataca agresivamente.
+    *   **Solución:** Definir desde ya la política de *Data History TTL (Time-To-Live)*. Por ejemplo, trasladar la metadata de procesos cerrados de +90 días a *Cold Storage* y vaciar PostgreSQL activo.
 2.  **Sincronización Transaccional "Outbox":** Si la BD local (`Expediente`) guarda el estado pero el evento a Kafka (`CasoCreado`) falla tras la escritura relacional (falla la red de Kafka), quedarán en inconsistencia.
     *   **Solución:** Validar la implementación imperativa del **Patrón Transactional Outbox**, escribiendo eventos en una misma tabla relacional local que un _debezium/cron_ se encargue de empujar por red de forma infalible asíncronamente.
 

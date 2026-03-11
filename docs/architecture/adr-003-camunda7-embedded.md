@@ -7,12 +7,12 @@
 ## Contexto y Problema
 El requerimiento base de la plataforma es orquestar flujos de trabajo (Workflows) y tomar decisiones de negocio (DMN). El estándar indiscutible de la industria actual es Camunda. Sin embargo, Camunda Platform 8 (Zeebe) representa un salto radical hacia una arquitectura Nativa de la Nube, requiriendo orquestadores remotos vía gRPC, bases de datos no relacionales intensivas (Elasticsearch) y un ecosistema distribuido.
 
-Nuestra V1 (Prueba de Concepto y Go-To-Market Táctico) está fuertemente limitada a funcionar sobre máquinas virtuales (IaaS Azure VMs) y una base relacional monolítica consolidada (MySQL 8). Implementar el ecosistema completo de Zeebe en V1 elevaría exponencialmente el costo de infraestructura, la fricción operativa y el *Time-to-Market*. 
+Nuestra V1 (Prueba de Concepto y Go-To-Market Táctico) está fuertemente limitada a funcionar sobre máquinas virtuales (IaaS Azure VMs) y una base relacional monolítica consolidada (PostgreSQL 15+). Implementar el ecosistema completo de Zeebe en V1 elevaría exponencialmente el costo de infraestructura, la fricción operativa y el *Time-to-Market*. 
 
 Teníamos que decidir cómo soportar de manera robusta los procesos de negocio en un esquema monolítico transicional sin envenenar todo el código a futuro.
 
 ## Decisión
-Hemos decidido **utilizar Camunda 7 Embedded (como dependencia `.jar`) dentro de la aplicación Spring Boot 3**, compartiendo la misma transacción (JDBC) y Base de Datos MySQL 8 que el dominio de negocio. 
+Hemos decidido **utilizar Camunda 7 Embedded (como dependencia `.jar`) dentro de la aplicación Spring Boot 3**, compartiendo la misma transacción (JDBC) y Base de Datos PostgreSQL que el dominio de negocio. 
 
 ## Justificación
 1. **Time-to-Market y Simplicidad Operativa:** Para V1, es indispensable que los desarrolladores puedan encender el Backend localmente en segundos. Empotrar el motor significa que un solo proceso Java Virtual Machine (JVM) y una sola conexión a base de datos resuelven la orquestación. No hay que orquestar contenedores satélite.

@@ -3,7 +3,7 @@
 ## User Review Required
 > [!WARNING]
 > The current underlying database architecture uses a `Dual Schema Data Architecture` (`phases_json` JSON column) instead of full relational entity structures.
-> To fulfill the **"5 tablas jerárquicas ON DELETE CASCADE"** instruction mathematically, I will execute a Liquibase DDL migration destroying the JSON column and constructing proper MySQL Foreign Keys.
+> To fulfill the **"5 tablas jerárquicas ON DELETE CASCADE"** instruction mathematically, I will execute a Liquibase DDL migration destroying the JSON column and constructing proper PostgreSQL Foreign Keys.
 
 ## Proposed Changes
 

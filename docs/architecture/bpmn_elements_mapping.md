@@ -43,7 +43,7 @@
 *La carga útil (Payload) y la inmutabilidad documental.*
 
 *   **Implementación iBPMS:**
-    *   **Objetos de Datos (Data Objects):** En Camunda, esto se traduce en *Process Variables*. Nosotros lo revolucionamos guardándolo como un gran campo nativo `JSON` en MySQL 8 (`ibpms_case.payload`).
+    *   **Objetos de Datos (Data Objects):** En Camunda, esto se traduce en *Process Variables*. Nosotros lo revolucionamos guardándolo como un gran campo nativo `JSONB` en PostgreSQL (`ibpms_case.payload`).
     *   **Almacenes de Datos (Data Stores) / Archivos:** En lugar de guardar archivos en la BD de procesos, modelamos el Data Store apuntando al **SGDEA** (Nuestra bóveda documental con Hash SHA-256 en Azure Blob/Pantalla 12).
 *   **Gestión en Historias de Usuario / PRD:**
     *   `Épica: Bóveda Documental y Cumplimiento (SGDEA)`.

@@ -1538,50 +1538,53 @@ Feature: Action Cards Operativas y Orquestación Funcional (Human-in-the-Loop)
 
 ---
 
-### US-015: Feedback y aprendizaje supervisado (Human-in-the-loop MLOps)
-**Como** Analista del Área de Servicio (SAC)
-**Quiero** que el agente inteligente me proponga respuestas y acciones, permitiéndome editarlas, aprobarlas o rechazarlas
-**Para** garantizar que la máquina no tome decisiones autónomas erróneas y aprenda continuamente de mis correcciones en la Pantalla 1B.
+### US-015: Feedback y Aprendizaje Supervisado (Nightly MLOps Batch)
+**Como** Líder de Operaciones / Arquitecto IA
+**Quiero** que el sistema aprenda de las correcciones humanas sin colapsar el performance transaccional diario
+**Para** garantizar una evolución cognitiva continua (Zero-Touch) aislando el entrenamiento en ventanas nocturnas controladas.
+
+> 🧠 **Arquitectura de Aprendizaje en 2 Fases (V1):**
+> Para proteger la estabilidad de la Base de Datos Transaccional (Camunda/Kanban) durante el día, el MLOps se bifurca en:
+> - **Día (Observador Pasivo):** Registra silenciosamente el "Delta" entre lo que sugirió la IA y la decisión final del humano en la UI.
+> - **Noche (Agente Data Scientist):** Un Cron-Job autónomo procesa masivamente los logs del día y afina los vectores/pesos sin intervención de ingenieros humanos.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Asistente SAC y Triaje con Aprobación Humana Obligatoria
-  Scenario: Disparador Diferido del Acuse de Recibo (CA-1)
-    Given la llegada de un correo electrónico de un cliente al buzón parametrizado
-    When el Agente Inteligente 3 analiza el contenido y genera un borrador de Respuesta
-    Then el iBPMS NO envía el correo automáticamente al cliente
-    And retiene el borrador en la Pantalla 1B hasta que el humano lo revise y presione específicamente el botón `[Enviar Acuse]` o `[Cancelar Propuesta]`.
+Feature: MLOps Feedback Loop Architecture (2-Phase)
+  Scenario: Fase 1 - Recolección Diurna (Observación No Bloqueante NFR)
+    Given un componente IA emitiendo una sugerencia o borrador en la Pantalla 1B
+    When un Analista humano edita, rechaza o reclasifica dicha sugerencia antes de enviarla
+    Then el Frontend disparará la discrepancia (Lo que dijo la IA vs Lo que escribió el Humano) hacia el endpoint dedicado `POST /api/v1/mlops/feedback` bajo el patrón "Fire-and-Forget"
+    And queda estrictamente PROHIBIDO interceptar o añadir latencia a la transacción core de Camunda/Entity al guardar casos en la BD principal
+    And el servicio Backend (Spring Boot) empujará este log a un tópico en RabbitMQ o lo procesará de forma 100% asíncrona para insertarlo en `ibpms_mlops_feedback_log` sin competir por los hilos de conexión de PostgreSQL.
 
-  Scenario: Tolerancia al Riesgo y Declaración de Incertidumbre (CA-2)
-    Given un correo electrónico confuso o ininteligible
-    When la red neuronal calcula un Confidence Score por debajo del umbral parametrizado
-    Then el Agente 3 se declara incompetente explícitamente y deja la tarea en blanco para el humano
-    And expone un botón amarillo de `[Retroalimentar IA]` que despliega un Modal para que el analista (opcionalmente) le enseñe a clasificar ese caso anómalo.
+  Scenario: Fase 2 - Despertar del Agente Data Scientist (Batch Nocturno)
+    Given la ventana de mantenimiento parametrizada (Ej: 02:00 AM, Semanal, Mensual) en la Épica 15
+    When el motor de Cron-Jobs dispara el Agente Data Scientist (Proceso Autónomo)
+    Then el Agente consultará masivamente la tabla `ibpms_mlops_feedback_log` filtrando los logs acumulados
+    And ejecutará la consolidación de patrones repetitivos exigiendo un "Consenso Mínimo" (Ej: Aprende el patrón SI Y SOLO SI existen al menos 2 analistas distintos corrigiendo lo mismo).
+    And si encuentra discrepancias lógicas (Analista A lo categorizó 'Ventas', Analista B lo categorizó 'Soporte'), el Agente ignorará por completo el patrón por considerarlo "Contradictorio".
+    And ignorará matemáticamente los "Patrones Negativos" (Cuando el analista simplemente oprime `[Descartar/Eliminar Propuesta]`), asumiendo que el rechazo se debe a ruido/spam y no a un error cognitivo de clasificación, ahorrando poder de cómputo.
+    And le dará un peso aritmético multiplicador a la corrección dependiendo del Rol (Ej: Corrección de un Líder pesa x5 frente a la de un Junior).
+    And actualizará los pesos de la Base de Conocimiento (RAG) para clasificaciones Y asimilará las correcciones de redacción humana de la Pantalla 1B para imitar el Estilo Institucional (NLG).
 
-  Scenario: Consumo Contextual de Historial Cliente (Exchange API) (CA-3)
-    Given la necesidad de redactar una respuesta útil al cliente
-    Then el Agente 3 se conecta vía API a Microsoft Exchange (O365) para recuperar el hilo de correos recientes del cliente
-    And utiliza este contexto para generar el borrador, ignorando la Bóveda SGDEA (SharePoint) para este propósito específico.
+  Scenario: Trazabilidad y Purga del Turno Nocturno
+    Given la finalización exitosa del fine-tuning nocturno
+    Then el Agente Data Scientist emitirá un reporte consolidado al log de auditoría del sistema: "Matriz actualizada basada en N correcciones"
+    And marcará los registros procesados en la tabla `ibpms_mlops_feedback_log` con el flag `status: trained`.
 
-  Scenario: Tono Dinámico Inyectado por Administrador (CA-4)
-    Given la generación de texto natural (NLG) hacia un ciudadano
-    Then el tono (Formal, Empático, Urgente) no está hardcodeado en la lógica
-    And hereda las directrices directamente del *System Prompt* parametrizado previamente por el Administrador del Buzón en la configuración global.
+  Scenario: Declaración de Incompetencia Diurna (Límite Paramétrico)
+    Given un correo electrónico confuso procesado durante el día
+    When la red neuronal calcula un Confidence Score por debajo del umbral parametrizado en la Épica 15 (Configuración Global)
+    Then la IA se declara incompetente explícitamente y deja la tarea en blanco
+    And enruta el caso obligatoriamente al "Fallback Humano" sin intentar adivinar, generando el primer log de falla para que el Data Scientist Nocturno lo califique como un "Patrón Desconocido".
 
-  Scenario: Creación Exclusiva de Tareas Sugeridas (CA-5)
-    Given una solicitud de cliente que requiere múltiples acciones inter-área
-    Then el Agente 3 NO instancia los procesos subyacentes mágicamente en el backend
-    And se limita a proponer la lista de "Tareas / Actividades a Instanciar" en la Pantalla 1B, requiriendo el click humano de `[Aprobar Lista]`.
-
-  Scenario: Resiliencia ante Archivos Densos (Ceguera V1) (CA-6)
-    Given un correo con un anexo `.xlsx` de 40 MB lleno de macros financieras
-    Then en el alcance de la V1, el Agente 3 ignora el contenido computacional profundo de los anexos (Excel, XMLs)
-    And basa su razonamiento exclusivamente en el texto del cuerpo del correo y los PDFs/Word básicos.
-
-  Scenario: Trazabilidad Operativa sin Reporte Formal (CA-7)
-    Given una acción sugerida por la IA y aprobada por un analista
-    Then el iBPMS guarda el registro transaccional "Aprobado por: X, Sugerido por: IA" en la base de datos para trazabilidad forense
-    And no la proyecta como una "Etiqueta Policial de Auditoría" perturbadora en los informes comerciales diarios.
+  Scenario: Resiliencia Nocturna en PostgreSQL y Dead-Lettering (NFR)
+    Given el Cron-Job de aprendizaje neuronal (Agente Data Scientist) leyendo forzosamente los logs desde RabbitMQ
+    When recalcule vectores RAG y la base PostgreSQL arroje latencia o timeout a las 03:00 AM
+    Then el worker abortará emitiendo un NACK a RabbitMQ
+    And al acumular 3 NACKs sucesivos, un Dead Letter Exchange (DLX) enviará la carga fallida a la cola residual `mlops-dlq`
+    And notificará al SysAdmin por correo/webhook salvando la metadata cruda de la pérdida para intervención manual.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1B (Bandeja Docketing).
 
@@ -1600,8 +1603,46 @@ Feature: Configuración de 'Mailbox Policy' Dinámicas
     When el administrador define un 'mailbox_policy' configurando idioma, nivel de formalidad, disclaimers y escalamiento
     Then las propuestas generadas por el LLM aplican inmediatamente este contexto en sus prompts
     And los nuevos cambios de política operan sobre el siguiente correo entrante sin requerir 'redeploy' de código
-```
-**Trazabilidad UX:** Wireframes Pantalla 15 (Configuración de Buzones SAC).
+
+  Scenario: Toggle de Activación Cognitiva por Buzón
+    Given la configuración local de un buzón en la Pantalla 15.B
+    Then el Administrador posee un Master Switch `[Habilitar IA Copilot]`
+    And si el switch está apagado, el correo ingresa a la bandeja como un Intake 100% manual, sin análisis de sentimiento, sin extracción CRM y sin sugerencias, ahorrando tokens en buzones de bajo valor.
+
+  Scenario: Restricción del Catálogo de Servicios (White-Listing de Acciones)
+    Given que la IA generativa puede alucinar o sugerir procesos fuera de la jurisdicción del área
+    When el Administrador configura un buzón específico (Ej: `soporte_tecnico@`)
+    Then la Pantalla 15.B despliega una lista de checkboxes con todos los servicios SD disponibles en el Catálogo de la empresa.
+    And el Administrador puede seleccionar explícitamente cuáles son los ÚNICOS procesos que la IA tiene permitido sugerir en este buzón. Las inferencias hacia procesos no seleccionados serán bloqueadas y el borrador de acción quedará vacío.
+
+  Scenario: Umbral de Confianza Cognitiva Independiente (Confidence Score)
+    Given la pestaña "Variables de Entorno" dentro de la configuración específica de un buzón
+    When el líder de negocio edita las propiedades de ese buzón
+    Then puede asignar matemáticamente (0-100) el `Minimum Confidence Score` local.
+    And cualquier inferencia heurística de LA IA en ESE buzón que no supere el puntaje, se considerará "Anómala" e invocará el `[Fallback Humano]` (US-015).
+    And esto permite tener buzones críticos (Ej: Legales) exigiendo 95% de confianza, y buzones laxos (Ej: Info General) exigiendo 70%, sin pisarse entre ellos.
+
+  Scenario: Enrutamiento Táctico y SLA por Defecto
+    Given la entrada de un nuevo correo a un buzón específico (Ej: `reclamos@`)
+    When la IA procesa el mensaje a las 3:00 AM y genera las propuestas (A la espera de validación humana diurna)
+    Then la política del buzón forzará a la IA a asignar un SLA de Gracia (Ej: 2 horas) y una Criticidad (Ej: Alta) pre-parametrizada para ese buzón.
+    And el sistema enrutará la visualización de este correo EXCLUSIVAMENTE a los usuarios que posean el Rol/Dueño asociado a ese buzón (RBAC), impidiendo que el Intake sea público para toda la empresa.
+
+  Scenario: Control de Tono y Firmas Corporativas (NLG)
+    Given que la IA generó un borrador de respuesta (US-012)
+    Then la política del buzón obligará a la IA a reescribir la respuesta bajo el "Tono" parametrizado (Ej: "Corporativo y Gélido" para quejas, "Persuasivo" para ventas).
+    And inyectará automáticamente en el borrador la Plantilla de Firma asociada a ese buzón (Nombre del Canal, Disclaimer de Privacidad, Links).
+
+  Scenario: Parseo Multilingüe Estricto (Inglés/Español)
+    Given la política de Idioma del buzón ajustada a "Match Automático (V1)"
+    When ingresa un correo en Inglés
+    Then la IA procesará, analizará y sugerirá el borrador de respuesta OBLIGATORIAMENTE en Inglés. Si entra en Español, el ciclo completo será en Español.
+
+  Scenario: Alerta UI de Desconexión de Buzón (Token Expirado)
+    Given que el conector IMAP/GraphAPI de Office 365 pierde permisos sobre un buzón (Sesión expirada o revocada)
+    Then el iBPMS dejará de leer el buzón en silencio
+    And levantará de inmediato una "Alerta Crítica Visual" en la Pantalla 15.B (Local) marcando el buzón en Rojo.
+**Trazabilidad UX:** Wireframes Pantalla 15.B (Configuración Local de Buzones SAC).
 
 ---
 
@@ -1635,18 +1676,37 @@ Implementar el paradigma de Delivery separando la "Definición Comercial" (CRM) 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Conectividad y Resiliencia CRM
-  Scenario: Consulta base de servicios (CA-1)
-    Given el conector CRM (Outbound Adapter) está configurado con autenticación OAuth2
-    When el subsistema iBPMS consulta el catálogo por API
-    Then el CRM devuelve los servicios incluyendo obligatoriamente su 'service_ref_id' y metadata comercial esencial (Nombre, Descripción)
-    
-  Scenario: Activación de Modo Degradado por caída de CRM (CA-2)
-    Given el backend del CRM externo se encuentra inalcanzable (Timeout o HTTP 5xx)
-    And existe sincronización previa en caché Redis
-    When un cliente final abre el Portal de Catálogo de Servicios
-    Then el iBPMS debe mostrar el catálogo cacheado
-    And debe advertir visualmente la "última fecha de actualización"
-    And debe permitir iniciar el requerimiento de servicio sin bloquear el Frontend
+  Scenario: El Master Switch y el Modo Standalone (Bypass del CRM)
+    Given la configuración global en la Pantalla 15.A (Épica 15)
+    When el Administrador apaga el `Master Switch [Integración Continua CRM]`
+    Then el iBPMS entra en "Modo Standalone" u "Orquestador Maestro".
+    And pausa (oculta) inmediatamente todos los servicios antiguos importados del CRM.
+    And a partir de ese momento, la lista desplegable de servicios en los Intakes y las reglas de la IA (US-016) se alimentarán EXCLUSIVAMENTE de los Flujos/Procesos internos modelados nativamente en la Pantalla 8 (Low-Code). No existe modo híbrido en V1.
+
+  Scenario: Ingesta Plana del Catálogo (Consulta Base)
+    Given el Master Switch del CRM en `ON`
+    When el subsistema iBPMS sincroniza el catálogo por API (Vía OAuth2)
+    Then el CRM devuelve los servicios importando estrictamente la Metadata Comercial Esencial (Nombre y Descripción) atada a un `service_ref_id`.
+    And el iBPMS ignorará e impedirá la importación de 'Grupos o Equipos' de asignación del CRM, delegando el enrutamiento 100% al motor RBAC interno del iBPMS.
+
+  Scenario: El CRM como 'Source of Truth' Indiscutible (Nomenclatura)
+    Given la sincronización periódica del catálogo Activa
+    When el CRM envía el nombre de un servicio (Ej. "Reemplazo de Tarjeta de Crédito")
+    And un usuario intentó renombrarlo manualmente en el iBPMS a "Sustitución TDC"
+    Then el iBPMS "aplastará" y sobrescribirá el nombre manual, restaurándolo obligatoriamente a la nomenclatura dictada por el CRM.
+
+  Scenario: Ocultamiento Silencioso de Servicios Eliminados
+    Given que un Gerente Comercial elimina o inactiva el Servicio "Venta de Seguros" directamente en las entrañas de Salesforce/CRM
+    When el iBPMS ejecuta su siguiente ciclo de sincronización nocturno y detecta la ausencia del `service_ref_id`
+    Then el sistema ocultará automáticamente ese Item de la lista desplegable para los operarios humanos (Pantalla 0 y 1B).
+    And la base de datos actualizará su estado informándole a la Inteligencia Artificial (US-016) que dicho servicio ya no es sugerible, evitando alucinaciones de Catálogo.
+
+  Scenario: Activación de Modo Sobrevivencia por Caída de CRM y Feedback Visual
+    Given el backend del CRM externo se encuentra inalcanzable (Timeout HTTP 5xx) o la red falla
+    And existe sincronización previa almacenada en la memoria Caché (Redis/Motor Interno)
+    When los operarios o clientes abren formularios para iniciar nuevos casos
+    Then el iBPMS permitirá la creación asíncrona utilizando el catálogo cacheado sin bloquear la operación.
+    And desplegará un Banner Naranja de Advertencia en la UI indicando: *"Precaución: El CRM está inalcanzable. Se está operando con el Catálogo en Modo Caché. Posible desactualización"*.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 0 (Service Catalog).
 
@@ -1659,12 +1719,13 @@ Feature: Conectividad y Resiliencia CRM
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: CRON y Event-Driven Sync
-  Scenario: Sincronización calendarizada automática (CA-3)
-    Given que la política de 'scheduled sync' está activada (Ej. "Cada 1 Hora")
-    When se alcanza el 'cron trigger' en el backend
-    Then el motor iBPMS refresca la tabla interna o el 'Redis Cache' con el catálogo del CRM
-    And registra el resultado del lote (OK/FAIL) en la tabla 'ibpms_audit_log'
+Feature: CRON y Sincronización Nocturna del Catálogo
+  Scenario: Sincronización calendarizada rígida a las 11:00 PM
+    Given la necesidad imperativa de no impactar la red durante el horario hábil
+    When se alcanza el 'cron trigger' en el backend Spring Boot a las 23:00 Horas (11:00 PM)
+    Then el motor iBPMS dispara una tarea asíncrona que hace un full-fetch del catálogo del CRM.
+    And refresca la tabla interna o el 'Redis Cache' con las altas, bajas y modificaciones comerciales.
+    And registra el resultado del lote (OK/FAIL) en la tabla `ibpms_audit_log` para visibilidad del SysAdmin en la mañana.
 ```
 **Trazabilidad UX:** Tarea Backend (Sin Vista UI requerida).
 
@@ -2709,24 +2770,37 @@ Feature: Zero-Trust Developer Portal Security
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Centro de Gobernanza IA (Threshold Configurator)
-  Scenario: Ajuste de Confianza Cognitiva y Declaración de Incompetencia (US-015)
-    Given la pestaña "AI & ML Settings" en el panel de administrador
-    When se carga el widget de "Tolerance Thresholds"
-    Then el Administrador puede ingresar matemáticamente (0-100) el `Minimum Confidence Score`
-    And cualquier inferencia heurística del buzón (US-011) que no supere dicho puntaje exacto, se considerará "Anómala" e invocará el `[Fallback Humano]` obligatorio sin adivinar resultados.
+Feature: Centro de Gobernanza IA (Global Threshold Configurator)
 
   Scenario: Feature Toggle del "Auto-Pilot" de Embudos (US-040)
     Given el panel de administración
     Then debe existir un Master Switch de `[Permitir Instanciación Autónoma AI (Zero-Touch)]`
     And si este interruptor está apagado, por más que la IA tenga 100% de certeza, todas las Action Cards se retendrán forzosamente en el Embudo de la Pantalla 16. Mantenimiento del Principio "Human-in-the-Loop Override".
 
+  Scenario: Auditoría de Transparencia y Combate al Sobre-Ajuste (Audit Matrix)
+    Given el proceso nocturno del Agente Data Scientist (US-015)
+    Then el Administrador posee una pantalla "AI Audit Log" donde puede ver exactamente qué palabras, vectores o estilos aprendió a asociar la IA.
+    And esta lista debe ser legible por humanos (Ej: `[Aprendizaje 1: La palabra 'Urgente' ahora levanta flag de prioridad Alta]`).
+    And para prevenir el "Sobre-Ajuste" (Overfitting) de problemas antiguos, el Administrador puede seleccionar cualquier "Aprendizaje/Patrón" de esta matriz y oprimir el botón `[Eliminar Patrón]`, forzando a la IA a desaprender esa asociación obsoleta inmediatamente.
+
+  Scenario: Rollback de Modelo MLOps vía Blue-Green SQL Swapping (NFR)
+    Given una degradación de la calidad de respuesta de la IA (Ej: Alucinaciones reportadas a las 8:00 AM) y el uso de `pgvector` en IaaS sin versionamiento Git de registros
+    When el Administrador presione el botón crítico `[Revertir Modelo Anterior]` en la P26.B
+    Then el Backend ejecutará un "Blue-Green Data Swapping" a nivel de SQL
+    And los vectores entrenados en la noche anterior (los cuales nacieron inactivos con `is_active_model = FALSE` y etiqueta temporal Ej. V.2026.03, pasando a TRUE tras finalizar el batch) se marcarán como `FALSE`
+    And la bandera del modelo previo volverá a `TRUE` en 1 milisegundo, revirtiendo el cerebro del Agente (RAG/Embeddings) de forma instantánea.
+
+  Scenario: Frecuencia de Ejecución del Agente Data Scientist
+    Given la necesidad operativa de ahorrar cómputo y gestionar el umbral de evolución
+    Then el administrador puede configurar la Frecuencia Cron del reentrenamiento (Ej: `Diario`, `Semanal`, `Mensual`) y la hora exacta (Ej: `02:00 AM`).
+    And cuenta con una Política de Reintentos automáticos (Retry Queue) en caso de que el Job falle por Timeouts en la base de datos vectorial durante la madrugada.
+
   Scenario: Lista Negra Corporativa Anti-Adivinación (US-013)
     Given la necesidad de prevenir emparejamientos indeseados (Ej: `@gmail.com`)
     Then la interfaz exhibe un componente de tipo "Chip Input"
     And permite al administrador agregar, listar y eliminar cadenas de dominios públicos bajo la directriz "Ignorar Match por Dominio". Al inyectarlos, se escriben asíncronamente en la BD (`ibpms_public_domains_blacklist`).
 ```
-**Trazabilidad UX:** Nueva pestaña en Pantalla 15 (Configuración General).
+**Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Configuración Global / Súper Administrador).
 
 ---
 
@@ -2753,7 +2827,7 @@ Feature: Governing Agile Entropy and Storage Economics
     When el usuario la comparta con los clientes para validación temporal ("Review Mode")
     Then el Administrador controla el `[Pre_Signed_URL_TTL_Hours]` dictando globalmente en el sistema la caducidad (TTL) de todos los links transaccionales generados (Volar el acceso al archivo tras 12 o 24 horas por seguridad).
 ```
-**Trazabilidad UX:** Nueva pestaña en Pantalla 15 (Restricciones Arquitectónicas).
+**Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Restricciones Arquitectónicas / PMO).
 
 ---
 
@@ -2775,5 +2849,16 @@ Feature: API Polling & Telemetry Thresholds
     Given cientos de líderes de negocio con el "BAM Dashboard" abierto simultáneamente
     Then para evitar que las pantallas colapsen las réplicas de la Base de Datos con peticiones asíncronas
     And el Administrador manipula el `[BAM_Refresh_Rate_Ticks]` dictando cada cuántos minutos (Globalmente) el Frontend pedirá repintar gráficas a la BD, anulando comandos de refresco interactivos.
-```
-**Trazabilidad UX:** Nueva pestaña en Pantalla 15 (Performance y Conexiones).
+
+  Scenario: Regla de Retención y Purgado de Logs MLOps (Cold Storage NFR)
+    Given el crecimiento exponencial de la tabla `ibpms_mlops_feedback_log` (Los Deltas capturados en el día por la US-015) en PostgreSQL 15+
+    And que tenemos PROHIBIDO delegar la purga a `pg_cron` para proteger la salud del almacenamiento SSD transaccional
+    Then un Scheduled Task del Backend (Spring Boot) buscará los JSONs pasados (>40 días)
+    And los consolidará y trasladará por red segura (HTTPS SDK) al Azure Blob Storage
+    And SOLO tras verificar el Hash/Éxito de la transferencia a Azure, el Backend lanzará el DELETE físico al motor SQL para borrarlos permanentemente.
+
+  Scenario: Telemetría Global de Infraestructura (Mailbox Health)
+    Given la caída de un Token OAuth de un buzón transaccional (US-016)
+    When el motor detecte la falla de lectura
+    Then además de la alerta local, se emitirá una Notificación Global en la Pantalla 15.A y se despachará un correo/webhook crítico al SysAdmin informando: "Integridad de Entrada Comprometida: Buzón X Desconectado".
+**Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Performance y Conexiones / SysAdmin).

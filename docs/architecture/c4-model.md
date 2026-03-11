@@ -1,6 +1,6 @@
 # Modelo C4 - Táctico (V1): Plataforma iBPMS (PoC)
 
-Este documento contiene la representación de la Arquitectura **V1 (Estado Actual Táctico)**, la cual asume las actuales limitaciones de infraestructura (Azure VMs cerradas, acoplamiento transaccional y dependencia estricta de MySQL Relacional).
+Este documento contiene la representación de la Arquitectura **V1 (Estado Actual Táctico)**, la cual asume las actuales limitaciones de infraestructura (Azure VMs cerradas, acoplamiento transaccional y dependencia estricta de PostgreSQL 15+).
 
 ## Nivel 1: Diagrama de Contexto (System Context V1)
 
@@ -39,11 +39,11 @@ C4Context
 
 ## Nivel 2: Diagrama de Contenedores (Container Diagram V1)
 
-Abre la iBPMS mostrando el monolito transaccional obligado por el uso del motor Camunda 7 sobre MySQL.
+Abre la iBPMS mostrando el monolito transaccional obligado por el uso del motor Camunda 7 sobre PostgreSQL.
 
 ```mermaid
 C4Container
-    title Diagrama de Contenedores (V1) - Limitado a VMs y MySQL
+    title Diagrama de Contenedores (V1) - Limitado a VMs y PostgreSQL
     
     Person(cliente, "Cliente B2B/B2C", "Acceso segregado.")
     Container(plugin_o365, "Plugin Outlook", "Vue/JS", "Iframe dentro de Outlook.")
@@ -69,7 +69,7 @@ C4Container
         Container(rag_engine, "RAG Embedder Engine", "Python / Vector DB", "Generador de Embeddings AI.")
         Container(rabbitmq, "Message Broker", "RabbitMQ", "Bus asíncrono de mensajería.")
         
-        ContainerDb(db, "Base de Datos Consolidada", "MySQL 8", "Operativa y Estado BPM.")
+        ContainerDb(db, "Base de Datos Consolidada", "PostgreSQL 15+", "Operativa y Estado BPM.")
         ContainerDb(doc_vault, "Document Vault", "Azure Managed Disks/Blob", "Bóveda física segura.")
     }
     
@@ -136,7 +136,7 @@ C4Component
             Component(camunda_adapter, "Camunda 7 API", "Java API", "Usa RuntimeService local")
             Component(ai_adapter, "Llama 3 Local Adapter", "REST API", "Inferencia de Texto/Reglas")
             Component(doc_adapter, "Template Renderer (.jar)", "Apache FOP", "Fabricante de PDFs Jurídicos")
-            Component(jpa_adapter, "MySQL JPA Repositories", "Spring Data", "Base de datos")
+            Component(jpa_adapter, "PostgreSQL JPA Repositories", "Spring Data", "Base de datos")
             Component(erp_adapter, "ERP Connector", "Feign Client", "Gatillos a Legacy")
             Component(crm_adapter, "CRM Outbound Port", "Feign Client", "Consumo perfil 360")
             Component(graph_adapter, "Graph API Client", "MS SDK", "Crea/Lee correos M365")

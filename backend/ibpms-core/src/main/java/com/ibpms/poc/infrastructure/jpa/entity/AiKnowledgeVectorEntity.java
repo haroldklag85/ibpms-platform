@@ -4,8 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -23,8 +21,6 @@ public class AiKnowledgeVectorEntity {
     @Column(name = "human_approved_reply", columnDefinition = "TEXT")
     private String humanApprovedReply;
 
-    // Dependiendo de la versión y dialecto (Hibernate 6.2+ + PgVector)
-    @JdbcTypeCode(SqlTypes.VECTOR)
     @Column(name = "embedding", columnDefinition = "vector(1536)") // 1536 es la dimensión de text-embedding-3-small y
                                                                    // ada-002
     private float[] embedding;

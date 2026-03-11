@@ -43,7 +43,7 @@ public class MailboxConnectionManager {
             // For the sake of this mock POC logic requested in Epica 13, we ping the tenant
             // endpoint.
             // A mocked HTTP call here simulating the token request payload
-            ResponseEntity<String> response = restTemplate.postForEntity(tokenEndpoint, Map.of(
+            ResponseEntity<String> response = restTemplate.postForEntity(java.util.Objects.requireNonNull(tokenEndpoint), Map.of(
                     "client_id", mailbox.getClientId(),
                     "client_secret", rawClientSecret,
                     "grant_type", "client_credentials"), String.class);

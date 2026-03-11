@@ -41,7 +41,7 @@ class ProcessLifecycleControllerTest {
         // Aunque el endpoint real devuelva 200, mockearemos la lógica que asegura que
         // la BD es purgada al final del test transaction.
         // Nota: Endpoint asimilado hipotético para TDD
-        mockMvc.perform(post("/api/v1/design/processes/" + mockProcessId + "/sandbox").with(csrf()))
+        mockMvc.perform(post("/api/v1/design/processes/" + mockProcessId + "/sandbox").with(java.util.Objects.requireNonNull(csrf())))
                 .andExpect(status().isNotFound()); // HTTP 404 porque el endpoint Sandbox está pendiente por el PO
 
         // Comportamiento esperado una vez implementado: Status 200 y validación de
@@ -60,7 +60,7 @@ class ProcessLifecycleControllerTest {
 
         // Simulamos que el endpoint arrojará un 403 Forbidden como indica la
         // instrucción de QA Pantalla 7
-        mockMvc.perform(put("/api/v1/design/processes/" + mockProcessId + "/archive").with(csrf()))
+        mockMvc.perform(put("/api/v1/design/processes/" + mockProcessId + "/archive").with(java.util.Objects.requireNonNull(csrf())))
                 .andExpect(status().isForbidden()); // HTTP 403 pendiente de implementación final por el PO
     }
 }

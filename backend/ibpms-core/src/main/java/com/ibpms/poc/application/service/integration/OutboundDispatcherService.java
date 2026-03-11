@@ -84,12 +84,12 @@ public class OutboundDispatcherService {
         HttpHeaders headers = buildHeaders(connector, finalPayload);
 
         HttpEntity<String> request = new HttpEntity<>(finalPayload, headers);
-        HttpMethod method = HttpMethod.valueOf(connector.getHttpMethod().toUpperCase());
+        HttpMethod method = HttpMethod.valueOf(java.util.Objects.requireNonNull(connector.getHttpMethod().toUpperCase()));
 
         // CA-18: Pagination Handler (Básico)
         // Por simplificación en V1, mostramos una llamada única. La iteración requiere
         // conocer la heurística de next_page.
-        ResponseEntity<String> response = restTemplate.exchange(connector.getBaseUrl(), method, request, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(java.util.Objects.requireNonNull(connector.getBaseUrl()), method, request, String.class);
 
         log.info("Dispatch exitoso a [{}]. HTTP Status: {}", connector.getBaseUrl(), response.getStatusCode());
 
@@ -176,7 +176,7 @@ public class OutboundDispatcherService {
         if (connector.getDefaultHeaders() != null) {
             try {
                 JsonNode customHbr = mapper.readTree(connector.getDefaultHeaders());
-                customHbr.fields().forEachRemaining(entry -> headers.set(entry.getKey(), entry.getValue().asText()));
+                customHbr.fields().forEachRemaining(entry -> headers.set(java.util.Objects.requireNonNull(entry.getKey()), entry.getValue().asText()));
             } catch (Exception e) {
             }
         }

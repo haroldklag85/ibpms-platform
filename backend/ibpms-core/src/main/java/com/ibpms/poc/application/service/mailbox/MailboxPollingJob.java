@@ -31,7 +31,7 @@ public class MailboxPollingJob {
             String lockKey = "LOCK:MAILBOX:SCAN:" + mailbox.getId();
 
             // Distributed Lock implementation via Redis SETNX
-            Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(lockKey, "LOCKED", Duration.ofMinutes(4));
+            Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(lockKey, "LOCKED", java.util.Objects.requireNonNull(Duration.ofMinutes(4)));
 
             if (Boolean.TRUE.equals(lockAcquired)) {
                 try {

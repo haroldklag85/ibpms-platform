@@ -46,7 +46,7 @@ public class GenericRestDelegate implements JavaDelegate {
         String configIdStr = (String) outboundConfigId.getValue(execution);
         UUID configId = UUID.fromString(configIdStr);
 
-        Optional<OutboundConfigEntity> configOpt = outboundConfigRepository.findById(configId);
+        Optional<OutboundConfigEntity> configOpt = outboundConfigRepository.findById(java.util.Objects.requireNonNull(configId));
 
         if (configOpt.isEmpty()) {
             throw new RuntimeException("Outbound Config No encontrada en BBDD: " + configIdStr);
@@ -66,12 +66,12 @@ public class GenericRestDelegate implements JavaDelegate {
         }
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(processVariables, headers);
-        HttpMethod method = HttpMethod.valueOf(config.getHttpMethod());
+        HttpMethod method = HttpMethod.valueOf(java.util.Objects.requireNonNull(config.getHttpMethod()));
 
         // Disparar invocación externa asíncrona
         @SuppressWarnings("unchecked")
         ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                config.getEndpointUrl(),
+                java.util.Objects.requireNonNull(config.getEndpointUrl()),
                 method,
                 entity,
                 (Class<Map<String, Object>>) (Class<?>) Map.class);

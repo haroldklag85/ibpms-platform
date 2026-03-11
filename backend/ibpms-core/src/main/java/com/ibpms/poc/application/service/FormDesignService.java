@@ -83,7 +83,7 @@ public class FormDesignService {
      * un formulario activo, clona en una versión N+1 como DRAFT.
      */
     public FormDesignDTO actualizarOCrearVersion(UUID id, CreateFormDesignDTO dto, String userId) {
-        FormDesignEntity base = formDesignRepository.findById(id)
+        FormDesignEntity base = formDesignRepository.findById(java.util.Objects.requireNonNull(id))
                 .orElseThrow(() -> new EntityNotFoundException("Formulario base no encontrado"));
 
         if (base.getStatus() == FormDesignEntity.Status.ACTIVE) {
@@ -115,7 +115,7 @@ public class FormDesignService {
     }
 
     public void eliminar(UUID id) {
-        FormDesignEntity entity = formDesignRepository.findById(id)
+        FormDesignEntity entity = formDesignRepository.findById(java.util.Objects.requireNonNull(id))
                 .orElseThrow(() -> new EntityNotFoundException("Formulario no encontrado"));
 
         // CA-10: Eliminar form bloqueado si hay instancias activas.

@@ -36,7 +36,7 @@ public class ProjectTemplateBuilderService {
         // 2. Si ya existe, lo borramos o limpiamos sus dependencias y fases por
         // orfandad
         if (dto.getId() != null && !dto.getId().isEmpty()) {
-            template = templateRepo.findById(dto.getId())
+            template = templateRepo.findById(java.util.Objects.requireNonNull(dto.getId()))
                     .orElse(new ProjectTemplate()); // O lanzar 404
 
             // Borrado masivo de dependencias viejas para recrearlas
@@ -106,7 +106,7 @@ public class ProjectTemplateBuilderService {
 
     @Transactional
     public void publishTemplate(String templateId) {
-        ProjectTemplate template = templateRepo.findById(templateId)
+        ProjectTemplate template = templateRepo.findById(java.util.Objects.requireNonNull(templateId))
                 .orElseThrow(() -> new IllegalArgumentException("Template no encontrado"));
 
         // AC-1: Validacion de Integridad. Todas las tareas deben tener form_key

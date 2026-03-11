@@ -19,7 +19,7 @@ public class CatalogCachePersistenceAdapter implements CatalogCachePort {
 
     @Override
     public void updateCache(String catalogId, String payload) {
-        CatalogCacheEntity entity = repository.findById(catalogId)
+        CatalogCacheEntity entity = repository.findById(java.util.Objects.requireNonNull(catalogId))
                 .orElseGet(() -> new CatalogCacheEntity(catalogId, payload, LocalDateTime.now()));
 
         entity.setPayload(payload);
@@ -30,7 +30,7 @@ public class CatalogCachePersistenceAdapter implements CatalogCachePort {
 
     @Override
     public Optional<String> getCatalogFallback(String catalogId) {
-        return repository.findById(catalogId)
+        return repository.findById(java.util.Objects.requireNonNull(catalogId))
                 .map(CatalogCacheEntity::getPayload);
     }
 }

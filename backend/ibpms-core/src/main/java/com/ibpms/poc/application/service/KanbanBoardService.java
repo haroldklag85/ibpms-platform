@@ -20,7 +20,7 @@ public class KanbanBoardService implements DelegateTaskUseCase {
     public String delegateSubTask(String parentTaskId, String subTaskName, String assignee) {
 
         // 1. Encontrar la tarea padre
-        KanbanTaskEntity parent = taskRepository.findById(java.util.UUID.fromString(parentTaskId))
+        KanbanTaskEntity parent = taskRepository.findById(java.util.Objects.requireNonNull(java.util.UUID.fromString(parentTaskId)))
                 .orElseThrow(() -> new RuntimeException("Tarea padre no encontrada (Ad-Hoc Delegation)"));
 
         // 2. Crear la Sub Tarea

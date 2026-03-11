@@ -32,7 +32,7 @@ public class AnalyticsControllerTest {
         when(obtenerMetricasUseCase.getProcessHealth()).thenReturn(healthDTO);
 
         mockMvc.perform(get("/analytics/process-health")
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.activeCases").value(150))
                 .andExpect(jsonPath("$.completedCases").value(500))
@@ -52,7 +52,7 @@ public class AnalyticsControllerTest {
         when(obtenerMetricasUseCase.getAiMetrics()).thenReturn(aiDTO);
 
         mockMvc.perform(get("/analytics/ai-metrics")
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalAiEvents").value(100))
                 .andExpect(jsonPath("$.generatedDmns").value(40))
@@ -64,7 +64,7 @@ public class AnalyticsControllerTest {
     @WithMockUser(username = "asesor", roles = { "Funcionario" })
     void shouldForbidAccessToNonDirectives() throws Exception {
         mockMvc.perform(get("/analytics/process-health")
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON)))
                 .andExpect(status().isForbidden());
     }
 }

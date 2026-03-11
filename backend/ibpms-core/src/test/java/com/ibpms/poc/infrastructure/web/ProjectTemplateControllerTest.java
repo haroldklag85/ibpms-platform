@@ -59,9 +59,9 @@ public class ProjectTemplateControllerTest {
         dtoIn.setPhases(Collections.singletonList(phase1));
 
         mockMvc.perform(post("/project-templates")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dtoIn)))
+                .with(java.util.Objects.requireNonNull(csrf()))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                .content(java.util.Objects.requireNonNull(objectMapper.writeValueAsString(dtoIn))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(expectedId.toString()))
                 .andExpect(jsonPath("$.name").value("WBS Desarrollo Inmobiliario"))
@@ -75,9 +75,9 @@ public class ProjectTemplateControllerTest {
         dtoIn.setName("WBS Prueba");
 
         mockMvc.perform(post("/project-templates")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dtoIn)))
+                .with(java.util.Objects.requireNonNull(csrf()))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                .content(java.util.Objects.requireNonNull(objectMapper.writeValueAsString(dtoIn))))
                 .andExpect(status().isForbidden());
     }
 }

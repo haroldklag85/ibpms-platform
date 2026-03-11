@@ -2,7 +2,7 @@
 --changeset hb-dev:10-create-sgdea-tables
 
 CREATE TABLE ibpms_document_reference (
-    id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
     sharepoint_graph_id VARCHAR(150) NOT NULL,
     sharepoint_url VARCHAR(500),
     file_name VARCHAR(255) NOT NULL,

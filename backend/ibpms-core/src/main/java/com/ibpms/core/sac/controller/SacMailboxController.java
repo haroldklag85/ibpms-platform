@@ -73,7 +73,7 @@ public class SacMailboxController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<Void> toggleStatus(@PathVariable String id, @RequestParam boolean active) {
-        SacMailbox mailbox = repository.findById(id).orElseThrow();
+        SacMailbox mailbox = repository.findById(java.util.Objects.requireNonNull(id)).orElseThrow();
         mailbox.setActive(active);
         repository.save(mailbox);
         return ResponseEntity.noContent().build();

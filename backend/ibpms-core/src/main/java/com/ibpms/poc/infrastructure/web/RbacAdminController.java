@@ -40,7 +40,7 @@ public class RbacAdminController {
 
     @PostMapping("/profiles")
     public ResponseEntity<IbpmsProfileEntity> createProfile(@RequestBody IbpmsProfileEntity profile) {
-        return ResponseEntity.ok(profileRepository.save(profile));
+        return ResponseEntity.ok(profileRepository.save(java.util.Objects.requireNonNull(profile)));
     }
 
     @GetMapping("/mappings")
@@ -50,7 +50,7 @@ public class RbacAdminController {
 
     @PostMapping("/mappings")
     public ResponseEntity<IdpGroupMappingEntity> addMapping(@RequestBody IdpGroupMappingEntity mapping) {
-        return ResponseEntity.ok(mappingRepository.save(mapping));
+        return ResponseEntity.ok(mappingRepository.save(java.util.Objects.requireNonNull(mapping)));
     }
 
     @GetMapping("/assignments")
@@ -61,6 +61,6 @@ public class RbacAdminController {
     @PostMapping("/assignments")
     public ResponseEntity<ProfileBpmnAssignmentEntity> addAssignment(
             @RequestBody ProfileBpmnAssignmentEntity assignment) {
-        return ResponseEntity.ok(assignmentRepository.save(assignment));
+        return ResponseEntity.ok(assignmentRepository.save(java.util.Objects.requireNonNull(assignment)));
     }
 }

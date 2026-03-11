@@ -37,13 +37,13 @@ public class ExpedienteJpaAdapter implements ExpedienteRepositoryPort {
     @Transactional
     public Expediente save(Expediente expediente) {
         ExpedienteEntity entity = toEntity(expediente);
-        return toDomain(repository.save(entity));
+        return toDomain(repository.save(java.util.Objects.requireNonNull(entity)));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Expediente> findById(UUID id) {
-        return repository.findById(id.toString()).map(this::toDomain);
+        return repository.findById(java.util.Objects.requireNonNull(id.toString())).map(this::toDomain);
     }
 
     @Override

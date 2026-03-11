@@ -4,7 +4,7 @@
 
 -- Table: ibpms_sec_role_template
 CREATE TABLE ibpms_sec_role_template (
-    id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
     role_name VARCHAR(100) NOT NULL UNIQUE,
     description VARCHAR(255),
     granular_permissions JSON,
@@ -14,9 +14,9 @@ CREATE TABLE ibpms_sec_role_template (
 
 -- Table: ibpms_sec_role_hierarchy
 CREATE TABLE ibpms_sec_role_hierarchy (
-    id BINARY(16) NOT NULL,
-    parent_role_id BINARY(16) NOT NULL,
-    child_role_id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
+    parent_role_id UUID NOT NULL,
+    child_role_id UUID NOT NULL,
     CONSTRAINT pk_ibpms_sec_role_hierarchy PRIMARY KEY (id),
     CONSTRAINT fk_role_hier_parent FOREIGN KEY (parent_role_id) REFERENCES ibpms_sec_role_template(id),
     CONSTRAINT fk_role_hier_child FOREIGN KEY (child_role_id) REFERENCES ibpms_sec_role_template(id)
@@ -24,11 +24,11 @@ CREATE TABLE ibpms_sec_role_hierarchy (
 
 -- Table: ibpms_sec_identity
 CREATE TABLE ibpms_sec_identity (
-    id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
     entraid_object_id VARCHAR(100) NOT NULL UNIQUE,
     email VARCHAR(150) NOT NULL,
     full_name VARCHAR(150) NOT NULL,
-    role_id BINARY(16),
+    role_id UUID,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     last_login_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -38,9 +38,9 @@ CREATE TABLE ibpms_sec_identity (
 
 -- Table: ibpms_sec_delegation_log
 CREATE TABLE ibpms_sec_delegation_log (
-    id BINARY(16) NOT NULL,
-    donor_id BINARY(16) NOT NULL,
-    recipient_id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
+    donor_id UUID NOT NULL,
+    recipient_id UUID NOT NULL,
     start_date TIMESTAMP NOT NULL,
     end_date TIMESTAMP NOT NULL,
     is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
@@ -53,10 +53,10 @@ CREATE TABLE ibpms_sec_delegation_log (
 
 -- Table: ibpms_sec_api_key
 CREATE TABLE ibpms_sec_api_key (
-    id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
     client_name VARCHAR(100) NOT NULL UNIQUE,
     client_secret_hash VARCHAR(255) NOT NULL,
-    role_id BINARY(16),
+    role_id UUID,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ibpms_sec_api_key PRIMARY KEY (id),

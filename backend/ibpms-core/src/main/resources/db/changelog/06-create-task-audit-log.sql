@@ -2,7 +2,7 @@
 --changeset hb-dev:6-create-task-audit-log
 
 CREATE TABLE ibpms_task_audit_log (
-    id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
     task_id VARCHAR(64) NOT NULL,
     action VARCHAR(50) NOT NULL,
     username VARCHAR(100) NOT NULL,

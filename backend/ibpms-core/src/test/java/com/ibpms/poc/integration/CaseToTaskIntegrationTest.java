@@ -37,6 +37,7 @@ import static org.hamcrest.Matchers.hasSize;
 class CaseToTaskIntegrationTest {
 
     @Container
+    @SuppressWarnings("resource")
     private static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0.33")
             .withDatabaseName("test_ibpms")
             .withUsername("test")
@@ -79,9 +80,9 @@ class CaseToTaskIntegrationTest {
         // --- 2. Probar Catálogo con Token ---
         mockMvc.perform(get("/api/v1/catalogs/countries")
                 .header("Authorization", "Bearer " + validJwtToken)
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$", java.util.Objects.requireNonNull(hasSize(3))))
                 .andExpect(jsonPath("$[0].code").value("CO"));
 
         // --- 3. Crear Expediente fallando limpiamente vía GlobalExceptionHandler ---
@@ -96,8 +97,8 @@ class CaseToTaskIntegrationTest {
         mockMvc.perform(post("/api/v1/expedientes")
                 .header("Authorization", "Bearer " + validJwtToken)
                 .header("Idempotency-Key", idempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                .content(java.util.Objects.requireNonNull(objectMapper.writeValueAsString(request))))
                 // Debido a que "dummy-process" no está desplegado en Camunda para este test,
                 // esperamos el 500 elegante (o si lo capturamos como NotFound, el que responda)
                 .andExpect(status().isInternalServerError())

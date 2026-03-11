@@ -2,7 +2,7 @@
 --changeset hb-dev:9-create-integration-hub-tables
 
 CREATE TABLE ibpms_api_connector (
-    id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
     name VARCHAR(100) NOT NULL,
     system_code VARCHAR(100) NOT NULL,
     base_url VARCHAR(500) NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE ibpms_api_connector (
     auth_config JSON,
     pgp_public_key TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_api_connector PRIMARY KEY (id),
     CONSTRAINT uq_api_connector_code_version UNIQUE (system_code, version)
 );

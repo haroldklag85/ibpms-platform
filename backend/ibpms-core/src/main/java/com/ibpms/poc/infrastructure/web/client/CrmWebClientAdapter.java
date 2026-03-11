@@ -20,7 +20,7 @@ public class CrmWebClientAdapter implements CrmClientPort {
     private final WebClient webClient;
 
     public CrmWebClientAdapter(@Value("${crm.base-url:http://localhost:9090}") String baseUrl) {
-        this.webClient = WebClient.builder().baseUrl(baseUrl).build();
+        this.webClient = WebClient.builder().baseUrl(java.util.Objects.requireNonNull(baseUrl)).build();
     }
 
     @Override

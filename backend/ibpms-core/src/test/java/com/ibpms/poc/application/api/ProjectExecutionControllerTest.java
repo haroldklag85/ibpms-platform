@@ -36,7 +36,7 @@ class ProjectExecutionControllerTest {
         String projectId = "PROJECT-101";
 
         mockMvc.perform(post("/api/v1/execution/projects/{id}/baseline", projectId)
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON)))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Línea Base fijada exitosamente."));
 

@@ -22,7 +22,7 @@ public class IdempotencyJpaAdapter implements IdempotencyPort {
     @Override
     @Transactional(readOnly = true)
     public boolean existe(String idempotencyKey) {
-        return repository.existsById(idempotencyKey);
+        return repository.existsById(java.util.Objects.requireNonNull(idempotencyKey));
     }
 
     @Override
@@ -37,7 +37,7 @@ public class IdempotencyJpaAdapter implements IdempotencyPort {
     @Override
     @Transactional(readOnly = true)
     public String obtenerResultado(String idempotencyKey) {
-        return repository.findById(idempotencyKey)
+        return repository.findById(java.util.Objects.requireNonNull(idempotencyKey))
                 .map(IdempotencyKeyEntity::getResultJson)
                 .orElse(null);
     }

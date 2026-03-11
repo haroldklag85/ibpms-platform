@@ -23,7 +23,7 @@ public class MsGraphWebClientAdapter implements MsGraphClientPort {
 
     public MsGraphWebClientAdapter(
             @Value("${msgraph.base-url:https://graph.microsoft.com/v1.0}") String baseUrl) {
-        this.webClient = WebClient.builder().baseUrl(baseUrl).build();
+        this.webClient = WebClient.builder().baseUrl(java.util.Objects.requireNonNull(baseUrl)).build();
     }
 
     @Override
@@ -39,8 +39,8 @@ public class MsGraphWebClientAdapter implements MsGraphClientPort {
             @SuppressWarnings("unchecked")
             Map<String, Object> response = webClient.post()
                     .uri("/me/messages")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(payload)
+                    .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                    .bodyValue(java.util.Objects.requireNonNull(payload))
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
@@ -63,8 +63,8 @@ public class MsGraphWebClientAdapter implements MsGraphClientPort {
             @SuppressWarnings("unchecked")
             Map<String, Object> response = webClient.post()
                     .uri("/me/events")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(payload)
+                    .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                    .bodyValue(java.util.Objects.requireNonNull(payload))
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();

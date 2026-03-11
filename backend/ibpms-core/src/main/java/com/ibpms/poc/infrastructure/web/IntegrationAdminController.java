@@ -31,7 +31,7 @@ public class IntegrationAdminController {
 
     @PostMapping("/inbound")
     public ResponseEntity<InboundWebhookEntity> createInboundWebhook(@RequestBody InboundWebhookEntity entity) {
-        return ResponseEntity.ok(inboundRepository.save(entity));
+        return ResponseEntity.ok(inboundRepository.save(java.util.Objects.requireNonNull(entity)));
     }
 
     // --- Outbound Configs ---
@@ -43,6 +43,6 @@ public class IntegrationAdminController {
 
     @PostMapping("/outbound")
     public ResponseEntity<OutboundConfigEntity> createOutboundConfig(@RequestBody OutboundConfigEntity entity) {
-        return ResponseEntity.ok(outboundRepository.save(entity));
+        return ResponseEntity.ok(outboundRepository.save(java.util.Objects.requireNonNull(entity)));
     }
 }

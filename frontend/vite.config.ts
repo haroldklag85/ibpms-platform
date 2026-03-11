@@ -4,7 +4,7 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [vue()],
+    plugins: [vue() as any],
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
@@ -28,8 +28,10 @@ export default defineConfig({
         css: true,
         setupFiles: ['./src/tests/setupVitest.ts'],
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-        deps: {
-            inline: ['element-plus', 'vue-router']
+        server: {
+            deps: {
+                inline: ['element-plus', 'vue-router']
+            }
         }
     }
 });

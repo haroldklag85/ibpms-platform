@@ -1701,6 +1701,12 @@ Feature: Conectividad y Resiliencia CRM
     Then el sistema ocultará automáticamente ese Item de la lista desplegable para los operarios humanos (Pantalla 0 y 1B).
     And la base de datos actualizará su estado informándole a la Inteligencia Artificial (US-016) que dicho servicio ya no es sugerible, evitando alucinaciones de Catálogo.
 
+  Scenario: Inmunidad Histórica (In-Flight Cases)
+    Given la desactivación o borrado de un Servicio en el CRM (Ej: "Venta de Seguros")
+    And que existen 50 Casos de dicho servicio operando "En Progreso" dentro de las bandejas del iBPMS
+    Then la eliminación comercial NO afectará transaccionalmente a estos casos vivos.
+    And continuarán su ciclo de vida y facturación normal hasta cerrarse utilizando la metadata inmutable que poseían al momento de su creación.
+
   Scenario: Activación de Modo Sobrevivencia por Caída de CRM y Feedback Visual
     Given el backend del CRM externo se encuentra inalcanzable (Timeout HTTP 5xx) o la red falla
     And existe sincronización previa almacenada en la memoria Caché (Redis/Motor Interno)
@@ -1726,7 +1732,25 @@ Feature: CRON y Sincronización Nocturna del Catálogo
     Then el motor iBPMS dispara una tarea asíncrona que hace un full-fetch del catálogo del CRM.
     And refresca la tabla interna o el 'Redis Cache' con las altas, bajas y modificaciones comerciales.
     And registra el resultado del lote (OK/FAIL) en la tabla `ibpms_audit_log` para visibilidad del SysAdmin en la mañana.
-```
+
+  Scenario: Tolerancia a Fallas en Mitad de Lote (Retry Queue / RabbitMQ)
+    Given un error de red o timeout durante la sincronización nocturna de miles de servicios
+    When el proceso falla a la mitad del lote de ingesta
+    Then el Backend no realizará un commit parcial (BD), sino que utilizará el módulo de **RabbitMQ** para apilar la tarea fallida.
+    And ejecutará una política automática de "Reintentos de Resiliencia" (Ej: 3 intentos cada 15 min).
+    And SI Y SOLO SI al finalizar los reintentos no hay éxito, descartará el lote defectuoso, preservando intacto el Catálogo de ayer, e informará el Error Crítico al administrador.
+
+  Scenario: Sincronización Manual de Emergencia (Botón de Pánico) y Cool-down
+    Given el panel de Configuración de Integraciones del Administrador (Pantalla 15.A)
+    When presiona el botón `[Sincronizar CRM Ahora]` por fuera del horario nocturno
+    Then el sistema forzará la descarga inmediata del catálogo.
+    And deshabilitará (grisará) el botón aplicando una regla de "Cool-Down" (Enfriamiento) obligatoria de 15 minutos para prevenir saturación (Anti-DDoS) hacia el servidor del propio cliente CRM.
+
+  Scenario: Actualización UI Sin Recarga (WebSockets)
+    Given la ejecución exitosa de una Sincronización de Emergencia en pleno horario laboral diurno
+    And cientos de agentes de Call Center operando dentro del iBPMS
+    Then el servidor (Node.js/Spring Boot) despachará un evento Push/WebSocket hacia los clientes conectados.
+    And los menús desplegables de "Catálogo de Servicios" se refrescarán y re-renderizarán automáticamente en la UI de todos los usuarios sin exigirles presionar F5.
 **Trazabilidad UX:** Tarea Backend (Sin Vista UI requerida).
 
 ---
@@ -2861,4 +2885,10 @@ Feature: API Polling & Telemetry Thresholds
     Given la caída de un Token OAuth de un buzón transaccional (US-016)
     When el motor detecte la falla de lectura
     Then además de la alerta local, se emitirá una Notificación Global en la Pantalla 15.A y se despachará un correo/webhook crítico al SysAdmin informando: "Integridad de Entrada Comprometida: Buzón X Desconectado".
+
+  Scenario: Telemetría de Desfase Comercial (Sync Health)
+    Given la falla definitiva de la sincronización nocturna o manual del Catálogo CRM (Agotamiento de reintentos RabbitMQ de la US-020)
+    Then al arrancar la operación humana en la mañana (Ej: 8:00 AM)
+    And el iBPMS forzará la exhibición de un "Banner Rojo Permanente" en la cabecera de la Pantalla 15.A indicándole al SysAdmin: *"CRÍTICO: La sincronización de catálogo falló. El iBPMS opera con una versión desactualizada de más de 24 horas"*.
+```
 **Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Performance y Conexiones / SysAdmin).

@@ -42,7 +42,7 @@ public class BpmnDesignService {
                 createdBy);
 
         BpmnProcessDesignEntity entity = toEntity(domain);
-        designRepository.save(entity);
+        designRepository.save(java.util.Objects.requireNonNull(entity));
 
         audit(domain.getId(), BpmnDesignAuditLogEntity.Action.EDIT, createdBy,
                 0, "{\"event\":\"CREATED\"}");
@@ -139,7 +139,7 @@ public class BpmnDesignService {
     // --- Helpers ---
 
     public BpmnProcessDesignEntity findOrFail(UUID id) {
-        return designRepository.findById(id)
+        return designRepository.findById(java.util.Objects.requireNonNull(id))
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
                         "Diseño BPMN no encontrado: " + id));
     }

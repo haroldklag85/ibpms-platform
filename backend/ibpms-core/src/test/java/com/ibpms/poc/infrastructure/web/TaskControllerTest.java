@@ -49,7 +49,7 @@ public class TaskControllerTest {
         doNothing().when(reclamarTareaUseCase).reclamar(taskId, "maria.lopez");
 
         mockMvc.perform(post("/tasks/{taskId}/claim", taskId)
-                .with(csrf())) // Protege contra fallos de seguridad CSRF si están activos
+                .with(java.util.Objects.requireNonNull(csrf()))) // Protege contra fallos de seguridad CSRF si están activos
                 .andExpect(status().isOk());
 
         verify(reclamarTareaUseCase, times(1)).reclamar(taskId, "maria.lopez");
@@ -64,7 +64,7 @@ public class TaskControllerTest {
                 .when(reclamarTareaUseCase).reclamar(taskId, "maria.lopez");
 
         mockMvc.perform(post("/tasks/{taskId}/claim", taskId)
-                .with(csrf()))
+                .with(java.util.Objects.requireNonNull(csrf())))
                 .andExpect(status().isConflict());
 
         verify(reclamarTareaUseCase, times(1)).reclamar(taskId, "maria.lopez");
@@ -79,7 +79,7 @@ public class TaskControllerTest {
                 .when(reclamarTareaUseCase).reclamar(taskId, "maria.lopez");
 
         mockMvc.perform(post("/tasks/{taskId}/claim", taskId)
-                .with(csrf()))
+                .with(java.util.Objects.requireNonNull(csrf())))
                 .andExpect(status().isNotFound());
 
         verify(reclamarTareaUseCase, times(1)).reclamar(taskId, "maria.lopez");

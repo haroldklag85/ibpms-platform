@@ -46,8 +46,8 @@ public class ServiceDeliveryControllerTest {
                 """;
 
         mockMvc.perform(post("/service-delivery/manual-start")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
+                .with(java.util.Objects.requireNonNull(csrf()))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .content(payload))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("STARTED"))
@@ -60,8 +60,8 @@ public class ServiceDeliveryControllerTest {
         String payload = "{\"definitionKey\": \"flujo-pqr\"}";
 
         mockMvc.perform(post("/service-delivery/manual-start")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
+                .with(java.util.Objects.requireNonNull(csrf()))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .content(payload))
                 .andExpect(status().isForbidden());
     }

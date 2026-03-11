@@ -37,9 +37,9 @@ class DeploymentControllerTest {
         request.setResourceName("proceso.bpmn");
         request.setXmlString("<bpmn />");
 
-        mockMvc.perform(post("/api/v1/deployments").with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(post("/api/v1/deployments").with(java.util.Objects.requireNonNull(csrf()))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                .content(java.util.Objects.requireNonNull(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isCreated());
     }
 
@@ -51,9 +51,9 @@ class DeploymentControllerTest {
         request.setResourceName("proceso.bpmn");
         request.setXmlString("<bpmn />");
 
-        mockMvc.perform(post("/api/v1/deployments").with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(post("/api/v1/deployments").with(java.util.Objects.requireNonNull(csrf()))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                .content(java.util.Objects.requireNonNull(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isForbidden());
     }
 }

@@ -33,7 +33,7 @@ public class ApiConnectorService {
 
     @Transactional(readOnly = true)
     public Optional<ApiConnectorEntity> getConnector(UUID id) {
-        return repository.findById(id);
+        return repository.findById(java.util.Objects.requireNonNull(id));
     }
 
     @Transactional
@@ -46,7 +46,7 @@ public class ApiConnectorService {
 
     @Transactional
     public ApiConnectorEntity updateConnector(UUID id, ApiConnectorEntity updatedData) {
-        return repository.findById(id).map(existing -> {
+        return repository.findById(java.util.Objects.requireNonNull(id)).map(existing -> {
             existing.setName(updatedData.getName());
             existing.setBaseUrl(updatedData.getBaseUrl());
             existing.setHttpMethod(updatedData.getHttpMethod());
@@ -59,14 +59,14 @@ public class ApiConnectorService {
 
     @Transactional
     public void deleteConnector(UUID id) {
-        repository.deleteById(id);
+        repository.deleteById(java.util.Objects.requireNonNull(id));
     }
 
     /**
      * Prueba el conector en vivo usando el Testing Playground del Frontend.
      */
     public String testPing(UUID id, String payloadJson) throws JsonProcessingException {
-        ApiConnectorEntity connector = repository.findById(id)
+        ApiConnectorEntity connector = repository.findById(java.util.Objects.requireNonNull(id))
                 .orElseThrow(() -> new RuntimeException("Connector not found: " + id));
 
         // Transforma el JSON string genérico a Map para el dispatcher

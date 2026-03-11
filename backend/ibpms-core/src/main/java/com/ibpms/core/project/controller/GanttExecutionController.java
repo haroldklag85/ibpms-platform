@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.lang.NonNull;
 
 import java.io.IOException;
 import java.util.List;
@@ -58,7 +59,7 @@ public class GanttExecutionController {
             emitter.complete();
             emitters.remove(id);
         });
-        emitter.onError(e -> {
+        emitter.onError((@NonNull Throwable e) -> {
             emitter.completeWithError(e);
             emitters.remove(id);
         });

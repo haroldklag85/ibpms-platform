@@ -48,7 +48,7 @@ public class KanbanController {
 
     @PostMapping("/boards/{boardId}/tasks")
     public ResponseEntity<KanbanTaskEntity> createTask(@PathVariable UUID boardId, @RequestBody KanbanTaskEntity task) {
-        Optional<KanbanBoardEntity> boardOpt = boardRepository.findById(boardId);
+        Optional<KanbanBoardEntity> boardOpt = boardRepository.findById(java.util.Objects.requireNonNull(boardId));
         if (boardOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -69,7 +69,7 @@ public class KanbanController {
             return ResponseEntity.badRequest().body("El campo 'newStatus' es requerido.");
         }
 
-        Optional<KanbanTaskEntity> taskOpt = taskRepository.findById(taskId);
+        Optional<KanbanTaskEntity> taskOpt = taskRepository.findById(java.util.Objects.requireNonNull(taskId));
         if (taskOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }

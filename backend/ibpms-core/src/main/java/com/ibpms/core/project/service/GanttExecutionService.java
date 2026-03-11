@@ -41,7 +41,7 @@ public class GanttExecutionService {
 
     @Transactional
     public void assignTask(String taskId, AssignTaskDTO dto) {
-        ProjectTaskExecution task = taskExecutionRepository.findById(taskId)
+        ProjectTaskExecution task = taskExecutionRepository.findById(java.util.Objects.requireNonNull(taskId))
                 .orElseThrow(() -> new IllegalArgumentException("Task ID No Encontrado"));
 
         task.setAssigneeUserId(dto.getAssigneeUserId());

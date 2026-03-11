@@ -31,8 +31,8 @@ public class OpenAiWebClientAdapter implements NlpAgentPort {
         this.openAiApiKey = openAiApiKey;
 
         this.webClient = webClientBuilder
-                .baseUrl(this.openAiBaseUrl)
-                .defaultHeader("Authorization", "Bearer " + this.openAiApiKey)
+                .baseUrl(java.util.Objects.requireNonNull(this.openAiBaseUrl))
+                .defaultHeader("Authorization", java.util.Objects.requireNonNull("Bearer " + this.openAiApiKey))
                 .build();
     }
 
@@ -60,7 +60,7 @@ public class OpenAiWebClientAdapter implements NlpAgentPort {
             @SuppressWarnings("unchecked")
             Map<String, Object> response = webClient.post()
                     .uri("/chat/completions")
-                    .bodyValue(requestBody)
+                    .bodyValue(java.util.Objects.requireNonNull(requestBody))
                     .retrieve()
                     .bodyToMono(Map.class)
                     .onErrorResume(e -> Mono.just(Map.of("error", e.getMessage())))
@@ -106,7 +106,7 @@ public class OpenAiWebClientAdapter implements NlpAgentPort {
             @SuppressWarnings("unchecked")
             Map<String, Object> response = webClient.post()
                     .uri("/chat/completions")
-                    .bodyValue(requestBody)
+                    .bodyValue(java.util.Objects.requireNonNull(requestBody))
                     .retrieve()
                     .bodyToMono(Map.class)
                     .onErrorResume(e -> Mono.just(Map.of("error", e.getMessage())))
@@ -138,7 +138,7 @@ public class OpenAiWebClientAdapter implements NlpAgentPort {
             @SuppressWarnings("unchecked")
             Map<String, Object> response = webClient.post()
                     .uri("/embeddings")
-                    .bodyValue(requestBody)
+                    .bodyValue(java.util.Objects.requireNonNull(requestBody))
                     .retrieve()
                     .bodyToMono(Map.class)
                     .onErrorResume(e -> Mono.just(Map.of("error", e.getMessage())))
@@ -192,7 +192,7 @@ public class OpenAiWebClientAdapter implements NlpAgentPort {
             @SuppressWarnings("unchecked")
             Map<String, Object> response = webClient.post()
                     .uri("/chat/completions")
-                    .bodyValue(requestBody)
+                    .bodyValue(java.util.Objects.requireNonNull(requestBody))
                     .retrieve()
                     .bodyToMono(Map.class)
                     .onErrorResume(e -> Mono.just(Map.of("error", e.getMessage())))

@@ -24,6 +24,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 public abstract class AbstractIntegrationTest {
 
     // Configuración estricta del Testcontainer para MySQL
+    @SuppressWarnings("resource")
     @Container
     protected static final MySQLContainer<?> MYSQL_CONTAINER = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("ibpms_test")

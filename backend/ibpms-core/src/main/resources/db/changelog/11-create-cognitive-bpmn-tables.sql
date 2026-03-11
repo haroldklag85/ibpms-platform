@@ -2,7 +2,7 @@
 --changeset hb-dev:11-create-cognitive-bpmn-tables
 
 CREATE TABLE ibpms_prompt_template (
-    id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
     name VARCHAR(150) NOT NULL,
     template_string TEXT NOT NULL,
     version INT NOT NULL DEFAULT 1,
@@ -12,7 +12,7 @@ CREATE TABLE ibpms_prompt_template (
 );
 
 CREATE TABLE ibpms_ai_audit_log (
-    id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
     execution_id VARCHAR(64) NOT NULL,
     system_prompt TEXT NOT NULL,
     response_payload TEXT,

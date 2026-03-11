@@ -50,7 +50,7 @@ class PromptLibraryControllerTest {
     void cannotModifyPrompts_WithoutPromptEngineerRole() throws Exception {
         mockMvc.perform(put("/api/v1/prompts/" + UUID.randomUUID())
                 .content("Nuevo prompt malicioso")
-                .with(csrf())) // CSRF requerido en operaciones mutating de Spring Security
+                .with(java.util.Objects.requireNonNull(csrf()))) // CSRF requerido en operaciones mutating de Spring Security
                 .andExpect(status().isForbidden());
     }
 
@@ -60,7 +60,7 @@ class PromptLibraryControllerTest {
     void canModifyPrompts_WithPromptEngineerRole() throws Exception {
         mockMvc.perform(put("/api/v1/prompts/" + UUID.randomUUID())
                 .content("Nuevo prompt optimizado")
-                .with(csrf()))
+                .with(java.util.Objects.requireNonNull(csrf())))
                 .andExpect(status().isOk());
     }
 }

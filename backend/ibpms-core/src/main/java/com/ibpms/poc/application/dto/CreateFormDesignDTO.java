@@ -3,6 +3,8 @@ package com.ibpms.poc.application.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 public class CreateFormDesignDTO {
 
     @NotBlank(message = "El nombre es obligatorio.")
@@ -16,6 +18,7 @@ public class CreateFormDesignDTO {
 
     private String vueTemplate;
     private String zodSchema;
+    private List<FormFieldMetadataDTO> formFields;
 
     public String getName() {
         return name;
@@ -55,5 +58,13 @@ public class CreateFormDesignDTO {
 
     public void setZodSchema(String zodSchema) {
         this.zodSchema = zodSchema;
+    }
+
+    public List<FormFieldMetadataDTO> getFormFields() {
+        return formFields;
+    }
+
+    public void setFormFields(List<FormFieldMetadataDTO> formFields) {
+        this.formFields = formFields;
     }
 }

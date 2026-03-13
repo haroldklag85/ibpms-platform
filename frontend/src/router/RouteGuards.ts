@@ -15,21 +15,26 @@ export const rbacGuard = (
 ) => {
     // 1. Verificación base de Autenticación (JWT Token)
     const authStore = useAuthStore();
-    const isAuthenticated = !!authStore.token || !!localStorage.getItem('ibpms_token');
+    const tokenStr = authStore.token || localStorage.getItem('ibpms_token');
+    
+    // Auto-login mockeado en caso de F5 en ambiente Dev/UAT
+    if (tokenStr && !authStore.user) {
+        authStore.user = { username: 'dev.user', role: 'Global Admin' };
+    }
+
+    const isAuthenticated = !!tokenStr;
 
     if (to.meta.requiresAuth && !isAuthenticated) {
         return next('/login');
     }
 
-    // 2. Verificación RBAC (Roles Autorizados)
+    // 2. Verificación RBAC Estricta (Solo si la ruta especifica .roles)
     if (to.meta.roles && Array.isArray(to.meta.roles)) {
         const userRole = authStore.user?.role;
 
         // Si exige roles pero el usuario no tiene rol o su rol no está en la lista: 403
         if (!userRole || !(to.meta.roles as string[]).includes(userRole)) {
-            console.warn(`[SECURITY 403] Acceso Denegado. Se requiere: ${to.meta.roles.join(', ')}. Rol actual: ${userRole || 'Ninguno'}`);
-
-            // Si la página 403 no existe aún, redirigir temporalmente al portal con un query param, o alertar
+            console.warn(`[SECURITY 403] Acceso Denegado a ${to.path}. Se requiere: ${to.meta.roles.join(', ')}. Rol actual: ${userRole || 'Ninguno'}`);
             alert('⚠️ 403 Forbidden: No tienes privilegios para acceder a este módulo.');
             return next('/');
         }

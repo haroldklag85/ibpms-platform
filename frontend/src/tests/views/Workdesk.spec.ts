@@ -46,7 +46,7 @@ describe('Pantalla 1: Hybrid Workdesk (US-001)', () => {
     expect(html).toContain('KANBAN');
   });
 
-  it('Debe renderizar el Semáforo SLA (border-l-red-500) si la fecha expiró', async () => {
+  it('Debe renderizar el Semáforo SLA (bg-red-100) si la fecha expiró', async () => {
     const store = useWorkdeskStore();
     
     // Hace 1 hora
@@ -67,8 +67,8 @@ describe('Pantalla 1: Hybrid Workdesk (US-001)', () => {
     const wrapper = mount(Workdesk);
     await wrapper.vm.$nextTick();
 
-    const taskCards = wrapper.findAll('.border-l-red-500');
-    expect(taskCards.length).toBe(1); // Deberia haber una carta mapeada con este color tailwind
+    const taskCards = wrapper.findAll('td .bg-red-100');
+    expect(taskCards.length).toBe(1); // Deberia haber un texto mapeado con este color tailwind en la celda
 
     const html = wrapper.html();
     expect(html).toContain('Vencido hace 1 hrs'); // Text format validator

@@ -45,6 +45,9 @@ public class FormDesignEntity {
     @Column(name = "zod_schema", columnDefinition = "LONGTEXT")
     private String zodSchema;
 
+    @Column(name = "form_fields", columnDefinition = "LONGTEXT")
+    private String formFields;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -125,6 +128,14 @@ public class FormDesignEntity {
 
     public void setZodSchema(String zodSchema) {
         this.zodSchema = zodSchema;
+    }
+
+    public String getFormFields() {
+        return formFields;
+    }
+
+    public void setFormFields(String formFields) {
+        this.formFields = formFields;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -17,3 +17,7 @@ databaseChangeLog:
       file: db/changelog/11-create-cognitive-bpmn-tables.sql
   - include:
       file: db/changelog/12-create-identity-rbac-tables.sql
+  - include:
+      file: db/changelog/13-create-workdesk-projection-tables.sql
+  - include:
+      file: db/changelog/14-create-knowledge-vector-tables.sql

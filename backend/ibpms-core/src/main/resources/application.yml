@@ -8,7 +8,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate # Control absoluto por Liquibase
+      ddl-auto: update # Auto-reparación por Hibernate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect

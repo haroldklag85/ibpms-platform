@@ -23,6 +23,7 @@ import com.ibpms.poc.infrastructure.event.KanbanTaskSyncListener;
 public class KanbanTaskEntity {
 
     @Id
+    @Column(columnDefinition = "bpchar")
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -55,7 +56,7 @@ public class KanbanTaskEntity {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_task_id", referencedColumnName = "id")
+    @JoinColumn(name = "parent_task_id", referencedColumnName = "id", columnDefinition = "bpchar")
     private KanbanTaskEntity parentTask;
 
     @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL)

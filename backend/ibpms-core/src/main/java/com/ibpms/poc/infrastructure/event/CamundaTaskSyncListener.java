@@ -7,6 +7,7 @@ import org.camunda.bpm.engine.delegate.TaskListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -22,9 +23,11 @@ public class CamundaTaskSyncListener implements TaskListener {
     private static final Logger log = LoggerFactory.getLogger(CamundaTaskSyncListener.class);
     
     private final WorkdeskProjectionRepository projectionRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public CamundaTaskSyncListener(WorkdeskProjectionRepository projectionRepository) {
+    public CamundaTaskSyncListener(WorkdeskProjectionRepository projectionRepository, SimpMessagingTemplate messagingTemplate) {
         this.projectionRepository = projectionRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
@@ -67,6 +70,11 @@ public class CamundaTaskSyncListener implements TaskListener {
             
             projectionRepository.save(projection);
             log.debug("BPMN CQRS Sync ({}) exitoso para tarea {}", eventName, taskId);
+            
+            if ("assignment".equals(eventName) && delegateTask.getAssignee() != null) {
+                String payload = "{\"event\": \"TASK_CLAIMED\", \"taskId\": \"BPMN-" + taskId + "\"}";
+                messagingTemplate.convertAndSend("/topic/workdesk.updates", payload);
+            }
 
         } catch (Exception e) {
             log.error("Error sincronizando CamundaTask {} hacia Workdesk CQRS", delegateTask.getId(), e);

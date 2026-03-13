@@ -1,163 +1,321 @@
 <template>
-  <div class="h-full flex flex-col relative" v-cloak>
+  <div class="h-full flex flex-col relative bg-gray-50 font-['Inter']" v-cloak>
     <!-- Overlay Cargando Global -->
     <div v-if="store.isLoading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-50 rounded-xl">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
     </div>
 
-    <!-- ═══════════ Toast Notifications ═══════════ -->
+    <!-- Toast Notifications -->
     <Transition name="toast-slide">
       <div v-if="toastSuccess" class="fixed top-4 right-4 z-[100] bg-green-600 text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3 animate-pulse">
-        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span class="material-symbols-outlined text-white text-xl">check_circle</span>
         <span class="text-sm font-medium">{{ toastSuccess }}</span>
         <button @click="clearToasts" class="ml-2 text-green-200 hover:text-white">&times;</button>
       </div>
     </Transition>
 
-    <div class="flex justify-between items-center mb-6">
-      <div>
-         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Bandeja Unificada (Hybrid Workdesk)</h2>
-         <p class="text-sm text-gray-500 dark:text-gray-400">Epic 1 (US-001) - Vista consolidada de Procesos y Agilidad</p>
+    <!-- Header Stitch Style -->
+    <header class="min-h-[4rem] bg-white border-b border-gray-200 flex flex-wrap items-center justify-between px-6 z-30 flex-shrink-0 gap-4 py-3 xl:py-0">
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-indigo-600 text-2xl">balance</span>
+          <h1 class="text-lg font-bold text-[#1e1b4b]">Bandeja Unificada <span class="text-gray-400 font-normal ml-1">Workdesk</span></h1>
+        </div>
+        
+        <!-- Contenedor general de Filtros -->
+        <div class="flex items-center gap-2">
+           <!-- Delegación de Bandejas (Gap CA-4) -->
+           <select 
+              v-model="delegationFilter" 
+              @change="loadData"
+              class="bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 font-semibold hover:bg-indigo-100 cursor-pointer outline-none"
+           >
+             <option value="">Mis Tareas</option>
+             <option value="TEAM">Tareas del Equipo</option>
+           </select>
+
+           <!-- Filtro Tipo (Procesos vs Proyectos) -->
+           <select 
+              v-model="typeFilter"
+              class="bg-white border border-gray-200 text-gray-600 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 hover:bg-gray-50 cursor-pointer outline-none transition-colors"
+           >
+             <option value="">Todos los Tipos</option>
+             <option value="BPMN">Procesos (BPMN)</option>
+             <option value="KANBAN">Proyectos (Kanban)</option>
+           </select>
+
+           <!-- Filtro Nivel de SLA -->
+           <select 
+              v-model="slaFilter"
+              class="bg-white border border-gray-200 text-gray-600 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 hover:bg-gray-50 cursor-pointer outline-none transition-colors"
+           >
+             <option value="">Cualquier Nivel SLA</option>
+             <option value="EXPIRED">Vencido</option>
+             <option value="WARNING">Urgente</option>
+             <option value="OK">Normal</option>
+           </select>
+        </div>
       </div>
-      
-      <!-- Filtros Rápidos y Refresh -->
-      <div class="flex items-center space-x-3">
-        <button @click="loadData" class="p-2 bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-600 rounded shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition" title="Refrescar Inbox">
-           <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+
+      <div class="flex-1 max-w-2xl px-2 xl:px-8 flex items-center gap-3">
+        <!-- Búsqueda (Gap CA-2) -->
+        <div class="relative flex-1 group">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl font-light">search</span>
+          <input 
+            v-model="searchQuery"
+            @input="onSearchInput"
+            class="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none" 
+            placeholder="Buscar por ID, título o asignado..." type="search"
+          />
+        </div>
+        <button @click="loadData" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 group" title="Refrescar Inbox">
+          <span class="material-symbols-outlined text-lg group-hover:rotate-180 transition-transform duration-500">sync</span>
         </button>
       </div>
-    </div>
+
+      <div class="flex items-center gap-4">
+        <!-- CA-8 (Feature Toggle Oculto) -->
+        <button v-if="FEATURE_FORCE_QUEUE" @click="attendNextTask" class="px-3 py-1.5 bg-indigo-600 text-white shadow-sm text-sm font-medium hover:bg-indigo-700 rounded transition hidden sm:inline-block">
+          Atender Siguiente
+        </button>
+      </div>
+    </header>
 
     <!-- Error Bar -->
-    <div v-if="store.isError" class="bg-red-50 border border-red-200 p-4 mb-4 rounded-lg shadow-sm flex items-start">
-      <svg class="w-5 h-5 text-red-500 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <div v-if="store.isError" class="bg-red-50 border-b border-red-200 p-3 shadow-sm flex items-start flex-shrink-0">
+      <span class="material-symbols-outlined text-red-500 mt-0.5 mr-3 shrink-0">error</span>
       <p class="text-red-700 font-medium text-sm">{{ store.errorMessage }}</p>
     </div>
 
-    <!-- Grid Layout para la Bandeja Vertical -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
-      
-      <!-- Listado de Tareas (Panel Izquierdo/Central) -->
-      <div class="lg:col-span-2 overflow-y-auto pr-2 space-y-4 pb-10">
-        
-        <div v-if="store.items.length === 0 && !store.isLoading" class="text-center py-20 bg-white dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
-           <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-900/30">
-               <svg class="h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
-           </div>
-           <p class="mt-4 text-gray-500 dark:text-gray-400 font-medium">Bandeja Vacía. Eres libre.</p>
+    <!-- Main Content 75/25 Split -->
+    <main class="flex-1 flex overflow-hidden">
+      <!-- 75% Cards -->
+      <section :class="isMetricsPanelOpen ? 'lg:w-3/4 border-r border-gray-200' : 'w-full'" class="w-full flex flex-col bg-gray-50 overflow-hidden transition-all duration-300">
+        <div class="h-12 bg-white border-b border-gray-200 px-6 flex items-center justify-between flex-shrink-0">
+          <div class="flex items-center gap-4">
+             <button @click="isMetricsPanelOpen = !isMetricsPanelOpen" class="p-1 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition -ml-2" :title="isMetricsPanelOpen ? 'Ocultar Resumen Panel Derecho' : 'Mostrar Resumen'">
+                <span class="material-symbols-outlined text-xl">{{ isMetricsPanelOpen ? 'dock_to_right' : 'dock_to_left' }}</span>
+             </button>
+             <span class="text-xs font-medium text-gray-500 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">filter_alt</span>
+                Mostrando: <span class="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{{ filteredItems.length }}</span> resultados locales
+             </span>
+          </div>
+          <div class="text-[11px] font-medium text-gray-400">
+              Total Global: {{ store.pageInfo.totalElements }}
+          </div>
         </div>
 
-        <!-- Renderizado Dinámico de Tareas CQRS -->
-        <div 
-           v-for="task in store.items" 
-           :key="task.unifiedId" 
-           class="bg-white dark:bg-gray-800 p-5 rounded-xl border-l-4 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col sm:flex-row gap-4"
-           :class="getSlaBorderColor(task.slaExpirationDate)"
-        >
-          <!-- Indicador de Sistema (Camunda vs Kanban) -->
-          <div class="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 shadow-inner">
-             <span v-if="task.sourceSystem === 'BPMN'" title="Camunda BPM" class="text-xl">⚡</span>
-             <span v-else-if="task.sourceSystem === 'KANBAN'" title="Agile Kanban" class="text-xl">📋</span>
-             <span v-else class="text-xl">📦</span>
-          </div>
+        <div class="flex-1 overflow-y-auto p-card-p no-scrollbar relative min-h-0">
+           
+           <div v-if="filteredItems.length === 0 && !store.isLoading" class="absolute inset-0 flex flex-col items-center justify-center">
+             <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 border border-indigo-100">
+               <span class="material-symbols-outlined text-indigo-500 text-3xl">task</span>
+             </div>
+             <p class="mt-4 text-gray-500 font-medium tracking-wide">Bandeja Vacía o sin resultados de filtro.</p>
+           </div>
+           
+           <!-- CSS Grid Cards Stitch (CA-3 Visual Remodel) -->
+           <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-6">
+             <div 
+               v-for="task in filteredItems" 
+               :key="task.unifiedId"
+               @click="mockOpenTask(task)"
+               class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:border-indigo-400 hover:shadow-md transition-all group cursor-pointer h-fit"
+             >
+               <!-- SLA Top Bar -->
+               <div class="h-1 w-full" :class="getSlaTopBarClass(task.slaExpirationDate)"></div>
+               
+               <div class="p-card-p flex flex-col gap-3">
+                 <div class="flex items-start justify-between mb-1">
+                   <div class="flex items-center gap-2">
+                     <span class="material-symbols-outlined text-xl" :class="task.sourceSystem === 'BPMN' ? 'text-indigo-600' : 'text-cyan-600'" :title="task.sourceSystem === 'BPMN' ? 'Camunda BPM' : 'Agile Kanban'">
+                       {{ task.sourceSystem === 'BPMN' ? 'bolt' : 'account_tree' }}
+                     </span>
+                     <span class="font-mono text-[11px] text-gray-400 font-semibold tracking-wider">{{ task.originalTaskId }}</span>
+                   </div>
+                   <span class="material-symbols-outlined text-gray-300 text-[18px] group-hover:text-indigo-600 transition-colors">more_vert</span>
+                 </div>
+                 
+                 <h3 class="text-sm font-bold text-[#1e1b4b] leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2">
+                   {{ task.title }}
+                 </h3>
+                 
+                 <div class="flex items-center gap-2 mt-2">
+                   <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border', getSlaPillClass(task.slaExpirationDate)]">
+                     {{ getSlaRelativeTime(task.slaExpirationDate) }}
+                   </span>
+                   <span class="px-2 py-1 bg-gray-100/80 text-gray-600 rounded text-[10px] font-bold uppercase tracking-wider border border-gray-200 border-dashed">
+                     {{ task.status }}
+                   </span>
+                 </div>
+                 
+                 <div class="pt-4 mt-2 border-t border-gray-100 flex items-center justify-between">
+                   <div class="flex items-center gap-3">
+                     <div v-if="task.assignee" class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs ring-2 ring-indigo-50 shadow-sm uppercase">
+                       {{ task.assignee.substring(0,2) }}
+                     </div>
+                     <div v-else class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+                       <span class="material-symbols-outlined text-gray-400 text-sm">person_off</span>
+                     </div>
+                     <div class="flex flex-col">
+                       <span class="text-[9px] text-gray-400 uppercase font-bold tracking-tight">Asignado</span>
+                       <span class="text-xs font-semibold text-gray-700 truncate max-w-[120px]" v-if="task.assignee">{{ task.assignee }}</span>
+                       <span class="text-xs font-semibold text-gray-400 italic" v-else>Sin Asignar</span>
+                     </div>
+                   </div>
+                   <span class="material-symbols-outlined text-gray-300 text-lg group-hover:text-indigo-400 transition-colors">arrow_forward</span>
+                 </div>
+               </div>
+             </div>
+           </div>
+        </div>
 
-          <div class="flex-1">
-            <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
-              <div class="flex items-center space-x-2 flex-wrap gap-y-2">
-                
-                <!-- Tag Source System -->
-                <span :class="[
-                  'px-2 py-0.5 text-xs font-bold rounded-md uppercase tracking-wide',
-                  task.sourceSystem === 'BPMN' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400'
-                ]">
-                  {{ task.sourceSystem }}
-                </span>
-                
-                <!-- SLA SEMAFORO -->
-                <span :class="['px-2 py-0.5 text-xs font-bold rounded-md flex items-center space-x-1', getSlaBadgeClass(task.slaExpirationDate)]">
-                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                   <span>{{ getSlaRelativeTime(task.slaExpirationDate) }}</span>
-                </span>
-                
+        <!-- Pagination Stitch Footer -->
+        <div v-if="store.pageInfo.totalElements > store.pageInfo.pageSize" class="h-14 bg-white border-t border-gray-200 px-6 flex items-center justify-between flex-shrink-0">
+          <p class="text-[11px] text-gray-500 font-medium tracking-wide">Página {{ store.pageInfo.pageNumber + 1 }}</p>
+          <div class="flex items-center gap-2">
+            <button 
+               :disabled="store.pageInfo.pageNumber === 0" 
+               @click="store.fetchGlobalInbox(store.pageInfo.pageNumber - 1, store.pageInfo.pageSize, searchQuery, delegationFilter)"
+               class="p-1 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400 transition"
+            >
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <div class="flex items-center gap-1">
+              <span class="w-7 h-7 flex items-center justify-center text-xs font-bold rounded bg-indigo-600 text-white shadow-sm">
+                {{ store.pageInfo.pageNumber + 1 }}
+              </span>
+            </div>
+            <button 
+               :disabled="(store.pageInfo.pageNumber + 1) * store.pageInfo.pageSize >= store.pageInfo.totalElements" 
+               @click="store.fetchGlobalInbox(store.pageInfo.pageNumber + 1, store.pageInfo.pageSize, searchQuery, delegationFilter)"
+               class="p-1 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400 transition"
+            >
+              <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 25% Sidebar Metrics -->
+      <aside v-if="isMetricsPanelOpen" class="hidden lg:block w-1/4 bg-white p-8 overflow-y-auto no-scrollbar relative z-10 shrink-0 transition-all duration-300">
+        <div class="space-y-10">
+          <div>
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-8">Resumen Operativo</h2>
+            <div class="space-y-8">
+              <div class="flex items-center gap-4">
+                <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100">
+                   <span class="text-base font-bold text-indigo-700">{{ store.pageInfo.totalElements }}</span>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-gray-900">Total Tareas</p>
+                  <p class="text-[10px] text-gray-500 uppercase tracking-tighter font-semibold">Bandeja Activa</p>
+                </div>
               </div>
-              <span class="text-xs text-gray-500 font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">ID: {{ task.originalTaskId }}</span>
-            </div>
-            
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mt-1">{{ task.title }}</h3>
-            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
-              Asignado a: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ task.assignee || 'Sin Asignar (Grupal)' }}</span>
-            </p>
-            
-            <div class="flex items-center mt-4">
-               <button @click.stop="mockOpenTask(task)" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition">
-                 Atender Tarea
-               </button>
+              <div class="flex items-center gap-4">
+                <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-red-50 border border-red-100">
+                   <span class="text-base font-bold text-red-600">{{ countExpiredSLA() }}</span>
+                   <div v-if="countExpiredSLA() > 0" class="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></div>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-red-600 uppercase">Vencidas</p>
+                  <p class="text-[10px] text-red-400 uppercase tracking-tighter font-semibold">Crítico - SLA Cumplido</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-yellow-50 border border-yellow-100">
+                   <span class="text-base font-bold text-yellow-600">{{ countWarningSLA() }}</span>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-gray-900">Por Expirar</p>
+                  <p class="text-[10px] text-yellow-600 uppercase tracking-tighter font-semibold">&lt; 24 Horas</p>
+                </div>
+              </div>
             </div>
           </div>
+
+          <div class="pt-8 border-t border-gray-100">
+             <div class="mt-2 bg-slate-50 p-5 rounded-xl border border-slate-200">
+               <div class="flex items-center gap-2 mb-3">
+                 <span class="material-symbols-outlined text-indigo-500 text-lg">public</span>
+                 <p class="text-xs text-indigo-800 font-bold uppercase tracking-widest">CQRS Engine</p>
+               </div>
+               <p class="text-sm text-slate-800 font-medium tracking-tight">Sync Eventual: <br/>
+                 <span class="font-bold text-emerald-600 flex items-center mt-2 gap-1.5 bg-emerald-50 px-2 py-1 rounded w-fit text-xs border border-emerald-100 animate-pulse">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ONLINE VERDE
+                 </span>
+               </p>
+             </div>
+          </div>
         </div>
-
-        <!-- Paginador -->
-        <div v-if="store.pageInfo.totalElements > store.pageInfo.pageSize" class="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-           <span class="text-sm text-gray-500 dark:text-gray-400">Total: {{ store.pageInfo.totalElements }} (Pág. {{ store.pageInfo.pageNumber + 1 }})</span>
-           <div class="flex space-x-2">
-              <button 
-                 :disabled="store.pageInfo.pageNumber === 0" 
-                 @click="store.fetchGlobalInbox(store.pageInfo.pageNumber - 1, store.pageInfo.pageSize)"
-                 class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 disabled:opacity-50 text-sm font-medium text-gray-700 dark:text-gray-300 transition"
-              >Anterior</button>
-              <button 
-                 :disabled="(store.pageInfo.pageNumber + 1) * store.pageInfo.pageSize >= store.pageInfo.totalElements" 
-                 @click="store.fetchGlobalInbox(store.pageInfo.pageNumber + 1, store.pageInfo.pageSize)"
-                 class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 disabled:opacity-50 text-sm font-medium text-gray-700 dark:text-gray-300 transition"
-              >Siguiente</button>
-           </div>
-        </div>
-
-      </div>
-
-      <!-- Panel Derecho Auxiliar (Métricas Globales) -->
-      <div class="hidden lg:block bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-fit sticky top-0">
-        <h4 class="font-bold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">Resumen Operativo</h4>
-        <ul class="space-y-4 text-sm text-gray-600 dark:text-gray-400">
-          <li class="flex justify-between items-center">
-            <span>Volumen Total Global:</span> 
-            <span class="font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{{ store.pageInfo.totalElements }}</span>
-          </li>
-          <li class="flex justify-between items-center text-red-600 dark:text-red-400">
-            <span>Tareas Vencidas (SLA):</span> 
-            <span class="font-bold bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">{{ countExpiredSLA() }}</span>
-          </li>
-          <li class="flex justify-between items-center text-yellow-600 dark:text-yellow-400">
-            <span>Por expirar (< 24h):</span> 
-            <span class="font-bold bg-yellow-100 dark:bg-yellow-900/30 px-2 py-0.5 rounded">{{ countWarningSLA() }}</span>
-          </li>
-        </ul>
-        
-        <div class="mt-8 bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800">
-          <p class="text-xs text-indigo-800 dark:text-indigo-300 mb-2 font-bold tracking-wider">📡 STATUS MODELO CQRS</p>
-          <p class="text-sm text-indigo-900 dark:text-indigo-200">Sincronización Eventual: <span class="font-bold text-green-600 dark:text-green-400 animate-pulse">Online</span></p>
-          <p class="text-xs text-indigo-500 mt-2">BPMN y KANBAN convergidos.</p>
-        </div>
-      </div>
-
-    </div>
-
+      </aside>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useWorkdeskStore } from '@/stores/useWorkdeskStore';
 
 const store = useWorkdeskStore();
 const toastSuccess = ref('');
 
+// ==========================================
+// Toggle del Panel Lateral Derecho
+// ==========================================
+const isMetricsPanelOpen = ref(true);
+
+// ==========================================
+// Gap CA-8: Toggle oculto Anti Cherry-Picking
+// ==========================================
+const FEATURE_FORCE_QUEUE = false;
+
+// ==========================================
+// Búsqueda & Delegación & Filtros Dinámicos (Gaps CA-2, CA-4)
+// ==========================================
+const searchQuery = ref('');
+const delegationFilter = ref('');
+const typeFilter = ref('');
+const slaFilter = ref('');
+
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// Reactivity para Filtros de Memoria sobre la página actual
+const filteredItems = computed(() => {
+    return store.items.filter(task => {
+        let matchType = true;
+        let matchSLA = true;
+
+        if (typeFilter.value) {
+            matchType = task.sourceSystem === typeFilter.value;
+        }
+
+        if (slaFilter.value) {
+            matchSLA = getSlaStatus(task.slaExpirationDate) === slaFilter.value;
+        }
+
+        return matchType && matchSLA;
+    });
+});
+
+const onSearchInput = () => {
+    if(searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        loadData();
+    }, 500); // 500ms Debouncer
+};
+
+const attendNextTask = () => {
+   alert("Asignación ciega forzada.");
+}
+
 const loadData = async () => {
-    await store.fetchGlobalInbox(0, 50);
+    await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 50, searchQuery.value, delegationFilter.value);
 };
 
 const mockOpenTask = (task: any) => {
-    toastSuccess.value = `Work in progress: Abriendo tarea ${task.unifiedId}...`;
+    toastSuccess.value = `Work in progress: Abriendo Tarea ${task.unifiedId}...`;
     setTimeout(() => { toastSuccess.value = ''; }, 3000);
 }
 
@@ -166,40 +324,41 @@ const clearToasts = () => {
 }
 
 // ==========================================
-// Logica Semáforo SLA (Ejecutada sobre el Front AC-1)
+// SLA Ticking Engine (Gap CA-5 Vivo)
 // ==========================================
+const currentTick = ref(Date.now());
+let timerId: ReturnType<typeof setInterval> | null = null;
+
 const getSlaStatus = (isoString?: string) => {
     if(!isoString) return 'OK';
-    
     const flag = new Date(isoString).getTime();
-    const now = Date.now();
-    const diffHours = (flag - now) / (1000 * 60 * 60);
+    const diffHours = (flag - currentTick.value) / (1000 * 60 * 60);
 
     if(diffHours < 0) return 'EXPIRED';
     if(diffHours <= 24) return 'WARNING';
     return 'OK';
 };
 
-const getSlaBorderColor = (isoString?: string) => {
+const getSlaTopBarClass = (isoString?: string) => {
     const st = getSlaStatus(isoString);
-    if(st === 'EXPIRED') return 'border-l-red-500';
-    if(st === 'WARNING') return 'border-l-yellow-400';
-    return 'border-l-green-500 dark:border-l-green-500/70 border-l-gray-300';
+    if(st === 'EXPIRED') return 'bg-red-500';
+    if(st === 'WARNING') return 'bg-yellow-400';
+    return 'bg-emerald-500';
 };
 
-const getSlaBadgeClass = (isoString?: string) => {
+const getSlaPillClass = (isoString?: string) => {
     const st = getSlaStatus(isoString);
-    if(st === 'EXPIRED') return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400 animate-pulse';
-    if(st === 'WARNING') return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400';
-    return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400';
+    if(st === 'EXPIRED') return 'bg-red-50 text-red-700 border-red-200/60';
+    if(st === 'WARNING') return 'bg-yellow-50 text-yellow-700 border-yellow-200/60';
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
 };
 
 const getSlaRelativeTime = (isoString?: string) => {
     if(!isoString) return 'Sin SLA Expiración';
     
+    // Reactivamente depende de currentTick.value
     const flag = new Date(isoString).getTime();
-    const now = Date.now();
-    const diffHours = (flag - now) / (1000 * 60 * 60);
+    const diffHours = (flag - currentTick.value) / (1000 * 60 * 60);
     const diffDays = diffHours / 24;
 
     if (diffHours < 0) return `Vencido hace ${Math.abs(Math.round(diffHours))} hrs`;
@@ -207,7 +366,9 @@ const getSlaRelativeTime = (isoString?: string) => {
     return `Vence en ${Math.round(diffDays)} días`;
 };
 
-// Summary Logic
+// ==========================================
+// Summary Metrics Logic
+// ==========================================
 const countExpiredSLA = () => {
     return store.items.filter(i => getSlaStatus(i.slaExpirationDate) === 'EXPIRED').length;
 };
@@ -217,12 +378,56 @@ const countWarningSLA = () => {
 
 onMounted(() => {
    loadData();
+   // Gap CA-5: Montar Engine con 60s
+   timerId = setInterval(() => {
+       currentTick.value = Date.now();
+   }, 60000);
+
+   // Gap CA-6: Iniciar conexión WebSocket (Ghost Deletion)
+   // NOTA: Store maneja el fallback WS local.
+   store.initWebSocket();
 });
+
+onUnmounted(() => {
+    // Purgar para prevenir leaks
+    if(timerId) clearInterval(timerId);
+    if(searchTimeout) clearTimeout(searchTimeout);
+
+    // Gap CA-6: Desconectar WebSocket
+    store.disconnectWebSocket();
+});
+
 </script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
+</style>
 
 <style scoped>
 [v-cloak] {
   display: none;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .toast-slide-enter-active,

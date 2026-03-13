@@ -11,11 +11,14 @@ import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Adaptador Driven para almacenar Documentos en Azure Blob Storage.
  * Configurado para apuntar a Azurite (emulador) en V1 según application.yml.
  */
 @Component
+@Slf4j
 public class AzureBlobStorageAdapter implements DocumentStoragePort {
 
     private final String connectionString;
@@ -31,14 +34,18 @@ public class AzureBlobStorageAdapter implements DocumentStoragePort {
 
     @PostConstruct
     public void init() {
-        // Inicializar cliente y asegurar que el contenedor exista
-        BlobServiceClient serviceClient = new BlobServiceClientBuilder()
-                .connectionString(connectionString)
-                .buildClient();
+        try {
+            // Inicializar cliente y asegurar que el contenedor exista
+            BlobServiceClient serviceClient = new BlobServiceClientBuilder()
+                    .connectionString(connectionString)
+                    .buildClient();
 
-        this.containerClient = serviceClient.getBlobContainerClient(containerName);
-        if (!this.containerClient.exists()) {
-            this.containerClient.create();
+            this.containerClient = serviceClient.getBlobContainerClient(containerName);
+            if (!this.containerClient.exists()) {
+                this.containerClient.create();
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo conectar a Azure Blob Storage. La carga de documentos fallará: {}", e.getMessage());
         }
     }
 

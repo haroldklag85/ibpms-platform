@@ -17,10 +17,10 @@ import java.time.Instant;
 public class DocumentoEntity {
 
     @Id
-    @Column(name = "id", columnDefinition = "CHAR(36)")
+    @Column(name = "id", columnDefinition = "bpchar")
     private String id;
 
-    @Column(name = "case_id", columnDefinition = "CHAR(36)", nullable = false)
+    @Column(name = "case_id", columnDefinition = "bpchar", nullable = false)
     private String caseId;
 
     @Column(name = "document_type_code", length = 100, nullable = false)

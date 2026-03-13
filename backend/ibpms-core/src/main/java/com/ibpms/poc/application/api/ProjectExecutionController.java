@@ -12,10 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProjectExecutionController {
 
-    // En un caso real: private final RuntimeService runtimeService;
-    // Object mock para testing
-    @SuppressWarnings("unused")
-    private final Object runtimeService;
 
     @PostMapping("/{id}/baseline")
     @Transactional

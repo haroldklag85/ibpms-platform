@@ -14,8 +14,9 @@ Se han planteado cuatro grandes desafíos arquitectónicos respecto a la segurid
 
 ### A. Inyección Dinámica de Lógica JS (Seguridad VS Flexibilidad)
 **Problema:** El arquitecto funcional necesita escribir reglas como `if (monto > 5000) showCampo = true`. Ejecutar esto con `eval()` o `new Function()` abre vectores de ataque XSS catastróficos y viola las políticas CSP (Content Security Policy) de la empresa.
-**Veredicto (AST Evaluator / Sandboxing Estricto):** Queda estrictamente prohibido el uso de `eval()`.
+**Veredicto Estratégico (AST Evaluator / Sandboxing Estricto):** Queda estrictamente prohibido el uso de `eval()`.
 La plataforma iBPMS (Frontend) integrará un evaluador de expresiones seguras o un intérprete AST ligero (como `expr-eval` o `jsep`). Estas librerías parsean el string y lo ejecutan en un contexto matemático y lógico cerrado donde es matemáticamente imposible acceder al objeto `window`, `document` o ejecutar llamadas `fetch`/XHR (Robo de JWT).
+> ⚠️ **Excepción Táctica V1 (MVP):** La integración del parser AST complejo es un esfuerzo considerable que detiene el Go-to-Market de la US-003. Para la V1, **queda inhabilitada y prohibida** la inyección de código libre (Custom JS) por parte del usuario final en el Mónaco IDE. La reactividad dinámica se condicionará puramente al flujo BPMN (`stage`) o directivas pre-compiladas sin exponer una consola JS al operador.
 
 ### B. Validación de Datos Reactiva (Zod On-The-Fly)
 **Problema:** ¿Cómo compilar la validación en tiempo de ejecución sin redesplegar la SPA de Vue?
@@ -24,17 +25,19 @@ En el Frontend, una clase de factoría estática leerá este JSON y ensamblará 
 
 ### C. Estilizado Dinámico sin sangrado global (Style Bleeding)
 **Problema:** Inyectar CSS redactado por el usuario final puede reescribir clases como `.btn-primary` y destruir o desfigurar la plataforma base del iBPMS.
-**Veredicto (Shadow DOM / Web Components):** 
+**Veredicto Estratégico (Shadow DOM / Web Components):** 
 Para prevenir que el CSS inyectado emponzoñe el ecosistema global de TailwindCSS, el contenedor maestro que renderiza el *iForm* se instanciará utilizando el paradigma de **Shadow DOM** nativo de HTML5.
 Los estilos redactados en la Pantalla 7 serán inyectados dentro de una etiqueta `<style>` encerrada dentro de ese *Shadow Root*. Es biológicamente imposible que una directriz CSS (incluso un `body { display: none !important }`) cruce la frontera del Shadow DOM hacia el exterior.
+> ⚠️ **Excepción Táctica V1 (MVP):** Postergar Shadow DOM para V2. El motor Low-Code de la V1 no emitirá bloques `<style scoped>` arbitrarios proporcionados por el usuario. Toda la maquetación se construirá usando las clases utilitarias seguras de TailwindCSS proveidas por nuestra paleta de componentes. Shadow DOM pospuesto para priorizar el Delivery de US-003.
 
 ### D. Apalancamiento Excepcional de Vue 3 (Grado Empresarial)
 **Problema:** ¿Qué piezas internas del Virtual DOM de Vue usaremos para alejarnos de un simple "v-if" y hacer de esto un motor de nivel corporativo?
-**Veredicto:** El motor Low-Code se construirá utilizando:
+**Veredicto Estratégico:** El motor Low-Code se construirá utilizando:
 1.  **Render Functions (`h()`) nativas:** No usaremos plantillas HTML (`<template>`). El motor leerá recursivamente el JSON del formulario y utilizará la función de renderizado programática `h('div', {...})` de Vue 3. Esto otorga control microscópico sobre el Virtual DOM y masivo rendimiento.
 2.  **Vue Teleport:** Para que los modales cruzados, diálogos de ayuda o Popovers configurados por el creador del formulario se "teletransporten" físicamente al `<body>` del documento evitando problemas de `z-index` y `overflow: hidden` anidados.
 3.  **Custom Directives (`v-mask`, `v-currency`):** El JSON inyectará directivas personalizadas al vuelo en campos de texto, garantizando enmascaramiento transaccional (formateo de moneda, números de teléfono) interceptando nativamente el evento de tipeo del usuario a bajo nivel.
+> ⚠️ **Excepción Táctica V1 (MVP):** El desarrollo de `Render Functions (h())` nativas requiere un expertise extremo en VDOM y detiene la velocity del Sprint. **Para la V1, el motor US-003 utilizará bucles estándar (`<template v-for>`) y Componentes Dinámicos de Vue (`<component :is="...">`)**, que han demostrado tolerar mallas de +150 elementos en navegadores hiper-optimizados (V8) sin decaimiento perceptible del FPS. Funciones `h()` quedan como optimización V2.
 
 ## 3. Impacto Inmediato
-1.  El PO tiene luz verde para diseñar los Criterios de Aceptación (Gherkin) de la US-003 vendiéndole al cliente una experiencia "Programable" 100% segura contra XSS.
-2.  Los desarrolladores Frontend Vue 3 deben estudiar **Render Functions** y evitar los componentes basados puramente en SFC (Single-File Components) para el corazón del motor "iForm Renderer".
+1.  El PO tiene luz verde para diseñar los Criterios de Aceptación (Gherkin) de la US-003 vendiéndole al cliente una experiencia "Programable" 100% segura contra XSS (Lograda bloqueando JS libre en V1, y usando AST en V2).
+2.  Los desarrolladores Frontend Vue 3 construirán el MVP utilizando técnicas estándar (`v-for`, `<component>`), con la tranquilidad arquitectónica de que **la omisión del Sandboxing/Shadow DOM en la V1 es una orden explícita del Arquitecto** para cumplir metas de go-to-market.

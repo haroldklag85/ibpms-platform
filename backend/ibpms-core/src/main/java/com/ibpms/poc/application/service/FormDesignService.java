@@ -9,10 +9,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ibpms.poc.application.dto.FormFieldMetadataDTO;
 
 /**
  * Servicio Central del Motor de Formularios (Pantalla 7).
@@ -23,9 +29,11 @@ import java.util.stream.Collectors;
 public class FormDesignService {
 
     private final FormDesignRepository formDesignRepository;
+    private final ObjectMapper objectMapper;
 
-    public FormDesignService(FormDesignRepository formDesignRepository) {
+    public FormDesignService(FormDesignRepository formDesignRepository, ObjectMapper objectMapper) {
         this.formDesignRepository = formDesignRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -71,6 +79,11 @@ public class FormDesignService {
         entity.setPattern(FormDesignEntity.Pattern.valueOf(dto.getPattern()));
         entity.setVueTemplate(dto.getVueTemplate());
         entity.setZodSchema(dto.getZodSchema());
+        try {
+            entity.setFormFields(dto.getFormFields() != null ? objectMapper.writeValueAsString(dto.getFormFields()) : null);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error serializando formFields", e);
+        }
         entity.setAuthorId(userId);
 
         formDesignRepository.save(entity);
@@ -97,6 +110,11 @@ public class FormDesignService {
             nuevaVersion.setVersion(base.getVersion() + 1);
             nuevaVersion.setVueTemplate(dto.getVueTemplate());
             nuevaVersion.setZodSchema(dto.getZodSchema());
+            try {
+                nuevaVersion.setFormFields(dto.getFormFields() != null ? objectMapper.writeValueAsString(dto.getFormFields()) : base.getFormFields());
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Error serializando formFields", e);
+            }
             nuevaVersion.setAuthorId(userId);
 
             formDesignRepository.save(nuevaVersion);
@@ -107,6 +125,11 @@ public class FormDesignService {
             base.setName(dto.getName() != null ? dto.getName() : base.getName());
             base.setVueTemplate(dto.getVueTemplate());
             base.setZodSchema(dto.getZodSchema());
+            try {
+                base.setFormFields(dto.getFormFields() != null ? objectMapper.writeValueAsString(dto.getFormFields()) : base.getFormFields());
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Error serializando formFields", e);
+            }
             base.setUpdatedAt(LocalDateTime.now());
             base.setAuthorId(userId);
             formDesignRepository.save(base);
@@ -139,6 +162,13 @@ public class FormDesignService {
         dto.setVersion(e.getVersion());
         dto.setVueTemplate(e.getVueTemplate());
         dto.setZodSchema(e.getZodSchema());
+        if (e.getFormFields() != null) {
+            try {
+                dto.setFormFields(objectMapper.readValue(e.getFormFields(), new TypeReference<List<FormFieldMetadataDTO>>() {}));
+            } catch (JsonProcessingException ex) {
+                dto.setFormFields(Collections.emptyList());
+            }
+        }
         dto.setAuthorId(e.getAuthorId());
         dto.setUpdatedAt(e.getUpdatedAt());
         return dto;

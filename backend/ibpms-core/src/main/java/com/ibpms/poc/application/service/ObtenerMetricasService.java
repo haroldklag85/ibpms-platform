@@ -50,7 +50,7 @@ public class ObtenerMetricasService implements ObtenerMetricasUseCase {
         long totalEvents = aiAuditLogRepository.count();
         long autoDmns = aiAuditLogRepository.countByEventType("DMN_GENERATION");
         long autoEmails = aiAuditLogRepository.countByEventType("EMAIL_NLU_ROUTING");
-        Double avgSimilarity = aiAuditLogRepository.getAverageSimilarityScore();
+        Double avgSimilarity = aiAuditLogRepository.getAverageConfidenceScore();
 
         AiMetricsDTO metrics = new AiMetricsDTO();
         metrics.setTotalAiEvents(totalEvents);

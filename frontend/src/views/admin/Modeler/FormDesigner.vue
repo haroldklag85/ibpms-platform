@@ -176,6 +176,7 @@
              :language="activeCodeTab === 'TEMPLATE' ? 'html' : 'typescript'"
              theme="vs-dark"
              :options="monacoOptions"
+             @mount="onMonacoMount"
              class="absolute inset-0"
            />
         </div>
@@ -222,6 +223,11 @@
           <div v-if="formPattern === 'IFORM_MAESTRO'" class="bg-blue-50 p-3 rounded border border-blue-200">
              <label class="block text-xs font-bold text-blue-800 mb-1">Stage (Etapa BPMN de aparición)</label>
              <input v-model="editingField.stage" class="w-full text-sm border-blue-300 rounded font-mono" placeholder="Ej: ANALYSIS" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-indigo-700 mb-1">Camunda Variable (I/O Binding)</label>
+            <input v-model="editingField.camundaVariable" class="w-full text-sm border-indigo-300 rounded font-mono bg-indigo-50" placeholder="Ej: customerName" />
+            <p class="text-[10px] text-gray-500 mt-1">El valor del campo se mapeará a esta variable en Process Engine.</p>
           </div>
           <div class="flex items-center gap-2 pt-2 border-t mt-4">
              <input type="checkbox" v-model="editingField.required" id="reqCheck" class="text-indigo-600 rounded" />
@@ -276,22 +282,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import VueDraggable from 'vuedraggable';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
+import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
+import apiClient from '@/services/apiClient';
 
 // ── Types ────────────────────────────────────────────────────────
-interface FormField {
-  id: string;
-  type: string;
-  label: string;
-  desc?: string;
-  placeholder: string;
-  required: boolean;
-  stage?: string; // Solo para IFORM_MAESTRO
-  zodType: string;
-  options?: string[];
-}
+interface FormField extends FormFieldMetadataDTO {}
 
 // ── State ────────────────────────────────────────────────────────
 const formTitle = ref('Solicitud Onboarding (V1)');
@@ -322,28 +320,28 @@ const toolboxCategories = [
   {
     name: "Texto",
     items: [
-      { icon: 'Ab', label: 'Input Text', desc: 'Validación Regex', type: 'text', placeholder: 'Ej: Juan Pérez', required: true, zodType: 'string' },
-      { icon: '📝', label: 'Long Text', desc: 'Textarea (2+ filas)', type: 'text', placeholder: 'Comentarios...', required: false, zodType: 'string' },
+      { icon: 'Ab', label: 'Input Text', desc: 'Validación Regex', type: 'text', placeholder: 'Ej: Juan Pérez', required: true, zodType: 'string', camundaVariable: '' },
+      { icon: '📝', label: 'Long Text', desc: 'Textarea (2+ filas)', type: 'text', placeholder: 'Comentarios...', required: false, zodType: 'string', camundaVariable: '' },
     ]
   },
   {
     name: "Numérico & Fechas",
     items: [
-      { icon: '#', label: 'Number Field', desc: 'Zod min/max', type: 'number', placeholder: '0.00', required: true, zodType: 'number' },
-      { icon: '📅', label: 'Date Picker', desc: 'Zod date (YYYY-MM-DD)', type: 'text', placeholder: 'Seleccionar Fecha', required: false, zodType: 'string' },
+      { icon: '#', label: 'Number Field', desc: 'Zod min/max', type: 'number', placeholder: '0.00', required: true, zodType: 'number', camundaVariable: '' },
+      { icon: '📅', label: 'Date Picker', desc: 'Zod date (YYYY-MM-DD)', type: 'text', placeholder: 'Seleccionar Fecha', required: false, zodType: 'string', camundaVariable: '' },
     ]
   },
   {
     name: "Selección",
     items: [
-      { icon: '≡', label: 'Dropdown', desc: 'Typeahead / API', type: 'select', placeholder: '-- Seleccione --', required: true, zodType: 'string', options: ['Opción A', 'Opción B'] },
+      { icon: '≡', label: 'Dropdown', desc: 'Typeahead / API', type: 'select', placeholder: '-- Seleccione --', required: true, zodType: 'string', options: ['Opción A', 'Opción B'], camundaVariable: '' },
     ]
   },
   {
     name: "Avanzados",
     items: [
-      { icon: '📎', label: 'File Upload', desc: 'SGDEA Vault Embed', type: 'file', placeholder: 'Arrastra PDF aquí', required: false, zodType: 'any' },
-      { icon: '✍️', label: 'Firma Digital', desc: 'Canvas a Base64', type: 'text', placeholder: 'Firma autógrafa', required: true, zodType: 'string' },
+      { icon: '📎', label: 'File Upload', desc: 'SGDEA Vault Embed', type: 'file', placeholder: 'Arrastra PDF aquí', required: false, zodType: 'any', camundaVariable: '' },
+      { icon: '✍️', label: 'Firma Digital', desc: 'Canvas a Base64', type: 'text', placeholder: 'Firma autógrafa', required: true, zodType: 'string', camundaVariable: '' },
     ]
   }
 ];
@@ -353,6 +351,7 @@ let idCounter = 1;
 const cloneComponent = (original: any) => {
   const cloned = JSON.parse(JSON.stringify(original));
   cloned.id = `FIELD_${idCounter++}`;
+  cloned.camundaVariable = cloned.id.toLowerCase();
   cloned.stage = 'START_EVENT'; // Default
   return cloned;
 };
@@ -383,7 +382,35 @@ const editField = (field: FormField) => {
   editingField.value = field;
 };
 
-// ── Monaco Editor Setup ──────────────────────────────────────────
+declare const monaco: any;
+
+const onMonacoMount = (editorIns: any, monacoIns: any) => {
+  // Intellisense Injection CA-115
+  monacoIns.languages.typescript.typescriptDefaults.setCompilerOptions({
+      target: monacoIns.languages.typescript.ScriptTarget.ESNext,
+      allowNonTsExtensions: true,
+      moduleResolution: monacoIns.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monacoIns.languages.typescript.ModuleKind.CommonJS,
+      noEmit: true,
+      esModuleInterop: true,
+      jsx: monacoIns.languages.typescript.JsxEmit.React,
+      reactNamespace: "React",
+      allowJs: true,
+      typeRoots: ["node_modules/@types"]
+  });
+
+  monacoIns.languages.typescript.typescriptDefaults.addExtraLib(`
+    declare module 'vue' {
+        export function ref<T>(value: T): { value: T };
+        export function computed<T>(getter: () => T): { value: T };
+        export function inject<T>(key: string, defaultValue?: T): T;
+    }
+    declare module 'zod' {
+        export const z: any;
+    }
+    `, 'file:///node_modules/@types/vue-zod/index.d.ts');
+};
+
 const monacoOptions = {
   readOnly: true,
   minimap: { enabled: false },
@@ -444,7 +471,10 @@ const computedCode = computed(() => {
   if (activeCodeTab.value === 'ZOD') {
     let zc = `import { z } from 'zod';\n\nexport const taskSchema = z.object({\n`;
     for (const field of canvasFields.value) {
-      zc += `  ${field.id}: z.${field.zodType}()${field.required ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
+      let zt = 'string';
+      if(field.type === 'number') zt = 'number';
+      if(field.type === 'file') zt = 'any';
+      zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
     }
     zc += `});\n\nexport type TaskSchemaPayload = z.infer<typeof taskSchema>;`;
     return zc;
@@ -478,30 +508,38 @@ ${canvasFields.value.map(f => `         ${f.id}: ${f.type==='number' ? 100 : "'t
     showResultModal.value = true;
 };
 
-const simulateMockSubmit = () => {
-    modalTitle.value = "🚀 Submit Mock Execute (CA-29)";
-    if(canvasFields.value.length === 0) {
-        modalContent.value = "[MOCK ENGINE] ⚠️ No hay campos obligatorios. Payload vacío permitido.";
-    } else {
-        modalContent.value = `[WORKDESK ENGINE] Enviando Formulario a Cola de Tareas...
-POST -> /api/v1/workbox/tasks/{TAREA_ID}/complete
+const simulateMockSubmit = async () => {
+    modalTitle.value = "🚀 Execute End-to-End Validation Engine & Integration (CA-29)";
+    
+    // BUILD DYNAMIC ZOD SCHEMA FACTORY based on live fields metadata
+    const executableSchema = ZodBuilder.buildSchema(canvasFields.value);
 
-1. Ejecutando parse Zod Local (Vue):
-=> FALLIDO (Validando variables requeridas vacías).
+    // Mapeo inicial vacío del Payload que se "recibe" simulando llenado del Usuario o Camunda
+    const rawFormSubmission: Record<string, any> = {};
 
-2. Simulando Payload forzado sin client-validation a Backend:
-{ 
-   "variables": {} 
-}
+    // Evaluamos el safeParse en memoria real (SIN MOCKS ESTATICOS STINGS)
+    const result = executableSchema.safeParse(rawFormSubmission);
 
-[BACKEND HTTP 400 RESPONSE]:
-{
-  "instance": "com.ibpms.core.zod.ValidationException",
-  "detail": "Violación de contrato iForm_Maestro",
-  "issues": [
-${canvasFields.value.filter(f => f.required).map(f => `    { "field": "${f.id}", "rule": "required" }`).join(',\n')}
-  ]
-}`;
+    if(!result.success) {
+      modalContent.value = `[WORKDESK VALIDATION ENGINE] (Vue Realtime Zod Factory)\n❌ FALLIDO: Integridad I/O de Camunda no superada.\n\nEl sistema Zod Dinámico arrojó infracciones de validación al intentar procesar payload vacío:\n\n` + 
+      result.error.issues.map(iss => `  - [${iss.path.join('.')}] Rule '${iss.code}': ${iss.message}`).join('\n') + 
+      `\n\n⚠️ Acción de Submit Abortada por el Front-end. El API no ha sido contactado.`;
+      showResultModal.value = true;
+      return;
+    }
+
+    modalContent.value = `[WORKDESK VALIDATION ENGINE] (Vue Realtime Zod Factory)\n✅ VALIDACION EXITOSA.\n\nEmitiendo POST hacia el Backend End-to-End...\n`;
+
+    try {
+        const dto = {
+           title: formTitle.value,
+           pattern: formPattern.value,
+           schemaVariables: canvasFields.value
+        };
+        const response = await apiClient.post('/forms', dto);
+        modalContent.value += `\n[BACKEND HTTP RESPONSE 201 CREATED]:\nRecepción de metadatos aprobada por la API.\nFormulario guardado para distribución:\n\n${JSON.stringify(response.data, null, 2)}`;
+    } catch (error: any) {
+        modalContent.value += `\n[BACKEND HTTP ERROR]:\n\nEndpoint devolvió fallo. Asegúrate que Java está activo.\n${error.message}`;
     }
     showResultModal.value = true;
 };

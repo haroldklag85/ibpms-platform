@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 /**
  * Event Listener Acoplado a JPA para replicar Kanban hacia la tabla CQRS (Workdesk).
  */
@@ -21,10 +23,17 @@ public class KanbanTaskSyncListener {
 
     // Se usa @Lazy para evitar dependencias circulares durante la inicializacion de Hibernate
     private WorkdeskProjectionRepository projectionRepository;
+    
+    private SimpMessagingTemplate messagingTemplate;
 
     @Autowired
     public void setProjectionRepository(@Lazy WorkdeskProjectionRepository projectionRepository) {
         this.projectionRepository = projectionRepository;
+    }
+
+    @Autowired
+    public void setMessagingTemplate(@Lazy SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
     }
 
     @PostPersist
@@ -50,6 +59,13 @@ public class KanbanTaskSyncListener {
             
             projectionRepository.save(projection);
             log.debug("Kanban CQRS Sync exitoso para tarea {}", task.getId());
+            
+            // CA-6: Broadcastear TASK_CLAIMED para Ghost Deletion en Front
+            if (task.getAssignee() != null && messagingTemplate != null) {
+                String payload = "{\"event\": \"TASK_CLAIMED\", \"taskId\": \"KANBAN-" + task.getId() + "\"}";
+                messagingTemplate.convertAndSend("/topic/workdesk.updates", payload);
+            }
+            
         } catch (Exception e) {
             log.error("Error sincronizando KanbanTask {} hacia Workdesk CQRS", task.getId(), e);
         }

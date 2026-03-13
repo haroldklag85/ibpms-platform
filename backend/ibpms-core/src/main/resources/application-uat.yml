@@ -3,16 +3,16 @@ spring:
     activate:
       on-profile: uat
 
-  # Configuración de Base de Datos H2 en Memoria (Sustituye a MySQL/PostgreSQL Local)
+  # Configuración de Base de Datos PostgreSQL
   datasource:
-    url: jdbc:h2:mem:ibpmsdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
-    driverClassName: org.h2.Driver
-    username: sa
-    password: password
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:ibpms_db}
+    driverClassName: org.postgresql.Driver
+    username: ${POSTGRES_USER:ibpms_user}
+    password: ${POSTGRES_PASSWORD:ibpms_password}
 
   # Inicialización de Esquemas
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update # Crea tablas automáticamente basándose en las entidades JPA
     show-sql: false
@@ -29,11 +29,13 @@ spring:
         trace: false
         web-allow-others: false
 
-# Camunda Configuration para sobrevivir en un entorno efímero
+# Camunda Configuration
 camunda:
   bpm:
+    client:
+      base-url: "http://localhost:8080/engine-rest"
     database:
-      type: h2
+      type: postgres
       schema-update: true
     generic-properties:
       properties:
@@ -44,12 +46,24 @@ camunda:
     repositories:
       enabled: false
 
+# Configuración Mock para Storage en UAT
+app:
+  azure:
+    storage:
+      connection-string: "DefaultEndpointsProtocol=https;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;EndpointSuffix=core.windows.net"
+      container-name: "ibpms-docs"
+
 # Configuraciones Dummy de Seguridad JWT para dev/uat
 ibpms:
   security:
     jwt:
       secret: "UAT_SUPER_SECRET_KEY_THAT_IS_VERY_LONG_AND_SECURE_982374982374892374"
       expiration-ms: 86400000
+
+management:
+  health:
+    camunda:
+      enabled: false
 
 logging:
   level:

@@ -13,6 +13,12 @@ export default {
                     brand: '#3b82f6',
                     danger: '#ef4444'
                 }
+            },
+            spacing: {
+                'card-p': 'var(--spacing-card-p)'
+            },
+            fontSize: {
+                'dynamic-base': 'var(--text-dynamic-base)'
             }
         },
     },

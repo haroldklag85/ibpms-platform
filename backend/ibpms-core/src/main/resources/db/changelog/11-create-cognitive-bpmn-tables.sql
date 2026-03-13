@@ -16,7 +16,7 @@ CREATE TABLE ibpms_ai_audit_log (
     execution_id VARCHAR(64) NOT NULL,
     system_prompt TEXT NOT NULL,
     response_payload TEXT,
-    confidence_score DOUBLE,
+    confidence_score DOUBLE PRECISION,
     chain_of_thought TEXT,
     human_override TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

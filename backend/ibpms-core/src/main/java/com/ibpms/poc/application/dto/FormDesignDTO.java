@@ -1,6 +1,7 @@
 package com.ibpms.poc.application.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public class FormDesignDTO {
@@ -14,6 +15,7 @@ public class FormDesignDTO {
     private String zodSchema;
     private String authorId;
     private LocalDateTime updatedAt;
+    private List<FormFieldMetadataDTO> formFields;
 
     // Getters
     public UUID getId() {
@@ -56,6 +58,10 @@ public class FormDesignDTO {
         return updatedAt;
     }
 
+    public List<FormFieldMetadataDTO> getFormFields() {
+        return formFields;
+    }
+
     // Setters
     public void setId(UUID id) {
         this.id = id;
@@ -95,5 +101,9 @@ public class FormDesignDTO {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public void setFormFields(List<FormFieldMetadataDTO> formFields) {
+        this.formFields = formFields;
     }
 }

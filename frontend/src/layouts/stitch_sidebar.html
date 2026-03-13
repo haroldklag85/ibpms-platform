@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Enterprise Legal iBPMS - Collapsed View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1111d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101022",
+                        "sidebar-dark": "#1A1C1E",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .active-nav { position: relative; color: #1111d4; }
+        .active-nav::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 25%;
+            height: 50%;
+            width: 3px;
+            background-color: #1111d4;
+            border-radius: 0 4px 4px 0;
+        }
+        .tooltip-mockup {
+            position: absolute;
+            left: 60px;
+            background: #1A1C1E;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- Sidebar: Collapsed State (Left) -->
+<aside class="w-[64px] bg-sidebar-dark flex flex-col items-center py-6 gap-8 border-r border-white/5 shrink-0 z-40">
+<!-- Brand Logo Minimized -->
+<div class="mb-4">
+<div class="size-10 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white">balance</span>
+</div>
+</div>
+<!-- Navigation Icons -->
+<nav class="flex flex-col gap-6 w-full">
+<a class="flex justify-center items-center h-12 w-full text-slate-400 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">home</span>
+</a>
+<!-- Active State Example with Tooltip Mockup -->
+<div class="relative group">
+<a class="active-nav flex justify-center items-center h-12 w-full text-primary" href="#">
+<span class="material-symbols-outlined text-[24px]">work</span>
+</a>
+<!-- Floating Tooltip Mockup -->
+<div class="tooltip-mockup opacity-100 flex items-center gap-2">
+<span>Workdesk</span>
+<span class="bg-primary/20 text-primary-light text-[10px] px-1.5 rounded font-bold">12</span>
+</div>
+</div>
+<a class="flex justify-center items-center h-12 w-full text-slate-400 hover:text-white transition-colors relative" href="#">
+<span class="material-symbols-outlined text-[24px]">mail</span>
+<span class="absolute top-2 right-4 size-2 bg-red-500 rounded-full border-2 border-sidebar-dark"></span>
+</a>
+<a class="flex justify-center items-center h-12 w-full text-slate-400 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">description</span>
+</a>
+<a class="flex justify-center items-center h-12 w-full text-slate-400 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">analytics</span>
+</a>
+</nav>
+<!-- Bottom Icons -->
+<div class="mt-auto flex flex-col gap-6 w-full pb-4">
+<a class="flex justify-center items-center h-12 w-full text-slate-400 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+</a>
+<div class="flex justify-center items-center w-full">
+<div class="size-8 rounded-full bg-slate-700 overflow-hidden border border-white/10">
+<img class="size-full object-cover" data-alt="Professional profile headshot for lawyer dashboard" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyPMPnh3YjZPMCgvoPCOtu7hpRoxZnTqnO9F6A343dBQS9A6PKR9v3Z1eXF3b92Oa9EIh2gjez_ybn0jbhgXcQSHYG-MyGBhr3rC6J_K7oOUTTyvSU6j6oNFHl9G-iZSrzargWix4ftYYZG8Vw0ApUGrSjRywDnJ9I7Ebv_Uq4oX16c7VyFHVpt59ISZkMBcDkgQsugGRST7-GG_QGgnNNwlKqPqrV2DxWnDORNPga1-MZTlaQGn0huFAJntmgHXKTJGbqNUXv18k"/>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area (Right) -->
+<main class="flex-1 flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+<div class="flex items-center gap-4">
+<h1 class="text-lg font-semibold tracking-tight">Active Matters / Acme Corp vs. Globex</h1>
+<span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded uppercase tracking-wider">In Review</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex -space-x-2">
+<img class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-900" data-alt="Collaborator profile image 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-XcXFKi89WQE6e1_WEmIA9-EEl6hrr3DxOzfHid4Ek3BItLxF8Pp03_RcpbCXYuIl_efTo2o6u9GTmLj99qu4S_pa-z5GI5zPXzNWGHrG8QJIPecjh2RcJY676nkV_AUtwCt5DhpSRROkvjeF1vNSxudy7POIGZm0fMfC-hgeuKB7Bb1T5ju96TWQesxLlc5s5Zzu1bcYLfpGkQVU4QdRpmirxPIbRkPRttYajlpJylXKBZqxqEzu6fB2Fo5zryMgjHFxoOq2ETM"/>
+<img class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-900" data-alt="Collaborator profile image 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0dAx_R3zQgAz4_s1hOOjmfZCwOhOvw-ule-O6NuDw_g99io8IyXAsFHQ92BaYj6sWFS_3kkJxUXEv0_QCQMtH6VFfJJyQTh-IQXlAWjLFAF7uuUIFOJVichvcgw7Z7pQS0DdtEowAHLDjw35vjpWbAcCwBzHKwTSDoAOXwZZxhLyE5o6r7hAloNU4_vrJmcc02mVbQd_gU39668D9mB-_MNrBRlmCQE5mHpRzOKf76nnECsoWQL2QrzabaxC8WGKXVlC3OGUvUlk"/>
+<div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 ring-2 ring-white dark:ring-slate-900 text-[10px] font-medium">+3</div>
+</div>
+<div class="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2"></div>
+<button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-sm">share</span>
+                        Share
+                    </button>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="flex-1 overflow-y-auto p-8 space-y-8">
+<!-- Metrics Bar -->
+<div class="grid grid-cols-4 gap-6">
+<div class="bg-background-light dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+<p class="text-xs text-slate-500 font-medium uppercase tracking-wide">Time Elapsed</p>
+<p class="text-2xl font-bold mt-1">14h 22m</p>
+</div>
+<div class="bg-background-light dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+<p class="text-xs text-slate-500 font-medium uppercase tracking-wide">Tasks Completed</p>
+<p class="text-2xl font-bold mt-1 text-primary">82%</p>
+</div>
+<div class="bg-background-light dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+<p class="text-xs text-slate-500 font-medium uppercase tracking-wide">Pending Signatures</p>
+<p class="text-2xl font-bold mt-1">03</p>
+</div>
+<div class="bg-background-light dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+<p class="text-xs text-slate-500 font-medium uppercase tracking-wide">Next Milestone</p>
+<p class="text-2xl font-bold mt-1">Feb 24</p>
+</div>
+</div>
+<!-- Main Layout Grid for Legal Work -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Left: Document Preview (Optimized Space) -->
+<div class="col-span-8 bg-background-light dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden min-h-[600px]">
+<div class="bg-white dark:bg-slate-800 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+<span class="text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400">picture_as_pdf</span>
+                                Master_Service_Agreement_v4.pdf
+                            </span>
+<div class="flex items-center gap-4">
+<div class="flex border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+<button class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700"><span class="material-symbols-outlined text-sm">zoom_out</span></button>
+<div class="px-3 flex items-center border-x border-slate-200 dark:border-slate-700 text-xs font-medium">100%</div>
+<button class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700"><span class="material-symbols-outlined text-sm">zoom_in</span></button>
+</div>
+<button class="p-1.5 text-slate-500 hover:text-slate-900"><span class="material-symbols-outlined">fullscreen</span></button>
+</div>
+</div>
+<div class="flex-1 p-12 flex justify-center overflow-y-auto">
+<!-- Mock Document Page -->
+<div class="w-full max-w-2xl bg-white shadow-xl dark:shadow-none p-16 min-h-[800px] border border-slate-200 dark:border-slate-700">
+<h2 class="text-2xl font-serif font-bold text-center mb-12">MASTER SERVICE AGREEMENT</h2>
+<div class="space-y-6 text-slate-700 leading-relaxed text-sm font-display">
+<p>THIS MASTER SERVICE AGREEMENT (this "Agreement") is made as of October 12, 2023, by and between ACME CORPORATION, a Delaware corporation ("Client"), and GLOBEX INTERNATIONAL, INC., a New York corporation ("Provider").</p>
+<h3 class="font-bold text-black pt-4">1. DEFINITIONS</h3>
+<p>1.1 "Services" shall mean those professional services provided by Provider to Client as described in a Statement of Work ("SOW") executed by the parties from time to time.</p>
+<p>1.2 "Deliverables" shall mean those tangible and intangible items, including software, documentation, and reports, developed by Provider specifically for Client under an SOW.</p>
+<h3 class="font-bold text-black pt-4">2. SERVICES AND STATEMENTS OF WORK</h3>
+<p>Provider shall perform the Services and provide the Deliverables set forth in each SOW. Each SOW shall be governed by the terms of this Agreement. In the event of a conflict between the terms of this Agreement and an SOW, this Agreement shall prevail unless the SOW specifically states otherwise.</p>
+<div class="h-2 w-full bg-slate-100 rounded animate-pulse"></div>
+<div class="h-2 w-3/4 bg-slate-100 rounded animate-pulse"></div>
+<div class="h-2 w-1/2 bg-slate-100 rounded animate-pulse"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Analysis & Tasks -->
+<div class="col-span-4 space-y-6">
+<!-- AI Insights -->
+<div class="bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/20 p-6">
+<div class="flex items-center gap-2 mb-4 text-primary">
+<span class="material-symbols-outlined">auto_awesome</span>
+<h3 class="font-bold text-sm tracking-tight uppercase">AI Contract Analysis</h3>
+</div>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-orange-500 text-sm mt-0.5">warning</span>
+<div>
+<p class="text-xs font-semibold">Liability Clause Alert</p>
+<p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Section 4.2 contains unlimited liability for provider, which contradicts standard policy.</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-green-500 text-sm mt-0.5">check_circle</span>
+<div>
+<p class="text-xs font-semibold">Termination Compliant</p>
+<p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Termination for convenience (30 days) matches market standards.</p>
+</div>
+</li>
+</ul>
+</div>
+<!-- Process Workflow -->
+<div class="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+<h3 class="font-bold text-sm mb-6 flex items-center justify-between">
+                                Workflow Status
+                                <span class="text-[10px] text-slate-400 font-normal">Step 3 of 5</span>
+</h3>
+<div class="relative space-y-6">
+<div class="absolute left-[11px] top-2 bottom-2 w-px bg-slate-200 dark:bg-slate-700"></div>
+<div class="relative flex items-center gap-4 group">
+<div class="size-6 rounded-full bg-green-500 flex items-center justify-center text-white shrink-0 z-10">
+<span class="material-symbols-outlined text-xs">check</span>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold">Intake &amp; Conflict Check</p>
+<p class="text-[10px] text-slate-400">Completed by Sarah L. • Oct 14</p>
+</div>
+</div>
+<div class="relative flex items-center gap-4 group">
+<div class="size-6 rounded-full bg-green-500 flex items-center justify-center text-white shrink-0 z-10">
+<span class="material-symbols-outlined text-xs">check</span>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold">First Draft Review</p>
+<p class="text-[10px] text-slate-400">Completed by AI Engine • Oct 15</p>
+</div>
+</div>
+<div class="relative flex items-center gap-4 group">
+<div class="size-6 rounded-full bg-primary flex items-center justify-center text-white shrink-0 z-10">
+<span class="material-symbols-outlined text-xs">edit</span>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold text-primary">Negotiation Phase</p>
+<p class="text-[10px] text-slate-400 italic">In progress (Awaiting Client)</p>
+</div>
+</div>
+<div class="relative flex items-center gap-4 group opacity-40">
+<div class="size-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 z-10">
+<span class="material-symbols-outlined text-xs">lock</span>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold">Final Approval</p>
+<p class="text-[10px] text-slate-400">Pending</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Toolbar (iOS/Mobile Context for Large Desktop Content) -->
+<footer class="h-14 border-t border-slate-200 dark:border-slate-800 bg-background-light dark:bg-slate-900 px-8 flex items-center justify-between shrink-0">
+<div class="flex items-center gap-6 text-[11px] text-slate-500 font-medium">
+<span class="flex items-center gap-1.5"><span class="size-2 bg-green-500 rounded-full"></span> System Ready</span>
+<span>Last backup: 2 min ago</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">help</span>
+</button>
+<button class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">feedback</span>
+</button>
+</div>
+</footer>
+</main>
+</div>
+</body></html>

@@ -12,10 +12,10 @@ import java.time.LocalDateTime;
 public class IdempotencyKeyEntity {
 
     @Id
-    @Column(name = "idempotency_key", length = 128, nullable = false, updatable = false)
+    @Column(name = "id", length = 36, nullable = false, updatable = false)
     private String idempotencyKey;
 
-    @Column(name = "result_json", columnDefinition = "json")
+    @Column(name = "response_payload", columnDefinition = "json")
     private String resultJson;
 
     @Column(name = "created_at", nullable = false, updatable = false)

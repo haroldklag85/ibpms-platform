@@ -4,8 +4,23 @@
 
 /* Reglas UI Base del Workspace Corporativo */
 @layer base {
+  :root, body[data-density="STANDARD"] {
+    --spacing-card-p: 1.5rem; /* p-6 eq */
+    --text-dynamic-base: 0.875rem; /* text-sm eq */
+  }
+
+  body[data-density="COMFORTABLE"] {
+    --spacing-card-p: 2.25rem; /* p-9 eq */
+    --text-dynamic-base: 1rem; /* text-base eq */
+  }
+
+  body[data-density="COMPACT"] {
+    --spacing-card-p: 0.75rem; /* p-3 eq */
+    --text-dynamic-base: 0.75rem; /* text-xs eq */
+  }
+
   body {
-    @apply antialiased text-gray-900 bg-ibpms-light;
+    @apply antialiased text-gray-900 bg-ibpms-light transition-all duration-300;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }

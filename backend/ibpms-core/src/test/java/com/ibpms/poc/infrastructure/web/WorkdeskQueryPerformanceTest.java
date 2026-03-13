@@ -1,6 +1,6 @@
 package com.ibpms.poc.infrastructure.web;
 
-import com.ibpms.poc.application.dto.WorkdeskGlobalItemDTO;
+import com.ibpms.poc.application.dto.WorkdeskResponseDTO;
 import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,11 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class WorkdeskQueryPerformanceTest {
 
     @Mock
@@ -56,12 +58,12 @@ class WorkdeskQueryPerformanceTest {
         // Arrange: Mock the JPA page response
         PageRequest pageRequest = PageRequest.of(0, 50);
         Page<WorkdeskProjectionEntity> pagedResponse = new PageImpl<>(mockLargeDataset.subList(0, 50), pageRequest, mockLargeDataset.size());
-        when(repository.findAll(pageRequest)).thenReturn(pagedResponse);
+        when(repository.findByCombinedSearch(any(), any(), any())).thenReturn(pagedResponse);
 
         // Act & Measure Latency
         long startTime = System.currentTimeMillis();
         
-        ResponseEntity<Page<WorkdeskGlobalItemDTO>> response = controller.getGlobalInbox(pageRequest);
+        ResponseEntity<WorkdeskResponseDTO> response = controller.getGlobalInbox(null, null, pageRequest);
         
         long endTime = System.currentTimeMillis();
         long executionTime = endTime - startTime;
@@ -70,6 +72,7 @@ class WorkdeskQueryPerformanceTest {
         System.out.println("Execution Time (ms): " + executionTime);
         assertTrue(executionTime <= 800, "Violación NFR-PER-01: El tiempo de respuesta (" + executionTime + "ms) excedió los 800ms permitidos.");
         assertTrue(response.getStatusCode().is2xxSuccessful());
-        assertTrue(response.getBody().getContent().size() == 50);
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().getContent().getContent().size() == 50);
     }
 }

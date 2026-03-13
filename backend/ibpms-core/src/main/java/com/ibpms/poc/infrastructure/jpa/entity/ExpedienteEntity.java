@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class ExpedienteEntity {
 
     @Id
-    @Column(name = "id", length = 36, nullable = false, updatable = false)
+    @Column(name = "id", length = 36, nullable = false, updatable = false, columnDefinition = "bpchar")
     private String id;
 
     @Column(name = "definition_key", nullable = false)
@@ -30,7 +30,7 @@ public class ExpedienteEntity {
     @Column(name = "payload", columnDefinition = "json")
     private String payload;
 
-    @Column(name = "process_instance_id")
+    @Column(name = "process_instance_id", length = 36, columnDefinition = "bpchar")
     private String processInstanceId;
 
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -11,9 +11,9 @@ import java.util.UUID;
 public interface AiAuditLogRepository extends JpaRepository<AiAuditLogEntity, UUID> {
     List<AiAuditLogEntity> findByExecutionIdOrderByCreatedAtDesc(String executionId);
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(a) FROM AiAuditLogEntity a WHERE a.eventType = :eventType")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(a) FROM AiAuditLogEntity a WHERE a.systemPrompt LIKE %:eventType%")
     long countByEventType(@org.springframework.data.repository.query.Param("eventType") String eventType);
 
-    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(AVG(a.similarityScore), 0.0) FROM AiAuditLogEntity a")
-    double getAverageSimilarityScore();
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(AVG(a.confidenceScore), 0.0) FROM AiAuditLogEntity a")
+    double getAverageConfidenceScore();
 }

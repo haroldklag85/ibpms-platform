@@ -190,13 +190,13 @@ Aborda la capacidad para diseñar interfaces de usuario mediante herramientas vi
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Web IDE Form Code Generation
-  Scenario: Seleccionar Patrón de Formulario
+  Scenario: Seleccionar Patrón de Formulario (CA-1)
     Given que el desarrollador crea un nuevo recurso en la sección "Formularios"
     When el modal pregunta "¿Qué arquitectura de formulario desea?"
     Then el usuario puede elegir "Patrón B: iForm Maestro (Expediente Multi-Etapa)"
     And el lienzo visual se estructura para basar el renderizado en la variable "Current_Stage" de Camunda
 
-  Scenario: Análisis Bidireccional de Código en Tiempo Real
+  Scenario: Análisis Bidireccional de Código en Tiempo Real (CA-2)
     Given que el usuario está en el Canvas del "iForm Maestro"
     When arrastra un "Input Text (Monto Aprobado)" y marca "Requerido"
     Then el panel derecho "Mónaco IDE" de código actualizado escribe automáticamente:
@@ -210,48 +210,48 @@ Feature: Web IDE Form Code Generation
     Then a la par de las pestañas `<script setup>` y `<style scoped>` debe haber un icono de ayuda [?]
     And al hacer hover, un Tooltip explica de forma concisa la función de cada pestaña (Ej: "Aquí va la lógica de Vue y validaciones Zod" / "Aquí va el CSS del componente").
 
-  Scenario: [Arquitectura] Sandboxing Estricto contra XSS (AST Evaluator)
+  Scenario: [Arquitectura] Sandboxing Estricto contra XSS (AST Evaluator) (CA-4)
     Given que el constructor del iForm inyectó una regla de negocio Javascript en un campo dinámico
     When el motor de renderizado de la Pantalla 7 interpreta el formulario en el navegador
     Then la plataforma prohíbe estructuralmente el uso de la función `eval()`
     And toda expresión JS es analizada y ejecutada internamente mediante un intérprete de gramática seguro (Abstract Syntax Tree Parser) que rechaza cualquier intento de manipulación del `window`, `document` o peticiones `fetch`.
 
-  Scenario: [Arquitectura] Factoría Reactiva de Zod On-The-Fly
+  Scenario: [Arquitectura] Factoría Reactiva de Zod On-The-Fly (CA-5)
     Given la estructura JSON del formulario generada por el IDE
     When el motor requiere validar los campos renderizados en pantalla
     Then el sistema NO emite archivos estáticos de código fuente JS para re-compilar
     And instanciará dinámicamente el esquema global cruzado utilizando la factoría de validaciones `zod` conectada en tiempo real a la memoria reactiva (`reactive()`) de Vue.
 
-  Scenario: [Arquitectura] Aislamiento Perimetral CSS (Shadow DOM)
+  Scenario: [Arquitectura] Aislamiento Perimetral CSS (Shadow DOM) (CA-6)
     Given que el usuario redactó reglas exóticas de CSS para colorear botones específicos de su Formulario
     When la pantalla cliente dibuja el componente en el Workdesk
     Then el iBPMS encapsulará todo el componente inyectado usando el estándar HTML5 "Shadow DOM"
     And ninguna de las clases CSS inyectadas podrá sangrar (Style Bleed) hacia el exterior ni distorsionar la barra superior o menús laterales de Tailwind corporativo.
 
-  Scenario: [Arquitectura] Render Functions y Teleportación
+  Scenario: [Arquitectura] Render Functions y Teleportación (CA-7)
     Given una directriz para renderizar componentes infinitamente anidados (Ej: Grillas dentro de Módulos dentro de Secciones)
     Then el motor subyacente de Vue prescindirá del HTML rígido (`<template>`) utilizando funciones programáticas puras de Virtual DOM (`h()`) para renderizado ultrarrápido
     And los Tooltips dinámicos o ventanas emergentes forzarán el uso de la etiqueta nativa `<Teleport to="body">` para romper el encierro del z-index y sobreponerse perfectamente en la jerarquía visual del monitor.
     And los Tooltips dinámicos o ventanas emergentes forzarán el uso de la etiqueta nativa `<Teleport to="body">` para romper el encierro del z-index y sobreponerse perfectamente en la jerarquía visual del monitor.
 
-  Scenario: [Arquitectura ERP] Navegación Modular y Agrupación de Malla
+  Scenario: [Arquitectura ERP] Navegación Modular y Agrupación de Malla (CA-8)
     Given que el Arquitecto está diseñando un "iForm Maestro" de alta densidad (Ej: 100+ campos)
     When el usuario arrastra componentes visuales al lienzo
     Then la Pantalla 7 dispondrá nativamente de agrupadores tipo "Micro-ERP": Pestañas (Tabs), Paneles Acordeón (Collapsible Panels) y Grillas de Datos Anidadas (DataTables con CRUD)
     And para evitar el diseño infinito vertical, segmentando el formulario visualmente a nivel departamental (Ej: Pestaña "Datos Clínicos", Pestaña "Análisis Legal").
 
-  Scenario: [Arquitectura Multi-Expediente] Cohabitación de Maestros en un Proceso
+  Scenario: [Arquitectura Multi-Expediente] Cohabitación de Maestros en un Proceso (CA-9)
     Given un Proceso BPMN (Camunda) de largo aliento con distintas esferas de confidencialidad
     When el Arquitecto vincula formularios a las Tareas (`UserTasks`)
     Then la plataforma permitirá asociar MÚLTIPLES "iForm Maestros" distintos dentro de una misma Instancia de Proceso (Ej: Maestro Comercial al inicio, Maestro Contractual al final)
     And cada Maestro gestionará su propio esquema Zod y persistencia independiente en CQRS, evitando la creación de un único "Monolito JSON" inmanejable para toda la organización.
 
-  Scenario: Inmersión Funcional "Alt+Tab Zero" (Full-Screen Focus)
+  Scenario: Inmersión Funcional "Alt+Tab Zero" (Full-Screen Focus) (CA-10)
     Given un Operario abriendo un "iForm Maestro" desde su Bandeja en Pantalla 2
     When la interfaz dibuja el componente en el navegador
     Then el sistema forzará que el Contenedor ocupe el 100% del Ancho y Alto útil (Experiencia ERP Inmersiva)
     And embebiendo sub-elementos (Previsores PDF, Calculadoras en línea) dentro del mismo componente Vue para evitar forzar al usuario a minimizar el iBPMS o abrir aplicaciones satélite para resolver la Tarea.
-  Scenario: Paleta de Componentes Base HTML5 (Formulario Simple y Maestro)
+  Scenario: Paleta de Componentes Base HTML5 (Formulario Simple y Maestro) (CA-11)
     Given que el desarrollador está diseñando un formulario en el lienzo de la Pantalla 7
     Then la plataforma debe proveer una paleta tipificada que garantice la renderización de todos los estándares HTML5 y su mapeo a Zod:
     And Textos: `text` (Corto), `textarea` (Largo), `password`, `email`, `url`, `tel`, `search`, `hidden`.
@@ -262,25 +262,25 @@ Feature: Web IDE Form Code Generation
     And Estructura y Acción: `submit`, `reset`, `button`, `image`, `file`, `color`, `output`, `fieldset`, `legend`, `label`.
     And cada uno de estos componentes emitirá su tipo de dato UI y su esquema Zod correspondiente para la validación bidireccional.
 
-  Scenario: [Integración Motor] Drag & Drop Sensorial de Process Variables
+  Scenario: [Integración Motor] Drag & Drop Sensorial de Process Variables (CA-12)
     Given que el Arquitecto está diseñando en el Mónaco IDE (Pantalla 7) vinculado a una User Task (Ej: "Aprobar Crédito")
     When importa el archivo subyacente `.bpmn` o conecta el IDE mediante API contra Camunda para leer el Diccionario de Datos del proceso activo
     Then el IDE enlistará las `Process Variables` detectadas en un panel lateral
     And al arrastrar una variable (Ej. `monto_credito` tipado numérico) hacia el Canvas, el motor adivinará su componente Vue lógico (`<InputNumber>`) y redactará automáticamente `z.number()` en el panel de Zod.
 
-  Scenario: [Arquitectura de Datos] Mapeo de Entradas y Salidas Form-To-Process
+  Scenario: [Arquitectura de Datos] Mapeo de Entradas y Salidas Form-To-Process (CA-13)
     Given el panel de propiedades globales del formulario en el IDE
     Then el desarrollador dispondrá de dos matrices declarativas de vinculación (Input/Output Mapping):
     And 1. Carga (`onMounted`): El mapeo estricto de qué variables leerá de la API de Camunda para pre-poblar o condicionar el formulario (`prefillData` de US-029).
     And 2. Retorno (Submit): Un contrato explícito indicando qué porción específica de la data recolectada se serializará y reinyectará en las `Process Variables` del motor al hacer el POST `Complete Task`, blindando el motor de basura transaccional.
 
-  Scenario: [Accionadores] Botones Nativos de Estado Camunda (Task Lifecycle)
+  Scenario: [Accionadores] Botones Nativos de Estado Camunda (Task Lifecycle) (CA-14)
     Given la necesidad de gobernar el ciclo vital del Token directamente desde la UI sin que el desarrollador escriba llamadas Axios manuales
     When el Arquitecto abre la paleta de componentes "Botones de Acción" en Pantalla 7
     Then dispondrá de componentes drag&drop *Smart Buttons* pre-conectados a las APIs core (`/workbox/tasks`):
     And `[Completar]` (Avanza el proceso enviando I/O), `[Reclamar/Liberar]`, `[Auto-Guardar Borrador]` (Persistencia Local de US-029), y `[Generar BPMN Error]` (Desvío técnico hacia un Evento Intermedio de Error en Camunda).
 
-  Scenario: [Arquitectura de Resiliencia] Captura Automática de Errores Core (Smart Buttons)
+  Scenario: [Arquitectura de Resiliencia] Captura Automática de Errores Core (Smart Buttons) (CA-15)
     Given el desarrollador ha finalizado el diseño del "iForm Maestro" y procede a hacer clic en `[Publicar]` en la Pantalla 7
     When el motor de compilación Mónaco IDE analiza el código fuente del componente Vue generado
     Then el IDE verificará explícitamente la presencia de manejadores de eventos (Action Listeners) conectados a la API de Camunda (Ej. Los Smart Buttons de la Paleta)
@@ -288,223 +288,244 @@ Feature: Web IDE Form Code Generation
     And si las APIs de Camunda o CQRS (US-029) retornan un HTTP 5xx (Timeout o Crash), el Smart Button suspenderá su estado de carga (Spinner) y detonará automáticamente un Componente Visual Genérico de Error (Toast/Snackbar corporativo alertando: "Fallo de Comunicación con el Motor Central").
     And bajo ninguna circunstancia se permitirá la publicación de un formulario "Mudo" (Sin captura de errores de red), descargando esta responsabilidad arquitectónica de las manos del desarrollador (Enfoque No-Code Seguro).
 
-  Scenario: [Arquitectura Flexible] Constraint de Bajo Acoplamiento Form-To-Process
+  Scenario: [Arquitectura Flexible] Constraint de Bajo Acoplamiento Form-To-Process (CA-16)
     Given que el Arquitecto vinculó el diccionario de un `.bpmn` al panel IDE para el "iForm Maestro"
     When existan discrepancias lógicas entre los campos visuales dibujados y las variables detectadas por Camunda
     Then el lienzo IDE no impondrá bloqueos duros ('No Mapeado') ni abortará la compilación de la UI
     And la coerción de coherencia entre ambas capas recaerá estrictamente sobre el ciclo de QA automatizado (US-028)
     And preservando la agilidad del IDE y el bajo acoplamiento arquitectónico entre el Frontend/Zod y el Motor Central.
 
-  Scenario: Soporte de Motores de Lenguaje (Language Servers en Web IDE)
+  Scenario: Soporte de Motores de Lenguaje (Language Servers en Web IDE) (CA-17)
     Given que el usuario edita el código fuente de un Formulario en las pestañas del Mónaco IDE (Pantalla 7)
     Then la plataforma proveerá Autocompletado, Syntax Highlighting y Linting estricto exclusivamente para: TypeScript, Vue (SFC), SCSS/Tailwind y JSON.
     And descartará a nivel arquitectónico motores de terceros como GraphQL o YAML para mantener el Bundle Size del Editor ultraligero y consistente con la estrategia REST API del Core iBPMS.
 
+  Scenario: [Onboarding Embebido] Tooltips de Ayuda Visual (Propiedades Avanzadas) (CA-18)
+    Given que el Arquitecto No-Code selecciona un componente visual en el lienzo para configurar sus Propiedades Avanzadas
+    Then el panel lateral (Propiedades) mostrará iconos de ayuda `[?]` al lado de cada título
+    And al hacer hover sobre los iconos, el sistema desplegará Tooltips didácticos con el siguiente mapeo funcional:
+    | Propiedad | Contenido del Tooltip "Para Dummies" |
+    |---|---|
+    | **ID (Variable Name)** | "Ésta es 'La Cédula' única del campo para el sistema. Usa solo minúsculas y guiones bajos, sin espacios (Ej: nombre_cliente)." |
+    | **Label (Nombre Visible)** | "La pregunta o título oficial que leerá la persona humana (Ej: ¿Cuál es su nombre?)." |
+    | **Placeholder / Descripción** | "Texto ejemplo tipo 'fantasma' que guía al usuario y desaparece cuando él escribe (Ej: +57 321 000 0000)." |
+    | **Camunda Variable (I/O Binding)** | "El puente de datos. Nombra el 'bolsillo' exacto donde el motor central de Camunda guardará esta respuesta." |
+    | **Validaciones Zod** | "El Policía. Marca como Requerido para obligar la respuesta, o usa los límites numéricos para que un texto no sea demasiado largo o corto." |
+    | **Regex Automático** | "Escáneres mágicos. Elige una regla (Ej: Correo, Tarjeta de Crédito) para impedir que el usuario ingrese datos inválidos." |
+    | **Cross-Field Logic** | "Lógica condicional. Configura si la obligatoriedad de este campo depende de lo que el usuario respondió en otra pregunta." |
+    And esta funcionalidad estará aislada del Mónaco IDE, focalizándose única y exclusivamente en la usabilidad del panel Clic-and-Drop.
+
+  Scenario: Maximización de Lienzo Visual (Contracción de Mónaco IDE) (CA-19)
+    Given el Arquitecto está diseñando un formulario complejo en el Canvas de la Pantalla 7
+    When no necesita visualizar o interactuar con el código en tiempo real (Vue/Zod)
+    Then dispondrá de un control visual (Ej. un botón de colapso "`>`" en el borde del panel) para ocultar completamente el "Mónaco IDE"
+    And al contraerse, el área del Lienzo Visual se expandirá fluidamente para ocupar el 100% del espacio central, mejorando la ergonomía visual del diseño No-Code.
+
 **Nota Post-MVP (V2):** *Motor White-Label & Theming. El sistema estará cimentado sobre Tailwind CSS V4 / Native Variables, permitiendo en fases posteriores la exposición de un Panel Administrativo para la sobreescritura dinámica de Brand Tokens (Colores primarios, radios y fuentes) por Tenant. Excluido del MVP V1 para priorizar features transaccionales.*
     
 **Trazabilidad UX:** Wireframes Pantalla 7 (iForm Builder - Web IDE Bidireccional).
-  Scenario: Permisos de Sobrescritura en Campos (CA-4)
+  Scenario: Permisos de Sobrescritura en Campos (CA-20)
     Given un usuario en la Etapa 2 abre un iForm Maestro
     Then puede sobrescribir los valores ingresados previamente en la Etapa 1
     But solo si su Rol RBAC tiene permisos explícitos de escritura sobre esos campos, de lo contrario se renderizan como "Solo Lectura".
 
-  Scenario: Enrutador de Archivos Adjuntos por TRD (CA-5)
+  Scenario: Enrutador de Archivos Adjuntos por TRD (CA-21)
     Given un usuario sube un archivo en un componente de Adjuntos del formulario
     Then el sistema lee la configuración de las Tablas de Retención Documental (TRD) del proceso
     And rutea el archivo automáticamente a la Bóveda SGDEA Interna (Pantalla 12) o a Microsoft SharePoint según indique la TRD
     And NO se guarda en la Base de Datos transaccional (Diferido a V2).
 
-  Scenario: Validación Proactiva de Zod (CA-6)
+  Scenario: Validación Proactiva de Zod (CA-22)
     Given un usuario final está diligenciando el formulario en su Workdesk
     When incumple una regla de validación (Ej: escribe 3 números en un campo que exige 10)
     Then el formulario muestra el mensaje de error "en vivo" proactivamente mientras teclea, sin esperar al botón de [Enviar].
 
-  Scenario: Estilos CSS Corporativos Estandarizados V1 (CA-7)
+  Scenario: Estilos CSS Corporativos Estandarizados V1 (CA-23)
     Given el Arquitecto diseña un formulario
     Then todos los componentes visuales heredan la hoja de estilos de "Marca Corporativa" global
     And NO es posible customizar el color/fuente de cada botón individualmente en V1 para asegurar consistencia (Diferido a V2).
 
-  Scenario: Auto-Guardado de Borrador en Workdesk (CA-8)
+  Scenario: Auto-Guardado de Borrador en Workdesk (CA-24)
     Given un usuario final está llenando un formulario extenso en la Pantalla 2
     Then cada interacción se guarda automáticamente como un borrador en caché local (o BD temporal)
     And si el usuario cierra la pestaña por error, al volver a abrir la tarea, recupera los datos ingresados no enviados.
 
-  Scenario: Reglas de Visibilidad Condicional (CA-9)
+  Scenario: Reglas de Visibilidad Condicional (CA-25)
     Given el Arquitecto configura la propiedad "Dependencia Visual" de un campo B
     When en el lienzo visual el usuario final marca un Checkbox A
     Then el campo B aparece dinámicamente ("Campo Fantasma") empujando el resto de la estructura hacia abajo (layout reactivo Vue).
 
-  Scenario: Prevención Contra Borrado de Formularios Activos (CA-10)
+  Scenario: Prevención Contra Borrado de Formularios Activos (CA-26)
     Given el Arquitecto intenta eliminar el "Form_Solicitud_V1" en la Pantalla 7
     When el sistema detecta que existen instancias de procesos "en vuelo" que requieren de este formulario
     Then se cancela la eliminación y se muestra un mensaje de Error: "Prohibido: Este formulario está siendo usado por N procesos activos."
 
-  Scenario: Control de Versiones de Diseño de Formulario (CA-11)
+  Scenario: Control de Versiones de Diseño de Formulario (CA-27)
     Given el Arquitecto modifica un formulario guardado
     Then al presionar guardar, el IDE genera una nueva versión inmutable (v2) del `.vue`/`JSON`
     And permite consultar y restaurar versiones anteriores en caso de daño en el diseño.
 
-  Scenario: Bitácora de Auditoría a Nivel de Campo (CA-12)
+  Scenario: Bitácora de Auditoría a Nivel de Campo (CA-28)
     Given el usuario "maria.lopez" sobrescribe un valor que había puesto "juan.perez" en una etapa previa
     Then el backend inserta un registro en una tabla de auditoría (Ej: FormFieldValueAudit)
     And un Revisor puede ver un panel flotante "Bitácora" que lista "María cambió 'Costo' de 100 a 150 a las 14:00".
 
-  Scenario: Dropdown Alimentado por Exportación CSV (CA-13)
+  Scenario: Dropdown Alimentado por Exportación CSV (CA-29)
     Given el Arquitecto agrega un componente Dropdown (Select) al Lienzo
     Then en el panel de propiedades tiene la opción de "Cargar archivo .CSV"
     And al subir el archivo, el Dropdown se puebla automáticamente con las opciones (Ej: Países, Áreas, Tipos de Documento) en lugar de tipearlas una a una.
 
-  Scenario: Autocompletado mediante Integración API / BD Externa (CA-14)
+  Scenario: Autocompletado mediante Integración API / BD Externa (CA-30)
     Given el Arquitecto diseña un formulario en la Pantalla 7
     When configura un campo (Ej: "Cédula") para que sea el gatillo (trigger) de una consulta externa
     Then puede vincular ese campo a un Endpoint del Hub (Pantalla 11) o a datos de otros procesos
     And al usuario final tipear la cédula y perder el foco (blur), el formulario autocompleta los campos destino (Ej: "Nombre", "Dirección") automáticamente.
 
-  Scenario: Componente de Firma Electrónica Manuscrita (CA-15)
+  Scenario: Componente de Firma Electrónica Manuscrita (CA-31)
     Given el Arquitecto requiere formalizar un acuerdo en el formulario
     Then puede arrastrar un componente de "Firma a Mano Alzada" (Canvas HTML5) al Lienzo
     And el usuario final puede dibujar su firma con el mouse o pantalla táctil
     And el sistema guarda la firma como una imagen (Ej: Base64/PNG) anexa al Payload del formulario.
 
-  Scenario: Validaciones Cruzadas entre Múltiples Campos (CA-16)
+  Scenario: Validaciones Cruzadas entre Múltiples Campos (CA-32)
     Given un formulario tiene un componente "Fecha de Inicio" y "Fecha de Fin"
     When el usuario final ingresa una "Fecha de Fin" que es anterior a la "Fecha de Inicio"
     Then el esquema Zod dinámico evalúa la regla cruzada (refinement)
     And muestra inmediatamente un mensaje de error impidiendo el avance, indicando la inconsistencia temporal.
 
-  Scenario: Exportación a PDF del Formulario Diligenciado (CA-17)
+  Scenario: Exportación a PDF del Formulario Diligenciado (CA-33)
     Given un usuario final ha completado de llenar los datos requeridos en pantalla
     Then dispone de un botón global estilo "[⬇️ Exportar a PDF]"
     And al presionarlo, el sistema genera y descarga un PDF con formato de "Documento Físico" que contiene todos los campos y valores renderizados de manera limpia para impresión.
 
-  Scenario: Grupos de Campos Repetibles (Data Grids / Tablas) (CA-18)
+  Scenario: Grupos de Campos Repetibles (Data Grids / Tablas) (CA-34)
     Given el Arquitecto necesita recopilar una lista de longitud variable (Ej: "Múltiples Co-Deudores")
     Then puede utilizar un componente de "Grupo Repetible" (Field Array)
     And el usuario final verá un botón "[+ Agregar]" para duplicar dinámicamente el conjunto de campos configurados sin afectar el esquema Zod subyacente.
 
-  Scenario: Ayudantes Locales (Tooltips y Placeholders) (CA-19)
+  Scenario: Ayudantes Locales (Tooltips y Placeholders) (CA-35)
     Given el Arquitecto configura un campo complejo en el Lienzo
     Then puede configurar un texto "Placeholder" (texto gris de fondo)
     And puede configurar un "Tooltip" (icono ℹ️ que al hacer hover muestra una descripción detallada)
     And el Arquitecto es libre de usar ambos mecanismos simultáneamente para guiar al usuario final.
 
-  Scenario: Máscaras de Entrada (Input Masks) para Formatos Específicos (CA-20)
+  Scenario: Máscaras de Entrada (Input Masks) para Formatos Específicos (CA-36)
     Given el Arquitecto configura un campo numérico como "Ingresos Brutos" o "Cédula"
     Then puede aplicarle una Máscara de Formato (Ej: Moneda, Teléfono, Fecha)
     And mientras el usuario final teclea (Ej: "150000"), el sistema formatea visualmente el valor en vivo (Ej: "$ 150.000,00") sin alterar el valor numérico real bajo el capó.
 
-  Scenario: Visor Histórico Inmutable para Auditoría (CA-21)
+  Scenario: Visor Histórico Inmutable para Auditoría (CA-37)
     Given un usuario Auditor accede a un proceso completado hace años para revisión
     Then el sistema renderiza el formulario con su diseño original exacto
     But todos los componentes están estrictamente en modo "Solo Lectura", sin botón de [Enviar] y congelados contra cualquier manipulación.
 
-  Scenario: Restricciones de Longitud Dinámicas (Zod min/max) (CA-22)
+  Scenario: Restricciones de Longitud Dinámicas (Zod min/max) (CA-38)
     Given el Arquitecto configura un campo de texto largo (Textarea)
     Then puede definir en el panel de propiedades "Caracteres Mínimos" y "Máximos"
     And el lienzo genera instantáneamente la regla Zod correspondiente (Ej: `z.string().min(5).max(100)`)
     And bloquea el input visualmente cuando el usuario alcanza el límite.
 
-  Scenario: Condicionamiento de Archivos Adjuntos (CA-23)
+  Scenario: Condicionamiento de Archivos Adjuntos (CA-39)
     Given el Arquitecto agrega un componente de "Subida de Archivos"
     Then el panel de propiedades debe permitir restringir el "Peso Máximo (MB)" y los "Tipos Permitidos (Ej: .pdf, .jpg, .xml)"
     And si el usuario intenta subir un archivo no permitido, el sistema lo rechaza proactivamente antes de enviarlo al servidor.
 
-  Scenario: Dropdown de Búsqueda Interactiva (Searchable Select) (CA-24)
+  Scenario: Dropdown de Búsqueda Interactiva (Searchable Select) (CA-40)
     Given el Arquitecto necesita presentar una lista extensa de opciones (Ej: 195 Países)
     Then el componente Dropdown (Select) debe incluir por defecto un motor de búsqueda interno (Typeahead)
     And permite al usuario teclear para filtrar la lista instantáneamente sin tener que usar el scroll manual.
 
-  Scenario: Restricciones en Grillas Repetibles (Min/Max Rows) (CA-25)
+  Scenario: Restricciones en Grillas Repetibles (Min/Max Rows) (CA-41)
     Given el Arquitecto utiliza un Data Grid (Grupo Repetible)
     Then puede configurar mediante el panel de propiedades cuántas filas como mínimo debe llenar el usuario, y un tope máximo (Ej: Min: 1, Max: 3)
     And el esquema Zod asegura que el arreglo (`z.array`) cumpla estas restricciones bloqueando el botón [+ Agregar] al llegar al límite.
 
-  Scenario: Soporte Multi-Idioma (i18n) (CA-26 - Diferido a V2)
+  Scenario: Soporte Multi-Idioma (i18n) (CA-42 - Diferido a V2)
     # NOTA: Diferido a V2. Para V1 todos los formularios son creados y operados estáticamente en Español.
     Given el Arquitecto diseña un formulario
     Then puede habilitar soporte multi-idioma para cambiar el idioma condicionalmente.
 
-  Scenario: Data Binding (Precarga Automática desde Camunda) (CA-27)
+  Scenario: Data Binding (Precarga Automática desde Camunda) (CA-43)
     Given un usuario "Carlos" tiene variables persistidas de etapas anteriores almacenadas en el proceso de Camunda
     Then el IDE de Formularios mapea automáticamente todas las variables (variables del motor) usando sus IDs Técnicos
     And cuando el usuario abre la Pantalla 2, los campos coincidentes se auto-rellenan con esos datos históricos almacenados.
 
-  Scenario: Componentes de Calendario y Rangos de Fechas (CA-28 - Rango Diferido V2)
+  Scenario: Componentes de Calendario y Rangos de Fechas (CA-44 - Rango Diferido V2)
     Given el Arquitecto necesita recopilar fechas
     Then dispone de un componente DatePicker estándar (Selección de un solo día) en V1.
     # NOTA: La selección compleja de "Rango de Fechas" (Drag and Drop en calendario) se difiere a V2.
 
-  Scenario: Multi-Select Visual (Pastillas/Etiquetas) (CA-29)
+  Scenario: Multi-Select Visual (Pastillas/Etiquetas) (CA-45)
     Given el Arquitecto configura un campo desplegable que permite selección múltiple
     Then el diseñador o el panel de propiedades permite elegir la presentación visual: "Chips/Etiquetas" o "Pastillas"
     And el usuario final puede eliminar selecciones individuales haciendo clic en la 'x' de la pastilla correspondiente.
 
-  Scenario: Sello Visual de Aprobatoria con Rol (CA-30)
+  Scenario: Sello Visual de Aprobatoria con Rol (CA-46)
     Given un usuario con Rol "Gerente" completa una etapa de revisión en un iForm Maestro
     Then esa etapa genera un "Badge/Sello" visual estático incrustado
     And dicho sello muestra el Nombre del Usuario y su Rol (Ej: "Aprobado por Juan Pérez - Gerente de Área") para visibilidad en etapas subsecuentes.
 
-  Scenario: Campos Ocultos (Hidden Inputs) para Metadata (CA-31)
+  Scenario: Campos Ocultos (Hidden Inputs) para Metadata (CA-47)
     Given el Arquitecto necesita enviar datos técnicos que el usuario NO debe ver ni alterar
     Then puede arrastrar un componente "Campo Oculto (Hidden Input)" al Lienzo
     And puede asignarle valores variables (Ej: `sys_request_id`)
     And esos datos viajan transparentemente en el Payload JSON final al enviarse la tarea.
 
-  Scenario: Validaciones Condicionales (Required-If) (CA-32)
+  Scenario: Validaciones Condicionales (Required-If) (CA-48)
     Given el Arquitecto configura la propiedad "Requerido Condicional" del Campo B
     When en el lienzo el usuario final marca "Sí" en el Campo A
     Then el esquema Zod dinámico hace que el Campo B se vuelva obligatorio
     And si marca "No", el Campo B es opcional y no bloquea el envío del formulario.
 
-  Scenario: Restricción de Cantidad Mínima y Máxima de Adjuntos (CA-33)
+  Scenario: Restricción de Cantidad Mínima y Máxima de Adjuntos (CA-49)
     Given el Arquitecto agrega un componente de "Subida de Archivos"
     Then puede habilitar en las propiedades un requerimiento de Volumen (Ej: Mínimo 2 archivos, Máximo 5)
     And el sistema previene el envío del formulario si no se cumple esta cuota exacta.
 
-  Scenario: Traducción Silenciosa de Formatos (Mascara Front vs Dato Back) (CA-34)
+  Scenario: Traducción Silenciosa de Formatos (Mascara Front vs Dato Back) (CA-50)
     Given el usuario final digita "1.500.230" en un input numérico con máscara visual
     When el formulario se procesa para hacer el POST al motor de tareas (Camunda)
     Then el IDE despoja el formato estético en secreto y envía el Integer/Float puro (`1500230`)
     And garantizando la integridad de los datos para la analítica y reglas de negocio.
 
-  Scenario: Grillas Editables con Protección y Auditoría Parcial (CA-35)
+  Scenario: Grillas Editables con Protección y Auditoría Parcial (CA-51)
     Given un usuario "Analista 2" requiere agregar filas a un Data Grid donde "Analista 1" ya insertó datos
     Then el Analista 2 puede visualizar y editar toda la grilla si tiene permisos
     And cualquier fila modificada o eliminada que perteneciera al Analista 1 dejará un rastro en la Bitácora de Auditoría (CA-12).
 
-  Scenario: Feedback Visual en Llamadas a APIs (Estado Indeterminado) (CA-36)
+  Scenario: Feedback Visual en Llamadas a APIs (Estado Indeterminado) (CA-52)
     Given el usuario final ingresa un dato en un campo que dispara una llamada de Autocompletado (CA-14)
     When la interconexión con el sistema externo está procesándose
     Then el botón global de [Enviar Formulario] se deshabilita temporalmente
     And muestra un indicador de carga (spinner), evitando envíos prematuros o datos rotos.
 
-  Scenario: Enmascaramiento de Inputs de Múltiple Tipo (Contraseñas / Sensibles) (CA-37)
+  Scenario: Enmascaramiento de Inputs de Múltiple Tipo (Contraseñas / Sensibles) (CA-53)
     Given el Arquitecto requiere capturar información sensible (Ej: APIs Keys, Claves)
     Then dispone del tipo de Campo "Contraseña (Password)"
     And el texto digitado por el usuario final se oculta inmediatamente bajo asteriscos (****).
 
-  Scenario: Limpieza Automática por Lógica Condicional (CA-38)
+  Scenario: Limpieza Automática por Lógica Condicional (CA-54)
     Given un campo B es dependiente de que el campo A tenga el valor "X"
     When el usuario final había llenado el campo B, pero decide cambiar el campo A al valor "Y"
     Then el campo B desaparece visualmente (CA-9) Y suelta (limpia null/undefined) los datos almacenados
     And evitando que viajen datos "fantasma" al motor asociados a ramas muertas del formulario.
 
-  Scenario: Grillas y Organización Multicolumna (Layouts) (CA-39)
+  Scenario: Grillas y Organización Multicolumna (Layouts) (CA-55)
     Given el Arquitecto está diseñando la distribución espacial del formulario
     Then puede arrastrar y soltar componentes "Lado a Lado" organizándolos en múltiples columnas (Ej: 2, 3 o 4 columnas)
     And este layout es renderizado mediante CSS Grid / Flexbox de Tailwind en el `.vue` final adaptándose al espacio del Workdesk.
 
-  Scenario: Vista de Imprimible y de Solo-Lectura Plana (View-Mode) (CA-40)
+  Scenario: Vista de Imprimible y de Solo-Lectura Plana (View-Mode) (CA-56)
     Given un usuario que tiene el rol de "Visualizador" (Solo aprobar, no rellenar datos) abre la tarea
     Then el sistema NO le muestra un formulario lleno de Inputs deshabilitados y grises
     And le renderiza un componente de "Vista de Lectura / Print-Friendly" donde los datos parecen un documento de texto limpio sin bordes de formulario interactivo.
 
-  Scenario: Candado de Solo-Lectura Basado en Fórmulas (CA-41)
+  Scenario: Candado de Solo-Lectura Basado en Fórmulas (CA-57)
     Given el Arquitecto configura un campo B que depende del valor de un campo A
     Then puede usar el panel de propiedades para establecer una "Fórmula de Bloqueo" (Ej: `if A == 'Extranjero' then disable B`)
     And el motor Zod / Vue deshabilita visualmente (Solo-Lectura) el campo B en tiempo real cuando se cumple la condición.
 
-  Scenario: Cronómetro de Productividad en Formulario (Timer Component) (CA-42)
+  Scenario: Cronómetro de Productividad en Formulario (Timer Component) (CA-58)
     Given el Arquitecto necesita medir Tiempos y Movimientos de los empleados
     Then dispone de un componente "Timer / Cronómetro" que ofrece tres modos de configuración:
     And 1. Cronómetro Activo a Demanda (Con botones de Play/Pausa/Reset manuales).
@@ -512,49 +533,49 @@ Feature: Web IDE Form Code Generation
     And 3. Cronómetro Sincronizado por API (Conectado a un sistema externo de Time-Tracking).
     And el resultado viaja en los metadatos globales del Payload final.
 
-  Scenario: Botón de Reset Dual-Verification (CA-43)
+  Scenario: Botón de Reset Dual-Verification (CA-59)
     Given el Arquitecto agrega un botón "Restablecer Formulario"
     When el usuario final lo oprime por error o a propósito
     Then el sistema debe exigir una "Doble Verificación" (Modal de confirmación: "¿Está seguro que desea borrar todos los datos ingresados?")
     And solo si se confirma, el estado reactivo del componente se limpia a cero.
 
-  Scenario: Arrastrar y Soltar (Drag & Drop) Expandido para Adjuntos (CA-44)
+  Scenario: Arrastrar y Soltar (Drag & Drop) Expandido para Adjuntos (CA-60)
     Given el formulario contiene un componente de Subir Archivos
     Then el usuario no está obligado a usar el botón táctil "Buscar Archivo"
     And puede arrastrar múltiples archivos simultáneamente desde su escritorio / SO y soltarlos sobre la zona definida en pantalla para iniciar la carga (Dropzone).
 
-  Scenario: Captura de Geolocalización (GPS) Embebida (CA-45)
+  Scenario: Captura de Geolocalización (GPS) Embebida (CA-61)
     Given el Arquitecto diseña un formulario para trabajadores en terreno
     Then puede arrastrar un componente "Captura GPS" (Obtener Ubicación)
     And cuando el usuario lo presiona, el navegador solicita permiso y captura las coordenadas (Latitud / Longitud) precisas integrándolas automáticamente al esquema.
 
-  Scenario: Lector Nativo de Código de Barras / QR (CA-46)
+  Scenario: Lector Nativo de Código de Barras / QR (CA-62)
     Given el proceso requiere leer etiquetas físicas o documentos
     Then el Arquitecto dispone de un componente "Escaner QR/Barcode"
     And este componente invoca la API moderna de navegadores (WebRTC/MediaDevices) para usar la cámara del dispositivo móvil/laptop
     And el valor escaneado rellena el campo objetivo automáticamente.
 
-  Scenario: Auto-Validación de Regex Comunes (Email/URL) (CA-47)
+  Scenario: Auto-Validación de Regex Comunes (Email/URL) (CA-63)
     Given el Arquitecto configura un campo de texto y le asigna el tipo "Email" o "URL"
     Then el IDE aplica implícitamente la validación de Expresión Regular correspondiente (Ej: `z.string().email()`)
     And el sistema provee feedback visual inmediato de error si el usuario tipea algo como `carlos@gmail` sin dominio TLD.
 
-  Scenario: Mensajes de Ayuda / Hint Texts Multi-Estado (CA-48)
+  Scenario: Mensajes de Ayuda / Hint Texts Multi-Estado (CA-64)
     Given el Arquitecto configura un campo con requisitos complejos (Ej: Contraseña Segura)
     Then puede definir múltiples mensajes de estado (Hint Texts) debajo del componente
     And el color/icono de cada mensaje cambia dinámicamente ("❌ a ✅") conforme el usuario va cumpliendo cada criterio (Ej: Mayúscula, Número, Longitud) en tiempo real.
 
-  Scenario: Rechazo de Modo Oscuro en V1 (CA-49 - Diferido a V2)
+  Scenario: Rechazo de Modo Oscuro en V1 (CA-65 - Diferido a V2)
     # NOTA: Diferido a V2. Para V1, los formularios generados forzarán Light Mode independientemente del SO/Dispositivo.
     Given el Arquitecto despliega el formulario
     Then el formulario se renderiza siempre en paleta corporativa clara.
 
-  Scenario: Conversor de Moneda Automático (CA-50 - Diferido a V2)
+  Scenario: Conversor de Moneda Automático (CA-66 - Diferido a V2)
     # NOTA: Diferido a V2.
     Given el Arquitecto configura un campo monetario
     Then el formulario ofrecería conversión de tasa de cambio a COP en vivo al pie del componente.
 
-  Scenario: Componente WYSIWYG de Texto Enriquecido (CA-51 - Diferido a V2)
+  Scenario: Componente WYSIWYG de Texto Enriquecido (CA-67 - Diferido a V2)
     # NOTA: Diferido a V2. Para V1 solo existe Texto Plano Textarea.
     Given el Arquitecto requiere que el usuario entregue justificaciones extensas
     Then dispone de un componente de Texto Enriquecido (Word-like, con negritas, listas y cursivas).
@@ -2301,180 +2322,197 @@ Feature: Intelligent Intake Funnel Management
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
  Feature: Arquitectura de Visibilidad Basada en Roles (UX RBAC)
-  Scenario: Privilegio Absoluto del System Admin (Omnipresencia)
+  Scenario: Privilegio Absoluto del System Admin (Omnipresencia) (CA-1)
     Given un usuario autenticado con el rol global de `system_admin`
     When el Frontend (Vue Router) renderiza la Master Page
     Then el Sidebar despliega incondicionalmente todos los accesos (Inicio, Workdesk, Inbox, Proyectos, Dashboards, Configuración, Integraciones, Seguridad, SGDEA)
     And el Header activa todas las herramientas de gestión global (Campana de Notificaciones Full, Búsqueda Inter-Dominio)
     And el Main Content (Dashboard) renderiza todas las Action Cards estratégicas sin censura.
 
-  Scenario: Segregación Estructural del Operario Base (Workdesk Only)
+  Scenario: Segregación Estructural del Operario Base (Workdesk Only) (CA-2)
     Given un usuario operativo (Ej: `auditor_junior`, `contractor`) sin privilegios de gestión
     When ingresa a la plataforma
     Then el Sidebar oculta proactivamente (no renderiza sus Nodos DOM) los módulos de Administración (Reglas IA, Configuración, Integraciones, Seguridad, Proyectos Macro)
     And restringe su Sidebar estrictamente a `[🏠 Inicio]`, `[📋 Workdesk]`, y `[📂 Histórico Propio]`
     And en el Main Content (Dashboard/Workdesk), el motor oculta el botón global de `[ + Iniciar Nuevo Proceso ]` si su rol no tiene derechos de instanciación ("Semilla").
 
-  Scenario: Experiencia Aislada del Líder de Intake (Inbox SAC)
+  Scenario: Experiencia Aislada del Líder de Intake (Inbox SAC) (CA-3)
     Given un usuario autenticado con el rol especializado `sac_leader` (Gestor de Cuarentena)
     When navega la aplicación
     Then el Sidebar le renderiza el acceso privilegiado al módulo `[📥 Inbox Inteligente]` (Pantallas 1B y 16)
     And el Header le habilita notificaciones específicas sobre SLAs rotos de correos entrantes (Plan A)
     And el Main Content del Dashboard central le proyecta Cards analíticas enfocadas en "Volumen de Embudo actual" y "Tasa de Descarte IA".
 
-  Scenario: Visibilidad del Project Manager y Líderes Ágiles
+  Scenario: Visibilidad del Project Manager y Líderes Ágiles (CA-4)
     Given un usuario con rol de `pm` (Project Manager) o `scrum_master`
     When expande su navegación lateral
     Then el Sidebar le desbloquea el acceso al ecosistema de Proyectos (Pantallas 8, 9, 10, 15)
     And se habilita dinámicamente el botón `[+ Nuevo Proyecto]` en el Main Content correspondiente
     And el Sidebar sigue ocultando herramientas de bajo nivel (Reglas IA, Seguridad, Integraciones API) ajenas a su dominio.
 
-  Scenario: Seguridad Perimetral Frontend (Router Navigation Guards)
+  Scenario: Seguridad Perimetral Frontend (Router Navigation Guards) (CA-5)
     Given que un usuario operativo (sin permisos) intenta forzar la entrada a un modulo prohibido pegando la URL directa (Ej: `/admin/security`) en el navegador
     Then el archivo `RouteGuards.ts` del Frontend intercepta la navegación antes de montar el componente
     And redirige al usuario forzosamente al `[🏠 Inicio]`
     And despliega un Toast indicando que carece de privilegios para acceder a esa sección, protegiendo el Main Content (Router View) de manipulaciones.
 
-  Scenario: Conflicto Multi-Rol (Selector de Perfil Activo)
+  Scenario: Conflicto Multi-Rol (Selector de Perfil Activo) (CA-6)
     Given un usuario autenticado que posee simultáneamente múltiples roles contradictorios en base de datos (Ej: `auditor_junior` y `sac_leader`)
     When el Frontend inicializa la Master Page
     Then en lugar de fusionar caóticamente ambas interfaces, el sistema detecta la multiplicidad
     And inyecta en el Header Superior un "Selector de Perfil Activo" (Dropdown)
     And permite al usuario elegir explícitamente con qué "sombrero" (rol) quiere operar en la sesión actual, redibujando el Sidebar y Main Content instantáneamente para ajustarse a esa única intención.
 
-  Scenario: Refresco Forzoso por Alteración de Privilegios en Caliente
+  Scenario: Refresco Forzoso por Alteración de Privilegios en Caliente (CA-7)
     Given un usuario operando activamente en la plataforma
     When un Administrador de Sistema modifica, revoca o inyecta nuevos roles a dicho usuario desde la Pantalla 14 (Seguridad)
     Then el cambio no se refleja mágicamente "en vivo" arriesgando el estado actual de los formularios
     And el sistema exige un Log-Out / Log-In forzoso (Muerte y regeneración del Token JWT), obligando al usuario a re-autenticarse para que el Frontend parsee desde cero el nuevo árbol de visibilidad del DOM.
 
-  Scenario: Degradación Responsiva (Web Desktop vs Dispositivos Móviles)
+  Scenario: Degradación Responsiva (Web Desktop vs Dispositivos Móviles) (CA-8)
     Given el sistema de diseño (UI/UX) conceptual de la plataforma
     When un usuario (incluso con privilegios máximos de Administrador) accede desde un navegador móvil (Viewport < 768px)
     Then la arquitectura Frontend aplica una separación estricta de responsabilidades visuales
     And oculta físicamente herramientas de modelado complejo (Motor BPMN, Diseñador de Formularios Pro-Code, Matrices de Seguridad) que son ergonómicamente inviables en móvil
     And restringe la experiencia móvil puramente a operaciones transaccionales (Workdesk, Aprobaciones simples, y Vista de Dashboards).
 
-  Scenario: Impersonación Transaccional para Soporte (Ver Sistema Como...)
+  Scenario: Impersonación Transaccional para Soporte (Ver Sistema Como...) (CA-9)
     Given un usuario con rol de `system_admin` atendiendo un ticket de soporte de un empleado operativo
     When el administrador activa la función "Impersonate" o "Ver Sistema Como" desde la Pantalla 14, seleccionando a dicho empleado
     Then el Frontend (Vue) reacciona absorbiendo y limitándose estrictamente al Token simulado de ese empleado
     And el Administrador pierde temporalmente la visión de su Mega-Layout y observa la pantalla exactamente mutilada e idéntica a la que ve el operario al otro lado del mundo, facilitando el diagnóstico de UI.
 
-  Scenario: Política de Ocultamiento Físico (DOM Removal) sobre Atenuación (Disabled)
+  Scenario: Política de Ocultamiento Físico (DOM Removal) sobre Atenuación (Disabled) (CA-10)
     Given una pantalla genérica donde coexisten elementos libres y elementos restringidos (Ej: Botón "Aprobar Gasto > $5M")
     When un usuario sin el rol paramétrico (`Aprobador_Financiero`) renderiza esa pantalla
     Then el Frontend obedece una estricta directriz de "Ocultamiento Físico" (`v-if` / destrucción del Nodo DOM)
     And NO DEBE bajo ninguna circunstancia renderizar el botón en estado 'Gris/Atenuado' (`disabled="true"`), previniendo que atributos manipulables desde las DevTools del navegador expongan funcionalidades restringidas.
 
-  Scenario: Estados de Carga Mixtos (Skeleton a Spinner)
+  Scenario: Estados de Carga Mixtos (Skeleton a Spinner) (CA-11)
     Given un usuario que solicita cargar un volumen de datos desde el backend (Ej: Abrir el Workdesk)
     When el motor Vue inicia la petición HTTP
     Then el sistema dibuja inmediatamente un "Skeleton Screen" (Estructura gris parpadeante) para gratificanción visual instantánea
     And si la latencia de red supera los 5 segundos paramétricos sin recibir el Payload de Camunda, el Skeleton muta mediante una transición suave hacia un "Spinner" de carga clásico que bloquea interacciones preventivamente.
 
-  Scenario: Recompensa Psicológica en Pantallas Vacías (Empty States)
+  Scenario: Recompensa Psicológica en Pantallas Vacías (Empty States) (CA-12)
     Given un usuario operativo que vacía exitosamente su Workdesk de tareas pendientes
     When el array de tareas en memoria llega a cero (0)
     Then la interfaz rechaza tajantemente renderizar una tabla de datos vacía o un texto plano "Sin datos"
     And despliega un componente visual de "Empty State Ilustrado" (Ej: Arte gráfico premium con el mensaje de felicitación: "¡Genial, no hay nada pendiente por hoy!") para fomentar el bienestar mental del operario.
 
-  Scenario: Manejo de Errores Transaccionales No Bloqueantes
+  Scenario: Manejo de Errores Transaccionales No Bloqueantes (CA-13)
     Given el fallo de una operación atómica en el backend (Ej: HTTP 500 al intentar aprobar una tarea)
     When el Frontend captura el código de error
     Then el sistema utiliza estrictamente notificaciones efímeras tipo "Toast" renderizadas en la esquina superior derecha
     And estas notificaciones de error desaparecen de forma autónoma tras 5 segundos, evitando interrumpir críticamente el layout visual del usuario con Modals bloqueantes (A menos que el error sea la pérdida total de la sesión).
 
-  Scenario: Micro-interacción de Deshacer (Soft-Undo)
+  Scenario: Micro-interacción de Deshacer (Soft-Undo) (CA-14)
     Given un usuario que ejerce una acción destructiva de bajo impacto visual (Ej: Archivar/Borrar una tarjeta en un Tablero Kanban)
     When la acción es gatillada desde la UI
     Then la tarjeta desaparece inmediatamente de la columna para dar fluidez visual al usuario
     And el sistema despliega un Toast en la parte inferior ("Tarea Archivada [Deshacer]")
     And posterga la petición DELETE al backend otorgando una ventana de gracia de 5 segundos donde el usuario puede cancelar la aniquilación de la data.
 
-  Scenario: Navegación Profunda y Ubicuidad (Breadcrumbs)
+  Scenario: Navegación Profunda y Ubicuidad (Breadcrumbs) (CA-15)
     Given un usuario operando en el 3er o 4to nivel de profundidad de la arquitectura de información (Ej: `Proyectos > Alpha > Fase 2 > Tarea Especifica`)
     When el usuario desplaza su vista hacia el Header maestro
     Then encuentra obligatoriamente habilitado un rastro de Migas de Pan (Breadcrumbs) interactivo y clickeable
     And permitiéndole "saltar hacia atrás" en el árbol genealógico del proceso sin tener que recurrir al botón genérico 'Back' del navegador.
 
-  Scenario: Densidad de UI Paramétrica Global
+  Scenario: Densidad de UI Paramétrica Global (CA-16)
     Given la diversidad de preferencias ergonómicas entre usuarios gerenciales y usuarios de alto volumen transaccional
     Then el módulo de Configuración de Perfil (Header) expone un "Selector de Densidad de Interfaz" (Comfortable vs Compact)
     And esta variable se transmite transversalmente por el Vue Store/Context
     And altera el Padding, Márgenes y tamaños de fuente de *todas* las tarjetas, tablas y modales del ecosistema instantáneamente.
 
-  Scenario: Feedback Transaccional de Salida (Animaciones de Router/Store)
+  Scenario: Feedback Transaccional de Salida (Animaciones de Router/Store) (CA-17)
     Given la necesidad humana de seguimiento visual al completar un trabajo
     When un operario presiona [Aprobar] en una tarea del Workdesk
     Then la entidad NO desaparece con un corte abrupto de 0 milisegundos
     And se exige al Arquitecto Frontend empotrar una transición CSS fluida (Ej: `Fade-Out` / `Slide-Up` de 400ms) para que el ojo asimile orgánicamente que el objeto viajó hacia la historia o al servidor.
 
-  Scenario: Optimización del Viewport de Lectura (Header No-Pegajoso)
+  Scenario: Optimización del Viewport de Lectura (Header No-Pegajoso) (CA-18)
     Given un usuario consumiendo una lista masiva de datos (Ej. Tabla de Auditoría o Embudo Plan A)
     When el operario comienza a realizar Scroll vertical profundo hacia el Sur del DOM
     Then la barra de navegación superior global (Master Header) abandona el Viewport deslizándose hacia arriba
     And NO se mantiene anclada o pegajosa (Sticky), priorizando la liberación de píxeles cuadrados máximos para el Main Content de lectura intensiva.
 
-  Scenario: Tolerancia Base a la Desconexión (Offline Survival Mode)
+  Scenario: Tolerancia Base a la Desconexión (Offline Survival Mode) (CA-19)
     Given una interrupción temporal de la conectividad de red del usuario (Caída de WiFi)
     When el usuario intenta navegar o el Vue Router detecta el quiebre de sockets
     Then la aplicación rechaza tajantemente romperse hacia la clásica pantalla blanca o el dinosaurio del navegador
     And el App Shell (Sidebar y Header) se mantiene 100% dibujado y congelado, renderizando en el Main Content un componente de "Reconectando..." para salvaguardar la ilusión de inmersión y estabilidad de la plataforma.
 
-  Scenario: Renderizado Delegado al Cliente (CSR Architecture)
+  Scenario: Renderizado Delegado al Cliente (CSR Architecture) (CA-20)
     Given la naturaleza B2B interna e instrumentada del iBPMS (Detrás de login corporativo, SEO irrelevante)
     When el Arquitecto de Software define el paradigma de carga
     Then el ecosistema se construirá estrictamente bajo Client-Side Rendering (SPA Vue.js standard), descartando el alto costo y latencia del Server-Side Rendering (Nuxt)
     And el contrato visual exige absorber esos 1-2 segundos de ensamblaje en el cliente (Browser) mediante el uso hiper-agresivo de Skeleton Loaders.
 
-  Scenario: Toasts Fatales (Nivel 0 - Imborrables)
+  Scenario: Toasts Fatales (Nivel 0 - Imborrables) (CA-21)
     Given la ocurrencia de un evento crítico del sistema (Ej: Caída de Base de Datos, Breach de SLA Multimillonario de un Cliente VIP)
     When el Frontend recibe la señal Websocket o HTTP 500 fatal
     Then el sistema despliega un "Toast Nivel 0" (Alerta Crítica, usualmente en color Rojo Sangre o Negro)
     And esta alerta desafía la regla estándar del auto-borrado: NO desaparece bajo ninguna circunstancia natural, obligando al usuario a realizar un clic físico y consciente sobre la [x] para garantizar el acuse de recibo del desastre.
 
-  Scenario: Flujo Visual a Alta Escala (DOM Virtualization)
+  Scenario: Flujo Visual a Alta Escala (DOM Virtualization) (CA-22)
     Given que el servidor le responde al Frontend con un payload que contiene 5,000 Action Cards históricas en la Pantalla 16
     When Vue.js reciba la matriz de datos y se disponga a renderizar
     Then la tabla/grilla utilizará obligatoriamente un motor de "Virtual Scrolling" (DOM Virtualization)
     And el navegador solo dibujará físicamente los 20 Nodos HTML que están dentro del viewport visible del usuario, destruyendo recicladamente los que quedan arriba, blindando la plataforma contra desbordamientos de Memoria RAM en PCs de bajos recursos.
 
-  Scenario: Geometría de Foco Accesible (Power User A11y)
+  Scenario: Geometría de Foco Accesible (Power User A11y) (CA-23)
     Given un analista experto que opera la plataforma a máxima velocidad utilizando atajos de teclado y la tecla [TAB]
     When el foco del DOM aterriza sobre cualquier botón interactivo, Input o Tarjeta
     Then el CSS/Tailwind debe inyectar obligatoriamente un contorno visual estridente (Ej: Un "Aura Azul" o Ring Focus)
     And garantizando que el usuario jamás necesite usar el mouse para adivinar dónde está operando actualmente.
 
-  Scenario: Internacionalización Estructural (I18n Pre-Cargada)
+  Scenario: Internacionalización Estructural (I18n Pre-Cargada) (CA-24)
     Given los planes de despliegue escalar del iBPMS V1
     When se consolide el Layout Maestro (Sidebar, Header y Títulos Estructurales)
     Then estos componentes no deben nacer "Hardcodeados" en Español
     And deben envolverse bajo la arquitectura `vue-i18n` (O equivalente), suministrando desde el Día 1 un selector vivo de idiomas [ES / EN] en el Header para probar la plasticidad lingüística del framework.
 
-  Scenario: Alerta Silenciosa de Inyecciones (WebSockets Mágicos)
+  Scenario: Alerta Silenciosa de Inyecciones (WebSockets Mágicos) (CA-25)
     Given un operario estacionado pasivamente mirando su Workdesk sin interactuar con el mouse
     When Camunda (Backend) le asigna subitamente un nuevo caso caliente por detrás
     Then la interfaz NO le obligará a actualizar la página (F5) ni usar técnicas arcaicas de Polling
     And un WebSocket notificará a Pinia (Vue Store), el cual detonará una pastilla flotante no-intrusiva: "✨ 1 Nueva tarea asignada", la cual al ser clickeada inyecta la nueva fila en su vista en vivo.
 
-  Scenario: Maximización de Lienzo (Sidebar Colapsable Voluntario)
+  Scenario: Maximización de Lienzo (Sidebar Colapsable Voluntario) (CA-26)
     Given un operario que debe transcribir un formulario complejo en una laptop pequeña (Viewport width limitado)
     When siente que el menú estructural le roba espacio vital de su pantalla (Pantalla 2)
     Then el Header le provee un "Toggle de Hamburguesa"
     And al accionarlo, el Sidebar global colapsa con una transición de 300ms reduciéndose a una banda estrecha de iconos, devolviéndole +250px de aire puro al lienzo de ejecución.
 
-  Scenario: Soft-Lock de Inactividad (Pausa de Sesión Flotante)
+  Scenario: Soft-Lock de Inactividad (Pausa de Sesión Flotante) (CA-27)
     Given que el JWT Token del usuario expira por inactividad prolongada
     When el Frontend intercepta el 401 Unauthorized
     Then en lugar de ejecutar una recarga dura y violenta hacia la landing page de Login destruyendo su progreso visual en vivo
     And el sistema inyecta un "Modal de Bloqueo de Sesión de Pantalla Completa" (Efecto Glassmorphism), oscureciendo el entorno operativo pero dejando ver que su trabajo sigue ahí debajo, exigiendo únicamente reingresar la contraseña en ese mismo modal para resucitar el token y destrabar la pantalla.
 
-  Scenario: Renderizado Diferido para Tableros Densos (Lazy Loading)
+  Scenario: Renderizado Diferido para Tableros Densos (Lazy Loading) (CA-28)
     Given el Dashboard de Gerencia (Pantalla 5) el cual aloja simultáneamente 10 gráficas estadísticas pesadas y múltiples tablas
     When la página se monta (Mounted Lifecycle)
     Then Vue NO solicitará los datos ni renderizará los canvas de las 10 gráficas simultáneamente
     And implementará el patrón IntersectionObserver (Lazy Loading), renderizando y consultando la Base de Datos o Apache ECharts únicamente a medida que la gráfica particular penetra en el campo visual del usuario al hacer Scroll Vertical.
+
+  Scenario: Visualización de Contexto ONS en Pestañas (Tab-Based UI) (CA-29)
+    Given la necesidad de renderizar un área de trabajo (Workdesk o Intake) que posee un hilo de correos o historial asociado (Contexto Pre-SD)
+    When el Frontend construye la interfaz del Main Content Area
+    Then el diseño abandonará definitivamente el enfoque de "Pantalla Dividida" (Split-Screen) para maximizar el lienzo de trabajo
+    And implementará un modelo ergonómico basado en Pestañas (Tabs) consumiendo el 100% del espacio disponible
+    And la "Pestaña 1 [Formulario Operativo]" estará dedicada exclusivamente a la visualización y diligenciamiento del formulario de Camunda
+    And la "Pestaña 2 [Contexto y Correos]" contendrá exclusivamente el registro del hilo de correos originales (US-023) y el historial de eventos.
+
+  Scenario: Renderizado Estricto de iForm Maestros vs Formularios Simples (CA-30)
+    Given que el sistema se dispone a renderizar la "Pestaña 1 [Formulario Operativo]"
+    When el motor evalúa la naturaleza del formulario asociado a la tarea actual
+    Then si es un Formulario Simple, este se renderizará de golpe hacia abajo (Flat layout)
+    And si es un "iForm Maestro" (Expediente Multi-Etapa), el renderizador (MaestroFormRender.vue) TIENE PROHIBIDO listar los inputs de forma plana hacia abajo
+    And el sistema debe respetar e inyectar estrictamente el componente Vue original diseñado para esa etapa específica
+    And preservando intacto su CSS, UI Density, Columnas y Cuadrículas (Grids) originales configurados en el Form Designer
+    And la interfaz debe estar coronada obligatoriamente por un componente "Stepper" en la parte superior para trazabilidad de las etapas.
 ```
 
 **Trazabilidad UX:** Layout Maestro (Sidebar Lateral, Header Superior) y Pantallas 0 (Dashboard) y 1 (Workdesk).
@@ -2501,6 +2539,195 @@ Feature: External Customer Portal (Service Delivery)
     And listará todos los Service Deliveries concluidos permitiendo la descarga de su respectivo PDF (SGDEA)
 ```
 **Trazabilidad UX:** Wireframes Pantalla 18 (Portal B2B/B2C del Cliente).
+
+**Trazabilidad UX:** Wireframes Pantalla 18 (Portal B2B/B2C del Cliente).
+
+---
+
+## ÉPICA 12: Gobierno de Identidad y Accesos (RBAC Multirrol)
+Garantizar que la plataforma soporta el modelo corporativo real donde un usuario ejerce múltiples funciones simultáneamente mediante asignación de múltiples roles y grupos de EntraID.
+
+### US-038: Asignación Multi-Rol y Sincronización EntraID
+**Como** Administrador de Seguridad
+**Quiero** asignar o sincronizar múltiples roles (Globales y de Proceso) a un mismo usuario autenticado
+**Para** que pueda acceder a las distintas bandejas y tareas correspondientes a todos sus 'sombreros' operativos sin necesidad de tener cuentas separadas.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Multitenant RBAC & Multiple Roles Assignment
+
+  # A. El Inicio de Sesión y la Muerte Súbita
+  Scenario: Revocación Inmediata de Acceso (CA-1)
+    Given un usuario operando activamente dentro del iBPMS
+    When su cuenta es desactivada o removida de todos los grupos de acceso en EntraID (Directorio Activo)
+    Then el sistema debe detectar la invalidez del Token y expulsarlo inmediatamente hacia la pantalla de Login
+    And no permitirá la ejecución de ninguna transacción en vuelo, arrojando HTTP 401 Unauthorized.
+
+  Scenario: Prevención del Secuestro de Roles (CA-2)
+    Given un usuario que ayer poseía el rol "Líder_SAC" pero que hoy le fue revocado en EntraID
+    When el usuario con una sesión antigua (Token vivo de ayer) intenta aprobar un reclamo
+    Then el backend intercepta la petición y valida asíncronamente los Claims actuales antes del Commit
+    And rechaza la operación si el rol ya no le pertenece, forzando un refresco de sus permisos (Log-Out silencioso o recarga de la Master Page).
+
+  # B. La Pelea de Permisos
+  Scenario: Resolución de Permisos Contradictorios (Regla del Más Restrictivo) (CA-3)
+    Given un usuario que hereda simultáneamente un "Rol A" (Permite Borrado) y un "Rol B" (Prohíbe Borrado estricto) sobre el mismo objeto
+    When el motor de políticas de Vue y Spring Security evalúan el acceso
+    Then el sistema debe resolver el conflicto aplicando siempre "La Regla del Rol Más Restrictivo" (Deny-Overrides)
+    And inhabilitando físicamente el botón de [Borrar] en la UI.
+
+  Scenario: Detección de Conflicto de Segregación de Funciones (Juez y Parte) (CA-4)
+    Given un usuario al que se le han asignado por error los roles exclusivos de "Creador de Pedido" y "Aprobador Financiero"
+    When el usuario inicia sesión
+    Then el sistema le permite ingresar y operar
+    And dispara inmediatamente una Alerta Roja asíncrona ("Conflicto SoD Detectado") hacia el Módulo de Anomalías del Administrador
+    And dejará una traza en la Auditoría etiquetando todas las transacciones de este usuario con un flag `WARNING_SoD_CONFLICT` hasta que el administrador depure sus roles en el AD.
+
+  # C. La Bandeja de Entrada Mágica (Workdesk)
+  Scenario: Consolidación Transversal en el Workdesk (CA-5)
+    Given un usuario con múltiples sombreros (Ej: 3 roles operativos distintos)
+    When abre su vista de Workdesk
+    Then el sistema consolida TODAS sus tareas en una única lista unificada y limpia
+    And NO fragmenta la pantalla en múltiples pestañas ni lo obliga a saltar entre perfiles (La segregación de vistas complejas se abordará en historias de Dashboarding, no en la trinchera operativa).
+
+  Scenario: Insignia de Procedencia del Rol en la Tarjeta (CA-6)
+    Given la lista de tareas unificadas en el Workdesk
+    Then cada tarjeta (Card o Fila) debe inyectar un Badge/Etiqueta visual discreta (Ej: `Rol: Aprobador_Nivel_2`)
+    And explicándole al usuario exactamente bajo qué "Sombrero" o prerrogativa de negocio se le está exigiendo resolver ese caso específico.
+
+  Scenario: Retorno al Pool Común por Renuncia (CA-7)
+    Given una tarea instanciada y encolada específicamente bajo un candidato de rol (Ej: "BPMN_Credito_Aprobador")
+    When el único usuario en toda la empresa que poseía ese rol renuncia y es desactivado
+    Then la tarea NO entra en Dead-Letter ni se pierde en un agujero negro
+    And la tarea permanece visible y viva en el Pool (Cola del Grupo)
+    And esperando a que el Administrador de TI asigne ese rol a un nuevo empleado para que pueda visualizarla y reclamarla.
+
+  # D. Infraestructura de Mentiras (Fallas)
+  Scenario: Autenticación de Respaldo por Falla de Azure (Puerta Secreta) (CA-8)
+    Given que la infraestructura de Microsoft EntraID sufre una caída global (HTTP 503)
+    When los usuarios intentan loguearse a través de OAuth/OIDC
+    Then el sistema fallará elegantemente
+    And debe existir una URL local oculta (Backdoor pre-configurado en Frontend) que permita autenticación directa (Email/Contraseña) contra la tabla interna de usuarios
+    And solo disponible para un listado minúsculo de Administradores Locales (Break-Glass Accounts) para mantener la plataforma viva durante la crisis.
+
+  Scenario: Mapeo Flexible de Identidades (CA-9)
+    Given la arquitectura global de autenticación del iBPMS
+    Then el sistema debe soportar tres (3) modos de operación paramétricos para la ingesta de Roles:
+    And 1. Sincronía Total (1:1): Los grupos y roles se inyectan 100% desde Azure EntraID.
+    And 2. IdP Híbrido: Azure solo se usa para el "Login" (Validar existencia), pero el iBPMS asigna localmente sus propios roles en su base de datos.
+    And 3. IdP Local Absoluto: El sistema funge como su propio Autenticador (Módulo interno de Usuarios y Passwords).
+
+  # E. Auditoría y Rastro de Migas
+  Scenario: Trazabilidad Quirúrgica en Logs (CA-10)
+    Given un usuario multi-rol ejecutando una transacción crítica (Ej: Aprobar Pago)
+    When el Backend estampa el evento en la bitácora de auditoría (AiAuditLogEntity)
+    Then la tupla de base de datos debe almacenar el máximo detalle forense
+    And registrando no solo el `user_id` y `timestamp`, sino también un JSON con el "Contexto de Roles Activos" (`active_claims`) en el milisegundo exacto de la ejecución para peritajes legales.
+
+  Scenario: Restricción del Préstamo de Llaves (CA-11)
+    Given un empleado multi-rol que se ausenta temporalmente
+    When intenta ceder uno de sus sombreros críticos a un compañero desde la UI de la plataforma
+    Then el Frontend bloquea la intención careciendo de una interfaz para "Transferencia de Roles en Caliente"
+    And obliga procedimentalmente a que el compañero solicite el permiso transitorio a través del conducto regular (Directorio Activo de TI).
+
+  # F. Delegaciones 
+  Scenario: Trazabilidad de la Delegación (Workdesk) (CA-12)
+    Given que María le delega una de sus tareas de Workdesk a Carlos (US-001)
+    When María ejecuta la transferencia
+    Then la auditoría debe grabar el evento indicando "Delegan: María -> Carlos"
+    And la tarea aparece en la bandeja de Carlos junto con un Popup o Banner exigiéndole ACEPTAR o RECHAZAR la delegación encomendada.
+
+  Scenario: Rebote Natural por Rechazo de Delegación (CA-13)
+    Given la delegación pendiente descrita en CA-12
+    When Carlos presiona el botón [Rechazar Delegación] en el Popup
+    Then la tarea abandona inmediatamente el Workdesk de Carlos
+    And vuelve a rebotar como un boomerang regresando a ser la responsabilidad exclusiva en el Workdesk de María (Propietaria original), conservando todo el historial en la auditoría.
+
+  Scenario: Pre-Autorización a Pasajeros Nuevos (CA-14)
+    Given un usuario que acaba de ser contratado e instanciado en Microsoft EntraID hoy a las 8:00 AM
+    When el usuario ingresa por primera vez a la URL del iBPMS a las 8:05 AM
+    Then el sistema NO lo detiene en pantallas de "Cree su perfil" ni "Espere aprobación"
+    And mapea al vuelo (Just-In-Time Provisioning) sus atributos y roles del Token de Azure, dejándolo pasar derecho hacia su Workdesk operativo instantáneamente.
+
+  # G. Visuales (Lo que ve el ojo)
+  Scenario: Rendimiento Estricto en Parseo de Mega-Roles (CA-15)
+    Given un Gerente General que porta un listado demencial de +80 roles y permisos combinados en su perfil de Azure
+    When el usuario hace el proceso de Login y redirección
+    Then el tiempo de cómputo del Frontend para desenredar iterativamente ese árbol de permisos y renderizar el Layout (Sidebar/Header)
+    And no debe superar los 500ms bajo ninguna circunstancia (Complejidad O(1) o indexación en Pinia Store), garantizando que su ingreso se sienta inmediato.
+
+  Scenario: Indicador Tipográfico de Dominio (Header) (CA-16)
+    Given un usuario multi-rol que finaliza su carga inicial
+    Then el Master Header, justo debajo o al lado de su Nombre/Avatar, debe renderizar un micro-texto o chip
+    And resumiendo visualmente los 2 o 3 "Sombreros Principales" (Ej: `Director Comercial | Aprobador VIP`) que el parseador calculó que está usando hoy, validándole al operario que sus permisos subieron correctamente.
+
+  # H. Módulo de Tablero de Anomalías de Seguridad (NUEVO)
+  Scenario: Tablero de Resolución de Anomalías de Seguridad (CA-17)
+    Given que el sistema ha detectado conflictos graves (Ej: CA-4 SoD Conflict - Juez y Parte)
+    When un Administrador de Seguridad ingresa a la Pantalla de Configuración / RBAC (Pantalla 14)
+    Then el sistema debe darle acceso a una pestaña especializada denominada "Tablero de Anomalías"
+    And este tablero listará en color Rojo todas las incidencias de seguridad vivas detectadas por el motor
+    And obligará al Administrador a revisar el caso, subsanar el error a nivel EntraID/Local, y presionar físicamente un botón `[ ✅ Marcar como Subsanado ]` para apagar la alerta.
+
+  # I. Mantenimiento Evolutivo de Recuperación (V2)
+  Scenario: Postergación de Reset de Password para V2 (CA-18)
+    Given que el sistema opera en modo de IdP Local (Tabla propia de usuarios sin Azure)
+    When un usuario olvida su contraseña
+    Then la responsabilidad del Frontend y Backend de crear pantallas transaccionales de "Recuperar Contraseña via Email / OTP" queda estrictamente aplazada fuera del alcance del MVP V1.
+    And el proceso de recuperación manual en V1 queda relegado a una solicitud verbal/correo al Administrador del Sistema.
+
+```
+**Trazabilidad UX:** Wireframes Pantalla 14 (Seguridad RBAC) y Tablero de Anomalías.
+
+---
+
+### US-048: Módulo Gestor Propio de Identidades (Internal IdP)
+**Como** Súper Administrador del Sistema
+**Quiero** gestionar centralizadamente los usuarios y roles internos del iBPMS
+**Para** tener un control granular sobre quién accede a qué funcionalidades, incluso si el cliente no tiene un IdP externo robusto.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Gestión de Identidades Internas (Internal IdP)
+  Scenario: Creación Exclusiva por Administrador (V1 Centralizada) (CA-1)
+    Given la necesidad de registrar un nuevo empleado en el iBPMS (Modo Standalone)
+    Then para el MVP V1, el Súper Administrador es el único facultado para crear cuentas mediante un formulario interno (Pantalla 14)
+    And la creación de cuentas mediante portales públicos de "Regístrate Aquí" queda estrictamente diferida para V2.
+
+  Scenario: Gobernanza Estricta de Contraseñas Seguras (CA-2)
+    Given la creación o actualización de una credencial local
+    Then el Frontend (Formulario y Login) y el Backend deben acatar y forzar políticas Enterprise de seguridad
+    And exigiendo obligatoriamente: Mínimo 8 caracteres, 1 Mayúscula, 1 Número y 1 Símbolo Especial
+    And bloqueando el botón de [Guardar] si la entropía de la clave es débil.
+
+  Scenario: Destrabe Administrativo de Credenciales (Reset Manual) (CA-3)
+    Given un usuario bloqueado u olvidadizo (sin soporte de Auto-Reset vía Email en V1)
+    Then el Súper Administrador visualizará un botón de emergencia `[Generar Clave Temporal]` en la ficha del empleado
+    And al accionarlo, el sistema reemplaza el hash anterior y devuelve una cadena temporal visible por única vez para que el Admin la comunique verbalmente.
+
+  Scenario: Fábrica de Roles Dinámicos (Role CRUD) (CA-4)
+    Given una organización que no cuenta con grupos de Directorio Activo (EntraID)
+    Then el módulo Interno de Identidad (Pantalla 14) debe poseer una pestaña de "Gestión de Roles"
+    And permitiendo al Súper Administrador bautizar roles nuevos a voluntad (Ej: `Analista_Riesgo_Senior`)
+    And otorgando una interfaz drag-and-drop o checkboxes multiselect para asociar usuarios hacia esos sombreros creados.
+
+  Scenario: El Botón de Emergencia (Kill Switch Activo/Inactivo) (CA-5)
+    Given un empleado enfrentando un proceso disciplinario o despido en tiempo real
+    Then la tabla de usuarios (CRUD) expone un Toggle Switch visible `[Estado: Activo/Inactivo]`
+    And al apagarlo, el Backend no solo marca el registro lógico como inactivo, sino que destruye activamente cualquier sesión viva (JWT/Redis) de ese usuario, expulsándolo instantáneamente al Login.
+
+  Scenario: Asignación Híbrida de Múltiples Sombreros Locales (CA-6)
+    Given la vista de edición de un usuario
+    Then la interfaz debe permitir la selección múltiple (Ej: un Dropdown de selección múltiple)
+    And logrando que el Administrador asigne libremente 1, 2 o N roles organizacionales al mismo individuo convergentes en una única sesión local (Sinergia con US-038).
+
+  Scenario: Mutación de Interfaz en Modo Híbrido EntraID (CA-7)
+    Given que el sistema se configuró para delegar el "Login de Acceso" a Microsoft EntraID, pero gobernar los "Roles" de forma local (iBPMS)
+    When el Súper Administrador edita el perfil de un individuo
+    Then la interfaz de Frontend oscurece o desaparece forzosamente los campos de "Contraseña" y "Cambiar Clave" en esa ficha
+    And impidiendo intentos de alteración de credenciales locales que le pertenecen exclusivamente al IdP externo, evitando colisiones de Sincronía.
+```
+**Trazabilidad UX:** Pantalla 14 (Panel IdP Local).
 
 ---
 
@@ -2554,31 +2781,6 @@ Feature: External Customer Portal (Service Delivery)
 ```
 **Trazabilidad UX:** Wireframes Pantalla 18 (Portal B2B/B2C del Cliente).
 
----
-
-## ÉPICA 12: Gobierno de Identidad y Accesos (RBAC Multirrol)
-Garantizar que la plataforma soporta el modelo corporativo real donde un usuario ejerce múltiples funciones simultáneamente mediante asignación de múltiples roles y grupos de EntraID.
-
-### US-038: Asignación Multi-Rol y Sincronización EntraID
-**Como** Administrador de Seguridad
-**Quiero** asignar o sincronizar múltiples roles (Globales y de Proceso) a un mismo usuario autenticado
-**Para** que pueda acceder a las distintas bandejas y tareas correspondientes a todos sus 'sombreros' operativos sin necesidad de tener cuentas separadas.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Multitenant RBAC & Multiple Roles Assignment
-  Scenario: Resolución de permisos híbridos (Global + Proceso)
-    Given que el usuario "maria.lider" está autenticada vía Azure AD (OIDC)
-    And tiene sincronizado el Rol Global "Líder de SAC"
-    And tiene sincronizado el Rol de Proceso "BPMN_Credito_Aprobador"
-    When el usuario solicita su menú de navegación
-    Then el sistema debe renderizar el botón de "Inbox" (Pantalla 1B) basado en su Rol Global
-    And el sistema debe renderizar el botón de "Workdesk"
-    When el usuario abre el "Workdesk"
-    Then el backend debe retornar en la lista de tareas pendientes (US-001) los casos asignados explícitamente a "maria.lider", Y ADEMÁS los asignados al candidato "BPMN_Credito_Aprobador"
-    And el usuario puede ejecutar exitosamente acciones derivadas de ambos roles en una sola sesión sin conflicto.
-```
-**Trazabilidad UX:** Wireframes Pantalla 14 (Seguridad RBAC).
 
 ---
 
@@ -3458,3 +3660,151 @@ Feature: API Polling & Telemetry Thresholds
     And el iBPMS forzará la exhibición de un "Banner Rojo Permanente" en la cabecera de la Pantalla 15.A indicándole al SysAdmin: *"CRÍTICO: La sincronización de catálogo falló. El iBPMS opera con una versión desactualizada de más de 24 horas"*.
 ```
 **Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Performance y Conexiones / SysAdmin).
+
+---
+---
+
+# 🚀 ROADMAP VERSIÓN 2 (V2) - EN REFINAMIENTO
+*(Todas las funcionalidades, épicas e historias de usuario declaradas a partir de este punto pertenecen estructural y financieramente a la Fase 2 del Proyecto iBPMS. No forman parte del alcance del MVP V1).*
+
+---
+
+## ÉPICA V2-01: Gobernanza Activa y Erradicación de Antipatrones (Opinionated OS)
+El iBPMS deja de ser un lienzo ciego y se convierte en un auditor inteligente del diseño de procesos. Interviene físicamente para evitar que las empresas democraticen la ineficiencia (como aprobadores redundantes que no mutan el modelo de datos).
+
+### US-V2-001: Bloqueo Arquitectónico de Burocracia Humana (Hard-Stop)
+**Como** Motor de Gobernanza (Opinionated OS)
+**Quiero** auditar el I/O Binding de las tareas humanas en el Pre-Flight Analyzer (US-005)
+**Para** bloquear físicamente el despliegue de procesos que modelen "sellos de goma" y firmas inútiles.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Forced DMN Adoption over Human Bureaucracy
+  Scenario: Detección Temprana en el Lienzo (Linting en Tiempo Real) (CA-1)
+    Given el Arquitecto diseñando un flujo en la Pantalla 6 (Canvas BPMN)
+    When conecta dos (2) o más `UserTasks` humanas de forma secuencial
+    And selecciona para la segunda tarea un Formulario que NO requiere inyección de campos nuevos (solo lectura de la tarea anterior)
+    Then el motor de UI del Modeler debe dibujar la flecha (SequenceFlow) de conexión en color ROJO intermitente
+    And proyectar un ícono de advertencia (⚠️) sobre la tarea redundante, alertando del antipatrón burocrático de forma inmediata antes del guardado.
+
+  Scenario: Bloqueo Estructural en el Pre-Flight (Hard-Stop) (CA-2)
+    Given las advertencias visuales del Canvas ignoradas
+    When el Arquitecto intenta presionar [🚀 DESPLEGAR]
+    And el motor Pre-Flight cruza el I/O Mapping contra el Esquema Zod confirmando la ausencia de mutación de datos
+    Then el sistema CANCELA el despliegue cambiando el estado a ❌ ERROR CRÍTICO
+    And el Copiloto IA arroja un modal bloqueante: "🛑 Antipatrón burocrático: La aprobación humana que no altera el contrato de datos no genera valor. Reemplace la tarea por una Regla DMN o condense la autoridad en un solo rol."
+
+  Scenario: Inmunidad por Decisión de Enrutamiento (Gateway Decision Validity) (CA-3)
+    Given la configuración de un "Sello de Goma" humano (Ej: Gerente que solo aprueba/rechaza)
+    When el motor detecta que el output (salida) de la tarea de ese Gerente está directamente conectado a un Gateway Exclusivo (XOR) para definir la ruta del proceso
+    Then el analizador interpreta la acción de "Toma de Decisión de Ruta" como una agregación de valor cognitivo ("Gateway Validity")
+    And perdona la configuración, absteniéndose de lanzar el bloqueo rojo, permitiendo el despliegue del proceso.
+
+  Scenario: Excepción por Responsabilidad Legal Expresa (Override Auditado) (CA-4)
+    Given el bloqueo Hard-Stop del Pre-Flight disparado por un antipatrón redundante
+    And que la empresa argumente fuerza mayor corporativa (Ej: ISO 9001 o mandato legal de doble firma)
+    Then el modal bloqueante cuenta con un botón en fuente pequeña `[Ignorar Advertencia y Asumir Riesgo]`
+    When el Arquitecto lo presiona
+    Then el sistema le solicita una justificación de texto obligatoria y su contraseña de confirmación
+    And permite el despliegue liberando el proceso, pero estampando el evento crudo en el Log de Auditoría bajo el tag `[BUREAUCRATIC_DEBT_ASSUMED]` responsabilizándolo permanentemente.
+```
+**Trazabilidad UX:** Pantalla 6 (BPMN Canvas) y Modal de Auditoría Pre-Flight.
+
+---
+
+### US-V2-002: El Asesino del "Síndrome de la Sandía" (Friction Tax Calculator)
+**Como** CEO / Director de Transformación (BAM Dashboard)
+**Quiero** que el sistema calcule exactamente cuánto dinero me cuesta la fricción y el tiempo muerto en mis procesos
+**Para** tener argumentos financieros innegables que obliguen a los gerentes medios a automatizar sus feudos.
+
+*Nota Estratégica: El síndrome de la sandía ocurre cuando los KPIs están "verdes" por fuera (el empleado cumplió su SLA de 2 horas para firmar), pero "rojos" por dentro (el caso estuvo estacionado 15 días esperando en la bandeja).*
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Friction Tax Telemetry (Value-Driven BAM)
+  
+  Scenario: Personalización del Dolor Financiero (Multiplicador de Gravedad Nodal) (CA-1)
+    Given el Arquitecto diseñando la configuración financiera del proceso
+    Then el sistema le permite asociar a un Nodo Humano específico (UserTask) un `[Costo_Fijo_Retraso_Hora]`
+    And este valor desvincula la matemática del simple "salario del empleado"
+    And permite traducir el Riesgo de Negocio (Ej: Un SLA incumplido en 'Aprobación VIP' cuesta $500/hora en multas) directamente al lenguaje gerencial del Tablero BAM.
+
+  Scenario: El Reloj Justo (SLA-Aware Taxometer) (CA-2)
+    Given un reclamo que cae a la bandeja de un usuario a las 6:00 PM del Viernes y es atendido a las 8:00 AM del Lunes
+    When el motor analítico calcula el "Tiempo Muerto" (Wait Time) para monetizar la ineficiencia
+    Then el algoritmo cruza obligatoriamente los timestamps contra la Matriz SLA Corporativa (US-043, Días/Horas Hábiles)
+    And el Taxímetro se PAUSA automáticamente durante el fin de semana, cobrando $0 dólares por ese periodo
+    And evitando "Data Contaminada" y desmotivación en los empleados por penalizaciones injustas fuera de su turno legal.
+
+  Scenario: Telemetría de Sangría en Tiempo Real (Live Pain Counter) (CA-3)
+    Given el Director de Transformación observando el BAM Dashboard en medio de la operación diurna
+    Then el tablero expone un módulo gigante en ROJO denominado "Friction Tax: Dinero Quemado AHORA MISMO"
+    And este indicador totaliza y grafica en Tiempo Real (Live) el costo acumulado por segundo de todos los casos que están atascados en las bandejas vivas
+    And generando un sentido de urgencia psicológica para la intervención inmediata, en lugar de ser una simple autopsia post-mortem de fin de mes.
+```
+**Trazabilidad UX:** Dashboard Gerencial BAM (Grafana/Kibana) y Panel de Configuración Nodal.
+
+---
+
+### US-V2-003: Penalización por Carga Cognitiva en Formularios (Data Diet)
+**Como** Motor UX del Sistema
+**Quiero** auditar el destino de cada campo de UI creado en el "iForm Maestro"
+**Para** impedir que la empresa capture datos "por si acaso" que nunca usa, saturando al usuario final.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Data Minimization and Form Strictness
+  Scenario: El Peaje Analítico (Opcionalidad Forzada) (CA-1)
+    Given un Diseñador intentando justificar un campo inútil para la operación alegando que su único fin es la exportación a PowerBI (Big Data ciego)
+    When el IDE marca el campo como ROJO (Campo Huérfano)
+    Then el Diseñador debe abrir obligatoriamente las propiedades del campo y seleccionar el [Destino Estratégico: Analítica Pasiva / Reportes]
+    And al seleccionarlo, el esquema Zod subyacente DESHABILITA y BLOQUEA físicamente el switch de "Requerido" u "Obligatorio" para ese input
+    And garantizando que la empresa pueda recolectar datos analíticos, pero prohibiendo estrictamente que se conviertan en una fricción bloqueante para el usuario final.
+
+  Scenario: La Ley del Lector Garantizado (Campos de Texto Libre) (CA-2)
+    Given la inserción por costumbre de un Área de Texto (Text-Area) para "Observaciones" que ninguna regla DMN puede evaluar matemáticamente
+    When el Pre-Flight Analyzer audita el futuro de dicha variable en el proceso
+    Then el motor le otorga el Indulto de Supervivencia ÚNICAMENTE si detecta uno de los tres "Lectores Garantizados" aguas abajo:
+    And 1. Una `UserTask` humana donde un Analista leerá la variable.
+    And 2. Una `GenerativeTask` (RAG / AI) que extraerá sentimiento o resumirá el texto.
+    And 3. Un mapeo explícito de inyección SGDEA (Ej: Imprimir el campo dentro del PDF legal final).
+    And bloqueándolo sin piedad si carece de estos 3 destinos.
+
+  Scenario: Libertad de Bosquejo vs Guillotina en Producción (CA-3)
+    Given el proceso creativo de un Arquitecto de Negocio
+    When se encuentra en la Pantalla 3 (Form Builder) creando los inputs
+    Then el sistema arroja un Soft-Lock visual (Iconos naranjas/rojos ⚠️) advirtiendo la falta de destino, pero permite guardar el trabajo tranquilamente en estado `DRAFT_INVALID` para no destruir la iteración.
+    When días después, el Arquitecto une el formulario al BPMN en la Pantalla 6 e intenta pulsar el botón [🚀 DESPLEGAR A PRODUCCIÓN]
+    Then el sistema arroja el Hard-Stop defintivo y ABORTA el Despliegue con un flag rojo ❌, obligándolo a higienizar (borrar o justificar) los campos huérfanos antes de impactar el Core productivo.
+**Trazabilidad UX:** Pantalla 3 (Diseñador de Formularios - Form Builder).
+
+---
+
+### US-V2-004: Auto-Destrucción de Nodos Zombie (The Darwinian Engine)
+**Como** Motor de Gobernanza MLOps (Agente Data Scientist de Turno Nocturno)
+**Quiero** auditar el comportamiento histórico de los operarios humanos
+**Para** sugerir la eliminación de reglas, tareas o firmas que la data empírica demuestre que son inútiles.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Continuous AI Pruning (Self-Healing Organization)
+  Scenario: Slider de Tolerancia y Frenos de Emergencia (Parametrización MLOps) (CA-1)
+    Given la configuración del Motor Darwiniano en la Pantalla 15.A (SysAdmin)
+    When el cliente ajusta el `[Umbral_Inercia_Zombie]` y la `[Ventana_Analisis_Meses]`
+    Then el sistema prohíbe estadísticamente bajar el umbral de inercia a menos del 85%
+    And garantizando que si un humano rechaza o altera el 15% o más de los casos, la IA asume que SÍ está utilizando criterio cognitivo, bloqueando la etiqueta de "Zombie" para proteger la evaluación de riesgo real (Ej: Prevención de Fraude).
+
+  Scenario: El Muro de Fuego Legal (Cero Skynet) (CA-2)
+    Given el Agente Data Scientist descubriendo una Tarea Humana 99% inútil en la madrugada
+    When consolida el hallazgo, calcula el ahorro en EBITDA y lo reporta a la Junta (Pantalla 5)
+    Then el sistema TIENE ESTRICTAMENTE PROHIBIDO auto-parchear Producción de forma autónoma
+    And exige que un rol fiduciario (PMO o Director) apruebe manualmente el hallazgo presionando `[Aceptar Hallazgo y Auto-Refactorizar]`, asumiendo la responsabilidad legal de la automatización por principio de Segregación de Funciones.
+
+  Scenario: Cirugía Asistida y Respeto al SDLC (Generación de Drafts) (CA-3)
+    Given la aprobación del Hallazgo Darwiniano por parte de la PMO
+    When el Agente IA recibe la orden de ejecución
+    Then el sistema NO altera la versión V1.0 que opera transaccionalmente en Producción
+    And en background, el Agente abre la Pantalla 6 (Modeler), clona el mapa, extirpa la caja humana, inyecta la regla matemática DMN, sella las conexiones BPMN y lo guarda silenciosamente como `V1.1-DRAFT`
+    And finalmente dispara un Ticket al Workdesk del Arquitecto IT diciendo: "Borrador de Optimización Generado. Revise las conexiones y presione Desplegar".
+```
+**Trazabilidad UX:** Pantalla 5 (AI Copilot / Evolution Findings) y Modeler (Auto-Refactor).

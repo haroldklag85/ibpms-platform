@@ -1,5 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
+import { useAppStore } from '@/stores/useAppStore';
+import { useToastStore } from '@/stores/useToastStore';
 
 // Instancia global con baseUrl que pasa por el Proxy de Vite (/api -> localhost:8080)
 const apiClient: AxiosInstance = axios.create({
@@ -17,6 +19,13 @@ setupMockAdapter(apiClient);
 // Interceptor de Request para anexar el Bearer Token corporativo si existe
 apiClient.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
+        // CA-19: Bloqueo de Requests si estamos en Survival Mode
+        const appStore = useAppStore();
+        if (appStore.isNetworkOffline) {
+            console.error('Peticion bloqueada por CA-19 (Modo Offline Activo).');
+            return Promise.reject(new Error('OFFLINE_MODE_ACTIVE'));
+        }
+
         const authStore = useAuthStore();
         if (authStore.token && config.headers) {
             config.headers.Authorization = `Bearer ${authStore.token}`;
@@ -34,9 +43,33 @@ apiClient.interceptors.response.use(
         return response;
     },
     (error) => {
+        // CA-19: Detección Offline Instintiva
+        if (!error.response || error.code === 'ERR_NETWORK') {
+            const toastStore = useToastStore();
+            toastStore.addToast('Modo Desconectado. La aplicación se ha congelado por falta de Red.', 'error', 8000);
+            return Promise.reject(error); // Silently stops component logic without crash
+        }
+        
+        // CA-21: Alertas Rojas Imborrables (Fatal Level 0)
+        if (error.response && [500, 502, 503, 504].includes(error.response.status)) {
+            const toastStore = useToastStore();
+            console.error('Fatal Level 0 Dispatching');
+            // Timeout en 0 anula el auto-expire (forzando intervención humana)
+            toastStore.addToast(`Colapso del Servidor (Code ${error.response.status}). Reinicie aplicación o contacte IT de inmediato.`, 'error', 0);
+            return Promise.reject(error);
+        }
+
         if (error.response && error.response.status === 401) {
             const authStore = useAuthStore();
+            console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
+            authStore.lockSession();
+            // Ya no redirigimos ni hacemos logout destructivo
+        }
+        // CA-7: Refresco Forzoso (Supervivencia de JWT Roles mutados)
+        if (error.response && error.response.status === 403 && error.response.data?.code === 'PRIVILEGES_CHANGED') {
+            const authStore = useAuthStore();
             authStore.logout();
+            window.location.href = '/login?alert=Sesión Invalidada por Seguridad';
         }
         return Promise.reject(error);
     }
@@ -58,8 +91,18 @@ export const api = {
     // 4. Project Templates (Pantalla 8)
     createProjectTemplate: (payload: any) => apiClient.post('/projects/templates', payload),
 
-    // 5. BPMN Draft (Pantalla 6)
+    // 5. BPMN Draft / Deploy / Versioning (Pantalla 6)
     saveProcessDraft: (id: string, payload: any) => apiClient.put(`/design/processes/${id}/draft`, payload),
+    validateProcess: (payload: any) => apiClient.post(`/design/processes/validate`, payload),
+    deployProcess: (payload: any) => apiClient.post(`/design/processes/deploy`, payload),
+    requestDeployment: (id: string, payload?: any) => apiClient.post(`/design/processes/${id}/request-deployment`, payload),
+    getCatalogProcesses: () => apiClient.get(`/design/processes/catalog`),
+    getBpmnTemplates: () => apiClient.get(`/design/processes/templates`),
+    
+    // Gobernanza CA-6 & CA-7:
+    getProcessVersions: (id: string) => apiClient.get(`/design/processes/${id}/versions`),
+    restoreProcessVersion: (id: string, version: number) => apiClient.post(`/design/processes/${id}/versions/${version}/restore`),
+    getProcessLock: (id: string) => apiClient.get(`/design/processes/${id}/lock`),
 
     // 6. BPMN Sandbox (Pantalla 6)
     deployToSandbox: (id: string, payload: any) => apiClient.post(`/design/processes/${id}/sandbox`, payload),
@@ -70,11 +113,15 @@ export const api = {
     // 8. BAM Analytics - AI Metrics (Pantalla 5)
     getAiMetrics: () => apiClient.get('/analytics/ai-metrics'),
 
-    // 9. Kanban Status Update (Pantalla 3)
+    // 9. Formularios (Pantalla 7 / CA-30)
+    getForms: () => apiClient.get('/forms'),
+
+    // 10. Kanban Status Update (Pantalla 3)
     updateKanbanStatus: (id: string, status: string) => apiClient.patch(`/kanban/items/${id}/status`, { status }),
 
-    // 10. AI DMN Translate (Pantalla 4/15)
+    // 10. AI Agents & Copilot (CA-8 US-005)
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),
+    analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
 
     // 11. Public Tracking (Pantalla 18)
     getPublicTracking: (trackingCode: string) => apiClient.get(`/public/tracking/${trackingCode}`)

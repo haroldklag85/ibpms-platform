@@ -133,7 +133,10 @@
 
           <!-- SLA Global -->
           <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded">
-            <label class="block text-xs font-bold text-blue-800 dark:text-blue-300 mb-1">⏱ SLA Global (Horas)</label>
+            <label class="block text-xs font-bold text-blue-800 dark:text-blue-300 mb-1 flex items-center justify-between">
+              ⏱ SLA Global (Horas)
+              <AppTooltip :content="bpmnTooltips.GLOBAL_SLA" />
+            </label>
             <input type="number" v-model.number="globalSla" @change="updateGlobalSla" min="1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" placeholder="72" />
             <!-- Propiedades: Tarea de Usuario (Intake / Approval) -->
             <div v-if="selectedElement.type === 'bpmn:UserTask'" class="space-y-4">
@@ -145,9 +148,13 @@
                   <option value="iform_maestro_credito">iform_maestro_credito (Dual)</option>
                 </select>
               </div>
+              <!-- SLA de la Tarea -->
               <div class="pt-3 border-t border-gray-200">
-                <label class="block text-xs font-bold text-gray-700 mb-2 flex items-center gap-1">⏱️ SLA Timeout (ISO 8601)</label>
-                <input type="text" v-model="selectedElement.props.sla" @change="updateElementSla" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 font-mono" placeholder="Ej: P2D (2 Días)" />
+                <label class="block text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
+                  <span class="flex items-center gap-1">⏱️ SLA Timeout</span>
+                  <AppTooltip :content="bpmnTooltips.SLA_TIMEOUT" :isError="isSlaSyntaxError" />
+                </label>
+                <input type="text" v-model="selectedElement.props.sla" @change="updateElementSla" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 font-mono" :class="{'border-red-500 bg-red-50 text-red-700': isSlaSyntaxError}" placeholder="Ej: P2D (2 Días)" />
               </div>
 
               <!-- SharePoint Integration Checkbox (CA-2) -->
@@ -162,9 +169,12 @@
             </div>
           </div>
 
-          <!-- Process Pattern (CA-31) -->
+          <!-- Process Pattern (CA-31 y CA-38) -->
           <div>
-            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Patrón de Proceso</label>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 flex items-center justify-between">
+              Patrón de Proceso
+              <AppTooltip :content="bpmnTooltips.PROCESS_PATTERN" />
+            </label>
             <select v-model="processPattern" :disabled="elementCount > 1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border disabled:opacity-60 disabled:cursor-not-allowed">
               <option value="SIMPLE">🟢 Simple (Formularios independientes)</option>
               <option value="IFORM_MAESTRO">🔵 iForm Maestro (Formulario mutante)</option>
@@ -174,7 +184,10 @@
 
           <!-- User Task Properties -->
           <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
-            <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2">📝 FormKey (User Task)</label>
+            <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+              📝 FormKey (User Task)
+              <AppTooltip :content="bpmnTooltips.FORM_KEY" />
+            </label>
             <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Formulario renderizado en Workdesk</p>
             <select v-model="selectedFormKey" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border bg-indigo-50/30 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300">
               <option value="">-- Sin FormKey --</option>
@@ -213,9 +226,15 @@
           </div>
 
           <!-- Call Activity Link (CA-27) -->
-          <button v-if="selectedElement.type === 'bpmn:CallActivity'" @click="openCallActivity" class="w-full text-xs text-center py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-600 transition truncate px-2" :title="selectedElement.props.calledElement || 'Sub-proceso'">
-            🔗 Abrir Sub-Proceso {{ selectedElement.props.calledElement ? `(${selectedElement.props.calledElement})` : '' }}
-          </button>
+          <div class="mb-4">
+             <label v-if="selectedElement.type === 'bpmn:CallActivity'" class="block text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
+                <span>🔗 Destino de Call Activity</span>
+                <AppTooltip :content="bpmnTooltips.CALL_ACTIVITY" :isError="isCallActivityError" />
+             </label>
+             <button v-if="selectedElement.type === 'bpmn:CallActivity'" @click="openCallActivity" class="w-full text-xs text-center py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-600 transition truncate px-2" :class="{'border-red-400 hover:border-red-500 text-red-500 bg-red-50 hover:bg-red-100': isCallActivityError}" :title="selectedElement.props.calledElement || 'Sub-proceso'">
+               Abrir Sub-Proceso {{ selectedElement.props.calledElement ? `(${selectedElement.props.calledElement})` : '(No Configurado)' }}
+             </button>
+          </div>
 
           <!-- AI Copilot Quick Action -->
           <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
@@ -464,6 +483,7 @@ import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { api } from '@/services/apiClient';
 import { useAuthStore } from '@/stores/authStore';
 import { debounce } from 'lodash-es';
+import AppTooltip from '@/components/common/AppTooltip.vue';
 
 const authStore = useAuthStore();
 
@@ -478,6 +498,15 @@ interface BpmnElement {
 // ── Canvas ───────────────────────────────────────────────────
 const canvasContainer = ref<HTMLElement | null>(null);
 let modelerInstance: any = null;
+
+// ── Tooltips Didácticos (CA-38 y CA-39 MVP) ─────────────────
+const bpmnTooltips = {
+  GLOBAL_SLA: 'Dicta el Acabado Total esperado del Proceso (Vida Útil). Al expirar, lanza métrica a los dashboards BAM corporativos y emite alertas amarillas.',
+  SLA_TIMEOUT: 'Determina temporalidad en norma <a href="https://en.wikipedia.org/wiki/ISO_8601" target="_blank" class="text-blue-500 underline font-semibold">ISO-8601</a> antes de detonar Boundary Events o Escalar la Tarea a líderes.<br><br><b>Syntax estricta:</b> <code>P(N)Y(N)M(N)DT(N)H(N)M(N)S</code><br>Ejemplo: <code>P2D</code> = 2 días. <code>PT6H</code> = 6 Horas.',
+  FORM_KEY: 'Formulario Inteligente embebido. El Workdesk usará este ID Técnico para dibujar la GUI y los campos reactivos de la tarea humana actual.',
+  PROCESS_PATTERN: 'La arquitectura. <b>iForm_Maestro</b> permite usar un solo formulario mutante universal; <b>Simple</b> requiere diseñar formularios separados e instanciarlos en tareas disyuntas individualmente.',
+  CALL_ACTIVITY: 'Un Sub-proceso re-usable de nivel corporativo que actúa como Caja Negra. Obliga a que la Cédula/Identificador coincida lógicamente entre ambos Diagramas. El link no rutea si la variable Target no existe.'
+};
 
 // ── Selection State ──────────────────────────────────────────
 const selectedElement = ref<BpmnElement>({
@@ -504,7 +533,19 @@ const selectedConnector = ref('');
 // CA-31: Computado para el bloqueo de Patrón
 const elementCount = ref(0);
 
-// ── Lock (CA-7) ──────────────────────────────────────────────
+// ── Computed Validations (CA-39) ─────────────────────────
+const isSlaSyntaxError = computed(() => {
+  const sla = selectedElement.value.props.sla;
+  if (!sla) return false;
+  // Regex Simple de Periodos ISO 8601 (Exige empezar con P y tener unidades lógicas)
+  const regexIso8601 = /^P(?:\d+[YMWD])?(?:T(?:\d+[HMS])*)?$/;
+  return sla !== '' && !regexIso8601.test(sla);
+});
+
+const isCallActivityError = computed(() => {
+   if(selectedElement.value.type !== 'bpmn:CallActivity') return false;
+   return !selectedElement.value.props.calledElement || selectedElement.value.props.calledElement.trim() === '';
+});
 const lockOwner = ref<string | null>(null);
 const lockSince = ref<string | null>(null);
 const isLocked = computed(() => lockOwner.value !== null);

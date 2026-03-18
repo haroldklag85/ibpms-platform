@@ -20,9 +20,23 @@ public class FormStorageController {
         this.formStorageService = formStorageService;
     }
 
-    // CA-21: Almacenamiento SGDEA Intermedio
+    // CA-39: Condicionamiento de Archivos Adjuntos - Seguridad
     @PostMapping("/upload")
-    public ResponseEntity<FileUploadResponse> uploadDocument(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadDocument(@RequestParam("file") MultipartFile file) {
+        long maxSize = 10L * 1024 * 1024; // 10MB
+        if (file.getSize() > maxSize) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                    .body(Map.of("error", "El archivo supera el límite de 10MB autorizado por CA-39."));
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !(contentType.equals("application/pdf") || 
+                                     contentType.equals("image/jpeg") || 
+                                     contentType.equals("image/png"))) {
+            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                    .body(Map.of("error", "Tipo MIME no permitido. CA-39 solo aprueba PDF, JPEG y PNG."));
+        }
+
         UUID documentId = UUID.randomUUID();
         String path = formStorageService.saveDocument(documentId, file);
         return ResponseEntity.status(HttpStatus.CREATED)

@@ -4,7 +4,10 @@ import com.ibpms.poc.application.dto.FormActionDTO;
 import com.ibpms.poc.application.dto.FormComponentDTO;
 import com.ibpms.poc.application.dto.FormSchemaDTO;
 import com.ibpms.poc.application.port.in.ObtenerFormularioUseCase;
+import org.camunda.bpm.engine.HistoryService;
 import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.history.HistoricTaskInstance;
+import org.camunda.bpm.engine.history.HistoricVariableInstance;
 import org.camunda.bpm.engine.task.Task;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,24 +24,47 @@ import java.util.List;
 public class ObtenerFormularioService implements ObtenerFormularioUseCase {
 
     private final TaskService taskService;
+    private final HistoryService historyService;
 
-    public ObtenerFormularioService(TaskService taskService) {
+    public ObtenerFormularioService(TaskService taskService, HistoryService historyService) {
         this.taskService = taskService;
+        this.historyService = historyService;
     }
 
     @Override
     @Transactional(readOnly = true)
     public FormSchemaDTO obtenerFormulario(String taskId) {
+        boolean isHistory = false;
+        String formKey = "frm_dinamico";
+        String taskName = "Tarea Histórica";
+        java.util.Map<String, Object> processVariables = new java.util.HashMap<>();
+
         // Validación de existencia en el motor real
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
         if (task == null) {
-            throw new jakarta.persistence.EntityNotFoundException("Tarea no encontrada: " + taskId);
+            // CA-37: Fallback al Historial Inmutable
+            HistoricTaskInstance hTask = historyService.createHistoricTaskInstanceQuery().taskId(taskId).singleResult();
+            if (hTask == null) {
+                throw new jakarta.persistence.EntityNotFoundException("Tarea no encontrada ni activa ni en el historial (CA-37): " + taskId);
+            }
+            isHistory = true;
+            if (hTask.getName() != null) taskName = hTask.getName();
+            
+            // Cargar variables históricas
+            List<HistoricVariableInstance> hVars = historyService.createHistoricVariableInstanceQuery().processInstanceId(hTask.getProcessInstanceId()).list();
+            for (HistoricVariableInstance v : hVars) {
+                processVariables.put(v.getName(), v.getValue());
+            }
+        } else {
+            if (task.getFormKey() != null) formKey = task.getFormKey();
+            if (task.getName() != null) taskName = task.getName();
+            processVariables = taskService.getVariables(taskId);
         }
 
         // Mock exacto según la arquitectura ui_components_schema.md
         FormSchemaDTO schema = new FormSchemaDTO();
-        schema.setFormId(task.getFormKey() != null ? task.getFormKey() : "frm_dinamico");
-        schema.setTitle("Atención de Tarea: " + task.getName());
+        schema.setFormId(formKey);
+        schema.setTitle("Atención de Tarea: " + taskName);
         schema.setVersion("1.0");
         schema.setLayout("vertical");
 
@@ -65,24 +91,30 @@ public class ObtenerFormularioService implements ObtenerFormularioUseCase {
 
         List<FormComponentDTO> componentsList = java.util.Arrays.asList(inputRut, inputCountry, textAreaAi);
 
-        // CA-27: Data Binding -> Inject Camunda instance variables into form
-        // DefaultValues
-        java.util.Map<String, Object> processVariables = taskService.getVariables(taskId);
+        // CA-27: Data Binding -> Inject Camunda instance variables into form DefaultValues
+        // CA-37: Soporte Visor Histórico Inmutable (Set Readonly)
         for (FormComponentDTO comp : componentsList) {
             if (processVariables.containsKey(comp.getId())) {
                 comp.setDefaultValue(processVariables.get(comp.getId()));
+            }
+            if (isHistory) {
+                comp.setReadonly(true);
             }
         }
 
         schema.setComponents(componentsList);
 
-        FormActionDTO btnSubmit = new FormActionDTO();
-        btnSubmit.setId("btn_submit");
-        btnSubmit.setType("submit");
-        btnSubmit.setLabel("Aprobar y Continuar");
-        btnSubmit.setTheme("primary");
-
-        schema.setActions(List.of(btnSubmit));
+        if (isHistory) {
+            // Un form histórico no debe permitir submits
+            schema.setActions(java.util.Collections.emptyList());
+        } else {
+            FormActionDTO btnSubmit = new FormActionDTO();
+            btnSubmit.setId("btn_submit");
+            btnSubmit.setType("submit");
+            btnSubmit.setLabel("Aprobar y Continuar");
+            btnSubmit.setTheme("primary");
+            schema.setActions(List.of(btnSubmit));
+        }
 
         return schema;
     }

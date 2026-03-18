@@ -43,6 +43,14 @@ public class FormDesignController {
     }
 
     /**
+     * CA-27: Clonador DB y Control de Versiones.
+     */
+    @GetMapping("/{id}/versions")
+    public ResponseEntity<List<FormDesignDTO>> listarVersiones(@PathVariable UUID id) {
+        return ResponseEntity.ok(formDesignService.listarVersiones(id));
+    }
+
+    /**
      * Crear nuevo formulario (Define patrón Dual).
      */
     @PostMapping
@@ -71,5 +79,16 @@ public class FormDesignController {
     public ResponseEntity<Void> eliminarFormulario(@PathVariable UUID id) {
         formDesignService.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * CA-26: Manejador de error semántico (Instancias activas).
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<java.util.Map<String, String>> handleConflict(IllegalStateException ex) {
+        if (ex.getMessage() != null && ex.getMessage().contains("bqueado (CA-26)") || ex.getMessage().contains("bloqueado")) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(java.util.Map.of("error", ex.getMessage()));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("error", ex.getMessage()));
     }
 }

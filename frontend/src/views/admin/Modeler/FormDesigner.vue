@@ -40,6 +40,9 @@
         <button @click="isPrintMode = !isPrintMode" class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center" :class="{ 'bg-blue-100 text-blue-700 border-blue-300': isPrintMode }">
           👁️ Print Mode (CA-56)
         </button>
+        <button @click="generateVitestSpec" class="bg-yellow-50 text-yellow-800 px-3 py-1.5 border border-yellow-300 rounded shadow-sm text-xs font-bold hover:bg-yellow-100 transition flex gap-1.5 items-center">
+          ⚡ GENERADOR DE TESTS (CA-1)
+        </button>
         <button @click="showGlobalRulesModal = true" class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center">
           ⚙️ Zod Global (CA-32)
         </button>
@@ -624,6 +627,92 @@ const isPrintMode = ref(false); // Modo Lectura PDF CA-56
 
 const exportToPdf = () => {
     window.print();
+};
+
+// ── Tests Generator (CA-1, CA-2, CA-3, CA-4) ─────────────────────
+const generateVitestSpec = () => {
+    // 1. AST Traversal para obtener el Schema String puro sin Vue
+    const walkNodeForTest = (fieldsArr: any[], isRoot: boolean): string => {
+         let zc = `z.object({\n`;
+         for(const field of fieldsArr) {
+            if(field.type.startsWith('button_') || field.type === 'container') continue;
+            if(field.type === 'field_array') {
+                if(!field.children || field.children.length === 0) continue;
+                let arrCode = `z.array(${walkNodeForTest(field.children, false)})`;
+                if(field.minRows) arrCode += `.min(${field.minRows}, "Mínimo ${field.minRows} filas")`;
+                if(field.maxRows) arrCode += `.max(${field.maxRows}, "Máximo ${field.maxRows} filas")`;
+                zc += `  ${field.camundaVariable || field.id}: ${arrCode},\n`;
+                continue;
+            }
+            let zt = 'string';
+            if(field.type === 'number' || field.type === 'timer') zt = 'number';
+            if(field.type === 'file') zt = 'any';
+            if(field.type === 'checkbox') zt = 'boolean';
+            
+            if (field.isMultiple && ['select', 'async_select'].includes(field.type)) {
+                zc += `  ${field.camundaVariable || field.id}: z.array(z.string())${field.required ? '.min(1)' : '.optional()'}, \n`;
+            } else {
+                let baseZ = `z.${zt}()`;
+                if(field.type === 'email') baseZ += '.email()';
+                if(field.type === 'url') baseZ += '.url()';
+                zc += `  ${field.camundaVariable || field.id}: ${baseZ}${field.required && field.type !== 'checkbox' ? '.min(1)' : '.optional()'}, \n`;
+            }
+         }
+         zc += isRoot ? `})` : `        })`;
+         return zc;
+    };
+
+    const hasAsync = flatFields(canvasFields.value).some(f => f.type === 'async_select');
+    let specStr = `import { describe, it, expect, vi } from 'vitest';\n`;
+    specStr += `import { z } from 'zod';\n\n`;
+    
+    // CA-2 Mocks
+    if (hasAsync) {
+        specStr += `// CA-2 Mocks de Red Simulada (Aislamiento de Componentes)\n`;
+        specStr += `vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ json: () => Promise.resolve({ data: [] }) })));\n\n`;
+    }
+
+    specStr += `const taskSchema = ${walkNodeForTest(canvasFields.value, true)};\n\n`;
+    
+    // CA-3 Bloques Describe & Happy/Sad Paths
+    specStr += `describe('Formulario Mapeado - BDD Tests Automáticos', () => {\n\n`;
+    
+    let happyPayload: any = {};
+    const flatF = flatFields(canvasFields.value);
+    flatF.forEach(f => {
+        if(f.type.startsWith('button_') || f.type === 'container') return;
+        const key = f.camundaVariable || f.id;
+        if(f.type === 'number' || f.type === 'timer') happyPayload[key] = 42;
+        else if(f.type === 'checkbox') happyPayload[key] = true;
+        else if(f.type === 'email') happyPayload[key] = 'test@example.com';
+        else if(f.type === 'url') happyPayload[key] = 'https://example.com';
+        else if(f.isMultiple) happyPayload[key] = ['Option1'];
+        else happyPayload[key] = 'Valor Dummy 100%';
+    });
+
+    specStr += `  it('Happy Path: Debe aprobar el parse() con un Payload perfecto al 100%', () => {\n`;
+    specStr += `    const happyPayload = ${JSON.stringify(happyPayload, null, 4).replace(/\\n/g, '\\n    ')};\n`;
+    specStr += `    expect(() => taskSchema.parse(happyPayload)).not.toThrow();\n`;
+    specStr += `  });\n\n`;
+
+    specStr += `  it('Sad Path: Debe lanzar ZodError al enviar Payload vacío {} (Extremo Crítico)', () => {\n`;
+    specStr += `    const badPayload = {};\n`;
+    specStr += `    expect(() => taskSchema.parse(badPayload)).toThrow();\n`;
+    specStr += `  });\n\n`;
+    
+    specStr += `});\n`;
+
+    // CA-4 Descarga Pasiva Blob
+    const blob = new Blob([specStr], { type: 'text/typescript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'form_payload.spec.ts';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Script de tests generado exitosamente, descargando...', 'success');
 };
 
 // ── Modals / Toasts ──────────────────────────────────────────────

@@ -285,25 +285,29 @@
           
           <div class="space-y-4">
             <div>
-              <label class="block text-xs font-bold text-gray-700 mb-1">ID (Variable Name)</label>
+              <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">ID (Variable Name) <AppTooltip content="Identificador único del campo en el Motor. Se utiliza si el Binding explícito no está declarado (CA-18)." /></label>
               <input v-model="editingField.id" class="w-full text-sm border-gray-300 rounded font-mono bg-gray-50 uppercase" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-700 mb-1">Label (Nombre Visible)</label>
+              <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">Label (Nombre Visible) <AppTooltip content="El texto de la etiqueta que el usuario leerá en la pantalla visual producida." /></label>
               <input v-model="editingField.label" class="w-full text-sm border-gray-300 rounded" />
             </div>
             <div v-if="formPattern === 'IFORM_MAESTRO'" class="bg-blue-50 p-3 rounded border border-blue-200">
-               <label class="block text-xs font-bold text-blue-800 mb-1">Stage (Etapa BPMN de aparición)</label>
+               <label class="block text-xs font-bold text-blue-800 mb-1 flex items-center gap-1">Stage (Etapa BPMN de aparición) <AppTooltip content="Etapa en la cual el campo se revelará dinámicamente o dejará de bloquearse (CA-20)." /></label>
                <input v-model="editingField.stage" class="w-full text-sm border-blue-300 rounded font-mono" placeholder="Ej: ANALYSIS" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-indigo-700 mb-1">Camunda Variable (I/O Binding)</label>
+              <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1">Camunda Variable (I/O Binding) <AppTooltip content="La variable exacta en el Process Instance de Camunda con la que se emparejará bidireccionalmente este campo." /></label>
               <input v-model="editingField.camundaVariable" class="w-full text-sm border-indigo-300 rounded font-mono bg-indigo-50" placeholder="Ej: customerName" />
               <p class="text-[10px] text-gray-500 mt-1">El valor del campo se mapeará a esta variable en Process Engine.</p>
             </div>
             <div class="flex items-center gap-2 pt-2 border-t mt-4">
                <input type="checkbox" v-model="editingField.required" id="reqCheck" class="text-indigo-600 rounded" />
-               <label for="reqCheck" class="text-sm font-medium text-gray-700 cursor-pointer">Campo Requerido (Agrega .min(1) a Zod)</label>
+               <label for="reqCheck" class="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-1">Campo Requerido (Agrega .min(1) a Zod) <AppTooltip content="Fuerza al validador Zod On-The-Fly a bloquear el envío si el campo es nulo o vacío." /></label>
+            </div>
+            <div v-if="formPattern === 'IFORM_MAESTRO'" class="flex items-center gap-2 pt-2 border-t">
+               <input type="checkbox" v-model="editingField.soloLecturaPosterior" id="roCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
+               <label for="roCheck" class="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-1">Bloquear en etapas futuras (RBAC) <AppTooltip content="CA-20 Corregido: Si se activa, este input será Deshabilitado (:disabled) si el proceso actual avanza a una etapa diferente." /></label>
             </div>
           </div>
 
@@ -311,11 +315,11 @@
              <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1 flex items-center gap-2">🗃️ Data Binding Camunda (I/O) (CA-12/CA-13)</h4>
              <div class="flex items-center gap-2 mb-2">
                 <input type="checkbox" v-model="editingField.isPrefilled" id="prefillCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
-                <label for="prefillCheck" class="text-xs font-medium text-gray-700 cursor-pointer">Pre-Fill (Lectura de BD al cargar)</label>
+                <label for="prefillCheck" class="text-xs font-medium text-gray-700 cursor-pointer flex items-center gap-1">Pre-Fill (Lectura) <AppTooltip content="Avisa al motor que debe leer esta variable desde DB/Camunda CND se cargue la forma." /></label>
              </div>
              <div class="flex items-center gap-2">
                 <input type="checkbox" v-model="editingField.isOutputToken" id="outCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
-                <label for="outCheck" class="text-xs font-medium text-gray-700 cursor-pointer">Update Token (Guardar Output en Camunda)</label>
+                <label for="outCheck" class="text-xs font-medium text-gray-700 cursor-pointer flex items-center gap-1">Update Token (Escritura) <AppTooltip content="Informa al backend que el valor modificado debe persistirse como variable global del Process Instance." /></label>
              </div>
           </div>
 
@@ -375,7 +379,9 @@ import apiClient from '@/services/apiClient';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 
 // ── Types ────────────────────────────────────────────────────────
-interface FormField extends FormFieldMetadataDTO {}
+interface FormField extends FormFieldMetadataDTO {
+  soloLecturaPosterior?: boolean; // CA-20
+}
 
 // ── State ────────────────────────────────────────────────────────
 const formTitle = ref('Solicitud Onboarding (V1)');
@@ -507,12 +513,27 @@ const onMonacoMount = (editorIns: any, monacoIns: any) => {
   });
 
   monacoIns.languages.typescript.typescriptDefaults.addExtraLib(`
+    /** Funciones core de Vue.js Inyectadas. */
     declare module 'vue' {
+        /**
+         * Crea una referencia reactiva (Mutable Reactivity) para UI State (CA-17 Language Server Hovering).
+         */
         export function ref<T>(value: T): { value: T };
+        /**
+         * Propiedad calculada que se actualiza automáticamente ante cambios de sus dependencias (Read-Only).
+         */
         export function computed<T>(getter: () => T): { value: T };
+        /**
+         * Adquiere un objeto o estado proveído por el Layout o el Host padre.
+         */
         export function inject<T>(key: string, defaultValue?: T): T;
     }
+    /** Validador de esquemas Zod O-T-F (On-The-Fly) */
     declare module 'zod' {
+        /**
+         * Creador maestro de construcciones declarativas de validación. 
+         * Permite validar strings, numbers y objetos complejos antes del submit (CA-17).
+         */
         export const z: any;
     }
     `, 'file:///node_modules/@types/vue-zod/index.d.ts');
@@ -580,16 +601,17 @@ const generateFieldHTML = (field: any, indent: string = '      '): string => {
      tpl += `${indent}  </div>\n`;
   } else {
     tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}</label>\n`;
+    const dsb = (formPattern.value === 'IFORM_MAESTRO' && field.soloLecturaPosterior) ? ` :disabled="stage !== '${field.stage}'"` : '';
     if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time') {
-      tpl += `${indent}  <input type="${field.type}" v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" />\n`;
+      tpl += `${indent}  <input type="${field.type}" v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
     } else if (field.type === 'textarea') {
-      tpl += `${indent}  <textarea v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" rows="3"></textarea>\n`;
+      tpl += `${indent}  <textarea v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" rows="3"${dsb}></textarea>\n`;
     } else if (field.type === 'checkbox') {
-      tpl += `${indent}  <div class="flex items-center gap-2 mt-1">\n${indent}    <input type="checkbox" v-model="formData.${field.camundaVariable || field.id}" class="rounded text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm" />\n${indent}    <span class="text-sm text-gray-700">${field.placeholder || field.label}</span>\n${indent}  </div>\n`;
+      tpl += `${indent}  <div class="flex items-center gap-2 mt-1">\n${indent}    <input type="checkbox" v-model="formData.${field.camundaVariable || field.id}" class="rounded text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} />\n${indent}    <span class="text-sm text-gray-700">${field.placeholder || field.label}</span>\n${indent}  </div>\n`;
     } else if (field.type === 'radio') {
-      tpl += `${indent}  <div class="flex flex-col gap-1 mt-1">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <label class="flex items-center gap-2"><input type="radio" value="${o}" v-model="formData.${field.camundaVariable || field.id}" class="text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm" /> <span class="text-sm text-gray-600 font-medium">${o}</span></label>`).join('\n')}\n${indent}  </div>\n`;
+      tpl += `${indent}  <div class="flex flex-col gap-1 mt-1">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <label class="flex items-center gap-2"><input type="radio" value="${o}" v-model="formData.${field.camundaVariable || field.id}" class="text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} /> <span class="text-sm text-gray-600 font-medium">${o}</span></label>`).join('\n')}\n${indent}  </div>\n`;
     } else if (field.type === 'select') {
-       tpl += `${indent}  <select v-model="formData.${field.camundaVariable || field.id}" class="form-select mt-1 w-full rounded-md border-gray-300 shadow-sm">\n${indent}    <option disabled value="">${field.placeholder || 'Seleccione'}</option>\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </select>\n`;
+       tpl += `${indent}  <select v-model="formData.${field.camundaVariable || field.id}" class="form-select mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb}>\n${indent}    <option disabled value="">${field.placeholder || 'Seleccione'}</option>\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </select>\n`;
     } else if (field.type === 'file') {
        tpl += `${indent}  <div class="border-2 border-dashed border-gray-300 rounded p-4 text-center text-xs text-gray-500 cursor-pointer bg-white mt-1">\n${indent}    📂 ${field.placeholder || 'Arrastra tu archivo aquí'}\n${indent}  </div>\n`;
     } else {

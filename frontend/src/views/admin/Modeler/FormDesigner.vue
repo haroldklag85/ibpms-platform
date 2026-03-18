@@ -368,8 +368,18 @@
                    <input type="number" v-model="editingField.maxSizeMb" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 5" />
                  </div>
                  <div class="flex-1">
-                   <label class="block text-xs font-bold text-gray-700 mb-1">Extensiones</label>
                    <input v-model="editingField.allowedExts" class="w-full text-sm border-gray-300 rounded" placeholder=".pdf,.png" />
+                 </div>
+               </div>
+               
+               <div class="flex gap-2 mb-2">
+                 <div class="flex-1">
+                   <label class="block text-xs font-bold text-gray-700 mb-1">Mínimo Archivos (CA-49)</label>
+                   <input type="number" v-model="editingField.minFiles" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 1" />
+                 </div>
+                 <div class="flex-1">
+                   <label class="block text-xs font-bold text-gray-700 mb-1">Máximo Archivos (CA-49)</label>
+                   <input type="number" v-model="editingField.maxFiles" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 5" />
                  </div>
                </div>
                <p class="text-[10px] text-orange-600">Validará en frontend antes de subir por Axios.</p>
@@ -414,6 +424,22 @@
                <input type="checkbox" v-model="editingField.enableAuditLog" id="auditCheck" class="text-red-500 rounded focus:ring-red-500 border-gray-300" />
                <label for="auditCheck" class="text-xs font-medium text-red-700 cursor-pointer">Activar Auditoría Forense (Huella en Token, CA-28)</label>
             </div>
+          </div>
+
+          <!-- CA-48: Condicional Zod Validaciones -->
+          <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mt-4 shadow-inner">
+             <h4 class="text-xs font-bold text-yellow-800 mb-2 border-b border-yellow-300 pb-1 flex items-center gap-2">⚡ Validaciones Condicionales O-T-F (CA-48)</h4>
+             <div class="flex gap-2 mb-2">
+                 <div class="flex-1">
+                   <label class="block text-[10px] font-bold text-gray-700 mb-1">Requiere si Campo (ID):</label>
+                   <input v-model="editingField.requiredIfField" class="w-full text-xs border-yellow-300 rounded font-mono" placeholder="Ej: TIENE_HIJOS" />
+                 </div>
+                 <div class="flex-1">
+                   <label class="block text-[10px] font-bold text-gray-700 mb-1">Es Igual A (Valor):</label>
+                   <input v-model="editingField.requiredIfValue" class="w-full text-xs border-yellow-300 rounded font-mono" placeholder="Ej: SI" />
+                 </div>
+             </div>
+             <p class="text-[9px] text-yellow-700 leading-tight">Agrega dinámicamente regla <code class="bg-yellow-100 p-0.5 rounded">.superRefine()</code> cruzada al Zod O-T-F.</p>
           </div>
 
           <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 shadow-inner">
@@ -614,7 +640,8 @@ const toolboxCategories = [
     name: "Layouts (CA-8, CA-34)",
     items: [
       { icon: '🗂️', label: 'Contenedor', desc: 'Panel Agrupador', type: 'container', placeholder: 'Nueva Sección de Datos', required: false, zodType: 'object', camundaVariable: '', children: [] },
-      { icon: '📑', label: 'Data Grid', desc: 'Fila Repetible', type: 'field_array', placeholder: 'Nueva Tabla', required: false, zodType: 'array', camundaVariable: '', children: [] }
+      { icon: '📑', label: 'Data Grid', desc: 'Fila Repetible', type: 'field_array', placeholder: 'Nueva Tabla', required: false, zodType: 'array', camundaVariable: '', children: [] },
+      { icon: '👁️‍🗨️', label: 'Hidden Input', desc: 'ID/Token Silencioso (CA-47)', type: 'hidden', placeholder: '', required: false, zodType: 'any', camundaVariable: '' }
     ]
   },
   {
@@ -860,7 +887,10 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
        // CA-39: Binding de MaxSizeMb y AllowedExts
        const maxMb = field.maxSizeMb || 0;
        const exts = field.allowedExts || '';
-       tpl += `${indent}  <input type="file" @change="(e) => uploadFile(e, '${field.camundaVariable || field.id}', ${uTarget}, ${maxMb}, '${exts}')" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mt-1 cursor-pointer no-print"${dsb} />\n`;
+       const minFs = field.minFiles || 0;
+       const maxFs = field.maxFiles || 1;
+       const multAttr = maxFs > 1 ? ' multiple' : '';
+       tpl += `${indent}  <input type="file" @change="(e) => uploadFile(e, '${field.camundaVariable || field.id}', ${uTarget}, ${maxMb}, '${exts}', ${minFs}, ${maxFs})" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mt-1 cursor-pointer no-print"${dsb}${multAttr} />\n`;
     } else if (field.type === 'signature') {
        const oTarget = parentBinding === 'formData' ? 'formData.value' : parentBinding;
        tpl += `${indent}  <div class="border rounded bg-white p-2 mt-1">\n`;
@@ -870,16 +900,21 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
        tpl += `${indent}       <span class="text-[10px] text-gray-400">Dibuja en el recuadro superior</span>\n`;
        tpl += `${indent}    </div>\n`;
        tpl += `${indent}  </div>\n`;
+    } else if (field.type === 'hidden') {
+       // CA-47: Componente Oculto Silencioso
+       tpl += `${indent}  <input type="hidden" v-model="${vModelBase}" id="${field.camundaVariable || field.id}" />\n`;
     } else {
        tpl += `${indent}  <!-- Custom Component: ${field.type} -->\n`;
     }
     
     // CA-28 Auditoria Forense Check
-    if (field.enableAuditLog) {
+    if (field.enableAuditLog && field.type !== 'hidden') {
        tpl += `${indent}  <p class="text-[9px] text-gray-400 mt-1 uppercase tracking-wider font-mono">Modificado por: {{ currentUser?.name || 'Sistema' }}</p>\n`;
     }
 
-    tpl += `${indent}  <span v-if="errors.${field.camundaVariable || field.id}" class="text-red-500 text-xs">{{ errors.${field.camundaVariable || field.id} }}</span>\n`;
+    if (field.type !== 'hidden') {
+       tpl += `${indent}  <span v-if="errors.${field.camundaVariable || field.id}" class="text-red-500 text-xs">{{ errors.${field.camundaVariable || field.id} }}</span>\n`;
+    }
     tpl += `${indent}</div>\n`;
   }
   return tpl;
@@ -890,6 +925,7 @@ const computedCode = computed({
   get: () => {
     if (activeCodeTab.value === 'TEMPLATE') {
       let tpl = `<template>\n  <form @submit.prevent="submitTask" class="space-y-4">`;
+      tpl += `\n    <!-- CA-46: Sello Visual de Aprobatoria (Si existe en prefillData) -->\n    <div v-if="props.prefillData?.approvedBy" class="bg-green-50 border border-green-200 text-green-800 p-3 rounded-md flex items-center gap-3 no-print">\n      <span class="text-2xl">✅</span>\n      <div>\n        <p class="text-sm font-bold">Fase Aprobada Anteriomente</p>\n        <p class="text-xs">Revisor: {{ props.prefillData.approvedBy }}</p>\n      </div>\n    </div>\n`;
       if (canvasFields.value.length === 0) {
         tpl += `\n    <!-- Arrastra componentes al lienzo -->`;
       } else {
@@ -969,14 +1005,17 @@ const computedCode = computed({
       scr += `// CA-24: Auto-Guardado Workdesk LocalStorage/API\nlet autoSyncDraftTimeout: any = null;\nwatch(formData, (newVal) => {\n  clearTimeout(autoSyncDraftTimeout);\n  autoSyncDraftTimeout = setTimeout(async () => {\n    try {\n      await apiClient.post('/api/v1/forms/draft', newVal);\n      console.log('✅ Borrador auto-guardado en backend');\n    } catch (e) {\n      localStorage.setItem('workdesk_draft', JSON.stringify(newVal));\n      console.warn('⚠️ Fallback a LocalStorage para auto-guardado');\n    }\n  }, 2000);\n}, { deep: true });\n\n`;
 
       if (hasFile) {
-         scr += `// CA-21, CA-39: Conector Multipart File Upload + Constraints\nconst uploadFile = async (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string) => {\n  const target = event.target;\n  const file = target?.files?.[0];\n  if (!file) return;\n  if (maxMb > 0 && file.size > maxMb * 1024 * 1024) { alert('El archivo excede el límite máximo de ' + maxMb + 'MB.'); target.value = ''; return; }\n  if (exts) { const ext = '.' + file.name.split('.').pop()?.toLowerCase(); if (!exts.toLowerCase().includes(ext)) { alert('Extensión ' + ext + ' no permitida. Solo: ' + exts); target.value = ''; return; } }\n  \n  const data = new FormData();\n  data.append('file', file);\n  try {\n    const res = await apiClient.post('/api/v1/forms/upload', data, {\n      headers: { 'Content-Type': 'multipart/form-data' }\n    });\n    targetObj[fieldId] = res.data.url || 'subido_exitosamente';\n    alert('Archivo subido al SGDEA');\n  } catch (error) {\n    alert('Error de subida: ' + (error as any).message);\n  }\n};\n\n`;
+         scr += `// CA-21, CA-39, CA-49: Conector Multipart File Upload + Constraints\nconst uploadFile = async (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const target = event.target;\n  const files = target?.files;\n  if (!files || files.length === 0) return;\n  if (files.length < minFiles) { alert('Mínimo ' + minFiles + ' archivo(s) requeridos.'); target.value = ''; return; }\n  if (files.length > maxFiles) { alert('Máximo ' + maxFiles + ' archivo(s) permitidos.'); target.value = ''; return; }\n  let urls: string[] = [];\n  for (let i = 0; i < files.length; i++) {\n     const file = files[i];\n     if (maxMb > 0 && file.size > maxMb * 1024 * 1024) { alert('El archivo \\'' + file.name + '\\' excede el límite de ' + maxMb + 'MB.'); target.value = ''; return; }\n     if (exts) { const ext = '.' + file.name.split('.').pop()?.toLowerCase(); if (!exts.toLowerCase().includes(ext)) { alert('Extensión ' + ext + ' no permitida. Solo: ' + exts); target.value = ''; return; } }\n     const data = new FormData();\n     data.append('file', file);\n     try {\n       const res = await apiClient.post('/api/v1/forms/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });\n       urls.push(res.data.url || 'subido_exitosamente_' + i);\n     } catch (error) {\n       alert('Error subiendo \\'' + file.name + '\\': ' + (error as any).message);\n       return;\n     }\n  }\n  targetObj[fieldId] = urls.length > 1 ? JSON.stringify(urls) : urls[0];\n  alert('Archivo(s) subido(s) exitosamente');\n};\n\n`;
       }
 
-      scr += `// CA-15: Smart Actions con Blindaje de Red Try/Catch\n`;
-      scr += `const submitTask = async () => {\n  errors.value = {};\n  const result = taskSchema.safeParse(formData.value);\n  if (!result.success) {\n    result.error.issues.forEach(iss => {\n      if (iss.path[0]) errors.value[iss.path[0].toString()] = iss.message;\n    });\n    return;\n  }\n  try {\n    const payload = { variables: result.data };\n    await apiClient.post(\`/engine-rest/task/\${taskId}/complete\`, payload);\n    alert('Tarea Completada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Completar Tarea: ' + (error as any).message);\n  }\n};\n`;
+      scr += `// CA-15, CA-50: Smart Actions con Blindaje y Stripping Numerico\n`;
+      scr += `const submitTask = async () => {\n  errors.value = {};\n`;
+      scr += `  // CA-50: Stripping Silencioso de formato Numérico\n  const cleanData = JSON.parse(JSON.stringify(formData.value));\n`;
+      scr += `  Object.keys(cleanData).forEach(k => { if (typeof cleanData[k] === 'string' && /^[\\d.,$]+$/.test(cleanData[k])) { const num = parseFloat(cleanData[k].replace(/[^\\d.-]/g, '')); if(!isNaN(num)) cleanData[k] = num; } });\n\n`;
+      scr += `  const result = taskSchema.safeParse(cleanData);\n  if (!result.success) {\n    result.error.issues.forEach(iss => {\n      if (iss.path[0]) errors.value[iss.path[0].toString()] = iss.message;\n    });\n    return;\n  }\n  try {\n    const payload = { variables: result.data };\n    await apiClient.post(\`/engine-rest/task/\${taskId}/complete\`, payload);\n    alert('Tarea Completada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Completar Tarea: ' + (error as any).message);\n  }\n};\n`;
       
       if (hasDraft) {
-        scr += `\nconst saveDraft = async () => {\n  try {\n    await apiClient.post('/api/v1/forms/draft', formData.value);\n    alert('Borrador Guardado (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Guardar Borrador: ' + (error as any).message);\n  }\n};\n`;
+        scr += `\nconst saveDraft = async () => {\n  try {\n    const cleanData = JSON.parse(JSON.stringify(formData.value));\n    Object.keys(cleanData).forEach(k => { if (typeof cleanData[k] === 'string' && /^[\\d.,$]+$/.test(cleanData[k])) { const num = parseFloat(cleanData[k].replace(/[^\\d.-]/g, '')); if(!isNaN(num)) cleanData[k] = num; } });\n    await apiClient.post('/api/v1/forms/draft', cleanData);\n    alert('Borrador Guardado (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Guardar Borrador: ' + (error as any).message);\n  }\n};\n`;
       }
       if (hasReject) {
          scr += `\nconst rejectTask = async () => {\n  try {\n    await apiClient.post(\`/engine-rest/task/\${taskId}/bpmnError\`, { errorCode: 'REJECTED' });\n    alert('Excepción BPMN Disparada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Rechazar Tarea: ' + (error as any).message);\n  }\n};\n`;
@@ -1019,8 +1058,20 @@ const computedCode = computed({
       };
 
       let zc = `import { z } from 'zod';\n\nexport const taskSchema = ${walkNode(canvasFields.value, true)}`;
-      if (crossValidationCode.value) {
-         zc += `\n.superRefine((data, ctx) => {\n${crossValidationCode.value.split('\n').map(l=>'  '+l).join('\n')}\n})`;
+      
+      // Inject CA-48 Condicionales Directly via SuperRefine
+      const conditionalFields = flatFields(canvasFields.value).filter(f => f.requiredIfField && f.requiredIfValue);
+      let crules = crossValidationCode.value ? crossValidationCode.value.split('\n').map(l=>'  '+l).join('\n') + '\n' : '';
+      
+      if (conditionalFields.length > 0) {
+         crules += `  // CA-48: Validaciones Condicionales Declarativas\n`;
+         conditionalFields.forEach(f => {
+            crules += `  if (data.${f.requiredIfField} === '${f.requiredIfValue}' && !data.${f.camundaVariable || f.id}) {\n    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Campo obligatorio basado en ${f.requiredIfField}", path: ["${f.camundaVariable || f.id}"] });\n  }\n`;
+         });
+      }
+
+      if (crules) {
+         zc += `\n.superRefine((data, ctx) => {\n${crules}})`;
       }
       zc += `;\n\nexport type TaskSchemaPayload = z.infer<typeof taskSchema>;`;
       return zc;
@@ -1071,15 +1122,14 @@ const computedCode = computed({
           if (maxMatch) maxL = parseInt(maxMatch[1], 10);
           
           let cType = 'text';
-          if(zTypeRaw.includes('number')) cType = 'number';
-          if(zTypeRaw.includes('any')) cType = 'file';
           if(isMult) cType = 'select'; // Prefer select if multiple
 
           const exist = currentFields.find(f => f.camundaVariable === varName || f.id === varName);
           newCanvasFields.push({
              ...(exist || { id: varName.toUpperCase(), label: varName }),
              camundaVariable: varName,
-             type: exist && exist.type !== cType && exist.type !== 'select' && exist.type !== 'async_select' ? cType : (exist ? exist.type : cType),
+             type: exist && exist.type !== cType && exist.type !== 'select' && exist.type !== 'async_select' && exist.type !== 'hidden' ? cType : (exist ? exist.type : cType),
+
              required: isReq,
              stage: stage,
              isMultiple: isMult || exist?.isMultiple,

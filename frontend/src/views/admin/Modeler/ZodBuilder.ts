@@ -24,6 +24,10 @@ export interface FormFieldMetadataDTO {
     minRows?: number; // CA-41: Mínimo filas Grilla
     maxRows?: number; // CA-41: Máximo filas Grilla
     isMultiple?: boolean; // CA-45: Multi-select Pastillas
+    minFiles?: number; // CA-49: Min adjuntos
+    maxFiles?: number; // CA-49: Max adjuntos
+    requiredIfField?: string; // CA-48: Condicional Zod Field Name
+    requiredIfValue?: string; // CA-48: Condicional Zod Target Value
     children?: FormFieldMetadataDTO[]; // CA-8: Recursive Nested Support
 }
 
@@ -62,6 +66,10 @@ export class ZodBuilder {
             switch (field.type) {
                 case 'checkbox':
                     fieldSchema = z.boolean();
+                    break;
+                case 'hidden':
+                    fieldSchema = z.string();
+                    fieldSchema = fieldSchema.optional();
                     break;
                 case 'number':
                     fieldSchema = z.number({ invalid_type_error: 'Debe ser un número válido' });

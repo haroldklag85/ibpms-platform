@@ -1085,6 +1085,43 @@ Feature: BPMN Process Deployment
     Then debe usar un MessageEvent (Intermediate Throw/Catch) como marcador visual temporal
     And el Pre-Flight Analyzer debe clasificar este nodo como Advertencia (⚠️): "MessageEvent sin conector API asociado. Considere crear el conector en el Hub y migrar a Service Task."
     And cuando el conector sea registrado posteriormente, el Arquitecto puede reemplazar el MessageEvent por una Service Task enlazada al nuevo conector.
+
+  Scenario: [Onboarding Embebido] Iconos de Ayuda Globales en el Diseñador (CA-38)
+    Given el Arquitecto (de cualquier perfil o seniority) selecciona un componente visual en el Lienzo de la Pantalla 6
+    Then tanto en la barra superior de herramientas como al lado de cada título del Panel de Propiedades aparecerá un ícono de ayuda `[?]`
+    And al hacer hover, el sistema desplegará el Componente de Tooltip Estándar (reutilizado de la US-003).
+
+  Scenario: Tooltips Ricos interactivos y Mapeo de Errores de Sintaxis (CA-39)
+    Given la visualización del Tooltip en el Diseñador BPMN
+    Then el contenido didáctico estará codificado de forma estática ("quemado") para la V1
+    And el componente soportará formato HTML enriquecido permitiendo incrustar hipervínculos azules hacia la documentación oficial
+    When el Arquitecto ingresa una expresión inválida o código basura en un campo de configuración (Ej: Listener Script o Condición de Gateway)
+    Then el ícono de ayuda y su respectivo Tooltip mutarán dinámicamente a color ROJO para alertar el error de sintaxis visualmente.
+
+  Scenario: Mapeo Visual Estricto (Prohibición de JSON Crudo) (CA-40)
+    Given que el Arquitecto selecciona un Conector API (Ej: Oracle) en una Service Task (Pantalla 6)
+    When el Frontend despliega el sub-panel de Integración
+    Then el sistema TIENE ESTRICTAMENTE PROHIBIDO renderizar un `<textarea>` libre para inyección manual de JSON Payload.
+    And debe renderizar un componente `<DataMapperGrid>` de dos columnas: Columna Izquierda (Campos fijos dictados por el Swagger del Hub en Pantalla 11) vs Columna Derecha (Dropdown interactivo).
+    And el Dropdown de la derecha consumirá el Diccionario de Datos del proceso (Variables Zod de la Pantalla 7), permitiendo al usuario emparejarlas visualmente con clics.
+
+  Scenario: Coerción Inteligente y Seguridad de Tipos (Type-Safety) (CA-41)
+    Given la matriz de mapeo visual `<DataMapperGrid>`
+    When el usuario despliega la lista de variables origen para emparejarlas con un destino
+    Then el Frontend aplicará un filtro dinámico: mostrará deshabilitadas (sombreadas en gris) con un tooltip explicativo de "Tipo Incompatible" a aquellas variables (Zod) cuyo tipo de dato (String, Number, Boolean) NO coincida matemáticamente con el tipo esperado por el sistema externo.
+    And anulando desde el diseño de la UI la posibilidad de enviar un Error 400 (Type Mismatch) a Producción.
+
+  Scenario: Inyección de Valores Constantes (Hardcoding Controlado) (CA-42)
+    Given que la API externa requiere un dato que no proviene del Formulario del cliente (Ej: `Country_Code`)
+    Then la Columna Derecha del `<DataMapperGrid>` permitirá al usuario alternar entre [Variable Dinámica Zod] y [Valor Estático].
+    And si elige [Valor Estático], podrá digitar el texto crudo inyectándolo de forma segura en el Payload saliente.
+
+  Scenario: Bloqueo de Despliegue por Traducción Incompleta (Hard-Stop Pre-Flight) (CA-43)
+    Given un mapeo de datos hacia una API externa en progreso
+    When el Arquitecto presiona el botón `[🚀 DESPLEGAR]` en el Pre-Flight Analyzer
+    Then el motor verifica la "Libreta del Traductor".
+    And si la API destino exige un campo como 'Obligatorio' (Required) y el Arquitecto olvidó enchufarle una variable origen en la columna derecha (Quedó nulo), el despliegue SE ABORTA (❌).
+    And lanza una alerta roja: "Integración Rota: Oracle exige el dato [Amount_USD] y no le estás enviando nada. Mapea la variable o elimina la conexión antes de pasar a Producción."
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).
 

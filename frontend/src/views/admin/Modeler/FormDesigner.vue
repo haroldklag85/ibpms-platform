@@ -147,24 +147,29 @@
         </div>
       </section>
 
-      <!-- Monaco IDE (Solo Lectura V1) -->
+      <!-- Monaco IDE (Bidireccional V2) -->
       <aside class="w-2/5 min-w-[350px] bg-[#1e1e1e] border-l border-gray-800 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-20">
         
         <!-- Tabs -->
-        <div class="flex bg-[#252526] text-xs font-mono font-medium text-gray-400 border-b border-[#3e3e42] shrink-0">
-          <button @click="activeCodeTab = 'TEMPLATE'" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-blue-500': activeCodeTab === 'TEMPLATE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
+        <div class="flex bg-[#252526] text-xs font-mono font-medium text-gray-400 border-b border-[#3e3e42] shrink-0 overflow-x-auto">
+          <button @click="activeCodeTab = 'TEMPLATE'" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-emerald-500': activeCodeTab === 'TEMPLATE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
             <span class="text-emerald-400">&lt;&gt;</span> template
           </button>
-          <button @click="activeCodeTab = 'SCRIPT'" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-yellow-500': activeCodeTab === 'SCRIPT' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
-            <span class="text-blue-400">{}</span> script
+          <button @click="activeCodeTab = 'SCRIPT'" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-blue-500': activeCodeTab === 'SCRIPT' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
+            <span class="text-blue-400">&lt;script setup&gt;</span>
+            <AppTooltip content="Código Vue.js autogenerado con Composition API (Solo Lectura)." />
+          </button>
+          <button @click="activeCodeTab = 'STYLE'" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-pink-500': activeCodeTab === 'STYLE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
+            <span class="text-pink-400">&lt;style scoped&gt;</span>
+            <AppTooltip content="Estilizado CSS inyectado para Tailwind y clases utilitarias (Solo Lectura)." />
           </button>
           <button @click="activeCodeTab = 'ZOD'" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-indigo-500': activeCodeTab === 'ZOD' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
              <span class="text-indigo-400 font-bold">Z</span> zod
           </button>
           <div class="ml-auto px-4 flex items-center group relative cursor-help">
             <span class="text-gray-500 text-sm">❕</span>
-            <div class="absolute right-0 top-full mt-2 w-48 p-2 bg-gray-800 text-xs text-gray-300 rounded shadow-xl hidden group-hover:block z-50">
-              El IDE es Read-Only en esta versión. El código se autogenera según los componentes en el lienzo.
+            <div class="absolute right-0 top-full mt-2 w-56 p-2 bg-gray-800 text-xs text-gray-300 rounded shadow-xl hidden group-hover:block z-50 whitespace-normal">
+              Bidireccionalidad Activa (CA-2): Editar Zod o Template actualizará el lienzo visual con un AST Parser Seguro. Sin eval() (CA-4).
             </div>
           </div>
         </div>
@@ -173,7 +178,7 @@
         <div class="flex-1 relative">
            <VueMonacoEditor 
              v-model:value="computedCode"
-             :language="activeCodeTab === 'TEMPLATE' ? 'html' : 'typescript'"
+             :language="editorLanguage"
              theme="vs-dark"
              :options="monacoOptions"
              @mount="onMonacoMount"
@@ -299,7 +304,7 @@ const showPatternModal = ref(true);
 const canvasFields = ref<FormField[]>([]);
 const activeStageSim = ref('ALL');
 
-const activeCodeTab = ref<'TEMPLATE' | 'SCRIPT' | 'ZOD'>('TEMPLATE');
+const activeCodeTab = ref<'TEMPLATE' | 'SCRIPT' | 'ZOD' | 'STYLE'>('TEMPLATE');
 const editingField = ref<FormField | null>(null);
 
 const showResetModal = ref(false); // Modal de Reset CA-43
@@ -411,76 +416,140 @@ const onMonacoMount = (editorIns: any, monacoIns: any) => {
     `, 'file:///node_modules/@types/vue-zod/index.d.ts');
 };
 
-const monacoOptions = {
-  readOnly: true,
+const editorLanguage = computed(() => {
+  if (activeCodeTab.value === 'TEMPLATE' || activeCodeTab.value === 'STYLE') return 'html';
+  return 'typescript';
+});
+
+const monacoOptions = computed(() => ({
+  readOnly: activeCodeTab.value === 'SCRIPT' || activeCodeTab.value === 'STYLE',
   minimap: { enabled: false },
   wordWrap: 'on',
   fontSize: 13,
   lineHeight: 22,
   scrollBeyondLastLine: false,
   padding: { top: 16 }
-};
+}));
 
-// ── Generators (Auto-sync) ───────────────────────────────────────
-const computedCode = computed(() => {
-  if (activeCodeTab.value === 'TEMPLATE') {
-    let tpl = `<template>\n  <form @submit.prevent="submitTask" class="space-y-6">`;
-    if (canvasFields.value.length === 0) {
-      tpl += `\n    <!-- Arrastra componentes al lienzo -->`;
-    } else {
+// ── Generators & Parsers (Bidireccional AST-Sandbox) ────────────────────────
+const computedCode = computed({
+  get: () => {
+    if (activeCodeTab.value === 'TEMPLATE') {
+      let tpl = `<template>\n  <form @submit.prevent="submitTask" class="space-y-6">`;
+      if (canvasFields.value.length === 0) {
+        tpl += `\n    <!-- Arrastra componentes al lienzo -->`;
+      } else {
+        for (const field of canvasFields.value) {
+          tpl += `\n    `;
+          if (formPattern.value === 'IFORM_MAESTRO') {
+            tpl += `<div v-if="stage === '${field.stage}'" class="field-${field.id.toLowerCase()}">\n      `;
+          } else {
+            tpl += `<div class="field-${field.id.toLowerCase()}">\n      `;
+          }
+          tpl += `<label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}</label>\n      `;
+          
+          if (field.type === 'text' || field.type === 'number') {
+            tpl += `<input type="${field.type}" v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300" />`;
+          } else if (field.type === 'select') {
+             tpl += `<select v-model="formData.${field.camundaVariable || field.id}" class="form-select mt-1 w-full rounded-md border-gray-300">\n        <!-- Options -->\n      </select>`;
+          } else {
+             tpl += `<!-- Custom Component: ${field.type} -->`;
+          }
+          
+          tpl += `\n      <span v-if="errors.${field.camundaVariable || field.id}" class="text-red-500 text-xs">{{ errors.${field.camundaVariable || field.id} }}</span>\n    </div>`;
+        }
+      }
+      tpl += `\n    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded">Enviar</button>\n  </form>\n</template>`;
+      return tpl;
+    } 
+    
+    if (activeCodeTab.value === 'SCRIPT') {
+      let scr = `<script setup lang="ts">\nimport { ref, inject } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\n\n`;
+      if (formPattern.value === 'IFORM_MAESTRO') {
+        scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
+      }
+      
+      scr += `const formData = ref({\n`;
       for (const field of canvasFields.value) {
-        tpl += `\n    `;
-        if (formPattern.value === 'IFORM_MAESTRO') {
-          tpl += `<div v-if="stage === '${field.stage}'" class="field-${field.id.toLowerCase()}">\n      `;
-        } else {
-          tpl += `<div class="field-${field.id.toLowerCase()}">\n      `;
-        }
-        tpl += `<label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}</label>\n      `;
-        
-        // Component logic (simplified)
-        if (field.type === 'text' || field.type === 'number') {
-          tpl += `<input type="${field.type}" v-model="formData.${field.id}" placeholder="${field.placeholder}" class="form-input mt-1 w-full rounded-md border-gray-300" />`;
-        } else if (field.type === 'select') {
-           tpl += `<select v-model="formData.${field.id}" class="form-select mt-1 w-full rounded-md border-gray-300">\n        <!-- Options -->\n      </select>`;
-        } else {
-           tpl += `<!-- Custom Component: ${field.type} -->`;
-        }
-        
-        tpl += `\n      <span v-if="errors.${field.id}" class="text-red-500 text-xs">{{ errors.${field.id} }}</span>\n    </div>`;
+        const def = field.type === 'number' ? 'null' : "''";
+        scr += `  ${field.camundaVariable || field.id}: ${def},\n`;
+      }
+      scr += `});\n\nconst errors = ref<Record<string, string>>({});\n\nconst submitTask = async () => {\n  errors.value = {}; // Reset\n  const result = taskSchema.safeParse(formData.value);\n...`;
+      scr += `\n};\n<\/script>`;
+      return scr;
+    }
+
+    if (activeCodeTab.value === 'STYLE') {
+      return `<style scoped>\n/* Estilos inyectados por el motor Zod O-T-F (CA-5) */\n.form-input {\n  @apply w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500;\n}\n.form-select {\n  @apply w-full rounded-md border-gray-300 shadow-sm;\n}\n</style>`;
+    }
+
+    if (activeCodeTab.value === 'ZOD') {
+      let zc = `import { z } from 'zod';\n\nexport const taskSchema = z.object({\n`;
+      for (const field of canvasFields.value) {
+        let zt = 'string';
+        if(field.type === 'number') zt = 'number';
+        if(field.type === 'file') zt = 'any';
+        zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
+      }
+      zc += `});\n\nexport type TaskSchemaPayload = z.infer<typeof taskSchema>;`;
+      return zc;
+    }
+
+    return '';
+  },
+  set: (newCode: string) => {
+    // CA-4: Parseo seguro usando Regex (AST Ligero in-memory), PROHIBIDO eval() o new Function()
+    if (activeCodeTab.value === 'TEMPLATE') {
+      const inputRegex = /v-model="formData\.([^"]+)"/g;
+      let m;
+      const ids = new Set<string>();
+      while ((m = inputRegex.exec(newCode)) !== null) {
+          ids.add(m[1]);
+      }
+      const currentFields = [...canvasFields.value];
+      const newCanvasFields = [];
+      for (const id of Array.from(ids)) {
+          const exist = currentFields.find(f => f.camundaVariable === id || f.id === id);
+          if (exist) {
+              newCanvasFields.push(exist);
+          } else {
+              newCanvasFields.push({ id: id.toUpperCase(), camundaVariable: id, type: 'text', label: id, required: false, stage: 'START_EVENT' });
+          }
+      }
+      canvasFields.value = newCanvasFields;
+    } 
+    else if (activeCodeTab.value === 'ZOD') {
+      const regex = /^\s*([a-zA-Z0-9_]+):\s*z\.(string|number|any|boolean)\(\)(.*?)(?:\/\/\s*\[([^\]]+)\])?/gm;
+      let match;
+      const newCanvasFields = [];
+      const currentFields = [...canvasFields.value];
+      
+      while ((match = regex.exec(newCode)) !== null) {
+          const varName = match[1];
+          const zType = match[2];
+          const mods = match[3];
+          const stage = match[4] ? match[4].trim() : "START_EVENT";
+
+          const isReq = mods.includes('.min(') || !mods.includes('.optional()');
+          
+          let cType = 'text';
+          if(zType === 'number') cType = 'number';
+          if(zType === 'any') cType = 'file';
+
+          const exist = currentFields.find(f => f.camundaVariable === varName || f.id === varName);
+          newCanvasFields.push({
+             ...(exist || { id: varName.toUpperCase(), label: varName }),
+             camundaVariable: varName,
+             type: exist && exist.type !== cType && exist.type !== 'select' ? cType : (exist ? exist.type : cType),
+             required: isReq,
+             stage: stage 
+          });
+      }
+      if (newCanvasFields.length > 0 || newCode.includes('z.object({')) {
+          canvasFields.value = newCanvasFields;
       }
     }
-    tpl += `\n    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded">Enviar</button>\n  </form>\n</template>`;
-    return tpl;
-  } 
-  
-  if (activeCodeTab.value === 'SCRIPT') {
-    let scr = `<script setup lang="ts">\nimport { ref, inject } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\n\n`;
-    if (formPattern.value === 'IFORM_MAESTRO') {
-      scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
-    }
-    
-    scr += `const formData = ref({\n`;
-    for (const field of canvasFields.value) {
-      const def = field.type === 'number' ? 'null' : "''";
-      scr += `  ${field.id}: ${def},\n`;
-    }
-    scr += `});\n\nconst errors = ref<Record<string, string>>({});\n\nconst submitTask = async () => {\n  errors.value = {}; // Reset\n  const result = taskSchema.safeParse(formData.value);\n  if (!result.success) {\n    result.error.issues.forEach(issue => {\n      errors.value[issue.path[0]] = issue.message;\n    });\n    return;\n  }\n  \n  // Envío a Camunda\n  // await apiClient.post('/tasks/complete', { variables: result.data });\n};\n<\/script>`;
-    return scr;
   }
-
-  if (activeCodeTab.value === 'ZOD') {
-    let zc = `import { z } from 'zod';\n\nexport const taskSchema = z.object({\n`;
-    for (const field of canvasFields.value) {
-      let zt = 'string';
-      if(field.type === 'number') zt = 'number';
-      if(field.type === 'file') zt = 'any';
-      zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
-    }
-    zc += `});\n\nexport type TaskSchemaPayload = z.infer<typeof taskSchema>;`;
-    return zc;
-  }
-
-  return '';
 });
 
 // ── Modals Triggers ──────────────────────────────────────────────

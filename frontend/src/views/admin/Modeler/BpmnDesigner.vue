@@ -47,6 +47,10 @@
         <button @click="showVersions = !showVersions" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
           📜 Versiones
         </button>
+        <!-- Instance Manager CA-8 -->
+        <button @click="showInstancesManager = true" class="bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold hover:bg-indigo-100 flex items-center gap-1 transition">
+          🧬 Gestor de Instancias
+        </button>
         <!-- Deploy / Request Deploy (RBAC CA-12, CA-24) -->
         <button v-if="authStore.hasAnyRole(['BPMN_Release_Manager', 'system_admin'])" 
                 @click="showDeployModal = true" 
@@ -129,6 +133,15 @@
           <div>
             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">ID Técnico</label>
             <input type="text" v-model="processId" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-gray-50 dark:bg-gray-900" placeholder="Auto: credito-de-consumo" />
+          </div>
+
+          <!-- Nomenclatura Instancia CA-5 -->
+          <div class="p-3 bg-fuchsia-50 dark:bg-fuchsia-900/20 border border-fuchsia-200 rounded">
+             <label class="block text-xs font-bold text-fuchsia-800 dark:text-fuchsia-300 mb-1 flex items-center justify-between">
+               🎟 Regla de Nomenclatura (CA-5)
+             </label>
+             <input type="text" v-model="processNomenclature" @change="updateProcessProperty('ReglaNomenclatura', processNomenclature)" class="w-full text-xs border-fuchsia-300 dark:border-fuchsia-600 dark:bg-gray-700 dark:text-white rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 p-2 border" placeholder="Ej: OC-{Solicitante}" />
+             <p class="text-[10px] text-fuchsia-600 dark:text-fuchsia-400 mt-1 leading-tight">Obligatorio. Define la máscara para instanciar tickets. Se inyecta al nodo raíz del XML.</p>
           </div>
 
           <!-- SLA Global -->
@@ -486,6 +499,14 @@
       </div>
     </div>
 
+    <!-- ═══════ Gestor de Instancias (CA-8 a CA-10) ═══════ -->
+    <InstancesManager 
+      :show="showInstancesManager"
+      :processId="processId"
+      @close="showInstancesManager = false"
+      @success="msg => showToast('✅ ' + msg, 'success')"
+    />
+
   </div>
 </template>
 
@@ -495,6 +516,7 @@ import { api } from '@/services/apiClient';
 import { useAuthStore } from '@/stores/authStore';
 import { debounce } from 'lodash-es';
 import AppTooltip from '@/components/common/AppTooltip.vue';
+import InstancesManager from './InstancesManager.vue';
 
 const authStore = useAuthStore();
 
@@ -580,6 +602,9 @@ const showNewProcessModal = ref(false);
 const newProcessName = ref('');
 const newProcessPattern = ref<'SIMPLE' | 'IFORM_MAESTRO'>('SIMPLE');
 const newProcessOrigin = ref<'SCRATCH' | 'TEMPLATE'>('SCRATCH');
+
+// ── Instance Manager ─────────────────────────────────────────
+const showInstancesManager = ref(false);
 
 // ── Templates (CA-18) ─────────────────────────────────────────
 const templatesList = ref<any[]>([]);
@@ -942,6 +967,7 @@ const confirmDeploy = async () => {
   isDeploying.value = true;
   validationErrors.value = [];
   try {
+    let deployResponse: any;
     if (modelerInstance) {
       const { xml } = await modelerInstance.saveXML({ format: true });
       console.log('[Deploy] Sending XML to /api/v1/design/processes/deploy', { strategy: deployStrategy.value });
@@ -953,8 +979,14 @@ const confirmDeploy = async () => {
       const xmlBlob = new Blob([xml!], { type: 'application/xml' });
       formData.append('file', xmlBlob, `${processId.value}.bpmn`);
 
-      await api.deployProcess(formData);
+      deployResponse = await api.deployProcess(formData);
     }
+    
+    // CA-6: Autogeneración de Roles Feedback
+    if (deployResponse?.data?.generatedRoles && deployResponse.data.generatedRoles.length > 0) {
+       alert(`Proceso desplegado con Éxito.\\n\\nSe han auto-generado los siguientes perfiles de seguridad:\\n➡ ${deployResponse.data.generatedRoles.join('\\n➡ ')}\\n\\nPuedes asignar estos roles en el CND.`);
+    }
+    
     showToast(`✅ Proceso "${currentProcessName.value}" desplegado exitosamente`);
     processStatus.value = 'ACTIVO';
     showDeployModal.value = false;
@@ -1098,6 +1130,42 @@ const updateElementSla = () => {
     // Actualizamos el dueDate del Business Object Nativo
     modeling.updateProperties(shape, { "camunda:dueDate": selectedElement.value.props.sla });
   }
+};
+
+const processNomenclature = ref(''); // CA-5
+
+const updateProcessProperty = (name: string, value: string) => {
+  if (!modelerInstance) return;
+  const modeling = modelerInstance.get('modeling');
+  const bpmnFactory = modelerInstance.get('bpmnFactory');
+  const canvas = modelerInstance.get('canvas');
+  const rootElement = canvas.getRootElement();
+  const bo = rootElement.businessObject;
+
+  let extensionElements = bo.get('extensionElements');
+  if (!extensionElements) {
+    extensionElements = bpmnFactory.create('bpmn:ExtensionElements', { values: [] });
+    modeling.updateProperties(rootElement, { extensionElements });
+  }
+
+  let camundaProperties = extensionElements.values?.find((e: any) => e.$type === 'camunda:Properties');
+  if (!camundaProperties) {
+    camundaProperties = bpmnFactory.create('camunda:Properties', { values: [] });
+    // CA-5: Adherimos las Propiedades de extensiones Root
+    extensionElements.get('values').push(camundaProperties);
+    modeling.updateProperties(rootElement, { extensionElements });
+  }
+
+  // CA-5: Reemplazar o insertar la prop de Nomenclatura Instancia
+  const existingProp = camundaProperties.values?.find((p: any) => p.name === name);
+  if (existingProp) {
+    existingProp.value = value;
+  } else {
+    const newProp = bpmnFactory.create('camunda:Property', { name, value });
+    camundaProperties.get('values').push(newProp);
+  }
+  // Forzar actualización al canvas undo/redo stack
+  modeling.updateProperties(rootElement, { extensionElements });
 };
 
 const openCallActivity = () => {

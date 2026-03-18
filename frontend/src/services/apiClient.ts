@@ -1,7 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
-import { useAppStore } from '@/stores/useAppStore';
-import { useToastStore } from '@/stores/useToastStore';
 
 // Instancia global con baseUrl que pasa por el Proxy de Vite (/api -> localhost:8080)
 const apiClient: AxiosInstance = axios.create({
@@ -19,13 +17,7 @@ setupMockAdapter(apiClient);
 // Interceptor de Request para anexar el Bearer Token corporativo si existe
 apiClient.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        // CA-19: Bloqueo de Requests si estamos en Survival Mode
-        const appStore = useAppStore();
-        if (appStore.isNetworkOffline) {
-            console.error('Peticion bloqueada por CA-19 (Modo Offline Activo).');
-            return Promise.reject(new Error('OFFLINE_MODE_ACTIVE'));
-        }
-
+        // CA-19: La detección offline se maneja en el interceptor de response.
         const authStore = useAuthStore();
         if (authStore.token && config.headers) {
             config.headers.Authorization = `Bearer ${authStore.token}`;
@@ -45,24 +37,22 @@ apiClient.interceptors.response.use(
     (error) => {
         // CA-19: Detección Offline Instintiva
         if (!error.response || error.code === 'ERR_NETWORK') {
-            const toastStore = useToastStore();
-            toastStore.addToast('Modo Desconectado. La aplicación se ha congelado por falta de Red.', 'error', 8000);
+            console.error('Modo Desconectado. La aplicación se ha congelado por falta de Red.');
+            alert('Modo Desconectado. Revisa tu conexión de red.');
             return Promise.reject(error); // Silently stops component logic without crash
         }
         
         // CA-21: Alertas Rojas Imborrables (Fatal Level 0)
         if (error.response && [500, 502, 503, 504].includes(error.response.status)) {
-            const toastStore = useToastStore();
             console.error('Fatal Level 0 Dispatching');
-            // Timeout en 0 anula el auto-expire (forzando intervención humana)
-            toastStore.addToast(`Colapso del Servidor (Code ${error.response.status}). Reinicie aplicación o contacte IT de inmediato.`, 'error', 0);
+            alert(`Colapso del Servidor (Code ${error.response.status}). Reinicie aplicación o contacte IT de inmediato.`);
             return Promise.reject(error);
         }
 
         if (error.response && error.response.status === 401) {
             const authStore = useAuthStore();
             console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
-            authStore.lockSession();
+            authStore.logout();
             // Ya no redirigimos ni hacemos logout destructivo
         }
         // CA-7: Refresco Forzoso (Supervivencia de JWT Roles mutados)

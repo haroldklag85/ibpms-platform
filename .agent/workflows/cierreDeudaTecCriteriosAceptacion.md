@@ -1,32 +1,36 @@
 ---
-description: Genera la estrategia de delegación, prompts y coordinación para los agentes de Backend, Frontend y QA al abordar una Historia de Usuario, respetando obligatoriamente las políticas de Zero-Trust Git y Patrón Gatekeeper.
+description: Operación "Enjambre Autónomo". El agente ejecuta de forma secuencial y continua los roles de Backend, Frontend y QA para resolver Criterios de Aceptación, aplicando estricto Patrón Gatekeeper.
 ---
 
-Actúas como un Lead Architect y Orquestador de Agentes dentro del ProyectoAntigravity (ibpms-platform).
+Actúas como un Enjambre de IA Autónomo dentro del ProyectoAntigravity (ibpms-platform).
 
 **Contexto de la solicitud:**
-El usuario te ha pedido coordinar el trabajo para una Historia de Usuario (US) y Criterios de Aceptación (CA) específicos. Lee atentamente su solicitud inicial para saber qué US y CA exactos debes procesar.
+El usuario te ha pedido resolver una Historia de Usuario (US) y Criterios de Aceptación (CA) específicos. Lee atentamente su solicitud inicial y extrae los detalles desde la Única Fuente de Verdad (`docs/requirements/v1_user_stories.md`).
 
-**Tus Instrucciones a seguir obligatoriamente:**
+**Tus Instrucciones (REGLA DE ORO):**
+**TIENES PROHIBIDO pedirle al usuario que copie y pegue prompts.** Tú eres todos los Agentes. Debes asumir los roles uno tras otro en este mismo chat, programar la solución e integrarla de forma autónoma, deteniéndote únicamente para que el humano (Arquitecto Líder) valide tus entregas.
 
-1. **Recuerda la política de comunicación y Código de Conducta .cursorrules:**
-   * El Backend provee las APIs (Arquitectura Hexagonal en Java/Spring Boot).
-   * El Frontend consume las APIs (Vue.js/TypeScript).
-   * QA verifica la integración E2E.
-   * **REGLA DE ORO (Patrón Gatekeeper):** Ningún agente especialista (Frontend/Backend) tiene permiso para confirmar código permanentemente (`git commit`). Siempre terminan su turno almacenando temporalmente con `git stash save`. Solo tú (Lead Architect) puedes aprobar el código tras una revisión de deltas (`git stash pop`).
+Ejecuta el siguiente ciclo ininterrumpido:
 
-2. **Genera los prompts maestros (Entregable 1):**
-   * Escribe los prompts e instrucciones exactas (listas para copiar y pegar) que el usuario deberá entregarle a cada agente especialista.
-   * **OBLIGATORIO:** Inyecta en el prompt de cada desarrollador (Backend o Frontend) la orden final estricta de **no hacer commits**, y de usar la terminal para empaquetar su trabajo con `git stash save "temp-[rol]-US[X]"` y avisar al Lead Architect.
+### Paso 1: Asumir Rol Backend (Java/Spring Boot)
+1. Analiza los Criterios de Aceptación y programa los endpoints, DTOs y servicios necesarios respetando la Arquitectura Hexagonal.
+2. Escribe pruebas unitarias (JUnit/Mockito) si aplica.
+3. **MANDATO LOCAL (Gatekeeper):** Tienes estrictamente prohibido hacer `git commit`. Cuando termines tu código Backend, abre una terminal y ejecuta obligatoriamente: `git stash save "temp-backend-US[X]"`.
 
-3. **Define la Secuencia de Ejecución (Entregable 2):**
-   * Indica claramente el orden de trabajo iterativo.
-   * Especifica las dependencias (Ej. "Frontend no puede empezar sin el endpoint Backend").
-   * **OBLIGATORIO:** En la secuencia, después de que cada especialista termine, debe aparecer explícitamente el "Paso de Auditoría" donde el Lead Architect asume el control, hace `git stash pop`, revisa que no haya Mocks de respuesta estática y consolida o rechaza (`git reset --hard`) el código.
+### Paso 2: Pausa de Auditoría Backend (Intervención Humana)
+* Detén tu ejecución temporalmente y anúnciale al usuario:
+  > 🛑 **ALTO: Fase Backend Terminada y Empaquetada.**
+  > Arquitecto Líder, he guardado el código en el Stash (`temp-backend-US...`). Por favor, ejecuta `git stash pop`, revisa el código para confirmar que no hay basura o quiebres de arquitectura, y haz el commit definitivo. Confírmame cuando esté listo para que yo pueda proceder con el Frontend.
 
-4. **Define la Intervención Humana (Entregable 3):**
-   * En caso de que se requiera una intervención directa del usuario como "Project Manager", redacta el texto listo para copiar y pegar, indicando a qué agente debe enviarse y en qué momento preciso.
-   * Redacta el comando exacto para que el humano te invoque a ti (el Arquitecto) para ejecutar la auditoría posterior al *stash* de los agentes.
+### Paso 3: Asumir Rol Frontend (Vue 3/TypeScript)
+1. Una vez el Arquitecto Humano apruebe el Backend, asume el rol Frontend.
+2. Consume el API real recién creado (CERO MOCKS PERMITIDOS). Desarrolla las vistas, stores de Pinia y componentes necesarios.
+3. **MANDATO LOCAL (Gatekeeper):** Nuevamente, cero commits. Al terminar, abre la consola y ejecuta: `git stash save "temp-frontend-US[X]"`.
+
+### Paso 4: Pausa de Auditoría Frontend y QA Final
+* Anuncia de nuevo al usuario:
+  > 🛑 **ALTO: Fase Frontend Terminada y Empaquetada.**
+  > Arquitecto Líder, por favor haz `git stash pop` del Frontend, verifica la reactividad y haz el commit final. Si todo está correcto, invoca el comando `/pruebasUatVisibles` o `/pruebasUatVisiblesAutomatizadas` pasándole esta Historia de Usuario para validar todo el flujo en el navegador.
 
 **Objetivo Final:**
-Tu respuesta debe dejar la coordinación completamente clara, ordenada y blindada bajo las políticas del enjambre (.cursorrules). Usa formato Markdown, bloques de código para los "textos a copiar" y listas ordenadas para la secuencia.
+Ejecutar el desarrollo multicapa de forma continua y directa, programando el código y almacenándolo en stashes para la revisión del arquitecto humano. No hables, programa.

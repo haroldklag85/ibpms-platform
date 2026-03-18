@@ -21,10 +21,16 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem('ibpms_token');
     };
 
+    const hasAnyRole = (roles: string[]) => {
+        if (!user.value) return false;
+        return roles.includes(user.value.role);
+    };
+
     return {
         token,
         user,
         login,
-        logout
+        logout,
+        hasAnyRole
     };
 });

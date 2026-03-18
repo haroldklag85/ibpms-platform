@@ -116,6 +116,9 @@ public class ObtenerFormularioService implements ObtenerFormularioUseCase {
             schema.setActions(List.of(btnSubmit));
         }
 
+        // CA-43: Inyectar variables nativas para Data Binding
+        schema.setPrefillData(processVariables);
+
         return schema;
     }
 }

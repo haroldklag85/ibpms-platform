@@ -1,6 +1,7 @@
 package com.ibpms.poc.application.dto;
 
 import java.util.List;
+import java.util.Map;
 
 public class FormSchemaDTO {
     private String formId;
@@ -9,6 +10,7 @@ public class FormSchemaDTO {
     private String layout;
     private List<FormComponentDTO> components;
     private List<FormActionDTO> actions;
+    private Map<String, Object> prefillData; // CA-43 Data Binding
 
     // Getters y Setters
     public String getFormId() {
@@ -57,5 +59,13 @@ public class FormSchemaDTO {
 
     public void setActions(List<FormActionDTO> actions) {
         this.actions = actions;
+    }
+
+    public Map<String, Object> getPrefillData() {
+        return prefillData;
+    }
+
+    public void setPrefillData(Map<String, Object> prefillData) {
+        this.prefillData = prefillData;
     }
 }

@@ -867,13 +867,54 @@ Feature: BPMN Process Deployment
     And el sistema debe asociar automáticamente a este Rol los permisos de escritura sobre "Form_Firma" y ejecución sobre la tarea "Firmar_Contrato"
     And el Rol autogenerado queda disponible en el Módulo de Seguridad (Pantalla 14) para asignarle usuarios.
 
-  Scenario: Migración Dual de Instancias En Vuelo (CA-5)
-    Given el Arquitecto despliega la versión 3 de "Aprobacion_Credito.bpmn"
-    And existen 15 instancias activas ("En Vuelo") ejecutándose con la versión 2
-    Then el sistema debe ofrecer dos opciones mutuamente excluyentes al Arquitecto:
-    And Opción A: "Mantener instancias actuales en v2" (coexistencia pacífica, las nuevas instancias usan v3)
-    And Opción B: "Forzar migración de las 15 instancias activas a v3" (el motor reapunta los tokens BPMN)
-    And en ambos casos, el sistema registra un Audit Log con la decisión tomada.
+  Scenario: Ley del Abuelo o Grandfathering Estricto por Defecto (CA-5.1)
+    Given existen 15 instancias activas ("En Vuelo") ejecutándose con la Versión 1 de un proceso
+    When el Arquitecto presiona `[🚀 DESPLEGAR V2]`
+    Then el sistema asume 100% coexistencia pacífica por defecto
+    And la V1 sigue viva en background procesando a las instancias antiguas hasta su conclusión
+    And la migración forzada JAMÁS es el comportamiento predeterminado, requiriendo un acto explícito y manual.
+
+  Scenario: Cirugía Quirúrgica de Instancias (No Guillotina) (CA-5.2)
+    Given el Arquitecto requiere forzar la migración de instancias de V1 a V2
+    When accede al panel `[Gestor de Instancias Activas]`
+    Then el sistema TIENE PROHIBIDO ofrecer un botón de "Migrar Todos" de forma masiva ciega
+    And debe desplegar una lista con checkboxes individuales permitiendo al Arquitecto seleccionar con pinzas cuáles instancias específicas someterá al salto de versión.
+
+  Scenario: Bloqueo Topológico Duro Pre-Migración (CA-5.3)
+    Given el Arquitecto intenta migrar la Instancia #45 (V1) hacia la V2
+    And la Instancia #45 se encuentra actualmente pausada en el nodo `Tarea_Analisis`
+    When el motor evalúa el Plan de Migración (Migration Plan)
+    Then si el nodo `Tarea_Analisis` fue eliminado o no existe en la topología de la V2, el checkbox de selección se deshabilita
+    And el sistema bloquea la migración arrojando: "Imposible migrar la Instancia #45. El nodo actual no existe en la Versión 2. Esta instancia debe terminar en V1 o ser anulada."
+
+  Scenario: Prohibición Absoluta de Data-Patching Humano en TI (CA-5.4)
+    Given la migración forzada hacia una V2 que exige un nuevo campo Zod "Obligatorio" (Ej: `Cédula`) que no existía en la V1
+    Then el sistema TIENE ESTRICTAMENTE PROHIBIDO levantar un modal para que el usuario de TI (Systems Admin/Arquitecto) digite o invente ese dato faltante
+    And garantizando así la Segregación de Funciones (SoD) y evitando la falsedad ideológica en la base de datos documental.
+
+  Scenario: Amnistía Técnica y Cobro en Aduana (Lazy Validation) (CA-5.5)
+    Given la migración del escenario anterior (CA-5.4) donde falta el dato obligatorio `Cédula`
+    When el motor ejecuta el salto técnico a la V2
+    Then inyecta silenciosamente un valor nulo (`null`) en la base de datos para no colapsar el hilo de ejecución (Amnistía Técnica)
+    And cuando el operario de negocio abra esa instancia en su Workdesk (Pantalla 2), el Frontend renderizará el formulario Zod V2, detectará el `null` imperdonable, pintará el campo en ROJO y bloqueará físicamente el avance funcional hasta que el dueño del proceso pregunte y digite la `Cédula` real (Lazy Validation).
+
+  Scenario: Principio de Ley Vigente para Reglas de Decisión DMN (Late Binding) (CA-5.6)
+    Given un proceso V1 con tokens en vuelo que se aproxima a una Business Rule Task (DMN)
+    When el Director de Riesgos actualiza y publica una nueva versión de la tabla DMN
+    Then los tokens de la V1 (junto con los de las nuevas versiones) que pisen la compuerta un milisegundo después de la publicación, serán evaluados con la nueva regla matemática
+    And demostrando que las reglas DMN no tienen nostalgia y aplican Late Binding.
+
+  Scenario: Tablero de Resiliencia y Morgue de Tokens (CA-5.7)
+    Given un error técnico no controlado durante una migración asíncrona (Ej: Caída de red o base de datos)
+    Then el operario de negocio JAMÁS verá un stacktrace o error técnico en su Workdesk
+    And el token roto pasará a estado `INCIDENT` y será canalizado exclusivamente a la Pantalla 15.A (SysAdmin) en la pestaña `[🚨 Centro de Incidentes]`
+    And otorgando a Soporte Nivel 3 los botones tácticos: `[🔄 Retry (Electrochoque)]` o `[💀 Abortar Caso]`.
+
+  Scenario: Cicatriz Forense de Auditoría Inmutable (CA-5.8)
+    Given la culminación o visualización de una instancia que sufrió una migración forzada estructural
+    When un Auditor o Usuario consulta la Vista 360 del Caso (Pantalla 17) o el historial del Workdesk
+    Then el sistema inyecta obligatoriamente una franja visual inamovible: `[⚠️ MIGRACIÓN ESTRUCTURAL: Este caso inició bajo la Versión X y fue promovido forzosamente a la Versión Y el DD/MM/YYYY por el Administrador Z]`
+    And blindando legalmente a la compañía ante demandas por vacíos procedimentales.
 
   Scenario: Rollback a Versión Anterior con Historial (CA-6)
     Given el Arquitecto detecta que la versión 3 de un proceso tiene un error lógico post-despliegue

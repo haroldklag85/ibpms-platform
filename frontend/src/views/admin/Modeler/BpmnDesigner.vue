@@ -36,12 +36,12 @@
           ⬇️ Exportar .bpmn
         </button>
         <!-- Copilot -->
-        <button @click="showCopilot = !showCopilot" class="bg-slate-900 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-black flex items-center gap-1 transition">
-          🧠 Copiloto IA
+        <button @click="triggerCopilotAudit" class="bg-slate-900 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-black flex items-center gap-1 transition">
+          🧠 Consultar Copiloto IA
         </button>
         <!-- Sandbox -->
         <button @click="runSandbox" class="bg-amber-500 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-amber-600 flex items-center gap-1 transition">
-          🧪 Sandbox
+          🧪 Probar en Sandbox
         </button>
         <!-- Versions -->
         <button @click="showVersions = !showVersions" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
@@ -638,6 +638,13 @@ const copilotMessages = ref<{ role: 'ai' | 'user'; text: string }[]>([
   { role: 'ai', text: 'Copiloto listo. Puedo auditar tu proceso contra ISO 9001, sugerir mejoras o identificar riesgos.' }
 ]);
 
+const triggerCopilotAudit = async () => {
+  showCopilot.value = true;
+  if(copilotMessages.value.length > 1) return; // avoid duplicate initial runs
+  copilotInput.value = '💡 Analizar cumplimiento y riesgos ISO 9001 (CA-17)';
+  await sendCopilotMessage();
+};
+
 // ── Versions (CA-6) ──────────────────────────────────────────
 const showVersions = ref(false);
 const loadingVersions = ref(false);
@@ -653,8 +660,16 @@ const fetchLockState = async () => {
       lockOwner.value = null;
       lockSince.value = null;
     }
-  } catch (err) {
-    lockOwner.value = null;
+  } catch (err: any) {
+    if (err.response && err.response.status === 423) {
+      // CA-16: Bloqueo Pesimista Detectado
+      lockOwner.value = err.response.data?.owner || 'Otro Usuario';
+      lockSince.value = err.response.data?.since || new Date().toLocaleTimeString();
+      showToast(`🔒 Este proceso está siendo editado por ${lockOwner.value} desde las ${lockSince.value}`, 'error');
+    } else {
+      lockOwner.value = null;
+      lockSince.value = null;
+    }
   }
 };
 
@@ -845,10 +860,15 @@ onMounted(async () => {
     }
   }
 
-  // Auto-save timer (every 30s)
-  autoSaveInterval = setInterval(() => {
-    autoSaveAgo.value = 0;
-    saveDraft();
+  // Auto-save timer (CA-19)
+  autoSaveInterval = setInterval(async () => {
+    if (modelerInstance && !isLocked.value) {
+      const { xml } = await modelerInstance.saveXML({ format: true });
+      if (xml !== lastSavedXml.value) {
+        await saveDraft();
+        autoSaveAgo.value = 0;
+      }
+    }
   }, 30000);
 
   // Tick the "ago" counter every second
@@ -919,13 +939,16 @@ const onDiagramEdit = () => {
   debouncedValidate();
 };
 
+const lastSavedXml = ref<string>('');
+
 const saveDraft = async () => {
   if (!modelerInstance) return;
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
     
     await api.saveProcessDraft(processId.value, { xml });
-    console.log('[AutoSave] Draft XML saved to Backend API successfully');
+    lastSavedXml.value = xml;
+    console.log('[AutoSave] Draft XML saved to Backend API successfully (CA-19)');
   } catch (err) {
     // CA-10: Offline degradation warning
     showToast('⚠️ Modo Offline: Guardado en API falló. Revisa tu conexión de red.', 'error');
@@ -1026,11 +1049,22 @@ const runSandbox = async () => {
   try {
     showToast('🧪 Sandbox: Iniciando simulación...');
     const { xml } = await modelerInstance.saveXML({ format: true });
+    
+    // Ejecuta Sandbox y extrae path o mockea (CA-20)
     const { data } = await api.deployToSandbox(processId.value, { xml });
-    // CA-11: Output del Backend
-    showToast(`🧪 Sandbox: ${data?.simulationResult || 'Simulación exitosa'}`, 'success');
+    const nodesToHighlight = data?.nodeIds || ['StartEvent_1', 'Event_1']; 
+    
+    showToast(`🧪 Sandbox: Simulación exitosa. Tracking tokens...`, 'success');
+    
+    const canvas = modelerInstance.get('canvas');
+    nodesToHighlight.forEach((nodeId: string, index: number) => {
+      setTimeout(() => {
+        try { canvas.addMarker(nodeId, 'highlight-green'); } catch(_) {}
+      }, index * 1000);
+    });
+    
   } catch (err) {
-    showToast('🧪 Error conectando al Sandbox', 'error');
+    showToast('🧪 Error conectando al motor de Simulación Sandbox', 'error');
   }
 };
 

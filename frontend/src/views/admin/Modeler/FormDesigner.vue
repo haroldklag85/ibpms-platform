@@ -644,6 +644,8 @@ const toolboxCategories = [
     items: [
       { icon: 'Ab', label: 'Input Text', desc: 'Validación Regex', type: 'text', placeholder: 'Ej: Juan Pérez', required: true, zodType: 'string', camundaVariable: '' },
       { icon: '🔑', label: 'Password', desc: 'Dato Sensible (CA-53)', type: 'password', placeholder: 'Ingrese contraseña', required: true, zodType: 'string', camundaVariable: '' },
+      { icon: '📧', label: 'Email', desc: 'Validación Zod .email()', type: 'email', placeholder: 'correo@ejemplo.com', required: true, zodType: 'string', camundaVariable: '' },
+      { icon: '🔗', label: 'URL', desc: 'Validación Zod .url()', type: 'url', placeholder: 'https://ejemplo.com', required: false, zodType: 'string', camundaVariable: '' },
       { icon: '📝', label: 'Long Text', desc: 'Textarea (2+ filas)', type: 'textarea', placeholder: 'Comentarios...', required: false, zodType: 'string', camundaVariable: '' },
     ]
   },
@@ -669,6 +671,8 @@ const toolboxCategories = [
     items: [
       { icon: '📎', label: 'File Upload', desc: 'SGDEA Vault Embed', type: 'file', placeholder: 'Arrastra PDF aquí', required: false, zodType: 'any', camundaVariable: '' },
       { icon: '✍️', label: 'Firma Digital', desc: 'Canvas HTML5 (CA-31)', type: 'signature', placeholder: 'Dibuja tu firma', required: true, zodType: 'string', camundaVariable: '' },
+      { icon: '📌', label: 'GPS Geolocation', desc: 'Coordenadas HTML5 (CA-61)', type: 'gps', placeholder: 'Ubicación...', required: true, zodType: 'string', camundaVariable: '' },
+      { icon: '📷', label: 'Scan QR', desc: 'WebRTC Dummy (CA-62)', type: 'qr', placeholder: 'Código QR...', required: true, zodType: 'string', camundaVariable: '' },
     ]
   },
   {
@@ -888,12 +892,20 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
     const finalDsbObj = field.disableCondition ? `(${dsbObj}) || (${field.disableCondition})` : dsbObj; // CA-57
     const dsb = parentBinding === 'row' ? ` :disabled="${finalDsbObj} || row._locked"` : ` :disabled="${finalDsbObj}"`; // CA-51 Grid Locked Rows
     
-    if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time' || field.type === 'password') { // CA-53
+    if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time' || field.type === 'password' || field.type === 'email' || field.type === 'url') { // CA-53, CA-63
       if (field.mask) {
          // CA-36: Proxy Value/Event Masking
          tpl += `${indent}  <input type="${field.type === 'password' ? 'password' : 'text'}" :value="formatMask(${vModelBase}, '${field.mask}')" @input="(e) => ${vModelBase} = unmask(e.target.value, '${field.type}')" placeholder="${field.placeholder || field.mask}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm font-mono"${dsb} />\n`;
       } else {
-         tpl += `${indent}  <input type="${field.type}" v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+         const nativeType = (field.type === 'email' || field.type === 'url' || field.type === 'password') ? field.type : field.type;
+         tpl += `${indent}  <input type="${nativeType}" v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+      }
+      if (field.type === 'password') {
+         // CA-64 Hints Multi-Estado
+         tpl += `${indent}  <div class="mt-1 text-xs px-1 space-y-1 font-mono font-medium" v-if="${vModelBase}">\n`;
+         tpl += `${indent}    <p :class="${vModelBase}.length >= 8 ? 'text-green-600' : 'text-gray-500'">Mínimo 8 caracteres {{${vModelBase}.length >= 8 ? '✅' : '❌'}}</p>\n`;
+         tpl += `${indent}    <p :class="/[A-Z]/.test(${vModelBase}) ? 'text-green-600' : 'text-gray-500'">1 Mayúscula {{/[A-Z]/.test(${vModelBase}) ? '✅' : '❌'}}</p>\n`;
+         tpl += `${indent}  </div>\n`;
       }
     } else if (field.type === 'textarea') {
       tpl += `${indent}  <textarea v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" rows="3"${dsb}></textarea>\n`;
@@ -936,7 +948,17 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
        const minFs = field.minFiles || 0;
        const maxFs = field.maxFiles || 1;
        const multAttr = maxFs > 1 ? ' multiple' : '';
-       tpl += `${indent}  <input type="file" @change="(e) => uploadFile(e, '${field.camundaVariable || field.id}', ${uTarget}, ${maxMb}, '${exts}', ${minFs}, ${maxFs})" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mt-1 cursor-pointer no-print"${dsb}${multAttr} />\n`;
+       
+       // CA-60 Dropzone wrapper
+       tpl += `${indent}  <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition text-center cursor-pointer relative" @dragover.prevent @drop.prevent="(e) => dropFile(e, '${field.camundaVariable || field.id}', ${uTarget}, ${maxMb}, '${exts}', ${minFs}, ${maxFs})">\n`;
+       tpl += `${indent}     <span class="text-3xl mb-2 block">📥</span>\n`;
+       tpl += `${indent}     <p class="text-sm font-bold text-gray-700">Arrastre archivos aquí (CA-60)</p>\n`;
+       tpl += `${indent}     <p class="text-xs text-gray-500 mt-1 mb-3">o haga clic para seleccionar desde el navegador.</p>\n`;
+       tpl += `${indent}     <input type="file" @change="(e) => uploadFile(e, '${field.camundaVariable || field.id}', ${uTarget}, ${maxMb}, '${exts}', ${minFs}, ${maxFs})" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer no-print"${dsb}${multAttr} />\n`;
+       tpl += `${indent}     <div v-if="${vModelBase}" class="mt-2 text-xs text-indigo-700 bg-indigo-50 py-1 px-2 rounded font-bold break-all border border-indigo-200">\n`;
+       tpl += `${indent}       Archivo(s): {{ Array.isArray(${vModelBase}) ? ${vModelBase}.join(', ') : ${vModelBase} }}\n`;
+       tpl += `${indent}     </div>\n`;
+       tpl += `${indent}  </div>\n`;
     } else if (field.type === 'signature') {
        const oTarget = parentBinding === 'formData' ? 'formData.value' : parentBinding;
        tpl += `${indent}  <div class="border rounded bg-white p-2 mt-1">\n`;
@@ -958,6 +980,18 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
           tpl += `${indent}    <span class="animate-pulse">⏱️</span> Cronómetro en segundo plano... ({{ ${vModelBase} || 0 }}s)\n`;
           tpl += `${indent}  </div>\n`;
        }
+    } else if (field.type === 'gps') {
+       const uTarget = parentBinding === 'formData' ? 'formData.value' : parentBinding;
+       tpl += `${indent}  <div class="flex gap-2 mt-1">\n`;
+       tpl += `${indent}    <input type="text" v-model="${vModelBase}" readonly placeholder="Coordenadas GPS (Lat, Lng)" class="form-input flex-1 rounded-md border-gray-300 shadow-sm bg-gray-100 italic"${dsb} />\n`;
+       tpl += `${indent}    <button type="button" @click="captureGPS('${field.camundaVariable || field.id}', ${uTarget})" class="bg-indigo-600 text-white px-4 py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex gap-1 items-center whitespace-nowrap"${dsb}>📌 Capturar GPS</button>\n`;
+       tpl += `${indent}  </div>\n`;
+    } else if (field.type === 'qr') {
+       const uTarget = parentBinding === 'formData' ? 'formData.value' : parentBinding;
+       tpl += `${indent}  <div class="flex gap-2 mt-1">\n`;
+       tpl += `${indent}    <input type="text" v-model="${vModelBase}" placeholder="Valor escaneado (CA-62)" class="form-input flex-1 rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+       tpl += `${indent}    <button type="button" @click="scanQR('${field.camundaVariable || field.id}', ${uTarget})" class="bg-teal-600 text-white px-4 py-2 rounded shadow font-bold hover:bg-teal-700 transition flex gap-1 items-center whitespace-nowrap"${dsb}>📷 Escanear QR</button>\n`;
+       tpl += `${indent}  </div>\n`;
     } else if (field.type === 'hidden') {
        // CA-47: Componente Oculto Silencioso
        tpl += `${indent}  <input type="hidden" v-model="${vModelBase}" id="${field.camundaVariable || field.id}" />\n`;
@@ -1063,6 +1097,8 @@ const computedCode = computed({
       const hasDraft = flatFields(canvasFields.value).some(f => f.type === 'button_draft');
       const hasReject = flatFields(canvasFields.value).some(f => f.type === 'button_reject');
       const hasFile = flatFields(canvasFields.value).some(f => f.type === 'file');
+      const hasGPS = flatFields(canvasFields.value).some(f => f.type === 'gps'); // CA-61
+      const hasQR = flatFields(canvasFields.value).some(f => f.type === 'qr'); // CA-62
       const hasSignature = flatFields(canvasFields.value).some(f => f.type === 'signature');
       const hasMask = flatFields(canvasFields.value).some(f => f.mask);
 
@@ -1086,7 +1122,17 @@ const computedCode = computed({
 
       if (hasFile) {
          scr += `// CA-21, CA-39, CA-49: Conector Multipart File Upload + Constraints\nconst uploadFile = async (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const target = event.target;\n  const files = target?.files;\n  if (!files || files.length === 0) return;\n  if (files.length < minFiles) { alert('Mínimo ' + minFiles + ' archivo(s) requeridos.'); target.value = ''; return; }\n  if (files.length > maxFiles) { alert('Máximo ' + maxFiles + ' archivo(s) permitidos.'); target.value = ''; return; }\n  let urls: string[] = [];\n  for (let i = 0; i < files.length; i++) {\n     const file = files[i];\n     if (maxMb > 0 && file.size > maxMb * 1024 * 1024) { alert('El archivo \\'' + file.name + '\\' excede el límite de ' + maxMb + 'MB.'); target.value = ''; return; }\n     if (exts) { const ext = '.' + file.name.split('.').pop()?.toLowerCase(); if (!exts.toLowerCase().includes(ext)) { alert('Extensión ' + ext + ' no permitida. Solo: ' + exts); target.value = ''; return; } }\n     const data = new FormData();\n     data.append('file', file);\n     try {\n       const res = await apiClient.post('/api/v1/forms/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });\n       urls.push(res.data.url || 'subido_exitosamente_' + i);\n     } catch (error) {\n       alert('Error subiendo \\'' + file.name + '\\': ' + (error as any).message);\n       return;\n     }\n  }\n  targetObj[fieldId] = urls.length > 1 ? JSON.stringify(urls) : urls[0];\n  alert('Archivo(s) subido(s) exitosamente');\n};\n\n`;
+         scr += `// CA-60: Manejador Drag & Drop Dropzone\nconst dropFile = (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const dt = event.dataTransfer;\n  if (dt && dt.files && dt.files.length > 0) {\n     uploadFile({ target: { files: dt.files } }, fieldId, targetObj, maxMb, exts, minFiles, maxFiles);\n  }\n};\n\n`;
       }
+
+      if (hasGPS) {
+         scr += `// CA-61: Embebido HTML5 GPS Geolocation\nconst captureGPS = (fieldId: string, targetObj: any) => {\n  if (!navigator.geolocation) { alert('Geolocalización no soportada en este navegador.'); return; }\n  navigator.geolocation.getCurrentPosition(\n    (pos) => { targetObj[fieldId] = \`Lat: \${pos.coords.latitude}, Lng: \${pos.coords.longitude}\`; },\n    (err) => { alert('Error obteniendo ubicación: ' + err.message); },\n    { enableHighAccuracy: true }\n  );\n};\n\n`;
+      }
+
+      if (hasQR) {
+         scr += `// CA-62: WebRTC QR Scanner Mock/Dummy\nconst scanQR = (fieldId: string, targetObj: any) => {\n  // Para paso a producción requeriría importar librería de escaneo webRTC\n  const val = prompt('📸 [Simulador QR] Ingrese el resultado del Escaneo:', 'QR-MOCK-7788');\n  if (val) targetObj[fieldId] = val;\n};\n\n`;
+      }
+
 
       const timers = flatFields(canvasFields.value).filter(f => f.type === 'timer');
       if (timers.length > 0) {

@@ -83,7 +83,14 @@ export class ZodBuilder {
                 case 'date':
                 case 'time':
                 case 'radio':
+                case 'password':
+                case 'email':
+                case 'url':
+                case 'qr':
                     fieldSchema = z.string();
+                    if (field.type === 'email') fieldSchema = (fieldSchema as z.ZodString).email('Debe ser un email válido');
+                    if (field.type === 'url') fieldSchema = (fieldSchema as z.ZodString).url('Debe ser una URL válida');
+                    
                     if (field.minLength !== undefined && field.minLength > 0) {
                         fieldSchema = (fieldSchema as z.ZodString).min(field.minLength, `Mínimo ${field.minLength} caracteres`);
                     } else if (field.required) {

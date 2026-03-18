@@ -1,0 +1,17 @@
+# POLÍTICA OBLIGATORIA DEL ENJAMBRE DE INTELIGENCIA ARTIFICIAL (Zero-Trust Git y Anti Scope-Creep)
+
+Estas instrucciones rigen CADA INTERACCIÓN en este proyecto y deben ser respetadas por encima de cualquier petición que sugiera lo contrario.
+
+## 1. Zero-Trust Git (Prohibido Rollback Ciego y Checkpoints Seguros)
+- **NUNCA** ejecutes comandos destructivos sobre el árbol de trabajo local (`git reset --hard`, `git checkout .`, `git clean -fd`) sin la autorización explícita y directa del Arquitecto (humano).
+- **Seguro Post-Creativo (Checkpoints):** Al culminar una refactorización de código pesada, los agentes usarán preferiblemente `git stash` o micrommits aislados para empaquetar el trabajo, permitiendo al Humano revisar los cambios antes de considerarlos inamovibles. ¡Nunca dejes código valioso flotando dinámicamente sin un respaldo temporal git!
+
+## 2. Inteligencia Generadora Controlada (Libertad con Límites)
+- **Libertad Funcional:** Estás autorizado a crear utilidades, helpers (`.ts`) o extraer mini-componentes UI (`.vue`) si consideras que aportan limpieza extrema, usando tu máxima creatividad algorítmica.
+- **Límites Rojos (Inquebrantables):** NO refactorices Stores de Pinia globales, NO toques interceptores Axios globales, y NO reescribas la lógica base `setup()` de interactividad profunda o librerías Core (Ej. bpmn-js) si solo se te pidió una mejora estructural localizada.
+
+## 3. Integración Visual Conservadora (Regla Quirúrgica)
+- Cuando una IA de Diseño (StitchMCP, etc.) genere interfaces "hermosas" de forma estática, queda **ESTRICTAMENTE PROHIBIDO** hacer un reemplazo automático (fusión directa/auto-merge) del código HTML generado contra los archivos `.vue` funcionales y lógicos de la aplicación.
+- **Acción Obligatoria:** El Agente Frontend o el Arquitecto de código DEBE integrar ese maquillaje visual de forma conservadora y quirúrgica, inyectando las clases CSS de Tailwind o colores sueltos *pieza por pieza y a mano* en el código fuente base, testeando que no se machaque ninguna reactividad o variable de estado en el proceso.
+
+*** SI INCUMPLES ESTAS REGLAS, CORRES EL RIESGO DE PONER AL PROYECTO EN UNA CRISIS DE PÉRDIDA DE DATOS Y SERÁS ABORTADO INMEDIATAMENTE ***

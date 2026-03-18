@@ -584,84 +584,43 @@ Feature: Web IDE Form Code Generation
 
 ---
 
-### US-028: Auto-Generación de Test Suites Zod/Vitest (Shift-Left QA)
+### US-028: Simulador de Contratos Zod en Memoria (In-Browser QA Sandbox)
 **Como** Ingeniero de Calidad (QA) / Arquitecto Frontend
-**Quiero** que el diseñador de formularios exponga un botón para generar los test unitarios y de integración de Payload
-**Para** asegurar en mi CI/CD que el comportamiento complejo del "iForm Maestro" (Zod) no reviente el motor de Camunda antes de compilar el frontal, probando exclusivamente la capa lógica y evadiendo dependencias externas.
+**Quiero** un entorno de simulación (Sandbox) integrado directamente en el Diseñador Web (Pantalla 7) que inyecte Payloads extremos (Feliz y Triste) contra el esquema Zod en tiempo real
+**Para** garantizar que las reglas matemáticas, de obligatoriedad y formato (Regex) funcionen perfectamente antes de asociar el formulario a Camunda, sin generar código muerto ni depender de pipelines de CI/CD externos.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Automated BDD Form Testing Generation
+Feature: Integrated BDD Zod Testing Sandbox
 
-  Scenario: Cobertura Lógica Pura (Zod Schema Validation vs DOM)
-    Given la estructura JSON del Formulario generada por el IDE web
-    When el usuario oprime [⚡ GENERADOR DE TESTS]
-    Then el IDE lee exclusivamente la estructura de validación Zod
-    And genera un script de prueba `.spec.ts` acotado a Behavior Driven Development (BDD) del Payload JSON
-    And omite intencionalmente cualquier aserción sobre el DOM interactivo (`@vue/test-utils`), blindando el test contra refactores de CSS y Layout.
+  Scenario: Ejecución Interna In-Browser (Zero Dead Code) (CA-1)
+    Given la estructura JSON del Formulario generada por el IDE web en Pantalla 7
+    When el usuario oprime el botón `[🧪 SIMULAR CONTRATO ZOD]`
+    Then el sistema NO descargará archivos `.spec.ts` físicos al disco duro local.
+    And abrirá un "Panel de Consola QA" (Split View) integrado en el mismo IDE.
+    And ejecutará las validaciones en tiempo real utilizando la memoria RAM del navegador contra el objeto Zod reactivo.
 
-  Scenario: Aislamiento Total de APIs (Mocking Boilerplate)
-    Given que el formulario "Maestro_Onboarding" llama a una API de "Mapeo de Puestos" para autocompletar dropdowns
-    When se ejecuta la generación de la Suite
-    Then el autogenerador rastrea la llamada externa asíncrona
-    And escupe bloques de código Boilerplate usando `vi.mock()` o interceptores (MSW) para devolver respuestas vacías estáticas (Ej: `{ status: 200, data: [] }`)
-    And bloquea la red por defecto, obligando al QA a rellenar el Mock manualmente.
+  Scenario: Boundary Testing Pragmático y Ciego (Type-Based Fuzzing) (CA-2)
+    Given el esquema Zod compilado en memoria
+    When el motor de simulación arranca
+    Then el sistema autogenerará un Payload Dummy basado estrictamente en los Tipos Base y Restricciones matemáticas de Zod (Ej: Inyectar un string de 5 caracteres "AAAAA" si la regla es `.min(5)`), sin intentar adivinar la semántica del negocio.
+    And presentará en la Consola dos evaluaciones automáticas:
+      1. Path Feliz (100%): Inyecta el Payload válido generado y aserta visualmente `success: true`.
+      2. Path Triste (Empty): Inyecta un Payload vacío `{}` y aserta que Zod devuelva los errores de `Required` correspondientes.
 
-  Scenario: Boundary Testing Pragmático (Happy vs Sad Extremo)
-    Given que el Arquitecto ha definido 10 campos obligatorios y 3 opcionales
-    When el autogenerador procesa las matrices de prueba para `it()`
-    Then emitirá exactamente DOS bloques de aserciones fundamentales:
-    And 1. Path Feliz 100%: Payload con datos dummy (faker.js) que pasa el parser exitosamente.
-    And 2. Path Triste Extremo: Payload vacío (`{}`) o valores nulos para garantizar el choque masivo contra los validadores `Required` y emitir el `ZodError` HTTP 400.
+  Scenario: Modificación Manual del Mock Payload (Edición en Caliente) (CA-3)
+    Given el Panel de Consola QA abierto y el Path Feliz generado
+    Then el QA podrá editar libremente el código JSON del "Payload de Prueba" en un mini-editor de texto incrustado.
+    And al teclear o borrar comillas, el motor de Zod reevaluará instantáneamente el Payload arrojando los errores de validación en tiempo real, permitiendo al humano probar Regex complejos (Ej: Cédulas o NITs) a mano.
 
-  Scenario: Descarga Pasiva del Binario (Blob Download)
-    Given el string de JavaScript en memoria compilado por el Generador
-    When finaliza el cruce de datos
-    Then el Frontend dispara una descarga nativa silenciosa del archivo `[nombre_form].spec.ts` al disco local del QA
-    And se abstiene perentoriamente de inyectar *Commits* directos vía API hacia Git/GitLab para evitar colisiones DevSecOps.
-
-  Scenario: Formulario Multi-Etapa (State Machine de Camunda)
-    Given un "iForm Maestro" que altera dinámicamente sus campos y validaciones cruzadas dependiendo de la propiedad `Current_Stage` inyectada por el motor BPMN
-    Then el autogenerador interpretará cada alteración lógica como esquemas independientes
-    And emitirá descriptores separados (`describe('Stage: Radicación')`, `describe('Stage: Análisis')`)
-    And inyectará forzosamente la variable de estado dentro del mock payload para probar las dependencias condicionales (Refines/Unions) por separado.
-
-  Scenario: Renovación Destructiva del Código (Sobrescribir y Perder)
-    Given que el QA ya curó un archivo de test manual de la 'Versión 1' del Formulario en su Notebook
-    When el Arquitecto lanza la 'Versión 2' visual en el portal
-    Then el botón `[⚡ GENERADOR DE TESTS]` simplemente descargará un molde limpio (V2) recién pintado
-    And es estricta responsabilidad del humano (QA) hacer el *diff/merge* de sus validaciones manuales antiguas (V1) contra la plantilla nativa (V2) en su entorno Git local.
-
-  Scenario: Responsabilidad Manual en Time Mocking (Fechas Relativas)
-    Given un formulario Zod con lógicas de fecha estrictamente relativas (Ej: Mayor a la Fecha Actual Estricta)
-    When el IDE autogenera el Payload Feliz
-    Then insertará un objeto estándar estático (`new Date('1990-01-01')`) incapaz de predecir el offset del futuro
-    And forzará el fallo del test en CI/CD el día posterior delegando la responsabilidad de inyectar `vi.setSystemTime()` o manipular el reloj global netamente a las manos del QA humano en su merge local.
-
-  Scenario: Inyección Estricta de Aliasing Absoluto (@/utils)
-    Given que el Zod invoca esquemas compartidos en una carpeta externa raíz compartida (`src/utils/validators.ts`)
-    Then el autogenerador jamás intentará reempacar las dependencias transversalmente
-    And redactará un import asumiendo el alias estándar Vue/Vite: `import { x } from '@/utils/validators'`
-    And el QA será el dueño del error en compilación si el `tsconfig.json` de su propio *runner* difiere de esta regla.
-
-  Scenario: Aislamiento Puro de Estado Global (Ignorar Pinia/VueX)
-    Given un *iForm Maestro* con potentes side-effects que interactúa con un estado global (Store de Pinia) para almacenar borradores web
-    When el compilador procesa para emitir el `.spec.ts`
-    Then se limitará herméticamente a invocar `.parse()` sobre objeto literal del formulario
-    And JAMÁS escribirá código de *setup* inyectando referencias cruzadas o Mock Store (Ej: `const store = useMyStore()`), garantizando funciones puras y no una prueba de integración del ecosistema Vuex/Pinia.
-
-  Scenario: Inyección Tipificada Mock File API (Upload File Forms)
-    Given un input diseñado por el Arquitecto para subir *Anexos PDF*, rígidamente blindado en Zod como `instanceof File` y validado por *Mime-Type*
-    When se procesa el Path Feliz Unitario
-    Then el test autogenerado escribirá código imperativo instanciando interfaces web nativas puras (Ej: `new File(["buffer"], "doc.pdf", { type: "application/pdf" })`) 
-    And anulando fallos técnicos del parser donde fallaría por inyectar *Strings* simples allí donde la librería Zod exige forzósamente un *Blob* estructurado.
-
-  Scenario: Ceguera Visual de Cobertura (Delegación a CI/CD Runner)
-    Given el proceso de hacer clic en `[⚡ GENERADOR DE TESTS]`
-    Then la interfaz (IDE Pantalla 7) descargará un `Blob` sin procesar el porcentaje global de *assertions* correctas (Istanbul/C8 Coverage Stats)
-    And el Arquitecto no verá estadísticas, diagramas en pastel ni el estado en caliente, asumiendo una compilación ciega y unidireccional cuyo veredicto es propiedad absoluta de la consola Terminal del QA o el *Runner* CI/CD (Ej: GitLab) remoto.
+  Scenario: Aislamiento Puro de Lógica de Negocio (Zero-Network Mocking) (CA-4)
+    Given un formulario con campos que dependen de llamadas asíncronas a APIs externas (Data Sources)
+    When se ejecuta el Simulador Zod
+    Then el motor evaluará ÚNICAMENTE el método `zod.safeParse()` sobre el esquema estático.
+    And omitirá cualquier intento de invocar el ciclo de vida de Vue (Ej: `onMounted`), garantizando que no se disparen peticiones de red (Axios/Fetch) ni se requieran librerías de Mocking complejas (MSW/vi.mock), asumiendo que la prueba valida el contrato de datos final y no la interfaz gráfica.
 ```
-**Trazabilidad UX:** Wireframes Pantalla 7 (Botones Inferiores).
+**Trazabilidad UX:** Wireframes Pantalla 7 (Panel QA).
+
 
 ### US-029: Ejecución y Envío de Formulario (iForm Maestro o Simple)
 **Como** Analista / Usuario de Negocio

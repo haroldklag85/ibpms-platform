@@ -13,6 +13,11 @@ import java.util.UUID;
 
 /**
  * Endpoint del Motor de Formularios UI (Pantalla 7).
+ * <p>
+ * NOTA ARQUITECTÓNICA (US-028): Los Endpoints de Mapeo asíncrono y resolución de este Controlador 
+ * DEBEN seguir siendo estructuralmente consumibles y mockeables por las pruebas BDD (Behavior-Driven Development) 
+ * que auto-genera estáticamente el Frontend (Vitest/Zod). Las respuestas HTTP 200/201 deben mantener estricto tipping.
+ * </p>
  */
 @RestController
 @RequestMapping("/api/v1/forms")

@@ -609,6 +609,7 @@ const toolboxCategories = [
     name: "Texto",
     items: [
       { icon: 'Ab', label: 'Input Text', desc: 'Validación Regex', type: 'text', placeholder: 'Ej: Juan Pérez', required: true, zodType: 'string', camundaVariable: '' },
+      { icon: '🔑', label: 'Password', desc: 'Dato Sensible (CA-53)', type: 'password', placeholder: 'Ingrese contraseña', required: true, zodType: 'string', camundaVariable: '' },
       { icon: '📝', label: 'Long Text', desc: 'Textarea (2+ filas)', type: 'textarea', placeholder: 'Comentarios...', required: false, zodType: 'string', camundaVariable: '' },
     ]
   },
@@ -789,11 +790,11 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
   if (field.type.startsWith('button_')) {
       tpl += `${indent}<div class="mt-6 field-${field.id.toLowerCase()} no-print" v-if="(typeof isAuditMode === 'undefined' ? false : !isAuditMode) && (typeof stage === 'undefined' ? true : stage !== 'AUDIT')">\n`;
       if (field.type === 'button_submit') {
-        tpl += `${indent}  <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2">✅ ${field.label}</button>\n`;
+        tpl += `${indent}  <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2" :disabled="typeof isAsyncLoading !== 'undefined' && isAsyncLoading">✅ ${field.label}</button>\n`;
       } else if (field.type === 'button_draft') {
-        tpl += `${indent}  <button type="button" @click="saveDraft" class="w-full border-2 border-dashed border-gray-300 text-gray-700 py-2 rounded shadow-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2">💾 ${field.label}</button>\n`;
+        tpl += `${indent}  <button type="button" @click="saveDraft" class="w-full border-2 border-dashed border-gray-300 text-gray-700 py-2 rounded shadow-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2" :disabled="typeof isAsyncLoading !== 'undefined' && isAsyncLoading">💾 ${field.label}</button>\n`;
       } else if (field.type === 'button_reject') {
-        tpl += `${indent}  <button type="button" @click="rejectTask" class="w-full bg-red-600 text-white py-2 rounded shadow-sm font-bold hover:bg-red-700 transition mt-2 flex items-center justify-center gap-2">❌ ${field.label}</button>\n`;
+        tpl += `${indent}  <button type="button" @click="rejectTask" class="w-full bg-red-600 text-white py-2 rounded shadow-sm font-bold hover:bg-red-700 transition mt-2 flex items-center justify-center gap-2" :disabled="typeof isAsyncLoading !== 'undefined' && isAsyncLoading">❌ ${field.label}</button>\n`;
       }
       tpl += `${indent}</div>\n`;
       return tpl;
@@ -840,12 +841,12 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
     const ttip = field.tooltipText ? ` <span title="${field.tooltipText}" class="cursor-help text-indigo-500 font-bold ml-1 text-xs outline-none">ⓘ</span>` : '';
     tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}${ttip}</label>\n`;
     const dsbObj = formPattern.value === 'IFORM_MAESTRO' ? `isAuditMode || stage === 'AUDIT' || (stage !== '${field.stage}' && ${field.soloLecturaPosterior || false})` : `isAuditMode`;
-    const dsb = ` :disabled="${dsbObj}"`;
+    const dsb = parentBinding === 'row' ? ` :disabled="${dsbObj} || row._locked"` : ` :disabled="${dsbObj}"`; // CA-51 Grid Locked Rows
     
-    if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time') {
+    if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time' || field.type === 'password') { // CA-53
       if (field.mask) {
          // CA-36: Proxy Value/Event Masking
-         tpl += `${indent}  <input type="text" :value="formatMask(${vModelBase}, '${field.mask}')" @input="(e) => ${vModelBase} = unmask(e.target.value, '${field.type}')" placeholder="${field.placeholder || field.mask}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm font-mono"${dsb} />\n`;
+         tpl += `${indent}  <input type="${field.type === 'password' ? 'password' : 'text'}" :value="formatMask(${vModelBase}, '${field.mask}')" @input="(e) => ${vModelBase} = unmask(e.target.value, '${field.type}')" placeholder="${field.placeholder || field.mask}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm font-mono"${dsb} />\n`;
       } else {
          tpl += `${indent}  <input type="${field.type}" v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
       }
@@ -951,6 +952,7 @@ const computedCode = computed({
       scr += `// CA-37: Visor Histórico Inmutable para Auditoría\nconst isAuditMode = ref(false); // Cambiar a true si es histórico\n\n`;
       
       scr += `// CA-43: Recepción de Datos Precargados (BFF Pattern)\nconst props = defineProps<{ prefillData?: Record<string, any> }>();\n\n`;
+      scr += `// CA-52: Control Asíncrono Global\nconst isAsyncLoading = ref(false);\n\n`;
       
       const hasAudit = flatFields(canvasFields.value).some(f => f.enableAuditLog);
       if (hasAudit) {
@@ -960,7 +962,7 @@ const computedCode = computed({
       const asyncFields = flatFields(canvasFields.value).filter(f => f.type === 'async_select' && f.asyncUrl);
       for (const field of asyncFields) {
          scr += `const asyncOpts_${field.id} = ref<string[]>([]);\n`;
-         scr += `const fetchAsyncOpts_${field.id} = async (query: string) => {\n   if(query.trim().length === 0) { asyncOpts_${field.id}.value = []; return; }\n   try {\n      const res = await apiClient.get(\`${field.asyncUrl}?q=\${query}\`);\n      asyncOpts_${field.id}.value = Array.isArray(res.data) ? res.data.map(i => i.label || i.nombre || i.name || JSON.stringify(i)) : [];\n   } catch (e) { console.error('Typeahead Error (CA-30)', e); }\n};\n\n`;
+         scr += `const fetchAsyncOpts_${field.id} = async (query: string) => {\n   if(query.trim().length === 0) { asyncOpts_${field.id}.value = []; return; }\n   try {\n      isAsyncLoading.value = true;\n      const res = await apiClient.get(\`${field.asyncUrl}?q=\${query}\`);\n      asyncOpts_${field.id}.value = Array.isArray(res.data) ? res.data.map(i => i.label || i.nombre || i.name || JSON.stringify(i)) : [];\n   } catch (e) { console.error('Typeahead Error (CA-30)', e); } finally { isAsyncLoading.value = false; }\n};\n\n`;
       }
 
       scr += `const formData = ref<Record<string, any>>({\n`;
@@ -1008,14 +1010,37 @@ const computedCode = computed({
          scr += `// CA-21, CA-39, CA-49: Conector Multipart File Upload + Constraints\nconst uploadFile = async (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const target = event.target;\n  const files = target?.files;\n  if (!files || files.length === 0) return;\n  if (files.length < minFiles) { alert('Mínimo ' + minFiles + ' archivo(s) requeridos.'); target.value = ''; return; }\n  if (files.length > maxFiles) { alert('Máximo ' + maxFiles + ' archivo(s) permitidos.'); target.value = ''; return; }\n  let urls: string[] = [];\n  for (let i = 0; i < files.length; i++) {\n     const file = files[i];\n     if (maxMb > 0 && file.size > maxMb * 1024 * 1024) { alert('El archivo \\'' + file.name + '\\' excede el límite de ' + maxMb + 'MB.'); target.value = ''; return; }\n     if (exts) { const ext = '.' + file.name.split('.').pop()?.toLowerCase(); if (!exts.toLowerCase().includes(ext)) { alert('Extensión ' + ext + ' no permitida. Solo: ' + exts); target.value = ''; return; } }\n     const data = new FormData();\n     data.append('file', file);\n     try {\n       const res = await apiClient.post('/api/v1/forms/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });\n       urls.push(res.data.url || 'subido_exitosamente_' + i);\n     } catch (error) {\n       alert('Error subiendo \\'' + file.name + '\\': ' + (error as any).message);\n       return;\n     }\n  }\n  targetObj[fieldId] = urls.length > 1 ? JSON.stringify(urls) : urls[0];\n  alert('Archivo(s) subido(s) exitosamente');\n};\n\n`;
       }
 
+      let phantomLogic = '';
+      const fieldsWithCond = flatFields(canvasFields.value).filter(f => f.visibilityCondition || (f.requiredIfField && f.requiredIfValue));
+      if (fieldsWithCond.length > 0) {
+         phantomLogic += `  // CA-54: Purga de Phantom Data (Ocultos/Condicionales)\n`;
+         for (const f of fieldsWithCond) {
+             const key = f.camundaVariable || f.id;
+             let condStr = '';
+             let hasVis = false;
+             if (f.visibilityCondition) {
+                condStr += `!(${f.visibilityCondition.replace(/formData\./g, 'cleanData.')})`;
+                hasVis = true;
+             }
+             if (f.requiredIfField && f.requiredIfValue) {
+                if (hasVis) condStr += ' || ';
+                condStr += `!(cleanData.${f.requiredIfField} === '${f.requiredIfValue}')`;
+             }
+             phantomLogic += `  if (${condStr}) { delete cleanData['${key}']; }\n`;
+         }
+      }
+
       scr += `// CA-15, CA-50: Smart Actions con Blindaje y Stripping Numerico\n`;
       scr += `const submitTask = async () => {\n  errors.value = {};\n`;
       scr += `  // CA-50: Stripping Silencioso de formato Numérico\n  const cleanData = JSON.parse(JSON.stringify(formData.value));\n`;
       scr += `  Object.keys(cleanData).forEach(k => { if (typeof cleanData[k] === 'string' && /^[\\d.,$]+$/.test(cleanData[k])) { const num = parseFloat(cleanData[k].replace(/[^\\d.-]/g, '')); if(!isNaN(num)) cleanData[k] = num; } });\n\n`;
+      if (phantomLogic) scr += phantomLogic + '\n';
       scr += `  const result = taskSchema.safeParse(cleanData);\n  if (!result.success) {\n    result.error.issues.forEach(iss => {\n      if (iss.path[0]) errors.value[iss.path[0].toString()] = iss.message;\n    });\n    return;\n  }\n  try {\n    const payload = { variables: result.data };\n    await apiClient.post(\`/engine-rest/task/\${taskId}/complete\`, payload);\n    alert('Tarea Completada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Completar Tarea: ' + (error as any).message);\n  }\n};\n`;
       
       if (hasDraft) {
-        scr += `\nconst saveDraft = async () => {\n  try {\n    const cleanData = JSON.parse(JSON.stringify(formData.value));\n    Object.keys(cleanData).forEach(k => { if (typeof cleanData[k] === 'string' && /^[\\d.,$]+$/.test(cleanData[k])) { const num = parseFloat(cleanData[k].replace(/[^\\d.-]/g, '')); if(!isNaN(num)) cleanData[k] = num; } });\n    await apiClient.post('/api/v1/forms/draft', cleanData);\n    alert('Borrador Guardado (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Guardar Borrador: ' + (error as any).message);\n  }\n};\n`;
+        scr += `\nconst saveDraft = async () => {\n  try {\n    const cleanData = JSON.parse(JSON.stringify(formData.value));\n    Object.keys(cleanData).forEach(k => { if (typeof cleanData[k] === 'string' && /^[\\d.,$]+$/.test(cleanData[k])) { const num = parseFloat(cleanData[k].replace(/[^\\d.-]/g, '')); if(!isNaN(num)) cleanData[k] = num; } });\n`;
+        if (phantomLogic) scr += phantomLogic;
+        scr += `    await apiClient.post('/api/v1/forms/draft', cleanData);\n    alert('Borrador Guardado (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Guardar Borrador: ' + (error as any).message);\n  }\n};\n`;
       }
       if (hasReject) {
          scr += `\nconst rejectTask = async () => {\n  try {\n    await apiClient.post(\`/engine-rest/task/\${taskId}/bpmnError\`, { errorCode: 'REJECTED' });\n    alert('Excepción BPMN Disparada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Rechazar Tarea: ' + (error as any).message);\n  }\n};\n`;

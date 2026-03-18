@@ -12,6 +12,7 @@ export interface FormFieldMetadataDTO {
     options?: string[];
     isPrefilled?: boolean; // CA-12: Data Binding I/O
     isOutputToken?: boolean; // CA-13: Data Binding I/O
+    visibilityCondition?: string; // CA-25: Visibilidad Condicional Dinámica Eval
     children?: FormFieldMetadataDTO[]; // CA-8: Recursive Nested Support
 }
 

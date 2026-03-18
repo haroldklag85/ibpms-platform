@@ -323,6 +323,15 @@
              </div>
           </div>
 
+          <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 shadow-inner">
+             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1 flex items-center gap-2">👁️ Visibilidad Dinámica (CA-25)</h4>
+             <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Condición de Visibilidad Eval</label>
+                <input v-model="editingField.visibilityCondition" class="w-full text-sm border-gray-300 rounded font-mono" placeholder="Ej: formData.country === 'COL'" />
+                <p class="text-[10px] text-gray-500 mt-1">Si se provee, este campo será envuelto en un `v-if` dinámico evaluado en tiempo real.</p>
+             </div>
+          </div>
+
           <div class="mt-6 flex justify-end gap-3">
             <button @click="editingField = null" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-indigo-700">Guardar Cambios</button>
           </div>
@@ -371,7 +380,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import VueDraggable from 'vuedraggable';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
@@ -391,6 +400,21 @@ const isFullScreen = ref(false); // Estado para CA-9/CA-10
 
 const canvasFields = ref<FormField[]>([]);
 const activeStageSim = ref('ALL');
+
+// CA-24 Auto-guardado del Designer Canvas
+let designerDraftTimeout: any = null;
+watch(canvasFields, (newVal) => {
+    clearTimeout(designerDraftTimeout);
+    designerDraftTimeout = setTimeout(async () => {
+        try {
+            await apiClient.post('/api/v1/forms/draft', { schema: newVal, title: formTitle.value });
+            console.log('✅ Diseño auto-guardado en API (Modelador)');
+        } catch (e) {
+            localStorage.setItem('designer_draft_fallback', JSON.stringify(newVal));
+            console.warn('⚠️ Fallback a LocalStorage activado para autoguardado del modelador');
+        }
+    }, 2000);
+}, { deep: true });
 
 const activeCodeTab = ref<'TEMPLATE' | 'SCRIPT' | 'ZOD' | 'STYLE'>('TEMPLATE');
 const editingField = ref<FormField | null>(null);
@@ -584,22 +608,28 @@ const generateFieldHTML = (field: any, indent: string = '      '): string => {
       return tpl;
   }
 
-  if (formPattern.value === 'IFORM_MAESTRO') {
-    tpl += `${indent}<div v-if="stage === '${field.stage}'" class="field-${field.id.toLowerCase()}">\n`;
-  } else {
-    tpl += `${indent}<div class="field-${field.id.toLowerCase()}">\n`;
+  let vIfDir = '';
+  if (field.visibilityCondition) {
+      if (formPattern.value === 'IFORM_MAESTRO') {
+         vIfDir = `v-if="stage === '${field.stage}' && (${field.visibilityCondition})" `;
+      } else {
+         vIfDir = `v-if="${field.visibilityCondition}" `;
+      }
+  } else if (formPattern.value === 'IFORM_MAESTRO') {
+      vIfDir = `v-if="stage === '${field.stage}'" `;
   }
-  
+
   if (field.type === 'container') {
-     tpl += `${indent}  <div class="border rounded-md p-4 bg-gray-50">\n`;
-     tpl += `${indent}    <h3 class="font-bold text-md mb-4">${field.label || 'Sección'}</h3>\n`;
+     tpl += `${indent}<div ${vIfDir}class="border rounded-md p-4 bg-gray-50 field-${field.id.toLowerCase()}">\n`;
+     tpl += `${indent}  <h3 class="font-bold text-md mb-4">${field.label || 'Sección'}</h3>\n`;
      if (field.children && field.children.length > 0) {
        for(const child of field.children) {
-         tpl += generateFieldHTML(child, indent + '    ');
+         tpl += generateFieldHTML(child, indent + '  ');
        }
      }
-     tpl += `${indent}  </div>\n`;
+     tpl += `${indent}</div>\n`;
   } else {
+    tpl += `${indent}<div ${vIfDir}class="field-${field.id.toLowerCase()}">\n`;
     tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}</label>\n`;
     const dsb = (formPattern.value === 'IFORM_MAESTRO' && field.soloLecturaPosterior) ? ` :disabled="stage !== '${field.stage}'"` : '';
     if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time') {
@@ -613,13 +643,13 @@ const generateFieldHTML = (field: any, indent: string = '      '): string => {
     } else if (field.type === 'select') {
        tpl += `${indent}  <select v-model="formData.${field.camundaVariable || field.id}" class="form-select mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb}>\n${indent}    <option disabled value="">${field.placeholder || 'Seleccione'}</option>\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </select>\n`;
     } else if (field.type === 'file') {
-       tpl += `${indent}  <div class="border-2 border-dashed border-gray-300 rounded p-4 text-center text-xs text-gray-500 cursor-pointer bg-white mt-1">\n${indent}    📂 ${field.placeholder || 'Arrastra tu archivo aquí'}\n${indent}  </div>\n`;
+       tpl += `${indent}  <input type="file" @change="(e) => uploadFile(e, '${field.camundaVariable || field.id}')" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mt-1 cursor-pointer" />\n`;
     } else {
        tpl += `${indent}  <!-- Custom Component: ${field.type} -->\n`;
     }
     tpl += `${indent}  <span v-if="errors.${field.camundaVariable || field.id}" class="text-red-500 text-xs">{{ errors.${field.camundaVariable || field.id} }}</span>\n`;
+    tpl += `${indent}</div>\n`;
   }
-  tpl += `${indent}</div>\n`;
   return tpl;
 };
 
@@ -645,7 +675,7 @@ const computedCode = computed({
     } 
     
     if (activeCodeTab.value === 'SCRIPT') {
-      let scr = `<script setup lang="ts">\nimport { ref, inject } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\n\n`;
+      let scr = `<script setup lang="ts">\nimport { ref, inject, watch } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\n\n`;
       if (formPattern.value === 'IFORM_MAESTRO') {
         scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
       }
@@ -663,6 +693,13 @@ const computedCode = computed({
 
       const hasDraft = flatFields(canvasFields.value).some(f => f.type === 'button_draft');
       const hasReject = flatFields(canvasFields.value).some(f => f.type === 'button_reject');
+      const hasFile = flatFields(canvasFields.value).some(f => f.type === 'file');
+
+      scr += `// CA-24: Auto-Guardado Workdesk LocalStorage/API\nlet autoSyncDraftTimeout: any = null;\nwatch(formData, (newVal) => {\n  clearTimeout(autoSyncDraftTimeout);\n  autoSyncDraftTimeout = setTimeout(async () => {\n    try {\n      await apiClient.post('/api/v1/forms/draft', newVal);\n      console.log('✅ Borrador auto-guardado en backend');\n    } catch (e) {\n      localStorage.setItem('workdesk_draft', JSON.stringify(newVal));\n      console.warn('⚠️ Fallback a LocalStorage para auto-guardado');\n    }\n  }, 2000);\n}, { deep: true });\n\n`;
+
+      if (hasFile) {
+         scr += `// CA-21: Conector Multipart File Upload\nconst uploadFile = async (event: any, fieldId: string) => {\n  const target = event.target;\n  const file = target?.files?.[0];\n  if (!file) return;\n  const data = new FormData();\n  data.append('file', file);\n  try {\n    const res = await apiClient.post('/api/v1/forms/upload', data, {\n      headers: { 'Content-Type': 'multipart/form-data' }\n    });\n    (formData.value as any)[fieldId] = res.data.url || 'subido_exitosamente';\n    alert('Archivo subido al SGDEA');\n  } catch (error) {\n    alert('Error de subida: ' + (error as any).message);\n  }\n};\n\n`;
+      }
 
       scr += `// CA-15: Smart Actions con Blindaje de Red Try/Catch\n`;
       scr += `const submitTask = async () => {\n  errors.value = {};\n  const result = taskSchema.safeParse(formData.value);\n  if (!result.success) {\n    result.error.issues.forEach(iss => {\n      if (iss.path[0]) errors.value[iss.path[0].toString()] = iss.message;\n    });\n    return;\n  }\n  try {\n    const payload = { variables: result.data };\n    await apiClient.post(\`/engine-rest/task/\${taskId}/complete\`, payload);\n    alert('Tarea Completada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Completar Tarea: ' + (error as any).message);\n  }\n};\n`;

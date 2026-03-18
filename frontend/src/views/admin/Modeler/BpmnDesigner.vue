@@ -52,7 +52,7 @@
                 @click="showDeployModal = true" 
                 :disabled="isDeploying || !['VALIDATED', 'WARNING'].includes(preFlightStatus)" 
                 class="bg-indigo-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 transition">
-          🚀 Desplegar
+          🚀 [VALIDAR Y DESPLEGAR]
         </button>
         <button v-else @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
           📩 Solicitar Despliegue
@@ -141,8 +141,8 @@
             <!-- Propiedades: Tarea de Usuario (Intake / Approval) -->
             <div v-if="selectedElement.type === 'bpmn:UserTask'" class="space-y-4">
               <div>
-                <label class="block text-xs font-bold text-gray-700 mb-1">Formulario Asignado (FormKey)</label>
-                <select v-model="selectedElement.props.formKey" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 max-w-[200px]">
+                <label class="block text-xs font-bold text-gray-700 mb-1">Formulario Asignado (FormKey Alterno)</label>
+                <select v-model="selectedElement.props.formKey" @change="syncElementProperties('camunda:formKey', selectedElement.props.formKey)" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 max-w-[200px]">
                   <option value="">-- Sin Formulario --</option>
                   <option value="form_solicitud_v1">form_solicitud_v1 (Simple)</option>
                   <option value="iform_maestro_credito">iform_maestro_credito (Dual)</option>
@@ -160,7 +160,7 @@
               <!-- SharePoint Integration Checkbox (CA-2) -->
               <div v-if="selectedElement.name && selectedElement.name.toLowerCase().includes('intake')" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
                 <div class="flex items-start gap-2">
-                  <input type="checkbox" id="spFolderCheck" v-model="selectedElement.props.createSharepointFolder" class="mt-0.5 text-blue-600 rounded border-blue-300 focus:ring-blue-500 shadow-sm" />
+                  <input type="checkbox" id="spFolderCheck" v-model="selectedElement.props.createSharepointFolder" @change="syncElementProperties('camunda:createSharepointFolder', selectedElement.props.createSharepointFolder)" class="mt-0.5 text-blue-600 rounded border-blue-300 focus:ring-blue-500 shadow-sm" />
                   <label for="spFolderCheck" class="text-[11px] font-bold text-blue-900 cursor-pointer leading-tight">
                     Create Unique SharePoint Sub-folder for this generic Process Instance (CA-2)
                   </label>
@@ -189,7 +189,7 @@
               <AppTooltip :content="bpmnTooltips.FORM_KEY" />
             </label>
             <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Formulario renderizado en Workdesk</p>
-            <select v-model="selectedFormKey" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border bg-indigo-50/30 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300">
+            <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border bg-indigo-50/30 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300">
               <option value="">-- Sin FormKey --</option>
               <option v-for="form in filteredForms" :key="form.key" :value="form.key">
                 {{ form.type === 'MAESTRO' ? '🔵' : '🟢' }} {{ form.name }} ({{ form.key }})
@@ -253,7 +253,7 @@
               <!-- Tone Selector (CA-11) -->
               <div>
                 <label class="block text-[10px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-widest mb-1">Tone Override</label>
-                <select v-model="selectedElement.props.aiTone" class="w-full text-xs font-medium border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded p-1.5 focus:ring-emerald-500">
+                <select v-model="selectedElement.props.aiTone" @change="syncElementProperties('camunda:aiTone', selectedElement.props.aiTone)" class="w-full text-xs font-medium border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded p-1.5 focus:ring-emerald-500">
                   <option value="NEUTRAL">Neutral / Objetivo</option>
                   <option value="EMPATHETIC">Empático (Servicio al Cliente)</option>
                   <option value="FORMAL">Formal (Legal / Regulatorio)</option>
@@ -274,7 +274,7 @@
               <!-- Target Output Schema -->
               <div class="pt-2 border-t border-emerald-100 dark:border-emerald-800/50">
                 <label class="block text-[10px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-widest mb-1">JSON Target Schema</label>
-                <input type="text" v-model="selectedElement.props.aiSchemaId" placeholder="Ej: schema_risk_matrix_v2" class="w-full text-[11px] font-mono border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded p-1.5" />
+                <input type="text" v-model="selectedElement.props.aiSchemaId" @blur="syncElementProperties('camunda:aiSchemaId', selectedElement.props.aiSchemaId)" placeholder="Ej: schema_risk_matrix_v2" class="w-full text-[11px] font-mono border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded p-1.5" />
                 <p class="text-[9px] text-emerald-600 dark:text-emerald-500 mt-1 leading-tight">Fuerza a la IA a responder con un layout compatible con Pantalla 7.</p>
               </div>
 
@@ -308,12 +308,8 @@
           <div v-if="activeInstances > 0 && deployStrategy === 'migrate'" class="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs text-yellow-800">
             ⚠️ Se migrarán {{ activeInstances }} instancias en vuelo a la nueva versión. Esta acción es irreversible.
           </div>
-          <!-- CA-2: Renderizado de Detalles de Error HTTP 422 -->
-          <div v-if="validationErrors.length" class="mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
-             <p class="font-bold mb-1">❌ Falló la Validación de Camunda:</p>
-             <ul class="list-disc pl-4">
-               <li v-for="(err, i) in validationErrors" :key="i">{{ err }}</li>
-             </ul>
+          <div v-if="activeInstances > 0 && deployStrategy === 'migrate'" class="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs text-yellow-800">
+            ⚠️ Se migrarán {{ activeInstances }} instancias en vuelo a la nueva versión. Esta acción es irreversible.
           </div>
           <div class="flex justify-end space-x-3 pt-2">
             <button @click="showDeployModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
@@ -397,6 +393,21 @@
         <div class="px-4 py-2 bg-gray-800 flex gap-2 shrink-0">
           <input v-model="copilotInput" @keyup.enter="sendCopilotMessage" type="text" placeholder="Pregunta al Copiloto sobre tu proceso..." class="flex-1 bg-gray-700 text-white text-sm rounded px-3 py-1.5 border border-gray-600 focus:border-emerald-500 focus:ring-0" />
           <button @click="sendCopilotMessage" :disabled="copilotLoading" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold disabled:opacity-50 transition">Enviar</button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- ═══════ Panel: Semantic Errors (CA-2 a CA-4) ═══════ -->
+    <Transition name="slide-up">
+      <div v-if="validationErrors.length > 0" class="absolute bottom-0 left-0 right-0 max-h-56 bg-red-900 border-t-4 border-red-500 flex flex-col z-50 shadow-2xl overflow-hidden shadow-red-500/50">
+        <div class="flex items-center justify-between px-6 py-2 bg-red-800/90 shrink-0">
+          <h4 class="text-sm font-bold text-white flex items-center gap-2">⚠️ Errores Semánticos y Advertencias (HTTP 422)</h4>
+          <button @click="validationErrors = []" class="text-red-200 hover:text-white font-bold text-xl">&times;</button>
+        </div>
+        <div class="flex-1 p-5 overflow-y-auto space-y-2 text-sm font-mono bg-red-900 text-red-100">
+          <ul class="list-disc pl-5">
+             <li v-for="(err, i) in validationErrors" :key="i" class="mb-1">{{ err }}</li>
+          </ul>
         </div>
       </div>
     </Transition>
@@ -935,24 +946,27 @@ const confirmDeploy = async () => {
       const { xml } = await modelerInstance.saveXML({ format: true });
       console.log('[Deploy] Sending XML to /api/v1/design/processes/deploy', { strategy: deployStrategy.value });
       
-      // CA-1: Llamado real a backend enviando el BPMN (Adiós Mock)
-      await api.deployProcess({
-        processId: processId.value,
-        xml,
-        strategy: deployStrategy.value,
-      });
+      // CA-1: Llamado real a backend enviando el BPMN (Adiós Mock) empaquetado en multipart/form-data
+      const formData = new FormData();
+      formData.append('processId', processId.value);
+      formData.append('strategy', deployStrategy.value);
+      const xmlBlob = new Blob([xml!], { type: 'application/xml' });
+      formData.append('file', xmlBlob, `${processId.value}.bpmn`);
+
+      await api.deployProcess(formData);
     }
     showToast(`✅ Proceso "${currentProcessName.value}" desplegado exitosamente`);
     processStatus.value = 'ACTIVO';
     showDeployModal.value = false;
   } catch (err: any) {
-    showToast('Error desplegando proceso', 'error');
+    showToast('Error desplegando proceso. Revisar consola de validación.', 'error');
     
-    // CA-2: Parsear error 422 HTTP del endpoint Camunda y reflejar en Modal
+    // CA-2, CA-3, CA-4: Parsear error 422 HTTP del endpoint Camunda y reflejar en Consola Inferior (No en Modal!)
     if (err.response && err.response.status === 422) {
-      validationErrors.value = err.response.data?.errors || ['El archivo XML no pasó la validación estricta del motor de Camunda.'];
+      validationErrors.value = err.response.data?.errors || ['El archivo XML no pasó la validación estricta del motor semántico.'];
+      showDeployModal.value = false; // Descargamos modal para dejar ver canvas + errores
     } else {
-      showDeployModal.value = false; // Otros errores asumen cierre del modal y ver en toast
+      showDeployModal.value = false; 
     }
   } finally {
     isDeploying.value = false;
@@ -1093,6 +1107,17 @@ const openCallActivity = () => {
     window.open(`/admin/modeler?processId=${calledElementId}`, '_blank');
   } else {
     showToast('⚠️ Este subproceso no tiene un ID de proceso destino configurado.', 'error');
+  }
+};
+
+const syncElementProperties = (key: string, value: any) => {
+  if (!modelerInstance || !selectedElement.value.id) return;
+  const elementRegistry = modelerInstance.get('elementRegistry');
+  const shape = elementRegistry.get(selectedElement.value.id);
+  if (shape) {
+    const modeling = modelerInstance.get('modeling');
+    // Actualizamos la propiedad del nodo para prevenir desconexión (CA-1)
+    modeling.updateProperties(shape, { [key]: value });
   }
 };
 </script>

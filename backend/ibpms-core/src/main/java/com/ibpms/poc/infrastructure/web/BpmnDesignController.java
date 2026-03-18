@@ -62,7 +62,8 @@ public class BpmnDesignController {
             // Por V1 (Mock): simulate deploy
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "message", "Proceso desplegado exitosamente.",
-                "warnings", validation.getWarnings()
+                "warnings", validation.getWarnings(),
+                "generatedRoles", validation.getGeneratedRoles()
             ));
 
         } catch (Exception e) {

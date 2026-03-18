@@ -15,6 +15,7 @@ public class DeploymentValidationResponse {
     private String processId;
     private List<ValidationError> errors = new ArrayList<>();
     private List<ValidationError> warnings = new ArrayList<>();
+    private List<String> generatedRoles = new ArrayList<>();
 
     @Data
     @NoArgsConstructor

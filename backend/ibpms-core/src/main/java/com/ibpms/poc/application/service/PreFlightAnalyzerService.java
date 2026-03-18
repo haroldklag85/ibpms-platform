@@ -26,14 +26,20 @@ import org.camunda.bpm.model.bpmn.instance.ExclusiveGateway;
 import org.camunda.bpm.model.bpmn.instance.ServiceTask;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.camunda.bpm.model.bpmn.instance.UserTask;
+import org.camunda.bpm.model.bpmn.instance.Process;
+import org.camunda.bpm.model.bpmn.instance.Lane;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Pre-Flight Analyzer — CA-9, CA-24.
- * Parsea el XML BPMN del borrador y valida 7 reglas estructurales.
- * Usa javax.xml.parsers (DOM estándar de Java) para máxima portabilidad.
+ * Parsea el XML BPMN del borrador y valida reglas estructurales.
  */
 @Service
 public class PreFlightAnalyzerService {
+
+    private static final Logger log = LoggerFactory.getLogger(PreFlightAnalyzerService.class);
 
     private static final String BPMN_NS = "http://www.omg.org/spec/BPMN/20100524/MODEL";
 
@@ -158,6 +164,38 @@ public class PreFlightAnalyzerService {
             }
             if (!hasValidStartForm && !startEvents.isEmpty()) {
                 response.addError("StartEvent", "El StartEvent carece de camunda:formKey obligatorio para iniciar instancia de forma manual");
+            }
+
+            // CA-5: Nomenclatura Obligatoria de Instancia
+            boolean hasNomenclature = false;
+            Collection<Process> processes = modelInstance.getModelElementsByType(Process.class);
+            String firstProcessId = "UnknownProcess";
+            if (!processes.isEmpty()) {
+                Process proc = processes.iterator().next();
+                firstProcessId = proc.getId();
+                Collection<CamundaProperty> properties = proc.getChildElementsByType(org.camunda.bpm.model.bpmn.instance.ExtensionElements.class).isEmpty() 
+                    ? java.util.Collections.emptyList() 
+                    : proc.getChildElementsByType(org.camunda.bpm.model.bpmn.instance.ExtensionElements.class).iterator().next().getChildElementsByType(CamundaProperty.class);
+                
+                for (CamundaProperty prop : properties) {
+                    if ("ReglaNomenclatura".equals(prop.getCamundaName())) {
+                        hasNomenclature = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasNomenclature) {
+                response.addError("Process", "Debe definir cómo se llamarán los casos de este proceso (Propiedad: ReglaNomenclatura).");
+            }
+
+            // CA-6: Autogeneración de Roles RBAC desde Lanes (Si el proceso aprueba o incluso si falla el log lo reporta al final)
+            // Se calcula proyectivamente.
+            Collection<Lane> lanes = modelInstance.getModelElementsByType(Lane.class);
+            for (Lane lane : lanes) {
+                String laneName = lane.getName() != null ? lane.getName() : lane.getId();
+                String roleName = "BPMN_" + firstProcessId + "_" + laneName.replaceAll("\\s+", "_");
+                response.getGeneratedRoles().add(roleName);
+                log.info("Simulación Rol RBAC detectado por Carril: {}", roleName);
             }
 
         } catch (Exception e) {

@@ -26,6 +26,7 @@ import org.camunda.bpm.model.bpmn.instance.ExclusiveGateway;
 import org.camunda.bpm.model.bpmn.instance.ServiceTask;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.camunda.bpm.model.bpmn.instance.UserTask;
+import org.camunda.bpm.model.bpmn.instance.BusinessRuleTask;
 import org.camunda.bpm.model.bpmn.instance.Process;
 import org.camunda.bpm.model.bpmn.instance.Lane;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperty;
@@ -164,6 +165,21 @@ public class PreFlightAnalyzerService {
             }
             if (!hasValidStartForm && !startEvents.isEmpty()) {
                 response.addError("StartEvent", "El StartEvent carece de camunda:formKey obligatorio para iniciar instancia de forma manual");
+            }
+
+            // CA-12: Late Binding DMN por Defecto en BusinessRuleTasks
+            Collection<BusinessRuleTask> brTasks = modelInstance.getModelElementsByType(BusinessRuleTask.class);
+            for (BusinessRuleTask brt : brTasks) {
+                String decisionRef = brt.getCamundaDecisionRef();
+                String binding = brt.getCamundaDecisionRefBinding(); // e.g., "latest"
+                String version = brt.getCamundaDecisionRefVersion();
+                
+                if (decisionRef != null && !decisionRef.isBlank()) {
+                    if ((binding == null || (!binding.equals("latest") && !binding.equals("deployment"))) && 
+                        (version == null || version.isBlank())) {
+                        response.addWarning(brt.getId(), "BusinessRuleTask enlaza a un DMN (" + decisionRef + ") pero carece de camunda:decisionRefBinding='latest' o version explícita. Puede generar inconsistencias de resolución.");
+                    }
+                }
             }
 
             // CA-5: Nomenclatura Obligatoria de Instancia

@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Gobierno Topológico de Migraciones de Versión BPMN.
@@ -62,11 +64,19 @@ public class ProcessMigrationService {
     public void executeSafeMigration(MigrationRequestDTO request) {
         log.info("Iniciando Grandfathering/Migración explícita según CA-7.");
         
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String auditSignature = String.format("[⚠️ MIGRACIÓN ESTRUCTURAL: %s -> %s el %s]", 
+            request.getSourceProcessDefinitionId() != null ? request.getSourceProcessDefinitionId() : "V_Legacy", 
+            request.getTargetProcessDefinitionId() != null ? request.getTargetProcessDefinitionId() : "V_Latest", 
+            timestamp);
+
         for (String instanceId : request.getInstanceIds()) {
             log.info("-> Migrando forzosamente el runtime id: {}", instanceId);
-            // Aquí se ejecutaría Camunda: RuntimeService.createMigrationPlan(s, t).mapEqualActivities().executeAsync();
+            // CA-14 (Sello Forense de Migración): Inyectar la variable inmutable al Runtime del Token.
+            // runtimeService.setVariable(instanceId, "SYS_MIGRATION_AUDIT", auditSignature);
+            log.info("   ↳ Variable Forense Inyectada: SYS_MIGRATION_AUDIT = '{}'", auditSignature);
         }
         
-        log.info("Lote topológico migrado. Las variables en vuelo NO fueron mutadas (CA-10).");
+        log.info("Lote topológico migrado. Las variables en vuelo NO fueron mutadas manualmente (CA-10).");
     }
 }

@@ -1,7 +1,10 @@
 package com.ibpms.poc.application.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -15,6 +18,12 @@ public class FormFieldCleanserService {
     // numérico en Camunda)
     // Asume que el usuario envía "$ 1.500"
     private static final Pattern CURRENCY_MASK = Pattern.compile("^\\$\\s?[\\d.,]+$");
+    
+    private final ObjectMapper objectMapper;
+
+    public FormFieldCleanserService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     public void cleanseVariables(Map<String, Object> variables) {
         if (variables == null)
@@ -35,6 +44,13 @@ public class FormFieldCleanserService {
                 }
 
                 // Otras máscaras de RUT / Teléfono pueden añadirse aquí...
+            } else if (entry.getValue() instanceof List || entry.getValue() instanceof Map) {
+                // CA-34: Serialización para Data Grids
+                try {
+                    variables.put(entry.getKey(), objectMapper.writeValueAsString(entry.getValue()));
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException("Error parseando objeto anidado a JSON (CA-34)", e);
+                }
             }
         }
     }

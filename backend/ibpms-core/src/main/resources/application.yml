@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
   application:
     name: ibpms-core
   datasource:
@@ -48,6 +52,8 @@ server:
   port: 8080
   servlet:
     context-path: /api/v1
+  tomcat:
+    max-http-form-post-size: 50MB
 
 management:
   endpoints:

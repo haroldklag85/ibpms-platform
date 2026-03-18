@@ -129,15 +129,37 @@
                     <label class="text-sm font-bold text-gray-700">{{ element.label }} <span v-if="element.required" class="text-red-500">*</span></label>
                     <p v-if="element.desc" class="text-[10px] text-gray-400 mb-1">{{ element.desc }}</p>
                     
-                    <input v-if="element.type === 'text'" :placeholder="element.placeholder" class="form-input text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm disabled:bg-gray-100" />
-                    <input v-if="element.type === 'number'" type="number" :placeholder="element.placeholder" class="form-input text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" />
-                    <select v-if="element.type === 'select'" class="form-select text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                    <input v-if="element.type === 'text'" :placeholder="element.placeholder" class="form-input text-sm w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm disabled:bg-gray-100 mt-1" />
+                    <textarea v-if="element.type === 'textarea'" :placeholder="element.placeholder" class="form-input text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm w-full mt-1 disabled:bg-gray-100" rows="2"></textarea>
+                    <input v-if="element.type === 'number'" type="number" :placeholder="element.placeholder" class="form-input text-sm w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm mt-1" />
+                    <input v-if="element.type === 'date'" type="date" class="form-input text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm w-full mt-1" disabled />
+                    <input v-if="element.type === 'time'" type="time" class="form-input text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm w-full mt-1" disabled />
+                    
+                    <select v-if="element.type === 'select'" class="form-select text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm w-full mt-1">
                       <option disabled selected>{{ element.placeholder }}</option>
                       <option v-for="opt in element.options || ['Opción 1']" :key="opt">{{ opt }}</option>
                     </select>
-                    <div v-if="element.type === 'file'" class="border-2 border-dashed border-gray-300 rounded p-4 text-center text-xs text-gray-500 hover:bg-gray-50 cursor-pointer bg-white">
+                    
+                    <div v-if="element.type === 'checkbox'" class="flex items-center gap-2 mt-1 px-2">
+                       <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 border-gray-300" disabled />
+                       <span class="text-sm text-gray-700">{{ element.placeholder || element.label }}</span>
+                    </div>
+                    <div v-if="element.type === 'radio'" class="flex flex-col gap-1 mt-1 px-2">
+                       <label v-for="opt in element.options || ['Opción 1', 'Opción 2']" :key="opt" class="flex items-center gap-2">
+                          <input type="radio" class="text-indigo-600 border-gray-300 focus:ring-indigo-500" disabled />
+                          <span class="text-sm font-medium text-gray-600">{{ opt }}</span>
+                       </label>
+                    </div>
+
+                    <div v-if="element.type === 'file'" class="border-2 border-dashed border-gray-300 rounded p-4 text-center text-xs text-gray-500 hover:bg-gray-50 cursor-pointer bg-white mt-1">
                       📂 {{ element.placeholder }} (Drag & Drop SGDEA)
                     </div>
+
+                    <!-- CA-14 Smart Buttons -->
+                    <button v-if="element.type === 'button_draft'" class="w-full px-4 py-2 border-2 border-dashed border-gray-300 text-gray-600 font-bold rounded-lg mt-3 cursor-pointer bg-gray-50 uppercase text-xs">💾 {{ element.label }}</button>
+                    <button v-if="element.type === 'button_submit'" class="w-full px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg mt-3 cursor-pointer shadow-md">✅ {{ element.label }}</button>
+                    <button v-if="element.type === 'button_reject'" class="w-full px-4 py-2 bg-red-600 text-white font-bold rounded-lg mt-3 cursor-pointer shadow-md">❌ {{ element.label }}</button>
+
                     
                     <!-- Nested Container (CA-8) -->
                     <div v-if="element.type === 'container'" class="border border-indigo-200 bg-indigo-50/50 rounded-lg p-4 mt-2 min-h-[100px]">
@@ -157,10 +179,18 @@
                                </div>
                                <label class="text-xs font-bold text-gray-700 block">{{ child.label }} <span v-if="child.required" class="text-red-500">*</span></label>
                                <input v-if="child.type === 'text'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                               <textarea v-if="child.type === 'textarea'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" rows="1"></textarea>
                                <input v-if="child.type === 'number'" type="number" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                               <input v-if="child.type === 'date'" type="date" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" disabled />
+                               <input v-if="child.type === 'time'" type="time" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" disabled />
                                <select v-if="child.type === 'select'" class="form-select text-xs w-full mt-1 border-gray-300 rounded shadow-sm">
                                  <option disabled selected>{{ child.placeholder }}</option>
                                </select>
+                               <div v-if="child.type === 'checkbox'" class="flex items-center gap-1 mt-1">
+                                  <input type="checkbox" class="rounded text-indigo-600 border-gray-300" disabled />
+                                  <span class="text-[10px] text-gray-700">{{ child.placeholder || child.label }}</span>
+                               </div>
+                               <button v-if="child.type === 'button_submit'" class="w-full px-2 py-1 bg-indigo-600 text-white font-bold rounded mt-2 text-[10px]">✅ {{ child.label }}</button>
                             </div>
                          </template>
                       </VueDraggable>
@@ -277,6 +307,18 @@
             </div>
           </div>
 
+          <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 shadow-inner">
+             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1 flex items-center gap-2">🗃️ Data Binding Camunda (I/O) (CA-12/CA-13)</h4>
+             <div class="flex items-center gap-2 mb-2">
+                <input type="checkbox" v-model="editingField.isPrefilled" id="prefillCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
+                <label for="prefillCheck" class="text-xs font-medium text-gray-700 cursor-pointer">Pre-Fill (Lectura de BD al cargar)</label>
+             </div>
+             <div class="flex items-center gap-2">
+                <input type="checkbox" v-model="editingField.isOutputToken" id="outCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
+                <label for="outCheck" class="text-xs font-medium text-gray-700 cursor-pointer">Update Token (Guardar Output en Camunda)</label>
+             </div>
+          </div>
+
           <div class="mt-6 flex justify-end gap-3">
             <button @click="editingField = null" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-indigo-700">Guardar Cambios</button>
           </div>
@@ -366,20 +408,23 @@ const toolboxCategories = [
     name: "Texto",
     items: [
       { icon: 'Ab', label: 'Input Text', desc: 'Validación Regex', type: 'text', placeholder: 'Ej: Juan Pérez', required: true, zodType: 'string', camundaVariable: '' },
-      { icon: '📝', label: 'Long Text', desc: 'Textarea (2+ filas)', type: 'text', placeholder: 'Comentarios...', required: false, zodType: 'string', camundaVariable: '' },
+      { icon: '📝', label: 'Long Text', desc: 'Textarea (2+ filas)', type: 'textarea', placeholder: 'Comentarios...', required: false, zodType: 'string', camundaVariable: '' },
     ]
   },
   {
     name: "Numérico & Fechas",
     items: [
       { icon: '#', label: 'Number Field', desc: 'Zod min/max', type: 'number', placeholder: '0.00', required: true, zodType: 'number', camundaVariable: '' },
-      { icon: '📅', label: 'Date Picker', desc: 'Zod date (YYYY-MM-DD)', type: 'text', placeholder: 'Seleccionar Fecha', required: false, zodType: 'string', camundaVariable: '' },
+      { icon: '📅', label: 'Date Picker', desc: 'DD/MM/YYYY', type: 'date', placeholder: 'Seleccionar Fecha', required: false, zodType: 'string', camundaVariable: '' },
+      { icon: '⏰', label: 'Time Picker', desc: 'HH:MM AM/PM', type: 'time', placeholder: 'Seleccionar Hora', required: false, zodType: 'string', camundaVariable: '' },
     ]
   },
   {
     name: "Selección",
     items: [
       { icon: '≡', label: 'Dropdown', desc: 'Typeahead / API', type: 'select', placeholder: '-- Seleccione --', required: true, zodType: 'string', options: ['Opción A', 'Opción B'], camundaVariable: '' },
+      { icon: '☑️', label: 'Checkbox', desc: 'Booleano Múltiple', type: 'checkbox', placeholder: 'Marcar opción', required: false, zodType: 'boolean', camundaVariable: '' },
+      { icon: '🔘', label: 'Radio Button', desc: 'Opción Única', type: 'radio', placeholder: '', required: true, zodType: 'string', options: ['Opción 1', 'Opción 2'], camundaVariable: '' },
     ]
   },
   {
@@ -392,7 +437,15 @@ const toolboxCategories = [
   {
     name: "Layouts (CA-8)",
     items: [
-      { icon: '🗂️', label: 'Contenedor', desc: 'Panel Agrupador Anidado', type: 'container', placeholder: 'Nueva Sección de Datos', required: false, zodType: 'object', camundaVariable: '', children: [] }
+      { icon: '🗂️', label: 'Contenedor', desc: 'Panel Agrupador', type: 'container', placeholder: 'Nueva Sección de Datos', required: false, zodType: 'object', camundaVariable: '', children: [] }
+    ]
+  },
+  {
+    name: "Accionadores (CA-14)",
+    items: [
+      { icon: '💾', label: 'Guardar Borrador', desc: 'API DRAFT', type: 'button_draft', placeholder: '', required: false, zodType: 'none', camundaVariable: '' },
+      { icon: '✅', label: 'Completar Tarea', desc: 'API POST Complete', type: 'button_submit', placeholder: '', required: false, zodType: 'none', camundaVariable: '' },
+      { icon: '❌', label: 'Rechazar Tarea', desc: 'BPMN Error', type: 'button_reject', placeholder: '', required: false, zodType: 'none', camundaVariable: '' },
     ]
   }
 ];
@@ -496,6 +549,20 @@ const flatFields = (fields: any[]): any[] => {
 // HTML generator recursivo para Template (AST to Vue)
 const generateFieldHTML = (field: any, indent: string = '      '): string => {
   let tpl = '';
+  
+  if (field.type.startsWith('button_')) {
+      tpl += `${indent}<div class="mt-6 field-${field.id.toLowerCase()}">\n`;
+      if (field.type === 'button_submit') {
+        tpl += `${indent}  <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2">✅ ${field.label}</button>\n`;
+      } else if (field.type === 'button_draft') {
+        tpl += `${indent}  <button type="button" @click="saveDraft" class="w-full border-2 border-dashed border-gray-300 text-gray-700 py-2 rounded shadow-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2">💾 ${field.label}</button>\n`;
+      } else if (field.type === 'button_reject') {
+        tpl += `${indent}  <button type="button" @click="rejectTask" class="w-full bg-red-600 text-white py-2 rounded shadow-sm font-bold hover:bg-red-700 transition mt-2 flex items-center justify-center gap-2">❌ ${field.label}</button>\n`;
+      }
+      tpl += `${indent}</div>\n`;
+      return tpl;
+  }
+
   if (formPattern.value === 'IFORM_MAESTRO') {
     tpl += `${indent}<div v-if="stage === '${field.stage}'" class="field-${field.id.toLowerCase()}">\n`;
   } else {
@@ -513,10 +580,18 @@ const generateFieldHTML = (field: any, indent: string = '      '): string => {
      tpl += `${indent}  </div>\n`;
   } else {
     tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}</label>\n`;
-    if (field.type === 'text' || field.type === 'number') {
-      tpl += `${indent}  <input type="${field.type}" v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300" />\n`;
+    if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time') {
+      tpl += `${indent}  <input type="${field.type}" v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" />\n`;
+    } else if (field.type === 'textarea') {
+      tpl += `${indent}  <textarea v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" rows="3"></textarea>\n`;
+    } else if (field.type === 'checkbox') {
+      tpl += `${indent}  <div class="flex items-center gap-2 mt-1">\n${indent}    <input type="checkbox" v-model="formData.${field.camundaVariable || field.id}" class="rounded text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm" />\n${indent}    <span class="text-sm text-gray-700">${field.placeholder || field.label}</span>\n${indent}  </div>\n`;
+    } else if (field.type === 'radio') {
+      tpl += `${indent}  <div class="flex flex-col gap-1 mt-1">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <label class="flex items-center gap-2"><input type="radio" value="${o}" v-model="formData.${field.camundaVariable || field.id}" class="text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm" /> <span class="text-sm text-gray-600 font-medium">${o}</span></label>`).join('\n')}\n${indent}  </div>\n`;
     } else if (field.type === 'select') {
-       tpl += `${indent}  <select v-model="formData.${field.camundaVariable || field.id}" class="form-select mt-1 w-full rounded-md border-gray-300">\n${indent}    <!-- Options -->\n${indent}  </select>\n`;
+       tpl += `${indent}  <select v-model="formData.${field.camundaVariable || field.id}" class="form-select mt-1 w-full rounded-md border-gray-300 shadow-sm">\n${indent}    <option disabled value="">${field.placeholder || 'Seleccione'}</option>\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </select>\n`;
+    } else if (field.type === 'file') {
+       tpl += `${indent}  <div class="border-2 border-dashed border-gray-300 rounded p-4 text-center text-xs text-gray-500 cursor-pointer bg-white mt-1">\n${indent}    📂 ${field.placeholder || 'Arrastra tu archivo aquí'}\n${indent}  </div>\n`;
     } else {
        tpl += `${indent}  <!-- Custom Component: ${field.type} -->\n`;
     }
@@ -530,7 +605,7 @@ const generateFieldHTML = (field: any, indent: string = '      '): string => {
 const computedCode = computed({
   get: () => {
     if (activeCodeTab.value === 'TEMPLATE') {
-      let tpl = `<template>\n  <form @submit.prevent="submitTask" class="space-y-6">`;
+      let tpl = `<template>\n  <form @submit.prevent="submitTask" class="space-y-4">`;
       if (canvasFields.value.length === 0) {
         tpl += `\n    <!-- Arrastra componentes al lienzo -->`;
       } else {
@@ -538,25 +613,46 @@ const computedCode = computed({
           tpl += generateFieldHTML(field, '    ');
         }
       }
-      tpl += `\n    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded">Enviar</button>\n  </form>\n</template>`;
+      
+      const hasSubmit = flatFields(canvasFields.value).some(f => f.type === 'button_submit');
+      if (!hasSubmit && canvasFields.value.length > 0) {
+          tpl += `\n    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded shadow hover:bg-blue-700 transition mt-6">Enviar Tarea (Auto)</button>`;
+      }
+      tpl += `\n  </form>\n</template>`;
       return tpl;
     } 
     
     if (activeCodeTab.value === 'SCRIPT') {
-      let scr = `<script setup lang="ts">\nimport { ref, inject } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\n\n`;
+      let scr = `<script setup lang="ts">\nimport { ref, inject } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\n\n`;
       if (formPattern.value === 'IFORM_MAESTRO') {
         scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
       }
       
-      
       scr += `const formData = ref({\n`;
-      const allFields = flatFields(canvasFields.value);
+      const allFields = flatFields(canvasFields.value).filter(f => !f.type.startsWith('button_') && f.type !== 'container');
       for (const field of allFields) {
-        const def = field.type === 'number' ? 'null' : "''";
-        scr += `  ${field.camundaVariable || field.id}: ${def},\n`;
+        let def = "''";
+        if (field.type === 'number') def = 'null';
+        if (field.type === 'checkbox') def = 'false';
+        scr += `  ${field.camundaVariable || field.id}: ${def}, // Binding CA-12/13\n`;
       }
-      scr += `});\n\nconst errors = ref<Record<string, string>>({});\n\nconst submitTask = async () => {\n  errors.value = {}; // Reset\n  const result = taskSchema.safeParse(formData.value);\n...`;
-      scr += `\n};\n<\/script>`;
+      scr += `});\n\nconst errors = ref<Record<string, string>>({});\n`;
+      scr += `const taskId = 'MOCK_TASK_ID'; // Inyectar ID real\n\n`;
+
+      const hasDraft = flatFields(canvasFields.value).some(f => f.type === 'button_draft');
+      const hasReject = flatFields(canvasFields.value).some(f => f.type === 'button_reject');
+
+      scr += `// CA-15: Smart Actions con Blindaje de Red Try/Catch\n`;
+      scr += `const submitTask = async () => {\n  errors.value = {};\n  const result = taskSchema.safeParse(formData.value);\n  if (!result.success) {\n    result.error.issues.forEach(iss => {\n      if (iss.path[0]) errors.value[iss.path[0].toString()] = iss.message;\n    });\n    return;\n  }\n  try {\n    const payload = { variables: result.data };\n    await apiClient.post(\`/engine-rest/task/\${taskId}/complete\`, payload);\n    alert('Tarea Completada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Completar Tarea: ' + (error as any).message);\n  }\n};\n`;
+      
+      if (hasDraft) {
+        scr += `\nconst saveDraft = async () => {\n  try {\n    await apiClient.post('/api/v1/forms/draft', formData.value);\n    alert('Borrador Guardado (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Guardar Borrador: ' + (error as any).message);\n  }\n};\n`;
+      }
+      if (hasReject) {
+         scr += `\nconst rejectTask = async () => {\n  try {\n    await apiClient.post(\`/engine-rest/task/\${taskId}/bpmnError\`, { errorCode: 'REJECTED' });\n    alert('Excepción BPMN Disparada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Rechazar Tarea: ' + (error as any).message);\n  }\n};\n`;
+      }
+
+      scr += `<\/script>`;
       return scr;
     }
 
@@ -566,12 +662,13 @@ const computedCode = computed({
 
     if (activeCodeTab.value === 'ZOD') {
       let zc = `import { z } from 'zod';\n\nexport const taskSchema = z.object({\n`;
-      const allFields = flatFields(canvasFields.value);
+      const allFields = flatFields(canvasFields.value).filter(f => !f.type.startsWith('button_') && f.type !== 'container');
       for (const field of allFields) {
         let zt = 'string';
         if(field.type === 'number') zt = 'number';
         if(field.type === 'file') zt = 'any';
-        zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
+        if(field.type === 'checkbox') zt = 'boolean';
+        zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required && field.type !== 'checkbox' ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
       }
       zc += `});\n\nexport type TaskSchemaPayload = z.infer<typeof taskSchema>;`;
       return zc;

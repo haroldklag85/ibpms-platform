@@ -10,6 +10,9 @@ export interface FormFieldMetadataDTO {
     stage?: string;
     camundaVariable: string;
     options?: string[];
+    isPrefilled?: boolean; // CA-12: Data Binding I/O
+    isOutputToken?: boolean; // CA-13: Data Binding I/O
+    children?: FormFieldMetadataDTO[]; // CA-8: Recursive Nested Support
 }
 
 export class ZodBuilder {
@@ -19,31 +22,45 @@ export class ZodBuilder {
     static buildSchema(fields: FormFieldMetadataDTO[]): z.ZodObject<any> {
         const shape: Record<string, ZodTypeAny> = {};
 
-        fields.forEach(field => {
+        const flatFields = (arr: FormFieldMetadataDTO[]): FormFieldMetadataDTO[] => {
+            let res: FormFieldMetadataDTO[] = [];
+            for (const f of arr) {
+                if (f.type === 'container' && f.children) res = res.concat(flatFields(f.children));
+                else if (f.type !== 'container' && !f.type.startsWith('button_')) res.push(f);
+            }
+            return res;
+        };
+
+        flatFields(fields).forEach(field => {
             let fieldSchema: ZodTypeAny;
 
             switch (field.type) {
+                case 'checkbox':
+                    fieldSchema = z.boolean();
+                    break;
+                case 'number':
+                    fieldSchema = z.number({ invalid_type_error: 'Debe ser un número válido' });
+                    break;
                 case 'text':
+                case 'textarea':
                 case 'select':
-                case 'file': // File uploads often start as string references or base64 in JSON payload
+                case 'radio':
+                case 'date':
+                case 'time':
+                case 'file':
                     fieldSchema = z.string();
                     if (field.required) {
                         fieldSchema = (fieldSchema as z.ZodString).min(1, 'Campo requerido');
                     }
                     break;
-                case 'number':
-                    fieldSchema = z.number({ invalid_type_error: 'Debe ser un número válido' });
-                    break;
                 default:
                     fieldSchema = z.any();
             }
 
-            // Si no es requerido, lo hacemos opcional (permite undefined)
-            if (!field.required) {
+            if (!field.required && field.type !== 'checkbox') {
                 fieldSchema = fieldSchema.optional();
             }
 
-            // Bind the schema to the actual Camunda variable name if defined, else fallback to standard ID
             const bindingKey = field.camundaVariable || field.id;
             shape[bindingKey] = fieldSchema;
         });

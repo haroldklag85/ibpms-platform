@@ -37,6 +37,9 @@
         <button @click="exportToPdf" class="bg-red-50 text-red-700 px-3 py-1.5 border border-red-200 rounded shadow-sm text-xs font-semibold hover:bg-red-100 transition flex gap-1.5 items-center">
           📄 PDF (CA-33)
         </button>
+        <button @click="isPrintMode = !isPrintMode" class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center" :class="{ 'bg-blue-100 text-blue-700 border-blue-300': isPrintMode }">
+          👁️ Print Mode (CA-56)
+        </button>
         <button @click="showGlobalRulesModal = true" class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center">
           ⚙️ Zod Global (CA-32)
         </button>
@@ -454,6 +457,36 @@
              </div>
           </div>
 
+          <!-- CA-55, CA-57, CA-58 -->
+          <div v-if="editingField.type === 'container'" class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 shadow-inner">
+             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1">🗂️ Layout Multicolumna (CA-55)</h4>
+             <label class="block text-xs font-bold text-gray-700 mb-1">Número de Columnas Grid</label>
+             <select v-model.number="editingField.columns" class="w-full text-sm border-gray-300 rounded">
+                <option :value="undefined">Automático (Flex Col)</option>
+                <option :value="1">1 Columna (100%)</option>
+                <option :value="2">2 Columnas (50%)</option>
+                <option :value="3">3 Columnas (33%)</option>
+                <option :value="4">4 Columnas (25%)</option>
+             </select>
+          </div>
+
+          <div v-if="editingField.type === 'timer'" class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 shadow-inner">
+             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1">⏱️ Cronómetro (CA-58)</h4>
+             <label class="block text-xs font-bold text-gray-700 mb-1">Modo de Temporizador</label>
+             <select v-model="editingField.timerMode" class="w-full text-sm border-gray-300 rounded">
+                <option value="manual">Controles Manuales (Play/Pause)</option>
+                <option value="background">Oculto Transparente (Ticking JS)</option>
+                <option value="api">Mock API (Obtiene timestamp remoto)</option>
+             </select>
+          </div>
+
+          <div v-if="!['container','button_submit','button_draft','button_reject'].includes(editingField.type)" class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 shadow-inner">
+             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1">🔒 Bloqueo Estricto (CA-57)</h4>
+             <label class="block text-xs font-bold text-gray-700 mb-1">Condición de Bloqueo Eval</label>
+             <input v-model="editingField.disableCondition" class="w-full text-sm border-gray-300 rounded font-mono" placeholder="Ej: formData.ROL === 'INVITADO'" />
+             <p class="text-[10px] text-gray-500 mt-1">Si evalúa TRUE, inyecta `disabled` dinámicamente preservando lectura (Ast Binding).</p>
+          </div>
+
           <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 shadow-inner">
              <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1 flex items-center gap-2">👁️ Visibilidad Dinámica (CA-25)</h4>
              <div>
@@ -587,6 +620,7 @@ const activeCodeTab = ref<'TEMPLATE' | 'SCRIPT' | 'ZOD' | 'STYLE'>('TEMPLATE');
 const editingField = ref<FormField | null>(null);
 
 const showResetModal = ref(false); // Modal de Reset CA-43
+const isPrintMode = ref(false); // Modo Lectura PDF CA-56
 
 const exportToPdf = () => {
     window.print();
@@ -681,9 +715,11 @@ const confirmReset = () => {
 
 const executeReset = () => {
   canvasFields.value = [];
+  editingField.value = null; // CA-59: Purge state local
   idCounter = 1;
   showResetModal.value = false;
   showPatternModal.value = true;
+  localStorage.removeItem('designer_draft_fallback'); // CA-59
 };
 
 const removeField = (arr: FormField[], index: number) => {
@@ -816,7 +852,11 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
     : `row.${field.camundaVariable || field.id}`;
 
   if (field.type === 'container' || field.type === 'field_array') {
-     tpl += `${indent}<div ${vIfDir}class="${field.type === 'field_array' ? 'border-2 border-indigo-100' : 'border'} rounded-md p-4 bg-gray-50 field-${field.id.toLowerCase()}">\n`;
+     let containerClass = `${field.type === 'field_array' ? 'border-2 border-indigo-100' : 'border'} rounded-md p-4 bg-gray-50 field-${field.id.toLowerCase()}`;
+     if (field.type === 'container' && field.columns && field.columns > 1) {
+         containerClass += ` grid grid-cols-${field.columns} gap-4`; // CA-55
+     }
+     tpl += `${indent}<div ${vIfDir}class="${containerClass}">\n`;
      tpl += `${indent}  <h3 class="font-bold text-md mb-4">${field.label || 'Sección'}</h3>\n`;
      
      if (field.type === 'field_array') {
@@ -840,8 +880,13 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
     tpl += `${indent}<div ${vIfDir}class="field-${field.id.toLowerCase()}">\n`;
     const ttip = field.tooltipText ? ` <span title="${field.tooltipText}" class="cursor-help text-indigo-500 font-bold ml-1 text-xs outline-none">ⓘ</span>` : '';
     tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}${ttip}</label>\n`;
+    
+    // CA-56 Print Mode Wrapper
+    tpl += `${indent}  <div v-if="!isPrintMode">\n`;
+
     const dsbObj = formPattern.value === 'IFORM_MAESTRO' ? `isAuditMode || stage === 'AUDIT' || (stage !== '${field.stage}' && ${field.soloLecturaPosterior || false})` : `isAuditMode`;
-    const dsb = parentBinding === 'row' ? ` :disabled="${dsbObj} || row._locked"` : ` :disabled="${dsbObj}"`; // CA-51 Grid Locked Rows
+    const finalDsbObj = field.disableCondition ? `(${dsbObj}) || (${field.disableCondition})` : dsbObj; // CA-57
+    const dsb = parentBinding === 'row' ? ` :disabled="${finalDsbObj} || row._locked"` : ` :disabled="${finalDsbObj}"`; // CA-51 Grid Locked Rows
     
     if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time' || field.type === 'password') { // CA-53
       if (field.mask) {
@@ -901,11 +946,43 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
        tpl += `${indent}       <span class="text-[10px] text-gray-400">Dibuja en el recuadro superior</span>\n`;
        tpl += `${indent}    </div>\n`;
        tpl += `${indent}  </div>\n`;
+    } else if (field.type === 'timer') {
+       if (field.timerMode === 'manual') {
+          tpl += `${indent}  <div class="flex items-center gap-2 mt-1">\n`;
+          tpl += `${indent}    <span class="text-xl font-mono bg-gray-100 px-3 py-1 rounded border">{{ ${vModelBase} || 0 }}s</span>\n`;
+          tpl += `${indent}    <button type="button" @click="toggleTimer('${field.camundaVariable || field.id}', ${parentBinding === 'formData' ? 'formData.value' : 'row'})" class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded text-xs font-bold hover:bg-indigo-100 transition no-print"${dsb}>▶/⏸</button>\n`;
+          tpl += `${indent}    <button type="button" @click="resetTimer('${field.camundaVariable || field.id}', ${parentBinding === 'formData' ? 'formData.value' : 'row'})" class="bg-red-50 text-red-700 px-2 py-1 rounded text-xs font-bold hover:bg-red-100 transition no-print"${dsb}>↺</button>\n`;
+          tpl += `${indent}  </div>\n`;
+       } else {
+          tpl += `${indent}  <div class="text-xs text-gray-500 italic flex items-center gap-1 mt-1">\n`;
+          tpl += `${indent}    <span class="animate-pulse">⏱️</span> Cronómetro en segundo plano... ({{ ${vModelBase} || 0 }}s)\n`;
+          tpl += `${indent}  </div>\n`;
+       }
     } else if (field.type === 'hidden') {
        // CA-47: Componente Oculto Silencioso
        tpl += `${indent}  <input type="hidden" v-model="${vModelBase}" id="${field.camundaVariable || field.id}" />\n`;
     } else {
        tpl += `${indent}  <!-- Custom Component: ${field.type} -->\n`;
+    }
+    
+    // CA-56 Print Mode Fallback
+    tpl += `${indent}  </div>\n`; // End v-if !isPrintMode
+    if (field.type !== 'hidden') {
+        tpl += `${indent}  <div v-else class="text-sm text-gray-800 font-medium py-1 px-2 mb-1 mt-1 bg-white border-b border-dashed border-gray-300 min-h-[30px]">\n`;
+        if (field.type === 'password') {
+           tpl += `${indent}    <span class="text-gray-400 italic">*** Oculto ***</span>\n`;
+        } else if (field.type === 'file') {
+           tpl += `${indent}    <a v-if="${vModelBase}" :href="${vModelBase}" target="_blank" class="text-blue-600 underline">📎 Adjunto</a>\n`;
+        } else if (field.type === 'signature') {
+           tpl += `${indent}    <img v-if="${vModelBase}" :src="${vModelBase}" class="max-h-16" />\n`;
+        } else if (field.type === 'checkbox') {
+           tpl += `${indent}    <span>{{ ${vModelBase} ? '☑ Sí' : '☐ No' }}</span>\n`;
+        } else if (field.type === 'timer') {
+           tpl += `${indent}    <span>{{ ${vModelBase} || 0 }} seg.</span>\n`;
+        } else {
+           tpl += `${indent}    <span class="whitespace-pre-wrap">{{ Array.isArray(${vModelBase}) ? ${vModelBase}.join(', ') : (${vModelBase} || '---') }}</span>\n`;
+        }
+        tpl += `${indent}  </div>\n`;
     }
     
     // CA-28 Auditoria Forense Check
@@ -944,7 +1021,7 @@ const computedCode = computed({
     } 
     
     if (activeCodeTab.value === 'SCRIPT') {
-      let scr = `<script setup lang="ts">\nimport { ref, inject, watch, onMounted } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\n\n`;
+      let scr = `<script setup lang="ts">\nimport { ref, inject, watch, onMounted, onUnmounted } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\n\n`;
       if (formPattern.value === 'IFORM_MAESTRO') {
         scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
       }
@@ -953,6 +1030,7 @@ const computedCode = computed({
       
       scr += `// CA-43: Recepción de Datos Precargados (BFF Pattern)\nconst props = defineProps<{ prefillData?: Record<string, any> }>();\n\n`;
       scr += `// CA-52: Control Asíncrono Global\nconst isAsyncLoading = ref(false);\n\n`;
+      scr += `// CA-56: Modo Lectura Print/PDF\nconst isPrintMode = ref(false);\n\n`;
       
       const hasAudit = flatFields(canvasFields.value).some(f => f.enableAuditLog);
       if (hasAudit) {
@@ -1008,6 +1086,42 @@ const computedCode = computed({
 
       if (hasFile) {
          scr += `// CA-21, CA-39, CA-49: Conector Multipart File Upload + Constraints\nconst uploadFile = async (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const target = event.target;\n  const files = target?.files;\n  if (!files || files.length === 0) return;\n  if (files.length < minFiles) { alert('Mínimo ' + minFiles + ' archivo(s) requeridos.'); target.value = ''; return; }\n  if (files.length > maxFiles) { alert('Máximo ' + maxFiles + ' archivo(s) permitidos.'); target.value = ''; return; }\n  let urls: string[] = [];\n  for (let i = 0; i < files.length; i++) {\n     const file = files[i];\n     if (maxMb > 0 && file.size > maxMb * 1024 * 1024) { alert('El archivo \\'' + file.name + '\\' excede el límite de ' + maxMb + 'MB.'); target.value = ''; return; }\n     if (exts) { const ext = '.' + file.name.split('.').pop()?.toLowerCase(); if (!exts.toLowerCase().includes(ext)) { alert('Extensión ' + ext + ' no permitida. Solo: ' + exts); target.value = ''; return; } }\n     const data = new FormData();\n     data.append('file', file);\n     try {\n       const res = await apiClient.post('/api/v1/forms/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });\n       urls.push(res.data.url || 'subido_exitosamente_' + i);\n     } catch (error) {\n       alert('Error subiendo \\'' + file.name + '\\': ' + (error as any).message);\n       return;\n     }\n  }\n  targetObj[fieldId] = urls.length > 1 ? JSON.stringify(urls) : urls[0];\n  alert('Archivo(s) subido(s) exitosamente');\n};\n\n`;
+      }
+
+      const timers = flatFields(canvasFields.value).filter(f => f.type === 'timer');
+      if (timers.length > 0) {
+         scr += `// CA-58: Lógica de Cronómetros de Telemetría\n`;
+         scr += `const timerIntervals: Record<string, ReturnType<typeof setInterval>> = {};\n`;
+         scr += `const isTimerActive: Record<string, boolean> = {};\n`;
+         scr += `const toggleTimer = (key: string, targetObj: any) => {\n`;
+         scr += `  if (isTimerActive[key]) {\n`;
+         scr += `     clearInterval(timerIntervals[key]);\n`;
+         scr += `     isTimerActive[key] = false;\n`;
+         scr += `  } else {\n`;
+         scr += `     isTimerActive[key] = true;\n`;
+         scr += `     if (typeof targetObj[key] !== 'number') targetObj[key] = 0;\n`;
+         scr += `     timerIntervals[key] = setInterval(() => { targetObj[key]++; }, 1000);\n`;
+         scr += `  }\n`;
+         scr += `};\n`;
+         scr += `const resetTimer = (key: string, targetObj: any) => {\n`;
+         scr += `  clearInterval(timerIntervals[key]);\n`;
+         scr += `  isTimerActive[key] = false;\n`;
+         scr += `  targetObj[key] = 0;\n`;
+         scr += `};\n`;
+         const autoTimers = timers.filter(t => t.timerMode === 'background');
+         if (autoTimers.length > 0) {
+             scr += `onMounted(() => {\n`;
+             for (const t of autoTimers) {
+                 const key = t.camundaVariable || t.id;
+                 scr += `  if (typeof formData.value['${key}'] !== 'number') formData.value['${key}'] = 0;\n`;
+                 scr += `  timerIntervals['${key}'] = setInterval(() => { formData.value['${key}']++; }, 1000);\n`;
+                 scr += `  isTimerActive['${key}'] = true;\n`;
+             }
+             scr += `});\n`;
+         }
+         scr += `onUnmounted(() => {\n`;
+         scr += `  Object.values(timerIntervals).forEach(clearInterval);\n`;
+         scr += `});\n\n`;
       }
 
       let phantomLogic = '';

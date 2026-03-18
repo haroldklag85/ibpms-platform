@@ -28,6 +28,9 @@ export interface FormFieldMetadataDTO {
     maxFiles?: number; // CA-49: Max adjuntos
     requiredIfField?: string; // CA-48: Condicional Zod Field Name
     requiredIfValue?: string; // CA-48: Condicional Zod Target Value
+    disableCondition?: string; // CA-57: Candado de Solo-Lectura Basado en Fórmulas
+    timerMode?: 'manual' | 'background' | 'api'; // CA-58: Cronómetro
+    columns?: number; // CA-55: Layout Multicolumna
     children?: FormFieldMetadataDTO[]; // CA-8: Recursive Nested Support
 }
 
@@ -72,6 +75,7 @@ export class ZodBuilder {
                     fieldSchema = fieldSchema.optional();
                     break;
                 case 'number':
+                case 'timer':
                     fieldSchema = z.number({ invalid_type_error: 'Debe ser un número válido' });
                     break;
                 case 'text':

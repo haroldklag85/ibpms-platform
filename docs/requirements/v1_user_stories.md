@@ -1157,12 +1157,55 @@ Feature: BPMN Process Deployment
     Then la Columna Derecha del `<DataMapperGrid>` permitirá al usuario alternar entre [Variable Dinámica Zod] y [Valor Estático].
     And si elige [Valor Estático], podrá digitar el texto crudo inyectándolo de forma segura en el Payload saliente.
 
-  Scenario: Bloqueo de Despliegue por Traducción Incompleta (Hard-Stop Pre-Flight) (CA-43)
-    Given un mapeo de datos hacia una API externa en progreso
-    When el Arquitecto presiona el botón `[🚀 DESPLEGAR]` en el Pre-Flight Analyzer
-    Then el motor verifica la "Libreta del Traductor".
-    And si la API destino exige un campo como 'Obligatorio' (Required) y el Arquitecto olvidó enchufarle una variable origen en la columna derecha (Quedó nulo), el despliegue SE ABORTA (❌).
-    And lanza una alerta roja: "Integración Rota: Oracle exige el dato [Amount_USD] y no le estás enviando nada. Mapea la variable o elimina la conexión antes de pasar a Producción."
+  Scenario: Inmutabilidad Estricta ante Mutación de Swagger (Zero-Breakage) (CA-44)
+    Given un proceso V1 desplegado que utiliza el conector `Oracle_API_v1`
+    When el Administrador actualiza el contrato (Swagger) en el Hub (Pantalla 11) renombrando o eliminando variables esperadas
+    Then el sistema bloquea la sobrescritura y fuerza la creación de un nuevo conector `Oracle_API_v2`
+    And el proceso V1 que ya estaba en el motor sigue funcionando intacto con la versión vieja en caché ("Zero-Breakage Policy")
+    And si el Arquitecto desea usar la nueva versión, debe entrar a la Pantalla 6, seleccionar la v2, re-mapear y desplegar una nueva versión temporal del proceso.
+
+  Scenario: Validación Lógica de Cláusulas OneOf/AnyOf (CA-45)
+    Given una API que exige el dato X *o* el dato Y mediante las cláusulas Swagger (OneOf / AnyOf)
+    When el Frontend despliega el `<DataMapperGrid>`
+    Then agrupa visualmente las filas afectadas bajo la etiqueta `[ 🔀 Requiere mapear al menos UNO ]`
+    And el Pre-Flight Analyzer verificará el grupo lógico en conjunto: Si falta al menos uno, alerta roja y aborta despliegue. Si ambos están vacíos, aborta. Si uno está lleno, autoriza el pase a Producción.
+
+  Scenario: Shift-Left Security para Datos Sensibles (PII/PHI) (CA-46)
+    Given el mapeo de una variable clasificada con el flag `[🔒 Dato Sensible PII]` desde la Pantalla 7 (Zod)
+    When la Service Task dispara la integración hacia la API externa
+    Then el dato crudo viaja obligatoriamente encriptado por el túnel HTTP/TLS
+    And el motor de auditoría histórica de Camunda (History Level) tiene estrictamente PROHIBIDO persistir el valor real en texto plano dentro de sus logs, reemplazándolo obligatoriamente por un hash o la viñeta `[REDACTED_PII]`.
+
+  Scenario: Mapeo Reestringido de Headers Dinámicos (CA-47)
+    Given que la API exige metadatos de usuario por cada transacción (Ej: `User_ID`) en las cabeceras REST
+    Then el Data Mapper ofrecerá una tercera pestaña visual denominada `[ 🔑 HEADERS DINÁMICOS ]`
+    And la UI aplicará severas restricciones denegando la inserción de texto libre o crudo para prevenir Header Injection.
+    And obligará a mapear valores usando únicamente variables pre-validadas del formulario (Zod) o Macros seguras del Sistema.
+
+  Scenario: Delegación Transparente de Conversión Binaria (Multipart/Base64) (CA-48)
+    Given un componente Zod de tipo `<InputFile>` mapeado hacia un atributo del Payload destino
+    When el Arquitecto despliega y llega el momento de la ejecución
+    Then el flujo UI no exige que el Arquitecto indique la técnica de conversión
+    And el Worker (Backend) intercepta el mapping, consulta en caliente el requerimiento del Swagger (Multipart-FormData vs Base64), y lo transmuta automáticamente antes de inyectar la data a la trama HTTP de salida.
+
+  Scenario: Ley de Omisión Pura de Llaves Nulas (Drop Key by Default) (CA-49)
+    Given una variable Zod marcada como Opcional que el usuario no diligenció en el Runtime (cuyo valor es `null` o vacío)
+    When la petición es empaquetada hacia el sistema remoto
+    Then el Backend aniquila y purga la llave entera ("Key") del JSON saliente, evitando enviar sintaxis propensa a crashes (Ej: `"campo": null`)
+    And la única excepción será si el Swagger explicíta la obligación del campo como `nullable: true`, obligando al envío literal.
+
+  Scenario: Resiliencia Asíncrona Parametrizable (Retry Pattern Visual) (CA-50)
+    Given la configuración de una Task API Integrada en Pantalla 6
+    Then el sistema expone un sub-panel `[ ⚙️ Estrategia de Fallo (Retries) ]`
+    And permite configurar intentos asíncronos y ventana retardo temporal (Ej. 3 intentos espaciados por 5 mins)
+    And los reintentos operan como Background Jobs (Job Executor) liberando ram de la UI, y si la póliza se agota, canaliza automáticamente el Thread BPMN hacia el Boundary Error Event modelado de rescate humano.
+
+  Scenario: Amnesia Selectiva Obligatoria de Datos No Mapeados (Output Pruning) (CA-51)
+    Given una respuesta de la API externa que retorna un Payload gigante (Ej: JSON de 15 MB)
+    And el Arquitecto sólo enlazó visualmente 1 variable diminuta (`Ticket_ID`) en la pestaña de `[ 📥 OUTPUT MAPPING ]`
+    When arriba el Payload y se graba el Ticket_ID en el Bolsillo Global de Variables (Process Runtime)
+    Then de manera sincrónica el motor de Camunda invoca la poda total (Garbage Collection)
+    And destruye los remanentes masivos no procesados liberando I/O y evitando contaminar la Base de Datos operativa del motor BPM.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).
 

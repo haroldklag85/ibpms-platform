@@ -11,7 +11,21 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import org.xml.sax.InputSource;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.InputStream;
 import java.io.StringReader;
+import java.util.Collection;
+
+import com.ibpms.poc.application.dto.DeploymentValidationResponse;
+import org.camunda.bpm.model.bpmn.Bpmn;
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.bpmn.instance.EndEvent;
+import org.camunda.bpm.model.bpmn.instance.ExclusiveGateway;
+import org.camunda.bpm.model.bpmn.instance.ServiceTask;
+import org.camunda.bpm.model.bpmn.instance.StartEvent;
+import org.camunda.bpm.model.bpmn.instance.UserTask;
 
 /**
  * Pre-Flight Analyzer — CA-9, CA-24.
@@ -86,6 +100,71 @@ public class PreFlightAnalyzerService {
                 "{\"passed\":" + result.isPassed() + ",\"issues\":" + result.getIssues().size() + "}"));
 
         return result;
+    }
+
+    /**
+     * CA-1 a CA-4: Análisis semántico en caliente usando Camunda BPMN Model API.
+     */
+    public DeploymentValidationResponse analizar(InputStream bpmnStream) {
+        DeploymentValidationResponse response = new DeploymentValidationResponse();
+        response.setValid(true);
+
+        try {
+            BpmnModelInstance modelInstance = Bpmn.readModelFromStream(bpmnStream);
+
+            // CA-2: Control de diagrama roto (Falta End Event)
+            Collection<EndEvent> endEvents = modelInstance.getModelElementsByType(EndEvent.class);
+            if (endEvents == null || endEvents.isEmpty()) {
+                response.addError("Diagram", "Falta End Event");
+            }
+
+            // CA-3.1: ServiceTask requiere delegación
+            Collection<ServiceTask> serviceTasks = modelInstance.getModelElementsByType(ServiceTask.class);
+            for (ServiceTask st : serviceTasks) {
+                String cmdDelExpr = st.getCamundaDelegateExpression();
+                String cmdClass = st.getCamundaClass();
+                String cmdTopic = st.getCamundaTopic();
+                if ((cmdDelExpr == null || cmdDelExpr.isBlank()) &&
+                    (cmdClass == null || cmdClass.isBlank()) &&
+                    (cmdTopic == null || cmdTopic.isBlank())) {
+                    response.addError(st.getId(), "ServiceTask carece de propiedad de ejecución (delegateExpression, class o topic)");
+                }
+            }
+
+            // CA-3.2: UserTask requiere formKey
+            Collection<UserTask> userTasks = modelInstance.getModelElementsByType(UserTask.class);
+            for (UserTask ut : userTasks) {
+                if (ut.getCamundaFormKey() == null || ut.getCamundaFormKey().isBlank()) {
+                    response.addError(ut.getId(), "UserTask carece de camunda:formKey obligatorio");
+                }
+            }
+
+            // CA-3.3: ExclusiveGateway con advertencia sobre default flow
+            Collection<ExclusiveGateway> gateways = modelInstance.getModelElementsByType(ExclusiveGateway.class);
+            for (ExclusiveGateway gw : gateways) {
+                if (gw.getDefault() == null) {
+                    response.addWarning(gw.getId(), "ExclusiveGateway sin Flujo por Defecto (default property)");
+                }
+            }
+
+            // CA-4: StartEvent requiere formKey obligatorio
+            Collection<StartEvent> startEvents = modelInstance.getModelElementsByType(StartEvent.class);
+            boolean hasValidStartForm = false;
+            for (StartEvent se : startEvents) {
+                if (se.getCamundaFormKey() != null && !se.getCamundaFormKey().isBlank()) {
+                    hasValidStartForm = true;
+                    break;
+                }
+            }
+            if (!hasValidStartForm && !startEvents.isEmpty()) {
+                response.addError("StartEvent", "El StartEvent carece de camunda:formKey obligatorio para iniciar instancia de forma manual");
+            }
+
+        } catch (Exception e) {
+            response.addError("XML_PARSE", "Fallo severo al leer XML: " + e.getMessage());
+        }
+
+        return response;
     }
 
     // --- Reglas de Validación ---

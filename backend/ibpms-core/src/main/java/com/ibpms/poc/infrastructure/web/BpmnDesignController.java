@@ -2,16 +2,17 @@ package com.ibpms.poc.infrastructure.web;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.HttpStatus;
 
 import com.ibpms.poc.application.dto.DeploymentValidationResponse;
+import com.ibpms.poc.application.dto.MigratableInstanceDTO;
+import com.ibpms.poc.application.dto.MigrationRequestDTO;
 import com.ibpms.poc.application.service.PreFlightAnalyzerService;
+import com.ibpms.poc.application.service.ProcessMigrationService;
 
+import java.util.List;
 import java.util.Map;
-
+import java.util.UUID;
 /**
  * REST Controller for BPMN Design operations (Integration Gaps Mock).
  */
@@ -20,9 +21,12 @@ import java.util.Map;
 public class BpmnDesignController {
 
     private final PreFlightAnalyzerService preFlightAnalyzerService;
+    private final ProcessMigrationService processMigrationService;
 
-    public BpmnDesignController(PreFlightAnalyzerService preFlightAnalyzerService) {
+    public BpmnDesignController(PreFlightAnalyzerService preFlightAnalyzerService, 
+                                ProcessMigrationService processMigrationService) {
         this.preFlightAnalyzerService = preFlightAnalyzerService;
+        this.processMigrationService = processMigrationService;
     }
 
     @PutMapping("/{id}/draft")
@@ -70,5 +74,36 @@ public class BpmnDesignController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Fallo al procesar el archivo BPMN: " + e.getMessage()));
         }
+    }
+
+    /**
+     * CA-9: Evaluador Topológico de Instancias de versión vieja hacia versión nueva.
+     */
+    @GetMapping("/{processDefinitionKey}/instances/migratable")
+    public ResponseEntity<List<MigratableInstanceDTO>> getMigratableInstances(
+            @PathVariable("processDefinitionKey") String processDefinitionKey,
+            @RequestParam("sourceVersion") Integer sourceVersion,
+            @RequestParam("targetVersion") Integer targetVersion) {
+        
+        List<MigratableInstanceDTO> report = processMigrationService.evaluateTopologyTarget(
+                processDefinitionKey, sourceVersion, targetVersion);
+        
+        return ResponseEntity.ok(report);
+    }
+
+    /**
+     * CA-7 y CA-10: Ejecutor Transaccional de Migración Grandfathering
+     * @param request El payload blindado MigrationRequestDTO garantiza que "variables" es ignorado localmente.
+     */
+    @PostMapping("/migrate")
+    public ResponseEntity<Map<String, String>> triggerBatchMigration(
+            @RequestBody MigrationRequestDTO request) {
+        
+        processMigrationService.executeSafeMigration(request);
+        
+        return ResponseEntity.ok(Map.of(
+            "message", "Solicitud de migración en lote enviada al JobExecutor con éxito.",
+            "status", "MIGRATION_QUEUED"
+        ));
     }
 }

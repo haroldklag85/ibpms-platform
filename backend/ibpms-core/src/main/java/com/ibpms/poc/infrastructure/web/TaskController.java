@@ -17,6 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import com.ibpms.poc.application.dto.TaskCompleteRequest;
+import jakarta.validation.Valid;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -91,12 +94,15 @@ public class TaskController {
     public ResponseEntity<Void> completeTask(
             @PathVariable String taskId,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
-            @RequestBody Map<String, Object> payload) {
+            @Valid @RequestBody TaskCompleteRequest requestPayload) {
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> variables = payload.containsKey("variables")
-                ? (Map<String, Object>) payload.get("variables")
-                : payload;
+        // CA-47 & CA-50: Garantizar extracción estricta y limpia de variables
+        Map<String, Object> variables = requestPayload.getVariables();
+        if (variables == null || variables.isEmpty()) {
+            // Retrocompatibilidad temporal: Si enviaron variables sueltas sin bloque "variables",
+            // cayeron en hiddenMetadata debido a JsonAnySetter.
+            variables = requestPayload.getHiddenMetadata();
+        }
 
         // 1. Limpieza de máscaras estéticas (CA-31)
         formFieldCleanserService.cleanseVariables(variables);

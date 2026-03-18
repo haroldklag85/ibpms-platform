@@ -27,6 +27,9 @@ import org.camunda.bpm.model.bpmn.instance.ServiceTask;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.camunda.bpm.model.bpmn.instance.UserTask;
 import org.camunda.bpm.model.bpmn.instance.BusinessRuleTask;
+import org.camunda.bpm.model.bpmn.instance.CallActivity;
+import org.camunda.bpm.model.bpmn.instance.TimerEventDefinition;
+import org.camunda.bpm.model.bpmn.instance.MessageEventDefinition;
 import org.camunda.bpm.model.bpmn.instance.Process;
 import org.camunda.bpm.model.bpmn.instance.Lane;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperty;
@@ -202,6 +205,32 @@ public class PreFlightAnalyzerService {
             }
             if (!hasNomenclature) {
                 response.addError("Process", "Debe definir cómo se llamarán los casos de este proceso (Propiedad: ReglaNomenclatura).");
+            }
+
+            // CA-18.1: TimerEvent requiere configuracion (timeDuration o timeCycle)
+            Collection<TimerEventDefinition> timers = modelInstance.getModelElementsByType(TimerEventDefinition.class);
+            for (TimerEventDefinition t : timers) {
+                if ((t.getTimeDuration() == null || t.getTimeDuration().getTextContent().isBlank()) &&
+                    (t.getTimeCycle() == null || t.getTimeCycle().getTextContent().isBlank()) &&
+                    (t.getTimeDate() == null || t.getTimeDate().getTextContent().isBlank())) {
+                    response.addError(t.getId() != null ? t.getId() : "TimerEvent", "TimerEvent sin expresión de tiempo válida definida.");
+                }
+            }
+
+            // CA-18.2: MessageEvent requiere messageRef
+            Collection<MessageEventDefinition> messages = modelInstance.getModelElementsByType(MessageEventDefinition.class);
+            for (MessageEventDefinition m : messages) {
+                if (m.getMessage() == null) {
+                    response.addError(m.getId() != null ? m.getId() : "MessageEvent", "MessageEvent carece de Message Reference (messageRef).");
+                }
+            }
+
+            // CA-18.3: CallActivity requiere calledElement
+            Collection<CallActivity> calls = modelInstance.getModelElementsByType(CallActivity.class);
+            for (CallActivity ca : calls) {
+                if (ca.getCalledElement() == null || ca.getCalledElement().isBlank()) {
+                    response.addError(ca.getId(), "CallActivity invoca subproceso pero carece de la propiedad 'calledElement'.");
+                }
             }
 
             // CA-6: Autogeneración de Roles RBAC desde Lanes (Si el proceso aprueba o incluso si falla el log lo reporta al final)

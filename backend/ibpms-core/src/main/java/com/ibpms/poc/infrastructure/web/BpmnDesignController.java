@@ -13,12 +13,16 @@ import com.ibpms.poc.application.service.ProcessMigrationService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * REST Controller for BPMN Design operations (Integration Gaps Mock).
  */
 @RestController
 @RequestMapping("/api/v1/design/processes")
 public class BpmnDesignController {
+
+    private static final Map<String, String> pessimisticLocks = new ConcurrentHashMap<>();
 
     private final PreFlightAnalyzerService preFlightAnalyzerService;
     private final ProcessMigrationService processMigrationService;
@@ -131,6 +135,57 @@ public class BpmnDesignController {
             "message", "Rollback completado. La versión " + versionId + " ha sido clonada y repulsada como la nueva vLatest.",
             "processDefinitionKey", processDefinitionKey,
             "status", "ROLLBACK_SUCCESS"
+        ));
+    }
+
+    /**
+     * CA-16: Bloqueo Pesimista (Adquisición)
+     */
+    @PostMapping("/{processDefinitionKey}/lock")
+    public ResponseEntity<?> acquireLock(@PathVariable("processDefinitionKey") String key) {
+        String mockUser = "user-mock-123";
+        if (pessimisticLocks.containsKey(key) && !pessimisticLocks.get(key).equals(mockUser)) {
+            return ResponseEntity.status(423).body(Map.of("error", "El proceso ya se encuentra bloqueado por otro usuario."));
+        }
+        pessimisticLocks.put(key, mockUser);
+        return ResponseEntity.ok(Map.of("status", "LOCKED", "owner", mockUser));
+    }
+
+    /**
+     * CA-16: Bloqueo Pesimista (Liberación)
+     */
+    @DeleteMapping("/{processDefinitionKey}/lock")
+    public ResponseEntity<?> releaseLock(@PathVariable("processDefinitionKey") String key) {
+        pessimisticLocks.remove(key);
+        return ResponseEntity.ok(Map.of("status", "UNLOCKED"));
+    }
+
+    /**
+     * CA-17: Copiloto IA (Mock)
+     */
+    @PostMapping("/ai-copilot")
+    public ResponseEntity<?> aiCopilot(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(Map.of(
+            "suggestion", "Recomendación ISO-9001: Asegúrese de incluir al menos un User Task de validación manual o un Gateway exclusivo para casos de indisponibilidad técnica."
+        ));
+    }
+
+    /**
+     * CA-19: Autosave Borrador (POST explícito)
+     */
+    @PostMapping("/{processDefinitionKey}/draft")
+    public ResponseEntity<?> saveDraft(@PathVariable("processDefinitionKey") String key) {
+        return ResponseEntity.ok(Map.of("status", "DRAFT_SAVED", "processId", key));
+    }
+
+    /**
+     * CA-20: Sandbox Simulator (Extrae estáticamente 3 nodos a animar)
+     */
+    @PostMapping("/sandbox-simulate")
+    public ResponseEntity<?> sandboxSimulate(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(Map.of(
+            "status", "SIMULATION_COMPLETE",
+            "activeNodes", List.of("StartEvent_1", "Activity_Mock1", "EndEvent_1")
         ));
     }
 }

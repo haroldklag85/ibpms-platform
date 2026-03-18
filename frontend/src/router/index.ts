@@ -39,6 +39,11 @@ const router = createRouter({
                     component: () => import('@/views/admin/SettingsView.vue'),
                 },
                 {
+                    path: 'admin/incidents',
+                    name: 'IncidentCenter',
+                    component: () => import('@/views/admin/IncidentCenter.vue'),
+                },
+                {
                     path: 'admin/modeler/bpmn',
                     name: 'BpmnDesigner',
                     component: () => import('@/views/admin/Modeler/BpmnDesigner.vue'),

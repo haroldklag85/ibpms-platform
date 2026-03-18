@@ -435,6 +435,11 @@
           </h4>
           <button @click="showVersions = false" class="text-gray-400 hover:text-red-500">&times;</button>
         </div>
+        <div class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800 shrink-0 text-center">
+          <p class="text-[10px] text-blue-700 dark:text-blue-300 leading-tight">
+             ℹ️ <b>Nota (CA-15):</b> El Rollback es inmutable. No pisa los datos, sino que clona la arquitectura creando una <b>V_NUEVA</b> en borrador.
+          </p>
+        </div>
         <div class="flex-1 overflow-y-auto p-3 space-y-2">
           <div v-if="loadingVersions" class="text-center text-xs text-gray-500 py-4">Cargando versiones...</div>
           <div v-else v-for="v in versionHistory" :key="v.version" class="flex justify-between items-center p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-sm border border-gray-100 dark:border-gray-700 transition group">
@@ -444,9 +449,9 @@
             </div>
             <div class="flex flex-col items-end gap-1">
               <span :class="v.status === 'ACTIVO' ? 'text-green-600' : 'text-gray-500'" class="text-[10px] font-bold">{{ v.status }}</span>
-              <!-- CA-6 Botón Restaurar -->
-              <button v-if="v.status !== 'ACTIVO' && !isLocked" @click="restoreVersion(v.version)" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition disabled:opacity-50">
-                Restaurar ↺
+              <!-- CA-15 Botón Restaurar -> Clonar -->
+              <button v-if="v.status !== 'ACTIVO' && !isLocked" @click="restoreVersion(v.version)" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition disabled:opacity-50" title="Ejecutar Rollback Un Clic">
+                Clonar como V_NUEVA (Rollback) ↺
               </button>
             </div>
           </div>

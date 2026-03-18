@@ -89,9 +89,9 @@ export const api = {
     getCatalogProcesses: () => apiClient.get(`/design/processes/catalog`),
     getBpmnTemplates: () => apiClient.get(`/design/processes/templates`),
     
-    // Gobernanza CA-6 & CA-7:
+    // Gobernanza CA-6 & CA-7 & Rollback CA-15:
     getProcessVersions: (id: string) => apiClient.get(`/design/processes/${id}/versions`),
-    restoreProcessVersion: (id: string, version: number) => apiClient.post(`/design/processes/${id}/versions/${version}/restore`),
+    restoreProcessVersion: (id: string, version: number) => apiClient.post(`/design/processes/${id}/rollback/${version}`),
     getProcessLock: (id: string) => apiClient.get(`/design/processes/${id}/lock`),
 
     // 6. BPMN Sandbox (Pantalla 6)
@@ -114,5 +114,10 @@ export const api = {
     analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
 
     // 11. Public Tracking (Pantalla 18)
-    getPublicTracking: (trackingCode: string) => apiClient.get(`/public/tracking/${trackingCode}`)
+    getPublicTracking: (trackingCode: string) => apiClient.get(`/public/tracking/${trackingCode}`),
+
+    // 12. Centro de Incidentes SysAdmin (CA-13 DRP)
+    getIncidents: () => apiClient.get('/admin/incidents'),
+    retryIncident: (id: string) => apiClient.post(`/admin/incidents/${id}/retry`),
+    abortIncident: (id: string) => apiClient.delete(`/admin/incidents/${id}`)
 };

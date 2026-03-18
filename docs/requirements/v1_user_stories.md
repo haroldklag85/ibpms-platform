@@ -822,7 +822,7 @@ Esta épica aborda el rol del Arquitecto/Administrador para modelar cómo fluye 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: BPMN Process Deployment
-  Scenario: Despliegue exitoso de un diagrama BPMN válido
+  Scenario: Despliegue exitoso de un diagrama BPMN válido (CA-1)
     Given que el usuario Arquitecto ha diseñado el flujo "Aprobacion_Credito_v2.bpmn"
     When el usuario sube el archivo invocando un POST multipart/form-data a "/api/v1/design/processes/deploy"
     Then el motor (Ej. Camunda) debe validar la sintaxis XML del archivo
@@ -830,14 +830,14 @@ Feature: BPMN Process Deployment
     And el sistema debe generar una nueva "Version" del "Process Definition ID" (Ej. Credito:2)
     And las nuevas instancias usarán esta versión sin afectar a las que ya estaban "En Vuelo" (In-Flight)
 
-  Scenario: Intento de despliegue con diagrama inválido (BPMN Roto)
+  Scenario: Intento de despliegue con diagrama inválido (BPMN Roto) (CA-2)
     Given un archivo "Proceso_Roto.bpmn" al que le falta un "End Event" necesario
     When el usuario realiza el POST a "/api/v1/design/processes/deploy"
     Then el motor debe denegar el despliegue
     And el sistema debe retornar HTTP STATUS 422 Unprocessable Entity
     And el payload debe contener el mensaje parseado: "El diagrama no es instanciable. Falta End Event."
 
-  Scenario: Análisis Semántico en "Pre-Flight" de un diagrama complejo (Ejecutabilidad)
+  Scenario: Análisis Semántico en "Pre-Flight" de un diagrama complejo (Ejecutabilidad) (CA-3)
     Given el Arquitecto importa un diagrama BPMN 2.0 ("Proceso_Core.bpmn") que contiene Subprocesos, Start Events de Mensaje y Tareas de Servicio
     When el usuario solicita la validación previa al despliegue ("Pre-Flight Analyze")
     Then el motor semántico debe parsear los componentes avanzados
@@ -846,19 +846,19 @@ Feature: BPMN Process Deployment
     And identificar si alguna `ExclusiveGateway` carece de un flujo por defecto (`Default Flow`)
     And el sistema debe renderizar en Pantalla 6 la lista de Errores (❌) y Advertencias (⚠️) para que el Arquitecto los corrija antes del despliegue.
 
-  Scenario: Validación Estricta de Start Event Form (Sincronización US-024)
+  Scenario: Validación Estricta de Start Event Form (Sincronización US-024) (CA-4)
     Given el Arquitecto solicita el despliegue de un nuevo modelo BPMN
     When el analizador Pre-Flight evalúa el nodo inicial (`StartEvent`)
     Then es mandatorio que el Start Event posea una vinculación estricta a un formulario (`Form Key` = `iForm Maestro` o `Simple`)
     And si carece de este formulario, el sistema rechaza el despliegue (HTTP 422) porque rompería la capacidad de instanciación manual forzada (Plan B).
 
-  Scenario: Obligatoriedad de Nomenclatura de Instancia (ID Único)
+  Scenario: Obligatoriedad de Nomenclatura de Instancia (ID Único) (CA-5)
     Given el Arquitecto configura las propiedades globales del BPMN antes de desplegar
     When intenta ejecutar el despliegue hacia el motor (Camunda)
     Then el sistema verifica que se haya definido la "Regla de Nomenclatura" (Paramétrica Ej: `PREFIJO-{Var}` o Secuencial Automática) para las futuras instancias
     And si esta regla no está definida en la metadata del proceso, el despliegue se bloquea advirtiendo: "Debe definir cómo se llamarán los casos de este proceso".
 
-  Scenario: Autogeneración de Roles RBAC desde Carriles (Lanes)
+  Scenario: Autogeneración de Roles RBAC desde Carriles (Lanes) (CA-6)
     Given el Arquitecto importa un diagrama interactivo BPMN ("Flujo_Onboarding.bpmn")
     And el diagrama contiene un Carril (Lane) llamado "Aprobadores_Legales"
     And dentro de ese carril existe la Tarea "Firmar_Contrato" asociada al template "Form_Firma"
@@ -867,56 +867,56 @@ Feature: BPMN Process Deployment
     And el sistema debe asociar automáticamente a este Rol los permisos de escritura sobre "Form_Firma" y ejecución sobre la tarea "Firmar_Contrato"
     And el Rol autogenerado queda disponible en el Módulo de Seguridad (Pantalla 14) para asignarle usuarios.
 
-  Scenario: Ley del Abuelo o Grandfathering Estricto por Defecto (CA-5.1)
+  Scenario: Ley del Abuelo o Grandfathering Estricto por Defecto (CA-7)
     Given existen 15 instancias activas ("En Vuelo") ejecutándose con la Versión 1 de un proceso
     When el Arquitecto presiona `[🚀 DESPLEGAR V2]`
     Then el sistema asume 100% coexistencia pacífica por defecto
     And la V1 sigue viva en background procesando a las instancias antiguas hasta su conclusión
     And la migración forzada JAMÁS es el comportamiento predeterminado, requiriendo un acto explícito y manual.
 
-  Scenario: Cirugía Quirúrgica de Instancias (No Guillotina) (CA-5.2)
+  Scenario: Cirugía Quirúrgica de Instancias (No Guillotina) (CA-8)
     Given el Arquitecto requiere forzar la migración de instancias de V1 a V2
     When accede al panel `[Gestor de Instancias Activas]`
     Then el sistema TIENE PROHIBIDO ofrecer un botón de "Migrar Todos" de forma masiva ciega
     And debe desplegar una lista con checkboxes individuales permitiendo al Arquitecto seleccionar con pinzas cuáles instancias específicas someterá al salto de versión.
 
-  Scenario: Bloqueo Topológico Duro Pre-Migración (CA-5.3)
+  Scenario: Bloqueo Topológico Duro Pre-Migración (CA-9)
     Given el Arquitecto intenta migrar la Instancia #45 (V1) hacia la V2
     And la Instancia #45 se encuentra actualmente pausada en el nodo `Tarea_Analisis`
     When el motor evalúa el Plan de Migración (Migration Plan)
     Then si el nodo `Tarea_Analisis` fue eliminado o no existe en la topología de la V2, el checkbox de selección se deshabilita
     And el sistema bloquea la migración arrojando: "Imposible migrar la Instancia #45. El nodo actual no existe en la Versión 2. Esta instancia debe terminar en V1 o ser anulada."
 
-  Scenario: Prohibición Absoluta de Data-Patching Humano en TI (CA-5.4)
+  Scenario: Prohibición Absoluta de Data-Patching Humano en TI (CA-10)
     Given la migración forzada hacia una V2 que exige un nuevo campo Zod "Obligatorio" (Ej: `Cédula`) que no existía en la V1
     Then el sistema TIENE ESTRICTAMENTE PROHIBIDO levantar un modal para que el usuario de TI (Systems Admin/Arquitecto) digite o invente ese dato faltante
     And garantizando así la Segregación de Funciones (SoD) y evitando la falsedad ideológica en la base de datos documental.
 
-  Scenario: Amnistía Técnica y Cobro en Aduana (Lazy Validation) (CA-5.5)
+  Scenario: Amnistía Técnica y Cobro en Aduana (Lazy Validation) (CA-11)
     Given la migración del escenario anterior (CA-5.4) donde falta el dato obligatorio `Cédula`
     When el motor ejecuta el salto técnico a la V2
     Then inyecta silenciosamente un valor nulo (`null`) en la base de datos para no colapsar el hilo de ejecución (Amnistía Técnica)
     And cuando el operario de negocio abra esa instancia en su Workdesk (Pantalla 2), el Frontend renderizará el formulario Zod V2, detectará el `null` imperdonable, pintará el campo en ROJO y bloqueará físicamente el avance funcional hasta que el dueño del proceso pregunte y digite la `Cédula` real (Lazy Validation).
 
-  Scenario: Principio de Ley Vigente para Reglas de Decisión DMN (Late Binding) (CA-5.6)
+  Scenario: Principio de Ley Vigente para Reglas de Decisión DMN (Late Binding) (CA-12)
     Given un proceso V1 con tokens en vuelo que se aproxima a una Business Rule Task (DMN)
     When el Director de Riesgos actualiza y publica una nueva versión de la tabla DMN
     Then los tokens de la V1 (junto con los de las nuevas versiones) que pisen la compuerta un milisegundo después de la publicación, serán evaluados con la nueva regla matemática
     And demostrando que las reglas DMN no tienen nostalgia y aplican Late Binding.
 
-  Scenario: Tablero de Resiliencia y Morgue de Tokens (CA-5.7)
+  Scenario: Tablero de Resiliencia y Morgue de Tokens (CA-13)
     Given un error técnico no controlado durante una migración asíncrona (Ej: Caída de red o base de datos)
     Then el operario de negocio JAMÁS verá un stacktrace o error técnico en su Workdesk
     And el token roto pasará a estado `INCIDENT` y será canalizado exclusivamente a la Pantalla 15.A (SysAdmin) en la pestaña `[🚨 Centro de Incidentes]`
     And otorgando a Soporte Nivel 3 los botones tácticos: `[🔄 Retry (Electrochoque)]` o `[💀 Abortar Caso]`.
 
-  Scenario: Cicatriz Forense de Auditoría Inmutable (CA-5.8)
+  Scenario: Cicatriz Forense de Auditoría Inmutable (CA-14)
     Given la culminación o visualización de una instancia que sufrió una migración forzada estructural
     When un Auditor o Usuario consulta la Vista 360 del Caso (Pantalla 17) o el historial del Workdesk
     Then el sistema inyecta obligatoriamente una franja visual inamovible: `[⚠️ MIGRACIÓN ESTRUCTURAL: Este caso inició bajo la Versión X y fue promovido forzosamente a la Versión Y el DD/MM/YYYY por el Administrador Z]`
     And blindando legalmente a la compañía ante demandas por vacíos procedimentales.
 
-  Scenario: Rollback a Versión Anterior con Historial (CA-6)
+  Scenario: Rollback a Versión Anterior con Historial (CA-15)
     Given el Arquitecto detecta que la versión 3 de un proceso tiene un error lógico post-despliegue
     When navega al panel de "Historial de Versiones" en la Pantalla 6
     Then el sistema debe listar todas las versiones desplegadas previamente (v1, v2, v3) con fecha y autor
@@ -924,21 +924,21 @@ Feature: BPMN Process Deployment
     And el sistema re-despliega la v2 como la nueva versión activa (v4 internamente = copia de v2)
     And las instancias en vuelo de v3 siguen corriendo hasta terminar naturalmente (salvo Migración Forzada explícita).
 
-  Scenario: Bloqueo Pesimista de Edición Concurrente (CA-7)
+  Scenario: Bloqueo Pesimista de Edición Concurrente (CA-16)
     Given el Arquitecto "maria.lopez" abre el proceso "Solicitud_Credito" en el Diseñador (Pantalla 6)
     And el sistema le otorga un "Lock" exclusivo sobre ese proceso
     When el Arquitecto "carlos.gerente" intenta abrir el mismo proceso simultáneamente
     Then el sistema debe mostrar un mensaje: "🔒 Este proceso está siendo editado por maria.lopez desde las 10:15 AM"
     And debe bloquear los controles de edición del lienzo, dejando solo el modo "Solo Lectura" para el segundo usuario.
 
-  Scenario: Copiloto IA Bajo Demanda (CA-8)
+  Scenario: Copiloto IA Bajo Demanda (CA-17)
     Given el Arquitecto está diseñando un diagrama BPMN en el lienzo
     Then el Copiloto IA NO ejecuta análisis automático en tiempo real
     When el Arquitecto hace clic explícitamente en el botón [🧠 Consultar Copiloto IA]
     Then el sistema envía el XML del diagrama actual al endpoint de IA
     And renderiza las sugerencias y alertas ISO 9001 en el Panel de Feedback inferior.
 
-  Scenario: Pre-Flight Extendido con Validaciones Avanzadas (CA-9)
+  Scenario: Pre-Flight Extendido con Validaciones Avanzadas (CA-18)
     Given el Arquitecto solicita un "Pre-Flight Analyze" sobre un diagrama complejo
     Then el sistema debe validar, además de las reglas base (ServiceTask, UserTask, Gateway):
     And identificar si algún `TimerEvent` carece de la expresión de duración configurada (Ej. `R/PT1H`)
@@ -946,20 +946,20 @@ Feature: BPMN Process Deployment
     And identificar si algún `CallActivity` apunta a un `ProcessDefinitionKey` que NO existe desplegado en el motor
     And clasificar los hallazgos como Error (❌ bloquea despliegue) o Advertencia (⚠️ informativa).
 
-  Scenario: Auto-Guardado del Diagrama en Borrador (CA-10)
+  Scenario: Auto-Guardado del Diagrama en Borrador (CA-19)
     Given el Arquitecto está editando un diagrama BPMN en la Pantalla 6
     Then el sistema debe guardar automáticamente un borrador del XML cada 30 segundos (Best Practice Auto-Save)
     And si el usuario cierra el navegador sin desplegar, al volver a abrir el proceso encontrará el último borrador recuperado
     And el sistema debe mostrar un indicador discreto "✅ Guardado" en la barra de estado tras cada auto-guardado exitoso.
 
-  Scenario: Simulación en Sandbox Antes de Desplegar (CA-11)
+  Scenario: Simulación en Sandbox Antes de Desplegar (CA-20)
     Given el Arquitecto tiene un diagrama BPMN listo pero no ha sido desplegado aún
     When presiona el botón [🧪 Probar en Sandbox]
     Then el sistema debe generar una instancia temporal (no persiste en producción) del proceso
     And avanzar visualmente paso a paso mostrando por qué nodo (tarea/compuerta/evento) fluiría un caso de prueba ficticio
     And al finalizar la simulación, destruir la instancia temporal sin dejar rastro en la base de datos de producción.
 
-  Scenario: Separación de Roles RBAC Diseñador vs Release Manager (CA-12)
+  Scenario: Separación de Roles RBAC Diseñador vs Release Manager (CA-21)
     Given un usuario con rol "BPMN_Designer" abre un proceso en la Pantalla 6
     Then puede dibujar, importar, exportar y consultar al Copiloto IA
     But el botón [🚀 DESPLEGAR] debe estar deshabilitado (gris) para este rol
@@ -968,68 +968,68 @@ Feature: BPMN Process Deployment
     And ambos roles son asignables desde el Módulo de Seguridad (Pantalla 14) y un usuario puede tener ambos simultáneamente.
     And estos roles son GLOBALES (aplican a todos los procesos sin granularidad por módulo). La granularidad por proceso se difiere a V2.
 
-  Scenario: Paleta BPMN 2.0 Estándar Completa con UX Priorizada (CA-13)
+  Scenario: Paleta BPMN 2.0 Estándar Completa con UX Priorizada (CA-22)
     Given el Arquitecto abre el Diseñador en la Pantalla 6
     Then la Paleta BPMN 2.0 debe contener TODOS los elementos del estándar (incluyendo Conditional, Link, Cancel Events, Complex Gateway, Ad-Hoc y Event Sub-Process)
     But los elementos más usados (Start/End, User Task, Service Task, Exclusive/Parallel Gateway) deben aparecer como iconos principales visibles
     And los elementos avanzados/exóticos deben estar agrupados bajo submenús colapsables ("Más Eventos...", "Más Compuertas...")
     And esto evita saturar visualmente un principiante pero no limita a un experto.
 
-  Scenario: Catálogo / Biblioteca de Procesos Desplegados (CA-14)
+  Scenario: Catálogo / Biblioteca de Procesos Desplegados (CA-23)
     Given el Arquitecto accede a la Pantalla 6
     Then debe existir un Panel lateral o pestaña "Explorador de Procesos" que liste todos los procesos diseñados
     And cada entrada muestra: Nombre, Versión Activa, Fecha de Último Despliegue y Autor
     And al hacer clic en un proceso, se carga en el Lienzo para su edición o consulta.
 
-  Scenario: Text Annotations (Notas Adhesivas BPMN) en el Lienzo (CA-15)
+  Scenario: Text Annotations (Notas Adhesivas BPMN) en el Lienzo (CA-24)
     Given el Arquitecto está diseñando un diagrama
     Then debe poder arrastrar un componente "Text Annotation" desde la Paleta al Lienzo
     And escribir comentarios explicativos que se renderizan visualmente sobre el diagrama
     And estas anotaciones se persisten en el archivo .bpmn XML como parte del estándar.
 
-  Scenario: Zoom, Minimap y Navegación Visual (CA-16)
+  Scenario: Zoom, Minimap y Navegación Visual (CA-25)
     Given el Arquitecto trabaja con un diagrama con más de 3 carriles y 20+ nodos
     Then el Lienzo debe soportar controles de Zoom (+/-) y "Ajustar a Pantalla"
     And un Mini-Mapa (panorámico) en la esquina inferior derecha para navegar rápidamente entre secciones lejanas del diagrama.
 
-  Scenario: Naming Dual - Nombre de Negocio y Nombre Técnico (CA-17)
+  Scenario: Naming Dual - Nombre de Negocio y Nombre Técnico (CA-26)
     Given el Arquitecto crea una User Task y escribe "Llenar Formulario de Crédito" como nombre visible
     Then el panel de Propiedades debe ofrecer un segundo campo: "ID Técnico (Technical Name)"
     And si el Arquitecto no lo rellena, el sistema debe auto-generar un slug (Ej: `llenar_formulario_de_credito`)
     And el motor Camunda usará el ID Técnico internamente, mientras que la UI del Workdesk mostrará el Nombre de Negocio.
 
-  Scenario: Plantillas BPMN Prediseñadas (CA-18)
+  Scenario: Plantillas BPMN Prediseñadas (CA-27)
     Given el Arquitecto presiona "Nuevo Proceso" en la Pantalla 6
     Then un Modal debe ofrecer la opción "Empezar desde Cero" o "Usar Plantilla"
     And las plantillas disponibles incluyen ejemplos comunes (Ej: "Aprobación Simple", "Onboarding Cliente", "Incidencia IT")
     And al seleccionar una plantilla, se carga en el Lienzo como punto de partida editable.
 
-  Scenario: Diff Visual entre Versiones (CA-19 - Diferido a V2)
+  Scenario: Diff Visual entre Versiones (CA-28 - Diferido a V2)
     # NOTA: Este escenario queda documentado pero su implementación se difiere a la Versión 2 del producto.
     Given el Arquitecto navega al Historial de Versiones y selecciona v2 y v3 para comparar
     Then el sistema muestra un Diff visual resaltando nodos agregados (verde), eliminados (rojo) y modificados (amarillo).
 
-  Scenario: Copiar y Pegar Fragmentos entre Procesos (CA-20)
+  Scenario: Copiar y Pegar Fragmentos entre Procesos (CA-29)
     Given el Arquitecto tiene abiertos dos procesos en pestañas distintas de la Pantalla 6
     When selecciona un fragmento (Ej: un Sub-Proceso con 5 tareas) del Proceso A y ejecuta "Copiar"
     Then debe poder "Pegar" ese fragmento en el Lienzo del Proceso B
     And el sistema debe re-mapear los IDs internos para evitar colisiones XML.
 
-  Scenario: Límite de Complejidad Parametrizable y Advertencia de Mala Práctica (CA-21)
+  Scenario: Límite de Complejidad Parametrizable y Advertencia de Mala Práctica (CA-30)
     Given el sistema tiene configurado un umbral de complejidad máxima (Ej: 100 nodos por defecto, parametrizable)
     When el Arquitecto excede ese umbral dibujando el nodo número 101
     Then el sistema debe mostrar una advertencia visual: "⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos"
     And debe detallar los riesgos: "Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor"
     And la advertencia NO bloquea el despliegue, solo informa. El umbral es configurable por un Admin.
 
-  Scenario: Etiquetas de Estado en el Catálogo de Procesos (CA-22)
+  Scenario: Etiquetas de Estado en el Catálogo de Procesos (CA-31)
     Given el Catálogo de Procesos desplegados (CA-14) lista todos los procesos
     Then cada proceso debe tener una etiqueta visual de estado:
     And "📝 BORRADOR" si nunca ha sido desplegado al motor (solo existe como XML guardado)
     And "✅ ACTIVO (v3)" si tiene al menos una versión desplegada y operativa
     And "📦 ARCHIVADO" si fue retirado de operación (CA-23).
 
-  Scenario: Archivar un Proceso sin Instancias Activas (CA-23)
+  Scenario: Archivar un Proceso sin Instancias Activas (CA-32)
     Given el Arquitecto selecciona un proceso "Proceso_Obsoleto" en el Catálogo
     And NO existen instancias "En Vuelo" de ese proceso
     When presiona el botón [📦 Archivar]
@@ -1038,80 +1038,80 @@ Feature: BPMN Process Deployment
     And el proceso deja de estar visible para los usuarios operativos, pero permanece en BD para auditoría
     But si existen instancias activas, el botón Archivar está deshabilitado con el tooltip: "No se puede archivar: X instancias en ejecución".
 
-  Scenario: Invalidación Automática del Pre-Flight tras Edición (CA-24)
+  Scenario: Invalidación Automática del Pre-Flight tras Edición (CA-33)
     Given el Arquitecto ejecutó el Pre-Flight Analyzer y obtuvo resultado "✅ Sin Errores"
     When posteriormente modifica el diagrama (agrega/elimina/cambia un nodo)
     Then el estado del Pre-Flight debe resetearse automáticamente a "⚠️ Pendiente de re-validación"
     And el botón [🚀 DESPLEGAR] debe requerir una nueva ejecución del Pre-Flight antes de habilitarse.
 
-  Scenario: Solicitar Despliegue al Release Manager (CA-25)
+  Scenario: Solicitar Despliegue al Release Manager (CA-34)
     Given el Designer ha terminado de diseñar y el Pre-Flight está aprobado
     When presiona el botón [📩 Solicitar Despliegue]
     Then el sistema cambia el estado del proceso a "PENDIENTE_APROBACIÓN_DESPLIEGUE"
     And crea automáticamente una tarea en el Workdesk del usuario con rol "BPMN_Release_Manager"
     And el Release Manager ve esta tarea en su bandeja con el botón [🚀 Aprobar y Desplegar] o [❌ Rechazar].
 
-  Scenario: SLA Configurable por Tarea Individual o Global (CA-26)
+  Scenario: SLA Configurable por Tarea Individual o Global (CA-35)
     Given el Arquitecto configura un UserTask en el Panel de Propiedades de la Pantalla 6
     Then el campo "SLA" puede tener un valor específico por tarea (Ej: "4 horas" para "Analizar", "48 horas" para "Firmar")
     And adicionalmente debe existir un SLA Global a nivel de ProcessDefinition (Ej: "5 días hábiles para el proceso completo")
     And las reglas de negocio o el Diseñador definen cuál prevalece en caso de conflicto.
 
-  Scenario: Link Directo a Sub-Proceso desde Call Activity (CA-27)
+  Scenario: Link Directo a Sub-Proceso desde Call Activity (CA-36)
     Given el Arquitecto selecciona una Call Activity en el Lienzo que apunta al proceso hijo "Proceso_Riesgo"
     Then el Panel de Propiedades debe mostrar un link clickeable: "[🔗 Abrir Sub-Proceso: Proceso_Riesgo]"
     And al hacer clic, se abre el proceso hijo en una nueva pestaña del Diseñador para editarlo o consultarlo.
 
-  Scenario: Colores Personalizados en Carriles y Tareas (CA-28 - Diferido a V2)
+  Scenario: Colores Personalizados en Carriles y Tareas (CA-37 - Diferido a V2)
     # NOTA: Este escenario queda documentado pero su implementación se difiere a la Versión 2 del producto.
     Given el Arquitecto selecciona un Carril o Tarea en el Lienzo
     Then puede asignarle un color personalizado desde una paleta de colores para distinguir departamentos.
 
-  Scenario: Autocompletado de Variables en Expresiones (CA-29 - Diferido a V2)
+  Scenario: Autocompletado de Variables en Expresiones (CA-38 - Diferido a V2)
     # NOTA: Diferido a V2.
     Given el Arquitecto escribe una condición en una Compuerta Exclusiva (Ej: `${monto > 5000}`)
     Then el sistema ofrece autocompletado de variables disponibles basándose en los formularios asociados al proceso.
 
-  Scenario: FormKey como Dropdown Validado desde Pantalla 7 (CA-30)
+  Scenario: FormKey como Dropdown Validado desde Pantalla 7 (CA-39)
     Given el Arquitecto selecciona una User Task en el Lienzo de la Pantalla 6
     When accede al campo "📄 Formulario Asociado" en el Panel de Propiedades
     Then el campo debe ser un Dropdown (NO texto libre) que lista los formularios registrados en la Pantalla 7
     And cada opción del Dropdown muestra: Nombre del formulario, Tipo (🟢 Simple o 🔵 iForm Maestro), y si es Maestro, el número de etapas configuradas
     And si no se selecciona ningún formulario, el Pre-Flight lo marca como Error.
 
-  Scenario: Consistencia de Patrón de Formulario por Proceso (CA-31)
+  Scenario: Consistencia de Patrón de Formulario por Proceso (CA-40)
     Given el Arquitecto crea un nuevo proceso en la Pantalla 6
     Then al inicio debe elegir el patrón de formulario: "Patrón A: Formulario Simple" o "Patrón B: iForm Maestro"
     And esta decisión es inmutable para ese proceso (consistente con US-003)
     And si eligió Patrón A, cada User Task mostrará en el Dropdown solo formularios "Simple"
     And si eligió Patrón B, todas las User Tasks compartirán el mismo iForm Maestro y el Dropdown filtrará solo formularios "Maestro".
 
-  Scenario: Sandbox Simulado en Motor de Producción en V1 (CA-32)
+  Scenario: Sandbox Simulado en Motor de Producción en V1 (CA-41)
     Given el iBPMS V1 opera con un único motor Camunda (no hay ambiente de Desarrollo separado)
     Then el botón [🧪 Sandbox] genera instancias temporales directamente en el motor de producción
     And estas instancias se marcan como "SANDBOX_TEST" y se auto-destruyen al finalizar la simulación
     And la separación real de ambientes (Dev vs Prod) se difiere a V2.
 
-  Scenario: Registro de Auditoría de Diseño tipo Git-Log (CA-33)
+  Scenario: Registro de Auditoría de Diseño tipo Git-Log (CA-42)
     Given el Arquitecto realiza cualquier acción sobre un proceso (importar, editar, guardar borrador, solicitar despliegue, archivar, restaurar versión)
     Then el sistema debe crear una entrada en un log de auditoría persistente (BD) con: Acción, Usuario, Timestamp y Versión Afectada
     And este log debe ser visible para Administradores en un panel "📜 Historial de Cambios" (estilo Git Log) dentro de la Pantalla 6.
 
-  Scenario: Lock Manual sin Expiración Automática (CA-34)
+  Scenario: Lock Manual sin Expiración Automática (CA-43)
     Given el Arquitecto "maria.lopez" tiene el Lock sobre un proceso
     And permanece inactiva por más de 30 minutos
     Then el Lock NO expira automáticamente
     And otros usuarios que intenten editar verán: "🔒 Bloqueado por maria.lopez. Contacte al usuario para solicitar la liberación."
     And la liberación es un proceso manual: María debe cerrar su pestaña o presionar un botón "Liberar Edición".
 
-  Scenario: Soporte Multi-Pool para Modelado de Colaboración (CA-35)
+  Scenario: Soporte Multi-Pool para Modelado de Colaboración (CA-44)
     Given el Arquitecto crea un nuevo diagrama BPMN en la Pantalla 6
     Then puede agregar múltiples Pools al Lienzo representando actores internos y externos (Ej: "Mi Empresa", "Banco Externo", "Proveedor")
     And puede conectar los Pools con Message Flows (flechas de mensaje) para modelar la interacción
     And los Pools externos son representaciones visuales (cajas negras) que no se ejecutan en el motor Camunda interno
     And esto provee claridad documental y de auditoría sobre quién habla con quién.
 
-  Scenario: Service Task con Dropdown de Conectores API del Hub (CA-36)
+  Scenario: Service Task con Dropdown de Conectores API del Hub (CA-45)
     Given el Arquitecto coloca una Service Task en el Lienzo y abre su Panel de Propiedades
     Then el campo "Conector / API" debe ser un Dropdown que lista los conectores registrados en la Pantalla 11 (Hub de Integraciones)
     And cada opción muestra: Nombre del conector, Tipo (REST/SOAP/GraphQL) y Sistema Destino
@@ -1121,86 +1121,86 @@ Feature: BPMN Process Deployment
     And - 💰 Oracle NetSuite (ERP/Financiero)
     And si el conector necesario NO existe aún en el Hub, consultar CA-37.
 
-  Scenario: MessageEvent como Placeholder de Integración Futura (CA-37)
+  Scenario: MessageEvent como Placeholder de Integración Futura (CA-46)
     Given el Arquitecto necesita modelar una integración con un sistema externo cuyo conector API aún no fue registrado en el Hub (Pantalla 11)
     Then debe usar un MessageEvent (Intermediate Throw/Catch) como marcador visual temporal
     And el Pre-Flight Analyzer debe clasificar este nodo como Advertencia (⚠️): "MessageEvent sin conector API asociado. Considere crear el conector en el Hub y migrar a Service Task."
     And cuando el conector sea registrado posteriormente, el Arquitecto puede reemplazar el MessageEvent por una Service Task enlazada al nuevo conector.
 
-  Scenario: [Onboarding Embebido] Iconos de Ayuda Globales en el Diseñador (CA-38)
+  Scenario: [Onboarding Embebido] Iconos de Ayuda Globales en el Diseñador (CA-47)
     Given el Arquitecto (de cualquier perfil o seniority) selecciona un componente visual en el Lienzo de la Pantalla 6
     Then tanto en la barra superior de herramientas como al lado de cada título del Panel de Propiedades aparecerá un ícono de ayuda `[?]`
     And al hacer hover, el sistema desplegará el Componente de Tooltip Estándar (reutilizado de la US-003).
 
-  Scenario: Tooltips Ricos interactivos y Mapeo de Errores de Sintaxis (CA-39)
+  Scenario: Tooltips Ricos interactivos y Mapeo de Errores de Sintaxis (CA-48)
     Given la visualización del Tooltip en el Diseñador BPMN
     Then el contenido didáctico estará codificado de forma estática ("quemado") para la V1
     And el componente soportará formato HTML enriquecido permitiendo incrustar hipervínculos azules hacia la documentación oficial
     When el Arquitecto ingresa una expresión inválida o código basura en un campo de configuración (Ej: Listener Script o Condición de Gateway)
     Then el ícono de ayuda y su respectivo Tooltip mutarán dinámicamente a color ROJO para alertar el error de sintaxis visualmente.
 
-  Scenario: Mapeo Visual Estricto (Prohibición de JSON Crudo) (CA-40)
+  Scenario: Mapeo Visual Estricto (Prohibición de JSON Crudo) (CA-49)
     Given que el Arquitecto selecciona un Conector API (Ej: Oracle) en una Service Task (Pantalla 6)
     When el Frontend despliega el sub-panel de Integración
     Then el sistema TIENE ESTRICTAMENTE PROHIBIDO renderizar un `<textarea>` libre para inyección manual de JSON Payload.
     And debe renderizar un componente `<DataMapperGrid>` de dos columnas: Columna Izquierda (Campos fijos dictados por el Swagger del Hub en Pantalla 11) vs Columna Derecha (Dropdown interactivo).
     And el Dropdown de la derecha consumirá el Diccionario de Datos del proceso (Variables Zod de la Pantalla 7), permitiendo al usuario emparejarlas visualmente con clics.
 
-  Scenario: Coerción Inteligente y Seguridad de Tipos (Type-Safety) (CA-41)
+  Scenario: Coerción Inteligente y Seguridad de Tipos (Type-Safety) (CA-50)
     Given la matriz de mapeo visual `<DataMapperGrid>`
     When el usuario despliega la lista de variables origen para emparejarlas con un destino
     Then el Frontend aplicará un filtro dinámico: mostrará deshabilitadas (sombreadas en gris) con un tooltip explicativo de "Tipo Incompatible" a aquellas variables (Zod) cuyo tipo de dato (String, Number, Boolean) NO coincida matemáticamente con el tipo esperado por el sistema externo.
     And anulando desde el diseño de la UI la posibilidad de enviar un Error 400 (Type Mismatch) a Producción.
 
-  Scenario: Inyección de Valores Constantes (Hardcoding Controlado) (CA-42)
+  Scenario: Inyección de Valores Constantes (Hardcoding Controlado) (CA-51)
     Given que la API externa requiere un dato que no proviene del Formulario del cliente (Ej: `Country_Code`)
     Then la Columna Derecha del `<DataMapperGrid>` permitirá al usuario alternar entre [Variable Dinámica Zod] y [Valor Estático].
     And si elige [Valor Estático], podrá digitar el texto crudo inyectándolo de forma segura en el Payload saliente.
 
-  Scenario: Inmutabilidad Estricta ante Mutación de Swagger (Zero-Breakage) (CA-44)
+  Scenario: Inmutabilidad Estricta ante Mutación de Swagger (Zero-Breakage) (CA-52)
     Given un proceso V1 desplegado que utiliza el conector `Oracle_API_v1`
     When el Administrador actualiza el contrato (Swagger) en el Hub (Pantalla 11) renombrando o eliminando variables esperadas
     Then el sistema bloquea la sobrescritura y fuerza la creación de un nuevo conector `Oracle_API_v2`
     And el proceso V1 que ya estaba en el motor sigue funcionando intacto con la versión vieja en caché ("Zero-Breakage Policy")
     And si el Arquitecto desea usar la nueva versión, debe entrar a la Pantalla 6, seleccionar la v2, re-mapear y desplegar una nueva versión temporal del proceso.
 
-  Scenario: Validación Lógica de Cláusulas OneOf/AnyOf (CA-45)
+  Scenario: Validación Lógica de Cláusulas OneOf/AnyOf (CA-53)
     Given una API que exige el dato X *o* el dato Y mediante las cláusulas Swagger (OneOf / AnyOf)
     When el Frontend despliega el `<DataMapperGrid>`
     Then agrupa visualmente las filas afectadas bajo la etiqueta `[ 🔀 Requiere mapear al menos UNO ]`
     And el Pre-Flight Analyzer verificará el grupo lógico en conjunto: Si falta al menos uno, alerta roja y aborta despliegue. Si ambos están vacíos, aborta. Si uno está lleno, autoriza el pase a Producción.
 
-  Scenario: Shift-Left Security para Datos Sensibles (PII/PHI) (CA-46)
+  Scenario: Shift-Left Security para Datos Sensibles (PII/PHI) (CA-54)
     Given el mapeo de una variable clasificada con el flag `[🔒 Dato Sensible PII]` desde la Pantalla 7 (Zod)
     When la Service Task dispara la integración hacia la API externa
     Then el dato crudo viaja obligatoriamente encriptado por el túnel HTTP/TLS
     And el motor de auditoría histórica de Camunda (History Level) tiene estrictamente PROHIBIDO persistir el valor real en texto plano dentro de sus logs, reemplazándolo obligatoriamente por un hash o la viñeta `[REDACTED_PII]`.
 
-  Scenario: Mapeo Reestringido de Headers Dinámicos (CA-47)
+  Scenario: Mapeo Reestringido de Headers Dinámicos (CA-55)
     Given que la API exige metadatos de usuario por cada transacción (Ej: `User_ID`) en las cabeceras REST
     Then el Data Mapper ofrecerá una tercera pestaña visual denominada `[ 🔑 HEADERS DINÁMICOS ]`
     And la UI aplicará severas restricciones denegando la inserción de texto libre o crudo para prevenir Header Injection.
     And obligará a mapear valores usando únicamente variables pre-validadas del formulario (Zod) o Macros seguras del Sistema.
 
-  Scenario: Delegación Transparente de Conversión Binaria (Multipart/Base64) (CA-48)
+  Scenario: Delegación Transparente de Conversión Binaria (Multipart/Base64) (CA-56)
     Given un componente Zod de tipo `<InputFile>` mapeado hacia un atributo del Payload destino
     When el Arquitecto despliega y llega el momento de la ejecución
     Then el flujo UI no exige que el Arquitecto indique la técnica de conversión
     And el Worker (Backend) intercepta el mapping, consulta en caliente el requerimiento del Swagger (Multipart-FormData vs Base64), y lo transmuta automáticamente antes de inyectar la data a la trama HTTP de salida.
 
-  Scenario: Ley de Omisión Pura de Llaves Nulas (Drop Key by Default) (CA-49)
+  Scenario: Ley de Omisión Pura de Llaves Nulas (Drop Key by Default) (CA-57)
     Given una variable Zod marcada como Opcional que el usuario no diligenció en el Runtime (cuyo valor es `null` o vacío)
     When la petición es empaquetada hacia el sistema remoto
     Then el Backend aniquila y purga la llave entera ("Key") del JSON saliente, evitando enviar sintaxis propensa a crashes (Ej: `"campo": null`)
     And la única excepción será si el Swagger explicíta la obligación del campo como `nullable: true`, obligando al envío literal.
 
-  Scenario: Resiliencia Asíncrona Parametrizable (Retry Pattern Visual) (CA-50)
+  Scenario: Resiliencia Asíncrona Parametrizable (Retry Pattern Visual) (CA-58)
     Given la configuración de una Task API Integrada en Pantalla 6
     Then el sistema expone un sub-panel `[ ⚙️ Estrategia de Fallo (Retries) ]`
     And permite configurar intentos asíncronos y ventana retardo temporal (Ej. 3 intentos espaciados por 5 mins)
     And los reintentos operan como Background Jobs (Job Executor) liberando ram de la UI, y si la póliza se agota, canaliza automáticamente el Thread BPMN hacia el Boundary Error Event modelado de rescate humano.
 
-  Scenario: Amnesia Selectiva Obligatoria de Datos No Mapeados (Output Pruning) (CA-51)
+  Scenario: Amnesia Selectiva Obligatoria de Datos No Mapeados (Output Pruning) (CA-59)
     Given una respuesta de la API externa que retorna un Payload gigante (Ej: JSON de 15 MB)
     And el Arquitecto sólo enlazó visualmente 1 variable diminuta (`Ticket_ID`) en la pestaña de `[ 📥 OUTPUT MAPPING ]`
     When arriba el Payload y se graba el Ticket_ID en el Bolsillo Global de Variables (Process Runtime)

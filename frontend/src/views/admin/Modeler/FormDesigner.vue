@@ -374,6 +374,25 @@
                </div>
                <p class="text-[10px] text-orange-600">Validará en frontend antes de subir por Axios.</p>
             </div>
+            
+            <!-- CA-41: Grid Constraints -->
+            <div v-if="editingField.type === 'field_array'" class="flex gap-2">
+               <div class="flex-1">
+                 <label class="block text-xs font-bold text-gray-700 mb-1">Mínimo Filas (CA-41)</label>
+                 <input type="number" v-model="editingField.minRows" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 1" />
+               </div>
+               <div class="flex-1">
+                 <label class="block text-xs font-bold text-gray-700 mb-1">Máximo Filas (CA-41)</label>
+                 <input type="number" v-model="editingField.maxRows" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 10" />
+               </div>
+            </div>
+
+            <!-- CA-45: Multi-select Chips -->
+            <div v-if="['select', 'async_select'].includes(editingField.type)" class="flex items-center gap-2 pt-2 border-t mt-2">
+               <input type="checkbox" v-model="editingField.isMultiple" id="multipleCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
+               <label for="multipleCheck" class="text-xs font-medium text-gray-700 cursor-pointer">Permitir Selección Múltiple (Pastillas CA-45)</label>
+            </div>
+            
             <div v-if="formPattern === 'IFORM_MAESTRO'" class="bg-blue-50 p-3 rounded border border-blue-200">
                <label class="block text-xs font-bold text-blue-800 mb-1 flex items-center gap-1">Stage (Etapa BPMN de aparición) <AppTooltip content="Etapa en la cual el campo se revelará dinámicamente o dejará de bloquearse (CA-20)." /></label>
                <input v-model="editingField.stage" class="w-full text-sm border-blue-300 rounded font-mono" placeholder="Ej: ANALYSIS" />
@@ -809,13 +828,33 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
       tpl += `${indent}  <div class="flex items-center gap-2 mt-1">\n${indent}    <input type="checkbox" v-model="${vModelBase}" class="rounded text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} />\n${indent}    <span class="text-sm text-gray-700">${field.placeholder || field.label}</span>\n${indent}  </div>\n`;
     } else if (field.type === 'radio') {
       tpl += `${indent}  <div class="flex flex-col gap-1 mt-1">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <label class="flex items-center gap-2"><input type="radio" value="${o}" v-model="${vModelBase}" class="text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} /> <span class="text-sm text-gray-600 font-medium">${o}</span></label>`).join('\n')}\n${indent}  </div>\n`;
-    } else if (field.type === 'select') {
-       // CA-40: Datalist Interactiva Typeahead (Remueve <select> restrictivo)
-       tpl += `${indent}  <input list="list-${field.id}" v-model="${vModelBase}" placeholder="${field.placeholder || 'Seleccione...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
-       tpl += `${indent}  <datalist id="list-${field.id}">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </datalist>\n`;
-    } else if (field.type === 'async_select') {
-       tpl += `${indent}  <input list="list-${field.id}" @input="(e) => fetchAsyncOpts_${field.id}((e.target as HTMLInputElement).value)" v-model="${vModelBase}" placeholder="${field.placeholder || 'Buscando en servidor...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
-       tpl += `${indent}  <datalist id="list-${field.id}">\n${indent}    <option v-for="opt in asyncOpts_${field.id}" :key="opt" :value="opt"></option>\n${indent}  </datalist>\n`;
+    } else if (field.type === 'select' || field.type === 'async_select') {
+       if (field.isMultiple) {
+           // CA-45: Multi Select Chips
+           tpl += `${indent}  <div class="relative">\n`;
+           if (field.type === 'select') {
+               tpl += `${indent}    <input list="list-${field.id}" @change="(e) => { const val = (e.target as HTMLInputElement).value; if(val && !${vModelBase}.includes(val)) { ${vModelBase}.push(val); (e.target as HTMLInputElement).value=''; } }" placeholder="${field.placeholder || 'Seleccione múltiple...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+               tpl += `${indent}    <datalist id="list-${field.id}">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}      <option value="${o}">${o}</option>`).join('\n')}\n${indent}    </datalist>\n`;
+           } else {
+               tpl += `${indent}    <input list="list-${field.id}" @input="(e) => fetchAsyncOpts_${field.id}((e.target as HTMLInputElement).value)" @change="(e) => { const val = (e.target as HTMLInputElement).value; if(val && !${vModelBase}.includes(val)) { ${vModelBase}.push(val); (e.target as HTMLInputElement).value=''; } }" placeholder="${field.placeholder || 'Buscando en servidor...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+               tpl += `${indent}    <datalist id="list-${field.id}">\n${indent}      <option v-for="opt in asyncOpts_${field.id}" :key="opt" :value="opt"></option>\n${indent}    </datalist>\n`;
+           }
+           tpl += `${indent}    <div class="flex flex-wrap gap-2 mt-2">\n`;
+           tpl += `${indent}       <span v-for="(chip, idx) in ${vModelBase}" :key="chip" class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">\n`;
+           tpl += `${indent}         {{ chip }}\n`;
+           tpl += `${indent}         <button type="button" @click="${vModelBase}.splice(idx, 1)" class="font-bold hover:text-indigo-900 border-l border-indigo-200 pl-1 ml-1"${dsb}>&times;</button>\n`;
+           tpl += `${indent}       </span>\n`;
+           tpl += `${indent}    </div>\n`;
+           tpl += `${indent}  </div>\n`;
+       } else {
+           if (field.type === 'select') {
+               tpl += `${indent}  <input list="list-${field.id}" v-model="${vModelBase}" placeholder="${field.placeholder || 'Seleccione...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+               tpl += `${indent}  <datalist id="list-${field.id}">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </datalist>\n`;
+           } else {
+               tpl += `${indent}  <input list="list-${field.id}" @input="(e) => fetchAsyncOpts_${field.id}((e.target as HTMLInputElement).value)" v-model="${vModelBase}" placeholder="${field.placeholder || 'Buscando en servidor...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+               tpl += `${indent}  <datalist id="list-${field.id}">\n${indent}    <option v-for="opt in asyncOpts_${field.id}" :key="opt" :value="opt"></option>\n${indent}  </datalist>\n`;
+           }
+       }
     } else if (field.type === 'file') {
        const uTarget = parentBinding === 'formData' ? 'formData.value' : parentBinding;
        // CA-39: Binding de MaxSizeMb y AllowedExts
@@ -868,12 +907,14 @@ const computedCode = computed({
     } 
     
     if (activeCodeTab.value === 'SCRIPT') {
-      let scr = `<script setup lang="ts">\nimport { ref, inject, watch } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\n\n`;
+      let scr = `<script setup lang="ts">\nimport { ref, inject, watch, onMounted } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\n\n`;
       if (formPattern.value === 'IFORM_MAESTRO') {
         scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
       }
       
       scr += `// CA-37: Visor Histórico Inmutable para Auditoría\nconst isAuditMode = ref(false); // Cambiar a true si es histórico\n\n`;
+      
+      scr += `// CA-43: Recepción de Datos Precargados (BFF Pattern)\nconst props = defineProps<{ prefillData?: Record<string, any> }>();\n\n`;
       
       const hasAudit = flatFields(canvasFields.value).some(f => f.enableAuditLog);
       if (hasAudit) {
@@ -895,11 +936,13 @@ const computedCode = computed({
            let def = "''";
            if (field.type === 'number') def = 'null';
            if (field.type === 'checkbox') def = 'false';
+           if (field.isMultiple && ['select', 'async_select'].includes(field.type)) def = '[]';
            scr += `  ${field.camundaVariable || field.id}: ${def}, // Binding CA-12/13\n`;
         }
       }
       scr += `});\n\nconst errors = ref<Record<string, string>>({});\n`;
       scr += `const taskId = 'MOCK_TASK_ID'; // Inyectar ID real\n\n`;
+      scr += `// CA-43: Auto-map Pre-fill Binding\nonMounted(() => {\n  if (props.prefillData) {\n    for (const key in props.prefillData) {\n      if (key in formData.value) {\n        formData.value[key] = props.prefillData[key];\n      }\n    }\n  }\n});\n\n`;
 
       const hasDraft = flatFields(canvasFields.value).some(f => f.type === 'button_draft');
       const hasReject = flatFields(canvasFields.value).some(f => f.type === 'button_reject');
@@ -954,14 +997,22 @@ const computedCode = computed({
             if(field.type.startsWith('button_') || field.type === 'container') continue;
             if(field.type === 'field_array') {
                 if(!field.children || field.children.length === 0) continue;
-                zc += `  ${field.camundaVariable || field.id}: z.array(${walkNode(field.children, false)}), // [GRILLA]\n`;
+                let arrCode = `z.array(${walkNode(field.children, false)})`;
+                if(field.minRows) arrCode += `.min(${field.minRows}, "Mínimo ${field.minRows} filas")`;
+                if(field.maxRows) arrCode += `.max(${field.maxRows}, "Máximo ${field.maxRows} filas")`;
+                zc += `  ${field.camundaVariable || field.id}: ${arrCode}, // [GRILLA CA-41]\n`;
                 continue;
             }
             let zt = 'string';
             if(field.type === 'number') zt = 'number';
             if(field.type === 'file') zt = 'any';
             if(field.type === 'checkbox') zt = 'boolean';
-            zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required && field.type !== 'checkbox' ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
+            
+            if (field.isMultiple && ['select', 'async_select'].includes(field.type)) {
+                zc += `  ${field.camundaVariable || field.id}: z.array(z.string())${field.required ? '.min(1, "Seleccione opción")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
+            } else {
+                zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required && field.type !== 'checkbox' ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
+            }
          }
          zc += isRoot ? `})` : `        })`;
          return zc;
@@ -999,18 +1050,19 @@ const computedCode = computed({
       canvasFields.value = newCanvasFields;
     } 
     else if (activeCodeTab.value === 'ZOD') {
-      const regex = /^\s*([a-zA-Z0-9_]+):\s*z\.(string|number|any|boolean)\(\)(.*?)(?:\/\/\s*\[([^\]]+)\])?/gm;
+      const regex = /^\s*([a-zA-Z0-9_]+):\s*(z\.(?:string|number|any|boolean)\(\)|z\.array\(z\.string\(\)\))(.*?)(?:\/\/\s*\[([^\]]+)\])?/gm;
       let match;
       const newCanvasFields = [];
       const currentFields = [...canvasFields.value];
       
       while ((match = regex.exec(newCode)) !== null) {
           const varName = match[1];
-          const zType = match[2];
+          const zTypeRaw = match[2];
           const mods = match[3];
           const stage = match[4] ? match[4].trim() : "START_EVENT";
 
           const isReq = mods.includes('.min(') || !mods.includes('.optional()');
+          const isMult = zTypeRaw.includes('z.array');
           
           let minL, maxL;
           const minMatch = mods.match(/\.min\((\d+)/);
@@ -1019,16 +1071,18 @@ const computedCode = computed({
           if (maxMatch) maxL = parseInt(maxMatch[1], 10);
           
           let cType = 'text';
-          if(zType === 'number') cType = 'number';
-          if(zType === 'any') cType = 'file';
+          if(zTypeRaw.includes('number')) cType = 'number';
+          if(zTypeRaw.includes('any')) cType = 'file';
+          if(isMult) cType = 'select'; // Prefer select if multiple
 
           const exist = currentFields.find(f => f.camundaVariable === varName || f.id === varName);
           newCanvasFields.push({
              ...(exist || { id: varName.toUpperCase(), label: varName }),
              camundaVariable: varName,
-             type: exist && exist.type !== cType && exist.type !== 'select' ? cType : (exist ? exist.type : cType),
+             type: exist && exist.type !== cType && exist.type !== 'select' && exist.type !== 'async_select' ? cType : (exist ? exist.type : cType),
              required: isReq,
              stage: stage,
+             isMultiple: isMult || exist?.isMultiple,
              minLength: minL || exist?.minLength,
              maxLength: maxL || exist?.maxLength
           });

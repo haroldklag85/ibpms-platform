@@ -21,6 +21,9 @@ export interface FormFieldMetadataDTO {
     maxLength?: number; // CA-38: Zod string lengths
     maxSizeMb?: number; // CA-39: Peso máximo archivo
     allowedExts?: string; // CA-39: Tipos permitidos
+    minRows?: number; // CA-41: Mínimo filas Grilla
+    maxRows?: number; // CA-41: Máximo filas Grilla
+    isMultiple?: boolean; // CA-45: Multi-select Pastillas
     children?: FormFieldMetadataDTO[]; // CA-8: Recursive Nested Support
 }
 
@@ -43,6 +46,19 @@ export class ZodBuilder {
         flatFields(fields).forEach(field => {
             let fieldSchema: ZodTypeAny;
 
+            if (field.type === 'field_array') {
+                const subSchema = ZodBuilder.buildSchema(field.children || []);
+                let arrSchema = z.array(subSchema);
+                if (field.minRows !== undefined && field.minRows > 0) {
+                   arrSchema = arrSchema.min(field.minRows, `Mínimo ${field.minRows} filas requeridas`);
+                }
+                if (field.maxRows !== undefined && field.maxRows > 0) {
+                   arrSchema = arrSchema.max(field.maxRows, `Máximo ${field.maxRows} filas permitidas`);
+                }
+                shape[field.camundaVariable || field.id] = arrSchema;
+                return; // Skip the rest of the loop for field_array
+            }
+
             switch (field.type) {
                 case 'checkbox':
                     fieldSchema = z.boolean();
@@ -52,13 +68,9 @@ export class ZodBuilder {
                     break;
                 case 'text':
                 case 'textarea':
-                case 'select':
-                case 'async_select':
-                case 'radio':
                 case 'date':
                 case 'time':
-                case 'file':
-                case 'signature': // CA-31
+                case 'radio':
                     fieldSchema = z.string();
                     if (field.minLength !== undefined && field.minLength > 0) {
                         fieldSchema = (fieldSchema as z.ZodString).min(field.minLength, `Mínimo ${field.minLength} caracteres`);
@@ -69,11 +81,32 @@ export class ZodBuilder {
                         fieldSchema = (fieldSchema as z.ZodString).max(field.maxLength, `Máximo ${field.maxLength} caracteres`);
                     }
                     break;
+                case 'select':
+                case 'async_select':
+                    if (field.isMultiple) {
+                        fieldSchema = z.array(z.string());
+                        if (field.required) {
+                            fieldSchema = (fieldSchema as z.ZodArray<z.ZodString>).min(1, 'Seleccione al menos una opción');
+                        }
+                    } else {
+                        fieldSchema = z.string();
+                        if (field.required) {
+                            fieldSchema = (fieldSchema as z.ZodString).min(1, 'Campo requerido');
+                        }
+                    }
+                    break;
+                case 'file':
+                case 'signature': // CA-31
+                    fieldSchema = z.string();
+                    if (field.required) {
+                        fieldSchema = (fieldSchema as z.ZodString).min(1, 'Campo requerido');
+                    }
+                    break;
                 default:
                     fieldSchema = z.any();
             }
 
-            if (!field.required && field.type !== 'checkbox') {
+            if (!field.required && field.type !== 'checkbox' && !field.isMultiple) { // isMultiple arrays are handled above
                 fieldSchema = fieldSchema.optional();
             }
 

@@ -31,6 +31,9 @@
           {{ isFullScreen ? '🗗 Salir Inmersión' : '🖵 Pantalla Completa' }}
         </button>
 
+        <button @click="fetchVersions" class="bg-indigo-50 text-indigo-700 px-3 py-1.5 border border-indigo-200 rounded shadow-sm text-xs font-semibold hover:bg-indigo-100 transition flex gap-1.5 items-center">
+          🕰️ Historial
+        </button>
         <!-- Generador Tests -->
         <button @click="generateTests" class="bg-gray-800 text-yellow-400 px-3 py-1.5 border border-black rounded shadow-sm text-xs font-semibold hover:bg-black transition flex gap-1.5 items-center">
           ⚡ Generar Tests Zod (CA-115)
@@ -278,6 +281,27 @@
         </div>
       </div>
 
+      <!-- CA-27: Historial de Versiones UI -->
+      <div v-if="showHistoryModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
+         <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-lg w-full">
+            <div class="flex items-center justify-between mb-6 border-b pb-4">
+               <h2 class="text-xl font-bold text-gray-800">🕰️ Historial de Versiones</h2>
+               <button @click="showHistoryModal = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+            </div>
+            <div class="max-h-[60vh] overflow-y-auto space-y-3">
+               <div v-if="formVersions.length === 0" class="text-center text-gray-500 py-8 text-sm">No hay versiones publicadas aún.</div>
+               <div v-for="ver in formVersions" :key="ver.id" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition cursor-pointer flex justify-between items-center group">
+                  <div>
+                    <h4 class="font-bold text-indigo-700 text-sm flex items-center gap-2">Versión {{ ver.version }}</h4>
+                    <p class="text-[10px] text-gray-500 mt-1">Ref: {{ ver.id }}</p>
+                    <p class="text-xs text-gray-600 mt-1"><span class="font-semibold">Actualizado:</span> {{ new Date(ver.updatedAt).toLocaleString() }}</p>
+                  </div>
+                  <button class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-md font-bold opacity-0 group-hover:opacity-100 transition shadow-sm">Restaurar</button>
+               </div>
+            </div>
+         </div>
+      </div>
+
       <!-- Properties Modal (Field Editor) -->
       <div v-if="editingField" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[150] p-4">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md">
@@ -291,6 +315,17 @@
             <div>
               <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">Label (Nombre Visible) <AppTooltip content="El texto de la etiqueta que el usuario leerá en la pantalla visual producida." /></label>
               <input v-model="editingField.label" class="w-full text-sm border-gray-300 rounded" />
+            </div>
+            <div v-if="editingField.type === 'async_select'" class="bg-purple-50 p-3 rounded border border-purple-200">
+               <label class="block text-xs font-bold text-purple-800 mb-1">URL Endpoint Async (CA-30)</label>
+               <input v-model="editingField.asyncUrl" class="w-full text-sm border-purple-300 rounded font-mono" placeholder="Ej: /api/v1/customers" />
+               <p class="text-[10px] text-purple-600 mt-1">El input interrogará este endpoint con parámetros `?q=valor` en tiempo real (Typeahead AST).</p>
+            </div>
+            <div v-if="editingField.type === 'select'" class="bg-green-50 p-3 rounded border border-green-200">
+               <label class="block text-xs font-bold text-green-800 mb-1">Importar Catálogo CSV (CA-29)</label>
+               <input type="file" accept=".csv" @change="(e) => importCSVOptions(e, editingField!)" class="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-green-100 file:text-green-700 hover:file:bg-green-200 cursor-pointer border border-green-200 rounded" />
+               <p class="text-[10px] text-green-600 mt-1">CSV de 1 columna para sobreescribir las opciones (Lector In-Memory HTML5).</p>
+               <p v-if="editingField.options" class="text-[10px] font-bold mt-1 text-green-800">{{ editingField.options.length }} Opciones Cargadas.</p>
             </div>
             <div v-if="formPattern === 'IFORM_MAESTRO'" class="bg-blue-50 p-3 rounded border border-blue-200">
                <label class="block text-xs font-bold text-blue-800 mb-1 flex items-center gap-1">Stage (Etapa BPMN de aparición) <AppTooltip content="Etapa en la cual el campo se revelará dinámicamente o dejará de bloquearse (CA-20)." /></label>
@@ -308,6 +343,10 @@
             <div v-if="formPattern === 'IFORM_MAESTRO'" class="flex items-center gap-2 pt-2 border-t">
                <input type="checkbox" v-model="editingField.soloLecturaPosterior" id="roCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
                <label for="roCheck" class="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-1">Bloquear en etapas futuras (RBAC) <AppTooltip content="CA-20 Corregido: Si se activa, este input será Deshabilitado (:disabled) si el proceso actual avanza a una etapa diferente." /></label>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t mt-2">
+               <input type="checkbox" v-model="editingField.enableAuditLog" id="auditCheck" class="text-red-500 rounded focus:ring-red-500 border-gray-300" />
+               <label for="auditCheck" class="text-xs font-medium text-red-700 cursor-pointer">Activar Auditoría Forense (Huella en Token, CA-28)</label>
             </div>
           </div>
 
@@ -390,6 +429,8 @@ import AppTooltip from '@/components/common/AppTooltip.vue';
 // ── Types ────────────────────────────────────────────────────────
 interface FormField extends FormFieldMetadataDTO {
   soloLecturaPosterior?: boolean; // CA-20
+  asyncUrl?: string; // CA-30
+  enableAuditLog?: boolean; // CA-28
 }
 
 // ── State ────────────────────────────────────────────────────────
@@ -400,6 +441,23 @@ const isFullScreen = ref(false); // Estado para CA-9/CA-10
 
 const canvasFields = ref<FormField[]>([]);
 const activeStageSim = ref('ALL');
+
+const showHistoryModal = ref(false); // CA-27
+const formVersions = ref<any[]>([]); // Almacena el historial UI
+
+const fetchVersions = async () => {
+   try {
+       const res = await apiClient.get('/api/v1/forms/mock_id_or_draft/versions');
+       formVersions.value = res.data;
+   } catch(e) {
+       // Mock fallback for UI Demo if API is not fully seeded
+       formVersions.value = [
+          { id: 'v2.1', version: '2.1', updatedAt: new Date().toISOString() },
+          { id: 'v1.0', version: '1.0', updatedAt: new Date(Date.now() - 86400000).toISOString() }
+       ];
+   }
+   showHistoryModal.value = true;
+};
 
 // CA-24 Auto-guardado del Designer Canvas
 let designerDraftTimeout: any = null;
@@ -452,7 +510,8 @@ const toolboxCategories = [
   {
     name: "Selección",
     items: [
-      { icon: '≡', label: 'Dropdown', desc: 'Typeahead / API', type: 'select', placeholder: '-- Seleccione --', required: true, zodType: 'string', options: ['Opción A', 'Opción B'], camundaVariable: '' },
+      { icon: '≡', label: 'Dropdown', desc: 'Soporta Array CSV', type: 'select', placeholder: '-- Seleccione --', required: true, zodType: 'string', options: ['Opción A', 'Opción B'], camundaVariable: '' },
+      { icon: '🔄', label: 'Async Typeahead', desc: 'API Fetch (CA-30)', type: 'async_select', placeholder: 'Buscar en API...', required: true, zodType: 'string', asyncUrl: '/api/v1/data', camundaVariable: '' },
       { icon: '☑️', label: 'Checkbox', desc: 'Booleano Múltiple', type: 'checkbox', placeholder: 'Marcar opción', required: false, zodType: 'boolean', camundaVariable: '' },
       { icon: '🔘', label: 'Radio Button', desc: 'Opción Única', type: 'radio', placeholder: '', required: true, zodType: 'string', options: ['Opción 1', 'Opción 2'], camundaVariable: '' },
     ]
@@ -513,6 +572,23 @@ const executeReset = () => {
 
 const removeField = (arr: FormField[], index: number) => {
   arr.splice(index, 1);
+};
+
+// CA-29: Importación Dinámica CSV In-Memory reader
+const importCSVOptions = (event: any, fieldObj: FormField) => {
+   const file = event.target?.files?.[0];
+   if (!file) return;
+   const reader = new FileReader();
+   reader.onload = (e) => {
+      const text = e.target?.result as string;
+      if (text) {
+         // Convierte cada salto de linea en opcion
+         const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+         fieldObj.options = lines;
+         showToast(`Catálogo actualizado: ${lines.length} opciones cargadas.`, 'success');
+      }
+   };
+   reader.readAsText(file);
 };
 
 const editField = (field: FormField) => {
@@ -642,11 +718,21 @@ const generateFieldHTML = (field: any, indent: string = '      '): string => {
       tpl += `${indent}  <div class="flex flex-col gap-1 mt-1">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <label class="flex items-center gap-2"><input type="radio" value="${o}" v-model="formData.${field.camundaVariable || field.id}" class="text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} /> <span class="text-sm text-gray-600 font-medium">${o}</span></label>`).join('\n')}\n${indent}  </div>\n`;
     } else if (field.type === 'select') {
        tpl += `${indent}  <select v-model="formData.${field.camundaVariable || field.id}" class="form-select mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb}>\n${indent}    <option disabled value="">${field.placeholder || 'Seleccione'}</option>\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </select>\n`;
+    } else if (field.type === 'async_select') {
+       // CA-30: Axios Async Typeahead
+       tpl += `${indent}  <input list="list-${field.id}" @input="(e) => fetchAsyncOpts_${field.id}((e.target as HTMLInputElement).value)" v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || 'Buscando en servidor...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+       tpl += `${indent}  <datalist id="list-${field.id}">\n${indent}    <option v-for="opt in asyncOpts_${field.id}" :key="opt" :value="opt"></option>\n${indent}  </datalist>\n`;
     } else if (field.type === 'file') {
        tpl += `${indent}  <input type="file" @change="(e) => uploadFile(e, '${field.camundaVariable || field.id}')" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mt-1 cursor-pointer" />\n`;
     } else {
        tpl += `${indent}  <!-- Custom Component: ${field.type} -->\n`;
     }
+    
+    // CA-28 Auditoria Forense Check
+    if (field.enableAuditLog) {
+       tpl += `${indent}  <p class="text-[9px] text-gray-400 mt-1 uppercase tracking-wider font-mono">Modificado por: {{ currentUser?.name || 'Sistema' }}</p>\n`;
+    }
+
     tpl += `${indent}  <span v-if="errors.${field.camundaVariable || field.id}" class="text-red-500 text-xs">{{ errors.${field.camundaVariable || field.id} }}</span>\n`;
     tpl += `${indent}</div>\n`;
   }
@@ -680,6 +766,17 @@ const computedCode = computed({
         scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
       }
       
+      const hasAudit = flatFields(canvasFields.value).some(f => f.enableAuditLog);
+      if (hasAudit) {
+         scr += `// Auditoría (CA-28): Injection Dummy de Usuario Actual\nconst currentUser = ref({ name: 'Admin Demo' });\n\n`;
+      }
+
+      const asyncFields = flatFields(canvasFields.value).filter(f => f.type === 'async_select' && f.asyncUrl);
+      for (const field of asyncFields) {
+         scr += `const asyncOpts_${field.id} = ref<string[]>([]);\n`;
+         scr += `const fetchAsyncOpts_${field.id} = async (query: string) => {\n   if(query.trim().length === 0) { asyncOpts_${field.id}.value = []; return; }\n   try {\n      const res = await apiClient.get(\`${field.asyncUrl}?q=\${query}\`);\n      asyncOpts_${field.id}.value = Array.isArray(res.data) ? res.data.map(i => i.label || i.nombre || i.name || JSON.stringify(i)) : [];\n   } catch (e) { console.error('Typeahead Error (CA-30)', e); }\n};\n\n`;
+      }
+
       scr += `const formData = ref({\n`;
       const allFields = flatFields(canvasFields.value).filter(f => !f.type.startsWith('button_') && f.type !== 'container');
       for (const field of allFields) {

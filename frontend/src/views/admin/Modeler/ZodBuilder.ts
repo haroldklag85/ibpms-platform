@@ -13,6 +13,8 @@ export interface FormFieldMetadataDTO {
     isPrefilled?: boolean; // CA-12: Data Binding I/O
     isOutputToken?: boolean; // CA-13: Data Binding I/O
     visibilityCondition?: string; // CA-25: Visibilidad Condicional Dinámica Eval
+    enableAuditLog?: boolean; // CA-28: Auditoría Conf
+    asyncUrl?: string; // CA-30: Endpoint de recolección asyncrona Typeahead
     children?: FormFieldMetadataDTO[]; // CA-8: Recursive Nested Support
 }
 
@@ -45,6 +47,7 @@ export class ZodBuilder {
                 case 'text':
                 case 'textarea':
                 case 'select':
+                case 'async_select':
                 case 'radio':
                 case 'date':
                 case 'time':

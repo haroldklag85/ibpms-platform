@@ -1,13 +1,15 @@
 <template>
   <div class="h-full w-full bg-gray-50 flex flex-col" v-cloak>
 
-    <!-- ═══════ Toast Notifications ═══════ -->
-    <Transition name="toast-slide">
-      <div v-if="toast.msg" :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'" class="fixed top-4 right-4 z-[100] text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3">
-        <span class="text-sm font-medium">{{ toast.msg }}</span>
-        <button @click="toast.msg = ''" class="ml-2 opacity-70 hover:opacity-100">&times;</button>
-      </div>
-    </Transition>
+    <!-- ═══════ Toast Notifications (CA-7) ═══════ -->
+    <Teleport to="body">
+      <Transition name="toast-slide">
+        <div v-if="toast.msg" :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'" class="fixed top-4 right-4 z-[100] text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3">
+          <span class="text-sm font-medium">{{ toast.msg }}</span>
+          <button @click="toast.msg = ''" class="ml-2 opacity-70 hover:opacity-100">&times;</button>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- ═══════ Header Toolbar ═══════ -->
     <header class="flex justify-between items-center px-6 py-3 bg-white border-b border-gray-200 shrink-0">
@@ -24,6 +26,11 @@
       </div>
       
       <div class="flex items-center gap-2">
+        <!-- Full-Screen Inmersivo (CA-9/CA-10) -->
+        <button @click="isFullScreen = !isFullScreen" class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center">
+          {{ isFullScreen ? '🗗 Salir Inmersión' : '🖵 Pantalla Completa' }}
+        </button>
+
         <!-- Generador Tests -->
         <button @click="generateTests" class="bg-gray-800 text-yellow-400 px-3 py-1.5 border border-black rounded shadow-sm text-xs font-semibold hover:bg-black transition flex gap-1.5 items-center">
           ⚡ Generar Tests Zod (CA-115)
@@ -45,7 +52,7 @@
     <main class="flex-1 flex min-h-0 relative">
       
       <!-- Toolbox Izquierda (Componentes Lego) -->
-      <aside class="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <aside v-show="!isFullScreen" class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0 transition-all">
         <div class="p-3 border-b border-gray-100 bg-gray-50">
           <h3 class="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">🧩 Componentes</h3>
         </div>
@@ -88,14 +95,15 @@
         </div>
 
         <div class="flex-1 overflow-y-auto p-6 md:p-8 lg:p-12">
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col">
-            <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4">{{ formTitle }}</h2>
+          <!-- CA-6 Shadow DOM (Isolation css context class) -->
+          <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative" style="all: revert; box-sizing: border-box;">
+            <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans">{{ formTitle }}</h2>
             
             <VueDraggable
               v-model="canvasFields"
               group="components"
               item-key="id"
-              class="flex-1 min-h-[300px]"
+              class="flex-1 min-h-[300px] font-sans"
               animation="200"
               ghost-class="ghost-dropzone"
             >
@@ -108,7 +116,7 @@
                   <!-- Controles del Campo (Hover) -->
                   <div class="absolute -top-3 right-2 hidden group-hover:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
                     <button @click="editField(element)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200" title="Propiedades">⚙️</button>
-                    <button @click="removeField(index)" class="px-2 py-1 text-red-500 hover:bg-red-50" title="Eliminar">🗑️</button>
+                    <button @click="removeField(canvasFields, index)" class="px-2 py-1 text-red-500 hover:bg-red-50" title="Eliminar">🗑️</button>
                   </div>
 
                   <!-- Badge de Stage actual (Solo Maestro) -->
@@ -116,7 +124,7 @@
                     v-if stage == '{{ element.stage }}'
                   </div>
 
-                  <!-- Renderizado Dinámico Simple -->
+                  <!-- Renderizado Dinámico CA-8 (Soporte Nested Container) -->
                   <div class="flex flex-col gap-1 mt-1">
                     <label class="text-sm font-bold text-gray-700">{{ element.label }} <span v-if="element.required" class="text-red-500">*</span></label>
                     <p v-if="element.desc" class="text-[10px] text-gray-400 mb-1">{{ element.desc }}</p>
@@ -127,16 +135,44 @@
                       <option disabled selected>{{ element.placeholder }}</option>
                       <option v-for="opt in element.options || ['Opción 1']" :key="opt">{{ opt }}</option>
                     </select>
-                    <div v-if="element.type === 'file'" class="border-2 border-dashed border-gray-300 rounded p-4 text-center text-xs text-gray-500 hover:bg-gray-50 cursor-pointer">
+                    <div v-if="element.type === 'file'" class="border-2 border-dashed border-gray-300 rounded p-4 text-center text-xs text-gray-500 hover:bg-gray-50 cursor-pointer bg-white">
                       📂 {{ element.placeholder }} (Drag & Drop SGDEA)
                     </div>
+                    
+                    <!-- Nested Container (CA-8) -->
+                    <div v-if="element.type === 'container'" class="border border-indigo-200 bg-indigo-50/50 rounded-lg p-4 mt-2 min-h-[100px]">
+                      <VueDraggable
+                         v-model="element.children"
+                         group="components"
+                         item-key="id"
+                         class="min-h-[80px]"
+                         animation="200"
+                         ghost-class="ghost-dropzone"
+                      >
+                         <template #item="{ element: child, index: childIdx }">
+                            <div class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                               <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
+                                 <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
+                                 <button @click="removeField(element.children, childIdx)" class="px-2 py-1 text-red-500 hover:bg-red-50">🗑️</button>
+                               </div>
+                               <label class="text-xs font-bold text-gray-700 block">{{ child.label }} <span v-if="child.required" class="text-red-500">*</span></label>
+                               <input v-if="child.type === 'text'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                               <input v-if="child.type === 'number'" type="number" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                               <select v-if="child.type === 'select'" class="form-select text-xs w-full mt-1 border-gray-300 rounded shadow-sm">
+                                 <option disabled selected>{{ child.placeholder }}</option>
+                               </select>
+                            </div>
+                         </template>
+                      </VueDraggable>
+                    </div>
+
                   </div>
 
                 </div>
               </template>
               
               <template #footer>
-                 <div v-if="canvasFields.length === 0" class="h-full w-full flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 p-12 mt-4 hover:border-indigo-300 transition">
+                 <div v-if="canvasFields.length === 0" class="h-full w-full flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 p-12 mt-4 hover:border-indigo-300 transition cursor-default">
                    <span class="text-4xl mb-4">📥</span>
                    <p class="font-medium text-gray-500">Arrastra componentes aquí</p>
                    <p class="text-xs mt-2 text-gray-400 text-center max-w-xs">El código Vue.js se generará e inyectará en tiempo real en el IDE lateral.</p>
@@ -148,7 +184,7 @@
       </section>
 
       <!-- Monaco IDE (Bidireccional V2) -->
-      <aside class="w-2/5 min-w-[350px] bg-[#1e1e1e] border-l border-gray-800 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-20">
+      <aside v-show="!isFullScreen" class="w-2/5 min-w-[350px] bg-[#1e1e1e] border-l border-gray-800 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-20 shrink-0 transition-all">
         
         <!-- Tabs -->
         <div class="flex bg-[#252526] text-xs font-mono font-medium text-gray-400 border-b border-[#3e3e42] shrink-0 overflow-x-auto">
@@ -189,109 +225,112 @@
 
     </main>
 
-    <!-- ═══════ Modals ═══════ -->
-    <!-- Pattern Selection Modal (On Mount if Empty) -->
-    <div v-if="showPatternModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
-      <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-2xl w-full">
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">Crear Nuevo Formulario (Dual-Pattern)</h2>
-        <p class="text-sm text-gray-600 mb-8">Selecciona la arquitectura de este formulario según la directriz (CA-2).</p>
-        
-        <div class="grid md:grid-cols-2 gap-6">
-          <button @click="selectPattern('SIMPLE')" class="text-left border-2 border-gray-200 hover:border-green-500 hover:bg-green-50/30 rounded-xl p-6 transition group">
-            <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">🟢</div>
-            <h3 class="text-lg font-bold text-green-700 mb-2">Formulario Simple</h3>
-            <p class="text-xs text-gray-500 leading-relaxed">Formulario estándar de una sola vista. Ideal para tareas aisladas sin ciclo de vida complejo en Camunda.</p>
-          </button>
-          <button @click="selectPattern('IFORM_MAESTRO')" class="text-left border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl p-6 transition group">
-            <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">🔵</div>
-            <h3 class="text-lg font-bold text-blue-700 mb-2">iForm Maestro</h3>
-            <p class="text-xs text-gray-500 leading-relaxed">Formulario universal mutante. Viajará por todo el proceso BPMN revelando u ocultando componentes dinámicamente según la variable <code class="bg-gray-100 px-1 rounded">stage</code>.</p>
-          </button>
+    <!-- ═══════ Modals (CA-7 Teleport) ═══════ -->
+    <Teleport to="body">
+      <!-- Pattern Selection Modal (On Mount if Empty) -->
+      <div v-if="showPatternModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-2xl w-full">
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Crear Nuevo Formulario (Dual-Pattern)</h2>
+          <p class="text-sm text-gray-600 mb-8">Selecciona la arquitectura de este formulario según la directriz (CA-2).</p>
+          
+          <div class="grid md:grid-cols-2 gap-6">
+            <button @click="selectPattern('SIMPLE')" class="text-left border-2 border-gray-200 hover:border-green-500 hover:bg-green-50/30 rounded-xl p-6 transition group">
+              <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">🟢</div>
+              <h3 class="text-lg font-bold text-green-700 mb-2">Formulario Simple</h3>
+              <p class="text-xs text-gray-500 leading-relaxed">Formulario estándar de una sola vista. Ideal para tareas aisladas sin ciclo de vida complejo en Camunda.</p>
+            </button>
+            <button @click="selectPattern('IFORM_MAESTRO')" class="text-left border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl p-6 transition group">
+              <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">🔵</div>
+              <h3 class="text-lg font-bold text-blue-700 mb-2">iForm Maestro</h3>
+              <p class="text-xs text-gray-500 leading-relaxed">Formulario universal mutante. Viajará por todo el proceso BPMN revelando u ocultando componentes dinámicamente según la variable <code class="bg-gray-100 px-1 rounded">stage</code>.</p>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Properties Modal (Field Editor) -->
-    <div v-if="editingField" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[150] p-4">
-      <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md">
-        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">⚙️ Propiedades del Componente</h3>
-        
-        <div class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-gray-700 mb-1">ID (Variable Name)</label>
-            <input v-model="editingField.id" class="w-full text-sm border-gray-300 rounded font-mono bg-gray-50 uppercase" />
+      <!-- Properties Modal (Field Editor) -->
+      <div v-if="editingField" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[150] p-4">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md">
+          <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">⚙️ Propiedades del Componente</h3>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">ID (Variable Name)</label>
+              <input v-model="editingField.id" class="w-full text-sm border-gray-300 rounded font-mono bg-gray-50 uppercase" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">Label (Nombre Visible)</label>
+              <input v-model="editingField.label" class="w-full text-sm border-gray-300 rounded" />
+            </div>
+            <div v-if="formPattern === 'IFORM_MAESTRO'" class="bg-blue-50 p-3 rounded border border-blue-200">
+               <label class="block text-xs font-bold text-blue-800 mb-1">Stage (Etapa BPMN de aparición)</label>
+               <input v-model="editingField.stage" class="w-full text-sm border-blue-300 rounded font-mono" placeholder="Ej: ANALYSIS" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-indigo-700 mb-1">Camunda Variable (I/O Binding)</label>
+              <input v-model="editingField.camundaVariable" class="w-full text-sm border-indigo-300 rounded font-mono bg-indigo-50" placeholder="Ej: customerName" />
+              <p class="text-[10px] text-gray-500 mt-1">El valor del campo se mapeará a esta variable en Process Engine.</p>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t mt-4">
+               <input type="checkbox" v-model="editingField.required" id="reqCheck" class="text-indigo-600 rounded" />
+               <label for="reqCheck" class="text-sm font-medium text-gray-700 cursor-pointer">Campo Requerido (Agrega .min(1) a Zod)</label>
+            </div>
           </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-700 mb-1">Label (Nombre Visible)</label>
-            <input v-model="editingField.label" class="w-full text-sm border-gray-300 rounded" />
-          </div>
-          <div v-if="formPattern === 'IFORM_MAESTRO'" class="bg-blue-50 p-3 rounded border border-blue-200">
-             <label class="block text-xs font-bold text-blue-800 mb-1">Stage (Etapa BPMN de aparición)</label>
-             <input v-model="editingField.stage" class="w-full text-sm border-blue-300 rounded font-mono" placeholder="Ej: ANALYSIS" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-indigo-700 mb-1">Camunda Variable (I/O Binding)</label>
-            <input v-model="editingField.camundaVariable" class="w-full text-sm border-indigo-300 rounded font-mono bg-indigo-50" placeholder="Ej: customerName" />
-            <p class="text-[10px] text-gray-500 mt-1">El valor del campo se mapeará a esta variable en Process Engine.</p>
-          </div>
-          <div class="flex items-center gap-2 pt-2 border-t mt-4">
-             <input type="checkbox" v-model="editingField.required" id="reqCheck" class="text-indigo-600 rounded" />
-             <label for="reqCheck" class="text-sm font-medium text-gray-700 cursor-pointer">Campo Requerido (Agrega .min(1) a Zod)</label>
-          </div>
-        </div>
 
-        <div class="mt-6 flex justify-end gap-3">
-          <button @click="editingField = null" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-indigo-700">Guardar Cambios</button>
+          <div class="mt-6 flex justify-end gap-3">
+            <button @click="editingField = null" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-indigo-700">Guardar Cambios</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Test Gen / Result Modal -->
-    <div v-if="showResultModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[150] p-4">
-        <div class="bg-gray-900 rounded-xl max-w-2xl w-full shadow-2xl border border-gray-700 flex flex-col overflow-hidden">
-            <div class="px-5 py-3 bg-gray-800 border-b border-gray-700 flex justify-between items-center text-white">
-               <h3 class="font-bold flex items-center gap-2 text-sm">{{ modalTitle }}</h3>
-               <button @click="showResultModal = false" class="text-gray-400 hover:text-white">&times;</button>
-            </div>
-            <div class="p-5 overflow-y-auto font-mono text-xs text-green-400 whitespace-pre-wrap leading-relaxed max-h-[60vh]">
-{{ modalContent }}
-            </div>
-            <div class="px-5 py-3 bg-gray-800 border-t border-gray-700 flex justify-between">
-                <button v-if="modalTitle.includes('Tests')" class="text-xs text-gray-400 hover:text-white flex items-center gap-1">📋 Copiar al Portapapeles</button>
-                <div v-else></div>
-                <button @click="showResultModal = false" class="bg-indigo-600 text-white px-4 py-1.5 rounded hover:bg-indigo-700 text-xs font-bold font-sans">Cerrar</button>
-            </div>
-        </div>
-    </div>
+      <!-- Test Gen / Result Modal -->
+      <div v-if="showResultModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[150] p-4">
+          <div class="bg-gray-900 rounded-xl max-w-2xl w-full shadow-2xl border border-gray-700 flex flex-col overflow-hidden">
+              <div class="px-5 py-3 bg-gray-800 border-b border-gray-700 flex justify-between items-center text-white">
+                 <h3 class="font-bold flex items-center gap-2 text-sm">{{ modalTitle }}</h3>
+                 <button @click="showResultModal = false" class="text-gray-400 hover:text-white">&times;</button>
+              </div>
+              <div class="p-5 overflow-y-auto font-mono text-xs text-green-400 whitespace-pre-wrap leading-relaxed max-h-[60vh]">
+  {{ modalContent }}
+              </div>
+              <div class="px-5 py-3 bg-gray-800 border-t border-gray-700 flex justify-between">
+                  <button v-if="modalTitle.includes('Tests')" class="text-xs text-gray-400 hover:text-white flex items-center gap-1">📋 Copiar al Portapapeles</button>
+                  <div v-else></div>
+                  <button @click="showResultModal = false" class="bg-indigo-600 text-white px-4 py-1.5 rounded hover:bg-indigo-700 text-xs font-bold font-sans">Cerrar</button>
+              </div>
+          </div>
+      </div>
 
-    <!-- 4. Pantalla 7 (FormDesigner.vue) - Modal de Confirmación de Reset Dual (CA-43) -->
-    <div v-if="showResetModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm animate-slide-in">
-      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full border border-gray-200">
-        <div class="flex items-center gap-3 mb-4 text-red-600">
-           <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-           </svg>
-           <h3 class="text-lg font-bold">Confirmar Reset</h3>
-        </div>
-        <p class="text-sm text-gray-600 mb-6">
-           ¿Está seguro que desea borrar todo el diseño del formulario? <b>Esta acción no se puede deshacer</b> y todo el código generado se perderá.
-        </p>
-        <div class="flex justify-end gap-3">
-          <button @click="showResetModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
-          <button @click="executeReset" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow transition">Sí, Borrar</button>
+      <!-- Modal de Confirmación de Reset Dual (CA-43) -->
+      <div v-if="showResetModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm animate-slide-in">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full border border-gray-200">
+          <div class="flex items-center gap-3 mb-4 text-red-600">
+             <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+             </svg>
+             <h3 class="text-lg font-bold">Confirmar Reset</h3>
+          </div>
+          <p class="text-sm text-gray-600 mb-6">
+             ¿Está seguro que desea borrar todo el diseño del formulario? <b>Esta acción no se puede deshacer</b> y todo el código generado se perderá.
+          </p>
+          <div class="flex justify-end gap-3">
+            <button @click="showResetModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
+            <button @click="executeReset" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow transition">Sí, Borrar</button>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import VueDraggable from 'vuedraggable';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
 import apiClient from '@/services/apiClient';
+import AppTooltip from '@/components/common/AppTooltip.vue';
 
 // ── Types ────────────────────────────────────────────────────────
 interface FormField extends FormFieldMetadataDTO {}
@@ -300,6 +339,7 @@ interface FormField extends FormFieldMetadataDTO {}
 const formTitle = ref('Solicitud Onboarding (V1)');
 const formPattern = ref<'SIMPLE' | 'IFORM_MAESTRO' | null>(null);
 const showPatternModal = ref(true);
+const isFullScreen = ref(false); // Estado para CA-9/CA-10
 
 const canvasFields = ref<FormField[]>([]);
 const activeStageSim = ref('ALL');
@@ -348,6 +388,12 @@ const toolboxCategories = [
       { icon: '📎', label: 'File Upload', desc: 'SGDEA Vault Embed', type: 'file', placeholder: 'Arrastra PDF aquí', required: false, zodType: 'any', camundaVariable: '' },
       { icon: '✍️', label: 'Firma Digital', desc: 'Canvas a Base64', type: 'text', placeholder: 'Firma autógrafa', required: true, zodType: 'string', camundaVariable: '' },
     ]
+  },
+  {
+    name: "Layouts (CA-8)",
+    items: [
+      { icon: '🗂️', label: 'Contenedor', desc: 'Panel Agrupador Anidado', type: 'container', placeholder: 'Nueva Sección de Datos', required: false, zodType: 'object', camundaVariable: '', children: [] }
+    ]
   }
 ];
 
@@ -358,6 +404,9 @@ const cloneComponent = (original: any) => {
   cloned.id = `FIELD_${idCounter++}`;
   cloned.camundaVariable = cloned.id.toLowerCase();
   cloned.stage = 'START_EVENT'; // Default
+  if (cloned.type === 'container') {
+    cloned.children = [];
+  }
   return cloned;
 };
 
@@ -379,8 +428,8 @@ const executeReset = () => {
   showPatternModal.value = true;
 };
 
-const removeField = (index: number) => {
-  canvasFields.value.splice(index, 1);
+const removeField = (arr: FormField[], index: number) => {
+  arr.splice(index, 1);
 };
 
 const editField = (field: FormField) => {
@@ -431,6 +480,52 @@ const monacoOptions = computed(() => ({
   padding: { top: 16 }
 }));
 
+// Flat extractor helper for recursion script generation
+const flatFields = (fields: any[]): any[] => {
+  let res: any[] = [];
+  for (const f of fields) {
+    if (f.type === 'container') {
+      if (f.children) res = res.concat(flatFields(f.children));
+    } else {
+      res.push(f);
+    }
+  }
+  return res;
+};
+
+// HTML generator recursivo para Template (AST to Vue)
+const generateFieldHTML = (field: any, indent: string = '      '): string => {
+  let tpl = '';
+  if (formPattern.value === 'IFORM_MAESTRO') {
+    tpl += `${indent}<div v-if="stage === '${field.stage}'" class="field-${field.id.toLowerCase()}">\n`;
+  } else {
+    tpl += `${indent}<div class="field-${field.id.toLowerCase()}">\n`;
+  }
+  
+  if (field.type === 'container') {
+     tpl += `${indent}  <div class="border rounded-md p-4 bg-gray-50">\n`;
+     tpl += `${indent}    <h3 class="font-bold text-md mb-4">${field.label || 'Sección'}</h3>\n`;
+     if (field.children && field.children.length > 0) {
+       for(const child of field.children) {
+         tpl += generateFieldHTML(child, indent + '    ');
+       }
+     }
+     tpl += `${indent}  </div>\n`;
+  } else {
+    tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}</label>\n`;
+    if (field.type === 'text' || field.type === 'number') {
+      tpl += `${indent}  <input type="${field.type}" v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300" />\n`;
+    } else if (field.type === 'select') {
+       tpl += `${indent}  <select v-model="formData.${field.camundaVariable || field.id}" class="form-select mt-1 w-full rounded-md border-gray-300">\n${indent}    <!-- Options -->\n${indent}  </select>\n`;
+    } else {
+       tpl += `${indent}  <!-- Custom Component: ${field.type} -->\n`;
+    }
+    tpl += `${indent}  <span v-if="errors.${field.camundaVariable || field.id}" class="text-red-500 text-xs">{{ errors.${field.camundaVariable || field.id} }}</span>\n`;
+  }
+  tpl += `${indent}</div>\n`;
+  return tpl;
+};
+
 // ── Generators & Parsers (Bidireccional AST-Sandbox) ────────────────────────
 const computedCode = computed({
   get: () => {
@@ -440,23 +535,7 @@ const computedCode = computed({
         tpl += `\n    <!-- Arrastra componentes al lienzo -->`;
       } else {
         for (const field of canvasFields.value) {
-          tpl += `\n    `;
-          if (formPattern.value === 'IFORM_MAESTRO') {
-            tpl += `<div v-if="stage === '${field.stage}'" class="field-${field.id.toLowerCase()}">\n      `;
-          } else {
-            tpl += `<div class="field-${field.id.toLowerCase()}">\n      `;
-          }
-          tpl += `<label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}</label>\n      `;
-          
-          if (field.type === 'text' || field.type === 'number') {
-            tpl += `<input type="${field.type}" v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300" />`;
-          } else if (field.type === 'select') {
-             tpl += `<select v-model="formData.${field.camundaVariable || field.id}" class="form-select mt-1 w-full rounded-md border-gray-300">\n        <!-- Options -->\n      </select>`;
-          } else {
-             tpl += `<!-- Custom Component: ${field.type} -->`;
-          }
-          
-          tpl += `\n      <span v-if="errors.${field.camundaVariable || field.id}" class="text-red-500 text-xs">{{ errors.${field.camundaVariable || field.id} }}</span>\n    </div>`;
+          tpl += generateFieldHTML(field, '    ');
         }
       }
       tpl += `\n    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded">Enviar</button>\n  </form>\n</template>`;
@@ -469,8 +548,10 @@ const computedCode = computed({
         scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
       }
       
+      
       scr += `const formData = ref({\n`;
-      for (const field of canvasFields.value) {
+      const allFields = flatFields(canvasFields.value);
+      for (const field of allFields) {
         const def = field.type === 'number' ? 'null' : "''";
         scr += `  ${field.camundaVariable || field.id}: ${def},\n`;
       }
@@ -485,7 +566,8 @@ const computedCode = computed({
 
     if (activeCodeTab.value === 'ZOD') {
       let zc = `import { z } from 'zod';\n\nexport const taskSchema = z.object({\n`;
-      for (const field of canvasFields.value) {
+      const allFields = flatFields(canvasFields.value);
+      for (const field of allFields) {
         let zt = 'string';
         if(field.type === 'number') zt = 'number';
         if(field.type === 'file') zt = 'any';

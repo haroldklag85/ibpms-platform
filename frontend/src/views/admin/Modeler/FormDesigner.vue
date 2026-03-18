@@ -11,7 +11,7 @@
       </Transition>
     </Teleport>
 
-    <!-- ═══════ Header Toolbar ═══════ -->
+    <!-- ═══════ Header Toolbar (UX Refactor Tarea 1) ═══════ -->
     <header class="flex justify-between items-center px-6 py-3 bg-white border-b border-gray-200 shrink-0">
       <div class="flex items-center space-x-4">
         <div>
@@ -20,43 +20,38 @@
             <span class="text-xs font-bold text-white px-2 py-0.5 rounded-full" :class="formPattern === 'IFORM_MAESTRO' ? 'bg-blue-600' : 'bg-green-600'">
               {{ formPattern === 'IFORM_MAESTRO' ? '🔵 iForm Maestro' : '🟢 Simple' }}
             </span>
+            <!-- Zona 1: Visores -->
+            <button @click="isFullScreen = !isFullScreen" class="text-gray-400 hover:text-indigo-600 transition ml-2 focus:outline-none" :title="isFullScreen ? 'Salir Inmersión' : 'Pantalla Completa (Inmersivo)'">
+              🖵
+            </button>
+            <button @click="isPrintMode = !isPrintMode" class="text-gray-400 hover:text-indigo-600 transition focus:outline-none" :class="{ 'text-blue-600': isPrintMode }" title="Vista de Lectura Estática (Print Mode)">
+              👁️
+            </button>
           </h1>
           <p class="text-xs text-gray-500 mt-0.5">Editor bidireccional Vue3 Composition API + Validaciones Zod (US-003)</p>
         </div>
       </div>
       
       <div class="flex items-center gap-2">
-        <!-- Full-Screen Inmersivo (CA-9/CA-10) -->
-        <button @click="isFullScreen = !isFullScreen" class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center">
-          {{ isFullScreen ? '🗗 Salir Inmersión' : '🖵 Pantalla Completa' }}
+        <!-- Zona 2: Dropdown DevTools -->
+        <div class="relative group">
+          <button class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center">
+            🛠️ Herramientas Avanzadas ▼
+          </button>
+          <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-xl hidden group-hover:block z-50 overflow-hidden">
+            <button @click="fetchVersions" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">🕰️ Historial JSON</button>
+            <button @click="exportToPdf" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">📄 Exportar a PDF</button>
+            <button @click="showGlobalRulesModal = true" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">⚙️ Reglas Zod O-T-F</button>
+            <div class="border-t border-gray-100"></div>
+            <button @click="generateVitestSpec" class="block w-full text-left px-4 py-2 bg-yellow-50 hover:bg-yellow-100 text-xs text-yellow-800 font-bold transition">⚡ Generador Tests BDD</button>
+          </div>
+        </div>
+
+        <!-- Zona 4: Acciones Críticas -->
+        <button @click="confirmReset" class="bg-white text-red-600 px-3 py-1.5 border border-red-200 rounded shadow-sm text-xs font-semibold hover:bg-red-50 transition flex gap-1.5 items-center ml-2 outline outline-offset-1 outline-transparent hover:outline-red-200">
+          🗑 Reset
         </button>
 
-        <button @click="fetchVersions" class="bg-indigo-50 text-indigo-700 px-3 py-1.5 border border-indigo-200 rounded shadow-sm text-xs font-semibold hover:bg-indigo-100 transition flex gap-1.5 items-center">
-          🕰️ Historial
-        </button>
-        <button @click="exportToPdf" class="bg-red-50 text-red-700 px-3 py-1.5 border border-red-200 rounded shadow-sm text-xs font-semibold hover:bg-red-100 transition flex gap-1.5 items-center">
-          📄 PDF (CA-33)
-        </button>
-        <button @click="isPrintMode = !isPrintMode" class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center" :class="{ 'bg-blue-100 text-blue-700 border-blue-300': isPrintMode }">
-          👁️ Print Mode (CA-56)
-        </button>
-        <button @click="generateVitestSpec" class="bg-yellow-50 text-yellow-800 px-3 py-1.5 border border-yellow-300 rounded shadow-sm text-xs font-bold hover:bg-yellow-100 transition flex gap-1.5 items-center">
-          ⚡ GENERADOR DE TESTS (CA-1)
-        </button>
-        <button @click="showGlobalRulesModal = true" class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center">
-          ⚙️ Zod Global (CA-32)
-        </button>
-        <!-- Generador Tests -->
-        <button @click="generateTests" class="bg-gray-800 text-yellow-400 px-3 py-1.5 border border-black rounded shadow-sm text-xs font-semibold hover:bg-black transition flex gap-1.5 items-center">
-          ⚡ Generar Tests Zod (CA-115)
-        </button>
-
-        <!-- Reset Dual -->
-        <button @click="confirmReset" class="bg-white text-red-600 px-3 py-1.5 border border-red-200 rounded shadow-sm text-xs font-semibold hover:bg-red-50 transition flex gap-1.5 items-center">
-          🗑 Reset (CA-43)
-        </button>
-
-        <!-- Submit Mock -->
         <button @click="simulateMockSubmit" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
           🚀 Probar (Submit Mock)
         </button>
@@ -256,7 +251,7 @@
         </div>
 
         <!-- Monaco Editor Container -->
-        <div class="flex-1 relative">
+        <div class="flex-1 relative" :class="{'border-4 border-red-500 rounded-lg shadow-inner': zodParseError}">
            <VueMonacoEditor 
              v-model:value="computedCode"
              :language="editorLanguage"
@@ -325,7 +320,7 @@
           <div class="space-y-4">
             <div>
               <label class="block text-xs font-bold text-gray-700 mb-1">ID (Variable Name)</label>
-              <input v-model="editingField.id" class="w-full text-sm border-gray-300 rounded font-mono bg-gray-50 uppercase" />
+              <input v-model="editingField.id" @focus="oldIdTemp = editingField.id" @blur="handleIdChange(editingField)" class="w-full text-sm border-gray-300 rounded font-mono bg-gray-50 uppercase" />
             </div>
             <div>
               <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">Label (Nombre Visible) <AppTooltip content="El texto de la etiqueta que el usuario leerá en la pantalla visual producida." /></label>
@@ -583,6 +578,16 @@ const isFullScreen = ref(false); // Estado para CA-9/CA-10
 
 const crossValidationCode = ref(''); // CA-32
 const showGlobalRulesModal = ref(false); // CA-32
+const zodParseError = ref(false); // CA-Tarea 3 ZodRefactor
+
+const oldIdTemp = ref('');
+const handleIdChange = (field: FormField) => {
+  if (oldIdTemp.value && oldIdTemp.value !== field.id && crossValidationCode.value) {
+    // Tarea 2: Regex Seguro \bdata.oldId\b (previene romper eval/zod en runtime)
+    const re = new RegExp(`\\bdata\\.${oldIdTemp.value}\\b`, 'g');
+    crossValidationCode.value = crossValidationCode.value.replace(re, `data.${field.id}`);
+  }
+};
 
 const canvasFields = ref<FormField[]>([]);
 const activeStageSim = ref('ALL');
@@ -1375,73 +1380,65 @@ const computedCode = computed({
       canvasFields.value = newCanvasFields;
     } 
     else if (activeCodeTab.value === 'ZOD') {
-      const regex = /^\s*([a-zA-Z0-9_]+):\s*(z\.(?:string|number|any|boolean)\(\)|z\.array\(z\.string\(\)\))(.*?)(?:\/\/\s*\[([^\]]+)\])?/gm;
-      let match;
-      const newCanvasFields = [];
-      const currentFields = [...canvasFields.value];
-      
-      while ((match = regex.exec(newCode)) !== null) {
-          const varName = match[1];
-          const zTypeRaw = match[2];
-          const mods = match[3];
-          const stage = match[4] ? match[4].trim() : "START_EVENT";
+      try {
+        const regex = /^\s*([a-zA-Z0-9_]+):\s*(z\.(?:string|number|any|boolean)\(\)|z\.array\(z\.string\(\)\))(.*?)(?:\/\/\s*\[([^\]]+)\])?/gm;
+        let match;
+        const newCanvasFields = [];
+        const currentFields = [...canvasFields.value];
+        let parseCount = 0;
+        
+        while ((match = regex.exec(newCode)) !== null) {
+            parseCount++;
+            const varName = match[1];
+            const zTypeRaw = match[2];
+            const mods = match[3];
+            const stage = match[4] ? match[4].trim() : "START_EVENT";
 
-          const isReq = mods.includes('.min(') || !mods.includes('.optional()');
-          const isMult = zTypeRaw.includes('z.array');
-          
-          let minL, maxL;
-          const minMatch = mods.match(/\.min\((\d+)/);
-          if (minMatch) minL = parseInt(minMatch[1], 10);
-          const maxMatch = mods.match(/\.max\((\d+)/);
-          if (maxMatch) maxL = parseInt(maxMatch[1], 10);
-          
-          let cType = 'text';
-          if(isMult) cType = 'select'; // Prefer select if multiple
+            const isReq = mods.includes('.min(') || !mods.includes('.optional()');
+            const isMult = zTypeRaw.includes('z.array');
+            
+            let minL, maxL;
+            const minMatch = mods.match(/\.min\((\d+)/);
+            if (minMatch) minL = parseInt(minMatch[1], 10);
+            const maxMatch = mods.match(/\.max\((\d+)/);
+            if (maxMatch) maxL = parseInt(maxMatch[1], 10);
+            
+            let cType = 'text';
+            if(isMult) cType = 'select'; // Prefer select if multiple
 
-          const exist = currentFields.find(f => f.camundaVariable === varName || f.id === varName);
-          newCanvasFields.push({
-             ...(exist || { id: varName.toUpperCase(), label: varName }),
-             camundaVariable: varName,
-             type: exist && exist.type !== cType && exist.type !== 'select' && exist.type !== 'async_select' && exist.type !== 'hidden' ? cType : (exist ? exist.type : cType),
+            const exist = currentFields.find(f => f.camundaVariable === varName || f.id === varName);
+            newCanvasFields.push({
+               ...(exist || { id: varName.toUpperCase(), label: varName }),
+               camundaVariable: varName,
+               type: exist && exist.type !== cType && exist.type !== 'select' && exist.type !== 'async_select' && exist.type !== 'hidden' ? cType : (exist ? exist.type : cType),
 
-             required: isReq,
-             stage: stage,
-             isMultiple: isMult || exist?.isMultiple,
-             minLength: minL || exist?.minLength,
-             maxLength: maxL || exist?.maxLength
-          });
-      }
-      if (newCanvasFields.length > 0 || newCode.includes('z.object({')) {
-          canvasFields.value = newCanvasFields;
+               required: isReq,
+               stage: stage,
+               isMultiple: isMult || exist?.isMultiple,
+               minLength: minL || exist?.minLength,
+               maxLength: maxL || exist?.maxLength
+            });
+        }
+        
+        // Tarea 3: Fallback Try Catch
+        if (newCode.includes('z.object({') && parseCount === 0 && newCode.includes(':')) {
+            throw new Error('Sintaxis fallida o Regex roto');
+        }
+
+        if (newCanvasFields.length > 0 || newCode.includes('z.object({')) {
+            canvasFields.value = newCanvasFields;
+            zodParseError.value = false;
+        }
+      } catch (err) {
+        zodParseError.value = true;
+        showToast('El parseo manual ha fallado, las propiedades visuales prevalecen', 'error');
       }
     }
   }
 });
 
 // ── Modals Triggers ──────────────────────────────────────────────
-const generateTests = () => {
-    modalTitle.value = "🧪 Vitest/Jest Generator (CA-115)";
-    modalContent.value = `import { describe, it, expect } from 'vitest';
-import { taskSchema } from './schema.zod.ts';
-
-describe('${formTitle.value} - Zod Validation', () => {
-   
-   it('Debería retornar Error si el payload viene vacío (simulando 400 Bad Request)', () => {
-      const payload = {}; 
-      const result = taskSchema.safeParse(payload);
-      expect(result.success).toBe(false);
-   });
-
-${canvasFields.value.length > 0 ? `   it('Debería aprobar el envío correcto de ${canvasFields.value[0].label}', () => {
-      const payload = {
-${canvasFields.value.map(f => `         ${f.id}: ${f.type==='number' ? 100 : "'test_value'"},`).join('\n')}
-      };
-      const result = taskSchema.safeParse(payload);
-      expect(result.success).toBe(true);
-   });` : '   // Arrastra componentes para generar tests automáticos basados en tus inputs.'}
-});`;
-    showResultModal.value = true;
-};
+// Eliminado old `generateTests` (CA-115). Se mantiene BDD Generator `generateVitestSpec`.
 
 const simulateMockSubmit = async () => {
     modalTitle.value = "🚀 Execute End-to-End Validation Engine & Integration (CA-29)";

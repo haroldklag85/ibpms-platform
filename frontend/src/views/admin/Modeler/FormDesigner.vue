@@ -340,6 +340,40 @@
                <p class="text-[10px] text-green-600 mt-1">CSV de 1 columna para sobreescribir las opciones (Lector In-Memory HTML5).</p>
                <p v-if="editingField.options" class="text-[10px] font-bold mt-1 text-green-800">{{ editingField.options.length }} Opciones Cargadas.</p>
             </div>
+            
+            <!-- CA-38: Zod Lengths -->
+            <div v-if="['text', 'textarea'].includes(editingField.type)" class="flex gap-2">
+               <div class="flex-1">
+                 <label class="block text-xs font-bold text-gray-700 mb-1">Mínimo Caracteres</label>
+                 <input type="number" v-model="editingField.minLength" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 5" />
+               </div>
+               <div class="flex-1">
+                 <label class="block text-xs font-bold text-gray-700 mb-1">Máximo Caracteres</label>
+                 <input type="number" v-model="editingField.maxLength" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 255" />
+               </div>
+            </div>
+
+            <!-- CA-36: Input Mask -->
+            <div v-if="['text', 'number'].includes(editingField.type)">
+               <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">Máscara / Pattern (CA-36) <AppTooltip content="Inyecta un patrón regex visual (ej: \d{4}-\d{4} para tarjetas) en el input generado." /></label>
+               <input v-model="editingField.mask" class="w-full text-sm border-gray-300 rounded font-mono" placeholder="Ej: ^[0-9]{4}$" />
+            </div>
+
+            <!-- CA-39: File Upload Constraints -->
+            <div v-if="editingField.type === 'file'" class="border border-orange-200 bg-orange-50 p-3 rounded">
+               <h4 class="text-xs font-bold text-orange-800 mb-2">Restricciones de Archivo (CA-39)</h4>
+               <div class="flex gap-2 mb-2">
+                 <div class="flex-1">
+                   <label class="block text-xs font-bold text-gray-700 mb-1">Peso Máx (MB)</label>
+                   <input type="number" v-model="editingField.maxSizeMb" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 5" />
+                 </div>
+                 <div class="flex-1">
+                   <label class="block text-xs font-bold text-gray-700 mb-1">Extensiones</label>
+                   <input v-model="editingField.allowedExts" class="w-full text-sm border-gray-300 rounded" placeholder=".pdf,.png" />
+                 </div>
+               </div>
+               <p class="text-[10px] text-orange-600">Validará en frontend antes de subir por Axios.</p>
+            </div>
             <div v-if="formPattern === 'IFORM_MAESTRO'" class="bg-blue-50 p-3 rounded border border-blue-200">
                <label class="block text-xs font-bold text-blue-800 mb-1 flex items-center gap-1">Stage (Etapa BPMN de aparición) <AppTooltip content="Etapa en la cual el campo se revelará dinámicamente o dejará de bloquearse (CA-20)." /></label>
                <input v-model="editingField.stage" class="w-full text-sm border-blue-300 rounded font-mono" placeholder="Ej: ANALYSIS" />
@@ -707,7 +741,7 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
   let tpl = '';
   
   if (field.type.startsWith('button_')) {
-      tpl += `${indent}<div class="mt-6 field-${field.id.toLowerCase()} no-print">\n`;
+      tpl += `${indent}<div class="mt-6 field-${field.id.toLowerCase()} no-print" v-if="(typeof isAuditMode === 'undefined' ? false : !isAuditMode) && (typeof stage === 'undefined' ? true : stage !== 'AUDIT')">\n`;
       if (field.type === 'button_submit') {
         tpl += `${indent}  <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2">✅ ${field.label}</button>\n`;
       } else if (field.type === 'button_draft') {
@@ -759,10 +793,16 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
     tpl += `${indent}<div ${vIfDir}class="field-${field.id.toLowerCase()}">\n`;
     const ttip = field.tooltipText ? ` <span title="${field.tooltipText}" class="cursor-help text-indigo-500 font-bold ml-1 text-xs outline-none">ⓘ</span>` : '';
     tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}${ttip}</label>\n`;
-    const dsb = (formPattern.value === 'IFORM_MAESTRO' && field.soloLecturaPosterior) ? ` :disabled="stage !== '${field.stage}'"` : '';
+    const dsbObj = formPattern.value === 'IFORM_MAESTRO' ? `isAuditMode || stage === 'AUDIT' || (stage !== '${field.stage}' && ${field.soloLecturaPosterior || false})` : `isAuditMode`;
+    const dsb = ` :disabled="${dsbObj}"`;
     
     if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time') {
-      tpl += `${indent}  <input type="${field.type}" v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+      if (field.mask) {
+         // CA-36: Proxy Value/Event Masking
+         tpl += `${indent}  <input type="text" :value="formatMask(${vModelBase}, '${field.mask}')" @input="(e) => ${vModelBase} = unmask(e.target.value, '${field.type}')" placeholder="${field.placeholder || field.mask}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm font-mono"${dsb} />\n`;
+      } else {
+         tpl += `${indent}  <input type="${field.type}" v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+      }
     } else if (field.type === 'textarea') {
       tpl += `${indent}  <textarea v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" rows="3"${dsb}></textarea>\n`;
     } else if (field.type === 'checkbox') {
@@ -770,13 +810,18 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
     } else if (field.type === 'radio') {
       tpl += `${indent}  <div class="flex flex-col gap-1 mt-1">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <label class="flex items-center gap-2"><input type="radio" value="${o}" v-model="${vModelBase}" class="text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} /> <span class="text-sm text-gray-600 font-medium">${o}</span></label>`).join('\n')}\n${indent}  </div>\n`;
     } else if (field.type === 'select') {
-       tpl += `${indent}  <select v-model="${vModelBase}" class="form-select mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb}>\n${indent}    <option disabled value="">${field.placeholder || 'Seleccione'}</option>\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </select>\n`;
+       // CA-40: Datalist Interactiva Typeahead (Remueve <select> restrictivo)
+       tpl += `${indent}  <input list="list-${field.id}" v-model="${vModelBase}" placeholder="${field.placeholder || 'Seleccione...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+       tpl += `${indent}  <datalist id="list-${field.id}">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </datalist>\n`;
     } else if (field.type === 'async_select') {
        tpl += `${indent}  <input list="list-${field.id}" @input="(e) => fetchAsyncOpts_${field.id}((e.target as HTMLInputElement).value)" v-model="${vModelBase}" placeholder="${field.placeholder || 'Buscando en servidor...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
        tpl += `${indent}  <datalist id="list-${field.id}">\n${indent}    <option v-for="opt in asyncOpts_${field.id}" :key="opt" :value="opt"></option>\n${indent}  </datalist>\n`;
     } else if (field.type === 'file') {
        const uTarget = parentBinding === 'formData' ? 'formData.value' : parentBinding;
-       tpl += `${indent}  <input type="file" @change="(e) => uploadFile(e, '${field.camundaVariable || field.id}', ${uTarget})" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mt-1 cursor-pointer no-print" />\n`;
+       // CA-39: Binding de MaxSizeMb y AllowedExts
+       const maxMb = field.maxSizeMb || 0;
+       const exts = field.allowedExts || '';
+       tpl += `${indent}  <input type="file" @change="(e) => uploadFile(e, '${field.camundaVariable || field.id}', ${uTarget}, ${maxMb}, '${exts}')" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mt-1 cursor-pointer no-print"${dsb} />\n`;
     } else if (field.type === 'signature') {
        const oTarget = parentBinding === 'formData' ? 'formData.value' : parentBinding;
        tpl += `${indent}  <div class="border rounded bg-white p-2 mt-1">\n`;
@@ -828,6 +873,8 @@ const computedCode = computed({
         scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
       }
       
+      scr += `// CA-37: Visor Histórico Inmutable para Auditoría\nconst isAuditMode = ref(false); // Cambiar a true si es histórico\n\n`;
+      
       const hasAudit = flatFields(canvasFields.value).some(f => f.enableAuditLog);
       if (hasAudit) {
          scr += `// Auditoría (CA-28): Injection Dummy de Usuario Actual\nconst currentUser = ref({ name: 'Admin Demo' });\n\n`;
@@ -858,6 +905,13 @@ const computedCode = computed({
       const hasReject = flatFields(canvasFields.value).some(f => f.type === 'button_reject');
       const hasFile = flatFields(canvasFields.value).some(f => f.type === 'file');
       const hasSignature = flatFields(canvasFields.value).some(f => f.type === 'signature');
+      const hasMask = flatFields(canvasFields.value).some(f => f.mask);
+
+      if (hasMask) {
+         scr += `// CA-36: Enmascaramiento Dinámico Frontend-Only\n`;
+         scr += `const formatMask = (val: string|number|null, _mask: string) => { if (val == null) return ''; return val.toString(); /* Inyección futura de libreria regex-mask */};\n`;
+         scr += `const unmask = (val: string, type: string) => { const raw = val.replace(/[^a-zA-Z0-9.\-@:]/g, ''); return type === 'number' ? parseFloat(raw)||null : raw; };\n\n`;
+      }
 
       if (hasSignature) {
          scr += `// CA-31: Signature HTML5 Canvas Engine\n`;
@@ -872,7 +926,7 @@ const computedCode = computed({
       scr += `// CA-24: Auto-Guardado Workdesk LocalStorage/API\nlet autoSyncDraftTimeout: any = null;\nwatch(formData, (newVal) => {\n  clearTimeout(autoSyncDraftTimeout);\n  autoSyncDraftTimeout = setTimeout(async () => {\n    try {\n      await apiClient.post('/api/v1/forms/draft', newVal);\n      console.log('✅ Borrador auto-guardado en backend');\n    } catch (e) {\n      localStorage.setItem('workdesk_draft', JSON.stringify(newVal));\n      console.warn('⚠️ Fallback a LocalStorage para auto-guardado');\n    }\n  }, 2000);\n}, { deep: true });\n\n`;
 
       if (hasFile) {
-         scr += `// CA-21: Conector Multipart File Upload\nconst uploadFile = async (event: any, fieldId: string, targetObj: any) => {\n  const target = event.target;\n  const file = target?.files?.[0];\n  if (!file) return;\n  const data = new FormData();\n  data.append('file', file);\n  try {\n    const res = await apiClient.post('/api/v1/forms/upload', data, {\n      headers: { 'Content-Type': 'multipart/form-data' }\n    });\n    targetObj[fieldId] = res.data.url || 'subido_exitosamente';\n    alert('Archivo subido al SGDEA');\n  } catch (error) {\n    alert('Error de subida: ' + (error as any).message);\n  }\n};\n\n`;
+         scr += `// CA-21, CA-39: Conector Multipart File Upload + Constraints\nconst uploadFile = async (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string) => {\n  const target = event.target;\n  const file = target?.files?.[0];\n  if (!file) return;\n  if (maxMb > 0 && file.size > maxMb * 1024 * 1024) { alert('El archivo excede el límite máximo de ' + maxMb + 'MB.'); target.value = ''; return; }\n  if (exts) { const ext = '.' + file.name.split('.').pop()?.toLowerCase(); if (!exts.toLowerCase().includes(ext)) { alert('Extensión ' + ext + ' no permitida. Solo: ' + exts); target.value = ''; return; } }\n  \n  const data = new FormData();\n  data.append('file', file);\n  try {\n    const res = await apiClient.post('/api/v1/forms/upload', data, {\n      headers: { 'Content-Type': 'multipart/form-data' }\n    });\n    targetObj[fieldId] = res.data.url || 'subido_exitosamente';\n    alert('Archivo subido al SGDEA');\n  } catch (error) {\n    alert('Error de subida: ' + (error as any).message);\n  }\n};\n\n`;
       }
 
       scr += `// CA-15: Smart Actions con Blindaje de Red Try/Catch\n`;
@@ -958,6 +1012,12 @@ const computedCode = computed({
 
           const isReq = mods.includes('.min(') || !mods.includes('.optional()');
           
+          let minL, maxL;
+          const minMatch = mods.match(/\.min\((\d+)/);
+          if (minMatch) minL = parseInt(minMatch[1], 10);
+          const maxMatch = mods.match(/\.max\((\d+)/);
+          if (maxMatch) maxL = parseInt(maxMatch[1], 10);
+          
           let cType = 'text';
           if(zType === 'number') cType = 'number';
           if(zType === 'any') cType = 'file';
@@ -968,7 +1028,9 @@ const computedCode = computed({
              camundaVariable: varName,
              type: exist && exist.type !== cType && exist.type !== 'select' ? cType : (exist ? exist.type : cType),
              required: isReq,
-             stage: stage 
+             stage: stage,
+             minLength: minL || exist?.minLength,
+             maxLength: maxL || exist?.maxLength
           });
       }
       if (newCanvasFields.length > 0 || newCode.includes('z.object({')) {

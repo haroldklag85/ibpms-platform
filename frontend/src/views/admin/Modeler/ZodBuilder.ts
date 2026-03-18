@@ -16,6 +16,11 @@ export interface FormFieldMetadataDTO {
     enableAuditLog?: boolean; // CA-28: Auditoría Conf
     asyncUrl?: string; // CA-30: Endpoint de recolección asyncrona Typeahead
     tooltipText?: string; // CA-35: Ayudantes locales
+    mask?: string; // CA-36: Máscara visual de Input
+    minLength?: number; // CA-38: Zod string lengths
+    maxLength?: number; // CA-38: Zod string lengths
+    maxSizeMb?: number; // CA-39: Peso máximo archivo
+    allowedExts?: string; // CA-39: Tipos permitidos
     children?: FormFieldMetadataDTO[]; // CA-8: Recursive Nested Support
 }
 
@@ -55,8 +60,13 @@ export class ZodBuilder {
                 case 'file':
                 case 'signature': // CA-31
                     fieldSchema = z.string();
-                    if (field.required) {
+                    if (field.minLength !== undefined && field.minLength > 0) {
+                        fieldSchema = (fieldSchema as z.ZodString).min(field.minLength, `Mínimo ${field.minLength} caracteres`);
+                    } else if (field.required) {
                         fieldSchema = (fieldSchema as z.ZodString).min(1, 'Campo requerido');
+                    }
+                    if (field.maxLength !== undefined && field.maxLength > 0) {
+                        fieldSchema = (fieldSchema as z.ZodString).max(field.maxLength, `Máximo ${field.maxLength} caracteres`);
                     }
                     break;
                 default:

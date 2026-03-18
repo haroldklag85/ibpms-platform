@@ -34,6 +34,12 @@
         <button @click="fetchVersions" class="bg-indigo-50 text-indigo-700 px-3 py-1.5 border border-indigo-200 rounded shadow-sm text-xs font-semibold hover:bg-indigo-100 transition flex gap-1.5 items-center">
           🕰️ Historial
         </button>
+        <button @click="exportToPdf" class="bg-red-50 text-red-700 px-3 py-1.5 border border-red-200 rounded shadow-sm text-xs font-semibold hover:bg-red-100 transition flex gap-1.5 items-center">
+          📄 PDF (CA-33)
+        </button>
+        <button @click="showGlobalRulesModal = true" class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center">
+          ⚙️ Zod Global (CA-32)
+        </button>
         <!-- Generador Tests -->
         <button @click="generateTests" class="bg-gray-800 text-yellow-400 px-3 py-1.5 border border-black rounded shadow-sm text-xs font-semibold hover:bg-black transition flex gap-1.5 items-center">
           ⚡ Generar Tests Zod (CA-115)
@@ -304,17 +310,24 @@
 
       <!-- Properties Modal (Field Editor) -->
       <div v-if="editingField" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[150] p-4">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md">
-          <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">⚙️ Propiedades del Componente</h3>
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">🛠️ Propiedades del Componente</h3>
+            <button @click="editingField = null" class="text-gray-400 hover:text-gray-600">&times;</button>
+          </div>
           
           <div class="space-y-4">
             <div>
-              <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">ID (Variable Name) <AppTooltip content="Identificador único del campo en el Motor. Se utiliza si el Binding explícito no está declarado (CA-18)." /></label>
+              <label class="block text-xs font-bold text-gray-700 mb-1">ID (Variable Name)</label>
               <input v-model="editingField.id" class="w-full text-sm border-gray-300 rounded font-mono bg-gray-50 uppercase" />
             </div>
             <div>
               <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">Label (Nombre Visible) <AppTooltip content="El texto de la etiqueta que el usuario leerá en la pantalla visual producida." /></label>
               <input v-model="editingField.label" class="w-full text-sm border-gray-300 rounded" />
+            </div>
+            <div>
+               <label class="block text-xs font-bold text-gray-700 mb-1">Tooltip / Ayuda (CA-35)</label>
+               <input v-model="editingField.tooltipText" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: Ingrese su nombre completo..." />
             </div>
             <div v-if="editingField.type === 'async_select'" class="bg-purple-50 p-3 rounded border border-purple-200">
                <label class="block text-xs font-bold text-purple-800 mb-1">URL Endpoint Async (CA-30)</label>
@@ -415,6 +428,20 @@
       </div>
     </Teleport>
 
+<!-- Modal CA-32 Zod Global Rules -->
+    <Teleport to="body">
+      <div v-if="showGlobalRulesModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full border border-gray-200">
+          <h2 class="text-lg font-bold mb-4 flex items-center gap-2">⚙️ Reglas Cruzadas Zod (CA-32) <AppTooltip content="Agrega un callback para .superRefine() que aplica validaciones transversales en todo el payload de formulario."/></h2>
+          <p class="text-[11px] text-gray-600 mb-3">Ejemplo: <code class="bg-gray-100 p-0.5 rounded">if (data.EDAD < 18 && data.AUTORIZA === false) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requiere permiso", path: ["AUTORIZA"] }); }</code></p>
+          <textarea v-model="crossValidationCode" rows="6" class="w-full text-xs font-mono p-3 border border-gray-300 rounded bg-gray-100" placeholder="Escribe aquí el cuerpo JS de validación cruzada..."></textarea>
+          <div class="mt-4 flex justify-end gap-3">
+            <button @click="showGlobalRulesModal = false" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded hover:bg-indigo-700 transition">💾 Guardar Reglas Zod</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
   </div>
 </template>
 
@@ -438,6 +465,9 @@ const formTitle = ref('Solicitud Onboarding (V1)');
 const formPattern = ref<'SIMPLE' | 'IFORM_MAESTRO' | null>(null);
 const showPatternModal = ref(true);
 const isFullScreen = ref(false); // Estado para CA-9/CA-10
+
+const crossValidationCode = ref(''); // CA-32
+const showGlobalRulesModal = ref(false); // CA-32
 
 const canvasFields = ref<FormField[]>([]);
 const activeStageSim = ref('ALL');
@@ -478,6 +508,10 @@ const activeCodeTab = ref<'TEMPLATE' | 'SCRIPT' | 'ZOD' | 'STYLE'>('TEMPLATE');
 const editingField = ref<FormField | null>(null);
 
 const showResetModal = ref(false); // Modal de Reset CA-43
+
+const exportToPdf = () => {
+    window.print();
+};
 
 // ── Modals / Toasts ──────────────────────────────────────────────
 const showResultModal = ref(false);
@@ -520,13 +554,14 @@ const toolboxCategories = [
     name: "Avanzados",
     items: [
       { icon: '📎', label: 'File Upload', desc: 'SGDEA Vault Embed', type: 'file', placeholder: 'Arrastra PDF aquí', required: false, zodType: 'any', camundaVariable: '' },
-      { icon: '✍️', label: 'Firma Digital', desc: 'Canvas a Base64', type: 'text', placeholder: 'Firma autógrafa', required: true, zodType: 'string', camundaVariable: '' },
+      { icon: '✍️', label: 'Firma Digital', desc: 'Canvas HTML5 (CA-31)', type: 'signature', placeholder: 'Dibuja tu firma', required: true, zodType: 'string', camundaVariable: '' },
     ]
   },
   {
-    name: "Layouts (CA-8)",
+    name: "Layouts (CA-8, CA-34)",
     items: [
-      { icon: '🗂️', label: 'Contenedor', desc: 'Panel Agrupador', type: 'container', placeholder: 'Nueva Sección de Datos', required: false, zodType: 'object', camundaVariable: '', children: [] }
+      { icon: '🗂️', label: 'Contenedor', desc: 'Panel Agrupador', type: 'container', placeholder: 'Nueva Sección de Datos', required: false, zodType: 'object', camundaVariable: '', children: [] },
+      { icon: '📑', label: 'Data Grid', desc: 'Fila Repetible', type: 'field_array', placeholder: 'Nueva Tabla', required: false, zodType: 'array', camundaVariable: '', children: [] }
     ]
   },
   {
@@ -546,7 +581,7 @@ const cloneComponent = (original: any) => {
   cloned.id = `FIELD_${idCounter++}`;
   cloned.camundaVariable = cloned.id.toLowerCase();
   cloned.stage = 'START_EVENT'; // Default
-  if (cloned.type === 'container') {
+  if (cloned.type === 'container' || cloned.type === 'field_array') {
     cloned.children = [];
   }
   return cloned;
@@ -597,7 +632,7 @@ const editField = (field: FormField) => {
 
 declare const monaco: any;
 
-const onMonacoMount = (editorIns: any, monacoIns: any) => {
+const onMonacoMount = (_editorIns: any, monacoIns: any) => {
   // Intellisense Injection CA-115
   monacoIns.languages.typescript.typescriptDefaults.setCompilerOptions({
       target: monacoIns.languages.typescript.ScriptTarget.ESNext,
@@ -658,7 +693,7 @@ const monacoOptions = computed(() => ({
 const flatFields = (fields: any[]): any[] => {
   let res: any[] = [];
   for (const f of fields) {
-    if (f.type === 'container') {
+    if (f.type === 'container' || f.type === 'field_array') {
       if (f.children) res = res.concat(flatFields(f.children));
     } else {
       res.push(f);
@@ -668,11 +703,11 @@ const flatFields = (fields: any[]): any[] => {
 };
 
 // HTML generator recursivo para Template (AST to Vue)
-const generateFieldHTML = (field: any, indent: string = '      '): string => {
+const generateFieldHTML = (field: any, indent: string = '      ', parentBinding: string = 'formData'): string => {
   let tpl = '';
   
   if (field.type.startsWith('button_')) {
-      tpl += `${indent}<div class="mt-6 field-${field.id.toLowerCase()}">\n`;
+      tpl += `${indent}<div class="mt-6 field-${field.id.toLowerCase()} no-print">\n`;
       if (field.type === 'button_submit') {
         tpl += `${indent}  <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2">✅ ${field.label}</button>\n`;
       } else if (field.type === 'button_draft') {
@@ -695,35 +730,62 @@ const generateFieldHTML = (field: any, indent: string = '      '): string => {
       vIfDir = `v-if="stage === '${field.stage}'" `;
   }
 
-  if (field.type === 'container') {
-     tpl += `${indent}<div ${vIfDir}class="border rounded-md p-4 bg-gray-50 field-${field.id.toLowerCase()}">\n`;
+  const vModelBase = parentBinding === 'formData' 
+    ? `formData.${field.camundaVariable || field.id}` 
+    : `row.${field.camundaVariable || field.id}`;
+
+  if (field.type === 'container' || field.type === 'field_array') {
+     tpl += `${indent}<div ${vIfDir}class="${field.type === 'field_array' ? 'border-2 border-indigo-100' : 'border'} rounded-md p-4 bg-gray-50 field-${field.id.toLowerCase()}">\n`;
      tpl += `${indent}  <h3 class="font-bold text-md mb-4">${field.label || 'Sección'}</h3>\n`;
+     
+     if (field.type === 'field_array') {
+        tpl += `${indent}  <div v-for="(row, index) in ${vModelBase}" :key="index" class="p-4 border border-gray-200 bg-white mb-3 rounded isolate relative">\n`;
+        tpl += `${indent}    <button type="button" @click="${vModelBase}.splice(index, 1)" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold no-print" title="Eliminar Fila">🗑</button>\n`;
+     }
+
      if (field.children && field.children.length > 0) {
        for(const child of field.children) {
-         tpl += generateFieldHTML(child, indent + '  ');
+         if (field.type === 'field_array') tpl += generateFieldHTML(child, indent + '    ', 'row');
+         else tpl += generateFieldHTML(child, indent + '  ', parentBinding);
        }
+     }
+     
+     if (field.type === 'field_array') {
+        tpl += `${indent}  </div>\n`;
+        tpl += `${indent}  <button type="button" @click="${vModelBase}.push({})" class="text-sm border-2 border-dashed border-indigo-300 text-indigo-700 px-4 py-2 rounded hover:bg-indigo-50 font-bold w-full mt-2 no-print">[+ Agregar Fila]</button>\n`;
      }
      tpl += `${indent}</div>\n`;
   } else {
     tpl += `${indent}<div ${vIfDir}class="field-${field.id.toLowerCase()}">\n`;
-    tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}</label>\n`;
+    const ttip = field.tooltipText ? ` <span title="${field.tooltipText}" class="cursor-help text-indigo-500 font-bold ml-1 text-xs outline-none">ⓘ</span>` : '';
+    tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}${ttip}</label>\n`;
     const dsb = (formPattern.value === 'IFORM_MAESTRO' && field.soloLecturaPosterior) ? ` :disabled="stage !== '${field.stage}'"` : '';
+    
     if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time') {
-      tpl += `${indent}  <input type="${field.type}" v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+      tpl += `${indent}  <input type="${field.type}" v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
     } else if (field.type === 'textarea') {
-      tpl += `${indent}  <textarea v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" rows="3"${dsb}></textarea>\n`;
+      tpl += `${indent}  <textarea v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" rows="3"${dsb}></textarea>\n`;
     } else if (field.type === 'checkbox') {
-      tpl += `${indent}  <div class="flex items-center gap-2 mt-1">\n${indent}    <input type="checkbox" v-model="formData.${field.camundaVariable || field.id}" class="rounded text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} />\n${indent}    <span class="text-sm text-gray-700">${field.placeholder || field.label}</span>\n${indent}  </div>\n`;
+      tpl += `${indent}  <div class="flex items-center gap-2 mt-1">\n${indent}    <input type="checkbox" v-model="${vModelBase}" class="rounded text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} />\n${indent}    <span class="text-sm text-gray-700">${field.placeholder || field.label}</span>\n${indent}  </div>\n`;
     } else if (field.type === 'radio') {
-      tpl += `${indent}  <div class="flex flex-col gap-1 mt-1">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <label class="flex items-center gap-2"><input type="radio" value="${o}" v-model="formData.${field.camundaVariable || field.id}" class="text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} /> <span class="text-sm text-gray-600 font-medium">${o}</span></label>`).join('\n')}\n${indent}  </div>\n`;
+      tpl += `${indent}  <div class="flex flex-col gap-1 mt-1">\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <label class="flex items-center gap-2"><input type="radio" value="${o}" v-model="${vModelBase}" class="text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} /> <span class="text-sm text-gray-600 font-medium">${o}</span></label>`).join('\n')}\n${indent}  </div>\n`;
     } else if (field.type === 'select') {
-       tpl += `${indent}  <select v-model="formData.${field.camundaVariable || field.id}" class="form-select mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb}>\n${indent}    <option disabled value="">${field.placeholder || 'Seleccione'}</option>\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </select>\n`;
+       tpl += `${indent}  <select v-model="${vModelBase}" class="form-select mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb}>\n${indent}    <option disabled value="">${field.placeholder || 'Seleccione'}</option>\n${(field.options || ['Opción 1', 'Opción 2']).map((o:string) => `${indent}    <option value="${o}">${o}</option>`).join('\n')}\n${indent}  </select>\n`;
     } else if (field.type === 'async_select') {
-       // CA-30: Axios Async Typeahead
-       tpl += `${indent}  <input list="list-${field.id}" @input="(e) => fetchAsyncOpts_${field.id}((e.target as HTMLInputElement).value)" v-model="formData.${field.camundaVariable || field.id}" placeholder="${field.placeholder || 'Buscando en servidor...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+       tpl += `${indent}  <input list="list-${field.id}" @input="(e) => fetchAsyncOpts_${field.id}((e.target as HTMLInputElement).value)" v-model="${vModelBase}" placeholder="${field.placeholder || 'Buscando en servidor...'}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
        tpl += `${indent}  <datalist id="list-${field.id}">\n${indent}    <option v-for="opt in asyncOpts_${field.id}" :key="opt" :value="opt"></option>\n${indent}  </datalist>\n`;
     } else if (field.type === 'file') {
-       tpl += `${indent}  <input type="file" @change="(e) => uploadFile(e, '${field.camundaVariable || field.id}')" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mt-1 cursor-pointer" />\n`;
+       const uTarget = parentBinding === 'formData' ? 'formData.value' : parentBinding;
+       tpl += `${indent}  <input type="file" @change="(e) => uploadFile(e, '${field.camundaVariable || field.id}', ${uTarget})" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mt-1 cursor-pointer no-print" />\n`;
+    } else if (field.type === 'signature') {
+       const oTarget = parentBinding === 'formData' ? 'formData.value' : parentBinding;
+       tpl += `${indent}  <div class="border rounded bg-white p-2 mt-1">\n`;
+       tpl += `${indent}    <canvas :id="'canvas_' + '${field.id}'" width="400" height="200" class="border border-gray-300 bg-gray-50 cursor-crosshair w-full" @mousedown="startSig($event, '${field.id}')" @mousemove="drawSig($event, '${field.id}')" @mouseup="endSig('${field.id}', '${field.camundaVariable || field.id}', ${oTarget})" @mouseleave="endSig('${field.id}', '${field.camundaVariable || field.id}', ${oTarget})" @touchstart="startSig($event, '${field.id}')" @touchmove="drawSig($event, '${field.id}')" @touchend="endSig('${field.id}', '${field.camundaVariable || field.id}', ${oTarget})"></canvas>\n`;
+       tpl += `${indent}    <div class="flex justify-between mt-2 no-print">\n`;
+       tpl += `${indent}       <button type="button" @click="clearSig('${field.id}', '${field.camundaVariable || field.id}', ${oTarget})" class="text-xs text-red-500 font-bold">Limpiar Firma</button>\n`;
+       tpl += `${indent}       <span class="text-[10px] text-gray-400">Dibuja en el recuadro superior</span>\n`;
+       tpl += `${indent}    </div>\n`;
+       tpl += `${indent}  </div>\n`;
     } else {
        tpl += `${indent}  <!-- Custom Component: ${field.type} -->\n`;
     }
@@ -777,13 +839,17 @@ const computedCode = computed({
          scr += `const fetchAsyncOpts_${field.id} = async (query: string) => {\n   if(query.trim().length === 0) { asyncOpts_${field.id}.value = []; return; }\n   try {\n      const res = await apiClient.get(\`${field.asyncUrl}?q=\${query}\`);\n      asyncOpts_${field.id}.value = Array.isArray(res.data) ? res.data.map(i => i.label || i.nombre || i.name || JSON.stringify(i)) : [];\n   } catch (e) { console.error('Typeahead Error (CA-30)', e); }\n};\n\n`;
       }
 
-      scr += `const formData = ref({\n`;
-      const allFields = flatFields(canvasFields.value).filter(f => !f.type.startsWith('button_') && f.type !== 'container');
-      for (const field of allFields) {
-        let def = "''";
-        if (field.type === 'number') def = 'null';
-        if (field.type === 'checkbox') def = 'false';
-        scr += `  ${field.camundaVariable || field.id}: ${def}, // Binding CA-12/13\n`;
+      scr += `const formData = ref<Record<string, any>>({\n`;
+      const directFields = canvasFields.value.filter(f => !f.type.startsWith('button_') && f.type !== 'container');
+      for (const field of directFields) {
+        if (field.type === 'field_array') {
+           scr += `  ${field.camundaVariable || field.id}: [], // Grilla CA-34\n`;
+        } else {
+           let def = "''";
+           if (field.type === 'number') def = 'null';
+           if (field.type === 'checkbox') def = 'false';
+           scr += `  ${field.camundaVariable || field.id}: ${def}, // Binding CA-12/13\n`;
+        }
       }
       scr += `});\n\nconst errors = ref<Record<string, string>>({});\n`;
       scr += `const taskId = 'MOCK_TASK_ID'; // Inyectar ID real\n\n`;
@@ -791,11 +857,22 @@ const computedCode = computed({
       const hasDraft = flatFields(canvasFields.value).some(f => f.type === 'button_draft');
       const hasReject = flatFields(canvasFields.value).some(f => f.type === 'button_reject');
       const hasFile = flatFields(canvasFields.value).some(f => f.type === 'file');
+      const hasSignature = flatFields(canvasFields.value).some(f => f.type === 'signature');
+
+      if (hasSignature) {
+         scr += `// CA-31: Signature HTML5 Canvas Engine\n`;
+         scr += `const sigState = ref<Record<string, {isDrawing: boolean, ctx: CanvasRenderingContext2D | null}>>({});\n`;
+         scr += `const getCtx = (id: string, canvas: HTMLCanvasElement) => {\n  if(!sigState.value[id]) { sigState.value[id] = { isDrawing: false, ctx: canvas.getContext('2d') }; if(sigState.value[id].ctx) { sigState.value[id].ctx!.lineWidth = 2; sigState.value[id].ctx!.lineCap = 'round'; sigState.value[id].ctx!.strokeStyle = '#000'; } }\n  return sigState.value[id];\n};\n`;
+         scr += `const startSig = (e: any, id: string) => { e.preventDefault(); const canvas = e.target as HTMLCanvasElement; const st = getCtx(id, canvas); if(!st.ctx) return; st.isDrawing = true; st.ctx.beginPath(); const rect = canvas.getBoundingClientRect(); const x = (e.clientX || e.touches?.[0].clientX) - rect.left; const y = (e.clientY || e.touches?.[0].clientY) - rect.top; st.ctx.moveTo(x, y); };\n`;
+         scr += `const drawSig = (e: any, id: string) => { e.preventDefault(); const canvas = e.target as HTMLCanvasElement; const st = getCtx(id, canvas); if(!st || !st.isDrawing || !st.ctx) return; const rect = canvas.getBoundingClientRect(); const x = (e.clientX || e.touches?.[0].clientX) - rect.left; const y = (e.clientY || e.touches?.[0].clientY) - rect.top; st.ctx.lineTo(x, y); st.ctx.stroke(); };\n`;
+         scr += `const endSig = (id: string, varName: string, targetObj: any) => { const st = sigState.value[id]; if(!st || !st.isDrawing) return; st.isDrawing = false; const canvas = document.getElementById('canvas_' + id) as HTMLCanvasElement; if(canvas) { targetObj[varName] = canvas.toDataURL('image/png'); } };\n`;
+         scr += `const clearSig = (id: string, varName: string, targetObj: any) => { const canvas = document.getElementById('canvas_' + id) as HTMLCanvasElement; if(canvas) { const ctx = canvas.getContext('2d'); ctx?.clearRect(0,0, canvas.width, canvas.height); targetObj[varName] = ''; } };\n\n`;
+      }
 
       scr += `// CA-24: Auto-Guardado Workdesk LocalStorage/API\nlet autoSyncDraftTimeout: any = null;\nwatch(formData, (newVal) => {\n  clearTimeout(autoSyncDraftTimeout);\n  autoSyncDraftTimeout = setTimeout(async () => {\n    try {\n      await apiClient.post('/api/v1/forms/draft', newVal);\n      console.log('✅ Borrador auto-guardado en backend');\n    } catch (e) {\n      localStorage.setItem('workdesk_draft', JSON.stringify(newVal));\n      console.warn('⚠️ Fallback a LocalStorage para auto-guardado');\n    }\n  }, 2000);\n}, { deep: true });\n\n`;
 
       if (hasFile) {
-         scr += `// CA-21: Conector Multipart File Upload\nconst uploadFile = async (event: any, fieldId: string) => {\n  const target = event.target;\n  const file = target?.files?.[0];\n  if (!file) return;\n  const data = new FormData();\n  data.append('file', file);\n  try {\n    const res = await apiClient.post('/api/v1/forms/upload', data, {\n      headers: { 'Content-Type': 'multipart/form-data' }\n    });\n    (formData.value as any)[fieldId] = res.data.url || 'subido_exitosamente';\n    alert('Archivo subido al SGDEA');\n  } catch (error) {\n    alert('Error de subida: ' + (error as any).message);\n  }\n};\n\n`;
+         scr += `// CA-21: Conector Multipart File Upload\nconst uploadFile = async (event: any, fieldId: string, targetObj: any) => {\n  const target = event.target;\n  const file = target?.files?.[0];\n  if (!file) return;\n  const data = new FormData();\n  data.append('file', file);\n  try {\n    const res = await apiClient.post('/api/v1/forms/upload', data, {\n      headers: { 'Content-Type': 'multipart/form-data' }\n    });\n    targetObj[fieldId] = res.data.url || 'subido_exitosamente';\n    alert('Archivo subido al SGDEA');\n  } catch (error) {\n    alert('Error de subida: ' + (error as any).message);\n  }\n};\n\n`;
       }
 
       scr += `// CA-15: Smart Actions con Blindaje de Red Try/Catch\n`;
@@ -817,16 +894,30 @@ const computedCode = computed({
     }
 
     if (activeCodeTab.value === 'ZOD') {
-      let zc = `import { z } from 'zod';\n\nexport const taskSchema = z.object({\n`;
-      const allFields = flatFields(canvasFields.value).filter(f => !f.type.startsWith('button_') && f.type !== 'container');
-      for (const field of allFields) {
-        let zt = 'string';
-        if(field.type === 'number') zt = 'number';
-        if(field.type === 'file') zt = 'any';
-        if(field.type === 'checkbox') zt = 'boolean';
-        zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required && field.type !== 'checkbox' ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
+      const walkNode = (fieldsArr: any[], isRoot: boolean): string => {
+         let zc = `z.object({\n`;
+         for(const field of fieldsArr) {
+            if(field.type.startsWith('button_') || field.type === 'container') continue;
+            if(field.type === 'field_array') {
+                if(!field.children || field.children.length === 0) continue;
+                zc += `  ${field.camundaVariable || field.id}: z.array(${walkNode(field.children, false)}), // [GRILLA]\n`;
+                continue;
+            }
+            let zt = 'string';
+            if(field.type === 'number') zt = 'number';
+            if(field.type === 'file') zt = 'any';
+            if(field.type === 'checkbox') zt = 'boolean';
+            zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required && field.type !== 'checkbox' ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
+         }
+         zc += isRoot ? `})` : `        })`;
+         return zc;
+      };
+
+      let zc = `import { z } from 'zod';\n\nexport const taskSchema = ${walkNode(canvasFields.value, true)}`;
+      if (crossValidationCode.value) {
+         zc += `\n.superRefine((data, ctx) => {\n${crossValidationCode.value.split('\n').map(l=>'  '+l).join('\n')}\n})`;
       }
-      zc += `});\n\nexport type TaskSchemaPayload = z.infer<typeof taskSchema>;`;
+      zc += `;\n\nexport type TaskSchemaPayload = z.infer<typeof taskSchema>;`;
       return zc;
     }
 
@@ -950,6 +1041,22 @@ const simulateMockSubmit = async () => {
 </script>
 
 <style>
+/* CSS Media Query for Export to PDF (CA-33) */
+@media print {
+  header, aside, .no-print {
+    display: none !important;
+  }
+  .shadow-dom-isolation-wrapper {
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  main { overflow: visible !important; }
+}
+
 /* Ghost class for VueDraggable */
 .ghost-dropzone {
   opacity: 0.5;

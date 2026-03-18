@@ -15,6 +15,7 @@ export interface FormFieldMetadataDTO {
     visibilityCondition?: string; // CA-25: Visibilidad Condicional Dinámica Eval
     enableAuditLog?: boolean; // CA-28: Auditoría Conf
     asyncUrl?: string; // CA-30: Endpoint de recolección asyncrona Typeahead
+    tooltipText?: string; // CA-35: Ayudantes locales
     children?: FormFieldMetadataDTO[]; // CA-8: Recursive Nested Support
 }
 
@@ -52,6 +53,7 @@ export class ZodBuilder {
                 case 'date':
                 case 'time':
                 case 'file':
+                case 'signature': // CA-31
                     fieldSchema = z.string();
                     if (field.required) {
                         fieldSchema = (fieldSchema as z.ZodString).min(1, 'Campo requerido');

@@ -241,4 +241,41 @@ public class BpmnDesignController {
             "activeNodes", List.of("StartEvent_1", "Activity_Mock1", "EndEvent_1")
         ));
     }
+
+    /**
+     * CA-32: Suspender/Archivar Diagramas Seguros (Anti-Deadlock)
+     */
+    @PostMapping("/{processDefinitionKey}/archive")
+    public ResponseEntity<?> archiveProcessDefinition(@PathVariable("processDefinitionKey") String key) {
+        // MOCK Camunda API: long count = runtimeService.createProcessInstanceQuery().processDefinitionKey(key).count();
+        long activeInstancesCount = "onboarding_1".equals(key) ? 5 : 0; // Simulador: onboarding tiene instancias, otros no.
+
+        if (activeInstancesCount > 0) {
+            return ResponseEntity.status(409).body(Map.of(
+                "error", "No se puede archivar. Existen " + activeInstancesCount + " instancias vivas. Se requiere anulación o migración total."
+            ));
+        }
+
+        // MOCK Camunda API: repositoryService.suspendProcessDefinitionByKey(key);
+        return ResponseEntity.ok(Map.of(
+            "message", "Definición de Proceso archivada (suspendida) exitosamente.",
+            "status", "ARCHIVED"
+        ));
+    }
+
+    /**
+     * CA-34: Bandeja de Solicitud de Despliegue (Flujo de Aprobación MOCK)
+     */
+    @PostMapping("/{processDefinitionKey}/request-deploy")
+    public ResponseEntity<?> requestDeploymentApproval(
+            @PathVariable("processDefinitionKey") String key,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+        
+        // El Backend guardaría el XML en BD como PENDIENTE_APROBACION y crearía un UserTask de Camunda para el grupo BPMN_Release_Manager
+        return ResponseEntity.ok(Map.of(
+            "message", "Solicitud de despliegue enviada. La versión borrador está pendiente de aprobación por Release Management.",
+            "status", "PENDING_APPROVAL",
+            "assignedGroup", "BPMN_Release_Manager"
+        ));
+    }
 }

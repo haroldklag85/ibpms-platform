@@ -113,6 +113,9 @@ export const api = {
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),
     analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
 
+    // Configuraciones Administrativas (CA-30)
+    getBpmnComplexityLimit: () => apiClient.get('/admin/settings/bpmn-complexity-limit'),
+
     // 11. Public Tracking (Pantalla 18)
     getPublicTracking: (trackingCode: string) => apiClient.get(`/public/tracking/${trackingCode}`),
 

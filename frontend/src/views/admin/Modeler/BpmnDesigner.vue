@@ -563,6 +563,7 @@ const selectedConnector = ref('');
 
 // CA-31: Computado para el bloqueo de Patrón
 const elementCount = ref(0);
+const bpmnComplexityLimit = ref(100);
 
 // ── Computed Validations (CA-39) ─────────────────────────
 const isSlaSyntaxError = computed(() => {
@@ -794,8 +795,30 @@ onMounted(async () => {
     await modelerInstance.importXML(emptyBpmn);
     modelerInstance.get('canvas').zoom('fit-viewport');
 
-    // Initial Load CA-30
+    // Initial Load CA-30 Forms
     fetchForms();
+    try {
+      const { data } = await api.getBpmnComplexityLimit();
+      if (data && data.limit) bpmnComplexityLimit.value = data.limit;
+    } catch (_) {
+      console.warn('Fallo obteniendo threshold, usando default 100 limit (CA-30)');
+    }
+
+    // CA-26: Naming Dual (Auto-slug de Nombres Técnicos para Tasks)
+    modelerInstance.on('element.changed', (e: any) => {
+      const element = e.element;
+      if (['bpmn:UserTask', 'bpmn:ServiceTask'].includes(element.type)) {
+        const bo = element.businessObject;
+        if (bo.name && element.id && element.id.match(/^(Activity_|Task_|ServiceTask_|UserTask_)/)) {
+          const newId = bo.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+          if (newId.length > 0 && element.id !== newId) {
+            try {
+              modelerInstance.get('modeling').updateProperties(element, { id: newId });
+            } catch (err) {}
+          }
+        }
+      }
+    });
 
     // Listen for Selection Change to inflate active attributes into Vue State
     modelerInstance.on('selection.changed', (e: any) => {
@@ -821,15 +844,16 @@ onMounted(async () => {
       }
     });
 
-    // CA-21, CA-24: Reset pre-flight y contar complejidad
+    // CA-21, CA-24, CA-30: Reset pre-flight y auditar advertencias arquitectónicas
     modelerInstance.on('commandStack.changed', () => {
       preFlightStatus.value = 'PENDING';
       
       const count = modelerInstance.get('elementRegistry').filter((e: any) => e.type !== 'bpmn:Process').length;
       elementCount.value = count; // CA-31 update reactive state
       
-      if (count > 100) {
-        showToast('⚠️ Precaución: El proceso tiene más de 100 nodos. Considere modularizar.', 'error'); // Fallback to 'error' to get a colored toast if 'warning' is unsupported or just leave error for visibility of the bad practice
+      // CA-30 Alerta Complejidad
+      if (count > bpmnComplexityLimit.value) {
+        showToast(`⚠️ Mala Práctica: Diagrama excede [${bpmnComplexityLimit.value}] nodos. Riesgo de mantenimiento y rendimiento motor.`, 'error'); 
       }
 
       debouncedValidate(); // CA-3 Pre-Flight reactivo a cambios

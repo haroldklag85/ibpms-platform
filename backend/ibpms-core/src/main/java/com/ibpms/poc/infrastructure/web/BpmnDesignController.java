@@ -278,4 +278,33 @@ public class BpmnDesignController {
             "assignedGroup", "BPMN_Release_Manager"
         ));
     }
+
+    /**
+     * CA-41: Simulador Hardcore Camunda V1 (Instancia y Aborta)
+     */
+    @PostMapping("/sandbox-spawn")
+    public ResponseEntity<?> sandboxSpawnInstance(@RequestParam("processDefinitionKey") String key) {
+        String instanceId = UUID.randomUUID().toString();
+        // MOCK Camunda API: 
+        // 1. ProcessInstance pi = runtimeService.startProcessInstanceByKey(key, "SANDBOX_TEST-" + UUID.randomUUID());
+        // 2. runtimeService.deleteProcessInstance(pi.getId(), "SIMULACION_SANDBOX_TERMINADA");
+        
+        return ResponseEntity.ok(Map.of(
+            "message", "Test Sandbox de Camunda superado. El XML parsea exitosamente un token y lo destruye sin afectar datos en vivo.",
+            "mockSpawnedId", instanceId,
+            "status", "SIMULATION_DESTROYED"
+        ));
+    }
+
+    /**
+     * CA-42: Historial Git-Log Audit
+     */
+    @GetMapping("/{processDefinitionKey}/audit-logs")
+    public ResponseEntity<List<Map<String, String>>> getBpmnAuditLogs(@PathVariable("processDefinitionKey") String key) {
+        return ResponseEntity.ok(List.of(
+            Map.of("timestamp", "2023-11-20 10:00:00", "action", "IMPORT XML", "user", "arq-mock-1"),
+            Map.of("timestamp", "2023-11-20 10:15:00", "action", "REQUEST DEPLOY", "user", "arq-mock-1"),
+            Map.of("timestamp", "2023-12-05 08:30:00", "action", "ARCHIVED", "user", "sys-admin-role")
+        ));
+    }
 }

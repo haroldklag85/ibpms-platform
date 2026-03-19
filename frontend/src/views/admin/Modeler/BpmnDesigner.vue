@@ -194,7 +194,7 @@
               Patrón de Proceso
               <AppTooltip :content="bpmnTooltips.PROCESS_PATTERN" />
             </label>
-            <select v-model="processPattern" :disabled="elementCount > 1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border disabled:opacity-60 disabled:cursor-not-allowed">
+            <select v-model="processPattern" @change="updateProcessProperty('formPattern', processPattern)" :disabled="elementCount > 1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border disabled:opacity-60 disabled:cursor-not-allowed">
               <option value="SIMPLE">🟢 Simple (Formularios independientes)</option>
               <option value="IFORM_MAESTRO">🔵 iForm Maestro (Formulario mutante)</option>
             </select>
@@ -768,6 +768,7 @@ const availableConnectors = ref([
 
 const filteredForms = computed(() => {
   if (processPattern.value === 'SIMPLE') return availableForms.value.filter(f => f.type === 'SIMPLE');
+  if (processPattern.value === 'IFORM_MAESTRO') return availableForms.value.filter(f => f.type === 'MAESTRO');
   return availableForms.value;
 });
 
@@ -1109,14 +1110,15 @@ const createNewProcess = () => {
               const modeling = modelerInstance.get('modeling');
               const rootElement = modelerInstance.get('canvas').getRootElement();
               modeling.updateProperties(rootElement, { id: processId.value });
+              updateProcessProperty('formPattern', processPattern.value); // CA-40
             } catch(e) {}
           }, 100);
         });
       } else {
-        modelerInstance.importXML(emptyBpmn);
+        modelerInstance.importXML(emptyBpmn).then(() => setTimeout(() => updateProcessProperty('formPattern', processPattern.value), 100)); // CA-40
       }
     } else {
-      modelerInstance.importXML(emptyBpmn);
+      modelerInstance.importXML(emptyBpmn).then(() => setTimeout(() => updateProcessProperty('formPattern', processPattern.value), 100)); // CA-40
     }
   }
   showToast(`Proceso "${newProcessName.value}" creado`);

@@ -1261,6 +1261,28 @@ Feature: BPMN Process Deployment
     When arriba el Payload y se graba el Ticket_ID en el Bolsillo Global de Variables (Process Runtime)
     Then de manera sincrónica el motor de Camunda invoca la poda total (Garbage Collection)
     And destruye los remanentes masivos no procesados liberando I/O y evitando contaminar la Base de Datos operativa del motor BPM.
+
+Scenario: Mapeo Obligatorio de Parámetros en Subprocesos (In/Out Mapping) (CA-60)
+    Given el Arquitecto arrastra una `Call Activity` (Llamar Proceso Hijo) al lienzo en la Pantalla 6
+    When intenta configurar las propiedades de este nodo
+    Then el sistema TIENE ESTRICTAMENTE PROHIBIDO permitir el despliegue si no se configura la matriz de "In/Out Mapping".
+    And el panel debe obligar a mapear "Qué variables le entrego al hijo al nacer" (Input) y "Qué variables me devuelve el hijo al terminar" (Output).
+    And si el Arquitecto deja esta matriz vacía, el Pre-Flight Analyzer bloqueará el despliegue (❌) con el error: "El Subproceso nacerá ciego por falta de datos".
+
+Scenario: Vinculación Estricta del Cerebro Lógico (Business Rule Task a DMN) (CA-61)
+    Given el Arquitecto arrastra un nodo `Business Rule Task` (Regla de Negocio) para evaluar una decisión
+    When configura las propiedades del nodo
+    Then el panel de propiedades NO permitirá escribir código libre.
+    And mostrará un Dropdown obligatorio llamado `[ 🧠 Tabla de Decisión (Decision_Ref) ]` que lista todas las tablas DMN creadas en la Pantalla 4 (US-007).
+    And si el nodo no tiene una tabla DMN amarrada, el Pre-Flight Analyzer abortará el despliegue a Producción (❌).
+
+Scenario: Prohibición de Trabajo Síncrono en Camunda (External Task Pattern) (CA-62)
+    Given el Arquitecto configura un nodo automático como una `Service Task` o `Send Task`
+    When el motor procesa el XML para el despliegue
+    Then la arquitectura del iBPMS TIENE ESTRICTAMENTE PROHIBIDO usar `Java Delegates` o expresiones síncronas que ejecuten código pesado dentro del hilo (Thread) principal de Camunda.
+    And el motor forzará estructuralmente el uso del patrón `External Task` (Trabajadores Externos).
+    And Camunda simplemente publicará la intención de trabajo en un Topic (Ej: `topic="generar_pdf"`), liberando su memoria inmediatamente, a la espera de que los microservicios satélite (Workers) hagan el trabajo pesado y reporten el resultado asíncronamente.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).
 
@@ -2961,6 +2983,37 @@ Feature: Consolidación Transversal de Requerimientos y Workflows
 
 ---
 
+### US-050: Identidad y Onboarding de Clientes Externos (CIAM / Zero-Public-Signup)
+**Como** Sistema Core (iBPMS)
+**Quiero** enviar una invitación segura (Magic Link) al correo de un cliente externo
+**Para** que pueda crear su contraseña y acceder al Portal B2C, garantizando que su usuario quede amarrado criptográficamente a su CRM_ID sin abrir formularios de registro público.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Secure Customer Onboarding and Identity (CIAM)
+
+  Scenario: Prohibición de Registro Público (Zero-Public-Signup)
+    Given la pantalla de Login del Portal Externo (portal.ibpms.com)
+    Then la interfaz NO DEBE tener ningún enlace, botón o formulario que diga "Registrarse" o "Crear Cuenta".
+    And la creación de identidades ciudadanas (External Users) solo puede nacer desde el interior del iBPMS (Vía API o evento interno), blindando el sistema contra bots y registros masivos fraudulentos.
+
+  Scenario: Disparo de Invitación (Magic Link) por Evento o Botón
+    Given un Cliente nuevo registrado en el CRM con el ID `CUST-999` y correo `juan@gmail.com`
+    When el proceso BPMN llega a una tarea de "Invitar a Portal" O un analista oprime el botón [Invitar] en la Vista 360 del cliente
+    Then el sistema generará un Token criptográfico de uso único (Magic Link).
+    And el Motor de Notificaciones (US-049) enviará un correo a `juan@gmail.com` con el botón "Crear mi Contraseña de Acceso".
+    And el Magic Link tendrá una caducidad (TTL) rígida paramétrica (Ej: 24 horas).
+
+  Scenario: Aterrizaje y Vinculación Criptográfica (Account Claiming)
+    Given el cliente Juan que hace clic en el Magic Link dentro de las 24 horas permitidas
+    When aterriza en la página de "Definir Contraseña" del Portal B2C
+    Then el sistema verifica que el Token no haya sido usado antes y bloquea la edición del campo de correo electrónico (Read-Only).
+    And Juan digita su contraseña (cumpliendo políticas de seguridad corporativa).
+    And el sistema inscribe la cuenta en el Identity Provider (Azure AD B2C o Cognito / Local).
+    And OBLIGATORIAMENTE graba el valor `CUST-999` como un atributo inmutable (Custom Claim) dentro del Token del usuario (El "Bolsillo Secreto" de la cuenta).
+    And garantizando que a partir de ese momento, cada vez que Juan inicie sesión, su Token JWT contenga su identificador, lo cual activará el escudo Anti-BOLA de la US-026 impidiendo que vea datos de otros clientes.
+```
+
 ## ÉPICA 11: Extensiones Cognitivas AI-Native - Cognitive BPMN (US-032)
 
 ### US-032: Orquestación de IA y Generative Task (RAG)
@@ -3896,6 +3949,15 @@ Feature: Central Outbound Notification Engine
     When el motor dispara las alertas hacia el correo del "Jefe de Área"
     Then el Notification Engine aplicará una regla paramétrica de "Agrupación Temporal" (Throttling Window, Ej: 15 minutos) por destinatario.
     And en lugar de bombardear al Jefe con 150 correos individuales colapsando su bandeja, el motor consolidará los eventos en un único correo tipo "Digest": `[Alerta Masiva: 150 SLAs han sido vulnerados en los últimos 15 min. Vaya al Dashboard]`, protegiendo la reputación del dominio (Anti-Spam).
+
+    Scenario: Extracción e Inyección de Anexos Físicos (Outbound Attachments)
+    Given el Motor de Notificaciones procesando un correo en la cola de salida
+    When la tarea de Camunda incluya en su Payload un Array de identificadores de archivos (Ej: `attachments: ["UUID-A", "UUID-B"]`)
+    Then el Worker de Notificaciones hará una pausa antes de enviar el correo a Office 365 / SMTP.
+    And se conectará a la Bóveda SGDEA (SharePoint - US-035) utilizando esos UUIDs.
+    And descargará los binarios (Ej: El PDF del Contrato) temporalmente a la memoria RAM.
+    And empaquetará los binarios como archivos adjuntos reales (Attachments) en la trama del correo electrónico.
+    And destruirá los binarios de la RAM inmediatamente después de recibir el "200 OK" del servidor de correos para no saturar el servidor.
 ```
 
 ---

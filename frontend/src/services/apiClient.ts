@@ -100,8 +100,10 @@ export const api = {
     deployToSandbox: (id: string, payload: any) => apiClient.post(`/design/processes/${id}/sandbox`, payload),
     spawnSandbox: (payload: any) => apiClient.post(`/design/processes/sandbox-spawn`, payload), // CA-41
 
-    // Integraciones / Conectores (CA-45)
+    // Integraciones / Conectores (CA-45, CA-49)
     getIntegrationConnectors: () => apiClient.get(`/integrations/connectors`),
+    getConnectorSchema: (id: string) => apiClient.get(`/integrations/connectors/${id}/schema`), // CA-49
+    getProcessVariables: (id: string) => apiClient.get(`/design/processes/${id}/variables`), // CA-49
 
     // 7. BAM Analytics - Process Health (Pantalla 5)
     getProcessHealth: () => apiClient.get('/analytics/process-health'),

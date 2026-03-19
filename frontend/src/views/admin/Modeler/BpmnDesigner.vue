@@ -148,9 +148,10 @@
           <!-- Nomenclatura Instancia CA-5 -->
           <div class="p-3 bg-fuchsia-50 dark:bg-fuchsia-900/20 border border-fuchsia-200 rounded">
              <label class="block text-xs font-bold text-fuchsia-800 dark:text-fuchsia-300 mb-1 flex items-center justify-between">
-               🎟 Regla de Nomenclatura (CA-5)
+               <span>🎟 Regla de Nomenclatura (CA-5)</span>
+               <AppTooltip :content="isNomenclatureSyntaxError ? '⚠️ Error de sintaxis: llaves sin cerrar' : bpmnTooltips.NOMENCLATURE" :isError="isNomenclatureSyntaxError" />
              </label>
-             <input type="text" v-model="processNomenclature" @change="updateProcessProperty('ReglaNomenclatura', processNomenclature)" class="w-full text-xs border-fuchsia-300 dark:border-fuchsia-600 dark:bg-gray-700 dark:text-white rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 p-2 border" placeholder="Ej: OC-{Solicitante}" />
+             <input type="text" v-model="processNomenclature" @change="updateProcessProperty('ReglaNomenclatura', processNomenclature)" :class="{'border-red-500 ring-1 ring-red-500 bg-red-50': isNomenclatureSyntaxError}" class="w-full text-xs border-fuchsia-300 dark:border-fuchsia-600 dark:bg-gray-700 dark:text-white rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 p-2 border transition" placeholder="Ej: OC-{Solicitante}" />
              <p class="text-[10px] text-fuchsia-600 dark:text-fuchsia-400 mt-1 leading-tight">Obligatorio. Define la máscara para instanciar tickets. Se inyecta al nodo raíz del XML.</p>
           </div>
 
@@ -220,20 +221,60 @@
             </select>
           </div>
 
-          <!-- Service Task Connector -->
+          <!-- Service Task Connector (CA-47, CA-49) -->
           <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
-            <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2">🔌 Conector API (Service Task)</label>
-            <select v-model="selectedConnector" @change="updateElementConnector" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
+            <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+               <span>🔌 Conector API (Service Task)</span>
+               <AppTooltip :content="bpmnTooltips.CONNECTOR" />
+            </label>
+            <select v-model="selectedConnector" @change="updateElementConnector" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border mb-3">
               <option value="">-- Sin Conector --</option>
               <option v-for="c in availableConnectors" :key="c.id" :value="c.id">
                 {{ c.icon }} {{ c.name }}
               </option>
             </select>
+
+            <!-- CA-49 & CA-50: DataMapperGrid -->
+            <div v-if="selectedConnector" class="border-t border-gray-200 dark:border-gray-700 pt-3">
+               <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2">
+                 🔀 Mapeo Visual (DataMapperGrid)
+               </label>
+               <table class="w-full text-xs text-left">
+                  <thead>
+                     <tr class="text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                        <th class="pb-1 font-medium w-1/2">Input Esperado</th>
+                        <th class="pb-1 font-medium w-1/2">Variable del Proceso</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     <tr v-for="schema in connectorSchema" :key="schema.name" class="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <td class="py-2 pr-2 font-mono text-[10px] text-gray-700 dark:text-gray-300">
+                           <div class="font-bold">{{ schema.name }}</div>
+                           <div class="text-gray-400 text-[9px]">({{ schema.type }})</div>
+                        </td>
+                        <td class="py-2 relative group">
+                           <select v-model="connectorMappings[schema.name]" @change="saveConnectorMapping" class="w-full text-[10px] p-1 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-1 focus:ring-indigo-500" :class="{'border-red-500 ring-1 ring-red-500': mappingErrors[schema.name]}">
+                              <option value="">-- Asignar --</option>
+                              <!-- CA-50: Type Coercion -->
+                              <option v-for="v in processVariables" :key="v.name" :value="v.name" :disabled="!isTypeCompatible(schema.type, v.type)">
+                                 {{ !isTypeCompatible(schema.type, v.type) ? '🚫 ' : '' }}{{ v.name }} ({{ v.type }})
+                              </option>
+                           </select>
+                           <AppTooltip v-if="mappingErrors[schema.name]" content="⚠️ Tipo Incompatible" isError class="absolute right-0 top-1/2 -translate-y-1/2 -mr-6" />
+                        </td>
+                     </tr>
+                  </tbody>
+               </table>
+               <div v-if="loadingSchema" class="flex justify-center py-2"><AppSkeleton class="w-3/4 h-4 rounded" /></div>
+            </div>
           </div>
 
           <!-- Escalamiento -->
           <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
-            <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2">🔺 Escalamiento & Ping-Pong</label>
+            <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+               <span>🔺 Escalamiento & Ping-Pong</span>
+               <AppTooltip :content="bpmnTooltips.ESCALATION" />
+            </label>
             <div class="space-y-2">
               <select class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
                 <option>Escalamiento: Ninguno</option>
@@ -575,13 +616,17 @@ interface BpmnElement {
 const canvasContainer = ref<HTMLElement | null>(null);
 let modelerInstance: any = null;
 
-// ── Tooltips Didácticos (CA-38 y CA-39 MVP) ─────────────────
+// ── Tooltips Didácticos (CA-38, CA-47 MVP) ─────────────────
 const bpmnTooltips = {
   GLOBAL_SLA: 'Dicta el Acabado Total esperado del Proceso (Vida Útil). Al expirar, lanza métrica a los dashboards BAM corporativos y emite alertas amarillas.',
   SLA_TIMEOUT: 'Determina temporalidad en norma <a href="https://en.wikipedia.org/wiki/ISO_8601" target="_blank" class="text-blue-500 underline font-semibold">ISO-8601</a> antes de detonar Boundary Events o Escalar la Tarea a líderes.<br><br><b>Syntax estricta:</b> <code>P(N)Y(N)M(N)DT(N)H(N)M(N)S</code><br>Ejemplo: <code>P2D</code> = 2 días. <code>PT6H</code> = 6 Horas.',
   FORM_KEY: 'Formulario Inteligente embebido. El Workdesk usará este ID Técnico para dibujar la GUI y los campos reactivos de la tarea humana actual.',
   PROCESS_PATTERN: 'La arquitectura. <b>iForm_Maestro</b> permite usar un solo formulario mutante universal; <b>Simple</b> requiere diseñar formularios separados e instanciarlos en tareas disyuntas individualmente.',
-  CALL_ACTIVITY: 'Un Sub-proceso re-usable de nivel corporativo que actúa como Caja Negra. Obliga a que la Cédula/Identificador coincida lógicamente entre ambos Diagramas. El link no rutea si la variable Target no existe.'
+  CALL_ACTIVITY: 'Un Sub-proceso re-usable de nivel corporativo que actúa como Caja Negra. Obliga a que la Cédula/Identificador coincida lógicamente entre ambos Diagramas. El link no rutea si la variable Target no existe.',
+  // CA-47: Integraciones Estrictas y UX
+  NOMENCLATURE: 'Patrón para generar el ID del ticket. Soporta variables como {Solicitante}.',
+  CONNECTOR: 'Integra este nodo con sistemas externos mapeando variables del proceso actual.',
+  ESCALATION: 'Define reglas semánticas de rebote o escalamiento a roles superiores.'
 };
 
 // ── Selection State ──────────────────────────────────────────
@@ -606,6 +651,21 @@ const processNomenclature = ref(''); // CA-5
 const globalSla = ref(72);
 const selectedFormKey = ref('');
 const selectedConnector = ref('');
+
+// CA-49: Data Mapper State
+const connectorSchema = ref<any[]>([]);
+const processVariables = ref<any[]>([]);
+const connectorMappings = ref<Record<string, string>>({});
+const mappingErrors = ref<Record<string, boolean>>({});
+const loadingSchema = ref(false);
+
+// CA-48: Reactive Syntax Checking
+const isNomenclatureSyntaxError = computed(() => {
+  const nom = processNomenclature.value || '';
+  const openCount = (nom.match(/\{/g) || []).length;
+  const closeCount = (nom.match(/\}/g) || []).length;
+  return openCount !== closeCount;
+});
 
 // CA-31: Computado para el bloqueo de Patrón
 const elementCount = ref(0);
@@ -815,6 +875,80 @@ const fetchConnectors = async () => {
   }
 };
 
+// CA-49 & CA-50: Lógica de DataMapperGrid
+const fetchProcessVariables = async () => {
+  try {
+    const { data } = await api.getProcessVariables(processId.value);
+    processVariables.value = data || [];
+  } catch (err) {
+    processVariables.value = [
+      { name: 'cliente_email', type: 'String' },
+      { name: 'monto_credito', type: 'Number' },
+      { name: 'es_vip', type: 'Boolean' }
+    ];
+  }
+};
+
+const fetchConnectorSchema = async (connectorId: string) => {
+  if (!connectorId) {
+    connectorSchema.value = [];
+    return;
+  }
+  loadingSchema.value = true;
+  try {
+    const { data } = await api.getConnectorSchema(connectorId);
+    connectorSchema.value = data || [];
+  } catch (err) {
+    connectorSchema.value = [
+      { name: 'target_email', type: 'String' },
+      { name: 'attach_pdf', type: 'Boolean' },
+      { name: 'retry_count', type: 'Number' }
+    ];
+  } finally {
+    loadingSchema.value = false;
+  }
+};
+
+watch(selectedConnector, (newVal) => {
+  if (newVal) {
+    fetchConnectorSchema(newVal);
+    fetchProcessVariables();
+  } else {
+    connectorSchema.value = [];
+  }
+});
+
+const isTypeCompatible = (schemaType: string, varType: string) => {
+  if (!schemaType || !varType) return true;
+  if (schemaType.toLowerCase() === 'boolean' && varType.toLowerCase() !== 'boolean') return false;
+  if (schemaType.toLowerCase() === 'number' && varType.toLowerCase() === 'boolean') return false;
+  return true;
+};
+
+const saveConnectorMapping = () => {
+  mappingErrors.value = {};
+  for (const schema of connectorSchema.value) {
+    const assignedVarName = connectorMappings.value[schema.name];
+    if (assignedVarName) {
+      const procVar = processVariables.value.find(v => v.name === assignedVarName);
+      if (procVar && !isTypeCompatible(schema.type, procVar.type)) {
+        mappingErrors.value[schema.name] = true;
+      }
+    }
+  }
+  if (Object.values(mappingErrors.value).some(err => err)) {
+    showToast('⚠️ Existen errores de tipo estructurales (CA-50)', 'error');
+    return;
+  }
+  if (!modelerInstance || !selectedElement.value.id) return;
+  const elementRegistry = modelerInstance.get('elementRegistry');
+  const element = elementRegistry.get(selectedElement.value.id);
+  if (element) {
+     const modeling = modelerInstance.get('modeling');
+     modeling.updateProperties(element, { "camunda:inputOutput": JSON.stringify(connectorMappings.value) });
+  }
+};
+
 // CA-42: Audit Logs
 const showAuditLogsModal = ref(false);
 const auditLogs = ref<any[]>([]);
@@ -1009,16 +1143,30 @@ watch(processId, (newId) => {
   fetchVersions();
 });
 
-// ── Validation (CA-3 & CA-9) ─────────────────────────────────
+// ── Validation (CA-3, CA-9 & CA-46) ─────────────────────────────────
 const debouncedValidate = debounce(async () => {
   if (!modelerInstance) return;
   preFlightStatus.value = 'PENDING';
+  
+  // Clear previous CA-46 highlights
+  const canvas = modelerInstance.get('canvas');
+  const elementRegistry = modelerInstance.get('elementRegistry');
+  elementRegistry.getAll().forEach((el: any) => {
+    try { canvas.removeMarker(el.id, 'highlight-warning'); } catch(e) {}
+  });
+
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
     const { data } = await api.validateProcess({ xml });
-    // CA-9: Soporte de warnings no-bloqueantes
+    // CA-9 & CA-46: Soporte de warnings no-bloqueantes
     if (data && data.warnings && data.warnings.length > 0) {
       preFlightStatus.value = 'WARNING';
+      // CA-46: Paint specific nodes
+      if (data.warningNodeIds) {
+        data.warningNodeIds.forEach((id: string) => {
+          try { canvas.addMarker(id, 'highlight-warning'); } catch(e) {}
+        });
+      }
     } else {
       preFlightStatus.value = 'VALIDATED';
     }
@@ -1392,6 +1540,15 @@ const syncElementProperties = (key: string, value: any) => {
   display: flex !important;
 }
 /* CA-35: Eliminada restricción para create.participant-expanded habilitando los Pools (Carriles) */
+
+/* CA-46: Estilo CSS para Nodos en Alerta de Pre-Flight (Warning Amber) */
+:deep(.bjs-container .highlight-warning .djs-outline) {
+  stroke: #f59e0b !important;
+  stroke-width: 3px !important;
+}
+:deep(.bjs-container .highlight-warning .djs-visual > :nth-child(1)) {
+  fill: #fffbeb !important;
+}
 
 .bpmn-canvas {
   position: relative;

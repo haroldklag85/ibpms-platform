@@ -1749,6 +1749,15 @@ Feature: Process Health Analytics
     When el gerente seleccione la opción "BAM Avanzado" en la Pantalla 5
     Then el iBPMS cargará la Interfaz Nivel Editor Nativa de Grafana embebida
     And otorgará permisos formales de "Editor" al usuario, permitiéndole arrastrar bloques, cambiar colores de tortas y personalizar sus propias métricas ad-hoc limitadas a su Tenant_ID.
+
+  Scenario: Aplanamiento de Datos Transaccionales para Analítica Rápida (Data Flattening / CDC)
+    Given que el motor de Dashboards (Grafana) necesita graficar variables de negocio almacenadas en los JSON de Camunda
+    When una tarea se completa o una variable es inyectada en el motor
+    Then la arquitectura TIENE PROHIBIDO permitir que Grafana haga queries complejos (Full Table Scans) sobre las tablas operativas Blob de Camunda (`ACT_RU_VARIABLE`).
+    And el Backend iBPMS implementará un proceso asíncrono de "Aplanamiento" (Change Data Capture o Event Listener).
+    And extraerá las variables estratégicas del JSON y las insertará en una tabla relacional plana y columnar (Ej: `ibpms_business_metrics_flat`).
+    And Grafana consumirá exclusivamente esta tabla plana, garantizando tiempos de carga en milisegundos sin impactar el Core.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 5 (Dashboards y Panel de Control - BAM).
 
@@ -2377,6 +2386,14 @@ Feature: Conectividad y Resiliencia CRM
     When los operarios o clientes abren formularios para iniciar nuevos casos
     Then el iBPMS permitirá la creación asíncrona utilizando el catálogo cacheado sin bloquear la operación.
     And desplegará un Banner Naranja de Advertencia en la UI indicando: *"Precaución: El CRM está inalcanzable. Se está operando con el Catálogo en Modo Caché. Posible desactualización"*.
+
+  Scenario: Mapeo Comercial-Técnico (Service to BPMN Binding)
+    Given la importación exitosa del catálogo de servicios desde el CRM ONS (Ej: "Servicio 101: Crédito")
+    When el Administrador configura el iBPMS en la Pantalla 15.A
+    Then el sistema DEBE obligar a realizar un "Mapeo de Activación" estratégico.
+    And por cada Servicio comercial del CRM, el Administrador debe seleccionar de un Dropdown a qué `Process Definition Key` (el mapa BPMN de la Pantalla 6) corresponde su ejecución operativa.
+    And si un servicio no tiene un BPMN amarrado, el Frontend lo ocultará previniendo que un cliente intente arrancar un proceso fantasma que crashearía el Backend.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 0 (Service Catalog).
 
@@ -2818,6 +2835,15 @@ Feature: External Customer Portal (Service Delivery) and Zero-Trust Boundary
     When el cliente solicite descargar el contrato o PDF asociado a un caso cerrado
     Then el Backend validará la propiedad BOLA (CA-2) y generará una "Pre-Signed URL" temporal (Ej: 15 minutos de caducidad) apuntando a la Bóveda SGDEA (SharePoint/Azure) para su descarga segura y efímera.
     And garantizando que el PDF legal no pueda ser indexado por Google ni compartido públicamente por WhatsApp si el link es reenviado a un tercero no autorizado.
+
+Scenario: Colaboración Bidireccional (El Cliente como Operario Externo) (CA-5)
+    Given un Cliente Externo navegando el detalle de su Service Delivery en el Portal B2C
+    When el proceso BPMN interno haya enrutado un requerimiento formal o Tarea Humana (Ej: "Subsanar Documento Faltante") explícitamente hacia el "Rol del Cliente Externo"
+    Then la interfaz del Portal Externo mutará, abandonando el modo "Solo Lectura" (Museo).
+    And inyectará y renderizará dinámicamente el Componente Zod (iForm) correspondiente a esa etapa directamente en el portal B2C.
+    And permitirá al ciudadano diligenciar la data o adjuntar archivos (vía Patrón Upload-First de la US-029).
+    And al oprimir [Enviar], el portal ejecutará el POST a `/complete` avanzando el Token de Camunda desde el exterior, transfiriendo la carga operativa del Analista Interno hacia el Cliente Final.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 18 (Portal B2B/B2C del Cliente).
 
@@ -3864,6 +3890,13 @@ Feature: Governing Agile Entropy and Storage Economics
     Given la generación de PDFs Legales de alto costo que el cliente final puede consultar mediante una S3 URL Pre-Firmada
     When el usuario la comparta con los clientes para validación temporal ("Review Mode")
     Then el Administrador controla el `[Pre_Signed_URL_TTL_Hours]` dictando globalmente en el sistema la caducidad (TTL) de todos los links transaccionales generados (Volar el acceso al archivo tras 12 o 24 horas por seguridad).
+
+  Scenario: Persistencia Híbrida de Formularios en Ágil (JSONB Pocket)
+    Given que la arquitectura Ágil/Kanban rechaza el uso de Camunda (CMMN/BPMN) para favorecer la velocidad pura de Base de Datos Relacional (JPA)
+    When un Arquitecto asocie un Formulario Zod (iForm Maestro o Genérico) a una Tarjeta Kanban y el operario oprime [Guardar Progreso]
+    Then la tabla relacional `ibpms_kanban_tasks` DEBE contar con una columna especializada de tipo `JSONB` (o su equivalente estructurado).
+    And el Backend serializará y guardará el Payload completo validado por Zod directamente dentro de esta columna de la entidad.
+    And garantizando que la tarjeta Ágil soporte la captura de datos estructurados sin ensuciar la base de datos con tablas hijas.
 ```
 **Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Restricciones Arquitectónicas / PMO).
 
@@ -3958,6 +3991,47 @@ Feature: Central Outbound Notification Engine
     And descargará los binarios (Ej: El PDF del Contrato) temporalmente a la memoria RAM.
     And empaquetará los binarios como archivos adjuntos reales (Attachments) en la trama del correo electrónico.
     And destruirá los binarios de la RAM inmediatamente después de recibir el "200 OK" del servidor de correos para no saturar el servidor.
+
+  Scenario: Extracción e Inyección de Anexos Físicos (Outbound Attachments)
+    Given el Motor de Notificaciones procesando un correo en la cola de salida (RabbitMQ)
+    When la tarea transaccional de Camunda incluya un Array de identificadores documentales (Ej: `attachments: ["UUID-A"]`)
+    Then el Worker de Notificaciones hará una pausa antes de conectarse al servidor SMTP.
+    And se autenticará contra la Bóveda SGDEA (SharePoint - US-035) utilizando esos UUIDs.
+    And descargará los binarios (Ej: El PDF del Contrato) temporalmente a la memoria RAM del Worker.
+    And empaquetará los binarios transmutándolos a formato adjunto (`Attachments`) en la trama del correo electrónico saliente.
+    And DESTRUIRÁ los binarios de la RAM inmediatamente después de recibir el "200 OK" de despacho para mantener el servidor web ligero.
+
+
+```
+### US-050: Identidad y Onboarding de Clientes Externos (CIAM / Zero-Public-Signup)
+**Como** Sistema Core (iBPMS)
+**Quiero** enviar una invitación segura (Magic Link) al correo de un cliente externo
+**Para** que pueda crear su contraseña y acceder al Portal B2C, amarrando su usuario criptográficamente a su CRM_ID sin abrir formularios de registro público.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Secure Customer Onboarding and Identity (CIAM)
+
+  Scenario: Prohibición de Registro Público (Zero-Public-Signup)
+    Given la pantalla de Login del Portal Externo (portal.ibpms.com)
+    Then la interfaz NO DEBE tener ningún enlace, botón o formulario que diga "Registrarse" o "Crear Cuenta".
+    And la creación de identidades ciudadanas (External Users) solo puede nacer desde el interior del iBPMS (Vía API o evento interno), blindando el sistema contra bots.
+
+  Scenario: Disparo de Invitación (Magic Link) por Evento
+    Given un Cliente nuevo registrado en el CRM con el ID `CUST-999` y correo `juan@gmail.com`
+    When el proceso BPMN llega a una tarea de "Invitar a Portal" O un analista oprime [Invitar] en la Vista 360
+    Then el sistema generará un Token criptográfico de uso único (Magic Link).
+    And el Motor de Notificaciones enviará un correo a `juan@gmail.com` con el botón "Crear mi Contraseña de Acceso".
+    And el Magic Link tendrá una caducidad (TTL) rígida paramétrica (Ej: 24 horas).
+
+  Scenario: Aterrizaje y Vinculación Criptográfica (Account Claiming)
+    Given el cliente Juan que hace clic en el Magic Link dentro del tiempo permitido
+    When aterriza en la página de "Definir Contraseña" del Portal B2C
+    Then el sistema verifica que el Token no haya sido usado antes y bloquea la edición del campo de correo electrónico (Read-Only).
+    And Juan digita su contraseña (cumpliendo políticas corporativas).
+    And el sistema inscribe la cuenta en el Identity Provider (Azure AD B2C / Local).
+    And OBLIGATORIAMENTE graba el valor `CUST-999` como un atributo inmutable (Custom Claim) dentro del Token del usuario (El "Bolsillo Secreto").
+    And garantizando que a partir de ese momento, el candado Anti-BOLA (US-026) lea este atributo en cada inicio de sesión, impidiendo matemáticamente que Juan vea datos de otros clientes.
 ```
 
 ---

@@ -30,6 +30,7 @@ import org.camunda.bpm.model.bpmn.instance.BusinessRuleTask;
 import org.camunda.bpm.model.bpmn.instance.CallActivity;
 import org.camunda.bpm.model.bpmn.instance.TimerEventDefinition;
 import org.camunda.bpm.model.bpmn.instance.MessageEventDefinition;
+import org.camunda.bpm.model.bpmn.instance.Event;
 import org.camunda.bpm.model.bpmn.instance.Process;
 import org.camunda.bpm.model.bpmn.instance.Lane;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperty;
@@ -217,11 +218,29 @@ public class PreFlightAnalyzerService {
                 }
             }
 
-            // CA-18.2: MessageEvent requiere messageRef
+            // CA-18.2 y CA-46: MessageEvent requiere messageRef y conector
             Collection<MessageEventDefinition> messages = modelInstance.getModelElementsByType(MessageEventDefinition.class);
             for (MessageEventDefinition m : messages) {
                 if (m.getMessage() == null) {
                     response.addError(m.getId() != null ? m.getId() : "MessageEvent", "MessageEvent carece de Message Reference (messageRef).");
+                }
+                
+                // CA-46: Detección de Eventos Ciegos (Sin delegateExpression o conector)
+                Event parentEvent = (Event) m.getParentElement();
+                String delegate = parentEvent.getAttributeValueNs("http://camunda.org/schema/1.0/bpmn", "delegateExpression");
+                String expression = parentEvent.getAttributeValueNs("http://camunda.org/schema/1.0/bpmn", "expression");
+                String clazz = parentEvent.getAttributeValueNs("http://camunda.org/schema/1.0/bpmn", "class");
+                
+                boolean hasDelegate = (delegate != null && !delegate.isBlank()) || 
+                                      (expression != null && !expression.isBlank()) || 
+                                      (clazz != null && !clazz.isBlank());
+                                      
+                boolean hasConnector = !parentEvent.getChildElementsByType(org.camunda.bpm.model.bpmn.instance.ExtensionElements.class).isEmpty() &&
+                                       !parentEvent.getChildElementsByType(org.camunda.bpm.model.bpmn.instance.ExtensionElements.class).iterator().next()
+                                          .getChildElementsByType(org.camunda.bpm.model.bpmn.instance.camunda.CamundaConnector.class).isEmpty();
+
+                if (!hasDelegate && !hasConnector) {
+                    response.addWarning(parentEvent.getId(), "MessageEvent sin conector API asociado. Considere crear el conector en el Hub y migrar a Service Task.");
                 }
             }
 

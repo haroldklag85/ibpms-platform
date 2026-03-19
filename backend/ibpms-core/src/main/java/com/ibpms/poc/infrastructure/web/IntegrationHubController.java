@@ -2,6 +2,7 @@ package com.ibpms.poc.infrastructure.web;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,9 +23,27 @@ public class IntegrationHubController {
     @GetMapping("/connectors")
     public ResponseEntity<List<Map<String, String>>> getConnectors() {
         return ResponseEntity.ok(List.of(
-            Map.of("id", "conn_o365_exchange", "name", "Microsoft O365 / Exchange", "protocol", "REST"),
-            Map.of("id", "conn_sp_online", "name", "Microsoft SharePoint", "protocol", "REST"),
-            Map.of("id", "conn_oracle_ns", "name", "Oracle NetSuite", "protocol", "SOAP")
+            Map.of("id", "o365_mail", "name", "Microsoft O365 / Exchange", "protocol", "REST"),
+            Map.of("id", "sp_online", "name", "Microsoft SharePoint", "protocol", "REST"),
+            Map.of("id", "oracle_ns", "name", "Oracle NetSuite", "protocol", "SOAP")
+        ));
+    }
+
+    /**
+     * CA-49: API de Esquemas del Hub.
+     */
+    @GetMapping("/connectors/{id}/schema")
+    public ResponseEntity<List<Map<String, String>>> getConnectorSchema(@PathVariable("id") String id) {
+        if ("o365_mail".equals(id)) {
+            return ResponseEntity.ok(List.of(
+                Map.of("field", "to", "type", "String"),
+                Map.of("field", "body", "type", "String"),
+                Map.of("field", "isHtml", "type", "Boolean")
+            ));
+        }
+        return ResponseEntity.ok(List.of(
+            Map.of("field", "endpoint", "type", "String"),
+            Map.of("field", "payload", "type", "Object")
         ));
     }
 }

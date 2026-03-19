@@ -307,4 +307,16 @@ public class BpmnDesignController {
             Map.of("timestamp", "2023-12-05 08:30:00", "action", "ARCHIVED", "user", "sys-admin-role")
         ));
     }
+
+    /**
+     * CA-50: Diccionario de Variables Zod MOCK
+     */
+    @GetMapping("/{processDefinitionKey}/variables")
+    public ResponseEntity<List<Map<String, String>>> getProcessVariables(@PathVariable("processDefinitionKey") String key) {
+        return ResponseEntity.ok(List.of(
+            Map.of("name", "cliente_email", "type", "String"),
+            Map.of("name", "monto", "type", "Number"),
+            Map.of("name", "aprobado", "type", "Boolean")
+        ));
+    }
 }

@@ -481,14 +481,20 @@
           </div>
           <div class="space-y-3">
             <div v-for="p in catalogProcesses" :key="p.id" @click="loadProcess(p)" class="p-4 bg-white dark:bg-gray-800 border rounded-lg shadow-sm hover:shadow-md hover:border-blue-400 cursor-pointer transition flex flex-col gap-2 border-gray-200 dark:border-gray-700 group">
-              <span class="font-bold text-sm text-gray-900 dark:text-gray-100 group-hover:text-blue-600 transition">{{ p.name }}</span>
-              <div class="flex flex-col gap-1">
-                <span class="text-[10px] text-gray-500 dark:text-gray-400">📅 {{ p.lastEdited.split(' ')[0] || p.lastEdited }}</span>
-                <div class="flex items-center justify-between">
-                   <span class="text-[10px] font-bold text-gray-500">v{{ p.version }} | {{ p.author?.split(' ')[0] || p.author }}</span>
-                   <span class="text-[10px] font-bold uppercase rounded-full px-2 py-0.5" :class="{'bg-green-100 text-green-800': p.status==='ACTIVO', 'bg-yellow-100 text-yellow-800': p.status==='BORRADOR', 'bg-gray-100 text-gray-700': p.status==='ARCHIVADO'}">{{ p.status }}</span>
+              <div class="cursor-pointer" @click="loadProcess(p)">
+                <span class="font-bold text-sm text-gray-900 dark:text-gray-100 group-hover:text-blue-600 transition">{{ p.name }}</span>
+                <div class="flex flex-col gap-1">
+                  <span class="text-[10px] text-gray-500 dark:text-gray-400">📅 {{ p.lastEdited.split(' ')[0] || p.lastEdited }}</span>
+                  <div class="flex items-center justify-between">
+                     <span class="text-[10px] font-bold text-gray-500">v{{ p.version }} | {{ p.author?.split(' ')[0] || p.author }}</span>
+                     <span class="text-[10px] font-bold uppercase rounded-full px-2 py-0.5" :class="{'bg-green-100 text-green-800': p.status==='ACTIVO', 'bg-yellow-100 text-yellow-800': p.status==='BORRADOR', 'bg-gray-100 text-gray-700': p.status==='ARCHIVADO'}">{{ p.status }}</span>
+                  </div>
                 </div>
               </div>
+              <!-- Action Button CA-32 -->
+              <button v-if="p.status === 'ACTIVO'" @click.stop="archiveProcess(p.id)" class="absolute top-2 right-2 text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded hover:bg-gray-200 transition z-10 border border-gray-300 shadow-sm flex items-center gap-1" title="Archivar Proceso (CA-32)">
+                📦 Archivar
+              </button>
             </div>
             <div v-if="catalogProcesses.length === 0 && !loadingCatalog" class="text-center text-xs text-gray-500 py-10 font-bold">
               El repositorio está vacío.
@@ -557,6 +563,7 @@ const currentProcessName = ref('Crédito de Consumo V1');
 const processId = ref('credito-consumo-v1');
 const processStatus = ref<'BORRADOR' | 'ACTIVO' | 'ARCHIVADO' | 'PENDING'>('BORRADOR');
 const processPattern = ref<'SIMPLE' | 'IFORM_MAESTRO'>('SIMPLE');
+const processNomenclature = ref(''); // CA-5
 const globalSla = ref(72);
 const selectedFormKey = ref('');
 const selectedConnector = ref('');
@@ -1116,6 +1123,26 @@ const createNewProcess = () => {
   newProcessName.value = '';
 };
 
+
+
+// CA-32: Archivar Proceso Activo
+const archiveProcess = async (pId: string) => {
+  try {
+     await api.archiveProcess(pId);
+     showToast('Proceso archivado correctamente');
+     if(showCatalog.value) {
+        const { data } = await api.getCatalogProcesses();
+        catalogProcesses.value = data || [];
+     }
+  } catch(err: any) {
+     if(err.response && err.response.status === 409) {
+        showToast('❌ Conflicto: Existen instancias ejecutándose. Archivo abortado.', 'error');
+     } else {
+        showToast('Error al archivar proceso', 'error');
+     }
+  }
+};
+
 const loadProcess = (p: any) => {
   currentProcessName.value = p.name;
   processStatus.value = p.status;
@@ -1180,15 +1207,34 @@ const updateGlobalSla = () => {
 const updateElementSla = () => {
   if (!modelerInstance || !selectedElement.value.id) return;
   const elementRegistry = modelerInstance.get('elementRegistry');
-  const shape = elementRegistry.get(selectedElement.value.id);
-  if (shape) {
-    const modeling = modelerInstance.get('modeling');
-    // Actualizamos el dueDate del Business Object Nativo
-    modeling.updateProperties(shape, { "camunda:dueDate": selectedElement.value.props.sla });
+  const element = elementRegistry.get(selectedElement.value.id);
+  if (element) {
+    try {
+      const moddle = modelerInstance.get('moddle');
+      const modeling = modelerInstance.get('modeling');
+      const bo = element.businessObject;
+      let extensionElements = bo.extensionElements;
+      if (!extensionElements) extensionElements = moddle.create('bpmn:ExtensionElements', { values: [] });
+      let properties = extensionElements.values?.find((e:any) => e.$type === 'camunda:Properties');
+      if (!properties) {
+        properties = moddle.create('camunda:Properties', { values: [] });
+        if(!extensionElements.values) extensionElements.values = [];
+        extensionElements.values.push(properties);
+      }
+      let slaProp = properties.values?.find((p:any) => p.name === 'SLA');
+      if (!slaProp) {
+        slaProp = moddle.create('camunda:Property', { name: 'SLA', value: selectedElement.value.props.sla });
+        if(!properties.values) properties.values = [];
+        properties.values.push(slaProp);
+      } else {
+        slaProp.value = selectedElement.value.props.sla;
+      }
+      modeling.updateProperties(element, { extensionElements });
+    } catch (e) {
+      modelerInstance.get('modeling').updateProperties(element, { 'camunda:dueDate': selectedElement.value.props.sla });
+    }
   }
 };
-
-const processNomenclature = ref(''); // CA-5
 
 const updateProcessProperty = (name: string, value: string) => {
   if (!modelerInstance) return;

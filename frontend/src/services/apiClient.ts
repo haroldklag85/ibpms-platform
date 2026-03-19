@@ -88,6 +88,7 @@ export const api = {
     requestDeployment: (id: string, payload?: any) => apiClient.post(`/design/processes/${id}/request-deployment`, payload),
     getCatalogProcesses: () => apiClient.get(`/design/processes/catalog`),
     getBpmnTemplates: () => apiClient.get(`/design/processes/templates`),
+    archiveProcess: (id: string) => apiClient.post(`/design/processes/${id}/archive`), // CA-32
     
     // Gobernanza CA-6 & CA-7 & Rollback CA-15:
     getProcessVersions: (id: string) => apiClient.get(`/design/processes/${id}/versions`),

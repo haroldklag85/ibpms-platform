@@ -584,84 +584,94 @@ Feature: Web IDE Form Code Generation
 
 ---
 
-### US-028: Auto-Generación de Test Suites Zod/Vitest (Shift-Left QA)
+### US-028: Simulador de Contratos Zod en Memoria (In-Browser QA Sandbox)
 **Como** Ingeniero de Calidad (QA) / Arquitecto Frontend
-**Quiero** que el diseñador de formularios exponga un botón para generar los test unitarios y de integración de Payload
-**Para** asegurar en mi CI/CD que el comportamiento complejo del "iForm Maestro" (Zod) no reviente el motor de Camunda antes de compilar el frontal, probando exclusivamente la capa lógica y evadiendo dependencias externas.
+**Quiero** un entorno de simulación (Sandbox) integrado directamente en el Diseñador Web (Pantalla 7) que inyecte Payloads extremos (Feliz y Triste) contra el esquema Zod en tiempo real
+**Para** garantizar que las reglas matemáticas, de obligatoriedad y formato (Regex) funcionen perfectamente antes de asociar el formulario a Camunda, sin generar código muerto ni depender de pipelines de CI/CD externos.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Automated BDD Form Testing Generation
+Feature: Integrated BDD Zod Testing Sandbox
 
-  Scenario: Cobertura Lógica Pura (Zod Schema Validation vs DOM)
-    Given la estructura JSON del Formulario generada por el IDE web
-    When el usuario oprime [⚡ GENERADOR DE TESTS]
-    Then el IDE lee exclusivamente la estructura de validación Zod
-    And genera un script de prueba `.spec.ts` acotado a Behavior Driven Development (BDD) del Payload JSON
-    And omite intencionalmente cualquier aserción sobre el DOM interactivo (`@vue/test-utils`), blindando el test contra refactores de CSS y Layout.
+  Scenario: Ejecución Interna In-Browser (Zero Dead Code) (CA-1)
+    Given la estructura JSON del Formulario generada por el IDE web en Pantalla 7
+    When el usuario oprime el botón `[🧪 SIMULAR CONTRATO ZOD]`
+    Then el sistema NO descargará archivos `.spec.ts` físicos al disco duro local.
+    And abrirá un "Panel de Consola QA" (Split View) integrado en el mismo IDE.
+    And ejecutará las validaciones en tiempo real utilizando la memoria RAM del navegador contra el objeto Zod reactivo.
 
-  Scenario: Aislamiento Total de APIs (Mocking Boilerplate)
-    Given que el formulario "Maestro_Onboarding" llama a una API de "Mapeo de Puestos" para autocompletar dropdowns
-    When se ejecuta la generación de la Suite
-    Then el autogenerador rastrea la llamada externa asíncrona
-    And escupe bloques de código Boilerplate usando `vi.mock()` o interceptores (MSW) para devolver respuestas vacías estáticas (Ej: `{ status: 200, data: [] }`)
-    And bloquea la red por defecto, obligando al QA a rellenar el Mock manualmente.
+  Scenario: Boundary Testing Pragmático y Ciego (Type-Based Fuzzing) (CA-2)
+    Given el esquema Zod compilado en memoria
+    When el motor de simulación arranca
+    Then el sistema autogenerará un Payload Dummy basado estrictamente en los Tipos Base y Restricciones matemáticas de Zod (Ej: Inyectar un string de 5 caracteres "AAAAA" si la regla es `.min(5)`), sin intentar adivinar la semántica del negocio.
+    And presentará en la Consola dos evaluaciones automáticas:
+      1. Path Feliz (100%): Inyecta el Payload válido generado y aserta visualmente `success: true`.
+      2. Path Triste (Empty): Inyecta un Payload vacío `{}` y aserta que Zod devuelva los errores de `Required` correspondientes.
 
-  Scenario: Boundary Testing Pragmático (Happy vs Sad Extremo)
-    Given que el Arquitecto ha definido 10 campos obligatorios y 3 opcionales
-    When el autogenerador procesa las matrices de prueba para `it()`
-    Then emitirá exactamente DOS bloques de aserciones fundamentales:
-    And 1. Path Feliz 100%: Payload con datos dummy (faker.js) que pasa el parser exitosamente.
-    And 2. Path Triste Extremo: Payload vacío (`{}`) o valores nulos para garantizar el choque masivo contra los validadores `Required` y emitir el `ZodError` HTTP 400.
+  Scenario: Modificación Manual del Mock Payload (Edición en Caliente) (CA-3)
+    Given el Panel de Consola QA abierto y el Path Feliz generado
+    Then el QA podrá editar libremente el código JSON del "Payload de Prueba" en un mini-editor de texto incrustado.
+    And al teclear o borrar comillas, el motor de Zod reevaluará instantáneamente el Payload arrojando los errores de validación en tiempo real, permitiendo al humano probar Regex complejos (Ej: Cédulas o NITs) a mano.
 
-  Scenario: Descarga Pasiva del Binario (Blob Download)
-    Given el string de JavaScript en memoria compilado por el Generador
-    When finaliza el cruce de datos
-    Then el Frontend dispara una descarga nativa silenciosa del archivo `[nombre_form].spec.ts` al disco local del QA
-    And se abstiene perentoriamente de inyectar *Commits* directos vía API hacia Git/GitLab para evitar colisiones DevSecOps.
+  Scenario: Aislamiento Puro de Lógica de Negocio (Zero-Network Mocking) (CA-4)
+    Given un formulario con campos que dependen de llamadas asíncronas a APIs externas (Data Sources)
+    When se ejecuta el Simulador Zod
+    Then el motor evaluará ÚNICAMENTE el método `zod.safeParse()` sobre el esquema estático.
+    And omitirá cualquier intento de invocar el ciclo de vida de Vue (Ej: `onMounted`), garantizando que no se disparen peticiones de red (Axios/Fetch) ni se requieran librerías de Mocking complejas (MSW/vi.mock), asumiendo que la prueba valida el contrato de datos final y no la interfaz gráfica.
 
-  Scenario: Formulario Multi-Etapa (State Machine de Camunda)
-    Given un "iForm Maestro" que altera dinámicamente sus campos y validaciones cruzadas dependiendo de la propiedad `Current_Stage` inyectada por el motor BPMN
-    Then el autogenerador interpretará cada alteración lógica como esquemas independientes
-    And emitirá descriptores separados (`describe('Stage: Radicación')`, `describe('Stage: Análisis')`)
-    And inyectará forzosamente la variable de estado dentro del mock payload para probar las dependencias condicionales (Refines/Unions) por separado.
+  Scenario: Fuzzing Ciego Recursivo (Topología de Datos Anidados) (CA-5)
+    Given un formulario con reglas de colección (DataGrid o Grupo Repetible) como `z.array().min(2)`
+    When el Sandbox arranca su Payload Generator
+    Then iterará de forma superficial (Shallow Fuzzing) creando recursivamente una lista con exactamente 2 sub-objetos completos (Strings/Numbers basura tipificados)
+    And el Arquitecto sólo tendrá que enmendar los valores irreales, pero no perderá tiempo redactando corchetes ni llaves (`[] {}`) para satisfacer la estructura base.
 
-  Scenario: Renovación Destructiva del Código (Sobrescribir y Perder)
-    Given que el QA ya curó un archivo de test manual de la 'Versión 1' del Formulario en su Notebook
-    When el Arquitecto lanza la 'Versión 2' visual en el portal
-    Then el botón `[⚡ GENERADOR DE TESTS]` simplemente descargará un molde limpio (V2) recién pintado
-    And es estricta responsabilidad del humano (QA) hacer el *diff/merge* de sus validaciones manuales antiguas (V1) contra la plantilla nativa (V2) en su entorno Git local.
+  Scenario: Dropdown Dinámico para Formularios Multi-Etapa (CA-6)
+    Given un iForm Maestro que muta campos dependiendo de su fase (`Current_Stage`)
+    When se abre la Consola del Sandbox
+    Then la cabecera mostrará un Dropdown obligatorio `[ 🎭 Etapa a Simular: Radicación 🔻 ]`
+    And al cambiarlo, la Variable en el Store altera en caliente el Zod Schema revelando u ocultando validaciones
+    And el Fuzzer regenera el Payload JSON abarcando estrictamente la etapa seleccionada sin arrojar Falsos Positivos de validaciones aplanadas.
 
-  Scenario: Responsabilidad Manual en Time Mocking (Fechas Relativas)
-    Given un formulario Zod con lógicas de fecha estrictamente relativas (Ej: Mayor a la Fecha Actual Estricta)
-    When el IDE autogenera el Payload Feliz
-    Then insertará un objeto estándar estático (`new Date('1990-01-01')`) incapaz de predecir el offset del futuro
-    And forzará el fallo del test en CI/CD el día posterior delegando la responsabilidad de inyectar `vi.setSystemTime()` o manipular el reloj global netamente a las manos del QA humano en su merge local.
+  Scenario: Visibilidad Dual Absoluta de Transformaciones (Split-Panel) (CA-7)
+    Given una regla Zod que muta el dato del input (Ej: `.transform()` de String a Entero)
+    When el Sandbox evalúa en tiempo real
+    Then el IDE estará tajantemente seccionado en dos paneles:
+    And Izquierda Editable: `[ 📥 Payload Crudo (Lo que digita el usuario) ]`
+    And Derecha (Read-Only): `[ 📤 Payload Parseado (Lo que viaja a Camunda) ]`
+    And el QA certifica de un pestañeo cómo el framework limpia espacios, parsea números o blanquea campos por omisión (Drop Keys).
 
-  Scenario: Inyección Estricta de Aliasing Absoluto (@/utils)
-    Given que el Zod invoca esquemas compartidos en una carpeta externa raíz compartida (`src/utils/validators.ts`)
-    Then el autogenerador jamás intentará reempacar las dependencias transversalmente
-    And redactará un import asumiendo el alias estándar Vue/Vite: `import { x } from '@/utils/validators'`
-    And el QA será el dueño del error en compilación si el `tsconfig.json` de su propio *runner* difiere de esta regla.
+  Scenario: Bloqueo Sincrónico Aceptable y Delegación de Regex Rotos (CA-8)
+    Given una validación `.regex()` exigente o un `.superRefine()` de lógica temporal cruzada (Ej: `FechaInicio > FechaFin`)
+    When el Sandbox inyecta el Dummy Data ("AAAAA" o Fechas cruzadas inconexas)
+    Then la optimización prematura (Web Workers) está prohibida en V1
+    And el Sandbox aceptará un bloqueo síncrono sub-milimétrico (`.safeParse` nativo)
+    And pintará inescrupulosamente de ROJO el "Path Feliz" autogenerado informando de la ruptura Regex (Ej: `Placa Inválida`)
+    And es responsabilidad primaria del Humano (QA) entrar al mini-editor y digitar voluntariamente un valor semántico válido ("ABC-123") para curar la barrera intencional creada por Zod.
 
-  Scenario: Aislamiento Puro de Estado Global (Ignorar Pinia/VueX)
-    Given un *iForm Maestro* con potentes side-effects que interactúa con un estado global (Store de Pinia) para almacenar borradores web
-    When el compilador procesa para emitir el `.spec.ts`
-    Then se limitará herméticamente a invocar `.parse()` sobre objeto literal del formulario
-    And JAMÁS escribirá código de *setup* inyectando referencias cruzadas o Mock Store (Ej: `const store = useMyStore()`), garantizando funciones puras y no una prueba de integración del ecosistema Vuex/Pinia.
+  Scenario: Representación Visual Traducida (Human-Readable Errors) (CA-9)
+    Given un Path Triste donde el Payload se va de cara contra 15 reglas Zod obligatorias conjuntas
+    When el Sandbox invoca `.safeParse` y escupe el `ZodError` HTTP 400
+    Then prohibido renderizar el array críptico Json en la UI del QA
+    And el Frontend debe destripar la traza y repintarla como un Listado HTML con viñetas amigables:
+    And "❌ [cliente.direccion.ciudad] - Este campo es obligatorio."
+    And "❌ [monto_credito] - Debe ser mayor a 0."
 
-  Scenario: Inyección Tipificada Mock File API (Upload File Forms)
-    Given un input diseñado por el Arquitecto para subir *Anexos PDF*, rígidamente blindado en Zod como `instanceof File` y validado por *Mime-Type*
-    When se procesa el Path Feliz Unitario
-    Then el test autogenerado escribirá código imperativo instanciando interfaces web nativas puras (Ej: `new File(["buffer"], "doc.pdf", { type: "application/pdf" })`) 
-    And anulando fallos técnicos del parser donde fallaría por inyectar *Strings* simples allí donde la librería Zod exige forzósamente un *Blob* estructurado.
+  Scenario: Amnesia Prohibida del Payload Editor (Persistencia Local) (CA-10)
+    Given la ventana de edición cruzada `[ 📥 Payload Crudo ]` donde el Arquitecto modificó 10 campos manualmente durante 5 minutos para simular un Path Feliz complejo
+    When el usuario cierra la pantalla por accidente o refresca (`F5`)
+    Then la directiva `@vueuse/core` invocará a `useLocalStorage('zod_mock_form_{ID}')`
+    And el JSON artesanal renacerá exactamente como fue dejado, evitando destrucción por amnesia en sesiones continuas del QA.
 
-  Scenario: Ceguera Visual de Cobertura (Delegación a CI/CD Runner)
-    Given el proceso de hacer clic en `[⚡ GENERADOR DE TESTS]`
-    Then la interfaz (IDE Pantalla 7) descargará un `Blob` sin procesar el porcentaje global de *assertions* correctas (Istanbul/C8 Coverage Stats)
-    And el Arquitecto no verá estadísticas, diagramas en pastel ni el estado en caliente, asumiendo una compilación ciega y unidireccional cuyo veredicto es propiedad absoluta de la consola Terminal del QA o el *Runner* CI/CD (Ej: GitLab) remoto.
+  Scenario: Sello Criptográfico de Certificación BD (Cumplimiento ISO) (CA-11)
+    Given el panel derecho (Parsed Payload) de un formulario en VERDE demostrando la validación estricta Zod en el Sandbox
+    When se ilumina y se empuja el mega-botón: `[ 🏆 CERTIFICAR CONTRATO ZOD ]`
+    Then se dispara un `POST /api/v1/design/forms/{id}/certify`
+    And la Base de Datos plasma un sello: `ibpms_forms.is_qa_certified = true`
+    And se registra inamoviblemente en el log histórico `ibpms_audit_log` el Test exacto: "El Tester Juan certificó la V2 del Formulario el DD/MM/AAAA. Payload utilizado: {JSON...}"
+    And sirviendo esta bandera (is_qa_certified) de Guardrail para la Pantalla 6; que arrojará una Warning mandatoria de "Pre-Flight" bloqueando el botón `[🚀 DESPLEGAR Proceso]` si el BPMN intenta ir a Prod con un formulario sin sello QA.
 ```
-**Trazabilidad UX:** Wireframes Pantalla 7 (Botones Inferiores).
+**Trazabilidad UX:** Wireframes Pantalla 7 (Panel QA).
+
 
 ### US-029: Ejecución y Envío de Formulario (iForm Maestro o Simple)
 **Como** Analista / Usuario de Negocio
@@ -671,16 +681,17 @@ Feature: Automated BDD Form Testing Generation
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Task Completion with Form Data
-  Scenario: Enviar datos válidos de formulario
+
+  Scenario: Enviar datos válidos de formulario (CA-1)
     Given la tarea "TK-100" asignada a "carlos.ruiz" requiere el formulario "Form_Aprobacion_V1"
     And "Form_Aprobacion_V1" exige el campo obligatorio numérico "monto_aprobado"
     When "carlos.ruiz" realiza un POST a "/api/v1/workbox/tasks/TK-100/complete"
     And incluye en el body el JSON '{"variables": {"monto_aprobado": 1500, "comentarios": "Ok"}}'
     Then el sistema debe retornar un HTTP STATUS 200 OK
     And la tarea "TK-100" marca su estado como "COMPLETED"
-    And las variables del JSON se persisten asociadas a la instancia del proceso
+    And las variables del JSON se persisten asociadas a la instancia del proceso.
 
-  Scenario: Enviar datos inválidos (Violación del JSON Schema)
+  Scenario: Enviar datos inválidos (Violación del JSON Schema) (CA-2)
     Given la tarea "TK-100" requiere el campo obligatorio "monto_aprobado" numérico
     When "carlos.ruiz" realiza un POST a "/api/v1/workbox/tasks/TK-100/complete"
     And incluye un JSON vacío '{"variables": {}}'
@@ -688,59 +699,101 @@ Feature: Task Completion with Form Data
     And el sistema debe retornar un HTTP STATUS 400 Bad Request
     And el error format JSON debe especificar `{"error": "ValidationFailed", "fields": [{"field": "monto_aprobado", "message": "Required"}]}`
 
-  Scenario: Trazabilidad de Borrador Volátil (LocalStorage Draft)
+  Scenario: Trazabilidad Volátil y Recolección de Basura (LocalStorage & GC) (CA-3)
     Given un formulario extenso ("Maestro_Onboarding") abierto en el Workdesk
     When el analista diligencia la mitad de los campos y accidentalmente cierra la pestaña
-    Then el Frontend recuperará el progreso utilizando almacenamiento estricto en el navegador (`LocalStorage` mediante `@vueuse/core`)
-    And el Backend iBPMS se librará por completo de gestionar la basura transaccional de borradores incompletos hasta que el humano presione físicamente [Enviar].
+    Then el Frontend recuperará el progreso utilizando almacenamiento estricto en el navegador (`LocalStorage` mediante `@vueuse/core`) atado al Task_ID.
+    And cuando el POST a `/complete` finaliza exitosamente (HTTP 200 OK), el Frontend ejecutará una purga síncrona destruyendo inmediatamente la llave de ese caso específico.
+    And un proceso silencioso global al inicio de la sesión eliminará cualquier borrador huérfano en la PC del usuario que supere las 72 horas de antigüedad, previniendo cuellos de memoria.
 
-  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas)
+  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas) (CA-4)
     Given un Payload de formulario (`/complete`) perfectamente validado en Zod que llega al Backend
     When el motor orquestador (Camunda 7) sufre un Crash o Timeout HTTP en su API REST interna
     Then el Backend iBPMS abortará inmediatamente la transacción (Rollback de Persistencia CQRS)
     And devolverá un error HTTP 500 Crudo ("Motor No Disponible") a la UI en Pantalla 2
-    And se prohibe a nivel arquitectónico generar falsos positivos HTTP 202 ("Guardado para después") para eludir el colapso del proceso judicial de fondo.
+    And se prohíbe a nivel arquitectónico generar falsos positivos HTTP 202 ("Guardado para después") para eludir el colapso del proceso judicial de fondo.
 
-  Scenario: Inyección Megalítica de Contexto (Patrón BFF)
+  Scenario: Inyección Megalítica de Contexto (Patrón BFF) (CA-5)
     Given la entrada física a la vista de la tarea (Pantalla 2)
     When el Frontend inicializa el componente Vue
     Then despachará exactamente UNA (1) única petición consolidada GET `/api/v1/workbox/tasks/{id}/form-context`
     And el Backend obrará como BFF *(Backend for Frontend)* inyectando en un solo Mega-DTO la triada: El JSON Schema de Zod, la configuración de Layout de Vue, y las Variables de Solo Lectura extraídas de Camunda (`prefillData`) para poblar inputs en un solo *tick* de renderizado.
 
-  Scenario: Seguridad Asimétrica (Frontend Shift-Left vs Backend Zero-Trust)
-    Given un formulario que requiere validar asíncronamente un NIT gubernamental
-    When el operario cambia el foco (`OnBlur`) del input
-    Then el Frontend bloquea y muestra un Spinner de carga visual garantizando la *User Experience* fluida (Shift-Left)
-    But antes de insertar en Camunda, al presionar [Enviar], el Backend asume el principio arquitectónico Zero-Trust
-    And re-evaluará ciegamente el NIT contra la base de gobierno externa, ignorando la validación exitosa previa del Frontend para blindar el Modelo de Datos.
+  Scenario: Seguridad Asimétrica y Micro-Tokens Criptográficos (Zero-Trust) (CA-6)
+    Given una validación asíncrona externa (Ej: Validar NIT) gatillada desde el Frontend (`OnBlur`)
+    When el Backend consulta la API externa exitosamente y retorna al Frontend un "Micro-Token JWT" firmado criptográficamente de corta duración (Ej: TTL 15 min)
+    Then al momento del Submit final (`/complete`), el Frontend adjuntará este Micro-Token.
+    And el Backend (Zero-Trust) omitirá realizar una segunda llamada de red externa bloqueante, limitándose a verificar matemáticamente la validez de su propia firma en el Micro-Token para autorizar la transacción ACID en milisegundos.
 
-  Scenario: Integridad de Asignación Concurrente (Implicit Locking)
+  Scenario: Integridad de Asignación Concurrente (Implicit Locking) (CA-7)
     Given que una tarea "TK-400" está explícitamente asignada al analista `maria.perez` en el motor
-    When el analista `pedro.gomez` intercepta vulnearablemente la URL o el JWT Payload e intenta someter un POST a `/tasks/TK-400/complete`
+    When el analista `pedro.gomez` intercepta vulnerablemente la URL o el JWT Payload e intenta someter un POST a `/tasks/TK-400/complete`
     Then el Core iBPMS examina deductivamente el `{delegatedUserId}` transaccional contra la identidad central del Security Context
-    And aborta transaccionalmente la colisión inyectando un lapidario `HTTP 403 Forbidden` o `409 Conflict`, extirpando la necesidad pesada de emitir *ETags* (Optimistic Locking visual) a través del flujo asíncrono.
+    And aborta transaccionalmente la colisión inyectando un lapidario `HTTP 403 Forbidden` o `409 Conflict`, extirpando la necesidad pesada de emitir *ETags* a través del flujo asíncrono.
+
+  Scenario: Hibridación de Datos Históricos vs Nuevos Contratos (Lazy Patching) (CA-8)
+    Given el BFF inyectando `prefillData` de una Instancia antigua (V1) hacia un Formulario Zod nuevo (V2)
+    When existan campos obligatorios nuevos en la V2 que no venían en la data histórica de Camunda (`null` o `undefined`)
+    Then el esquema Zod reactivo los evaluará inmediatamente como inválidos
+    And el Frontend pintará dichos inputs en ROJO y bloqueará físicamente el botón de [Enviar]
+    And obligando procedimentalmente al analista a contactar al cliente y digitar el dato faltante en la UI para poder avanzar el proceso (Amnistía en Lectura, Guillotina en Escritura).
+
+  Scenario: Desacoplamiento de Carga Binaria (Upload-First Pattern) (CA-9)
+    Given un formulario Zod que incluye un componente `<InputFile>`
+    When el usuario final adjunta un documento pesado (Ej: PDF de 10MB)
+    Then el Frontend ejecutará una carga asíncrona temprana (Pre-Submit) hacia la Bóveda SGDEA (`/api/v1/documents/upload-temp`) obteniendo un Identificador Único (`UUID`).
+    And al presionar [Enviar], el POST a `/complete` enviará EXCLUSIVAMENTE el JSON plano referenciando el ID (`{"cedula_pdf": "UUID-123"}`), teniendo PROHIBIDO arquitectónicamente enviar payloads Multipart o Base64 contra el motor de procesos Camunda.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Detalle / Formulario Dinámico).
 
 ---
 
-### US-039: Formulario Genérico Base (Default Inyectado)
+### US-039: Formulario Genérico Base (Pantalla 7.B - El Camaleón Operativo)
 **Como** PMO / Owner del iBPMS
-**Quiero** disponer de un modelo de formulario genérico pre-asociado a todas las tareas por defecto
-**Para** no tener que invertir tiempo dibujando decenas de formularios básicos en la Pantalla 7 cuando las tareas son únicamente procedimentales (tracking de % avance y adjuntar evidencia).
+**Quiero** disponer de un modelo de formulario genérico pre-asociado a tareas operativas simples
+**Para** no invertir tiempo dibujando decenas de formularios básicos en la Pantalla 7 cuando la actividad es netamente procedimental (captura de evidencia, observaciones y tracking de avance).
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Auto-vinculación de Pantalla 7.B a tareas desnudas
-  Scenario: Inyección Automática de Metadata de Proyecto y Reglas de Completitud
-    Given un usuario que apertura una Tarea operativa
-    When la tarea NO tiene un "iForm_Key" dinámico asignado a su diseño (ya sea en BPMN P6 o Gantt P8)
-    Then el motor renderiza la vista de Workdesk inyectando automáticamente la Pantalla 7.B como interfaz de llenado
-    And el formulario debe presentar en modo Solo Lectura la metadata principal heredada de la Instancia de Proyecto (Ej: Presupuesto, Cliente)
-    And el formulario obliga al usuario a diligenciar un campo de "Comentario/Observación" antes de enviar
-    And persiste un Porcentaje (%) de avance numérico. Si es menor a 100%, el estado debe ser 'En Progreso'. Si es 100%, el estado pasa obligatoriamente a 'Terminado'.
+Feature: Auto-vinculación Camaleónica de Pantalla 7.B (Generic Form)
+
+  Scenario: Inyección Explícita en BPMN vs Implícita en Ágil (Anti-Bypass)
+    Given la necesidad de usar el Formulario Genérico Base
+    When se trata de un proceso **BPMN (Camunda)**: El Arquitecto DEBE seleccionarlo explícitamente en el Dropdown de la Pantalla 6 (`Form Key: sys_generic_form`). Si deja la tarea desnuda, el Pre-Flight Analyzer BLOQUEA el despliegue (US-005).
+    And when se trata de una Tarea **Kanban/Gantt** huérfana: El Frontend inyecta el Formulario Genérico automáticamente de forma silenciosa para asegurar que el operario tenga una interfaz gráfica de cierre.
+
+  Scenario: Renderizado de Contexto en Solo Lectura (BFF)
+    Given un usuario que apertura una Tarea operativa en el Workdesk asignada al formulario genérico
+    Then el Backend (BFF) inyectará el esquema Zod del "Formulario Genérico" junto con el `prefillData`.
+    And el Frontend renderizará la Pantalla 7.B coronada por un "Panel de Contexto" estricto de Solo Lectura.
+    And este panel iterará sobre la Metadata principal heredada de la Instancia (Ej: ID del Proyecto/Caso, Nombre del Cliente, Prioridad y SLA Restante) dibujándola en una cuadrícula limpia de "Llave : Valor" (Ej: `cliente: GlobalTech`), ocultando las variables técnicas del sistema.
+
+  Scenario: Mutación Camaleónica de Interfaz (BPMN vs Gantt/Kanban)
+    Given la renderización de la Pantalla 7.B
+    When el motor de UI detecte el origen transaccional de la tarea
+    Then el Formulario aplicará dos modos de comportamiento visuales y transaccionales distintos:
+    And 1. Si es Agile/Gantt (SQL Entity): Mostrará un Slider numérico `[% de Avance (0-100)]`. El botón principal dirá `[ 💾 Guardar Progreso ]`, permitiendo hacer POST para guardar el avance parcial reteniendo el estado de la tarea viva hasta llegar al 100%.
+    And 2. Si es BPMN (Camunda): OCULTARÁ físicamente el Slider de `% de Avance` (respetando la naturaleza binaria de los Tokens). Mostrará un único botón definitivo `[ ✔️ Completar Tarea ]` asumiendo el 100% de ejecución incondicional y gatillando el `/complete` destructivo.
+
+  Scenario: Minimización de Basura (Fricción Inteligente en Comentarios)
+    Given el campo `<TextArea>` de "Comentarios / Observaciones" dentro del Formulario Genérico
+    Then por defecto, el esquema Zod de este campo nacerá como OPCIONAL para evitar el 'Friction Tax' y los textos basura (Ej: "Ok").
+    But si el usuario reporta un porcentaje de avance MENOR a 100% (En Ágil), o si activa un Switch visual de `[⚠️ Reportar Bloqueo/Incidencia]`, el esquema Zod mutará reactivamente haciendo que el campo sea ESTRICTAMENTE OBLIGATORIO, forzando a justificar la anomalía temporal.
+
+  Scenario: Soporte Estándar de Evidencia Documental (Upload-First)
+    Given la necesidad operativa de adjuntar soportes físicos a la tarea procedimental
+    Then la Pantalla 7.B inyectará nativamente el componente `<Dropzone>` de Archivos Adjuntos.
+    And este componente operará bajo la política arquitectónica inquebrantable de la US-029: Carga asíncrona temprana (`upload-temp`) a la Bóveda SGDEA.
+    And al hacer el submit de la tarea, solo viajará un Array de Identificadores UUIDs (`{"attachments": ["UUID-1"]}`) al motor transaccional.
+
+  Scenario: Namespacing Automático para Prevención de Colisiones (Data Pollution)
+    Given que el operario finaliza la tarea usando el Formulario Genérico Pantalla 7.B
+    When presiona el botón de envío
+    Then el Frontend encapsulará las variables bajo un namespace estricto concatenando el ID de la Tarea (Ej: `{"TK105_comentarios": "...", "TK105_attachments": [...]}`).
+    And garantizando que si existen múltiples tareas genéricas secuenciales en el mismo proceso BPMN, sus datos históricos convivan pacíficamente en el Payload global de Camunda sin sobreescribirse entre sí.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 7.B (Formulario Genérico Base).
+
 
 ---
 
@@ -822,7 +875,7 @@ Esta épica aborda el rol del Arquitecto/Administrador para modelar cómo fluye 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: BPMN Process Deployment
-  Scenario: Despliegue exitoso de un diagrama BPMN válido
+  Scenario: Despliegue exitoso de un diagrama BPMN válido (CA-1)
     Given que el usuario Arquitecto ha diseñado el flujo "Aprobacion_Credito_v2.bpmn"
     When el usuario sube el archivo invocando un POST multipart/form-data a "/api/v1/design/processes/deploy"
     Then el motor (Ej. Camunda) debe validar la sintaxis XML del archivo
@@ -830,14 +883,14 @@ Feature: BPMN Process Deployment
     And el sistema debe generar una nueva "Version" del "Process Definition ID" (Ej. Credito:2)
     And las nuevas instancias usarán esta versión sin afectar a las que ya estaban "En Vuelo" (In-Flight)
 
-  Scenario: Intento de despliegue con diagrama inválido (BPMN Roto)
+  Scenario: Intento de despliegue con diagrama inválido (BPMN Roto) (CA-2)
     Given un archivo "Proceso_Roto.bpmn" al que le falta un "End Event" necesario
     When el usuario realiza el POST a "/api/v1/design/processes/deploy"
     Then el motor debe denegar el despliegue
     And el sistema debe retornar HTTP STATUS 422 Unprocessable Entity
     And el payload debe contener el mensaje parseado: "El diagrama no es instanciable. Falta End Event."
 
-  Scenario: Análisis Semántico en "Pre-Flight" de un diagrama complejo (Ejecutabilidad)
+  Scenario: Análisis Semántico en "Pre-Flight" de un diagrama complejo (Ejecutabilidad) (CA-3)
     Given el Arquitecto importa un diagrama BPMN 2.0 ("Proceso_Core.bpmn") que contiene Subprocesos, Start Events de Mensaje y Tareas de Servicio
     When el usuario solicita la validación previa al despliegue ("Pre-Flight Analyze")
     Then el motor semántico debe parsear los componentes avanzados
@@ -846,19 +899,19 @@ Feature: BPMN Process Deployment
     And identificar si alguna `ExclusiveGateway` carece de un flujo por defecto (`Default Flow`)
     And el sistema debe renderizar en Pantalla 6 la lista de Errores (❌) y Advertencias (⚠️) para que el Arquitecto los corrija antes del despliegue.
 
-  Scenario: Validación Estricta de Start Event Form (Sincronización US-024)
+  Scenario: Validación Estricta de Start Event Form (Sincronización US-024) (CA-4)
     Given el Arquitecto solicita el despliegue de un nuevo modelo BPMN
     When el analizador Pre-Flight evalúa el nodo inicial (`StartEvent`)
     Then es mandatorio que el Start Event posea una vinculación estricta a un formulario (`Form Key` = `iForm Maestro` o `Simple`)
     And si carece de este formulario, el sistema rechaza el despliegue (HTTP 422) porque rompería la capacidad de instanciación manual forzada (Plan B).
 
-  Scenario: Obligatoriedad de Nomenclatura de Instancia (ID Único)
+  Scenario: Obligatoriedad de Nomenclatura de Instancia (ID Único) (CA-5)
     Given el Arquitecto configura las propiedades globales del BPMN antes de desplegar
     When intenta ejecutar el despliegue hacia el motor (Camunda)
     Then el sistema verifica que se haya definido la "Regla de Nomenclatura" (Paramétrica Ej: `PREFIJO-{Var}` o Secuencial Automática) para las futuras instancias
     And si esta regla no está definida en la metadata del proceso, el despliegue se bloquea advirtiendo: "Debe definir cómo se llamarán los casos de este proceso".
 
-  Scenario: Autogeneración de Roles RBAC desde Carriles (Lanes)
+  Scenario: Autogeneración de Roles RBAC desde Carriles (Lanes) (CA-6)
     Given el Arquitecto importa un diagrama interactivo BPMN ("Flujo_Onboarding.bpmn")
     And el diagrama contiene un Carril (Lane) llamado "Aprobadores_Legales"
     And dentro de ese carril existe la Tarea "Firmar_Contrato" asociada al template "Form_Firma"
@@ -867,15 +920,56 @@ Feature: BPMN Process Deployment
     And el sistema debe asociar automáticamente a este Rol los permisos de escritura sobre "Form_Firma" y ejecución sobre la tarea "Firmar_Contrato"
     And el Rol autogenerado queda disponible en el Módulo de Seguridad (Pantalla 14) para asignarle usuarios.
 
-  Scenario: Migración Dual de Instancias En Vuelo (CA-5)
-    Given el Arquitecto despliega la versión 3 de "Aprobacion_Credito.bpmn"
-    And existen 15 instancias activas ("En Vuelo") ejecutándose con la versión 2
-    Then el sistema debe ofrecer dos opciones mutuamente excluyentes al Arquitecto:
-    And Opción A: "Mantener instancias actuales en v2" (coexistencia pacífica, las nuevas instancias usan v3)
-    And Opción B: "Forzar migración de las 15 instancias activas a v3" (el motor reapunta los tokens BPMN)
-    And en ambos casos, el sistema registra un Audit Log con la decisión tomada.
+  Scenario: Ley del Abuelo o Grandfathering Estricto por Defecto (CA-7)
+    Given existen 15 instancias activas ("En Vuelo") ejecutándose con la Versión 1 de un proceso
+    When el Arquitecto presiona `[🚀 DESPLEGAR V2]`
+    Then el sistema asume 100% coexistencia pacífica por defecto
+    And la V1 sigue viva en background procesando a las instancias antiguas hasta su conclusión
+    And la migración forzada JAMÁS es el comportamiento predeterminado, requiriendo un acto explícito y manual.
 
-  Scenario: Rollback a Versión Anterior con Historial (CA-6)
+  Scenario: Cirugía Quirúrgica de Instancias (No Guillotina) (CA-8)
+    Given el Arquitecto requiere forzar la migración de instancias de V1 a V2
+    When accede al panel `[Gestor de Instancias Activas]`
+    Then el sistema TIENE PROHIBIDO ofrecer un botón de "Migrar Todos" de forma masiva ciega
+    And debe desplegar una lista con checkboxes individuales permitiendo al Arquitecto seleccionar con pinzas cuáles instancias específicas someterá al salto de versión.
+
+  Scenario: Bloqueo Topológico Duro Pre-Migración (CA-9)
+    Given el Arquitecto intenta migrar la Instancia #45 (V1) hacia la V2
+    And la Instancia #45 se encuentra actualmente pausada en el nodo `Tarea_Analisis`
+    When el motor evalúa el Plan de Migración (Migration Plan)
+    Then si el nodo `Tarea_Analisis` fue eliminado o no existe en la topología de la V2, el checkbox de selección se deshabilita
+    And el sistema bloquea la migración arrojando: "Imposible migrar la Instancia #45. El nodo actual no existe en la Versión 2. Esta instancia debe terminar en V1 o ser anulada."
+
+  Scenario: Prohibición Absoluta de Data-Patching Humano en TI (CA-10)
+    Given la migración forzada hacia una V2 que exige un nuevo campo Zod "Obligatorio" (Ej: `Cédula`) que no existía en la V1
+    Then el sistema TIENE ESTRICTAMENTE PROHIBIDO levantar un modal para que el usuario de TI (Systems Admin/Arquitecto) digite o invente ese dato faltante
+    And garantizando así la Segregación de Funciones (SoD) y evitando la falsedad ideológica en la base de datos documental.
+
+  Scenario: Amnistía Técnica y Cobro en Aduana (Lazy Validation) (CA-11)
+    Given la migración del escenario anterior (CA-5.4) donde falta el dato obligatorio `Cédula`
+    When el motor ejecuta el salto técnico a la V2
+    Then inyecta silenciosamente un valor nulo (`null`) en la base de datos para no colapsar el hilo de ejecución (Amnistía Técnica)
+    And cuando el operario de negocio abra esa instancia en su Workdesk (Pantalla 2), el Frontend renderizará el formulario Zod V2, detectará el `null` imperdonable, pintará el campo en ROJO y bloqueará físicamente el avance funcional hasta que el dueño del proceso pregunte y digite la `Cédula` real (Lazy Validation).
+
+  Scenario: Principio de Ley Vigente para Reglas de Decisión DMN (Late Binding) (CA-12)
+    Given un proceso V1 con tokens en vuelo que se aproxima a una Business Rule Task (DMN)
+    When el Director de Riesgos actualiza y publica una nueva versión de la tabla DMN
+    Then los tokens de la V1 (junto con los de las nuevas versiones) que pisen la compuerta un milisegundo después de la publicación, serán evaluados con la nueva regla matemática
+    And demostrando que las reglas DMN no tienen nostalgia y aplican Late Binding.
+
+  Scenario: Tablero de Resiliencia y Morgue de Tokens (CA-13)
+    Given un error técnico no controlado durante una migración asíncrona (Ej: Caída de red o base de datos)
+    Then el operario de negocio JAMÁS verá un stacktrace o error técnico en su Workdesk
+    And el token roto pasará a estado `INCIDENT` y será canalizado exclusivamente a la Pantalla 15.A (SysAdmin) en la pestaña `[🚨 Centro de Incidentes]`
+    And otorgando a Soporte Nivel 3 los botones tácticos: `[🔄 Retry (Electrochoque)]` o `[💀 Abortar Caso]`.
+
+  Scenario: Cicatriz Forense de Auditoría Inmutable (CA-14)
+    Given la culminación o visualización de una instancia que sufrió una migración forzada estructural
+    When un Auditor o Usuario consulta la Vista 360 del Caso (Pantalla 17) o el historial del Workdesk
+    Then el sistema inyecta obligatoriamente una franja visual inamovible: `[⚠️ MIGRACIÓN ESTRUCTURAL: Este caso inició bajo la Versión X y fue promovido forzosamente a la Versión Y el DD/MM/YYYY por el Administrador Z]`
+    And blindando legalmente a la compañía ante demandas por vacíos procedimentales.
+
+  Scenario: Rollback a Versión Anterior con Historial (CA-15)
     Given el Arquitecto detecta que la versión 3 de un proceso tiene un error lógico post-despliegue
     When navega al panel de "Historial de Versiones" en la Pantalla 6
     Then el sistema debe listar todas las versiones desplegadas previamente (v1, v2, v3) con fecha y autor
@@ -883,21 +977,21 @@ Feature: BPMN Process Deployment
     And el sistema re-despliega la v2 como la nueva versión activa (v4 internamente = copia de v2)
     And las instancias en vuelo de v3 siguen corriendo hasta terminar naturalmente (salvo Migración Forzada explícita).
 
-  Scenario: Bloqueo Pesimista de Edición Concurrente (CA-7)
+  Scenario: Bloqueo Pesimista de Edición Concurrente (CA-16)
     Given el Arquitecto "maria.lopez" abre el proceso "Solicitud_Credito" en el Diseñador (Pantalla 6)
     And el sistema le otorga un "Lock" exclusivo sobre ese proceso
     When el Arquitecto "carlos.gerente" intenta abrir el mismo proceso simultáneamente
     Then el sistema debe mostrar un mensaje: "🔒 Este proceso está siendo editado por maria.lopez desde las 10:15 AM"
     And debe bloquear los controles de edición del lienzo, dejando solo el modo "Solo Lectura" para el segundo usuario.
 
-  Scenario: Copiloto IA Bajo Demanda (CA-8)
+  Scenario: Copiloto IA Bajo Demanda (CA-17)
     Given el Arquitecto está diseñando un diagrama BPMN en el lienzo
     Then el Copiloto IA NO ejecuta análisis automático en tiempo real
     When el Arquitecto hace clic explícitamente en el botón [🧠 Consultar Copiloto IA]
     Then el sistema envía el XML del diagrama actual al endpoint de IA
     And renderiza las sugerencias y alertas ISO 9001 en el Panel de Feedback inferior.
 
-  Scenario: Pre-Flight Extendido con Validaciones Avanzadas (CA-9)
+  Scenario: Pre-Flight Extendido con Validaciones Avanzadas (CA-18)
     Given el Arquitecto solicita un "Pre-Flight Analyze" sobre un diagrama complejo
     Then el sistema debe validar, además de las reglas base (ServiceTask, UserTask, Gateway):
     And identificar si algún `TimerEvent` carece de la expresión de duración configurada (Ej. `R/PT1H`)
@@ -905,20 +999,20 @@ Feature: BPMN Process Deployment
     And identificar si algún `CallActivity` apunta a un `ProcessDefinitionKey` que NO existe desplegado en el motor
     And clasificar los hallazgos como Error (❌ bloquea despliegue) o Advertencia (⚠️ informativa).
 
-  Scenario: Auto-Guardado del Diagrama en Borrador (CA-10)
+  Scenario: Auto-Guardado del Diagrama en Borrador (CA-19)
     Given el Arquitecto está editando un diagrama BPMN en la Pantalla 6
     Then el sistema debe guardar automáticamente un borrador del XML cada 30 segundos (Best Practice Auto-Save)
     And si el usuario cierra el navegador sin desplegar, al volver a abrir el proceso encontrará el último borrador recuperado
     And el sistema debe mostrar un indicador discreto "✅ Guardado" en la barra de estado tras cada auto-guardado exitoso.
 
-  Scenario: Simulación en Sandbox Antes de Desplegar (CA-11)
+  Scenario: Simulación en Sandbox Antes de Desplegar (CA-20)
     Given el Arquitecto tiene un diagrama BPMN listo pero no ha sido desplegado aún
     When presiona el botón [🧪 Probar en Sandbox]
     Then el sistema debe generar una instancia temporal (no persiste en producción) del proceso
     And avanzar visualmente paso a paso mostrando por qué nodo (tarea/compuerta/evento) fluiría un caso de prueba ficticio
     And al finalizar la simulación, destruir la instancia temporal sin dejar rastro en la base de datos de producción.
 
-  Scenario: Separación de Roles RBAC Diseñador vs Release Manager (CA-12)
+  Scenario: Separación de Roles RBAC Diseñador vs Release Manager (CA-21)
     Given un usuario con rol "BPMN_Designer" abre un proceso en la Pantalla 6
     Then puede dibujar, importar, exportar y consultar al Copiloto IA
     But el botón [🚀 DESPLEGAR] debe estar deshabilitado (gris) para este rol
@@ -927,68 +1021,68 @@ Feature: BPMN Process Deployment
     And ambos roles son asignables desde el Módulo de Seguridad (Pantalla 14) y un usuario puede tener ambos simultáneamente.
     And estos roles son GLOBALES (aplican a todos los procesos sin granularidad por módulo). La granularidad por proceso se difiere a V2.
 
-  Scenario: Paleta BPMN 2.0 Estándar Completa con UX Priorizada (CA-13)
+  Scenario: Paleta BPMN 2.0 Estándar Completa con UX Priorizada (CA-22)
     Given el Arquitecto abre el Diseñador en la Pantalla 6
     Then la Paleta BPMN 2.0 debe contener TODOS los elementos del estándar (incluyendo Conditional, Link, Cancel Events, Complex Gateway, Ad-Hoc y Event Sub-Process)
     But los elementos más usados (Start/End, User Task, Service Task, Exclusive/Parallel Gateway) deben aparecer como iconos principales visibles
     And los elementos avanzados/exóticos deben estar agrupados bajo submenús colapsables ("Más Eventos...", "Más Compuertas...")
     And esto evita saturar visualmente un principiante pero no limita a un experto.
 
-  Scenario: Catálogo / Biblioteca de Procesos Desplegados (CA-14)
+  Scenario: Catálogo / Biblioteca de Procesos Desplegados (CA-23)
     Given el Arquitecto accede a la Pantalla 6
     Then debe existir un Panel lateral o pestaña "Explorador de Procesos" que liste todos los procesos diseñados
     And cada entrada muestra: Nombre, Versión Activa, Fecha de Último Despliegue y Autor
     And al hacer clic en un proceso, se carga en el Lienzo para su edición o consulta.
 
-  Scenario: Text Annotations (Notas Adhesivas BPMN) en el Lienzo (CA-15)
+  Scenario: Text Annotations (Notas Adhesivas BPMN) en el Lienzo (CA-24)
     Given el Arquitecto está diseñando un diagrama
     Then debe poder arrastrar un componente "Text Annotation" desde la Paleta al Lienzo
     And escribir comentarios explicativos que se renderizan visualmente sobre el diagrama
     And estas anotaciones se persisten en el archivo .bpmn XML como parte del estándar.
 
-  Scenario: Zoom, Minimap y Navegación Visual (CA-16)
+  Scenario: Zoom, Minimap y Navegación Visual (CA-25)
     Given el Arquitecto trabaja con un diagrama con más de 3 carriles y 20+ nodos
     Then el Lienzo debe soportar controles de Zoom (+/-) y "Ajustar a Pantalla"
     And un Mini-Mapa (panorámico) en la esquina inferior derecha para navegar rápidamente entre secciones lejanas del diagrama.
 
-  Scenario: Naming Dual - Nombre de Negocio y Nombre Técnico (CA-17)
+  Scenario: Naming Dual - Nombre de Negocio y Nombre Técnico (CA-26)
     Given el Arquitecto crea una User Task y escribe "Llenar Formulario de Crédito" como nombre visible
     Then el panel de Propiedades debe ofrecer un segundo campo: "ID Técnico (Technical Name)"
     And si el Arquitecto no lo rellena, el sistema debe auto-generar un slug (Ej: `llenar_formulario_de_credito`)
     And el motor Camunda usará el ID Técnico internamente, mientras que la UI del Workdesk mostrará el Nombre de Negocio.
 
-  Scenario: Plantillas BPMN Prediseñadas (CA-18)
+  Scenario: Plantillas BPMN Prediseñadas (CA-27)
     Given el Arquitecto presiona "Nuevo Proceso" en la Pantalla 6
     Then un Modal debe ofrecer la opción "Empezar desde Cero" o "Usar Plantilla"
     And las plantillas disponibles incluyen ejemplos comunes (Ej: "Aprobación Simple", "Onboarding Cliente", "Incidencia IT")
     And al seleccionar una plantilla, se carga en el Lienzo como punto de partida editable.
 
-  Scenario: Diff Visual entre Versiones (CA-19 - Diferido a V2)
+  Scenario: Diff Visual entre Versiones (CA-28 - Diferido a V2)
     # NOTA: Este escenario queda documentado pero su implementación se difiere a la Versión 2 del producto.
     Given el Arquitecto navega al Historial de Versiones y selecciona v2 y v3 para comparar
     Then el sistema muestra un Diff visual resaltando nodos agregados (verde), eliminados (rojo) y modificados (amarillo).
 
-  Scenario: Copiar y Pegar Fragmentos entre Procesos (CA-20)
+  Scenario: Copiar y Pegar Fragmentos entre Procesos (CA-29)
     Given el Arquitecto tiene abiertos dos procesos en pestañas distintas de la Pantalla 6
     When selecciona un fragmento (Ej: un Sub-Proceso con 5 tareas) del Proceso A y ejecuta "Copiar"
     Then debe poder "Pegar" ese fragmento en el Lienzo del Proceso B
     And el sistema debe re-mapear los IDs internos para evitar colisiones XML.
 
-  Scenario: Límite de Complejidad Parametrizable y Advertencia de Mala Práctica (CA-21)
+  Scenario: Límite de Complejidad Parametrizable y Advertencia de Mala Práctica (CA-30)
     Given el sistema tiene configurado un umbral de complejidad máxima (Ej: 100 nodos por defecto, parametrizable)
     When el Arquitecto excede ese umbral dibujando el nodo número 101
     Then el sistema debe mostrar una advertencia visual: "⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos"
     And debe detallar los riesgos: "Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor"
     And la advertencia NO bloquea el despliegue, solo informa. El umbral es configurable por un Admin.
 
-  Scenario: Etiquetas de Estado en el Catálogo de Procesos (CA-22)
+  Scenario: Etiquetas de Estado en el Catálogo de Procesos (CA-31)
     Given el Catálogo de Procesos desplegados (CA-14) lista todos los procesos
     Then cada proceso debe tener una etiqueta visual de estado:
     And "📝 BORRADOR" si nunca ha sido desplegado al motor (solo existe como XML guardado)
     And "✅ ACTIVO (v3)" si tiene al menos una versión desplegada y operativa
     And "📦 ARCHIVADO" si fue retirado de operación (CA-23).
 
-  Scenario: Archivar un Proceso sin Instancias Activas (CA-23)
+  Scenario: Archivar un Proceso sin Instancias Activas (CA-32)
     Given el Arquitecto selecciona un proceso "Proceso_Obsoleto" en el Catálogo
     And NO existen instancias "En Vuelo" de ese proceso
     When presiona el botón [📦 Archivar]
@@ -997,80 +1091,80 @@ Feature: BPMN Process Deployment
     And el proceso deja de estar visible para los usuarios operativos, pero permanece en BD para auditoría
     But si existen instancias activas, el botón Archivar está deshabilitado con el tooltip: "No se puede archivar: X instancias en ejecución".
 
-  Scenario: Invalidación Automática del Pre-Flight tras Edición (CA-24)
+  Scenario: Invalidación Automática del Pre-Flight tras Edición (CA-33)
     Given el Arquitecto ejecutó el Pre-Flight Analyzer y obtuvo resultado "✅ Sin Errores"
     When posteriormente modifica el diagrama (agrega/elimina/cambia un nodo)
     Then el estado del Pre-Flight debe resetearse automáticamente a "⚠️ Pendiente de re-validación"
     And el botón [🚀 DESPLEGAR] debe requerir una nueva ejecución del Pre-Flight antes de habilitarse.
 
-  Scenario: Solicitar Despliegue al Release Manager (CA-25)
+  Scenario: Solicitar Despliegue al Release Manager (CA-34)
     Given el Designer ha terminado de diseñar y el Pre-Flight está aprobado
     When presiona el botón [📩 Solicitar Despliegue]
     Then el sistema cambia el estado del proceso a "PENDIENTE_APROBACIÓN_DESPLIEGUE"
     And crea automáticamente una tarea en el Workdesk del usuario con rol "BPMN_Release_Manager"
     And el Release Manager ve esta tarea en su bandeja con el botón [🚀 Aprobar y Desplegar] o [❌ Rechazar].
 
-  Scenario: SLA Configurable por Tarea Individual o Global (CA-26)
+  Scenario: SLA Configurable por Tarea Individual o Global (CA-35)
     Given el Arquitecto configura un UserTask en el Panel de Propiedades de la Pantalla 6
     Then el campo "SLA" puede tener un valor específico por tarea (Ej: "4 horas" para "Analizar", "48 horas" para "Firmar")
     And adicionalmente debe existir un SLA Global a nivel de ProcessDefinition (Ej: "5 días hábiles para el proceso completo")
     And las reglas de negocio o el Diseñador definen cuál prevalece en caso de conflicto.
 
-  Scenario: Link Directo a Sub-Proceso desde Call Activity (CA-27)
+  Scenario: Link Directo a Sub-Proceso desde Call Activity (CA-36)
     Given el Arquitecto selecciona una Call Activity en el Lienzo que apunta al proceso hijo "Proceso_Riesgo"
     Then el Panel de Propiedades debe mostrar un link clickeable: "[🔗 Abrir Sub-Proceso: Proceso_Riesgo]"
     And al hacer clic, se abre el proceso hijo en una nueva pestaña del Diseñador para editarlo o consultarlo.
 
-  Scenario: Colores Personalizados en Carriles y Tareas (CA-28 - Diferido a V2)
+  Scenario: Colores Personalizados en Carriles y Tareas (CA-37 - Diferido a V2)
     # NOTA: Este escenario queda documentado pero su implementación se difiere a la Versión 2 del producto.
     Given el Arquitecto selecciona un Carril o Tarea en el Lienzo
     Then puede asignarle un color personalizado desde una paleta de colores para distinguir departamentos.
 
-  Scenario: Autocompletado de Variables en Expresiones (CA-29 - Diferido a V2)
+  Scenario: Autocompletado de Variables en Expresiones (CA-38 - Diferido a V2)
     # NOTA: Diferido a V2.
     Given el Arquitecto escribe una condición en una Compuerta Exclusiva (Ej: `${monto > 5000}`)
     Then el sistema ofrece autocompletado de variables disponibles basándose en los formularios asociados al proceso.
 
-  Scenario: FormKey como Dropdown Validado desde Pantalla 7 (CA-30)
+  Scenario: FormKey como Dropdown Validado desde Pantalla 7 (CA-39)
     Given el Arquitecto selecciona una User Task en el Lienzo de la Pantalla 6
     When accede al campo "📄 Formulario Asociado" en el Panel de Propiedades
     Then el campo debe ser un Dropdown (NO texto libre) que lista los formularios registrados en la Pantalla 7
     And cada opción del Dropdown muestra: Nombre del formulario, Tipo (🟢 Simple o 🔵 iForm Maestro), y si es Maestro, el número de etapas configuradas
     And si no se selecciona ningún formulario, el Pre-Flight lo marca como Error.
 
-  Scenario: Consistencia de Patrón de Formulario por Proceso (CA-31)
+  Scenario: Consistencia de Patrón de Formulario por Proceso (CA-40)
     Given el Arquitecto crea un nuevo proceso en la Pantalla 6
     Then al inicio debe elegir el patrón de formulario: "Patrón A: Formulario Simple" o "Patrón B: iForm Maestro"
     And esta decisión es inmutable para ese proceso (consistente con US-003)
     And si eligió Patrón A, cada User Task mostrará en el Dropdown solo formularios "Simple"
     And si eligió Patrón B, todas las User Tasks compartirán el mismo iForm Maestro y el Dropdown filtrará solo formularios "Maestro".
 
-  Scenario: Sandbox Simulado en Motor de Producción en V1 (CA-32)
+  Scenario: Sandbox Simulado en Motor de Producción en V1 (CA-41)
     Given el iBPMS V1 opera con un único motor Camunda (no hay ambiente de Desarrollo separado)
     Then el botón [🧪 Sandbox] genera instancias temporales directamente en el motor de producción
     And estas instancias se marcan como "SANDBOX_TEST" y se auto-destruyen al finalizar la simulación
     And la separación real de ambientes (Dev vs Prod) se difiere a V2.
 
-  Scenario: Registro de Auditoría de Diseño tipo Git-Log (CA-33)
+  Scenario: Registro de Auditoría de Diseño tipo Git-Log (CA-42)
     Given el Arquitecto realiza cualquier acción sobre un proceso (importar, editar, guardar borrador, solicitar despliegue, archivar, restaurar versión)
     Then el sistema debe crear una entrada en un log de auditoría persistente (BD) con: Acción, Usuario, Timestamp y Versión Afectada
     And este log debe ser visible para Administradores en un panel "📜 Historial de Cambios" (estilo Git Log) dentro de la Pantalla 6.
 
-  Scenario: Lock Manual sin Expiración Automática (CA-34)
+  Scenario: Lock Manual sin Expiración Automática (CA-43)
     Given el Arquitecto "maria.lopez" tiene el Lock sobre un proceso
     And permanece inactiva por más de 30 minutos
     Then el Lock NO expira automáticamente
     And otros usuarios que intenten editar verán: "🔒 Bloqueado por maria.lopez. Contacte al usuario para solicitar la liberación."
     And la liberación es un proceso manual: María debe cerrar su pestaña o presionar un botón "Liberar Edición".
 
-  Scenario: Soporte Multi-Pool para Modelado de Colaboración (CA-35)
+  Scenario: Soporte Multi-Pool para Modelado de Colaboración (CA-44)
     Given el Arquitecto crea un nuevo diagrama BPMN en la Pantalla 6
     Then puede agregar múltiples Pools al Lienzo representando actores internos y externos (Ej: "Mi Empresa", "Banco Externo", "Proveedor")
     And puede conectar los Pools con Message Flows (flechas de mensaje) para modelar la interacción
     And los Pools externos son representaciones visuales (cajas negras) que no se ejecutan en el motor Camunda interno
     And esto provee claridad documental y de auditoría sobre quién habla con quién.
 
-  Scenario: Service Task con Dropdown de Conectores API del Hub (CA-36)
+  Scenario: Service Task con Dropdown de Conectores API del Hub (CA-45)
     Given el Arquitecto coloca una Service Task en el Lienzo y abre su Panel de Propiedades
     Then el campo "Conector / API" debe ser un Dropdown que lista los conectores registrados en la Pantalla 11 (Hub de Integraciones)
     And cada opción muestra: Nombre del conector, Tipo (REST/SOAP/GraphQL) y Sistema Destino
@@ -1080,11 +1174,91 @@ Feature: BPMN Process Deployment
     And - 💰 Oracle NetSuite (ERP/Financiero)
     And si el conector necesario NO existe aún en el Hub, consultar CA-37.
 
-  Scenario: MessageEvent como Placeholder de Integración Futura (CA-37)
+  Scenario: MessageEvent como Placeholder de Integración Futura (CA-46)
     Given el Arquitecto necesita modelar una integración con un sistema externo cuyo conector API aún no fue registrado en el Hub (Pantalla 11)
     Then debe usar un MessageEvent (Intermediate Throw/Catch) como marcador visual temporal
     And el Pre-Flight Analyzer debe clasificar este nodo como Advertencia (⚠️): "MessageEvent sin conector API asociado. Considere crear el conector en el Hub y migrar a Service Task."
     And cuando el conector sea registrado posteriormente, el Arquitecto puede reemplazar el MessageEvent por una Service Task enlazada al nuevo conector.
+
+  Scenario: [Onboarding Embebido] Iconos de Ayuda Globales en el Diseñador (CA-47)
+    Given el Arquitecto (de cualquier perfil o seniority) selecciona un componente visual en el Lienzo de la Pantalla 6
+    Then tanto en la barra superior de herramientas como al lado de cada título del Panel de Propiedades aparecerá un ícono de ayuda `[?]`
+    And al hacer hover, el sistema desplegará el Componente de Tooltip Estándar (reutilizado de la US-003).
+
+  Scenario: Tooltips Ricos interactivos y Mapeo de Errores de Sintaxis (CA-48)
+    Given la visualización del Tooltip en el Diseñador BPMN
+    Then el contenido didáctico estará codificado de forma estática ("quemado") para la V1
+    And el componente soportará formato HTML enriquecido permitiendo incrustar hipervínculos azules hacia la documentación oficial
+    When el Arquitecto ingresa una expresión inválida o código basura en un campo de configuración (Ej: Listener Script o Condición de Gateway)
+    Then el ícono de ayuda y su respectivo Tooltip mutarán dinámicamente a color ROJO para alertar el error de sintaxis visualmente.
+
+  Scenario: Mapeo Visual Estricto (Prohibición de JSON Crudo) (CA-49)
+    Given que el Arquitecto selecciona un Conector API (Ej: Oracle) en una Service Task (Pantalla 6)
+    When el Frontend despliega el sub-panel de Integración
+    Then el sistema TIENE ESTRICTAMENTE PROHIBIDO renderizar un `<textarea>` libre para inyección manual de JSON Payload.
+    And debe renderizar un componente `<DataMapperGrid>` de dos columnas: Columna Izquierda (Campos fijos dictados por el Swagger del Hub en Pantalla 11) vs Columna Derecha (Dropdown interactivo).
+    And el Dropdown de la derecha consumirá el Diccionario de Datos del proceso (Variables Zod de la Pantalla 7), permitiendo al usuario emparejarlas visualmente con clics.
+
+  Scenario: Coerción Inteligente y Seguridad de Tipos (Type-Safety) (CA-50)
+    Given la matriz de mapeo visual `<DataMapperGrid>`
+    When el usuario despliega la lista de variables origen para emparejarlas con un destino
+    Then el Frontend aplicará un filtro dinámico: mostrará deshabilitadas (sombreadas en gris) con un tooltip explicativo de "Tipo Incompatible" a aquellas variables (Zod) cuyo tipo de dato (String, Number, Boolean) NO coincida matemáticamente con el tipo esperado por el sistema externo.
+    And anulando desde el diseño de la UI la posibilidad de enviar un Error 400 (Type Mismatch) a Producción.
+
+  Scenario: Inyección de Valores Constantes (Hardcoding Controlado) (CA-51)
+    Given que la API externa requiere un dato que no proviene del Formulario del cliente (Ej: `Country_Code`)
+    Then la Columna Derecha del `<DataMapperGrid>` permitirá al usuario alternar entre [Variable Dinámica Zod] y [Valor Estático].
+    And si elige [Valor Estático], podrá digitar el texto crudo inyectándolo de forma segura en el Payload saliente.
+
+  Scenario: Inmutabilidad Estricta ante Mutación de Swagger (Zero-Breakage) (CA-52)
+    Given un proceso V1 desplegado que utiliza el conector `Oracle_API_v1`
+    When el Administrador actualiza el contrato (Swagger) en el Hub (Pantalla 11) renombrando o eliminando variables esperadas
+    Then el sistema bloquea la sobrescritura y fuerza la creación de un nuevo conector `Oracle_API_v2`
+    And el proceso V1 que ya estaba en el motor sigue funcionando intacto con la versión vieja en caché ("Zero-Breakage Policy")
+    And si el Arquitecto desea usar la nueva versión, debe entrar a la Pantalla 6, seleccionar la v2, re-mapear y desplegar una nueva versión temporal del proceso.
+
+  Scenario: Validación Lógica de Cláusulas OneOf/AnyOf (CA-53)
+    Given una API que exige el dato X *o* el dato Y mediante las cláusulas Swagger (OneOf / AnyOf)
+    When el Frontend despliega el `<DataMapperGrid>`
+    Then agrupa visualmente las filas afectadas bajo la etiqueta `[ 🔀 Requiere mapear al menos UNO ]`
+    And el Pre-Flight Analyzer verificará el grupo lógico en conjunto: Si falta al menos uno, alerta roja y aborta despliegue. Si ambos están vacíos, aborta. Si uno está lleno, autoriza el pase a Producción.
+
+  Scenario: Shift-Left Security para Datos Sensibles (PII/PHI) (CA-54)
+    Given el mapeo de una variable clasificada con el flag `[🔒 Dato Sensible PII]` desde la Pantalla 7 (Zod)
+    When la Service Task dispara la integración hacia la API externa
+    Then el dato crudo viaja obligatoriamente encriptado por el túnel HTTP/TLS
+    And el motor de auditoría histórica de Camunda (History Level) tiene estrictamente PROHIBIDO persistir el valor real en texto plano dentro de sus logs, reemplazándolo obligatoriamente por un hash o la viñeta `[REDACTED_PII]`.
+
+  Scenario: Mapeo Reestringido de Headers Dinámicos (CA-55)
+    Given que la API exige metadatos de usuario por cada transacción (Ej: `User_ID`) en las cabeceras REST
+    Then el Data Mapper ofrecerá una tercera pestaña visual denominada `[ 🔑 HEADERS DINÁMICOS ]`
+    And la UI aplicará severas restricciones denegando la inserción de texto libre o crudo para prevenir Header Injection.
+    And obligará a mapear valores usando únicamente variables pre-validadas del formulario (Zod) o Macros seguras del Sistema.
+
+  Scenario: Delegación Transparente de Conversión Binaria (Multipart/Base64) (CA-56)
+    Given un componente Zod de tipo `<InputFile>` mapeado hacia un atributo del Payload destino
+    When el Arquitecto despliega y llega el momento de la ejecución
+    Then el flujo UI no exige que el Arquitecto indique la técnica de conversión
+    And el Worker (Backend) intercepta el mapping, consulta en caliente el requerimiento del Swagger (Multipart-FormData vs Base64), y lo transmuta automáticamente antes de inyectar la data a la trama HTTP de salida.
+
+  Scenario: Ley de Omisión Pura de Llaves Nulas (Drop Key by Default) (CA-57)
+    Given una variable Zod marcada como Opcional que el usuario no diligenció en el Runtime (cuyo valor es `null` o vacío)
+    When la petición es empaquetada hacia el sistema remoto
+    Then el Backend aniquila y purga la llave entera ("Key") del JSON saliente, evitando enviar sintaxis propensa a crashes (Ej: `"campo": null`)
+    And la única excepción será si el Swagger explicíta la obligación del campo como `nullable: true`, obligando al envío literal.
+
+  Scenario: Resiliencia Asíncrona Parametrizable (Retry Pattern Visual) (CA-58)
+    Given la configuración de una Task API Integrada en Pantalla 6
+    Then el sistema expone un sub-panel `[ ⚙️ Estrategia de Fallo (Retries) ]`
+    And permite configurar intentos asíncronos y ventana retardo temporal (Ej. 3 intentos espaciados por 5 mins)
+    And los reintentos operan como Background Jobs (Job Executor) liberando ram de la UI, y si la póliza se agota, canaliza automáticamente el Thread BPMN hacia el Boundary Error Event modelado de rescate humano.
+
+  Scenario: Amnesia Selectiva Obligatoria de Datos No Mapeados (Output Pruning) (CA-59)
+    Given una respuesta de la API externa que retorna un Payload gigante (Ej: JSON de 15 MB)
+    And el Arquitecto sólo enlazó visualmente 1 variable diminuta (`Ticket_ID`) en la pestaña de `[ 📥 OUTPUT MAPPING ]`
+    When arriba el Payload y se graba el Ticket_ID en el Bolsillo Global de Variables (Process Runtime)
+    Then de manera sincrónica el motor de Camunda invoca la poda total (Garbage Collection)
+    And destruye los remanentes masivos no procesados liberando I/O y evitando contaminar la Base de Datos operativa del motor BPM.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).
 
@@ -3754,11 +3928,57 @@ Feature: Friction Tax Telemetry (Value-Driven BAM)
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Data Minimization and Form Strictness
-  Scenario: Cuarentena y Bloqueo de "Campos Fantasma" (Orphaned Inputs)
-    Given que el Arquitecto está diseñando un formulario asociado a un Proceso y arrastra un `<InputText>` llamado "Comentarios Adicionales" o "Segundo Apellido"
-    When el IDE de Mónaco compila las relaciones subyacentes del proceso completo (BPMN, DMN, SGDEA)
-    Then si el sistema detecta que la variable de ese campo NO impacta ninguna compuerta lógica, NO se evalúa en ninguna matriz DMN, NO se envía a ninguna API externa, y NO se imprime en ningún PDF legal...
-    And el componente visual se tiñe de color ROJO en el lienzo.
-    And el sistema emite un Soft-Lock: "🚮 Campo Huérfano: Estás exigiendo un dato que tu proceso jamás lee ni utiliza. Elimínalo para reducir la fricción del cliente, o justifícalo conectándolo a una regla de negocio para poder publicar."
-```
+  Scenario: El Peaje Analítico (Opcionalidad Forzada) (CA-1)
+    Given un Diseñador intentando justificar un campo inútil para la operación alegando que su único fin es la exportación a PowerBI (Big Data ciego)
+    When el IDE marca el campo como ROJO (Campo Huérfano)
+    Then el Diseñador debe abrir obligatoriamente las propiedades del campo y seleccionar el [Destino Estratégico: Analítica Pasiva / Reportes]
+    And al seleccionarlo, el esquema Zod subyacente DESHABILITA y BLOQUEA físicamente el switch de "Requerido" u "Obligatorio" para ese input
+    And garantizando que la empresa pueda recolectar datos analíticos, pero prohibiendo estrictamente que se conviertan en una fricción bloqueante para el usuario final.
+
+  Scenario: La Ley del Lector Garantizado (Campos de Texto Libre) (CA-2)
+    Given la inserción por costumbre de un Área de Texto (Text-Area) para "Observaciones" que ninguna regla DMN puede evaluar matemáticamente
+    When el Pre-Flight Analyzer audita el futuro de dicha variable en el proceso
+    Then el motor le otorga el Indulto de Supervivencia ÚNICAMENTE si detecta uno de los tres "Lectores Garantizados" aguas abajo:
+    And 1. Una `UserTask` humana donde un Analista leerá la variable.
+    And 2. Una `GenerativeTask` (RAG / AI) que extraerá sentimiento o resumirá el texto.
+    And 3. Un mapeo explícito de inyección SGDEA (Ej: Imprimir el campo dentro del PDF legal final).
+    And bloqueándolo sin piedad si carece de estos 3 destinos.
+
+  Scenario: Libertad de Bosquejo vs Guillotina en Producción (CA-3)
+    Given el proceso creativo de un Arquitecto de Negocio
+    When se encuentra en la Pantalla 3 (Form Builder) creando los inputs
+    Then el sistema arroja un Soft-Lock visual (Iconos naranjas/rojos ⚠️) advirtiendo la falta de destino, pero permite guardar el trabajo tranquilamente en estado `DRAFT_INVALID` para no destruir la iteración.
+    When días después, el Arquitecto une el formulario al BPMN en la Pantalla 6 e intenta pulsar el botón [🚀 DESPLEGAR A PRODUCCIÓN]
+    Then el sistema arroja el Hard-Stop defintivo y ABORTA el Despliegue con un flag rojo ❌, obligándolo a higienizar (borrar o justificar) los campos huérfanos antes de impactar el Core productivo.
 **Trazabilidad UX:** Pantalla 3 (Diseñador de Formularios - Form Builder).
+
+---
+
+### US-V2-004: Auto-Destrucción de Nodos Zombie (The Darwinian Engine)
+**Como** Motor de Gobernanza MLOps (Agente Data Scientist de Turno Nocturno)
+**Quiero** auditar el comportamiento histórico de los operarios humanos
+**Para** sugerir la eliminación de reglas, tareas o firmas que la data empírica demuestre que son inútiles.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Continuous AI Pruning (Self-Healing Organization)
+  Scenario: Slider de Tolerancia y Frenos de Emergencia (Parametrización MLOps) (CA-1)
+    Given la configuración del Motor Darwiniano en la Pantalla 15.A (SysAdmin)
+    When el cliente ajusta el `[Umbral_Inercia_Zombie]` y la `[Ventana_Analisis_Meses]`
+    Then el sistema prohíbe estadísticamente bajar el umbral de inercia a menos del 85%
+    And garantizando que si un humano rechaza o altera el 15% o más de los casos, la IA asume que SÍ está utilizando criterio cognitivo, bloqueando la etiqueta de "Zombie" para proteger la evaluación de riesgo real (Ej: Prevención de Fraude).
+
+  Scenario: El Muro de Fuego Legal (Cero Skynet) (CA-2)
+    Given el Agente Data Scientist descubriendo una Tarea Humana 99% inútil en la madrugada
+    When consolida el hallazgo, calcula el ahorro en EBITDA y lo reporta a la Junta (Pantalla 5)
+    Then el sistema TIENE ESTRICTAMENTE PROHIBIDO auto-parchear Producción de forma autónoma
+    And exige que un rol fiduciario (PMO o Director) apruebe manualmente el hallazgo presionando `[Aceptar Hallazgo y Auto-Refactorizar]`, asumiendo la responsabilidad legal de la automatización por principio de Segregación de Funciones.
+
+  Scenario: Cirugía Asistida y Respeto al SDLC (Generación de Drafts) (CA-3)
+    Given la aprobación del Hallazgo Darwiniano por parte de la PMO
+    When el Agente IA recibe la orden de ejecución
+    Then el sistema NO altera la versión V1.0 que opera transaccionalmente en Producción
+    And en background, el Agente abre la Pantalla 6 (Modeler), clona el mapa, extirpa la caja humana, inyecta la regla matemática DMN, sella las conexiones BPMN y lo guarda silenciosamente como `V1.1-DRAFT`
+    And finalmente dispara un Ticket al Workdesk del Arquitecto IT diciendo: "Borrador de Optimización Generado. Revise las conexiones y presione Desplegar".
+```
+**Trazabilidad UX:** Pantalla 5 (AI Copilot / Evolution Findings) y Modeler (Auto-Refactor).

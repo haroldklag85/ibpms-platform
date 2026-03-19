@@ -1304,73 +1304,10 @@ Feature: Standalone Project Template Builder (WBS)
 ```
 **Trazabilidad UX:** Wireframes Pantalla 8 (Project Template Builder).
 
----
-
-### US-030: Instanciar y Planificar un Proyecto Ágil (Sprints/Kanban)
-**Como** Scrum Master / Agile Coach
-**Quiero** instanciar un nuevo proyecto Ágil utilizando una estructura base (WBS) y gestionar su Backlog
-**Para** poder planificar iteraciones, asignar responsables directos y liberar tareas hacia los tableros Kanban operativos (Pantalla 3).
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Agile Project Instantiation and Planning
-  Scenario: Instanciación sin Sprints en V1 (Postergación Táctica) (CA-14)
-    Given un proyecto instanciado bajo metodología Ágil en la Pantalla 9
-    When el líder de proyecto abre el Agile Hub (Pantalla 10)
-    Then el sistema NO utiliza iteraciones con fechas (Sprints) para la Versión 1 del producto
-    And el lienzo funciona como un Tablero General de Kanban Continuo (Flujo sin Timebox) donde las tareas se mapean directamente de ToDo a Done, aplazando el marco Scrum complejo para V2.
-```
-**Trazabilidad UX:** Wireframes Pantalla 9 (Gestor de Proyectos) y Pantalla 10 (Hub Ágil).
 
 ---
 
-### US-031: Planificación y Ejecución de Proyecto Tradicional (Gantt)
-**Como** Project Manager (Tradicional)
-**Quiero** visualizar un proyecto instanciado como un diagrama de Gantt, asignar mis recursos, presupuestos y fijar la Línea Base
-**Para** que el motor de orquestación (Camunda) inicie la ejecución automática del proyecto despachando la primera secuencia de tareas a las bandejas (Workdesk) de los asignados.
 
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Traditional Project Planning and Baseline Execution
-  Scenario: Geometría Adaptativa por Colisión con Días Festivos (CA-3)
-    Given la tarea X planificada para el lunes 12, con duración de 3 días laborables
-    When el calendario maestro global marca repentinamente el lunes 12 como "Día Festivo Nacional"
-    Then el motor de cálculos del Diagrama de Gantt estira automáticamente la caja visual de la tarea hacia la derecha compensando el día muerto (Fin: Jueves 15) sin requerir re-planificación humana obligatoria.
-
-  Scenario: Protección Estructural contra Deadlocks Circulares (CA-4)
-    Given que el PM crea dependencia "T1 -> T2" (Fin-Inicio) arrastrando flechas en el Lienzo 10.B
-    When el PM arrastra erróneamente la dependencia contraria "T2 -> T1" creando un Ciclo Infinito
-    Then el WebClient bloquea y aborta inmediatamente el cruce relacional (Error Geométrico visual) e impide guardarlo en la Base de Datos para garantizar un motor DAG limpio.
-
-  Scenario: Sobrecarga Permisible con Semáforo Sensorial (CA-5)
-    Given la matriz de 40 horas laborables semanales para un humano
-    When el PM planifica tareas apiladas sobre la empleada "María" superando el 150% de su capacidad en la misma semana cronológica
-    Then el sistema "permite" teóricamente la mala práctica (dejando al PM violar la métrica)
-    And como contramedida, enciende agresivas Balizas Visuales Rojas (Marcador de Recurso Sobrecargado) a un costado del nombre de la analista.
-
-  Scenario: Re-planificación Activa y Multi-Líneas Base (Baseline Rupture) (CA-6)
-    Given un proyecto que lleva 2 meses en Ejecución Viva (Basado sobre Línea Base "V1")
-    When el PM requiera estirar los tiempos un 30% a solicitud formal del cliente
-    Then el sistema permite pausar y "Reprogramar" formalmente el nodo vivo en el lienzo visual de la Pantalla 10.B
-    And fuerza al PM a guardar y pisar una nueva Línea Base Evolutiva (Ej: V2_Reprogramada), preservando en el log histórico la desviación financiera/temporal ocurrida frente al V1 primitivo para auditoría de Gerencia.
-
-  Scenario: Hot-Swaps en Cabina de Mando (Reasignación de Silla Ejecutiva) (CA-7)
-    Given una tarea vital (T4) de Línea Base activa rebotando infructuosamente en el Workdesk del analista 'Pedro' por su ausencia repentina
-    When el Project Manager se adentra en la Pantalla 10.B (Cabina General Gantt Transaccional) e invoca la tarjeta temporal viva (T4)
-    Then el sistema posibilita el borrado nominal en duro de 'Pedro' para inyectar sobre vuelo el usuario 'Luis'
-    And el motor BPMN retira perentoriamente la carta de la delegación de Pedro, materializándola sincrónicamente en el Workdesk de su co-equipero para no frustrar la métrica de entrega del T4.
-
-  Scenario: Modos Flexibles de Reclamo (Pool vs Empleado Directo) (CA-8)
-    Given la responsabilidad del PM de instanciar tareas en el motor Gantt
-    Then el PMo goza del Switch parametrizable de Asignamiento en su UX
-    And ostenta la facultad imperativa de designar nominalmente la Tarea Hacia un Usuario Exacto (`maria.lopez`)
-    And o puede prescindir de asimetrías tácticas y tirarlo en bandeja común al Grupo Jerárquico General ("Equipo Legal"), forzando que ellos ejerzan Auto-Apropiación (US-002: Claim Task) por competencia.
-    
-  # NOTA CONTEXTUAL PO: (CA-9 Camino Crítico PERT) y (CA-10: Avance Financiero EVM) diferidos expresamente a V2 del MVP.
-```
-**Trazabilidad UX:** Wireframes Pantalla 10.B (Planner Tradicional - Gantt) y Pantalla 1 (Workdesk).
-
----
 
 ### US-027: Copiloto IA (Auditoría ISO 9001 y Generador Consultivo BPMN)
 **Como** Arquitecto Modelador de Procesos
@@ -1671,6 +1608,75 @@ Feature: Kanban Board Task Management
 
 ---
 
+
+### US-030: Instanciar y Planificar un Proyecto Ágil (Sprints/Kanban)
+**Como** Scrum Master / Agile Coach
+**Quiero** instanciar un nuevo proyecto Ágil utilizando una estructura base (WBS) y gestionar su Backlog
+**Para** poder planificar iteraciones, asignar responsables directos y liberar tareas hacia los tableros Kanban operativos (Pantalla 3).
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Agile Project Instantiation and Planning
+  Scenario: Instanciación sin Sprints en V1 (Postergación Táctica) (CA-14)
+    Given un proyecto instanciado bajo metodología Ágil en la Pantalla 9
+    When el líder de proyecto abre el Agile Hub (Pantalla 10)
+    Then el sistema NO utiliza iteraciones con fechas (Sprints) para la Versión 1 del producto
+    And el lienzo funciona como un Tablero General de Kanban Continuo (Flujo sin Timebox) donde las tareas se mapean directamente de ToDo a Done, aplazando el marco Scrum complejo para V2.
+```
+**Trazabilidad UX:** Wireframes Pantalla 9 (Gestor de Proyectos) y Pantalla 10 (Hub Ágil).
+
+---
+
+### US-031: Planificación y Ejecución de Proyecto Tradicional (Gantt)
+**Como** Project Manager (Tradicional)
+**Quiero** visualizar un proyecto instanciado como un diagrama de Gantt, asignar mis recursos, presupuestos y fijar la Línea Base
+**Para** que el motor de orquestación (Camunda) inicie la ejecución automática del proyecto despachando la primera secuencia de tareas a las bandejas (Workdesk) de los asignados.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Traditional Project Planning and Baseline Execution
+  Scenario: Geometría Adaptativa por Colisión con Días Festivos (CA-3)
+    Given la tarea X planificada para el lunes 12, con duración de 3 días laborables
+    When el calendario maestro global marca repentinamente el lunes 12 como "Día Festivo Nacional"
+    Then el motor de cálculos del Diagrama de Gantt estira automáticamente la caja visual de la tarea hacia la derecha compensando el día muerto (Fin: Jueves 15) sin requerir re-planificación humana obligatoria.
+
+  Scenario: Protección Estructural contra Deadlocks Circulares (CA-4)
+    Given que el PM crea dependencia "T1 -> T2" (Fin-Inicio) arrastrando flechas en el Lienzo 10.B
+    When el PM arrastra erróneamente la dependencia contraria "T2 -> T1" creando un Ciclo Infinito
+    Then el WebClient bloquea y aborta inmediatamente el cruce relacional (Error Geométrico visual) e impide guardarlo en la Base de Datos para garantizar un motor DAG limpio.
+
+  Scenario: Sobrecarga Permisible con Semáforo Sensorial (CA-5)
+    Given la matriz de 40 horas laborables semanales para un humano
+    When el PM planifica tareas apiladas sobre la empleada "María" superando el 150% de su capacidad en la misma semana cronológica
+    Then el sistema "permite" teóricamente la mala práctica (dejando al PM violar la métrica)
+    And como contramedida, enciende agresivas Balizas Visuales Rojas (Marcador de Recurso Sobrecargado) a un costado del nombre de la analista.
+
+  Scenario: Re-planificación Activa y Multi-Líneas Base (Baseline Rupture) (CA-6)
+    Given un proyecto que lleva 2 meses en Ejecución Viva (Basado sobre Línea Base "V1")
+    When el PM requiera estirar los tiempos un 30% a solicitud formal del cliente
+    Then el sistema permite pausar y "Reprogramar" formalmente el nodo vivo en el lienzo visual de la Pantalla 10.B
+    And fuerza al PM a guardar y pisar una nueva Línea Base Evolutiva (Ej: V2_Reprogramada), preservando en el log histórico la desviación financiera/temporal ocurrida frente al V1 primitivo para auditoría de Gerencia.
+
+  Scenario: Hot-Swaps en Cabina de Mando (Reasignación de Silla Ejecutiva) (CA-7)
+    Given una tarea vital (T4) de Línea Base activa rebotando infructuosamente en el Workdesk del analista 'Pedro' por su ausencia repentina
+    When el Project Manager se adentra en la Pantalla 10.B (Cabina General Gantt Transaccional) e invoca la tarjeta temporal viva (T4)
+    Then el sistema posibilita el borrado nominal en duro de 'Pedro' para inyectar sobre vuelo el usuario 'Luis'
+    And el motor BPMN retira perentoriamente la carta de la delegación de Pedro, materializándola sincrónicamente en el Workdesk de su co-equipero para no frustrar la métrica de entrega del T4.
+
+  Scenario: Modos Flexibles de Reclamo (Pool vs Empleado Directo) (CA-8)
+    Given la responsabilidad del PM de instanciar tareas en el motor Gantt
+    Then el PMo goza del Switch parametrizable de Asignamiento en su UX
+    And ostenta la facultad imperativa de designar nominalmente la Tarea Hacia un Usuario Exacto (`maria.lopez`)
+    And o puede prescindir de asimetrías tácticas y tirarlo en bandeja común al Grupo Jerárquico General ("Equipo Legal"), forzando que ellos ejerzan Auto-Apropiación (US-002: Claim Task) por competencia.
+    
+  # NOTA CONTEXTUAL PO: (CA-9 Camino Crítico PERT) y (CA-10: Avance Financiero EVM) diferidos expresamente a V2 del MVP.
+```
+**Trazabilidad UX:** Wireframes Pantalla 10.B (Planner Tradicional - Gantt) y Pantalla 1 (Workdesk).
+
+---
+
+
+
 ## ÉPICA 7: Dashboards y Reportería Operativa (BAM)
 Exposición de la salud de los procesos en vuelo para la toma de decisiones gerenciales.
 
@@ -1723,6 +1729,26 @@ Feature: Process Health Analytics
 **Trazabilidad UX:** Wireframes Pantalla 5 (Dashboards y Panel de Control - BAM).
 
 ---
+
+### US-018: Métricas de desempeño y calidad
+**Como** líder de operación/servicio
+**Quiero** ver métricas de desempeño del asistente
+**Para** medir Retorno de Inversión (ROI) y mejora continua.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Cuadro de Mando de Desempeño Inteligente (AI Dashboards)
+  Scenario: Consolidación de retorno y eficiencia
+    Given el Líder de Operación ingresa al dashboard
+    Then puede reportar la tasa de aceptación, edición, rechazo, y tiempo medio de respuesta
+    And visualizar las acciones orgánicas creadas segmentadas por buzón y por idioma
+    And configurar comparativas "antes vs después" mediante un 'baseline' histórico
+    And visualizar en un panel de control la telemetría de fallos de integración (Graph/CRM)
+```
+**Trazabilidad UX:** Wireframes Pantalla 5 (Dashboards / BAM).
+
+---
+
 
 ## ÉPICA 8: Generador Documental Jurídico (SGDEA)
 *(SHOULD HAVE)* - Producción controlada de artefactos legales a partir del estado final de un caso.
@@ -1777,9 +1803,115 @@ Feature: Legal PDF Generation from Template
 ```
 **Trazabilidad UX:** Wireframes Pantalla 12 (Bóveda Documental y Generación).
 
+### US-035: Integración SharePoint y Auditoría Documental
+**Como** Analista / Auditor de Cumplimiento
+**Quiero** que el iBPMS gestione los expedientes en SharePoint manteniendo trazabilidad matemática estricta
+**Para** garantizar que la evidencia aportada por clientes o generada por IA sea inmutable, centralizada y legalmente auditable.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: SharePoint Vault and Single Source of Truth
+  Scenario: Almacenamiento Delegado Basado en Enlaces (CA-1)
+    Given la subida de un documento de 10MB en la Pantalla 16 (Intake)
+    Then la arquitectura postula a SharePoint como "Single Source of Truth" físico de los PDFs
+    And el iBPMS únicamente almacena en su base de datos relacional la URL directa del activo, su ID referencial y la Metadata de auditoría, evadiendo duplicación de costos de Storage (S3).
+
+  Scenario: Creación Dinámica de Taxonomía Sub-Carpetas (CA-2)
+    Given un Arquitecto modelando una captura documental en la Pantalla 6
+    When configura la actividad paramétricamente para generar "Casos Independientes"
+    Then el iBPMS expone un Pop-Up para definir la ruta base en SharePoint
+    And en tiempo de ejecución, el motor invoca el API de SharePoint creando proactivamente la sub-carpeta unívoca para ese expediente (Ej: `/ProcesoA/Caso1234/`) antes de inyectar los documentos.
+
+  Scenario: Elusión de Seguridad Perimetral SharePoint (Service Account) (CA-3)
+    Given un Usuario de Negocio que posee Rol de Lectura en el iBPMS pero carece de licencia SharePoint
+    Then el módulo documental utiliza un App Registration (Súper Cuenta de Servicios - EntraID) para extraer el PDF del repositorio
+    And lo proyecta en la Pantalla 12 evadiendo los bloqueos nativos de SharePoint frente al usuario final.
+    # NOTA: Diferido a V2 el "RBAC Cruzado" (User Delegation OAuth2).
+```
+**Trazabilidad UX:** Wireframes Pantalla 12 (Bóveda Documental SGDEA Central).
+```gherkin
+  Scenario: Marcado Metadato para Tablas de Retención V1 (CA-4)
+    Given la necesidad legal de destruir tutelas tras 5 años (TRD)
+    Then en la V1, el iBPMS inyecta una Fecha de Expiración como Metadato estructurado directo a la taxonomía de SharePoint
+    And delega la incineración automatizada (Deletion Policies) al motor nativo de Microsoft 365.
+    # NOTA: Diferido a V1.2 el cronómetro destructor interno propio del iBPMS.
+
+  Scenario: Inmutabilidad por Versionamiento Incremental (CA-5)
+    Given un analista intentando "Reemplazar" un contrato que quedó mal redactado en el sistema
+    Then en el expediente de la Pantalla 12 el botón de sobre-escritura destructiva está censurado
+    And forcejea la obligatoriedad funcional de subir el nuevo archivo bajo el mecanismo de "Nueva Versión" (v1.1) reteniendo acceso forense e inmutable al borrador v1.0.
+
+  Scenario: Despacho de Integración E-Signature (CA-6)
+    Given un documento generado que requiere validez legal del firmante
+    Then el Módulo Documental posee el andamiaje (Hooks) para interactuar vía API con proveedores de Firma Digital (Ej: DocuSign/AdobeSign)
+    And actualiza el estado del expediente en la Pantalla 12 a "Firmado" una vez los Webhooks Inbound confirman el OTP legal del ciudadano.
+
+  Scenario: Componente Visor Empotrado (Iframe Preview) (CA-7)
+    Given la necesidad de leer un anexo para tomar una decisión en un proceso
+    Then la interfaz de Tareas (Pantalla 12 empotrada en Workdesk) renderiza un Visor de Documentos Nativos asíncrono
+    And impide obligar al analista a descargar el PDF ciegamente hacia las carpetas `Descargas/` locales de su Sistema Operativo, reteniendo el foco en el flujo iBPMS.
+
+  Scenario: Blindaje Criptográfico Anti-Fraude (SHA-256) (CA-8)
+    Given la delegación del archivo físico hacia el servidor SharePoint de TI (CA-1)
+    Then en el milisegundo anterior a la carga, el iBPMS calcula el HASH criptográfico SHA-256 del binario original
+    And sella esta huella matemática inmutablemente en la Base de Datos transaccional del iBPMS para detectar futuras y silenciosas alteraciones directamente en SharePoint.
+
+  Scenario: Lector Óptico Diferido (OCR Zonal) (CA-9)
+    Given imágenes de documentos de identidad (Cédulas) escaneadas
+    Then en V1 estas se gestionan como Binary/Image objects convencionales
+    # NOTA: Diferido a V2 el procesamiento neuronal OCR para extracción estructurada de texto zonal.
+
+  Scenario: Inyección Activa de Metadata de Negocio (CA-10)
+    Given el traspaso exitoso del documento PDF hacia la granja SharePoint
+    Then el iBPMS adjunta un Payload extendido de Propiedades Personalizadas (Ej: `ibpms_processName`, `ibpms_caseStatus`) al nodo del documento
+    And permitiendo a los usuarios externos buscar documentos utilizando las herramientas de búsqueda Nativas de O365 mediante filtros semánticos del negocio.
+
+  Scenario: Límite Infraestructural de Carga y Silencio Parcial (CA-11)
+    Given un usuario intentando subir un archivo estúpidamente pesado (Ej: Video 4K de 5GB)
+    Then la Pantalla 12 intercepta la carga en el Fronend guiada por un parámetro global `MAX_FILE_SIZE` (Ej: 50MB) configurado por IT
+    And emite un error de UI "genérico" o "silencioso" al usuario final (Ej: "Error en la Carga, archivo muy pesado")
+    And simultáneamente dispara una alerta técnica detallada en el Log del Administrador del Sistema para auditoría de abusos.
+
+  Scenario: Lista Blanca Estricta de Extensiones (MIME Types) (CA-12)
+    Given el riesgo inminente de inyección de Malware (Ej: `.exe`, `.bat`)
+    Then la Bóveda SGDEA opera exclusivamente bajo arquitectura de "Lista Blanca" (Whitelist)
+    And rechaza radicalmente cualquier archivo que no esté explícitamente parametrizado (Ej: `application/pdf`, `image/jpeg`, `application/msword`).
+
+  Scenario: Visibilidad Transparente de Atributos de Auditoría (CA-13)
+    Given la Tabla/Grilla visual del expediente en Pantalla 12
+    Then el diseño UI no esconde la data legal
+    And expone nativamente en columnas primarias la "Fecha Extrema (Vencimiento TRD)" y el "Hash SHA-256" para que el analista confirme la inmutabilidad física con un solo vistazo.
+    # NOTA: Opciones de "Botón del Pánico/Censura de archivos erróneos" diferido a V2.
+
+  Scenario: Consolidación Multi-Anexo (PDF Merge Tool) (CA-14)
+    Given un expediente con 10 archivos PDF fragmentados que deben enviarse a una Superintendencia
+    Then la Pantalla 12 posee un botón de acción masiva `[Combinar PDFs (Merge)]`
+    And el iBPMS compila transitoriamente las páginas de los archivos seleccionados en un único documento maestro PDF sin corromper los originales.
+
+  Scenario: Delegación de Escaneo Anti-Malware (CA-15)
+    Given el ingreso de nuevos documentos a la Bóveda
+    Then la arquitectura V1 asume ciegamente la robustez de los Defensores Nativos de Microsoft
+    And confía en que SharePoint 365 interceptará virus silenciosamente, librando al iBPMS de conectar con AntiVirus dedicados en este MVP.
+    # NOTA: Herramientas de "Anotación Gráfica (Highlighting)" sobre PDFs diferidas a V1.2.
+
+  Scenario: Búsqueda Semántica Delegada (Full-Text Search) (CA-16)
+    Given un analista utilizando el buscador global del iBPMS para buscar la palabra "Tornillo"
+    Then el iBPMS delega la consulta profunda al motor nativo de indexación de SharePoint
+    And este último busca el término *dentro del contenido textual* de los PDFs y devuelve los matches, inyectando los resultados en la UI del iBPMS.
+
+  Scenario: Orquestación SGDEA a Inteligencia RAG (Vectorización Segura) (CA-17)
+    Given un analista en Pantalla 12 que decide oprimir `[Usar para IA]` sobre un contrato de 100 páginas
+    Then el módulo documental envía asíncronamente el ID de ese archivo a la "Cola de Eventos IA (RabbitMQ - CA-34)"
+    And el cerebro LLM procede a desencolar y devorar el contenido (si es PDF o WORD habilitado) para poblar su memoria de Embeddings sin congelar la ventana del usuario.
+```
+**Trazabilidad UX:** Wireframes Pantallas 12, 16 y 6.
+
 ---
 
-## ÉPICA 9: M365 Copilot & Bandeja Docketing (Transicionado a MVP V1)
+
+---
+
+## ÉPICA 9: Inteligencia Artificial, MLOps y Buzones SAC
 *(Esta épica fue pivotada de V2 a V1 para garantizar el Product-Market Fit como plataforma AI-First).*
 
 ### US-011: Filtrado Transversal en Bandeja Avanzada (Docketing)
@@ -2096,30 +2228,78 @@ Feature: Configuración de 'Mailbox Policy' Dinámicas
     Given que el conector IMAP/GraphAPI de Office 365 pierde permisos sobre un buzón (Sesión expirada o revocada)
     Then el iBPMS dejará de leer el buzón en silencio
     And levantará de inmediato una "Alerta Crítica Visual" en la Pantalla 15.B (Local) marcando el buzón en Rojo.
+```
 **Trazabilidad UX:** Wireframes Pantalla 15.B (Configuración Local de Buzones SAC).
 
 ---
 
-### US-018: Métricas de desempeño y calidad
-**Como** líder de operación/servicio
-**Quiero** ver métricas de desempeño del asistente
-**Para** medir Retorno de Inversión (ROI) y mejora continua.
+### US-037: CRUD de Conexiones de Buzones (Intake API)
+**Como** Súper Administrador del Sistema
+**Quiero** registrar y administrar libremente las cuentas de correo corporativo conectadas al iBPMS
+**Para** definir de dónde el motor saca la información, qué protocolo usar, con qué frecuencia y a qué proceso BPMN enruta por defecto cuando la Inteligencia Artificial (Agente 3) no logra deducirlo.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Cuadro de Mando de Desempeño Inteligente (AI Dashboards)
-  Scenario: Consolidación de retorno y eficiencia
-    Given el Líder de Operación ingresa al dashboard
-    Then puede reportar la tasa de aceptación, edición, rechazo, y tiempo medio de respuesta
-    And visualizar las acciones orgánicas creadas segmentadas por buzón y por idioma
-    And configurar comparativas "antes vs después" mediante un 'baseline' histórico
-    And visualizar en un panel de control la telemetría de fallos de integración (Graph/CRM)
+Feature: Configuración de Orígenes SAC (Mailbox CRUD)
+  Scenario: Soporte Multi-Protocolo de Conexión (Arch. Abierta) (CA-1)
+    Given la ventana de registro de un nuevo Buzón SAC
+    Then el Administrador tiene la opción de elegir el tipo de Conector
+    And soporta autenticación moderna (OAuth 2.0 / MS Graph API) para ecosistemas Microsoft
+    And soporta simultáneamente configuración legacy (IMAP / SMTP) con usuario y contraseña genéricos (Ej: Gmail, cPanel) para una arquitectura V1 abierta.
+
+  Scenario: Centralización del Poder Organizacional (CA-2)
+    Given el formulario de gestión de cuentas (Pantalla 15)
+    Then este módulo está fuertemente bloqueado y pertenece exclusivamente al Súper Administrador
+    And un "Líder de Área SAC" NO puede agregar un correo nuevo de forma autónoma, forzando un esquema de gobierno centralizado por IT.
+
+  Scenario: Trazabilidad de Fallo (BPMN Default Rule) (CA-3)
+    Given un correo altamente ininteligible donde el Agente MLOps (Agente 3) falla en deducir su categoría
+    Then la configuración del buzón cuenta con un campo obligatorio: `[Proceso BPMN de Caída por Defecto]`
+    And el iBPMS enrutará ciegamente este correo hacia ese proceso genérico pre-seleccionado (Ej: "Trámite de Reclamo Manual") para no dejar correos "en el limbo".
+
+  Scenario: Sincronización Programada (Polling) y Manual (CA-4)
+    Given la infraestructura de recolección de correos
+    Then el sistema utiliza un Job de Polling configurado bajo mejores prácticas (Ej: cada 5 minutos) para evitar ahogar al servidor
+    And expone adicionalmente un botón táctico `[🔄 Sincronizar Buzón Ahora]` en el Frontend para que el Administrador fuerce la lectura a demanda inmediata.
+
+  Scenario: Ping de Conexión en Vivo Obligatorio (CA-5)
+    Given el administrador registrando credenciales de MS Graph (OAuth)
+    When oprime el botón de Guardar
+    Then el iBPMS pausa el registro y dispara un ping transaccional en caliente contra el tenant de Microsoft
+    And solo permite crear formalmente el Origen de Datos si Microsoft responde con un token 200 OK, abortando el proceso si las credenciales fallan.
+
+  Scenario: Réplica Operativa iBPMS vs Exchange (No Destructiva) (CA-6)
+    Given el proceso de "chupar" correos (Ingesta)
+    Then el iBPMS NUNCA ejecuta comandos de `DELETE` físico contra el Exchange de origen por el simple hecho de leerlos
+    And genera un folio replicado en la base de datos propia. Si un Súper Admin decide borrar (Hard-Delete) el caso en el iBPMS, el motor envía una instrucción de *Soft-Delete* hacia Microsoft (Mover a Papelera / Archivo) manteniendo la paridad.
+
+  Scenario: Gobernalización Central del Blacklist en V1 (CA-7)
+    Given la necesidad de bloquear SPAM o dominios maliciosos
+    Then en el MVP (V1) la Pantalla 15 NO reconstruye formularios de Blacklist/Whitelist
+    And delega el filtrado anti-spam 100% a las políticas perimetrales nativas configuradas por IT en Microsoft Exchange. (Reglas bidireccionales por API diferidas a V2).
+
+  Scenario: Silenciador de Emergencia Táctil (CA-8)
+    Given un ataque de SPAM o falla lógica en el enrutamiento de un Buzón
+    Then la grilla del CRUD expone un Toggle Switch `[En Vivo / Pausado]` de desconexión inmediata
+    And permite suspender temporalmente el Job de Polling para ese buzón en específico sin borrar permanentemente el registro ni sus tokens almacenados.
+
+  Scenario: Excepción de Límites de Carga por Dominio (CA-9)
+    Given que el límite global de archivos adjuntos del iBPMS es de 50MB
+    Then el formulario del Buzón permite configurar un `Override`
+    And otorga la capacidad de definir un límite en Megabytes customizado exclusivo para los correos succionados por esa cuenta en particular (Ej: 100MB para `planos@`).
+
+  Scenario: Auditoría de Caducidad de Tokens M2M (CA-10)
+    Given que los Secretos de Cliente OAuth en Entra ID caducan cada 6 meses
+    Then la Pantalla 15 debe calcular el tiempo de vida de la conexión
+    And si las credenciales fallan, el iBPMS inyecta una alerta en el Log de Auditoría y envía una notificación estructurada a los Administradores advirtiendo la desconexión del SAC.
 ```
-**Trazabilidad UX:** Wireframes Pantalla 5 (Dashboards / BAM).
+**Trazabilidad UX:** Pantalla 15 (Configuraciones Genéricas / Logs).
 
 ---
 
-## ÉPICA 10: Service Delivery (Catálogo de Servicios CRM Federado)
+
+
+## ÉPICA 10: Service Delivery CRM, Intelligent Intake y Portal B2C
 Implementar el paradigma de Delivery separando la "Definición Comercial" (CRM) de la "Ejecución Operativa" (iBPMS) mediante un catálogo consultado en tiempo real.
 
 ### US-019: Conectividad Resiliente y Modo Degradado
@@ -2205,6 +2385,7 @@ Feature: CRON y Sincronización Nocturna del Catálogo
     And cientos de agentes de Call Center operando dentro del iBPMS
     Then el servidor (Node.js/Spring Boot) despachará un evento Push/WebSocket hacia los clientes conectados.
     And los menús desplegables de "Catálogo de Servicios" se refrescarán y re-renderizarán automáticamente en la UI de todos los usuarios sin exigirles presionar F5.
+```	
 **Trazabilidad UX:** Tarea Backend (Sin Vista UI requerida).
 
 ---
@@ -2232,9 +2413,6 @@ Feature: Mapeo Configurable CRM a iBPMS
 **Trazabilidad UX:** Afecta a la **Pantalla 0: Service Catalog** y la **Pantalla 11: Hub de Integraciones**.
 
 ---
-
-## ÉPICA 11: Intelligent Intake y Vistas Híbridas por Rol (Service Delivery)
-Definir un modelo controlado de instanciación de procesos ("Plan A" vía correo y "Plan B" manual restrictivo), eliminando el anti-patrón de crear procesos BPMN basura ante simples respuestas de correo electrónico o alertas SPAM.
 
 ### US-022: Disparo 'Confirm-to-Create' por Correo (Plan A)
 **Como** Líder de SAC (Servicio al Cliente)
@@ -2365,126 +2543,6 @@ Feature: Intake Manual Plan B (Seguridad)
 ```
 
 **Trazabilidad UX:** Wireframes Pantalla 16 (Intake Administrativo).
-
----
-
-### US-040: Embudo Inteligente de Intake (Pre-Triaje y Descarte IA)
-**Como** Administrador / Líder de Service Delivery
-**Quiero** visualizar las Action Cards generadas por IA del Plan A en un formato de embudo de cuarentena
-**Para** decidir si las instancio forzosamente rellenando huecos, si apruebo la intención de la IA (Convirtiéndolos en Service Delivery BPMN) o si los descarto.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Intelligent Intake Funnel Management
-  Scenario: Virtual Scroll / Paginación en Embudo
-    Given el Administrador abre la Pantalla 16
-    When la base de datos contiene más de 25 Intakes en Cuarentena
-    Then el API del Backend debe soportar paginación dura (`?limit=25&offset=0`) con opciones de página de 25, 50 o 100 elementos
-    
-  Scenario: SLA de Embudo "Cuarentena"
-    Given un Intake capturado vía correo ha estado en cuarentena por un tiempo mayor al configurado en las políticas globales (SLA Default)
-    Then el Backend debe marcar el registro con una bandera de 'SLA_BREACHED'
-    And el Frontend debe renderizar esa fila o Card resaltada en color rojo en la Pantalla 16
-    
-  Scenario: Feedback MLOps Post-Descarte
-    Given el Administrador da clic en el botón [ 🗑️ Descartar ] sobre un Intake
-    Then el Backend no ejecuta un borrado físico inmediato (Hard Delete)
-    And emite un evento (Notificación webhook) al subsistema de Inteligencia Artificial para el reentrenamiento
-    And finalmente marca el registro con un 'Soft Delete' y lo oculta del Frontend
-    
-  Scenario: Forzar Mapeo Manual con CRM Opcional
-    Given el Administrador da clic en el botón [ ✏️ Forzar Mapeo Manual ] por fallo de la IA
-    When se despliega el Modal de catálogos agrupados para forzar la creación manual
-    Then el campo `CRM_ID` debe ser opcional (nullable en base de datos)
-    And si las variables extraídas por el correo están incompletas (Ej. Falta "Monto"), el proceso debe instanciarse de todas formas en Camunda omitiendo esa restricción. La variable será exigida posteriormente a nivel de Tarea Humana (Workdesk).
-    
-  Scenario: Prevención de Concurrencia Optimista
-    Given dos Administradores ('Admin_A' y 'Admin_B') visualizan el mismo Intake en Cuarentena en la Pantalla 16 simultáneamente
-    When 'Admin_A' aprueba el Intake y 2 segundos después 'Admin_B' intenta aprobar el mismo Intake
-    Then el Backend debe rechazar la segunda petición mediante validación de control de concurrencia optimista (EJ: `@Version` en el Entity) o validación de estado.
-    
-  Scenario: Ventana de Gracia / Botón "Deshacer"
-    Given el Administrador presiona "Aprobar Creación" en el Embudo
-    When el Frontend envía el payload de creación al Backend
-    Then el Frontend debe renderizar un 'Toast' interactivo con botón `[Deshacer]` visible y activo por N segundos paramétricos (Ej: 10s)
-    And el Backend postergará el gatillado asíncrono hacia Camunda hasta que expire dicha ventana de gracia, permitiendo abortar limpiamente.
-    
-  Scenario: Restricción de Anexos por RBAC (Link a Inbox)
-    Given un Administrador revisa un Intake en la Pantalla 16
-    When hace clic para ver detalles del correo original ("Link to Inbox")
-    Then el Frontend verifica si los roles del usuario logueado coinciden con los roles permitidos en el Inbox de SAC
-    And si coinciden, lo enruta a la Pantalla 1B para ver el correo íntegro con Anexos descargables
-    And si no coinciden, muestra únicamente un 'Summary/Plain Text' en un panel o modal, sin los adjuntos originales.
-
-  Scenario: SLA Diferenciado para Creación (Semilla)
-    Given múltiples correos entrantes procesados por la IA
-    When el motor genera "Action Cards" en estado "Pendiente_De_Validacion_Plan_A"
-    Then el sistema muestra únicamente tarjetas clasificadas como 'Nueva Instancia (Semilla)'
-    And permite parametrizar acuerdos de nivel de servicio (SLA) para la atención de estas tarjetas en el embudo
-    And nota: Las tarjetas de tipo "Aporte a Caso Vivo (Inyección)" quedan aplazadas para el MVP V2, el sistema V1 no generará sugerencias sobre instancias en vuelo.
-
-  Scenario: Agrupación y Filtro por Plantilla Sugerida
-    Given un embudo saturado con centenares de Action Cards
-    Then la interfaz expone filtros multifunción que permiten al Administrador aislar u ordenar las tarjetas
-    And permite filtrar específicamente por la "Plantilla Sugerida" por la IA para procesar en lote todas las tarjetas de un mismo tipo de trámite.
-
-  Scenario: Alerta de Vencimiento de SLA y Notificación a Jefatura
-    Given una Action Card estacionada en el embudo cuyo temporizador SLA expira
-    Then la tarjeta cambia visualmente a color ROJO en la grilla de la Pantalla 16
-    And el sistema dispara un evento unificado enviando un correo electrónico y una alerta in-app al "Jefe / Supervisor" parametrizado orgánicamente para ese Administrador o Buzón.
-
-  Scenario: Completitud Forzosa, Guardado de Borradores y Continuidad del SLA
-    Given que el administrador presiona [Aprobar] en una tarjeta incompleta
-    Then el sistema despliega un Modal bloqueante exigiendo diligenciar los campos
-    And permite utilizar el botón [Guardar Borrador] para persistir el avance parcial sin perder datos
-    And el reloj del SLA de Cuarentena NO se congela durante este estado de borrador, continuando su conteo natural para mantener la métrica de eficiencia intacta.
-
-  Scenario: Rutas de Asignación (Directa vs Pool)
-    Given el Administrador que completa una Action Card correctamente
-    When procede a confirmarla para crear el Service Delivery
-    Then el formulario le ofrece dos modos de asignación del caso naciente:
-    And 1. Asignación Directa: Escoger en un combo a un operario específico (Ej: Pedro Hernández).
-    And 2. Envío a Pool: Dejar la asignación abierta para que caiga a la bandeja general y sea tomada por demanda.
-
-  Scenario: Delegación de Cuarentena (Reasignación entre Administradores)
-    Given una Action Card en el embudo asignada por defecto a un Administrador Central
-    When este administrador determina que no posee el conocimiento para validarla
-    Then puede usar un botón [Reasignar Tarjeta] para transferir la propiedad exclusiva de esa tarjeta en cuarentena hacia el embudo de otro Administrador perito.
-
-  Scenario: Papelera de Reciclaje Transitoria (Soft Delete temporal)
-    Given el Administrador presiona [Descartar] sobre una Action Card
-    Then la tarjeta desaparece de la vista principal del Embudo
-    And es movida a una vista de "Papelera de Reciclaje" en la Pantalla 16
-    And el sistema ejecuta un Job programado que elimina física y definitivamente (Hard Delete SQL) esta tarjeta tras 2 días hábiles (Time-To-Live).
-
-  Scenario: Recuperación Total desde la Papelera (Restaurar como Nueva)
-    Given un Administrador buscando una Action Card descartada por error en la Papelera de Reciclaje
-    When oprime el botón [Restaurar]
-    Then la tarjeta abandona la papelera y reingresa a la cabecera (inicio) de la vista principal del Embudo
-    And es tratada operativamente como una tarjeta nueva reiniciando o adaptando su contexto de SLA para permitir su procesamiento.
-
-  Scenario: Edición de Datos en Modo Papelera (Admin Override)
-    Given una Action Card descartada habitando temporalmente en la Papelera
-    When un Administrador con los privilegios adecuados accede a inspeccionarla
-    Then este posee el botón de [Editar] activo, permitiéndole alterar y corregir las variables o metadatos extraídos originales antes o durante el acto de restaurarla hacia el embudo principal.
-
-  Scenario: Triunfo del Humano sobre la Máquina (Concurrencia vs IA)
-    Given una tarjeta en el Embudo a punto de auto-aprobarse por la IA en el background tras una re-evaluación
-    When un Administrador humano presiona [Descartar] o interactúa con la misma tarjeta en ese mismo milisegundo
-    Then el motor de base de datos otorga prioridad absoluta a la transacción humana, bloqueando y revirtiendo la auto-instanciación de la IA.
-
-  Scenario: Auto-Aprobación MLOps (Feature Toggle Opcional)
-    Given la configuración del sistema global
-    Then el administrador posee una bandera 'Feature Toggle' para encender la "Auto-Instanciación IA"
-    And si está encendido y el modelo supera el 98% de confianza, la tarjeta se aprueba sola saltando el embudo humano.
-
-  Scenario: Distintivo Visual de Origen IA en Workdesk Operativo
-    Given una Instancia inyectada generada a partir de la aprobación de una Action Card (Manual o Automática)
-    When el operador de Trinchera la recibe y visualiza en su lista del Workdesk (Inbox Pantalla 5)
-    Then el Frontend renderiza un distintivo gráfico inconfundible (Ej: Ícono de IA o Marco de color)
-    And alerta al operador que la existencia de este caso provino originalmente de deducción MLOps.
-```
-**Trazabilidad UX:** Wireframes Pantalla 16 (Intelligent Intake y Embudo Administrativo).
 
 ---
 
@@ -2714,194 +2772,126 @@ Feature: External Customer Portal (Service Delivery)
 ```
 **Trazabilidad UX:** Wireframes Pantalla 18 (Portal B2B/B2C del Cliente).
 
-**Trazabilidad UX:** Wireframes Pantalla 18 (Portal B2B/B2C del Cliente).
 
 ---
 
-## ÉPICA 12: Gobierno de Identidad y Accesos (RBAC Multirrol)
-Garantizar que la plataforma soporta el modelo corporativo real donde un usuario ejerce múltiples funciones simultáneamente mediante asignación de múltiples roles y grupos de EntraID.
-
-### US-038: Asignación Multi-Rol y Sincronización EntraID
-**Como** Administrador de Seguridad
-**Quiero** asignar o sincronizar múltiples roles (Globales y de Proceso) a un mismo usuario autenticado
-**Para** que pueda acceder a las distintas bandejas y tareas correspondientes a todos sus 'sombreros' operativos sin necesidad de tener cuentas separadas.
+### US-040: Embudo Inteligente de Intake (Pre-Triaje y Descarte IA)
+**Como** Administrador / Líder de Service Delivery
+**Quiero** visualizar las Action Cards generadas por IA del Plan A en un formato de embudo de cuarentena
+**Para** decidir si las instancio forzosamente rellenando huecos, si apruebo la intención de la IA (Convirtiéndolos en Service Delivery BPMN) o si los descarto.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Multitenant RBAC & Multiple Roles Assignment
+Feature: Intelligent Intake Funnel Management
+  Scenario: Virtual Scroll / Paginación en Embudo
+    Given el Administrador abre la Pantalla 16
+    When la base de datos contiene más de 25 Intakes en Cuarentena
+    Then el API del Backend debe soportar paginación dura (`?limit=25&offset=0`) con opciones de página de 25, 50 o 100 elementos
+    
+  Scenario: SLA de Embudo "Cuarentena"
+    Given un Intake capturado vía correo ha estado en cuarentena por un tiempo mayor al configurado en las políticas globales (SLA Default)
+    Then el Backend debe marcar el registro con una bandera de 'SLA_BREACHED'
+    And el Frontend debe renderizar esa fila o Card resaltada en color rojo en la Pantalla 16
+    
+  Scenario: Feedback MLOps Post-Descarte
+    Given el Administrador da clic en el botón [ 🗑️ Descartar ] sobre un Intake
+    Then el Backend no ejecuta un borrado físico inmediato (Hard Delete)
+    And emite un evento (Notificación webhook) al subsistema de Inteligencia Artificial para el reentrenamiento
+    And finalmente marca el registro con un 'Soft Delete' y lo oculta del Frontend
+    
+  Scenario: Forzar Mapeo Manual con CRM Opcional
+    Given el Administrador da clic en el botón [ ✏️ Forzar Mapeo Manual ] por fallo de la IA
+    When se despliega el Modal de catálogos agrupados para forzar la creación manual
+    Then el campo `CRM_ID` debe ser opcional (nullable en base de datos)
+    And si las variables extraídas por el correo están incompletas (Ej. Falta "Monto"), el proceso debe instanciarse de todas formas en Camunda omitiendo esa restricción. La variable será exigida posteriormente a nivel de Tarea Humana (Workdesk).
+    
+  Scenario: Prevención de Concurrencia Optimista
+    Given dos Administradores ('Admin_A' y 'Admin_B') visualizan el mismo Intake en Cuarentena en la Pantalla 16 simultáneamente
+    When 'Admin_A' aprueba el Intake y 2 segundos después 'Admin_B' intenta aprobar el mismo Intake
+    Then el Backend debe rechazar la segunda petición mediante validación de control de concurrencia optimista (EJ: `@Version` en el Entity) o validación de estado.
+    
+  Scenario: Ventana de Gracia / Botón "Deshacer"
+    Given el Administrador presiona "Aprobar Creación" en el Embudo
+    When el Frontend envía el payload de creación al Backend
+    Then el Frontend debe renderizar un 'Toast' interactivo con botón `[Deshacer]` visible y activo por N segundos paramétricos (Ej: 10s)
+    And el Backend postergará el gatillado asíncrono hacia Camunda hasta que expire dicha ventana de gracia, permitiendo abortar limpiamente.
+    
+  Scenario: Restricción de Anexos por RBAC (Link a Inbox)
+    Given un Administrador revisa un Intake en la Pantalla 16
+    When hace clic para ver detalles del correo original ("Link to Inbox")
+    Then el Frontend verifica si los roles del usuario logueado coinciden con los roles permitidos en el Inbox de SAC
+    And si coinciden, lo enruta a la Pantalla 1B para ver el correo íntegro con Anexos descargables
+    And si no coinciden, muestra únicamente un 'Summary/Plain Text' en un panel o modal, sin los adjuntos originales.
 
-  # A. El Inicio de Sesión y la Muerte Súbita
-  Scenario: Revocación Inmediata de Acceso (CA-1)
-    Given un usuario operando activamente dentro del iBPMS
-    When su cuenta es desactivada o removida de todos los grupos de acceso en EntraID (Directorio Activo)
-    Then el sistema debe detectar la invalidez del Token y expulsarlo inmediatamente hacia la pantalla de Login
-    And no permitirá la ejecución de ninguna transacción en vuelo, arrojando HTTP 401 Unauthorized.
+  Scenario: SLA Diferenciado para Creación (Semilla)
+    Given múltiples correos entrantes procesados por la IA
+    When el motor genera "Action Cards" en estado "Pendiente_De_Validacion_Plan_A"
+    Then el sistema muestra únicamente tarjetas clasificadas como 'Nueva Instancia (Semilla)'
+    And permite parametrizar acuerdos de nivel de servicio (SLA) para la atención de estas tarjetas en el embudo
+    And nota: Las tarjetas de tipo "Aporte a Caso Vivo (Inyección)" quedan aplazadas para el MVP V2, el sistema V1 no generará sugerencias sobre instancias en vuelo.
 
-  Scenario: Prevención del Secuestro de Roles (CA-2)
-    Given un usuario que ayer poseía el rol "Líder_SAC" pero que hoy le fue revocado en EntraID
-    When el usuario con una sesión antigua (Token vivo de ayer) intenta aprobar un reclamo
-    Then el backend intercepta la petición y valida asíncronamente los Claims actuales antes del Commit
-    And rechaza la operación si el rol ya no le pertenece, forzando un refresco de sus permisos (Log-Out silencioso o recarga de la Master Page).
+  Scenario: Agrupación y Filtro por Plantilla Sugerida
+    Given un embudo saturado con centenares de Action Cards
+    Then la interfaz expone filtros multifunción que permiten al Administrador aislar u ordenar las tarjetas
+    And permite filtrar específicamente por la "Plantilla Sugerida" por la IA para procesar en lote todas las tarjetas de un mismo tipo de trámite.
 
-  # B. La Pelea de Permisos
-  Scenario: Resolución de Permisos Contradictorios (Regla del Más Restrictivo) (CA-3)
-    Given un usuario que hereda simultáneamente un "Rol A" (Permite Borrado) y un "Rol B" (Prohíbe Borrado estricto) sobre el mismo objeto
-    When el motor de políticas de Vue y Spring Security evalúan el acceso
-    Then el sistema debe resolver el conflicto aplicando siempre "La Regla del Rol Más Restrictivo" (Deny-Overrides)
-    And inhabilitando físicamente el botón de [Borrar] en la UI.
+  Scenario: Alerta de Vencimiento de SLA y Notificación a Jefatura
+    Given una Action Card estacionada en el embudo cuyo temporizador SLA expira
+    Then la tarjeta cambia visualmente a color ROJO en la grilla de la Pantalla 16
+    And el sistema dispara un evento unificado enviando un correo electrónico y una alerta in-app al "Jefe / Supervisor" parametrizado orgánicamente para ese Administrador o Buzón.
 
-  Scenario: Detección de Conflicto de Segregación de Funciones (Juez y Parte) (CA-4)
-    Given un usuario al que se le han asignado por error los roles exclusivos de "Creador de Pedido" y "Aprobador Financiero"
-    When el usuario inicia sesión
-    Then el sistema le permite ingresar y operar
-    And dispara inmediatamente una Alerta Roja asíncrona ("Conflicto SoD Detectado") hacia el Módulo de Anomalías del Administrador
-    And dejará una traza en la Auditoría etiquetando todas las transacciones de este usuario con un flag `WARNING_SoD_CONFLICT` hasta que el administrador depure sus roles en el AD.
+  Scenario: Completitud Forzosa, Guardado de Borradores y Continuidad del SLA
+    Given que el administrador presiona [Aprobar] en una tarjeta incompleta
+    Then el sistema despliega un Modal bloqueante exigiendo diligenciar los campos
+    And permite utilizar el botón [Guardar Borrador] para persistir el avance parcial sin perder datos
+    And el reloj del SLA de Cuarentena NO se congela durante este estado de borrador, continuando su conteo natural para mantener la métrica de eficiencia intacta.
 
-  # C. La Bandeja de Entrada Mágica (Workdesk)
-  Scenario: Consolidación Transversal en el Workdesk (CA-5)
-    Given un usuario con múltiples sombreros (Ej: 3 roles operativos distintos)
-    When abre su vista de Workdesk
-    Then el sistema consolida TODAS sus tareas en una única lista unificada y limpia
-    And NO fragmenta la pantalla en múltiples pestañas ni lo obliga a saltar entre perfiles (La segregación de vistas complejas se abordará en historias de Dashboarding, no en la trinchera operativa).
+  Scenario: Rutas de Asignación (Directa vs Pool)
+    Given el Administrador que completa una Action Card correctamente
+    When procede a confirmarla para crear el Service Delivery
+    Then el formulario le ofrece dos modos de asignación del caso naciente:
+    And 1. Asignación Directa: Escoger en un combo a un operario específico (Ej: Pedro Hernández).
+    And 2. Envío a Pool: Dejar la asignación abierta para que caiga a la bandeja general y sea tomada por demanda.
 
-  Scenario: Insignia de Procedencia del Rol en la Tarjeta (CA-6)
-    Given la lista de tareas unificadas en el Workdesk
-    Then cada tarjeta (Card o Fila) debe inyectar un Badge/Etiqueta visual discreta (Ej: `Rol: Aprobador_Nivel_2`)
-    And explicándole al usuario exactamente bajo qué "Sombrero" o prerrogativa de negocio se le está exigiendo resolver ese caso específico.
+  Scenario: Delegación de Cuarentena (Reasignación entre Administradores)
+    Given una Action Card en el embudo asignada por defecto a un Administrador Central
+    When este administrador determina que no posee el conocimiento para validarla
+    Then puede usar un botón [Reasignar Tarjeta] para transferir la propiedad exclusiva de esa tarjeta en cuarentena hacia el embudo de otro Administrador perito.
 
-  Scenario: Retorno al Pool Común por Renuncia (CA-7)
-    Given una tarea instanciada y encolada específicamente bajo un candidato de rol (Ej: "BPMN_Credito_Aprobador")
-    When el único usuario en toda la empresa que poseía ese rol renuncia y es desactivado
-    Then la tarea NO entra en Dead-Letter ni se pierde en un agujero negro
-    And la tarea permanece visible y viva en el Pool (Cola del Grupo)
-    And esperando a que el Administrador de TI asigne ese rol a un nuevo empleado para que pueda visualizarla y reclamarla.
+  Scenario: Papelera de Reciclaje Transitoria (Soft Delete temporal)
+    Given el Administrador presiona [Descartar] sobre una Action Card
+    Then la tarjeta desaparece de la vista principal del Embudo
+    And es movida a una vista de "Papelera de Reciclaje" en la Pantalla 16
+    And el sistema ejecuta un Job programado que elimina física y definitivamente (Hard Delete SQL) esta tarjeta tras 2 días hábiles (Time-To-Live).
 
-  # D. Infraestructura de Mentiras (Fallas)
-  Scenario: Autenticación de Respaldo por Falla de Azure (Puerta Secreta) (CA-8)
-    Given que la infraestructura de Microsoft EntraID sufre una caída global (HTTP 503)
-    When los usuarios intentan loguearse a través de OAuth/OIDC
-    Then el sistema fallará elegantemente
-    And debe existir una URL local oculta (Backdoor pre-configurado en Frontend) que permita autenticación directa (Email/Contraseña) contra la tabla interna de usuarios
-    And solo disponible para un listado minúsculo de Administradores Locales (Break-Glass Accounts) para mantener la plataforma viva durante la crisis.
+  Scenario: Recuperación Total desde la Papelera (Restaurar como Nueva)
+    Given un Administrador buscando una Action Card descartada por error en la Papelera de Reciclaje
+    When oprime el botón [Restaurar]
+    Then la tarjeta abandona la papelera y reingresa a la cabecera (inicio) de la vista principal del Embudo
+    And es tratada operativamente como una tarjeta nueva reiniciando o adaptando su contexto de SLA para permitir su procesamiento.
 
-  Scenario: Mapeo Flexible de Identidades (CA-9)
-    Given la arquitectura global de autenticación del iBPMS
-    Then el sistema debe soportar tres (3) modos de operación paramétricos para la ingesta de Roles:
-    And 1. Sincronía Total (1:1): Los grupos y roles se inyectan 100% desde Azure EntraID.
-    And 2. IdP Híbrido: Azure solo se usa para el "Login" (Validar existencia), pero el iBPMS asigna localmente sus propios roles en su base de datos.
-    And 3. IdP Local Absoluto: El sistema funge como su propio Autenticador (Módulo interno de Usuarios y Passwords).
+  Scenario: Edición de Datos en Modo Papelera (Admin Override)
+    Given una Action Card descartada habitando temporalmente en la Papelera
+    When un Administrador con los privilegios adecuados accede a inspeccionarla
+    Then este posee el botón de [Editar] activo, permitiéndole alterar y corregir las variables o metadatos extraídos originales antes o durante el acto de restaurarla hacia el embudo principal.
 
-  # E. Auditoría y Rastro de Migas
-  Scenario: Trazabilidad Quirúrgica en Logs (CA-10)
-    Given un usuario multi-rol ejecutando una transacción crítica (Ej: Aprobar Pago)
-    When el Backend estampa el evento en la bitácora de auditoría (AiAuditLogEntity)
-    Then la tupla de base de datos debe almacenar el máximo detalle forense
-    And registrando no solo el `user_id` y `timestamp`, sino también un JSON con el "Contexto de Roles Activos" (`active_claims`) en el milisegundo exacto de la ejecución para peritajes legales.
+  Scenario: Triunfo del Humano sobre la Máquina (Concurrencia vs IA)
+    Given una tarjeta en el Embudo a punto de auto-aprobarse por la IA en el background tras una re-evaluación
+    When un Administrador humano presiona [Descartar] o interactúa con la misma tarjeta en ese mismo milisegundo
+    Then el motor de base de datos otorga prioridad absoluta a la transacción humana, bloqueando y revirtiendo la auto-instanciación de la IA.
 
-  Scenario: Restricción del Préstamo de Llaves (CA-11)
-    Given un empleado multi-rol que se ausenta temporalmente
-    When intenta ceder uno de sus sombreros críticos a un compañero desde la UI de la plataforma
-    Then el Frontend bloquea la intención careciendo de una interfaz para "Transferencia de Roles en Caliente"
-    And obliga procedimentalmente a que el compañero solicite el permiso transitorio a través del conducto regular (Directorio Activo de TI).
+  Scenario: Auto-Aprobación MLOps (Feature Toggle Opcional)
+    Given la configuración del sistema global
+    Then el administrador posee una bandera 'Feature Toggle' para encender la "Auto-Instanciación IA"
+    And si está encendido y el modelo supera el 98% de confianza, la tarjeta se aprueba sola saltando el embudo humano.
 
-  # F. Delegaciones 
-  Scenario: Trazabilidad de la Delegación (Workdesk) (CA-12)
-    Given que María le delega una de sus tareas de Workdesk a Carlos (US-001)
-    When María ejecuta la transferencia
-    Then la auditoría debe grabar el evento indicando "Delegan: María -> Carlos"
-    And la tarea aparece en la bandeja de Carlos junto con un Popup o Banner exigiéndole ACEPTAR o RECHAZAR la delegación encomendada.
-
-  Scenario: Rebote Natural por Rechazo de Delegación (CA-13)
-    Given la delegación pendiente descrita en CA-12
-    When Carlos presiona el botón [Rechazar Delegación] en el Popup
-    Then la tarea abandona inmediatamente el Workdesk de Carlos
-    And vuelve a rebotar como un boomerang regresando a ser la responsabilidad exclusiva en el Workdesk de María (Propietaria original), conservando todo el historial en la auditoría.
-
-  Scenario: Pre-Autorización a Pasajeros Nuevos (CA-14)
-    Given un usuario que acaba de ser contratado e instanciado en Microsoft EntraID hoy a las 8:00 AM
-    When el usuario ingresa por primera vez a la URL del iBPMS a las 8:05 AM
-    Then el sistema NO lo detiene en pantallas de "Cree su perfil" ni "Espere aprobación"
-    And mapea al vuelo (Just-In-Time Provisioning) sus atributos y roles del Token de Azure, dejándolo pasar derecho hacia su Workdesk operativo instantáneamente.
-
-  # G. Visuales (Lo que ve el ojo)
-  Scenario: Rendimiento Estricto en Parseo de Mega-Roles (CA-15)
-    Given un Gerente General que porta un listado demencial de +80 roles y permisos combinados en su perfil de Azure
-    When el usuario hace el proceso de Login y redirección
-    Then el tiempo de cómputo del Frontend para desenredar iterativamente ese árbol de permisos y renderizar el Layout (Sidebar/Header)
-    And no debe superar los 500ms bajo ninguna circunstancia (Complejidad O(1) o indexación en Pinia Store), garantizando que su ingreso se sienta inmediato.
-
-  Scenario: Indicador Tipográfico de Dominio (Header) (CA-16)
-    Given un usuario multi-rol que finaliza su carga inicial
-    Then el Master Header, justo debajo o al lado de su Nombre/Avatar, debe renderizar un micro-texto o chip
-    And resumiendo visualmente los 2 o 3 "Sombreros Principales" (Ej: `Director Comercial | Aprobador VIP`) que el parseador calculó que está usando hoy, validándole al operario que sus permisos subieron correctamente.
-
-  # H. Módulo de Tablero de Anomalías de Seguridad (NUEVO)
-  Scenario: Tablero de Resolución de Anomalías de Seguridad (CA-17)
-    Given que el sistema ha detectado conflictos graves (Ej: CA-4 SoD Conflict - Juez y Parte)
-    When un Administrador de Seguridad ingresa a la Pantalla de Configuración / RBAC (Pantalla 14)
-    Then el sistema debe darle acceso a una pestaña especializada denominada "Tablero de Anomalías"
-    And este tablero listará en color Rojo todas las incidencias de seguridad vivas detectadas por el motor
-    And obligará al Administrador a revisar el caso, subsanar el error a nivel EntraID/Local, y presionar físicamente un botón `[ ✅ Marcar como Subsanado ]` para apagar la alerta.
-
-  # I. Mantenimiento Evolutivo de Recuperación (V2)
-  Scenario: Postergación de Reset de Password para V2 (CA-18)
-    Given que el sistema opera en modo de IdP Local (Tabla propia de usuarios sin Azure)
-    When un usuario olvida su contraseña
-    Then la responsabilidad del Frontend y Backend de crear pantallas transaccionales de "Recuperar Contraseña via Email / OTP" queda estrictamente aplazada fuera del alcance del MVP V1.
-    And el proceso de recuperación manual en V1 queda relegado a una solicitud verbal/correo al Administrador del Sistema.
-
+  Scenario: Distintivo Visual de Origen IA en Workdesk Operativo
+    Given una Instancia inyectada generada a partir de la aprobación de una Action Card (Manual o Automática)
+    When el operador de Trinchera la recibe y visualiza en su lista del Workdesk (Inbox Pantalla 5)
+    Then el Frontend renderiza un distintivo gráfico inconfundible (Ej: Ícono de IA o Marco de color)
+    And alerta al operador que la existencia de este caso provino originalmente de deducción MLOps.
 ```
-**Trazabilidad UX:** Wireframes Pantalla 14 (Seguridad RBAC) y Tablero de Anomalías.
-
----
-
-### US-048: Módulo Gestor Propio de Identidades (Internal IdP)
-**Como** Súper Administrador del Sistema
-**Quiero** gestionar centralizadamente los usuarios y roles internos del iBPMS
-**Para** tener un control granular sobre quién accede a qué funcionalidades, incluso si el cliente no tiene un IdP externo robusto.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Gestión de Identidades Internas (Internal IdP)
-  Scenario: Creación Exclusiva por Administrador (V1 Centralizada) (CA-1)
-    Given la necesidad de registrar un nuevo empleado en el iBPMS (Modo Standalone)
-    Then para el MVP V1, el Súper Administrador es el único facultado para crear cuentas mediante un formulario interno (Pantalla 14)
-    And la creación de cuentas mediante portales públicos de "Regístrate Aquí" queda estrictamente diferida para V2.
-
-  Scenario: Gobernanza Estricta de Contraseñas Seguras (CA-2)
-    Given la creación o actualización de una credencial local
-    Then el Frontend (Formulario y Login) y el Backend deben acatar y forzar políticas Enterprise de seguridad
-    And exigiendo obligatoriamente: Mínimo 8 caracteres, 1 Mayúscula, 1 Número y 1 Símbolo Especial
-    And bloqueando el botón de [Guardar] si la entropía de la clave es débil.
-
-  Scenario: Destrabe Administrativo de Credenciales (Reset Manual) (CA-3)
-    Given un usuario bloqueado u olvidadizo (sin soporte de Auto-Reset vía Email en V1)
-    Then el Súper Administrador visualizará un botón de emergencia `[Generar Clave Temporal]` en la ficha del empleado
-    And al accionarlo, el sistema reemplaza el hash anterior y devuelve una cadena temporal visible por única vez para que el Admin la comunique verbalmente.
-
-  Scenario: Fábrica de Roles Dinámicos (Role CRUD) (CA-4)
-    Given una organización que no cuenta con grupos de Directorio Activo (EntraID)
-    Then el módulo Interno de Identidad (Pantalla 14) debe poseer una pestaña de "Gestión de Roles"
-    And permitiendo al Súper Administrador bautizar roles nuevos a voluntad (Ej: `Analista_Riesgo_Senior`)
-    And otorgando una interfaz drag-and-drop o checkboxes multiselect para asociar usuarios hacia esos sombreros creados.
-
-  Scenario: El Botón de Emergencia (Kill Switch Activo/Inactivo) (CA-5)
-    Given un empleado enfrentando un proceso disciplinario o despido en tiempo real
-    Then la tabla de usuarios (CRUD) expone un Toggle Switch visible `[Estado: Activo/Inactivo]`
-    And al apagarlo, el Backend no solo marca el registro lógico como inactivo, sino que destruye activamente cualquier sesión viva (JWT/Redis) de ese usuario, expulsándolo instantáneamente al Login.
-
-  Scenario: Asignación Híbrida de Múltiples Sombreros Locales (CA-6)
-    Given la vista de edición de un usuario
-    Then la interfaz debe permitir la selección múltiple (Ej: un Dropdown de selección múltiple)
-    And logrando que el Administrador asigne libremente 1, 2 o N roles organizacionales al mismo individuo convergentes en una única sesión local (Sinergia con US-038).
-
-  Scenario: Mutación de Interfaz en Modo Híbrido EntraID (CA-7)
-    Given que el sistema se configuró para delegar el "Login de Acceso" a Microsoft EntraID, pero gobernar los "Roles" de forma local (iBPMS)
-    When el Súper Administrador edita el perfil de un individuo
-    Then la interfaz de Frontend oscurece o desaparece forzosamente los campos de "Contraseña" y "Cambiar Clave" en esa ficha
-    And impidiendo intentos de alteración de credenciales locales que le pertenecen exclusivamente al IdP externo, evitando colisiones de Sincronía.
-```
-**Trazabilidad UX:** Pantalla 14 (Panel IdP Local).
+**Trazabilidad UX:** Wireframes Pantalla 16 (Intelligent Intake y Embudo Administrativo).
 
 ---
 
@@ -2934,32 +2924,7 @@ Feature: Consolidación Transversal de Requerimientos y Workflows
 
 ---
 
-### US-026: Portal del Cliente Externo (Vistas Tácticas y Estratégicas)
-**Como** Cliente Externo (B2B/B2C)
-**Quiero** ingresar a un portal web autenticado para ver el estado de mis Peticiones/Servicios
-**Para** no tener que llamar al contact center y tener trazabilidad total (Táctica y Estratégica) de mis trámites.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: External Customer Portal (Service Delivery)
-  Scenario: Acceso a Vista Táctica (Estado en Tiempo Real)
-    Given un Cliente Externo autenticado (Ej: portal.ibpms.com) mediante Azure AD B2C
-    When el cliente ingresa a su panel principal
-    Then el sistema debe renderizar una lista con sus Service Deliveries "En Curso"
-    And mostrar en qué etapa exacta del proceso se encuentra visualmente (Tracker)
-
-  Scenario: Acceso a Vista Estratégica (Dashboard y SLAs)
-    Given el mismo cliente navegando en la pestaña "Histórico y Desempeño"
-    Then el sistema renderizará métricas de "Servicios Finalizados a Tiempo" vs "Retrasados"
-    And listará todos los Service Deliveries concluidos permitiendo la descarga de su respectivo PDF (SGDEA)
-```
-**Trazabilidad UX:** Wireframes Pantalla 18 (Portal B2B/B2C del Cliente).
-
-
----
-
-## ÉPICA 8: Extensiones Cognitivas AI-Native (Cognitive BPMN)
-Aborda la integración nativa de Inteligencia Artificial (LLMs, RAG) en el modelado BPMN (Pantalla 6) y la ejecución del iBPMS, evolucionando de procesos secuenciales estáticos a procesos aumentados cognitivamente.
+## ÉPICA 11: Extensiones Cognitivas AI-Native - Cognitive BPMN (US-032)
 
 ### US-032: Orquestación de IA y Generative Task (RAG)
 **Como** Arquitecto Funcional
@@ -3139,8 +3104,8 @@ Feature: Componentes AI-Native BPMN y Controles
 
 ---
 
-## ÉPICA 9: Hub de Integraciones y Conectores (Integration Hub - Pantalla 11)
-Gobierna la comunicación bidireccional entre el motor iBPMS y los sistemas externos (CRM, ERP, SGDEA de terceros como SharePoint), garantizando resiliencia y estandarización mediante conectores reutilizables.
+
+## ÉPICA 12: Hub Integraciones & Central Message Broker (US-033, US-034)
 
 ### US-033: Catálogo de API y Mapeo Visual
 **Como** Arquitecto Técnico / Interfaz
@@ -3277,8 +3242,7 @@ Feature: API Connector Configuration and Resiliency
     Given el mandato de transferir payloads (Cuerpos HTTP) ultra-sensibles (Ej: Historias Clínicas)
     Then el Hub además de forzar TLS (HTTPS) en tránsito
     And posee soporte de auto-cifrado y descifrado nivel Payload utlizando criptografía asimétrica (PGP) garantizando impenetrabilidad absoluta incluso en reposo en logs intermedios de APIM del proveedor.
-```
-**Trazabilidad UX:** Wireframes Pantalla 11 (Integration Hub).
+
 
   Scenario: Privacidad de Auditoría Cognitiva (CA-29)
     Given que el proceso generó métricas de "Confidence Score" y "Chain of Thought"
@@ -3296,12 +3260,8 @@ Feature: API Connector Configuration and Resiliency
     And la arquitectura dicta que Camunda Engine, mediante Service Tasks previas y baratas, extraiga la data y se la entregue pre-empaquetada en el Prompt a la IA para que esta se limite únicamente a redactar.
 ```
 **Trazabilidad UX:** Pantalla 6 (BPMN Designer Palette), Pantalla 12 (SGDEA), Pantalla 7 (Form Builder UI).
-
+**Trazabilidad UX:** Wireframes Pantalla 11 (Integration Hub).
 ---
-
-
-## ÉPICA 10: Event Driven Architecture & Central Message Broker
-Formaliza la infraestructura de encolamiento transversal del iBPMS asegurando que tareas de alta latencia o llamadas a sistemas masivos (Cognitive RAG, APIs externas) no saturen la base de datos relacional ni el pool de hilos de Camunda.
 
 ### US-034: Orquestación a través de RabbitMQ
 **Como** Administrador de Infraestructura / Backend
@@ -3332,116 +3292,9 @@ Feature: Central Message Queue Orchestration
 
 ---
 
-## ÉPICA 11: Bóveda Documental SGDEA (Pantalla 12)
-Define la arquitectura de almacenamiento, inmutabilidad y recuperación de documentos (Expedientes y Anexos), integrándose nativamente con SharePoint como gestor documental primario en V1, sentando las bases para Tablas de Retención (TRD) y firmas digitales.
+## ÉPICA 13: Hub Integraciones & Central Message Broker (US-033, US-034)
+Cubre la brecha arquitectónica de la gestión de conexiones de los orígenes de datos (Correos Electrónicos). Permite al Súper Administrador registrar físicamente las cuentas de "Atención al Cliente" para que el iBPMS pueda succionar los reclamos y aplicar la IA.
 
-### US-035: Integración SharePoint y Auditoría Documental
-**Como** Analista / Auditor de Cumplimiento
-**Quiero** que el iBPMS gestione los expedientes en SharePoint manteniendo trazabilidad matemática estricta
-**Para** garantizar que la evidencia aportada por clientes o generada por IA sea inmutable, centralizada y legalmente auditable.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: SharePoint Vault and Single Source of Truth
-  Scenario: Almacenamiento Delegado Basado en Enlaces (CA-1)
-    Given la subida de un documento de 10MB en la Pantalla 16 (Intake)
-    Then la arquitectura postula a SharePoint como "Single Source of Truth" físico de los PDFs
-    And el iBPMS únicamente almacena en su base de datos relacional la URL directa del activo, su ID referencial y la Metadata de auditoría, evadiendo duplicación de costos de Storage (S3).
-
-  Scenario: Creación Dinámica de Taxonomía Sub-Carpetas (CA-2)
-    Given un Arquitecto modelando una captura documental en la Pantalla 6
-    When configura la actividad paramétricamente para generar "Casos Independientes"
-    Then el iBPMS expone un Pop-Up para definir la ruta base en SharePoint
-    And en tiempo de ejecución, el motor invoca el API de SharePoint creando proactivamente la sub-carpeta unívoca para ese expediente (Ej: `/ProcesoA/Caso1234/`) antes de inyectar los documentos.
-
-  Scenario: Elusión de Seguridad Perimetral SharePoint (Service Account) (CA-3)
-    Given un Usuario de Negocio que posee Rol de Lectura en el iBPMS pero carece de licencia SharePoint
-    Then el módulo documental utiliza un App Registration (Súper Cuenta de Servicios - EntraID) para extraer el PDF del repositorio
-    And lo proyecta en la Pantalla 12 evadiendo los bloqueos nativos de SharePoint frente al usuario final.
-    # NOTA: Diferido a V2 el "RBAC Cruzado" (User Delegation OAuth2).
-```
-**Trazabilidad UX:** Wireframes Pantalla 12 (Bóveda Documental SGDEA Central).
-```gherkin
-  Scenario: Marcado Metadato para Tablas de Retención V1 (CA-4)
-    Given la necesidad legal de destruir tutelas tras 5 años (TRD)
-    Then en la V1, el iBPMS inyecta una Fecha de Expiración como Metadato estructurado directo a la taxonomía de SharePoint
-    And delega la incineración automatizada (Deletion Policies) al motor nativo de Microsoft 365.
-    # NOTA: Diferido a V1.2 el cronómetro destructor interno propio del iBPMS.
-
-  Scenario: Inmutabilidad por Versionamiento Incremental (CA-5)
-    Given un analista intentando "Reemplazar" un contrato que quedó mal redactado en el sistema
-    Then en el expediente de la Pantalla 12 el botón de sobre-escritura destructiva está censurado
-    And forcejea la obligatoriedad funcional de subir el nuevo archivo bajo el mecanismo de "Nueva Versión" (v1.1) reteniendo acceso forense e inmutable al borrador v1.0.
-
-  Scenario: Despacho de Integración E-Signature (CA-6)
-    Given un documento generado que requiere validez legal del firmante
-    Then el Módulo Documental posee el andamiaje (Hooks) para interactuar vía API con proveedores de Firma Digital (Ej: DocuSign/AdobeSign)
-    And actualiza el estado del expediente en la Pantalla 12 a "Firmado" una vez los Webhooks Inbound confirman el OTP legal del ciudadano.
-
-  Scenario: Componente Visor Empotrado (Iframe Preview) (CA-7)
-    Given la necesidad de leer un anexo para tomar una decisión en un proceso
-    Then la interfaz de Tareas (Pantalla 12 empotrada en Workdesk) renderiza un Visor de Documentos Nativos asíncrono
-    And impide obligar al analista a descargar el PDF ciegamente hacia las carpetas `Descargas/` locales de su Sistema Operativo, reteniendo el foco en el flujo iBPMS.
-
-  Scenario: Blindaje Criptográfico Anti-Fraude (SHA-256) (CA-8)
-    Given la delegación del archivo físico hacia el servidor SharePoint de TI (CA-1)
-    Then en el milisegundo anterior a la carga, el iBPMS calcula el HASH criptográfico SHA-256 del binario original
-    And sella esta huella matemática inmutablemente en la Base de Datos transaccional del iBPMS para detectar futuras y silenciosas alteraciones directamente en SharePoint.
-
-  Scenario: Lector Óptico Diferido (OCR Zonal) (CA-9)
-    Given imágenes de documentos de identidad (Cédulas) escaneadas
-    Then en V1 estas se gestionan como Binary/Image objects convencionales
-    # NOTA: Diferido a V2 el procesamiento neuronal OCR para extracción estructurada de texto zonal.
-
-  Scenario: Inyección Activa de Metadata de Negocio (CA-10)
-    Given el traspaso exitoso del documento PDF hacia la granja SharePoint
-    Then el iBPMS adjunta un Payload extendido de Propiedades Personalizadas (Ej: `ibpms_processName`, `ibpms_caseStatus`) al nodo del documento
-    And permitiendo a los usuarios externos buscar documentos utilizando las herramientas de búsqueda Nativas de O365 mediante filtros semánticos del negocio.
-
-  Scenario: Límite Infraestructural de Carga y Silencio Parcial (CA-11)
-    Given un usuario intentando subir un archivo estúpidamente pesado (Ej: Video 4K de 5GB)
-    Then la Pantalla 12 intercepta la carga en el Fronend guiada por un parámetro global `MAX_FILE_SIZE` (Ej: 50MB) configurado por IT
-    And emite un error de UI "genérico" o "silencioso" al usuario final (Ej: "Error en la Carga, archivo muy pesado")
-    And simultáneamente dispara una alerta técnica detallada en el Log del Administrador del Sistema para auditoría de abusos.
-
-  Scenario: Lista Blanca Estricta de Extensiones (MIME Types) (CA-12)
-    Given el riesgo inminente de inyección de Malware (Ej: `.exe`, `.bat`)
-    Then la Bóveda SGDEA opera exclusivamente bajo arquitectura de "Lista Blanca" (Whitelist)
-    And rechaza radicalmente cualquier archivo que no esté explícitamente parametrizado (Ej: `application/pdf`, `image/jpeg`, `application/msword`).
-
-  Scenario: Visibilidad Transparente de Atributos de Auditoría (CA-13)
-    Given la Tabla/Grilla visual del expediente en Pantalla 12
-    Then el diseño UI no esconde la data legal
-    And expone nativamente en columnas primarias la "Fecha Extrema (Vencimiento TRD)" y el "Hash SHA-256" para que el analista confirme la inmutabilidad física con un solo vistazo.
-    # NOTA: Opciones de "Botón del Pánico/Censura de archivos erróneos" diferido a V2.
-
-  Scenario: Consolidación Multi-Anexo (PDF Merge Tool) (CA-14)
-    Given un expediente con 10 archivos PDF fragmentados que deben enviarse a una Superintendencia
-    Then la Pantalla 12 posee un botón de acción masiva `[Combinar PDFs (Merge)]`
-    And el iBPMS compila transitoriamente las páginas de los archivos seleccionados en un único documento maestro PDF sin corromper los originales.
-
-  Scenario: Delegación de Escaneo Anti-Malware (CA-15)
-    Given el ingreso de nuevos documentos a la Bóveda
-    Then la arquitectura V1 asume ciegamente la robustez de los Defensores Nativos de Microsoft
-    And confía en que SharePoint 365 interceptará virus silenciosamente, librando al iBPMS de conectar con AntiVirus dedicados en este MVP.
-    # NOTA: Herramientas de "Anotación Gráfica (Highlighting)" sobre PDFs diferidas a V1.2.
-
-  Scenario: Búsqueda Semántica Delegada (Full-Text Search) (CA-16)
-    Given un analista utilizando el buscador global del iBPMS para buscar la palabra "Tornillo"
-    Then el iBPMS delega la consulta profunda al motor nativo de indexación de SharePoint
-    And este último busca el término *dentro del contenido textual* de los PDFs y devuelve los matches, inyectando los resultados en la UI del iBPMS.
-
-  Scenario: Orquestación SGDEA a Inteligencia RAG (Vectorización Segura) (CA-17)
-    Given un analista en Pantalla 12 que decide oprimir `[Usar para IA]` sobre un contrato de 100 páginas
-    Then el módulo documental envía asíncronamente el ID de ese archivo a la "Cola de Eventos IA (RabbitMQ - CA-34)"
-    And el cerebro LLM procede a desencolar y devorar el contenido (si es PDF o WORD habilitado) para poblar su memoria de Embeddings sin congelar la ventana del usuario.
-```
-**Trazabilidad UX:** Wireframes Pantallas 12, 16 y 6.
-
----
-
-## ÉPICA 12: Identity Governance & Control de Acceso (Pantalla 14)
-Define la arquitectura centralizada de seguridad, delegación y segregación de datos. Establece a la Pantalla 14 como el único "Cuartel General" donde el Súper Administrador orquesta qué Humanos, APIs y Roles pueden interactuar con los procesos modelados en el iBPMS.
 
 ### US-036: Matriz de Control de Acceso Basado en Roles (RBAC)
 **Como** Oficial de Seguridad de la Información (CISO) / Super Admin
@@ -3511,9 +3364,7 @@ Feature: Identity Governance & RBAC Architecture
     Given un usuario intentando ocultar la columna "Salario" de un formulario en base al rol
     Then la directriz aclara que la Pantalla 14 administra accesos a la "Instancia Completa" (El Formulario entero)
     And delega la responsabilidad técnica de ocultar campos individuales a la algoritmia del Pro-Code Builder (Pantalla 7) durante el diseño del Vue Component.
-```
-**Trazabilidad UX:** Wireframes Pantalla 14 (Identity & Role Governance).
-```gherkin
+
   Scenario: Desacoplamiento de Roles Estáticos vs Dinámicos (BPMN Lanes) (CA-13)
     Given la asignación de trabajo en el motor Camunda
     Then el módulo de Permisos reconoce y respeta dos vías de asignación: 
@@ -3548,74 +3399,195 @@ Feature: Identity Governance & RBAC Architecture
 
 ---
 
-## ÉPICA 13: Configuración Administrativa de Buzones SAC (Pantalla 15)
-Cubre la brecha arquitectónica de la gestión de conexiones de los orígenes de datos (Correos Electrónicos). Permite al Súper Administrador registrar físicamente las cuentas de "Atención al Cliente" para que el iBPMS pueda succionar los reclamos y aplicar la IA.
 
-### US-037: CRUD de Conexiones de Buzones (Intake API)
-**Como** Súper Administrador del Sistema
-**Quiero** registrar y administrar libremente las cuentas de correo corporativo conectadas al iBPMS
-**Para** definir de dónde el motor saca la información, qué protocolo usar, con qué frecuencia y a qué proceso BPMN enruta por defecto cuando la Inteligencia Artificial (Agente 3) no logra deducirlo.
+
+### US-038: Asignación Multi-Rol y Sincronización EntraID
+**Como** Administrador de Seguridad
+**Quiero** asignar o sincronizar múltiples roles (Globales y de Proceso) a un mismo usuario autenticado
+**Para** que pueda acceder a las distintas bandejas y tareas correspondientes a todos sus 'sombreros' operativos sin necesidad de tener cuentas separadas.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Configuración de Orígenes SAC (Mailbox CRUD)
-  Scenario: Soporte Multi-Protocolo de Conexión (Arch. Abierta) (CA-1)
-    Given la ventana de registro de un nuevo Buzón SAC
-    Then el Administrador tiene la opción de elegir el tipo de Conector
-    And soporta autenticación moderna (OAuth 2.0 / MS Graph API) para ecosistemas Microsoft
-    And soporta simultáneamente configuración legacy (IMAP / SMTP) con usuario y contraseña genéricos (Ej: Gmail, cPanel) para una arquitectura V1 abierta.
+Feature: Multitenant RBAC & Multiple Roles Assignment
 
-  Scenario: Centralización del Poder Organizacional (CA-2)
-    Given el formulario de gestión de cuentas (Pantalla 15)
-    Then este módulo está fuertemente bloqueado y pertenece exclusivamente al Súper Administrador
-    And un "Líder de Área SAC" NO puede agregar un correo nuevo de forma autónoma, forzando un esquema de gobierno centralizado por IT.
+  # A. El Inicio de Sesión y la Muerte Súbita
+  Scenario: Revocación Inmediata de Acceso (CA-1)
+    Given un usuario operando activamente dentro del iBPMS
+    When su cuenta es desactivada o removida de todos los grupos de acceso en EntraID (Directorio Activo)
+    Then el sistema debe detectar la invalidez del Token y expulsarlo inmediatamente hacia la pantalla de Login
+    And no permitirá la ejecución de ninguna transacción en vuelo, arrojando HTTP 401 Unauthorized.
 
-  Scenario: Trazabilidad de Fallo (BPMN Default Rule) (CA-3)
-    Given un correo altamente ininteligible donde el Agente MLOps (Agente 3) falla en deducir su categoría
-    Then la configuración del buzón cuenta con un campo obligatorio: `[Proceso BPMN de Caída por Defecto]`
-    And el iBPMS enrutará ciegamente este correo hacia ese proceso genérico pre-seleccionado (Ej: "Trámite de Reclamo Manual") para no dejar correos "en el limbo".
+  Scenario: Prevención del Secuestro de Roles (CA-2)
+    Given un usuario que ayer poseía el rol "Líder_SAC" pero que hoy le fue revocado en EntraID
+    When el usuario con una sesión antigua (Token vivo de ayer) intenta aprobar un reclamo
+    Then el backend intercepta la petición y valida asíncronamente los Claims actuales antes del Commit
+    And rechaza la operación si el rol ya no le pertenece, forzando un refresco de sus permisos (Log-Out silencioso o recarga de la Master Page).
 
-  Scenario: Sincronización Programada (Polling) y Manual (CA-4)
-    Given la infraestructura de recolección de correos
-    Then el sistema utiliza un Job de Polling configurado bajo mejores prácticas (Ej: cada 5 minutos) para evitar ahogar al servidor
-    And expone adicionalmente un botón táctico `[🔄 Sincronizar Buzón Ahora]` en el Frontend para que el Administrador fuerce la lectura a demanda inmediata.
+  # B. La Pelea de Permisos
+  Scenario: Resolución de Permisos Contradictorios (Regla del Más Restrictivo) (CA-3)
+    Given un usuario que hereda simultáneamente un "Rol A" (Permite Borrado) y un "Rol B" (Prohíbe Borrado estricto) sobre el mismo objeto
+    When el motor de políticas de Vue y Spring Security evalúan el acceso
+    Then el sistema debe resolver el conflicto aplicando siempre "La Regla del Rol Más Restrictivo" (Deny-Overrides)
+    And inhabilitando físicamente el botón de [Borrar] en la UI.
 
-  Scenario: Ping de Conexión en Vivo Obligatorio (CA-5)
-    Given el administrador registrando credenciales de MS Graph (OAuth)
-    When oprime el botón de Guardar
-    Then el iBPMS pausa el registro y dispara un ping transaccional en caliente contra el tenant de Microsoft
-    And solo permite crear formalmente el Origen de Datos si Microsoft responde con un token 200 OK, abortando el proceso si las credenciales fallan.
+  Scenario: Detección de Conflicto de Segregación de Funciones (Juez y Parte) (CA-4)
+    Given un usuario al que se le han asignado por error los roles exclusivos de "Creador de Pedido" y "Aprobador Financiero"
+    When el usuario inicia sesión
+    Then el sistema le permite ingresar y operar
+    And dispara inmediatamente una Alerta Roja asíncrona ("Conflicto SoD Detectado") hacia el Módulo de Anomalías del Administrador
+    And dejará una traza en la Auditoría etiquetando todas las transacciones de este usuario con un flag `WARNING_SoD_CONFLICT` hasta que el administrador depure sus roles en el AD.
 
-  Scenario: Réplica Operativa iBPMS vs Exchange (No Destructiva) (CA-6)
-    Given el proceso de "chupar" correos (Ingesta)
-    Then el iBPMS NUNCA ejecuta comandos de `DELETE` físico contra el Exchange de origen por el simple hecho de leerlos
-    And genera un folio replicado en la base de datos propia. Si un Súper Admin decide borrar (Hard-Delete) el caso en el iBPMS, el motor envía una instrucción de *Soft-Delete* hacia Microsoft (Mover a Papelera / Archivo) manteniendo la paridad.
+  # C. La Bandeja de Entrada Mágica (Workdesk)
+  Scenario: Consolidación Transversal en el Workdesk (CA-5)
+    Given un usuario con múltiples sombreros (Ej: 3 roles operativos distintos)
+    When abre su vista de Workdesk
+    Then el sistema consolida TODAS sus tareas en una única lista unificada y limpia
+    And NO fragmenta la pantalla en múltiples pestañas ni lo obliga a saltar entre perfiles (La segregación de vistas complejas se abordará en historias de Dashboarding, no en la trinchera operativa).
 
-  Scenario: Gobernalización Central del Blacklist en V1 (CA-7)
-    Given la necesidad de bloquear SPAM o dominios maliciosos
-    Then en el MVP (V1) la Pantalla 15 NO reconstruye formularios de Blacklist/Whitelist
-    And delega el filtrado anti-spam 100% a las políticas perimetrales nativas configuradas por IT en Microsoft Exchange. (Reglas bidireccionales por API diferidas a V2).
+  Scenario: Insignia de Procedencia del Rol en la Tarjeta (CA-6)
+    Given la lista de tareas unificadas en el Workdesk
+    Then cada tarjeta (Card o Fila) debe inyectar un Badge/Etiqueta visual discreta (Ej: `Rol: Aprobador_Nivel_2`)
+    And explicándole al usuario exactamente bajo qué "Sombrero" o prerrogativa de negocio se le está exigiendo resolver ese caso específico.
 
-  Scenario: Silenciador de Emergencia Táctil (CA-8)
-    Given un ataque de SPAM o falla lógica en el enrutamiento de un Buzón
-    Then la grilla del CRUD expone un Toggle Switch `[En Vivo / Pausado]` de desconexión inmediata
-    And permite suspender temporalmente el Job de Polling para ese buzón en específico sin borrar permanentemente el registro ni sus tokens almacenados.
+  Scenario: Retorno al Pool Común por Renuncia (CA-7)
+    Given una tarea instanciada y encolada específicamente bajo un candidato de rol (Ej: "BPMN_Credito_Aprobador")
+    When el único usuario en toda la empresa que poseía ese rol renuncia y es desactivado
+    Then la tarea NO entra en Dead-Letter ni se pierde en un agujero negro
+    And la tarea permanece visible y viva en el Pool (Cola del Grupo)
+    And esperando a que el Administrador de TI asigne ese rol a un nuevo empleado para que pueda visualizarla y reclamarla.
 
-  Scenario: Excepción de Límites de Carga por Dominio (CA-9)
-    Given que el límite global de archivos adjuntos del iBPMS es de 50MB
-    Then el formulario del Buzón permite configurar un `Override`
-    And otorga la capacidad de definir un límite en Megabytes customizado exclusivo para los correos succionados por esa cuenta en particular (Ej: 100MB para `planos@`).
+  # D. Infraestructura de Mentiras (Fallas)
+  Scenario: Autenticación de Respaldo por Falla de Azure (Puerta Secreta) (CA-8)
+    Given que la infraestructura de Microsoft EntraID sufre una caída global (HTTP 503)
+    When los usuarios intentan loguearse a través de OAuth/OIDC
+    Then el sistema fallará elegantemente
+    And debe existir una URL local oculta (Backdoor pre-configurado en Frontend) que permita autenticación directa (Email/Contraseña) contra la tabla interna de usuarios
+    And solo disponible para un listado minúsculo de Administradores Locales (Break-Glass Accounts) para mantener la plataforma viva durante la crisis.
 
-  Scenario: Auditoría de Caducidad de Tokens M2M (CA-10)
-    Given que los Secretos de Cliente OAuth en Entra ID caducan cada 6 meses
-    Then la Pantalla 15 debe calcular el tiempo de vida de la conexión
-    And si las credenciales fallan, el iBPMS inyecta una alerta en el Log de Auditoría y envía una notificación estructurada a los Administradores advirtiendo la desconexión del SAC.
+  Scenario: Mapeo Flexible de Identidades (CA-9)
+    Given la arquitectura global de autenticación del iBPMS
+    Then el sistema debe soportar tres (3) modos de operación paramétricos para la ingesta de Roles:
+    And 1. Sincronía Total (1:1): Los grupos y roles se inyectan 100% desde Azure EntraID.
+    And 2. IdP Híbrido: Azure solo se usa para el "Login" (Validar existencia), pero el iBPMS asigna localmente sus propios roles en su base de datos.
+    And 3. IdP Local Absoluto: El sistema funge como su propio Autenticador (Módulo interno de Usuarios y Passwords).
+
+  # E. Auditoría y Rastro de Migas
+  Scenario: Trazabilidad Quirúrgica en Logs (CA-10)
+    Given un usuario multi-rol ejecutando una transacción crítica (Ej: Aprobar Pago)
+    When el Backend estampa el evento en la bitácora de auditoría (AiAuditLogEntity)
+    Then la tupla de base de datos debe almacenar el máximo detalle forense
+    And registrando no solo el `user_id` y `timestamp`, sino también un JSON con el "Contexto de Roles Activos" (`active_claims`) en el milisegundo exacto de la ejecución para peritajes legales.
+
+  Scenario: Restricción del Préstamo de Llaves (CA-11)
+    Given un empleado multi-rol que se ausenta temporalmente
+    When intenta ceder uno de sus sombreros críticos a un compañero desde la UI de la plataforma
+    Then el Frontend bloquea la intención careciendo de una interfaz para "Transferencia de Roles en Caliente"
+    And obliga procedimentalmente a que el compañero solicite el permiso transitorio a través del conducto regular (Directorio Activo de TI).
+
+  # F. Delegaciones 
+  Scenario: Trazabilidad de la Delegación (Workdesk) (CA-12)
+    Given que María le delega una de sus tareas de Workdesk a Carlos (US-001)
+    When María ejecuta la transferencia
+    Then la auditoría debe grabar el evento indicando "Delegan: María -> Carlos"
+    And la tarea aparece en la bandeja de Carlos junto con un Popup o Banner exigiéndole ACEPTAR o RECHAZAR la delegación encomendada.
+
+  Scenario: Rebote Natural por Rechazo de Delegación (CA-13)
+    Given la delegación pendiente descrita en CA-12
+    When Carlos presiona el botón [Rechazar Delegación] en el Popup
+    Then la tarea abandona inmediatamente el Workdesk de Carlos
+    And vuelve a rebotar como un boomerang regresando a ser la responsabilidad exclusiva en el Workdesk de María (Propietaria original), conservando todo el historial en la auditoría.
+
+  Scenario: Pre-Autorización a Pasajeros Nuevos (CA-14)
+    Given un usuario que acaba de ser contratado e instanciado en Microsoft EntraID hoy a las 8:00 AM
+    When el usuario ingresa por primera vez a la URL del iBPMS a las 8:05 AM
+    Then el sistema NO lo detiene en pantallas de "Cree su perfil" ni "Espere aprobación"
+    And mapea al vuelo (Just-In-Time Provisioning) sus atributos y roles del Token de Azure, dejándolo pasar derecho hacia su Workdesk operativo instantáneamente.
+
+  # G. Visuales (Lo que ve el ojo)
+  Scenario: Rendimiento Estricto en Parseo de Mega-Roles (CA-15)
+    Given un Gerente General que porta un listado demencial de +80 roles y permisos combinados en su perfil de Azure
+    When el usuario hace el proceso de Login y redirección
+    Then el tiempo de cómputo del Frontend para desenredar iterativamente ese árbol de permisos y renderizar el Layout (Sidebar/Header)
+    And no debe superar los 500ms bajo ninguna circunstancia (Complejidad O(1) o indexación en Pinia Store), garantizando que su ingreso se sienta inmediato.
+
+  Scenario: Indicador Tipográfico de Dominio (Header) (CA-16)
+    Given un usuario multi-rol que finaliza su carga inicial
+    Then el Master Header, justo debajo o al lado de su Nombre/Avatar, debe renderizar un micro-texto o chip
+    And resumiendo visualmente los 2 o 3 "Sombreros Principales" (Ej: `Director Comercial | Aprobador VIP`) que el parseador calculó que está usando hoy, validándole al operario que sus permisos subieron correctamente.
+
+  # H. Módulo de Tablero de Anomalías de Seguridad (NUEVO)
+  Scenario: Tablero de Resolución de Anomalías de Seguridad (CA-17)
+    Given que el sistema ha detectado conflictos graves (Ej: CA-4 SoD Conflict - Juez y Parte)
+    When un Administrador de Seguridad ingresa a la Pantalla de Configuración / RBAC (Pantalla 14)
+    Then el sistema debe darle acceso a una pestaña especializada denominada "Tablero de Anomalías"
+    And este tablero listará en color Rojo todas las incidencias de seguridad vivas detectadas por el motor
+    And obligará al Administrador a revisar el caso, subsanar el error a nivel EntraID/Local, y presionar físicamente un botón `[ ✅ Marcar como Subsanado ]` para apagar la alerta.
+
+  # I. Mantenimiento Evolutivo de Recuperación (V2)
+  Scenario: Postergación de Reset de Password para V2 (CA-18)
+    Given que el sistema opera en modo de IdP Local (Tabla propia de usuarios sin Azure)
+    When un usuario olvida su contraseña
+    Then la responsabilidad del Frontend y Backend de crear pantallas transaccionales de "Recuperar Contraseña via Email / OTP" queda estrictamente aplazada fuera del alcance del MVP V1.
+    And el proceso de recuperación manual en V1 queda relegado a una solicitud verbal/correo al Administrador del Sistema.
+
 ```
-**Trazabilidad UX:** Pantalla 15 (Configuraciones Genéricas / Logs).
+**Trazabilidad UX:** Wireframes Pantalla 14 (Seguridad RBAC) y Tablero de Anomalías.
 
 ---
 
-## ÉPICA 14: Configuraciones Globales de Nivel de Servicio (SLA)
+
+### US-048: Módulo Gestor Propio de Identidades (Internal IdP)
+**Como** Súper Administrador del Sistema
+**Quiero** gestionar centralizadamente los usuarios y roles internos del iBPMS
+**Para** tener un control granular sobre quién accede a qué funcionalidades, incluso si el cliente no tiene un IdP externo robusto.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Gestión de Identidades Internas (Internal IdP)
+  Scenario: Creación Exclusiva por Administrador (V1 Centralizada) (CA-1)
+    Given la necesidad de registrar un nuevo empleado en el iBPMS (Modo Standalone)
+    Then para el MVP V1, el Súper Administrador es el único facultado para crear cuentas mediante un formulario interno (Pantalla 14)
+    And la creación de cuentas mediante portales públicos de "Regístrate Aquí" queda estrictamente diferida para V2.
+
+  Scenario: Gobernanza Estricta de Contraseñas Seguras (CA-2)
+    Given la creación o actualización de una credencial local
+    Then el Frontend (Formulario y Login) y el Backend deben acatar y forzar políticas Enterprise de seguridad
+    And exigiendo obligatoriamente: Mínimo 8 caracteres, 1 Mayúscula, 1 Número y 1 Símbolo Especial
+    And bloqueando el botón de [Guardar] si la entropía de la clave es débil.
+
+  Scenario: Destrabe Administrativo de Credenciales (Reset Manual) (CA-3)
+    Given un usuario bloqueado u olvidadizo (sin soporte de Auto-Reset vía Email en V1)
+    Then el Súper Administrador visualizará un botón de emergencia `[Generar Clave Temporal]` en la ficha del empleado
+    And al accionarlo, el sistema reemplaza el hash anterior y devuelve una cadena temporal visible por única vez para que el Admin la comunique verbalmente.
+
+  Scenario: Fábrica de Roles Dinámicos (Role CRUD) (CA-4)
+    Given una organización que no cuenta con grupos de Directorio Activo (EntraID)
+    Then el módulo Interno de Identidad (Pantalla 14) debe poseer una pestaña de "Gestión de Roles"
+    And permitiendo al Súper Administrador bautizar roles nuevos a voluntad (Ej: `Analista_Riesgo_Senior`)
+    And otorgando una interfaz drag-and-drop o checkboxes multiselect para asociar usuarios hacia esos sombreros creados.
+
+  Scenario: El Botón de Emergencia (Kill Switch Activo/Inactivo) (CA-5)
+    Given un empleado enfrentando un proceso disciplinario o despido en tiempo real
+    Then la tabla de usuarios (CRUD) expone un Toggle Switch visible `[Estado: Activo/Inactivo]`
+    And al apagarlo, el Backend no solo marca el registro lógico como inactivo, sino que destruye activamente cualquier sesión viva (JWT/Redis) de ese usuario, expulsándolo instantáneamente al Login.
+
+  Scenario: Asignación Híbrida de Múltiples Sombreros Locales (CA-6)
+    Given la vista de edición de un usuario
+    Then la interfaz debe permitir la selección múltiple (Ej: un Dropdown de selección múltiple)
+    And logrando que el Administrador asigne libremente 1, 2 o N roles organizacionales al mismo individuo convergentes en una única sesión local (Sinergia con US-038).
+
+  Scenario: Mutación de Interfaz en Modo Híbrido EntraID (CA-7)
+    Given que el sistema se configuró para delegar el "Login de Acceso" a Microsoft EntraID, pero gobernar los "Roles" de forma local (iBPMS)
+    When el Súper Administrador edita el perfil de un individuo
+    Then la interfaz de Frontend oscurece o desaparece forzosamente los campos de "Contraseña" y "Cambiar Clave" en esa ficha
+    And impidiendo intentos de alteración de credenciales locales que le pertenecen exclusivamente al IdP externo, evitando colisiones de Sincronía.
+```
+**Trazabilidad UX:** Pantalla 14 (Panel IdP Local).
+
+---
+
+
+## ÉPICA 14: Configuraciones Globales de Nivel de Servicio - SLA (US-043)
 Permite a la PMO establecer las reglas del juego a nivel corporativo paramétricas (Matriz de días hábiles, umbrales de vencimiento).
 
 ### US-043: Configuración Global de Service Level Agreements (SLA)
@@ -3644,6 +3616,15 @@ Feature: Business SLA Matrix Configuration
 **Trazabilidad UX:** Wireframes Pantalla 19 (Configuración SLA).
 
 ---
+
+
+
+
+
+
+## ÉPICA 15: Developer Portal, Settings y Límites del Sistema (US-042, US-044, US-045, US-046)
+*(MUST HAVE)* - El "Cockpit" centralizado para Súper Administradores, donde se gobiernan los umbrales cognitivos, interruptores y caducidades arquitectónicas de todo el iBPMS en tiempo de ejecución, sin necesidad de despliegues de código o edición en la base de datos directa.
+
 
 ## Módulo: Developer Portal & Extensibilidad (Zero-Trust)
 
@@ -3726,8 +3707,6 @@ Feature: Zero-Trust Developer Portal Security
 
 ---
 
-## ÉPICA 15: Parametrización Global y Límites del Sistema (Settings)
-*(MUST HAVE)* - El "Cockpit" centralizado para Súper Administradores, donde se gobiernan los umbrales cognitivos, interruptores y caducidades arquitectónicas de todo el iBPMS en tiempo de ejecución, sin necesidad de despliegues de código o edición en la base de datos directa.
 
 ### US-044: Gobernanza de Inteligencia Artificial (AI Limits)
 **Como** Súper Administrador
@@ -3836,7 +3815,7 @@ Feature: API Polling & Telemetry Thresholds
 **Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Performance y Conexiones / SysAdmin).
 
 ---
----
+
 
 # 🚀 ROADMAP VERSIÓN 2 (V2) - EN REFINAMIENTO
 *(Todas las funcionalidades, épicas e historias de usuario declaradas a partir de este punto pertenecen estructural y financieramente a la Fase 2 del Proyecto iBPMS. No forman parte del alcance del MVP V1).*
@@ -3950,6 +3929,7 @@ Feature: Data Minimization and Form Strictness
     Then el sistema arroja un Soft-Lock visual (Iconos naranjas/rojos ⚠️) advirtiendo la falta de destino, pero permite guardar el trabajo tranquilamente en estado `DRAFT_INVALID` para no destruir la iteración.
     When días después, el Arquitecto une el formulario al BPMN en la Pantalla 6 e intenta pulsar el botón [🚀 DESPLEGAR A PRODUCCIÓN]
     Then el sistema arroja el Hard-Stop defintivo y ABORTA el Despliegue con un flag rojo ❌, obligándolo a higienizar (borrar o justificar) los campos huérfanos antes de impactar el Core productivo.
+```
 **Trazabilidad UX:** Pantalla 3 (Diseñador de Formularios - Form Builder).
 
 ---

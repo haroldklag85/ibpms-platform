@@ -152,11 +152,13 @@ Feature: Task Claiming and Reassignment
     Then un Cron Job estructurado en el Backend rastrea las transacciones con inactividad superior al SLA
     And ejecuta un "Auto-Unclaim", purgando al `assignee` inactivo y devolviendo el caso a la Cola Grupal para rescate.
 
-  Scenario: Persistencia de Borradores (Draft Savings) (CA-7)
-    Given un formulario parcialmente diligenciado
-    When el analista oprime [Liberar Tarea]
-    Then el motor persiste todo el JSON cargado hasta ese momento usando la API de Variables de Camunda
-    And el siguiente compañero que la reclame encontrará el progreso intacto en su interfaz.
+  Scenario: Amnesia Transaccional al Liberar Tarea (Protección del Motor) (CA-7)
+    Given un formulario parcialmente diligenciado (Borrador vivo temporalmente en LocalStorage según US-029)
+    When el analista oprime el botón [Liberar Tarea] para devolver el caso a la Cola Grupal
+    Then el Frontend advierte mediante un Modal bloqueante: "Perderá los datos no enviados si devuelve el caso".
+    And si el analista acepta, el sistema purga inmediatamente el LocalStorage de esa tarea en su navegador.
+    And el Backend TIENE ESTRICTAMENTE PROHIBIDO enviar mutaciones o payloads JSON parciales a Camunda para su guardado.
+    And el siguiente compañero que reclame la tarea la recibirá con el formulario 100% en blanco o con su prefillData original, garantizando la higiene absoluta de la Base de Datos Transaccional.
 
   Scenario: Despojo Forzoso de Tarea por Supervisor (CA-8)
     Given que la tarea "TK-099" pertenece a Juan, pero él se ausentó
@@ -1761,14 +1763,13 @@ Feature: Cuadro de Mando de Desempeño Inteligente (AI Dashboards)
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Legal PDF Generation from Template
-  Scenario: Ensamblar PDF usando plantilla del SGDEA y Variables de la Instancia
+Scenario: Ensamblar PDF usando plantilla del SGDEA y Variables de la Instancia (CA-1)
     Given la instancia de proceso "PI-888" finalizada en estado "APPROVED"
-    And la plantilla "Contrato_Laboral_V3.docx" almacenada en el repositorio
+    And la plantilla "Contrato_Laboral_V3.docx" almacenada en el repositorio maestro
     When el usuario realiza un POST a "/api/v1/documents/generate/PI-888"
-    And especifica '{"template_id": "Contrato_Laboral_V3"}'
-    Then el motor Documental (FOP/PDFBox) debe resolver el mapeo inyectando el árbol `json_variables` de la instancia "PI-888" en las etiquetas `<<key>>` de la plantilla
-    And el sistema debe registrar el checksum SHA-256 del archivo generado en `ibpms_audit_log` para inmutabilidad legal
-    And el sistema retorna HTTP STATUS 200 OK con un link "Signed URL" (AWS S3 Presigned o Azure Blob SAS) expirable en 15 minutos para la descarga del archivo `Contrato_Laboral_V3_PI-888.pdf`
+    Then el motor Documental (FOP/PDFBox) inyecta el árbol `json_variables` en las etiquetas `<<key>>` de la plantilla
+    And registra el checksum SHA-256 en `ibpms_audit_log` para inmutabilidad legal
+    And el sistema retorna HTTP STATUS 200 OK con un enlace temporal de SharePoint Graph API (Pre-Authenticated Link) expirable en 15 minutos para su visualización.
 
   Scenario: Tolerancia a Fallos por Variables Ausentes (Missing Keys)
     Given una plantilla `.docx` que incluye la etiqueta `<<segundo_apellido>>` obligatoria en su sintaxis
@@ -1781,12 +1782,12 @@ Feature: Legal PDF Generation from Template
     When la plantilla documental contenga sentencias iterativas de tipo `#foreach` en filas de una tabla de Word
     Then el motor SGDEA clonará la fila tantas veces como elementos existan en el array inyectando sus respectivas propiedades, posibilitando documentos hiper-dinámicos de longitud variable en la V1.
 
-  Scenario: Gobernanza de Persistencia (Almacenamiento Perenne vs Vuelo Efímero)
+Scenario: Gobernanza de Persistencia (SharePoint Vault vs Vuelo Efímero) (CA-4)
     Given la invocación del servicio REST `/api/v1/documents/generate`
-    When el proceso o usuario llamador configure explícitamente el flag `storageMode`
+    When el proceso configure explícitamente el flag `storageMode`
     Then el Back-End acatará rígidamente la directriz:
-    And Si es `EPHEMERAL`: El documento se renderiza, se entrega el base64/link de 15min y se destruye físicamente de RAM/Disco.
-    And Si es `PERSISTENT`: El PDF se consolida inmutablemente en el Storage (S3/Azure) amarrado al UID del Expediente, garantizando trazabilidad y registro perpetuo exigible por Ley.
+    And Si es `EPHEMERAL`: El documento se renderiza, se entrega el link de 15min y se destruye físicamente de RAM/Disco del servidor.
+    And Si es `PERSISTENT`: El PDF se traslada e inyecta inmutablemente en Microsoft SharePoint (Única Bóveda Oficial SGDEA), amarrado a la sub-carpeta del UID del Expediente (Acorde a la US-035), garantizando registro perenne exigible por Ley, evadiendo cobros duplicados en S3/Azure.
 
   Scenario: Acorazado Forense y Firma Digital del Documento Físico
     Given la configuración de una plantilla de Alto Riesgo Legal
@@ -1827,9 +1828,7 @@ Feature: SharePoint Vault and Single Source of Truth
     Then el módulo documental utiliza un App Registration (Súper Cuenta de Servicios - EntraID) para extraer el PDF del repositorio
     And lo proyecta en la Pantalla 12 evadiendo los bloqueos nativos de SharePoint frente al usuario final.
     # NOTA: Diferido a V2 el "RBAC Cruzado" (User Delegation OAuth2).
-```
-**Trazabilidad UX:** Wireframes Pantalla 12 (Bóveda Documental SGDEA Central).
-```gherkin
+
   Scenario: Marcado Metadato para Tablas de Retención V1 (CA-4)
     Given la necesidad legal de destruir tutelas tras 5 años (TRD)
     Then en la V1, el iBPMS inyecta una Fecha de Expiración como Metadato estructurado directo a la taxonomía de SharePoint
@@ -1903,6 +1902,15 @@ Feature: SharePoint Vault and Single Source of Truth
     Given un analista en Pantalla 12 que decide oprimir `[Usar para IA]` sobre un contrato de 100 páginas
     Then el módulo documental envía asíncronamente el ID de ese archivo a la "Cola de Eventos IA (RabbitMQ - CA-34)"
     And el cerebro LLM procede a desencolar y devorar el contenido (si es PDF o WORD habilitado) para poblar su memoria de Embeddings sin congelar la ventana del usuario.
+	
+	Scenario: Storage Garbage Collector para Archivos Huérfanos (Evitar Fuga Financiera) (CA-18)
+    Given el patrón arquitectónico "Upload-First" (US-029) donde los archivos pesados se suben a la sub-carpeta `/upload-temp` de manera asíncrona temprana
+    When el operario humano abandona la tarea, cierra la pestaña o descarta un Intake sin oprimir jamás el botón de [Enviar] Formulario
+    Then esos archivos se convierten en "Archivos Huérfanos" (Binarios sin un Process_Instance_ID asociado en BD).
+    And el iBPMS ejecutará un CronJob nocturno perentorio a las 03:00 AM
+    And el Job consultará la API de Storage eliminando físicamente (Hard-Delete) cualquier archivo en `/upload-temp` que supere las 24 horas de antigüedad, tapando la hemorragia de costos por almacenamiento de basura no transaccional.
+	
+	
 ```
 **Trazabilidad UX:** Wireframes Pantallas 12, 16 y 6.
 
@@ -2505,13 +2513,14 @@ Feature: Intake Manual Plan B (Seguridad)
     Then el sistema NO bloquea ni genera alertas visuales para impedir la creación
     And permite la instanciación de N procesos paralelos para el mismo cliente de forma agnóstica.
 
-  Scenario: Gestión del Ciclo de Vida del Caso Operativo (CRUD) (CA-7)
-    Given el nacimiento de un caso manual en el motor BPMN
-    Then el sistema debe proveer una interfaz de administración global (CRUD Real) sobre la instancia "In-Flight"
-    And permitiendo a usuarios estrictamente autorizados Consultar sus variables.
-    And si edita (Update) variables en caliente, el sistema restringe los cambios únicamente a variables "informativas/descriptivas" para evitar corromper las compuertas lógicas (Gateways) del BPMN.
-    And si decide eliminar/abortar (Delete) el caso, la acción ejecuta una 'Anulación Lógica' (Soft Delete) marcando el caso como cancelado y exigiendo obligatoriamente un motivo de anulación que quedará trazado en la bitácora de auditoría.
-
+Scenario: Gestión del Ciclo de Vida Operativo y Destrucción del Token (CA-7)
+    Given el nacimiento de un caso en el motor BPMN (Plan B)
+    Then el sistema debe proveer una interfaz de administración global sobre la instancia "In-Flight".
+    When el Administrador autorizado decide abortar/eliminar el caso operativo (Acción Delete)
+    Then la acción ejecuta un 'Soft Delete' en la Base de Datos relacional del iBPMS marcando el registro visual como CANCELADO (Exigiendo motivo de anulación para la bitácora).
+    And SIMULTÁNEAMENTE, el Backend invoca imperativamente la REST API interna de Camunda (`DELETE /engine-rest/process-instance/{id}`)
+    And aniquilando físicamente el Token en vuelo dentro del motor orquestador, garantizando que los Timers y SLAs de ese proceso mueran al instante, evitando falsas alertas o tareas zombies revividas.
+	
   Scenario: Pre-poblado Opcional CRM (Integración ONS) (CA-8)
     Given el Administrador digita el CRM_ID en el formulario Start Event
     Then el sistema invoca inmediatamente al proveedor externo (CRM) si la conectividad general (Épica 15) está encendida
@@ -2758,17 +2767,35 @@ Feature: Intake Manual Plan B (Seguridad)
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: External Customer Portal (Service Delivery)
-  Scenario: Acceso a Vista Táctica (Estado en Tiempo Real)
-    Given un Cliente Externo autenticado (Ej: portal.ibpms.com) mediante Azure AD B2C
+Feature: External Customer Portal (Service Delivery) and Zero-Trust Boundary
+
+  Scenario: Acceso a Vista Táctica (Estado en Tiempo Real) (CA-1)
+    Given un Cliente Externo autenticado (Ej: portal.ibpms.com) mediante un Identity Provider (Ej: Azure AD B2C / Cognito)
     When el cliente ingresa a su panel principal
     Then el sistema debe renderizar una lista con sus Service Deliveries "En Curso"
-    And mostrar en qué etapa exacta del proceso se encuentra visualmente (Tracker)
+    And mostrar en qué etapa exacta del proceso se encuentra visualmente (Tracker / Stepper) ocultando tajantemente las tareas internas (Backoffice) que no estén explícitamente marcadas como "Visibles para el Cliente" en el diseño del proceso BPMN.
 
-  Scenario: Acceso a Vista Estratégica (Dashboard y SLAs)
+  Scenario: Prevención Estructural BOLA / IDOR (Seguridad Perimetral Absoluta) (CA-2)
+    Given el Cliente Externo autenticado cuyo Token JWT contiene criptográficamente su identificador único (Ej: `Claim: crm_id = "CUST-999"`)
+    When el cliente intenta forzar la lectura de un caso ajeno manipulando directamente la URL o la API REST (Ej: `GET /api/v1/portal/cases/SD-500` donde SD-500 pertenece al cliente "CUST-111")
+    Then el Backend (Security Filter Chain / Interceptor) TIENE ESTRICTAMENTE PROHIBIDO confiar en el ID del caso enviado en la URL.
+    And el motor extraerá el `crm_id` del JWT, y forzará inyectar la cláusula en la consulta a la base de datos: `WHERE case_id = 'SD-500' AND owner_crm_id = 'CUST-999'`.
+    And al no haber coincidencia matemática, el Backend escupirá un silencioso `HTTP 404 Not Found` (Ceguera intencional, en lugar de 403 Forbidden, para no confirmarle al atacante que el caso ajeno sí existe).
+    And registrará un evento de `SECURITY_ANOMALY` en el Log de Auditoría por intento de escalamiento horizontal de privilegios.
+
+  Scenario: Enmascaramiento de Trazabilidad Interna (Data Masking BFF) (CA-3)
+    Given que el cliente abre el detalle de su caso lícito `SD-0045`
+    Then el API del Portal Externo actuará como un filtro (BFF) aislando la instancia cruda de Camunda.
+    And purgará y ocultará del Payload DTO cualquier metadata de consumo interno (Ej: `comentarios_analista`, `score_riesgo_interno`).
+    And ocultará terminantemente cualquier traza de IA (Confidence Score, Chain of Thought), exponiendo al ciudadano EXCLUSIVAMENTE los "Front-Facing Metadata" previamente autorizados.
+
+  Scenario: Acceso a Vista Estratégica y Descarga Segura de SGDEA (CA-4)
     Given el mismo cliente navegando en la pestaña "Histórico y Desempeño"
     Then el sistema renderizará métricas de "Servicios Finalizados a Tiempo" vs "Retrasados"
-    And listará todos los Service Deliveries concluidos permitiendo la descarga de su respectivo PDF (SGDEA)
+    And listará todos los Service Deliveries concluidos.
+    When el cliente solicite descargar el contrato o PDF asociado a un caso cerrado
+    Then el Backend validará la propiedad BOLA (CA-2) y generará una "Pre-Signed URL" temporal (Ej: 15 minutos de caducidad) apuntando a la Bóveda SGDEA (SharePoint/Azure) para su descarga segura y efímera.
+    And garantizando que el PDF legal no pueda ser indexado por Google ni compartido públicamente por WhatsApp si el link es reenviado a un tercero no autorizado.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 18 (Portal B2B/B2C del Cliente).
 
@@ -2783,6 +2810,16 @@ Feature: External Customer Portal (Service Delivery)
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Intelligent Intake Funnel Management
+  Scenario: Máquina de Estados Inmutable del Intake (Ciclo de Vida Estricto) (CA-0)
+    Given la fragmentación funcional entre la captura del correo, la IA y la instanciación en Camunda
+    Then la arquitectura Backend DEBE implementar una Máquina de Estados (State Machine) estricta para la entidad `Intake`, prohibiendo saltos anárquicos (lógica if/else suelta), bajo el siguiente flujo obligatorio:
+    And 1. `RECEIVED`: El Webhook recibe el correo crudo. Es invisible para los humanos. La IA extrae entidades y CRM_ID (US-013).
+    And 2. `QUARANTINE`: La IA terminó de procesar. La tarjeta cae al Embudo (Pantalla 16) esperando al Administrador humano. El SLA comienza a correr.
+    And 3. `APPROVED_LOCKED`: El Administrador presiona [Aprobar]. La tarjeta entra en la ventana de gracia de 10s (Botón Deshacer). Se bloquea la fila en BD para evitar concurrencia optimista (dos admins tocando la misma tarjeta).
+    And 4. `PROMOTED_TO_BPMN`: Venció la ventana de gracia. El Backend hace el POST a Camunda (creando el Process_Instance_ID), dispara la notificación de confirmación al cliente (Motor de Notificaciones US-049), y el Intake se marca como finalizado, desapareciendo del embudo visual.
+    And 5. `DISCARDED_TRASH`: El humano oprimió la papelera. Se notifica al MLOps (US-015) y desaparece de las vistas activas esperando la purga de 48 hrs.
+    And el Backend rechazará (HTTP 409 Conflict) cualquier intento de mutación que no respete estrictamente estas transiciones direccionales.
+  
   Scenario: Virtual Scroll / Paginación en Embudo
     Given el Administrador abre la Pantalla 16
     When la base de datos contiene más de 25 Intakes en Cuarentena
@@ -3598,11 +3635,14 @@ Permite a la PMO establecer las reglas del juego a nivel corporativo paramétric
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Business SLA Matrix Configuration
-  Scenario: Definición Efectiva de Calendario Laboral (Horas Hábiles)
-    Given el administrador accede a la sección de Configuración de SLAs o Matriz de Negocio
+Scenario: Inyección Arquitectónica del BusinessCalendar en Camunda Engine (Time-Warp Prevention)
+    Given el administrador accede a la sección de Configuración de SLAs o Matriz de Negocio (Pantalla 19)
     When se habilitan los Días Hábiles forzosamente basados en Horas (Ej: Lunes a Viernes de 8:00 a 17:00) y opcionalmente un listado de Días Feriados
-    Then el motor de temporizadores (Ticking Engine) debe calcular y pausar el contador de "Due Dates" respetando las horas inactivas y de descanso.
-    And posee un toggle de parametrización para dictaminar si este cambio en la matriz recalculará retroactivamente las instancias actualmente vivas, o solo a las nuevas (hacia adelante).
+    Then el iBPMS TIENE ESTRICTAMENTE PROHIBIDO dejar que Camunda calcule los SLAs usando su reloj UTC absoluto por defecto (24/7).
+    And los desarrolladores Backend DEBEN implementar e inyectar un Custom `BusinessCalendar` (o sobreescribir el `DefaultBusinessCalendar`) nativo en el *Job Executor* del Engine de Camunda.
+    And este Custom Calendar interceptará el cálculo matemático de todos los `Timer Boundary Events`, `Timer Catch Events` y `Due Dates` de las tareas, leyendo en caliente la Matriz SLA de la base de datos.
+    And garantizando que si una tarea con SLA de "4 horas" entra el Viernes a las 16:00 (Faltando 1 hora para el cierre a las 17:00), el motor pause físicamente el cronómetro de ese Token durante todo el fin de semana, y programe su detonación (Trigger) para el Lunes a las 11:00 AM, protegiendo las métricas operativas reales.
+    And posee un toggle de parametrización para dictaminar si una alteración en este calendario recalculará retroactivamente las instancias actualmente vivas, o solo a las nuevas (hacia adelante).
 
   Scenario: Automatización de Festivos Externos
     Given la necesidad corporativa de bloquear días de asueto local
@@ -3813,6 +3853,50 @@ Feature: API Polling & Telemetry Thresholds
     And el iBPMS forzará la exhibición de un "Banner Rojo Permanente" en la cabecera de la Pantalla 15.A indicándole al SysAdmin: *"CRÍTICO: La sincronización de catálogo falló. El iBPMS opera con una versión desactualizada de más de 24 horas"*.
 ```
 **Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Performance y Conexiones / SysAdmin).
+
+---
+
+### US-049: Motor Central de Notificaciones y Plantillas (Outbound Engine)
+**Como** Administrador del Sistema / PMO
+**Quiero** disponer de un motor centralizado que gestione todas las salidas de correos electrónicos y notificaciones
+**Para** administrar plantillas dinámicas visualmente, evitar textos quemados en el código fuente y garantizar que el envío de correos no bloquee transaccionalmente el motor de Camunda.
+
+**Criterios de Aceptación (Gherkin):**
+Feature: Central Outbound Notification Engine
+```gherkin
+  Scenario: Prohibición de Textos Quemados (Hardcoding) en Backend
+    Given la necesidad estructural del sistema de enviar correos electrónicos (Ej: Confirmaciones US-022, Alertas US-040)
+    Then la arquitectura TIENE ESTRICTAMENTE PROHIBIDO que los desarrolladores redacten el HTML o el asunto (Subject) de los correos dentro del código fuente (Java/Node).
+    And el sistema debe proveer un CRUD de "Plantillas de Notificación" (Templates) en la Interfaz Administrativa (Pantalla 15), utilizando un motor de renderizado estándar (Ej: Thymeleaf, FreeMarker o Handlebars).
+    And las plantillas deben soportar inyección de variables dinámicas (Ej: `Hola {{cliente.nombre}}, tu caso {{caso.id}} ha sido radicado`).
+
+  Scenario: Despacho Asíncrono Estricto (Patrón Outbox)
+    Given que el motor Camunda llega a una `SendTask` o `ServiceTask` configurada para notificar al cliente
+    When el hilo de ejecución intenta despachar el correo a través del servidor SMTP o MS Graph API
+    Then el motor de procesos NO ESPERARÁ la respuesta del servidor de correos (Evitando el bloqueo del Main Thread y Timeouts transaccionales).
+    And empaquetará el payload del correo y lo arrojará a una Cola de Mensajería dedicada (Ej: `outbound-email-queue` en RabbitMQ definida en US-034).
+    And un Worker independiente desencolará y ejecutará el envío real hacia internet.
+
+  Scenario: Resiliencia y Tolerancia a Caídas del Servidor de Correo
+    Given el Worker independiente procesando la cola de correos salientes
+    When el servidor SMTP corporativo del cliente (Ej: Office 365 / Exchange) sufre una caída temporal (HTTP 503 / Timeout)
+    Then el Worker no descartará el correo ni fallará la transacción de negocio principal.
+    And aplicará una política de reintentos con "Exponential Backoff" (Ej: reintentar en 1 min, luego en 5 min, luego en 15 min).
+    And si agota los reintentos máximos, trasladará el correo a una Dead-Letter Queue (DLQ) y emitirá una alerta visual en el Dashboard de TI para intervención manual.
+
+  Scenario: Auditoría Forense de Salida (Outbound Audit Trail)
+    Given un correo electrónico de respuesta de fondo o confirmación enviado al cliente
+    When el servidor SMTP confirma el despacho (Status 200 OK)
+    Then el Motor de Notificaciones debe generar una copia inmutable del HTML exacto y los metadatos de envío.
+    And debe registrar esta copia en la tabla `ibpms_outbox_log` vinculada al `Process_Instance_ID`.
+    And debe proyectar este registro visualmente en la pestaña "Contexto y Correos" del Workdesk proveyendo al analista de una prueba legal irrefutable de qué se le dijo al ciudadano y cuándo.
+
+  Scenario: Agrupación Anti-Spam (Digest / Throttling)
+    Given un error de diseño de un Arquitecto (Ej: Ciclo infinito en BPMN) o una caída masiva de SLAs donde 150 casos vencen simultáneamente
+    When el motor dispara las alertas hacia el correo del "Jefe de Área"
+    Then el Notification Engine aplicará una regla paramétrica de "Agrupación Temporal" (Throttling Window, Ej: 15 minutos) por destinatario.
+    And en lugar de bombardear al Jefe con 150 correos individuales colapsando su bandeja, el motor consolidará los eventos en un único correo tipo "Digest": `[Alerta Masiva: 150 SLAs han sido vulnerados en los últimos 15 min. Vaya al Dashboard]`, protegiendo la reputación del dominio (Anti-Spam).
+```
 
 ---
 

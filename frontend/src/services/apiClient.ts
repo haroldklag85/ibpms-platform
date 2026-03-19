@@ -94,9 +94,14 @@ export const api = {
     getProcessVersions: (id: string) => apiClient.get(`/design/processes/${id}/versions`),
     restoreProcessVersion: (id: string, version: number) => apiClient.post(`/design/processes/${id}/rollback/${version}`),
     getProcessLock: (id: string) => apiClient.get(`/design/processes/${id}/lock`),
+    getProcessAuditLogs: (id: string) => apiClient.get(`/design/processes/${id}/audit-logs`), // CA-42
 
-    // 6. BPMN Sandbox (Pantalla 6)
+    // 6. BPMN Sandbox (Pantalla 6 / CA-41)
     deployToSandbox: (id: string, payload: any) => apiClient.post(`/design/processes/${id}/sandbox`, payload),
+    spawnSandbox: (payload: any) => apiClient.post(`/design/processes/sandbox-spawn`, payload), // CA-41
+
+    // Integraciones / Conectores (CA-45)
+    getIntegrationConnectors: () => apiClient.get(`/integrations/connectors`),
 
     // 7. BAM Analytics - Process Health (Pantalla 5)
     getProcessHealth: () => apiClient.get('/analytics/process-health'),

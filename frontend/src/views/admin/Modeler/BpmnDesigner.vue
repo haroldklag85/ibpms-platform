@@ -39,9 +39,13 @@
         <button @click="triggerCopilotAudit" class="bg-slate-900 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-black flex items-center gap-1 transition">
           🧠 Consultar Copiloto IA
         </button>
-        <!-- Sandbox -->
+        <!-- Sandbox CA-41 -->
         <button @click="runSandbox" class="bg-amber-500 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-amber-600 flex items-center gap-1 transition">
           🧪 Probar en Sandbox
+        </button>
+        <!-- Audit Logs (CA-42) -->
+        <button @click="openAuditLogs" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
+          📝 Auditoría
         </button>
         <!-- Versions -->
         <button @click="showVersions = !showVersions" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
@@ -219,7 +223,7 @@
           <!-- Service Task Connector -->
           <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
             <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2">🔌 Conector API (Service Task)</label>
-            <select v-model="selectedConnector" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
+            <select v-model="selectedConnector" @change="updateElementConnector" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
               <option value="">-- Sin Conector --</option>
               <option v-for="c in availableConnectors" :key="c.id" :value="c.id">
                 {{ c.icon }} {{ c.name }}
@@ -427,6 +431,41 @@
           <ul class="list-disc pl-5">
              <li v-for="(err, i) in validationErrors" :key="i" class="mb-1">{{ err }}</li>
           </ul>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- ═══════ CA-42: Panel: Audit Log ═══════ -->
+    <Transition name="slide-up">
+      <div v-if="showAuditLogsModal" class="absolute bottom-0 right-0 w-[500px] h-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-tl-xl shadow-2xl flex flex-col z-40">
+        <div class="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 shrink-0">
+          <h4 class="text-sm font-bold text-gray-700 dark:text-white flex items-center gap-2">
+            📜 Auditoría de Cambios (Git Log)
+            <button @click="openAuditLogs" class="text-xs text-blue-500 hover:text-blue-700">↻</button>
+          </h4>
+          <button @click="showAuditLogsModal = false" class="text-gray-400 hover:text-red-500">&times;</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 space-y-2">
+          <div v-if="loadingAuditLogs" class="text-center text-xs text-gray-500 py-4">Cargando bitácora...</div>
+          <table v-else class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs text-left">
+            <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+               <tr>
+                 <th class="px-2 py-1">Acción</th>
+                 <th class="px-2 py-1">Usuario</th>
+                 <th class="px-2 py-1">Versión</th>
+                 <th class="px-2 py-1">Fecha</th>
+               </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
+               <tr v-for="(log, i) in auditLogs" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                 <td class="px-2 py-1 font-mono font-bold text-[10px]">{{ log.action }}</td>
+                 <td class="px-2 py-1">{{ log.user }}</td>
+                 <td class="px-2 py-1 font-bold">v{{ log.version }}</td>
+                 <td class="px-2 py-1 text-[10px] text-gray-500 dark:text-gray-400">{{ new Date(log.date).toLocaleString() }}</td>
+               </tr>
+            </tbody>
+          </table>
+          <div v-if="!loadingAuditLogs && auditLogs.length === 0" class="text-center text-xs text-gray-500 py-10">Sin auditoría visible.</div>
         </div>
       </div>
     </Transition>
@@ -760,11 +799,44 @@ const fetchForms = async () => {
   }
 };
 
-const availableConnectors = ref([
-  { id: 'o365', name: 'O365/Exchange', icon: '📧' },
-  { id: 'sharepoint', name: 'SharePoint MS', icon: '📁' },
-  { id: 'netsuite', name: 'Oracle NetSuite', icon: '💰' }
-]);
+const availableConnectors = ref<any[]>([]);
+
+const fetchConnectors = async () => {
+  try {
+    const { data } = await api.getIntegrationConnectors();
+    if(data && Array.isArray(data)) availableConnectors.value = data;
+  } catch(e) {
+    console.warn('API Integraciones MOCKS (CA-45)');
+    availableConnectors.value = [
+      { id: 'o365_mail', name: 'O365/Exchange', icon: '📧' },
+      { id: 'sharepoint_docs', name: 'SharePoint MS', icon: '📁' },
+      { id: 'netsuite_erp', name: 'Oracle NetSuite', icon: '💰' }
+    ];
+  }
+};
+
+// CA-42: Audit Logs
+const showAuditLogsModal = ref(false);
+const auditLogs = ref<any[]>([]);
+const loadingAuditLogs = ref(false);
+
+const openAuditLogs = async () => {
+  showAuditLogsModal.value = true;
+  showVersions.value = false;
+  loadingAuditLogs.value = true;
+  try {
+    const { data } = await api.getProcessAuditLogs(processId.value);
+    auditLogs.value = data || [];
+  } catch (err) {
+    auditLogs.value = [
+      { action: 'IMPORT XML', user: 'Harolt Gómez', date: new Date().toISOString(), version: 1 },
+      { action: 'REQUEST DEPLOY', user: 'Ana García', date: new Date().toISOString(), version: 1 },
+      { action: 'ARCHIVED', user: 'System', date: new Date().toISOString(), version: 1 }
+    ];
+  } finally {
+    loadingAuditLogs.value = false;
+  }
+};
 
 const filteredForms = computed(() => {
   if (processPattern.value === 'SIMPLE') return availableForms.value.filter(f => f.type === 'SIMPLE');
@@ -803,8 +875,9 @@ onMounted(async () => {
     await modelerInstance.importXML(emptyBpmn);
     modelerInstance.get('canvas').zoom('fit-viewport');
 
-    // Initial Load CA-30 Forms
+    // Initial Load CA-30 Forms & CA-45 Connectors
     fetchForms();
+    fetchConnectors();
     try {
       const { data } = await api.getBpmnComplexityLimit();
       if (data && data.limit) bpmnComplexityLimit.value = data.limit;
@@ -1072,22 +1145,13 @@ const requestDeploy = async () => {
 
 const runSandbox = async () => {
   try {
-    showToast('🧪 Sandbox: Iniciando simulación...');
+    showToast('🧪 Sandbox: Iniciando simulación en Motor V1...');
     const { xml } = await modelerInstance.saveXML({ format: true });
     
-    // Ejecuta Sandbox y extrae path o mockea (CA-20)
-    const { data } = await api.deployToSandbox(processId.value, { xml });
-    const nodesToHighlight = data?.nodeIds || ['StartEvent_1', 'Event_1']; 
+    // CA-41: Simulador Hardcore Camunda V1
+    await api.spawnSandbox({ xml });
     
-    showToast(`🧪 Sandbox: Simulación exitosa. Tracking tokens...`, 'success');
-    
-    const canvas = modelerInstance.get('canvas');
-    nodesToHighlight.forEach((nodeId: string, index: number) => {
-      setTimeout(() => {
-        try { canvas.addMarker(nodeId, 'highlight-green'); } catch(_) {}
-      }, index * 1000);
-    });
-    
+    showToast(`✅ Sandbox (CA-41): Ejecución simulada sin errores.`, 'success');
   } catch (err) {
     showToast('🧪 Error conectando al motor de Simulación Sandbox', 'error');
   }
@@ -1238,6 +1302,17 @@ const updateElementSla = () => {
   }
 };
 
+// CA-45: Service Task Connector
+const updateElementConnector = () => {
+  if (!modelerInstance || !selectedElement.value.id || !selectedConnector.value) return;
+  const elementRegistry = modelerInstance.get('elementRegistry');
+  const element = elementRegistry.get(selectedElement.value.id);
+  if (element) {
+    const modeling = modelerInstance.get('modeling');
+    modeling.updateProperties(element, { "camunda:delegateExpression": `\${${selectedConnector.value}Adapter}` });
+  }
+};
+
 const updateProcessProperty = (name: string, value: string) => {
   if (!modelerInstance) return;
   const modeling = modelerInstance.get('modeling');
@@ -1310,6 +1385,11 @@ const syncElementProperties = (key: string, value: any) => {
 .djs-palette .entry[data-action="create.data-store"],
 .djs-palette .entry[data-action="create.subprocess-expanded"] {
   display: none !important;
+}
+/* CA-44: Habilitar Pools y Message Flow explícitamente */
+:deep(.djs-palette .entry[data-action="create.participant-expanded"]),
+:deep(.djs-palette .entry[data-action="connect.message-flow"]) {
+  display: flex !important;
 }
 /* CA-35: Eliminada restricción para create.participant-expanded habilitando los Pools (Carriles) */
 

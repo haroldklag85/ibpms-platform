@@ -47,19 +47,25 @@
         <button @click="showVersions = !showVersions" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
           📜 Versiones
         </button>
+        <!-- Mock Role CA-21 -->
+        <select v-model="mockRole" title="Evaluar UI con diferentes perfiles CA-21" class="text-xs bg-indigo-50 dark:bg-gray-700 border-indigo-200 dark:border-gray-600 rounded px-2 py-1 focus:ring-indigo-500 text-indigo-800 dark:text-white font-bold ml-2">
+           <option value="BPMN_Designer">👨‍💻 Diseñador</option>
+           <option value="BPMN_Release_Manager">👑 Release Manager</option>
+        </select>
         <!-- Instance Manager CA-8 -->
         <button @click="showInstancesManager = true" class="bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold hover:bg-indigo-100 flex items-center gap-1 transition">
           🧬 Gestor de Instancias
         </button>
-        <!-- Deploy / Request Deploy (RBAC CA-12, CA-24) -->
-        <button v-if="authStore.hasAnyRole(['BPMN_Release_Manager', 'system_admin'])" 
+        <!-- Request Deploy -->
+        <button v-show="mockRole === 'BPMN_Designer'" @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
+          📩 Solicitar Despliegue
+        </button>
+        <!-- Deploy (CA-21) -->
+        <button v-show="mockRole === 'BPMN_Release_Manager'"
                 @click="showDeployModal = true" 
                 :disabled="isDeploying || !['VALIDATED', 'WARNING'].includes(preFlightStatus)" 
                 class="bg-indigo-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 transition">
           🚀 [VALIDAR Y DESPLEGAR]
-        </button>
-        <button v-else @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
-          📩 Solicitar Despliegue
         </button>
       </div>
     </header>
@@ -109,11 +115,11 @@
       <!-- BPMN Canvas -->
       <div ref="canvasContainer" class="flex-1 overflow-hidden h-full bpmn-canvas" :class="{ 'pointer-events-none': isLocked }"></div>
 
-      <!-- CA-16: Floating Zoom Controls -->
+      <!-- CA-25: Floating Zoom Controls -->
       <div class="absolute bottom-4 left-4 flex gap-2 z-30">
         <button @click="zoomIn" class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-lg rounded p-2 hover:bg-gray-50 dark:hover:bg-gray-700 font-bold w-10 h-10 flex items-center justify-center border border-gray-200 dark:border-gray-600" title="Zoom In">+</button>
         <button @click="zoomOut" class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-lg rounded p-2 hover:bg-gray-50 dark:hover:bg-gray-700 font-bold w-10 h-10 flex items-center justify-center border border-gray-200 dark:border-gray-600" title="Zoom Out">-</button>
-        <button @click="zoomFit" class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-lg rounded p-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs font-bold px-3 h-10 flex items-center justify-center border border-gray-200 dark:border-gray-600" title="Fit Viewport">FIT</button>
+        <button @click="zoomFit" class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-lg rounded p-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-lg font-bold w-10 h-10 flex items-center justify-center border border-gray-200 dark:border-gray-600" title="Fit Viewport">O</button>
       </div>
 
       <!-- ═══════ Properties Side Panel ═══════ -->
@@ -459,50 +465,38 @@
       </div>
     </Transition>
 
-    <!-- ═══════ Process Catalog Overlay ═══════ -->
-    <div v-if="showCatalog" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6">
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white">📜 Catálogo de Procesos</h3>
+    <!-- ═══════ Drawer: Explorador de Procesos (CA-23) ═══════ -->
+    <Transition name="slide-left">
+      <div v-if="showCatalog" class="fixed inset-y-0 right-0 w-96 bg-white dark:bg-gray-800 shadow-2xl z-50 flex flex-col border-l border-gray-200 dark:border-gray-700">
+        <div class="px-5 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0">
+          <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">📂 Explorador de Procesos</h3>
           <div class="flex items-center gap-3">
-            <button @click="showNewProcessModal = true; showCatalog = false" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700 transition">+ Nuevo Proceso</button>
-            <button @click="showCatalog = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            <button @click="showNewProcessModal = true; showCatalog = false" title="Nuevo Proceso" class="text-blue-600 hover:text-blue-800 text-xl font-bold">+</button>
+            <button @click="showCatalog = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
           </div>
         </div>
-        <div class="flex-1 overflow-y-auto relative">
+        <div class="flex-1 overflow-y-auto relative p-4 bg-gray-50 dark:bg-gray-900">
           <div v-if="loadingCatalog" class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 flex items-center justify-center z-10">
-            <span class="text-sm text-gray-500 font-bold animate-pulse">Cargando procesos...</span>
+            <span class="text-sm text-gray-500 font-bold animate-pulse">Consultando modelos...</span>
           </div>
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 dark:bg-gray-900 sticky top-0">
-              <tr>
-                <th class="text-left px-4 py-2 text-xs font-bold text-gray-500 uppercase">Nombre</th>
-                <th class="text-left px-4 py-2 text-xs font-bold text-gray-500 uppercase">Estado</th>
-                <th class="text-left px-4 py-2 text-xs font-bold text-gray-500 uppercase">Versión</th>
-                <th class="text-left px-4 py-2 text-xs font-bold text-gray-500 uppercase">Última Edición</th>
-                <th class="text-left px-4 py-2 text-xs font-bold text-gray-500 uppercase">Autor</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="p in catalogProcesses" :key="p.id" @click="loadProcess(p)" class="hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer border-t border-gray-100 dark:border-gray-700 transition">
-                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ p.name }}</td>
-                <td class="px-4 py-3">
-                  <span class="text-xs font-bold uppercase px-2 py-0.5 rounded-full"
-                        :class="{
-                          'bg-yellow-100 text-yellow-800': p.status === 'BORRADOR',
-                          'bg-green-100 text-green-800': p.status === 'ACTIVO',
-                          'bg-gray-100 text-gray-600': p.status === 'ARCHIVADO'
-                        }">{{ p.status }}</span>
-                </td>
-                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">v{{ p.version }}</td>
-                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ p.lastEdited }}</td>
-                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ p.author }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="space-y-3">
+            <div v-for="p in catalogProcesses" :key="p.id" @click="loadProcess(p)" class="p-4 bg-white dark:bg-gray-800 border rounded-lg shadow-sm hover:shadow-md hover:border-blue-400 cursor-pointer transition flex flex-col gap-2 border-gray-200 dark:border-gray-700 group">
+              <span class="font-bold text-sm text-gray-900 dark:text-gray-100 group-hover:text-blue-600 transition">{{ p.name }}</span>
+              <div class="flex flex-col gap-1">
+                <span class="text-[10px] text-gray-500 dark:text-gray-400">📅 {{ p.lastEdited.split(' ')[0] || p.lastEdited }}</span>
+                <div class="flex items-center justify-between">
+                   <span class="text-[10px] font-bold text-gray-500">v{{ p.version }} | {{ p.author?.split(' ')[0] || p.author }}</span>
+                   <span class="text-[10px] font-bold uppercase rounded-full px-2 py-0.5" :class="{'bg-green-100 text-green-800': p.status==='ACTIVO', 'bg-yellow-100 text-yellow-800': p.status==='BORRADOR', 'bg-gray-100 text-gray-700': p.status==='ARCHIVADO'}">{{ p.status }}</span>
+                </div>
+              </div>
+            </div>
+            <div v-if="catalogProcesses.length === 0 && !loadingCatalog" class="text-center text-xs text-gray-500 py-10 font-bold">
+              El repositorio está vacío.
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
 
     <!-- ═══════ Gestor de Instancias (CA-8 a CA-10) ═══════ -->
     <InstancesManager 
@@ -518,12 +512,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { api } from '@/services/apiClient';
-import { useAuthStore } from '@/stores/authStore';
 import { debounce } from 'lodash-es';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 import InstancesManager from './InstancesManager.vue';
 
-const authStore = useAuthStore();
+const mockRole = ref<'BPMN_Designer' | 'BPMN_Release_Manager'>('BPMN_Release_Manager'); // CA-21
 
 // ── Types ────────────────────────────────────────────────────
 interface BpmnElement {
@@ -1273,5 +1266,31 @@ const syncElementProperties = (key: string, value: any) => {
 .slide-up-leave-to {
   transform: translateY(100%);
   opacity: 0;
+}
+
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: all 0.3s ease;
+}
+.slide-left-enter-from,
+.slide-left-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+/* ═══════ CA-22: Custom Palette Override CSS ═══════ */
+:deep(.djs-palette .entry) { display: none !important; }
+:deep(.djs-palette .entry[data-action="create.start-event"]),
+:deep(.djs-palette .entry[data-action="create.end-event"]),
+:deep(.djs-palette .entry[data-action="create.task"]),
+:deep(.djs-palette .entry[data-action="create.service-task"]),
+:deep(.djs-palette .entry[data-action="create.exclusive-gateway"]),
+:deep(.djs-palette .entry[data-action="create.parallel-gateway"]),
+:deep(.djs-palette .entry[data-action="create.text-annotation"]),
+:deep(.djs-palette .entry[data-action="space-tool"]),
+:deep(.djs-palette .entry[data-action="lasso-tool"]),
+:deep(.djs-palette .entry[data-action="hand-tool"]),
+:deep(.djs-palette .entry[data-action="global-connect-tool"]) {
+  display: flex !important;
 }
 </style>

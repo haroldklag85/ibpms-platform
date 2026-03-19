@@ -173,6 +173,25 @@ public class BpmnDesignController {
     }
 
     /**
+     * CA-27: Proveedor de Plantillas BPMN
+     */
+    @GetMapping("/templates")
+    public ResponseEntity<List<Map<String, String>>> getProcessTemplates() {
+        String tmplAprobacion = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Def_Tmpl\">\n" +
+                "  <bpmn:process id=\"Process_Template_1\" isExecutable=\"true\">\n" +
+                "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
+                "    <bpmn:userTask id=\"Task_1\" name=\"Revisión Humana\" />\n" +
+                "    <bpmn:endEvent id=\"EndEvent_1\" />\n" +
+                "  </bpmn:process>\n" +
+                "</bpmn:definitions>";
+
+        return ResponseEntity.ok(List.of(
+            Map.of("id", "template_1", "name", "Aprobación Simple", "xml", tmplAprobacion)
+        ));
+    }
+
+    /**
      * CA-16: Bloqueo Pesimista (Adquisición)
      */
     @PostMapping("/{processDefinitionKey}/lock")

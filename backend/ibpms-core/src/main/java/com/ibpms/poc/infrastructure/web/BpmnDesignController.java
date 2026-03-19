@@ -53,7 +53,16 @@ public class BpmnDesignController {
     }
 
     @PostMapping("/deploy")
-    public ResponseEntity<?> deployBpmnProcess(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> deployBpmnProcess(
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader(value = "X-Mock-Role", required = false, defaultValue = "GUEST") String role) {
+        
+        // CA-21: Escudo RBAC para el Despliegue
+        if (!"BPMN_Release_Manager".equals(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager para comisionar modelos en Producción"));
+        }
+
         if (file.isEmpty() || !file.getOriginalFilename().endsWith(".bpmn")) {
             return ResponseEntity.badRequest().body(Map.of("error", "Debe adjuntar un archivo .bpmn válido."));
         }
@@ -136,6 +145,31 @@ public class BpmnDesignController {
             "processDefinitionKey", processDefinitionKey,
             "status", "ROLLBACK_SUCCESS"
         ));
+    }
+
+    /**
+     * CA-23: Catálogo de Modelos Base (Mock RepositoryService)
+     */
+    @GetMapping
+    public ResponseEntity<List<Map<String, Object>>> getAllLatestProcesses() {
+        return ResponseEntity.ok(List.of(
+            Map.of("key", "onboarding_1", "name", "Alta de Colaboradores", "version", 2, "deployDate", "2023-11-20T10:00:00Z"),
+            Map.of("key", "invoice_proc", "name", "Procesamiento de Facturas", "version", 5, "deployDate", "2023-12-01T15:30:00Z")
+        ));
+    }
+
+    /**
+     * CA-23 Click: Extracción RAW XML para pintado en Lienzo
+     */
+    @GetMapping("/{processDefinitionKey}/xml")
+    public ResponseEntity<Map<String, String>> getProcessXml(@PathVariable("processDefinitionKey") String key) {
+        String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                         "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Definitions_1\">\n" +
+                         "  <bpmn:process id=\"" + key + "\" isExecutable=\"true\">\n" +
+                         "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
+                         "  </bpmn:process>\n" +
+                         "</bpmn:definitions>";
+        return ResponseEntity.ok(Map.of("xml", mockXml));
     }
 
     /**

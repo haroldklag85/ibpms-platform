@@ -58,7 +58,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith(BEARER_PREFIX)) {
             String token = header.substring(BEARER_PREFIX.length()).trim();
 
-            // CA-14: Exorcismo JWT (Blacklist Filter)
+            // CA-14 y CA-01: Exorcismo JWT con Tolerancia a Fallos (Fail-Open)
             try {
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");
                 byte[] hash = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -70,8 +70,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token purgado en la Lista Negra (Kill-Session).");
                     return;
                 }
-            } catch (NoSuchAlgorithmException e) {
-                // Ignore hash error, resume validation
+            } catch (Exception e) {
+                // CA-01: Fail-Open Policy. Resiliencia ante caída del motor de Invalidación (Timeout Redis/DB).
+                logger.error("[SRE RESILIENCE] Redis Fail-Open CATCH: Lista Negra inaccesible. Confiando en la criptografía del Token. Causa: " + e.getMessage());
             }
 
             if (jwtTokenProvider.isValid(token)) {
@@ -98,7 +99,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                List<String> roles = jwtTokenProvider.getRoles(token);
+                // CA-02: Filtro de la Mochila Pesada (Anti-Token Bloat HTTP 431)
+                List<String> rawRoles = jwtTokenProvider.getRoles(token);
+                List<String> roles = rawRoles.stream()
+                        .filter(r -> r.startsWith("ibpms_rol_"))
+                        .map(r -> r.replace("ibpms_rol_", ""))
+                        .collect(Collectors.toList());
                 
                 // CA-9 Inyección Dinámica de Delegaciones (Sustituciones Temporales)
                 java.util.List<com.ibpms.poc.infrastructure.jpa.entity.security.DelegationEntity> activeDelegations = 

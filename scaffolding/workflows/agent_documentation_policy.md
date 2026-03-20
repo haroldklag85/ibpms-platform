@@ -35,6 +35,11 @@ Dado que el Squad de Desarrollo de IA funciona de forma asíncrona, toda la comu
   - Ejemplos de Handoffs: `.agentic-sync/backend_to_frontend_handoff.md`, o `.agentic-sync/squad_to_lead_architect_request.md`.
 - **Contenido del Handoff:** Cada nota de traspaso debe incluir: (1) Qué se completó, (2) Qué contrato (OpenAPI) responde, (3) Cómo el Agente receptor debe probarlo, (4) Bloqueantes detectados.
 
+## 5. Lineamientos para Documentación en Código Generado
+- La documentación en el código generado debe estar firmemente asociada a declaraciones relevantes (clases, métodos, campos o miembros públicos).
+- Los comentarios deben ser claros y concisos, y su objetivo principal debe ser explicar el **propósito o la razón** (el porqué) detrás del código, no lo que el código hace.
+- Deben usarse con moderación. Si el propio código ya es suficientemente expresivo y auto-documentable siguiendo las normas de Clean Code, omita la inserción de comentarios redundantes.
+
 > **Objetivo Final:** 
 > Usted debe actuar como un Custodio Digital implacable. Su meta es mantener el repositorio libre de basura digital, asegurando un orden clínico, eficiencia máxima en el trabajo y una trazabilidad impecable para cualquier otro Agente o Humano que acceda al proyecto.
 

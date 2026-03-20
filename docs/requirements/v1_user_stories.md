@@ -3534,6 +3534,7 @@ Feature: Identity Governance & RBAC Architecture
 
 
 
+
 ### US-038: Asignación Multi-Rol y Sincronización EntraID
 **Como** Administrador de Seguridad
 **Quiero** asignar o sincronizar múltiples roles (Globales y de Proceso) a un mismo usuario autenticado
@@ -3541,128 +3542,113 @@ Feature: Identity Governance & RBAC Architecture
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Multitenant RBAC & Multiple Roles Assignment
+Feature: Multitenant RBAC, EntraID Sync & Identity Governance (Microservices Ready)
 
-  # A. El Inicio de Sesión y la Muerte Súbita
-  Scenario: Revocación Inmediata de Acceso (CA-1)
-    Given un usuario operando activamente dentro del iBPMS
-    When su cuenta es desactivada o removida de todos los grupos de acceso en EntraID (Directorio Activo)
-    Then el sistema debe detectar la invalidez del Token y expulsarlo inmediatamente hacia la pantalla de Login
-    And no permitirá la ejecución de ninguna transacción en vuelo, arrojando HTTP 401 Unauthorized.
+  # ==============================================================================
+  # A. INICIO DE SESIÓN, JIT Y LA MUERTE SÚBITA (Arquitectura Stateless)
+  # ==============================================================================
+  Scenario: Tolerancia a Fallos del Kill-Switch (Redis Fail-Open Policy) (CA-01)
+    Given la arquitectura de validación de Tokens (JWT) que consulta una Lista Negra en memoria (Redis) en <5ms para bloquear usuarios despedidos
+    When el clúster de Redis sufre una caída temporal (Timeout) o partición de red (SPOF)
+    Then la arquitectura TIENE PROHIBIDO bloquear el acceso masivo a la plataforma asfixiando a la empresa (Fail-Closed).
+    And el Gateway DEBE adoptar una postura de resiliencia "Fail-Open Auditado" (Alta Disponibilidad).
+    And validará matemáticamente la firma criptográfica y la caducidad del Token JWT, y si es válido, PERMITIRÁ el paso.
+    And paralelamente disparará una alerta técnica crítica al SysAdmin indicando: "Caché Offline - Operando en Degradación Segura sin Lista Negra".
 
-  Scenario: Prevención del Secuestro de Roles (CA-2)
-    Given un usuario que ayer poseía el rol "Líder_SAC" pero que hoy le fue revocado en EntraID
-    When el usuario con una sesión antigua (Token vivo de ayer) intenta aprobar un reclamo
-    Then el backend intercepta la petición y valida asíncronamente los Claims actuales antes del Commit
-    And rechaza la operación si el rol ya no le pertenece, forzando un refresco de sus permisos (Log-Out silencioso o recarga de la Master Page).
+  Scenario: Filtro de la Mochila Pesada (Anti-Token Bloat) (CA-02)
+    Given un usuario (Ej: Gerente General) que pertenece a más de 150 grupos de seguridad en Microsoft EntraID
+    When el Backend recibe el payload de grupos/roles del Identity Provider (o el flag de exceso `_odata.nextLink`)
+    Then la arquitectura TIENE PROHIBIDO empaquetar cientos de roles irrelevantes dentro del Token JWT, previniendo que los servidores web colapsen con el error HTTP 431.
+    And aplicará un "Filtro de Prefijo" estricto, ingiriendo e inyectando únicamente los roles que comiencen con la nomenclatura oficial de la plataforma (Ej: `ibpms_rol_*`).
 
-  # B. La Pelea de Permisos
-  Scenario: Resolución de Permisos Contradictorios (Regla del Más Restrictivo) (CA-3)
-    Given un usuario que hereda simultáneamente un "Rol A" (Permite Borrado) y un "Rol B" (Prohíbe Borrado estricto) sobre el mismo objeto
-    When el motor de políticas de Vue y Spring Security evalúan el acceso
-    Then el sistema debe resolver el conflicto aplicando siempre "La Regla del Rol Más Restrictivo" (Deny-Overrides)
-    And inhabilitando físicamente el botón de [Borrar] en la UI.
+  Scenario: Aprovisionamiento Just-In-Time (JIT) con Guardrail de Claims Mínimos Vitales (CA-03)
+    Given un usuario nuevo que ingresa por primera vez a la URL del iBPMS vía SSO (EntraID)
+    When el motor de Aprovisionamiento (JIT) parsea el Token de Microsoft para crearlo localmente
+    Then el Backend evaluará el Token contra una matriz de "Claims Mínimos Vitales" (Ej: `Sucursal_ID`, `Codigo_Jefe`) necesarios para el enrutamiento de Camunda.
+    And si el perfil corporativo de EntraID viene COMPLETO, lo deja pasar al Workdesk asignándole el rol inofensivo `[Ciudadano_Interno]`.
+    But si el perfil corporativo está INCOMPLETO, el Frontend interceptará el acceso.
+    And renderizará un Modal bloqueante de `[Completar Perfil Local]`, forzando al empleado a seleccionar o digitar los datos faltantes antes de habilitarle la plataforma, protegiendo la integridad del motor BPMN.
 
-  Scenario: Detección de Conflicto de Segregación de Funciones (Juez y Parte) (CA-4)
-    Given un usuario al que se le han asignado por error los roles exclusivos de "Creador de Pedido" y "Aprobador Financiero"
-    When el usuario inicia sesión
-    Then el sistema le permite ingresar y operar
-    And dispara inmediatamente una Alerta Roja asíncrona ("Conflicto SoD Detectado") hacia el Módulo de Anomalías del Administrador
-    And dejará una traza en la Auditoría etiquetando todas las transacciones de este usuario con un flag `WARNING_SoD_CONFLICT` hasta que el administrador depure sus roles en el AD.
-
-  # C. La Bandeja de Entrada Mágica (Workdesk)
-  Scenario: Consolidación Transversal en el Workdesk (CA-5)
-    Given un usuario con múltiples sombreros (Ej: 3 roles operativos distintos)
-    When abre su vista de Workdesk
-    Then el sistema consolida TODAS sus tareas en una única lista unificada y limpia
-    And NO fragmenta la pantalla en múltiples pestañas ni lo obliga a saltar entre perfiles (La segregación de vistas complejas se abordará en historias de Dashboarding, no en la trinchera operativa).
-
-  Scenario: Insignia de Procedencia del Rol en la Tarjeta (CA-6)
-    Given la lista de tareas unificadas en el Workdesk
-    Then cada tarjeta (Card o Fila) debe inyectar un Badge/Etiqueta visual discreta (Ej: `Rol: Aprobador_Nivel_2`)
-    And explicándole al usuario exactamente bajo qué "Sombrero" o prerrogativa de negocio se le está exigiendo resolver ese caso específico.
-
-  Scenario: Retorno al Pool Común por Renuncia (CA-7)
-    Given una tarea instanciada y encolada específicamente bajo un candidato de rol (Ej: "BPMN_Credito_Aprobador")
-    When el único usuario en toda la empresa que poseía ese rol renuncia y es desactivado
-    Then la tarea NO entra en Dead-Letter ni se pierde en un agujero negro
-    And la tarea permanece visible y viva en el Pool (Cola del Grupo)
-    And esperando a que el Administrador de TI asigne ese rol a un nuevo empleado para que pueda visualizarla y reclamarla.
-
-  # D. Infraestructura de Mentiras (Fallas)
-  Scenario: Autenticación de Respaldo por Falla de Azure (Puerta Secreta) (CA-8)
+  # ==============================================================================
+  # B. INFRAESTRUCTURA DE EMERGENCIAS Y CIERRE DE CICLO
+  # ==============================================================================
+  Scenario: Protocolo Break-Glass con Cierre de Ciclo Obligatorio (CA-04)
     Given que la infraestructura de Microsoft EntraID sufre una caída global (HTTP 503)
-    When los usuarios intentan loguearse a través de OAuth/OIDC
-    Then el sistema fallará elegantemente
-    And debe existir una URL local oculta (Backdoor pre-configurado en Frontend) que permita autenticación directa (Email/Contraseña) contra la tabla interna de usuarios
-    And solo disponible para un listado minúsculo de Administradores Locales (Break-Glass Accounts) para mantener la plataforma viva durante la crisis.
+    Then el sistema habilitará un login de emergencia local ("Break-Glass Account") protegido por IP Whitelisting (Solo Red Corporativa/VPN).
+    And por cumplimiento estricto de ciberseguridad (ISO 27001), ESTÁ PROHIBIDO referirse a esto como un "Backdoor" u ocultar la URL en el Frontend.
+    And su uso exitoso disparará automáticamente alertas de Severidad Alta a la Gerencia de TI.
+    When se restablezca el servicio de EntraID (resolución de la crisis)
+    Then el iBPMS bloqueará las pantallas administrativas del Súper Admin con una alerta crítica (Tablero de Anomalías).
+    And le exigirá mediante un Modal Inevitable rotar la contraseña o destruir las credenciales locales de la cuenta Break-Glass utilizada, erradicando el riesgo de dejar una "Puerta Trasera" durmiente.
 
-  Scenario: Mapeo Flexible de Identidades (CA-9)
-    Given la arquitectura global de autenticación del iBPMS
-    Then el sistema debe soportar tres (3) modos de operación paramétricos para la ingesta de Roles:
-    And 1. Sincronía Total (1:1): Los grupos y roles se inyectan 100% desde Azure EntraID.
-    And 2. IdP Híbrido: Azure solo se usa para el "Login" (Validar existencia), pero el iBPMS asigna localmente sus propios roles en su base de datos.
-    And 3. IdP Local Absoluto: El sistema funge como su propio Autenticador (Módulo interno de Usuarios y Passwords).
+  # ==============================================================================
+  # C. LA PELEA DE PERMISOS Y ANOMALÍAS
+  # ==============================================================================
+  Scenario: Resolución Aditiva de Permisos (RBAC Simple) (CA-05)
+    Given un usuario que hereda simultáneamente "Rol A" (Solo Lectura) y "Rol B" (Lectura y Escritura)
+    Then el motor de políticas aplicará un modelo "Aditivo" estándar (Allow-Overrides) para la visibilidad de la UI.
+    And el usuario gozará del súper-conjunto de permisos, evitando la extrema complejidad computacional de motores de reglas negativas (Deny-Overrides) en el MVP V1.
 
-  # E. Auditoría y Rastro de Migas
-  Scenario: Trazabilidad Quirúrgica en Logs (CA-10)
-    Given un usuario multi-rol ejecutando una transacción crítica (Ej: Aprobar Pago)
-    When el Backend estampa el evento en la bitácora de auditoría (AiAuditLogEntity)
-    Then la tupla de base de datos debe almacenar el máximo detalle forense
-    And registrando no solo el `user_id` y `timestamp`, sino también un JSON con el "Contexto de Roles Activos" (`active_claims`) en el milisegundo exacto de la ejecución para peritajes legales.
+  Scenario: Detección y Contención de Segregación de Funciones (Juez y Parte) (CA-06)
+    Given un usuario al que EntraID le ha inyectado por error roles incompatibles (Ej: "Creador de Pedido" y "Aprobador Financiero")
+    When el usuario intenta aprobar una instancia de proceso que ÉL MISMO originó
+    Then el sistema DEBE BLOQUEAR matemáticamente la transacción en el backend (Regla Fija: `Creator_ID != Approver_ID`).
+    And el sistema le permitirá operar el resto de su día (Ej: Aprobar los pedidos de sus compañeros), pero JAMÁS cruzar el límite ético sobre su propia data.
+    And disparará una Alerta Roja asíncrona hacia el Tablero de Anomalías de Seguridad (CA-12).
 
-  Scenario: Restricción del Préstamo de Llaves (CA-11)
-    Given un empleado multi-rol que se ausenta temporalmente
-    When intenta ceder uno de sus sombreros críticos a un compañero desde la UI de la plataforma
-    Then el Frontend bloquea la intención careciendo de una interfaz para "Transferencia de Roles en Caliente"
-    And obliga procedimentalmente a que el compañero solicite el permiso transitorio a través del conducto regular (Directorio Activo de TI).
+  # ==============================================================================
+  # D. DELEGACIÓN Y RESCATE DE TAREAS (SRE Guaranteed Delivery)
+  # ==============================================================================
+  Scenario: Proxy Temporal de Autoridad y Exorcismo de Tareas Garantizado (CA-07)
+    Given una Directora ("María") que sale de vacaciones por 15 días y tiene tareas operativas retenidas bajo su usuario (`assignee = maria`)
+    When utiliza la Pantalla 14 para delegar su Rol jerárquico a un Coordinador ("Carlos")
+    Then el sistema exige definir una [Fecha_Inicio] y [Fecha_Fin] estricta para la delegación.
+    And la bitácora de auditoría estampará en cada acción de Carlos: "Ejecutado por: Carlos (En representación de: María)".
+    And SIMULTÁNEAMENTE el iBPMS encola un evento asíncrono de "Auto-Unclaim Masivo" en el Message Broker (RabbitMQ) hacia Camunda.
+    And si Camunda se encuentra Offline o en mantenimiento (HTTP 503), el Worker aplicará una Política de Reintentos (Retry Policy) y Dead Letter Queue (DLQ).
+    And garantizando matemáticamente que el evento no se pierda y las tareas de María sean devueltas a la "Cola de Grupo" cuando el motor reviva, erradicando los Zombies irrecuperables.
 
-  # F. Delegaciones 
-  Scenario: Trazabilidad de la Delegación (Workdesk) (CA-12)
-    Given que María le delega una de sus tareas de Workdesk a Carlos (US-001)
-    When María ejecuta la transferencia
-    Then la auditoría debe grabar el evento indicando "Delegan: María -> Carlos"
-    And la tarea aparece en la bandeja de Carlos junto con un Popup o Banner exigiéndole ACEPTAR o RECHAZAR la delegación encomendada.
+  Scenario: El Exorcismo de Tareas por Despido (CA-08)
+    Given una tarea operativa en Camunda asignada explícitamente a un empleado (`assignee = juan.perez`)
+    When Juan renuncia y su perfil es desactivado en el módulo de seguridad
+    Then el iBPMS no asumirá que Camunda se entera automáticamente.
+    And el módulo de Identidad emitirá un evento interno asíncrono hacia RabbitMQ (con política de reintentos y DLQ igual al CA-07).
+    And el Worker desencolará la orden, irá a Camunda y ejecutará un `Unclaim` masivo sobre TODAS las tareas vivas de Juan, devolviéndolas a disponibilidad pública para salvar los SLAs.
 
-  Scenario: Rebote Natural por Rechazo de Delegación (CA-13)
-    Given la delegación pendiente descrita en CA-12
-    When Carlos presiona el botón [Rechazar Delegación] en el Popup
-    Then la tarea abandona inmediatamente el Workdesk de Carlos
-    And vuelve a rebotar como un boomerang regresando a ser la responsabilidad exclusiva en el Workdesk de María (Propietaria original), conservando todo el historial en la auditoría.
+  # ==============================================================================
+  # E. CONSOLIDACIÓN VISUAL Y TRAZABILIDAD EXTREMA
+  # ==============================================================================
+  Scenario: Trazabilidad Quirúrgica (Distributed Tracing V2 Ready) (CA-09)
+    Given un usuario multi-rol ejecutando una transacción crítica
+    When el Backend estampa el evento en la bitácora de auditoría
+    Then almacenará el `user_id`, `timestamp` y un JSON inmutable con los "Roles Activos" (Claims) de su JWT en ese milisegundo exacto.
+    And OBLIGATORIAMENTE inyectará un `Correlation-ID` o `Trace-ID` transversal en los Headers HTTP, garantizando que al migrar a Microservicios (V2), los auditores puedan rastrear el hilo de la transacción a través de todas las bases de datos.
 
-  Scenario: Pre-Autorización a Pasajeros Nuevos (CA-14)
-    Given un usuario que acaba de ser contratado e instanciado en Microsoft EntraID hoy a las 8:00 AM
-    When el usuario ingresa por primera vez a la URL del iBPMS a las 8:05 AM
-    Then el sistema NO lo detiene en pantallas de "Cree su perfil" ni "Espere aprobación"
-    And mapea al vuelo (Just-In-Time Provisioning) sus atributos y roles del Token de Azure, dejándolo pasar derecho hacia su Workdesk operativo instantáneamente.
+  Scenario: Consolidación Transversal e Insignia de Procedencia (CA-10)
+    Given un usuario con 3 roles operativos distintos
+    When abre su vista de Workdesk
+    Then el sistema consolida TODAS sus tareas en una única grilla unificada sin forzar saltos de perfil.
+    And inyecta un Badge visual discreto en cada fila (Ej: `Rol: Aprobador_Nivel_2`) explicándole al usuario bajo qué prerrogativa de negocio se le exige resolver ese caso específico.
 
-  # G. Visuales (Lo que ve el ojo)
-  Scenario: Rendimiento Estricto en Parseo de Mega-Roles (CA-15)
-    Given un Gerente General que porta un listado demencial de +80 roles y permisos combinados en su perfil de Azure
-    When el usuario hace el proceso de Login y redirección
-    Then el tiempo de cómputo del Frontend para desenredar iterativamente ese árbol de permisos y renderizar el Layout (Sidebar/Header)
-    And no debe superar los 500ms bajo ninguna circunstancia (Complejidad O(1) o indexación en Pinia Store), garantizando que su ingreso se sienta inmediato.
+  Scenario: Indicador Tipográfico de Dominio en Cabecera (CA-11)
+    Given el usuario multi-rol navegando la plataforma
+    Then el Master Header renderizará un micro-texto o chip resumiendo visualmente sus 2 o 3 "Sombreros Principales" (Ej: `Director Comercial | Aprobador VIP`), validando que su sincronización con EntraID fue exitosa.
 
-  Scenario: Indicador Tipográfico de Dominio (Header) (CA-16)
-    Given un usuario multi-rol que finaliza su carga inicial
-    Then el Master Header, justo debajo o al lado de su Nombre/Avatar, debe renderizar un micro-texto o chip
-    And resumiendo visualmente los 2 o 3 "Sombreros Principales" (Ej: `Director Comercial | Aprobador VIP`) que el parseador calculó que está usando hoy, validándole al operario que sus permisos subieron correctamente.
-
-  # H. Módulo de Tablero de Anomalías de Seguridad (NUEVO)
-  Scenario: Tablero de Resolución de Anomalías de Seguridad (CA-17)
-    Given que el sistema ha detectado conflictos graves (Ej: CA-4 SoD Conflict - Juez y Parte)
-    When un Administrador de Seguridad ingresa a la Pantalla de Configuración / RBAC (Pantalla 14)
+  # ==============================================================================
+  # F. TABLERO DE ANOMALÍAS Y MANTENIMIENTO
+  # ==============================================================================
+  Scenario: Tablero de Resolución de Anomalías de Seguridad (CA-12)
+    Given que el sistema detecta alertas de seguridad pasivas (Ej: El Conflicto SoD del CA-06 o el Break-Glass del CA-04)
+    When el Administrador de Seguridad ingresa a la Pantalla de Configuración / RBAC (Pantalla 14)
     Then el sistema debe darle acceso a una pestaña especializada denominada "Tablero de Anomalías"
-    And este tablero listará en color Rojo todas las incidencias de seguridad vivas detectadas por el motor
-    And obligará al Administrador a revisar el caso, subsanar el error a nivel EntraID/Local, y presionar físicamente un botón `[ ✅ Marcar como Subsanado ]` para apagar la alerta.
+    And este tablero listará en color Rojo todas las incidencias de seguridad vivas detectadas por el motor.
+    And obligará al Administrador a revisar el caso, subsanar el error a nivel EntraID/Local, y presionar físicamente un botón `[ ✅ Marcar como Subsanado ]` para limpiar la alerta del sistema.
 
-  # I. Mantenimiento Evolutivo de Recuperación (V2)
-  Scenario: Postergación de Reset de Password para V2 (CA-18)
+  Scenario: Postergación de Reset de Password para V2 (CA-13)
     Given que el sistema opera en modo de IdP Local (Tabla propia de usuarios sin Azure)
     When un usuario olvida su contraseña
     Then la responsabilidad del Frontend y Backend de crear pantallas transaccionales de "Recuperar Contraseña via Email / OTP" queda estrictamente aplazada fuera del alcance del MVP V1.
     And el proceso de recuperación manual en V1 queda relegado a una solicitud verbal/correo al Administrador del Sistema.
-
 ```
 **Trazabilidad UX:** Wireframes Pantalla 14 (Seguridad RBAC) y Tablero de Anomalías.
 
@@ -3730,24 +3716,43 @@ Permite a la PMO establecer las reglas del juego a nivel corporativo paramétric
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Business SLA Matrix Configuration
-Scenario: Inyección Arquitectónica del BusinessCalendar en Camunda Engine (Time-Warp Prevention)
-    Given el administrador accede a la sección de Configuración de SLAs o Matriz de Negocio (Pantalla 19)
-    When se habilitan los Días Hábiles forzosamente basados en Horas (Ej: Lunes a Viernes de 8:00 a 17:00) y opcionalmente un listado de Días Feriados
-    Then el iBPMS TIENE ESTRICTAMENTE PROHIBIDO dejar que Camunda calcule los SLAs usando su reloj UTC absoluto por defecto (24/7).
-    And los desarrolladores Backend DEBEN implementar e inyectar un Custom `BusinessCalendar` (o sobreescribir el `DefaultBusinessCalendar`) nativo en el *Job Executor* del Engine de Camunda.
-    And este Custom Calendar interceptará el cálculo matemático de todos los `Timer Boundary Events`, `Timer Catch Events` y `Due Dates` de las tareas, leyendo en caliente la Matriz SLA de la base de datos.
-    And garantizando que si una tarea con SLA de "4 horas" entra el Viernes a las 16:00 (Faltando 1 hora para el cierre a las 17:00), el motor pause físicamente el cronómetro de ese Token durante todo el fin de semana, y programe su detonación (Trigger) para el Lunes a las 11:00 AM, protegiendo las métricas operativas reales.
-    And posee un toggle de parametrización para dictaminar si una alteración en este calendario recalculará retroactivamente las instancias actualmente vivas, o solo a las nuevas (hacia adelante).
+Feature: Business SLA Matrix Configuration and Multi-Zone Time-Warp Prevention
+  Scenario: Inyección Arquitectónica del BusinessCalendar en Camunda Engine (CA-1)
+    Given el administrador accede a la Matriz de Negocio (Pantalla 19)
+    When se habilitan los Días Hábiles forzosamente basados en Horas (Ej: Lunes a Viernes de 8:00 a 17:00)
+    Then el iBPMS TIENE ESTRICTAMENTE PROHIBIDO dejar que Camunda calcule los SLAs operativos usando su reloj UTC absoluto (24/7).
+    And el Backend DEBE inyectar un Custom `BusinessCalendar` en el *Job Executor* del Engine de Camunda.
+    And este Custom Calendar interceptará matemáticamente los `Timer Boundary Events` y `Due Dates` de tareas Humanas (`UserTasks`), leyendo en caliente la Matriz SLA de la BD.
+    And garantizando que si una tarea (SLA 4 Hrs) entra un Viernes a las 16:00, el motor pause su cronómetro el fin de semana, detonando el Lunes a las 11:00 AM, protegiendo las métricas operativas (BAM).
 
-  Scenario: Automatización de Festivos Externos
-    Given la necesidad corporativa de bloquear días de asueto local
-    Then la matriz integra una API Pública para consumir automáticamente el catálogo de Feriados del país del Tenant
-    And si dicha API falla, hace fallback al calendario manual editado en UI por el PMO.
-    
-  Scenario: Alertas Preventivas de Quiebre de Nivel
-    Given que la línea del tiempo matemática (Ticking) se aproxima al 100%
-    Then el motor SLA envía alertas tempranas garantizando un tiempo buffer para el solucionador (Prevención).
+  Scenario: Exención de Pausa para Timers Netamente Sistémicos (CA-2)
+    Given procesos transaccionales autónomos (Ej: Conciliaciones MLOps o Purga de Datos) que deben ejecutarse los Domingos a las 3:00 AM
+    When el Timer Event de tipo "System" se dispare según su configuración BPMN (Start Timer / System Catch)
+    Then el Custom `BusinessCalendar` TIENE PROHIBIDO pausar estos cronómetros o recalcularlos al Lunes.
+    And el Arquitecto BPMN deberá estipular visualmente una propiedad de extensión en Camunda (Ej: `camunda:property name="isBusinessSla" value="false"`) para saltar el bloqueo del calendario corporativo en hilos de máquina.
+
+  Scenario: Recálculo Retroactivo Restringido a Batch Job (Anti-Deadlocks) (CA-3)
+    Given que el administrador altera el rango de horas hábiles (Ej: de 17:00 a 16:30) y activa el Toggle de "Aplicar Retroactivamente a Tareas Vivas"
+    When el PMO oprime `[Aplicar Matriz]`
+    Then el Backend REST rechaza estructuralmente ejecutar el recálculo masivo de manera síncrona/inmediata en esa misma petición HTTP para prevenir Timeouts y Deadlocks de BD.
+    And el sistema encolará un Job Asíncrono de tipo Batch por detrás, el cual iterará la tabla `ACT_RU_JOB` actualizando los `DUEDATE_` en lotes paginados.
+    And el UI mostrará un Modal informativo: "Recálculo masivo en progreso. Los SLAs vivos se actualizarán gradualmente en los próximos minutos".
+
+  Scenario: Husos Horarios Estrictos en Geografías Híbridas (Timezones) (CA-4)
+    Given que el cliente (Tenant) opera con usuarios en diferentes zonas horarias (Ej: UTC-5 Bogotá y UTC+1 Madrid)
+    When el Custom `BusinessCalendar` intercepta un Timer de una Tarea Humana Asignada
+    Then el motor priorizará la Zona Horaria (Timezone) predefinida en el Perfil del Trabajador `Assignee` o del `Candidate Group` en su defecto.
+    And si un analista Europeo recibe un tarea, el fin de semana del motor de Camunda comenzará a aplicar 6 horas antes que para su homólogo en América, asegurando justicia laboral y SLAs inquebrantables cross-border.
+
+  Scenario: Automatización de Festivos Externos con Fallback (CA-5)
+    Given la necesidad legal de bloquear los contadores de SLA durante días de asueto local
+    Then la matriz se sincroniza con una API Pública gubernamental o en la nube para auto-poblar los Días Feriados del Tenant específico.
+    And si la API proveedora se cae, el sistema hace un "Fallback" a un grid manual editable en la Pantalla 19 por el PMO.
+
+  Scenario: Alertas Preventivas de Quiebre de Nivel (Early Warning) (CA-6)
+    Given que el temporizador (Ticking Engine) de una tarea se aproxima al 80% o "2 Horas restantes" de su tiempo total
+    Then el motor SLA dispara automáticamente una alerta (hacia el Motor de Notificaciones US-049).
+    And garantizando tiempo de reacción humano antes del verdadero vencimiento legal/operativo.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 19 (Configuración SLA).
 
@@ -3844,42 +3849,90 @@ Feature: Zero-Trust Developer Portal Security
 ---
 
 
-### US-044: Gobernanza de Inteligencia Artificial (AI Limits)
+
+
+### US-044: Gobernanza de Inteligencia Artificial (AI Limits & MLOps)
 **Como** Súper Administrador
 **Quiero** una pestaña de configuraciones dedicada al Motor Cognitivo
-**Para** decidir empíricamente el grado de libertad, permisividad y "Tolerance Score" que se le otorga a los LLMs antes de declarar ineficacia.
+**Para** gobernar empíricamente el grado de libertad de la IA, auditar sus sesgos, gestionar las listas negras y controlar el ciclo de vida de los modelos sin colapsar la base de datos de producción.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Centro de Gobernanza IA (Global Threshold Configurator)
+Feature: AI Governance Center, Telemetría MLOps y Micro-Control Cognitivo
 
-  Scenario: Feature Toggle del "Auto-Pilot" de Embudos (US-040)
-    Given el panel de administración
-    Then debe existir un Master Switch de `[Permitir Instanciación Autónoma AI (Zero-Touch)]`
-    And si este interruptor está apagado, por más que la IA tenga 100% de certeza, todas las Action Cards se retendrán forzosamente en el Embudo de la Pantalla 16. Mantenimiento del Principio "Human-in-the-Loop Override".
+  # ==============================================================================
+  # A. GOBERNANZA DE INTAKE Y AUTO-PILOT
+  # ==============================================================================
+  Scenario: Feature Toggle Global del "Auto-Pilot" y No-Retroactividad (CA-01)
+    Given el panel de administración central de IA en la Pantalla 15.A
+    Then debe existir un Master Switch de `[Permitir Instanciación Autónoma AI]`.
+    And este switch opera de forma GLOBAL (apaga o enciende la IA para todos los procesos en V1).
+    And si está apagado, TODAS las Action Cards caerán forzosamente al Embudo Humano (Pantalla 16).
+    And si el Administrador vuelve a ENCENDER el switch, la IA TIENE PROHIBIDO autoprocesar las tarjetas que ya estaban en cuarentena de manera retroactiva, exigiendo revisión humana para las antiguas y aplicando el Auto-Pilot solo a los correos nuevos.
 
-  Scenario: Auditoría de Transparencia y Combate al Sobre-Ajuste (Audit Matrix)
-    Given el proceso nocturno del Agente Data Scientist (US-015)
-    Then el Administrador posee una pantalla "AI Audit Log" donde puede ver exactamente qué palabras, vectores o estilos aprendió a asociar la IA.
-    And esta lista debe ser legible por humanos (Ej: `[Aprendizaje 1: La palabra 'Urgente' ahora levanta flag de prioridad Alta]`).
-    And para prevenir el "Sobre-Ajuste" (Overfitting) de problemas antiguos, el Administrador puede seleccionar cualquier "Aprendizaje/Patrón" de esta matriz y oprimir el botón `[Eliminar Patrón]`, forzando a la IA a desaprender esa asociación obsoleta inmediatamente.
+  Scenario: Parametrización de Certeza Dinámica (Tolerance Score) (CA-02)
+    Given el motor de inferencia que calcula la confianza matemática de sus predicciones
+    Then el Súper Administrador DEBE disponer de un Slider o Campo Numérico (Ej: 0-100%) en la UI.
+    And prohibiendo el "hardcoding" en el backend, este umbral dictará la Certeza Mínima Requerida en tiempo real.
+    And cualquier inferencia por debajo del umbral parametrizado será enviada obligatoriamente a revisión humana (Fallback).
 
-  Scenario: Rollback de Modelo MLOps vía Blue-Green SQL Swapping (NFR)
-    Given una degradación de la calidad de respuesta de la IA (Ej: Alucinaciones reportadas a las 8:00 AM) y el uso de `pgvector` en IaaS sin versionamiento Git de registros
-    When el Administrador presione el botón crítico `[Revertir Modelo Anterior]` en la P26.B
-    Then el Backend ejecutará un "Blue-Green Data Swapping" a nivel de SQL
-    And los vectores entrenados en la noche anterior (los cuales nacieron inactivos con `is_active_model = FALSE` y etiqueta temporal Ej. V.2026.03, pasando a TRUE tras finalizar el batch) se marcarán como `FALSE`
-    And la bandera del modelo previo volverá a `TRUE` en 1 milisegundo, revirtiendo el cerebro del Agente (RAG/Embeddings) de forma instantánea.
+  # ==============================================================================
+  # B. AUDITORÍA ANTI-OVERFITTING (TRANSPARENCIA Y AMNESIA)
+  # ==============================================================================
+  Scenario: Traducción Semántica de Tensores (Explainable AI - XAI) (CA-03)
+    Given el proceso nocturno del Agente Data Scientist
+    Then el Administrador posee una pantalla "AI Audit Log".
+    And el sistema utilizará un micro-LLM auxiliar inverso (XAI) para traducir los deltas vectoriales matemáticos hacia "Jerga Legible por Humanos" (Ej: `Aprendizaje 1: La palabra 'Reclamo' levanta flag de prioridad Alta`).
+    
+  Scenario: Efecto Cascada de la Amnesia (Negative Prompting Cache) (CA-04)
+    Given la pantalla de "AI Audit Log"
+    When el Administrador selecciona un Patrón obsoleto o erróneo y oprime `[Eliminar Patrón]`
+    Then el sistema NO ejecutará un costoso reentrenamiento de la BD Vectorial en caliente.
+    And inyectará instantáneamente el patrón rechazado como un "Negative Prompt" (System Instruction) en la caché de memoria RAM del LLM.
+    And forzará el desaprendizaje cognitivo en tiempo real en milisegundos, delegando el borrado físico de los vectores para el proceso Batch de la madrugada.
 
-  Scenario: Frecuencia de Ejecución del Agente Data Scientist
-    Given la necesidad operativa de ahorrar cómputo y gestionar el umbral de evolución
-    Then el administrador puede configurar la Frecuencia Cron del reentrenamiento (Ej: `Diario`, `Semanal`, `Mensual`) y la hora exacta (Ej: `02:00 AM`).
-    And cuenta con una Política de Reintentos automáticos (Retry Queue) en caso de que el Job falle por Timeouts en la base de datos vectorial durante la madrugada.
+  # ==============================================================================
+  # C. ROLLBACK Y GESTIÓN DE BASES DE DATOS VECTORIALES
+  # ==============================================================================
+  Scenario: Integridad Transaccional en Blue-Green Swapping y Límite N-1 (CA-05)
+    Given un escenario de degradación aguda de la IA (Ej: Alucinaciones masivas)
+    When el Administrador presione el botón de emergencia `[Revertir Modelo Anterior]`
+    Then el Backend ejecutará un "Blue-Green Data Swapping" SQL en milisegundos (`is_active_model = FALSE/TRUE`).
+    And la plataforma V1 solo soportará memoria de reversión **N-1** (El modelo de hoy y el de ayer) para proteger los costos Cloud.
+    And las transacciones de Camunda en vuelo que fallen en ese microsegundo sufrirán Degradación Elegante, siendo reintentadas por RabbitMQ a los 5 segundos contra el modelo ya restaurado.
 
-  Scenario: Lista Negra Corporativa Anti-Adivinación (US-013)
-    Given la necesidad de prevenir emparejamientos indeseados (Ej: `@gmail.com`)
-    Then la interfaz exhibe un componente de tipo "Chip Input"
-    And permite al administrador agregar, listar y eliminar cadenas de dominios públicos bajo la directriz "Ignorar Match por Dominio". Al inyectarlos, se escriben asíncronamente en la BD (`ibpms_public_domains_blacklist`).
+  Scenario: Garbage Collection Vectorial (Ahorro Cloud) (CA-06)
+    Given la generación constante de snapshots vectoriales tras los reentrenamientos y rollbacks
+    Then el sistema ejecutará un Job de Mantenimiento programado semanal (Ej: Domingos 03:00 AM).
+    And ejecutará un `HARD DELETE` físico sobre cualquier modelo marcado como inactivo (`is_active_model = FALSE`) que supere los 7 días de antigüedad, evitando facturas desmesuradas en `pgvector`.
+
+  # ==============================================================================
+  # D. OPERATIVIDAD MLOPS DEL DATA SCIENTIST Y RESILIENCIA
+  # ==============================================================================
+  Scenario: Prevención de Solapamiento de Cron Jobs (ShedLock Mutex) (CA-07)
+    Given el reentrenamiento masivo programado (Ej: Diario a las 02:00 AM)
+    When el servidor intenta lanzar la instancia de hoy, pero la instancia de ayer sigue en estado `RUNNING` (Ej: el procesamiento tomó 26 horas)
+    Then el Backend DEBE utilizar un Database Lock (Ej: librería `ShedLock` o Mutex nativo).
+    And al detectar el candado, ABORTARÁ silenciosamente la ejecución del Job nuevo (Skip).
+    And prevendrá el colapso del servidor por *Out of Memory* (OOM), emitiendo una alerta técnica al SysAdmin.
+
+  Scenario: Manejo de Errores Silenciosos y Aislamiento Tenant (CA-08)
+    Given una falla persistente en el Job Nocturno (Ej: Timeouts en la BD)
+    When el Job de reentrenamiento falla durante 3 días consecutivos
+    Then el sistema TIENE PROHIBIDO detener la operación diurna o apagar los Embudos de Inteligencia Artificial.
+    And entrará en "Modo Supervivencia", operando con el último modelo estable conocido y encendiendo una Alerta Roja inborrable en el Dashboard de SysAdmin.
+    And en despliegues Multitenant, el reentrenamiento usará Colas Dedicadas por Tenant en RabbitMQ, asegurando que el volumen de un Cliente no asfixie el reentrenamiento de los demás.
+
+  # ==============================================================================
+  # E. SEGURIDAD PERIMETRAL
+  # ==============================================================================
+  Scenario: Sensibilidad y Normalización Absoluta de Lista Negra (El Guardia Tonto) (CA-09)
+    Given el componente de inyección de dominios prohibidos (Blacklist)
+    When el Administrador inyecta un dominio "sucio" en la UI (Ej: `  @GMAIL.COM  `)
+    Then el Interceptor del Backend TIENE ESTRICTAMENTE PROHIBIDO guardar el input crudo.
+    And aplicará obligatoriamente una normalización de limpieza (`.toLowerCase().trim()`) ANTES del Commit SQL en la tabla `ibpms_public_domains_blacklist`.
+    And el motor aplicará esta misma normalización a los correos entrantes antes de comparar, garantizando un blindaje matemático total contra bypasseos de ciberseguridad por errores de digitación.
+
 ```
 **Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Configuración Global / Súper Administrador).
 

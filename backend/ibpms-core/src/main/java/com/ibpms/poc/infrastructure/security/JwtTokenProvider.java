@@ -77,4 +77,9 @@ public class JwtTokenProvider {
         }
         return List.of();
     }
+
+    public String getClaim(String token, String claimKey) {
+        Object claim = parseClaims(token).get(claimKey);
+        return claim != null ? claim.toString() : null;
+    }
 }

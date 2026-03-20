@@ -164,6 +164,13 @@ const router = createRouter({
             name: 'IdentityGovernance',
             component: () => import('@/views/admin/Security/IdentityGovernance.vue'),
             meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN'] }
+        },
+        // --- Bloque K: PMO SLA Management (Pantalla 19) CA-1 a CA-6 ---
+        {
+            path: '/admin/pmo/settings',
+            name: 'PmoSettings',
+            component: () => import('@/views/admin/PMO/PmoSettings.vue'),
+            meta: { title: 'Configuración PMO / SLA', requiresAuth: true, roles: ['Global Admin', 'ROLE_SUPER_ADMIN'] }
         }
     ]
 });

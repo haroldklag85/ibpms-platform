@@ -93,20 +93,20 @@
                           </div>
                       </div>
                       
-                      <!-- Item 2 -->
-                      <div class="flex gap-4 bg-white px-4 py-3 justify-between border-l-4 border-transparent hover:bg-gray-50 cursor-pointer transition">
+                      <!-- Item 2 (Mock CA-6: SLA en Riesgo) -->
+                      <div class="flex gap-4 bg-orange-50/80 px-4 py-3 justify-between border-l-4 border-orange-400 hover:bg-orange-100/50 cursor-pointer transition">
                           <div class="flex items-start gap-3 w-full">
-                              <div class="bg-orange-500 text-white flex items-center justify-center font-bold aspect-square rounded-full size-10">JS</div>
+                              <div class="bg-orange-500 text-white flex items-center justify-center font-bold aspect-square rounded-full size-10 shadow-sm">JS</div>
                               <div class="flex-1 overflow-hidden">
                                   <div class="flex justify-between items-center mb-0.5">
                                       <p class="text-gray-900 text-sm font-medium leading-normal truncate">Jane Smith</p>
-                                      <p class="text-gray-500 text-xs font-normal">4:30 PM</p>
+                                      <p class="text-orange-600 text-xs font-bold animate-pulse">4:30 PM</p>
                                   </div>
                                   <p class="text-gray-900 text-sm font-medium leading-normal truncate">Re: Meeting Schedule</p>
                                   <p class="text-gray-600 text-xs leading-normal truncate mt-0.5">Sounds good, let's meet tomorrow at 10 AM. I've sent the calendar invite.</p>
                                   <div class="flex items-center gap-2 mt-2">
-                                      <span class="inline-flex items-center gap-1.5 rounded-full bg-green-100 border border-green-200 px-2 py-0.5 text-xs font-bold text-green-800">
-                                          ✔️ Acuse Enviado
+                                      <span class="inline-flex items-center gap-1.5 rounded-full bg-orange-100 border border-orange-300 px-2 py-0.5 text-xs font-bold text-orange-800 animate-pulse">
+                                          ⚠️ SLA en Riesgo (<20%)
                                       </span>
                                   </div>
                               </div>
@@ -169,7 +169,7 @@
 
               <!-- Panel Inteligente IA -->
               <div class="border-t border-gray-200 bg-white group shrink-0 shadow-[0_-5px_15px_rgba(0,0,0,0.02)] z-10 transition-all duration-300">
-                  <input :checked="isAiExpanded" @change="isAiExpanded = $event.target.checked" class="peer hidden ai-checkbox" id="ai-toggle" type="checkbox"/>
+                  <input v-model="isAiExpanded" class="peer hidden ai-checkbox" id="ai-toggle" type="checkbox"/>
                   <label class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50" for="ai-toggle">
                       <div class="flex items-center gap-3">
                           <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2"><span class="text-xl">✨</span> Sugerencias Inteligentes de IA</h3>

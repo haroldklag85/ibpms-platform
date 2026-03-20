@@ -49,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/inbound/email-webhook").permitAll()
                         // CA-15: Bypass Anónimo
                         .requestMatchers(HttpMethod.POST, "/api/v1/process/*/start-anonymous").permitAll()
+                        // CA-03 y CA-04 (US-038): Aprovisionamiento JIT y Protocolo Break-Glass
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/sync", "/api/v1/auth/emergency-login").permitAll()
                         .anyRequest().authenticated())
 
                 // Habilitamos OAUTH2 JWT Validation delegando al Issuer-URI (Properties)

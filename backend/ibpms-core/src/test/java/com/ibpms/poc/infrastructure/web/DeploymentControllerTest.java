@@ -56,4 +56,20 @@ class DeploymentControllerTest {
                 .content(java.util.Objects.requireNonNull(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isForbidden());
     }
+
+    // ── QA Instruction 5: US-039 (Pre-Flight VIP Restriction) ──
+    @Test
+    @DisplayName("US-039: Pre-Flight Analyzer debe bloquear (HTTP 400 Hard-Stop) un formulario sys_generic_form ligado a una Tarea VIP")
+    @WithMockUser(username = "carlos.rm", roles = { "RELEASE_MANAGER" })
+    void deployProcess_GenericFormOnVipTask_HardStopReturns400() throws Exception {
+        DeploymentRequestDTO request = new DeploymentRequestDTO();
+        request.setResourceName("proceso_vip.bpmn");
+        // Mock de un BPMN con Formulario Genérico apuntando ilusamente a un Rol VIP
+        request.setXmlString("<bpmn:userTask id=\"Task_1\" camunda:candidateGroups=\"ALTA_DIRECCION\" camunda:formKey=\"sys_generic_form\" />");
+
+        mockMvc.perform(post("/api/v1/deployments").with(java.util.Objects.requireNonNull(csrf()))
+                .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                .content(java.util.Objects.requireNonNull(objectMapper.writeValueAsString(request))))
+                .andExpect(status().isBadRequest()); // Hard Stop Preventivo (400 Bad Request)
+    }
 }

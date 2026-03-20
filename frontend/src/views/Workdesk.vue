@@ -123,7 +123,8 @@
                v-for="task in filteredItems" 
                :key="task.unifiedId"
                @click="mockOpenTask(task)"
-               class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:border-indigo-400 hover:shadow-md transition-all group cursor-pointer h-fit"
+               class="rounded-xl shadow-sm border overflow-hidden flex flex-col transition-all group cursor-pointer h-fit"
+               :class="task.isSlaAtRisk ? 'bg-orange-50/50 border-orange-300 hover:border-orange-500 hover:bg-orange-50 hover:shadow-md' : 'bg-white border-gray-200 hover:border-indigo-400 hover:shadow-md'"
              >
                <!-- SLA Top Bar -->
                <div class="h-1 w-full" :class="getSlaTopBarClass(task.slaExpirationDate)"></div>
@@ -143,10 +144,21 @@
                    {{ task.title }}
                  </h3>
                  
-                 <div class="flex items-center gap-2 mt-2">
+                 <div class="flex items-center gap-2 mt-2 flex-wrap">
                    <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border', getSlaPillClass(task.slaExpirationDate)]">
                      {{ getSlaRelativeTime(task.slaExpirationDate) }}
                    </span>
+
+                   <!-- CA-10 Insignia Cognitiva Multi-Rol -->
+                   <span v-if="task.candidateGroup" class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-[10px] font-bold uppercase tracking-wider border border-blue-200 flex items-center gap-1 shadow-sm">
+                      <span class="material-symbols-outlined text-[12px]">badge</span> ROL: {{ task.candidateGroup.replace('ROLE_', '').replace(/_/g, ' ') }}
+                   </span>
+
+                   <!-- CA-6 Badge Early Warning -->
+                   <span v-if="task.isSlaAtRisk" class="px-2 py-1 bg-orange-100 text-orange-800 rounded text-[10px] font-bold uppercase tracking-wider border border-orange-300 animate-pulse flex items-center gap-1">
+                      ⚠️ SLA en Riesgo
+                   </span>
+                   
                    <span class="px-2 py-1 bg-gray-100/80 text-gray-600 rounded text-[10px] font-bold uppercase tracking-wider border border-gray-200 border-dashed">
                      {{ task.status }}
                    </span>

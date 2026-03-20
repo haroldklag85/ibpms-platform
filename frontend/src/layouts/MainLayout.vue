@@ -140,7 +140,7 @@
           </div>
           <div v-if="!isSidebarCollapsed" class="flex flex-col overflow-hidden fade-in">
             <span class="text-xs font-semibold text-white truncate">Usuario Activo</span>
-            <span class="text-[10px] text-slate-500 truncate">Legal Partner</span>
+            <span class="text-[10px] text-slate-500 truncate" :title="topRolesTipText">{{ topRolesTipText }}</span>
           </div>
         </div>
       </div>
@@ -217,7 +217,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -225,6 +225,15 @@ import { useAuthStore } from '@/stores/authStore';
 const router = useRouter();
 const preferencesStore = usePreferencesStore();
 const authStore = useAuthStore();
+
+// CA-11: Indicador Tipográfico Multi-Rol (Extrae y formatea máximo 2 roles del JWT EntraID)
+const topRolesTipText = computed(() => {
+  if (!authStore.roles || authStore.roles.length === 0) return 'Identidad Básica';
+  return authStore.roles.slice(0, 2).map((r: string) => {
+      const clean = r.replace('ROLE_', '').replace(/_/g, ' ');
+      return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
+  }).join(' | ');
+});
 
 // Estado del Sidebar principal (Colapsado para lectura profunda o expandido)
 const isSidebarCollapsed = ref(true);

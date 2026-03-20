@@ -10,6 +10,8 @@ export interface WorkdeskGlobalItemDTO {
   slaExpirationDate: string; // ISO 8601
   status: string;
   assignee: string | null;
+  isSlaAtRisk?: boolean; // CA-6 Semáforo Naranja Early Warning
+  candidateGroup?: string; // CA-10 Visibilidad Multi-Rol
 }
 
 export interface PageableResponse {

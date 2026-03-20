@@ -305,6 +305,52 @@
           </table>
         </div>
 
+        <!-- ============================================== -->
+        <!-- TAB 7: ANOMALÍAS CISO (CA-12)                  -->
+        <!-- ============================================== -->
+        <div v-else-if="currentTab === 'anomalies'" class="h-full flex flex-col">
+          <div class="flex justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+               <span class="material-symbols-outlined text-red-600">gpp_bad</span> Consola de Anomalías de Seguridad
+            </h2>
+          </div>
+          
+          <table class="min-w-full divide-y divide-gray-200 border rounded-lg overflow-hidden flex-1 shadow-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Referencia</th>
+                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Tipo / Riesgo</th>
+                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Descripción</th>
+                <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase">Estado</th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">Acción CISO</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+               <tr v-for="anm in mockAnomalies" :key="anm.id" :class="anm.status === 'OPEN' ? 'bg-red-50/50 hover:bg-red-50' : 'hover:bg-gray-50'">
+                 <td class="px-4 py-4 text-xs font-mono font-bold" :class="anm.status === 'OPEN' ? 'text-red-700' : 'text-gray-500'">{{ anm.id }}<br/><span class="text-[10px] font-sans font-normal text-gray-400">{{ anm.timestamp.slice(0,16).replace('T', ' ') }}</span></td>
+                 <td class="px-4 py-4 text-xs">
+                    <span class="px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[10px]" :class="anm.severity === 'CRITICAL' ? 'bg-red-600 text-white' : 'bg-orange-100 text-orange-800 border border-orange-200'">{{ anm.type.replace('_', ' ') }}</span>
+                    <div class="mt-1 text-gray-500 font-medium">Actor: <b>{{ anm.user }}</b></div>
+                 </td>
+                 <td class="px-4 py-4 text-sm font-medium text-gray-800">{{ anm.desc }}</td>
+                 <td class="px-4 py-4 text-center">
+                    <span v-if="anm.status === 'OPEN'" class="text-red-600 font-black animate-pulse uppercase tracking-widest text-[10px]">⚠️ ABIERTA</span>
+                    <span v-else class="text-emerald-600 font-bold flex flex-col items-center uppercase tracking-widest text-[10px]"><span class="material-symbols-outlined text-[16px]">verified</span> SUBSANADA</span>
+                 </td>
+                 <td class="px-4 py-4 text-right">
+                    <button v-if="anm.status === 'OPEN'" @click="resolveAnomaly(anm)" class="bg-white border-2 border-emerald-500 text-emerald-600 font-bold px-3 py-1.5 rounded text-xs hover:bg-emerald-50 transition shadow-sm flex items-center justify-end gap-1 ml-auto">
+                        ✅ Marcar Subsanado
+                    </button>
+                    <span v-else class="text-gray-400 text-xs font-medium italic">Acción Cerrada</span>
+                 </td>
+               </tr>
+               <tr v-if="mockAnomalies.length === 0">
+                 <td colspan="5" class="py-12 text-center text-gray-400 font-medium">No se detectan incidentes de seguridad (Limpieza IAM).</td>
+               </tr>
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </main>
 
@@ -496,7 +542,8 @@ const tabs = [
   { id: 'matrix', name: 'Permisos de Procesos' },
   { id: 'delegations', name: 'Delegaciones' },
   { id: 'api_keys', name: 'Cuentas de Servicio' },
-  { id: 'audit', name: 'Auditoría CISO' }
+  { id: 'audit', name: 'Auditoría CISO' },
+  { id: 'anomalies', name: 'Anomalías de Seg.' } // CA-12 CISO Dashboard
 ];
 const currentTab = ref('users');
 const toast = ref<{ msg: string; type: 'success' | 'error' }>({ msg: '', type: 'success' });
@@ -800,6 +847,25 @@ const mockAuditLogs = ref([
   { id: 'AUD-1002', timestamp: new Date(Date.now() - 86400000).toISOString(), adminId: 'U-001 (Admin)', action: 'REVOKE_DELEGATION', delta: { "delegationId": "DEL-1710", "targetUserId": "U-003", "status": "REVOKED_SOFT_DELETE", "reason": "Revocación manual CISO" } },
   { id: 'AUD-1003', timestamp: new Date(Date.now() - 250000000).toISOString(), adminId: 'SYSTEM_CRON', action: 'FREEZE_STALE_USER', delta: { "userId": "U-002", "inactivityDays": 95, "status": "FROZEN_SOFT_DELETE" } }
 ]);
+
+// ── TAB 7: ANOMALÍAS CISO (CA-12) ──
+const mockAnomalies = ref([
+  { id: 'ANM-001', type: 'SoD_VIOLATION', severity: 'HIGH', user: 'Ana Ramos', desc: 'Intento de Juez y Parte en Evaluación de Riesgo.', timestamp: new Date().toISOString(), status: 'OPEN' },
+  { id: 'ANM-002', type: 'BREAK_GLASS_LOGIN', severity: 'CRITICAL', user: 'Carlos Admin', desc: 'Acceso corporativo vía escotilla local eludiendo EntraID.', timestamp: new Date(Date.now() - 3600000).toISOString(), status: 'RESOLVED' }
+]);
+
+const resolveAnomaly = async (anomaly: any) => {
+   try {
+     // El CISO emite el comando de subsanamiento a la base de datos (HTTP PUT)
+     await apiClient.put(`/api/v1/security/anomalies/${anomaly.id}/resolve`, { resolution: 'Revisado y Subsanado Manualmente' });
+     anomaly.status = 'RESOLVED';
+     showToast(`Anomalía ${anomaly.id} subsanada con éxito.`, 'success');
+   } catch(e) {
+     // Fallback Mock UAT
+     anomaly.status = 'RESOLVED';
+     showToast(`Fallback Mock: Anomalía ${anomaly.id} subsanada.`, 'success');
+   }
+};
 
 const openAuditModal = (log: any) => {
   activeAuditLog.value = log;

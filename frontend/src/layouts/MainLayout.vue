@@ -107,7 +107,7 @@
            <router-link to="/admin/integration/catalog" class="sub-nav-item" active-class="sub-nav-active">
               <span class="material-symbols-outlined text-[14px] mr-2">cable</span> Integración API
            </router-link>
-           <router-link to="/admin/security/identity" class="sub-nav-item" active-class="sub-nav-active">
+           <router-link v-if="authStore.roles.includes('ROLE_SUPER_ADMIN')" to="/admin/security/identity" class="sub-nav-item" active-class="sub-nav-active">
               <span class="material-symbols-outlined text-[14px] mr-2">shield_person</span> Seguridad (RBAC)
            </router-link>
            <router-link to="/admin/integration/builder" class="sub-nav-item" active-class="sub-nav-active">
@@ -220,9 +220,11 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
+import { useAuthStore } from '@/stores/authStore';
 
 const router = useRouter();
 const preferencesStore = usePreferencesStore();
+const authStore = useAuthStore();
 
 // Estado del Sidebar principal (Colapsado para lectura profunda o expandido)
 const isSidebarCollapsed = ref(true);

@@ -32,7 +32,21 @@
         </div>
       </div>
       
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-4">
+        <!-- CA-15.1: Permitir Trámite Público -->
+        <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded border border-emerald-200" title="Permite recolectar datos sin autenticación previa (Bypass CA-15)">
+           <label for="publicToggle" class="text-xs font-bold text-emerald-800 cursor-pointer">🌐 Trámite Público</label>
+           <input type="checkbox" id="publicToggle" v-model="isPublic" class="text-emerald-600 rounded focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
+        </div>
+        
+        <!-- URL Banner si es público -->
+        <div v-if="isPublic" class="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded border border-gray-300">
+           <span class="text-[10px] font-mono text-gray-600 select-all truncate max-w-[200px]" title="Doble clic para seleccionar todo">{{ publicUrl }}</span>
+           <button @click="copyPublicUrl" class="text-gray-500 hover:text-indigo-600 flex items-center justify-center p-0.5 bg-white border rounded shadow-sm" title="Copiar Link"><span class="text-xs">📋</span></button>
+        </div>
+
+        <div class="h-6 w-px bg-gray-300 mx-1"></div>
+
         <!-- Zona 2: Dropdown DevTools -->
         <div class="relative group">
           <button class="bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded shadow-sm text-xs font-semibold hover:bg-gray-200 transition flex gap-1.5 items-center">
@@ -575,6 +589,16 @@ const formTitle = ref('Solicitud Onboarding (V1)');
 const formPattern = ref<'SIMPLE' | 'IFORM_MAESTRO' | null>(null);
 const showPatternModal = ref(true);
 const isFullScreen = ref(false); // Estado para CA-9/CA-10
+
+// CA-15.1: Formularios Públicos
+const isPublic = ref(false);
+const processKeyMock = formTitle.value.toUpperCase().replace(/\s+/g, '_').substring(0, 15);
+const publicUrl = computed(() => `${window.location.origin}/public/start/${processKeyMock}`);
+
+const copyPublicUrl = () => {
+    navigator.clipboard.writeText(publicUrl.value);
+    showToast('Enlace público (Huérfano) copiado al portapapeles', 'success');
+};
 
 const crossValidationCode = ref(''); // CA-32
 const showGlobalRulesModal = ref(false); // CA-32

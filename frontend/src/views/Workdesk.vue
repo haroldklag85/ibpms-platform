@@ -37,6 +37,7 @@
            <!-- Filtro Tipo (Procesos vs Proyectos) -->
            <select 
               v-model="typeFilter"
+              @change="loadData"
               class="bg-white border border-gray-200 text-gray-600 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 hover:bg-gray-50 cursor-pointer outline-none transition-colors"
            >
              <option value="">Todos los Tipos</option>
@@ -47,6 +48,7 @@
            <!-- Filtro Nivel de SLA -->
            <select 
               v-model="slaFilter"
+              @change="loadData"
               class="bg-white border border-gray-200 text-gray-600 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 hover:bg-gray-50 cursor-pointer outline-none transition-colors"
            >
              <option value="">Cualquier Nivel SLA</option>
@@ -281,22 +283,9 @@ const slaFilter = ref('');
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
-// Reactivity para Filtros de Memoria sobre la página actual
+// Reactivity CA-5 Zero Frontend Filtering logic - Direct pass-through
 const filteredItems = computed(() => {
-    return store.items.filter(task => {
-        let matchType = true;
-        let matchSLA = true;
-
-        if (typeFilter.value) {
-            matchType = task.sourceSystem === typeFilter.value;
-        }
-
-        if (slaFilter.value) {
-            matchSLA = getSlaStatus(task.slaExpirationDate) === slaFilter.value;
-        }
-
-        return matchType && matchSLA;
-    });
+    return store.items;
 });
 
 const onSearchInput = () => {
@@ -311,7 +300,7 @@ const attendNextTask = () => {
 }
 
 const loadData = async () => {
-    await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 50, searchQuery.value, delegationFilter.value);
+    await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 50, searchQuery.value, delegationFilter.value, typeFilter.value, slaFilter.value);
 };
 
 const mockOpenTask = (task: any) => {

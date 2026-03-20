@@ -61,4 +61,50 @@ class JwtSecurityFilterTest {
         verify(chain, never()).doFilter(req, res);
         assertTrue(stringWriter.toString().contains("revocado (Blacklisted)"));
     }
+
+    @Test
+    @DisplayName("US-036 p3: Zero-Trust Endpoint Isolation - Un bypass anónimo hacia API privada debe escupir 401 sin sangrado de red")
+    void testZeroTrustEndpointIsolation_AnonymousBypass() throws Exception {
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        HttpServletResponse res = mock(HttpServletResponse.class);
+        FilterChain chain = mock(FilterChain.class);
+
+        // Sin Header Authorization
+        when(req.getRequestURI()).thenReturn("/api/v1/admin/users/delete");
+        when(req.getHeader("Authorization")).thenReturn(null);
+
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter writer = new PrintWriter(stringWriter);
+        when(res.getWriter()).thenReturn(writer);
+
+        filter.doFilter(req, res, chain);
+
+        verify(res, times(1)).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        verify(chain, never()).doFilter(req, res);
+        assertTrue(stringWriter.toString().contains("Token no detectado. Zero-Trust enforcing."));
+    }
+
+    @Test
+    @DisplayName("US-036 p3: JWT Exorcism - La lista negra es instantánea (Sub-milisegundo)")
+    void testJwtExorcismSubMillisecond() throws Exception {
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        HttpServletResponse res = mock(HttpServletResponse.class);
+        FilterChain chain = mock(FilterChain.class);
+
+        String freshToken = "header.payload.signature_xyz_" + System.nanoTime();
+        when(req.getRequestURI()).thenReturn("/api/v1/analytics/dashboard");
+        when(req.getHeader("Authorization")).thenReturn("Bearer " + freshToken);
+
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter writer = new PrintWriter(stringWriter);
+        when(res.getWriter()).thenReturn(writer);
+
+        long t0 = System.nanoTime();
+        filter.blacklistToken(freshToken); // Disparador del Kill Switch
+        filter.doFilter(req, res, chain); // Intento Inmediato Fuzz
+        long t1 = System.nanoTime();
+
+        verify(res, times(1)).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        assertTrue((t1 - t0) < 5_000_000); // Exorcismo en menos de 5ms
+    }
 }

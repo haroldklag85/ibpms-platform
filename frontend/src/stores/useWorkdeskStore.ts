@@ -31,34 +31,36 @@ export const useWorkdeskStore = defineStore('workdesk', {
   }),
 
   actions: {
-    async fetchGlobalInbox(page: number = 0, size: number = 50, search?: string, delegatedToId?: string) {
+    async fetchGlobalInbox(page: number = 0, size: number = 50, search?: string, delegatedToId?: string, typeFilter?: string, slaFilter?: string) {
       this.isLoading = true;
       this.isError = false;
       this.errorMessage = '';
       this.currentPage = page;
 
       try {
-        const response = await apiClient.get('/workdesk/global-inbox', {
+        const response = await apiClient.get('/api/v1/workdesk/my-queues', {
             params: { 
               page, 
               size, 
               sort: 'slaExpirationDate,asc',
               ...(search && search.trim() !== '' ? { search: search.trim() } : {}),
-              ...(delegatedToId ? { delegatedToId } : {})
+              ...(delegatedToId ? { delegatedToId } : {}),
+              ...(typeFilter ? { type: typeFilter } : {}),
+              ...(slaFilter ? { slaLevel: slaFilter } : {})
             }
         });
         
         if (response.data && Array.isArray(response.data.content)) {
             this.items = response.data.content;
-            this.pageInfo = response.data.pageable || { pageNumber: page, pageSize: size, totalElements: this.items.length };
+            this.pageInfo = response.data.pageable || { pageNumber: page, pageSize: size, totalElements: response.data.totalElements || this.items.length };
         } else {
              // Fallback defensive
              this.items = [];
         }
       } catch (error: any) {
-        console.error("Failed to fetch hybrid workdesk items", error);
+        console.error("Failed to fetch secure workdesk queues", error);
         this.isError = true;
-        this.errorMessage = error.response?.data?.message || "Ocurrió un error al cargar la bandeja global.";
+        this.errorMessage = error.response?.data?.message || "Ocurrió un error al cargar la bandeja segura CA-5.";
         this.items = [];
       } finally {
         this.isLoading = false;

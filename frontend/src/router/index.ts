@@ -66,6 +66,13 @@ const router = createRouter({
             component: () => import('@/views/inbox/InboxView.vue'),
             meta: { requiresAuth: true }
         },
+        // --- Bloque Público CA-15 (iForm Anónimo) ---
+        {
+            path: '/public/start/:processKey',
+            name: 'PublicIntake',
+            component: () => import('@/views/public/PublicIntake.vue'),
+            meta: { requiresAuth: false }
+        },
         // --- Bloque 3: Service Delivery Intake ---
         {
             path: '/admin/intake',
@@ -156,7 +163,7 @@ const router = createRouter({
             path: '/admin/security/identity',
             name: 'IdentityGovernance',
             component: () => import('@/views/admin/Security/IdentityGovernance.vue'),
-            meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['Global Admin'] }
+            meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN'] }
         }
     ]
 });

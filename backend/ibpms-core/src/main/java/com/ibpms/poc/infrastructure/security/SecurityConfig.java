@@ -47,6 +47,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         // Webhook de M365 autenticado por lógica propia
                         .requestMatchers(HttpMethod.POST, "/api/v1/inbound/email-webhook").permitAll()
+                        // CA-15: Bypass Anónimo
+                        .requestMatchers(HttpMethod.POST, "/api/v1/process/*/start-anonymous").permitAll()
                         .anyRequest().authenticated())
 
                 // Habilitamos OAUTH2 JWT Validation delegando al Issuer-URI (Properties)

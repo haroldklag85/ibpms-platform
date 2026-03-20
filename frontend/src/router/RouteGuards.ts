@@ -19,7 +19,7 @@ export const rbacGuard = (
     
     // Auto-login mockeado en caso de F5 en ambiente Dev/UAT
     if (tokenStr && !authStore.user) {
-        authStore.user = { username: 'dev.user', role: 'Global Admin' };
+        authStore.user = { username: 'dev.user', roles: ['ROLE_SUPER_ADMIN'] };
     }
 
     const isAuthenticated = !!tokenStr;
@@ -30,12 +30,14 @@ export const rbacGuard = (
 
     // 2. Verificación RBAC Estricta (Solo si la ruta especifica .roles)
     if (to.meta.roles && Array.isArray(to.meta.roles)) {
-        const userRole = authStore.user?.role;
+        const userRoles = authStore.roles;
 
-        // Si exige roles pero el usuario no tiene rol o su rol no está en la lista: 403
-        if (!userRole || !(to.meta.roles as string[]).includes(userRole)) {
-            console.warn(`[SECURITY 403] Acceso Denegado a ${to.path}. Se requiere: ${to.meta.roles.join(', ')}. Rol actual: ${userRole || 'Ninguno'}`);
-            alert('⚠️ 403 Forbidden: No tienes privilegios para acceder a este módulo.');
+        // Si exige roles pero el usuario no tiene rol o sus roles no intersectan con la lista: 403
+        const hasAccess = userRoles.some(r => (to.meta.roles as string[]).includes(r));
+        
+        if (!hasAccess) {
+            console.warn(`[SECURITY 403] Acceso Denegado a ${to.path}. Se requiere al menos uno de: ${to.meta.roles.join(', ')}. Roles actuales: ${userRoles.join(', ')}`);
+            alert('⚠️ 403 Forbidden: No tienes privilegios directivos para acceder a este módulo.');
             return next('/');
         }
     }

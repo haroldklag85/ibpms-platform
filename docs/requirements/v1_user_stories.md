@@ -757,42 +757,58 @@ Feature: Task Completion with Form Data
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Auto-vinculación Camaleónica de Pantalla 7.B (Generic Form)
+Feature: Auto-vinculación Camaleónica y Resiliencia de Pantalla 7.B
 
-  Scenario: Inyección Explícita en BPMN vs Implícita en Ágil (Anti-Bypass)
-    Given la necesidad de usar el Formulario Genérico Base
-    When se trata de un proceso **BPMN (Camunda)**: El Arquitecto DEBE seleccionarlo explícitamente en el Dropdown de la Pantalla 6 (`Form Key: sys_generic_form`). Si deja la tarea desnuda, el Pre-Flight Analyzer BLOQUEA el despliegue (US-005).
-    And when se trata de una Tarea **Kanban/Gantt** huérfana: El Frontend inyecta el Formulario Genérico automáticamente de forma silenciosa para asegurar que el operario tenga una interfaz gráfica de cierre.
+  Scenario: Inyección Explícita (Anti-Bypass) y Restricción VIP (Pre-Flight)
+    Given la necesidad de usar el Formulario Genérico Base (`sys_generic_form`) en un BPMN
+    When el Arquitecto lo selecciona en el Dropdown de la `UserTask` en la Pantalla 6
+    Then el Pre-Flight Analyzer auditará el Rol y la criticidad de esa tarea.
+    And si el Rol está tipificado estructuralmente como "Alta Dirección", "Aprobador Financiero" o la tarea exige "Sello Legal", el Pre-Flight BLOQUEARÁ el despliegue (❌ Hard-Stop).
+    And prohibirá usar el formulario genérico, forzando la creación de un iForm Maestro formal (Pantalla 7) que cumpla con los estándares pesados de auditoría.
+    And para tareas Kanban huérfanas, el sistema inyectará la Pantalla 7.B silenciosamente.
 
-  Scenario: Renderizado de Contexto en Solo Lectura (BFF)
-    Given un usuario que apertura una Tarea operativa en el Workdesk asignada al formulario genérico
-    Then el Backend (BFF) inyectará el esquema Zod del "Formulario Genérico" junto con el `prefillData`.
-    And el Frontend renderizará la Pantalla 7.B coronada por un "Panel de Contexto" estricto de Solo Lectura.
-    And este panel iterará sobre la Metadata principal heredada de la Instancia (Ej: ID del Proyecto/Caso, Nombre del Cliente, Prioridad y SLA Restante) dibujándola en una cuadrícula limpia de "Llave : Valor" (Ej: `cliente: GlobalTech`), ocultando las variables técnicas del sistema.
+  Scenario: Prevención de Context Bleeding (Filtro Anti-Basura BFF)
+    Given un operario que apertura una tarea operativa con el Formulario Genérico
+    When el BFF (Backend for Frontend) compila el DTO de inicialización (`prefillData`)
+    Then el Backend aplicará un `Whitelist Regex` o filtro estricto sobre el Payload de Camunda.
+    And extraerá y enviará EXCLUSIVAMENTE los metadatos de negocio vitales (Ej: `Case_ID`, `Client_Name`, `Priority`, `SLA`), ocultando las 200+ variables técnicas transaccionales del proceso.
+    And el Frontend renderizará la Pantalla 7.B coronada por una cuadrícula superior de Solo Lectura ultraligera, evitando la sobrecarga cognitiva del operario.
 
-  Scenario: Mutación Camaleónica de Interfaz (BPMN vs Gantt/Kanban)
+  Scenario: Mutación Camaleónica de Interfaz y Botón de Pánico (Error Event)
     Given la renderización de la Pantalla 7.B
     When el motor de UI detecte el origen transaccional de la tarea
-    Then el Formulario aplicará dos modos de comportamiento visuales y transaccionales distintos:
-    And 1. Si es Agile/Gantt (SQL Entity): Mostrará un Slider numérico `[% de Avance (0-100)]`. El botón principal dirá `[ 💾 Guardar Progreso ]`, permitiendo hacer POST para guardar el avance parcial reteniendo el estado de la tarea viva hasta llegar al 100%.
-    And 2. Si es BPMN (Camunda): OCULTARÁ físicamente el Slider de `% de Avance` (respetando la naturaleza binaria de los Tokens). Mostrará un único botón definitivo `[ ✔️ Completar Tarea ]` asumiendo el 100% de ejecución incondicional y gatillando el `/complete` destructivo.
+    Then el Formulario aplicará dos modos visuales y transaccionales distintos:
+    And 1. Si es Agile/Gantt: Mostrará un Slider numérico `[% de Avance (0-100)]` y un botón `[ 💾 Guardar Progreso ]` para persistencia parcial.
+    And 2. Si es BPMN (Camunda): OCULTARÁ el Slider de avance (por la naturaleza binaria). Mostrará el botón definitivo `[ ✔️ Completar Tarea ]`.
+    And ADICIONALMENTE en BPMN, inyectará un botón secundario rojo `[ ⚠️ Escalar Incidencia / Devolver ]`, el cual al accionarse exigirá un comentario obligatorio y disparará un `BPMN Error Boundary Event` hacia Camunda para desviar el Token fuera del camino feliz hacia un validador Nivel 2.
 
-  Scenario: Minimización de Basura (Fricción Inteligente en Comentarios)
-    Given el campo `<TextArea>` de "Comentarios / Observaciones" dentro del Formulario Genérico
-    Then por defecto, el esquema Zod de este campo nacerá como OPCIONAL para evitar el 'Friction Tax' y los textos basura (Ej: "Ok").
-    But si el usuario reporta un porcentaje de avance MENOR a 100% (En Ágil), o si activa un Switch visual de `[⚠️ Reportar Bloqueo/Incidencia]`, el esquema Zod mutará reactivamente haciendo que el campo sea ESTRICTAMENTE OBLIGATORIO, forzando a justificar la anomalía temporal.
+  Scenario: Resiliencia Volátil Igualitaria (LocalStorage Draft)
+    Given que el Formulario Genérico es una interfaz aparentemente "liviana"
+    When el operario digita observaciones en terreno y cierra la pestaña accidentalmente (Offline o F5)
+    Then la arquitectura FrontEnd NO discriminará este formulario y heredará la directiva inquebrantable de la US-029.
+    And guardará el progreso tecleado temporalmente en el `LocalStorage` del navegador (atado al `Task_ID`).
+    And al completarse exitosamente la tarea, el Frontend purgará esta caché síncronamente para mantener la higiene del navegador del operario.
 
-  Scenario: Soporte Estándar de Evidencia Documental (Upload-First)
-    Given la necesidad operativa de adjuntar soportes físicos a la tarea procedimental
-    Then la Pantalla 7.B inyectará nativamente el componente `<Dropzone>` de Archivos Adjuntos.
-    And este componente operará bajo la política arquitectónica inquebrantable de la US-029: Carga asíncrona temprana (`upload-temp`) a la Bóveda SGDEA.
-    And al hacer el submit de la tarea, solo viajará un Array de Identificadores UUIDs (`{"attachments": ["UUID-1"]}`) al motor transaccional.
+  Scenario: Minimización de Basura y el Friction Tax de la Evidencia (TRD)
+    Given el campo `<TextArea>` de "Comentarios" y el `<Dropzone>` de Archivos Adjuntos
+    Then por defecto, el esquema Zod nacerá como OPCIONAL para evitar el 'Friction Tax' y textos basura.
+    But si el usuario reporta un avance MENOR a 100% (En Ágil) o usa el botón de Escalar (En BPMN), el Zod mutará haciendo el comentario ESTRICTAMENTE OBLIGATORIO.
+    And el Administrador podrá encender un Feature Toggle: `[ 📸 Exigir Evidencia Física ]` haciendo el `<Dropzone>` obligatorio para poder oprimir "Completar Tarea".
+    And para asegurar el cumplimiento documental (TRD), si se sube un archivo, el componente desplegará un Dropdown obligatorio de "Tipo de Documento" (Ej: Factura, Cédula) antes de aplicar el patrón Upload-First (`upload-temp`) hacia la Bóveda SGDEA.
 
-  Scenario: Namespacing Automático para Prevención de Colisiones (Data Pollution)
-    Given que el operario finaliza la tarea usando el Formulario Genérico Pantalla 7.B
-    When presiona el botón de envío
-    Then el Frontend encapsulará las variables bajo un namespace estricto concatenando el ID de la Tarea (Ej: `{"TK105_comentarios": "...", "TK105_attachments": [...]}`).
-    And garantizando que si existen múltiples tareas genéricas secuenciales en el mismo proceso BPMN, sus datos históricos convivan pacíficamente en el Payload global de Camunda sin sobreescribirse entre sí.
+  Scenario: Namespacing Preventivo y Exportación Activa a Integraciones
+    Given que el operario finaliza la tarea usando la Pantalla 7.B y presiona enviar
+    When el Frontend empaqueta el payload JSON
+    Then encapsulará las variables bajo un namespace estricto concatenando el ID de la Tarea (Ej: `{"TK105_comentarios": "...", "TK105_attachments": [...]}`) para evitar sobreescrituras en Camunda si hay múltiples tareas genéricas.
+    And esta información será de Mutabilidad Activa: el Arquitecto podrá acceder al Integration Hub (Pantalla 11) y mapear libremente la variable `TK105_comentarios` para enviarla explícitamente dentro de un Payload hacia APIs de terceros (Ej: SAP o Salesforce).
+
+  Scenario: Aplanamiento de Logs Genéricos para Analítica (Data Flattening)
+    Given la dispersión de variables dinámicas con prefijos (Ej: `TK105_comentarios`) viajando en el motor Camunda
+    When el proceso requiera ser reportado analíticamente en Dashboards BAM (US-009 / US-018)
+    Then el BFF/Backend interceptará la finalización de la Tarea Genérica mediante un Event Listener asíncrono.
+    And unificará el ID de la Tarea, el Comentario, la Evidencia y el Usuario, inyectándolos en un DTO estándar dentro de una tabla SQL plana de Logs Operativos (Ej: `generic_task_logs`).
+    And delegando a Grafana la lectura hiper-rápida de esta tabla plana, impidiendo que el motor de BI tenga que hacer minería destructiva buscando IDs dinámicos dentro de los JSONs crudos de Camunda.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 7.B (Formulario Genérico Base).
 
@@ -1757,6 +1773,7 @@ Feature: Process Health Analytics
     And el Backend iBPMS implementará un proceso asíncrono de "Aplanamiento" (Change Data Capture o Event Listener).
     And extraerá las variables estratégicas del JSON y las insertará en una tabla relacional plana y columnar (Ej: `ibpms_business_metrics_flat`).
     And Grafana consumirá exclusivamente esta tabla plana, garantizando tiempos de carga en milisegundos sin impactar el Core.
+
 
 ```
 **Trazabilidad UX:** Wireframes Pantalla 5 (Dashboards y Panel de Control - BAM).

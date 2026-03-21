@@ -2,6 +2,7 @@ package com.ibpms.poc.infrastructure.web.ai;
 
 import com.ibpms.poc.application.usecase.ai.BpmnCopilotUseCase;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -43,5 +44,19 @@ public class BpmnCopilotController {
         copilotUseCase.executeBpmnGenerationStream(userId, prompt, emitter);
 
         return emitter;
+    }
+
+    /**
+     * CA-04: Destructor Efímero (End of Session RAG Boundary).
+     * @param sessionId token correlativo desde el Frontend para eliminar vectores.
+     */
+    @DeleteMapping("/session")
+    @PreAuthorize("hasAnyAuthority('ROLE_PROCESS_ARCHITECT', 'ROLE_BPMN_DESIGNER')")
+    public ResponseEntity<Void> wipeCopilotMemory(@RequestParam String sessionId) {
+        // En V1 extraemos Tenant_ID asumiendo un Auth Context Mockeado
+        String tenantId = "tenant_hq_corp"; 
+        
+        copilotUseCase.triggerRagSessionWipe(tenantId, sessionId);
+        return ResponseEntity.ok().build();
     }
 }

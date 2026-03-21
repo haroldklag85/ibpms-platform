@@ -1,6 +1,8 @@
 package com.ibpms.poc.application.usecase.ai;
 
 import com.ibpms.poc.application.service.security.AiRateLimiterService;
+import com.ibpms.poc.application.service.security.AiJailbreakGuardService;
+import com.ibpms.poc.application.service.security.AiPiiAnonymizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -18,19 +20,47 @@ public class BpmnCopilotUseCase {
 
     private final AiRateLimiterService rateLimiterService;
     private final BpmnLayoutAdapter layoutAdapter;
+    private final AiJailbreakGuardService guardService;
+    private final AiPiiAnonymizerService piiService;
+    private final RagSessionCleanerUseCase sessionCleaner;
 
     // Prompt estricto quemado en código - Prevención de Inyección y Geometría
     private static final String SYSTEM_PROMPT = """
-        Eres un Copiloto Arquitecto BPMN 2.0 estricto.
-        REGLA 1 (SOVEREIGN LAYOUT): Genera SOLO el bloque <bpmn:process>. OMITE POR COMPLETO el bloque visual <bpmndi:BPMNDiagram>. Jamás calcules coordenadas (X,Y).
-        REGLA 2 (CONSTRAINTS): Tienes PROHIBIDO usar <callActivity>, <subProcess> o Eventos Complejos. 
-        Usa ÚNICAMENTE: startEvent, endEvent, userTask, serviceTask, exclusiveGateway, boundaryEvent (error).
-        REGLA 3 (OUTPUT): Retorna el XML crudo sin markdown, sin explicaciones.
+        Eres un Copiloto Arquitecto BPMN 2.0 estricto y de confianza nula.
+        REGLA 1 (SOVEREIGN LAYOUT Y RESTRICCIONES CATEGOÓRICAS): 
+          - Genera SOLO el bloque <bpmn:process>. OMITE POR COMPLETO el bloque visual <bpmndi:BPMNDiagram>. Jamás calcules coordenadas (X,Y).
+          - Prohibido el uso de <callActivity>, <subProcess> o Eventos Complejos. 
+          - Nodos permitidos: startEvent, endEvent, userTask, serviceTask, exclusiveGateway, boundaryEvent (error_only).
+        REGLA 2 (TRADUCCIÓN ACTIVA):
+          - El XML generado (nombres de tareas, eventos, IDs descriptivos) DEBE emitirse incondicionalmente en ESPAÑOL, sin importar el idioma de origen del documento procesado vía RAG.
+        REGLA 3 (PREVENCIÓN DE BUCLES REDUNDANTES):
+          - Jamás dupliques nodos secuenciales para repetir pasos lógicos. Dibuja un SequenceFlow invertido apuntando al nodo inicial del ciclo.
+        REGLA 4 (SANEAMIENTO DE GATEWAYS Y ROLES):
+          - Los Gateways exclusivos nacerán VACÍOS. JAMÁS inyectes sintaxis matemática o scripts FEEL en su interior. La lógica de evaluación recae en variables dummy fuera del BPMN.
+          - Si el documento fuerza un Rol Huérfano que no encaja operativamente, inyecta un <bpmn:textAnnotation> contiguo alertando al Arquitecto Humano.
+        REGLA 5 (TRIAGE CONVERSACIONAL Y PARADA DE EMERGENCIA):
+          - Si el análisis encuentra contradicciones procedimentales o variables imposibles de resolver, ABORTA la generación XML y emite JSON/Texto formulando un máximo de 3 Preguntas Cortas con 'Action Pills' (Opciones sugeridas) para que el humano rompa el empate antes de reanudar el flujo generativo.
+        REGLA 6 (OUTPUT FORMAT): 
+          - Si no hay ambigüedad, retorna el XML crudo sin envoltura Markdown. Si hay ambigüedad (Triage), retorna JSON {"type":"triage", "questions":[{"text":"?", "options":["A","B"]}]}.
         """;
 
-    public BpmnCopilotUseCase(AiRateLimiterService rateLimiterService, BpmnLayoutAdapter layoutAdapter) {
+    public BpmnCopilotUseCase(AiRateLimiterService rateLimiterService, 
+                              BpmnLayoutAdapter layoutAdapter,
+                              AiJailbreakGuardService guardService,
+                              AiPiiAnonymizerService piiService,
+                              RagSessionCleanerUseCase sessionCleaner) {
         this.rateLimiterService = rateLimiterService;
         this.layoutAdapter = layoutAdapter;
+        this.guardService = guardService;
+        this.piiService = piiService;
+        this.sessionCleaner = sessionCleaner;
+    }
+
+    /**
+     * CA-04: Transfiere la Orden de Purga de Vectores al UseCase Destructivo.
+     */
+    public void triggerRagSessionWipe(String tenantId, String sessionId) {
+        sessionCleaner.wipeSessionFootprint(tenantId, sessionId);
     }
 
     @Async
@@ -46,11 +76,18 @@ public class BpmnCopilotUseCase {
                 return;
             }
 
+            // CA-05: Escudo 3-Strikes Anti-Jailbreak Kill Switch
+            guardService.inspectAndEnforce(userId, humanPrompt);
+
+            // CA-05: Enmascarado Riguroso PII
+            String maskedPrompt = piiService.maskSensitiveData(humanPrompt);
+
             // Truncamiento Severo de Tokens (1000 Chars Humanos + System Prompt)
-            String safePrompt = humanPrompt != null && humanPrompt.length() > 1000 
-                ? humanPrompt.substring(0, 1000) : humanPrompt;
+            String safePrompt = maskedPrompt != null && maskedPrompt.length() > 1000 
+                ? maskedPrompt.substring(0, 1000) : maskedPrompt;
                 
-            log.debug("[SRE-COPILOT] Prompt ensamblado con Segregación Topológica. Iniciando Fake LLM Stream...");
+            log.debug("[SRE-COPILOT] Prompt ensamblado con Segregación Topológica y PII Enmascarado. {}... [System Rule Inyectada]", safePrompt.substring(0, Math.min(20, safePrompt.length())));
+            log.trace("[SRE-COPILOT-PROMPT] Reglas Subyacentes: {}", SYSTEM_PROMPT);
 
             // Streaming Mock Asíncrono
             String[] mockXmlChunks = {

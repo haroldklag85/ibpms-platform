@@ -55,11 +55,49 @@ apiClient.interceptors.response.use(
             authStore.logout();
             // Ya no redirigimos ni hacemos logout destructivo
         }
-        // CA-7: Refresco Forzoso (Supervivencia de JWT Roles mutados)
-        if (error.response && error.response.status === 403 && error.response.data?.code === 'PRIVILEGES_CHANGED') {
-            const authStore = useAuthStore();
-            authStore.logout();
-            window.location.href = '/login?alert=Sesión Invalidada por Seguridad';
+        
+        // CA-05: Expulsión por Manipulación Cognitiva (Prompt Injection / Abuso)
+        if (error.response && error.response.status === 403) {
+            // Evaluamos si trae bandera de Seguridad
+            if (error.response.data?.code === 'SECURITY_VIOLATION' || error.response.data?.message?.includes('RAG') || error.response.data?.code === 'PROMPT_INJECTION') {
+               console.error('[CA-05 ERROR] Infracción de Ciber-Seguridad. Interceptando flujo...');
+               
+               // Renderizado nativo de Modal Inevitable en el Top DOM (Vanilla injection para no depender de Vue Router)
+               const body = document.querySelector('body');
+               if (body && !document.getElementById('ciso-alert-modal')) {
+                  const modalHTML = `
+                     <div id="ciso-alert-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif;">
+                        <span style="font-size: 80px; margin-bottom: 20px;">🛑</span>
+                        <h1 style="color:#ef4444; font-size:32px; margin-bottom:10px;">VETA CIBER-COGNITIVA ACTIVADA</h1>
+                        <p style="max-width: 600px; text-align:center; font-size: 16px; margin-bottom: 30px; line-height:1.5;">
+                           Se ha detectado una anomalía crítica en sus patrones de Prompt hacia la IA. 
+                           Por protocolo Zero-Trust del CISO (US-027 CA-05), sus credenciales estructurales han sido revocadas instantáneamente mediante un Token Blacklist.
+                        </p>
+                        <p style="color:#f87171; font-weight:bold; font-family:monospace; font-size: 14px;">Iniciando expulsión forzada en <span id="ciso-countdown">5</span> segundos...</p>
+                     </div>
+                  `;
+                  body.insertAdjacentHTML('beforeend', modalHTML);
+
+                  let count = 5;
+                  const int = setInterval(() => {
+                     count--;
+                     const span = document.getElementById('ciso-countdown');
+                     if(span) span.innerText = count.toString();
+                     if (count <= 0) {
+                        clearInterval(int);
+                        const authStore = useAuthStore();
+                        authStore.logout();
+                        window.location.href = '/login?alert=Expulsión%20por%20Violación%20Cognitiva';
+                     }
+                  }, 1000);
+               }
+               return new Promise(() => {}); // Suspende la cadena perpetuamente para abortar Vue
+            } else if (error.response.data?.code === 'PRIVILEGES_CHANGED') {
+               // CA-7: Refresco Forzoso estándar
+               const authStore = useAuthStore();
+               authStore.logout();
+               window.location.href = '/login?alert=Sesión Invalidada por Seguridad';
+            }
         }
         return Promise.reject(error);
     }
@@ -130,5 +168,11 @@ export const api = {
     // 12. Centro de Incidentes SysAdmin (CA-13 DRP)
     getIncidents: () => apiClient.get('/admin/incidents'),
     retryIncident: (id: string) => apiClient.post(`/admin/incidents/${id}/retry`),
-    abortIncident: (id: string) => apiClient.delete(`/admin/incidents/${id}`)
+    abortIncident: (id: string) => apiClient.delete(`/admin/incidents/${id}`),
+    
+    // CA-04: Limpieza de contexto IA al abandonar Sesión (Purga RAG)
+    destroyCopilotSession: () => fetch('/api/v1/ai/copilot/session', { method: 'DELETE', keepalive: true, headers: { 'Authorization': `Bearer ${localStorage.getItem('ibpms_token')}` } }),
+
+    // CA-09: Trazador Forense de Descartes ISO (Override)
+    reportIsoOverride: (payload: any) => apiClient.post('/forensics/iso-override', payload)
 };

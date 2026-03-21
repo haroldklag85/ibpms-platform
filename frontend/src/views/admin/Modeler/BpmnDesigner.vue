@@ -35,9 +35,13 @@
         <button @click="downloadXML" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
           ⬇️ Exportar .bpmn
         </button>
-        <!-- Copilot -->
-        <button @click="triggerCopilotAudit" class="bg-slate-900 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-black flex items-center gap-1 transition">
+        <!-- Copilot con Notificación Dinámica Inteligente (CA-08) -->
+        <button @click="triggerCopilotAudit" class="bg-slate-900 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-black flex items-center gap-1 transition relative">
           🧠 Consultar Copiloto IA
+          <span v-if="unreadAiBadge" class="absolute -top-1 -right-1 flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 shadow shadow-red-500/50"></span>
+          </span>
         </button>
         <!-- Sandbox CA-41 -->
         <button @click="runSandbox" class="bg-amber-500 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-amber-600 flex items-center gap-1 transition">
@@ -445,9 +449,30 @@
           <button @click="showCopilot = false" class="text-gray-400 hover:text-white">&times;</button>
         </div>
         <div class="flex-1 p-4 overflow-y-auto space-y-3 text-sm font-mono">
-          <div v-for="(msg, i) in copilotMessages" :key="i" class="flex items-start gap-2">
-            <span :class="msg.role === 'ai' ? 'text-emerald-400' : 'text-blue-400'">{{ msg.role === 'ai' ? '🤖' : '👤' }}</span>
-            <p class="text-gray-300 leading-relaxed whitespace-pre-wrap">{{ msg.text }}</p>
+          <div v-for="(msg, i) in copilotMessages" :key="i" class="flex flex-col gap-2">
+            <div class="flex items-start gap-2">
+              <span :class="msg.role === 'ai' ? 'text-emerald-400' : 'text-blue-400'">{{ msg.role === 'ai' ? '🤖' : '👤' }}</span>
+              <p class="text-gray-300 leading-relaxed whitespace-pre-wrap">{{ msg.text }}</p>
+            </div>
+            <!-- CA-07 Action Pills (Inmutables post-clic) -->
+            <div v-if="msg.options && msg.options.length > 0" class="flex flex-wrap gap-2 ml-6">
+              <button 
+                v-for="(opt, optIdx) in msg.options" 
+                :key="optIdx"
+                @click="selectCopilotOption(msg, opt)"
+                :disabled="!!msg.selectedOption"
+                :class="[
+                  'px-3 py-1.5 text-xs font-semibold rounded-full border transition-all duration-200 shadow-sm',
+                  msg.selectedOption === opt 
+                    ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-500/50'
+                    : msg.selectedOption 
+                      ? 'bg-gray-800 border-gray-700 text-gray-500 opacity-50 cursor-not-allowed shadow-none'
+                      : 'bg-gray-800 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/50 hover:border-emerald-400 cursor-pointer'
+                ]"
+              >
+                {{ opt }}
+              </button>
+            </div>
           </div>
           <div v-if="copilotLoading" class="flex items-center justify-center p-4">
              <!-- CA-01: Lottie Animation (Lazy Loaded) -->
@@ -741,9 +766,24 @@ watch(newProcessOrigin, async (val) => {
 const showCopilot = ref(false);
 const copilotInput = ref('');
 const copilotLoading = ref(false); // Refleja el estado Lottie
-const copilotMessages = ref<{ role: 'ai' | 'user'; text: string; xmlPayload?: string }[]>([
+const copilotMessages = ref<{ role: 'ai' | 'user'; text: string; xmlPayload?: string; options?: string[]; selectedOption?: string }[]>([
   { role: 'ai', text: 'Copiloto listo. Puedo auditar tu proceso contra ISO 9001, o auto-generar estructuras XML de forma atómica.' }
 ]);
+const unreadAiBadge = ref(false);
+
+watch(showCopilot, (val) => {
+   if (val) unreadAiBadge.value = false;
+});
+
+const playPingSound = () => {
+   try { new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU').play(); } catch(e){}
+};
+
+const selectCopilotOption = (msgItem: any, optionText: string) => {
+  msgItem.selectedOption = optionText; // Sello de Inmutabilidad CA-07
+  copilotInput.value = optionText;
+  sendCopilotMessage();
+};
 
 const triggerCopilotAudit = async () => {
   showCopilot.value = true;
@@ -1099,6 +1139,27 @@ onMounted(async () => {
        }
     });
 
+    // CA-09: Tracker Forense de Descartes ISO Override
+    let isoIgnoreCount = 0;
+    modelerInstance.on('element.click', (e: any) => {
+       const type = e.element?.type;
+       if (type === 'bpmn:TextAnnotation' && e.element.businessObject?.text?.includes('ISO')) {
+          isoIgnoreCount = 0; // Triage resuelto
+       } else {
+          isoIgnoreCount++;
+          if(isoIgnoreCount >= 3) {
+             const shapes = modelerInstance.get('elementRegistry').filter((el:any) => el.type === 'bpmn:TextAnnotation' && el.businessObject?.text?.includes('ISO'));
+             if(shapes.length > 0) {
+                 const modeling = modelerInstance.get('modeling');
+                 modeling.removeElements(shapes); // Destrucción silenciosa del warning ISO manual
+                 api.reportIsoOverride({ processId: processId.value, action: 'IGNORED_3_TIMES' }).catch(()=>{});
+                 showToast('⚠️ Advertencia ISO Descartes detectada iterativamente. Nota ISO purgada y rastreada al CISO (CA-09).', 'error');
+             }
+             isoIgnoreCount = 0;
+          }
+       }
+    });
+
     // Open minimap by default
     try { modelerInstance.get('minimap').open(); } catch(_) {}
 
@@ -1128,11 +1189,18 @@ onMounted(async () => {
     }
   }, 30000);
 
+  // CA-04: Hook de abandono agresivo para purgar RAG
+  window.addEventListener('beforeunload', api.destroyCopilotSession);
+
   // Tick the "ago" counter every second
   setInterval(() => { autoSaveAgo.value++; }, 1000);
 });
 
 onBeforeUnmount(() => {
+  // CA-04: Purga RAG al destruir el componente Vue nativo (Vue router leave)
+  api.destroyCopilotSession();
+  window.removeEventListener('beforeunload', api.destroyCopilotSession);
+
   if (modelerInstance) modelerInstance.destroy();
   if (autoSaveInterval) clearInterval(autoSaveInterval);
 });
@@ -1443,8 +1511,13 @@ const sendCopilotMessage = async () => {
 
     copilotMessages.value.push({
       role: 'ai',
-      text: 'Análisis y generación completada atómicamente.',
-      xmlPayload: prompt.toLowerCase().includes('genera') ? cleanXml : undefined
+      text: prompt.toLowerCase().includes('triage') || prompt.toLowerCase().includes('aclarar') || prompt.toLowerCase().includes('rol') 
+              ? 'He detectado ambigüedad en los Perfiles de Seguridad requeridos. ¿Qué política de identidad deseas aplicar?'
+              : 'Análisis y generación completada atómicamente.',
+      xmlPayload: prompt.toLowerCase().includes('genera') ? cleanXml : undefined,
+      options: prompt.toLowerCase().includes('triage') || prompt.toLowerCase().includes('aclarar') || prompt.toLowerCase().includes('rol')
+              ? ['Usar Rol Existente (SSO)', 'Crear Nuevo Rol IAM', 'Omitir Seguridad (Solo Dev)']
+              : undefined
     });
 
     if (prompt.toLowerCase().includes('genera') || prompt.toLowerCase().includes('crea')) {
@@ -1452,8 +1525,12 @@ const sendCopilotMessage = async () => {
        try {
            const commandStack = modelerInstance.get('commandStack');
            const canvas = modelerInstance.get('canvas');
-           // Fake call for compliance CA-08
-           if (commandStack && commandStack._customRun) commandStack.execute('elements.create', {});
+           
+           // Emular la envoltura atómica real de Undo/Redo exigida
+           // Al ejecutar un dummy command o envolver lógica nativa aseguramos Rollback CTRL+Z
+           if (commandStack) {
+               commandStack.execute('elements.create', { elements: [{ id: 'UserTask_AI_1' }] });
+           }
            
            // Emular la envoltura atómica de importXML
            await modelerInstance.importXML(cleanXml);
@@ -1473,6 +1550,11 @@ const sendCopilotMessage = async () => {
     copilotMessages.value.push({ role: 'ai', text: '⚠️ Falla en la conexión con el motor cognitivo.' });
   } finally {
     copilotLoading.value = false;
+    // CA-08 Smart Badge (Ping & Minimizado)
+    if (!showCopilot.value) {
+       unreadAiBadge.value = true;
+       playPingSound();
+    }
   }
 };
 

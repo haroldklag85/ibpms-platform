@@ -111,6 +111,11 @@ public class BpmTaskService {
             }
         }
 
+        Integer syncVersionId = null;
+        if (task instanceof org.camunda.bpm.engine.impl.persistence.entity.TaskEntity) {
+             syncVersionId = ((org.camunda.bpm.engine.impl.persistence.entity.TaskEntity) task).getRevision();
+        }
+
         GenericTaskPayloadDTO dto = new GenericTaskPayloadDTO(
             task.getId(),
             task.getProcessInstanceId(),
@@ -119,7 +124,8 @@ public class BpmTaskService {
             rawVariables.get("amount") != null ? Double.valueOf(rawVariables.get("amount").toString()) : null,
             (String) rawVariables.get("priority"),
             (String) rawVariables.get("description"),
-            dynamicFields
+            dynamicFields,
+            syncVersionId
         );
 
         return dto;
@@ -145,6 +151,21 @@ public class BpmTaskService {
         if (initiatorObj != null && userId.equals(initiatorObj.toString())) {
             eventPublisher.publishEvent(new com.ibpms.poc.application.event.SecurityAnomalyEvent("INTENTO_SOD_AUTOAPROBACION", userId, taskId));
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Segregación de Funciones (SoD): Tiene estrictamente prohibido aprobar una instancia creada por usted mismo.");
+        }
+
+        // GAP-2 (US-028): Escudo Anti-Colapso S3 Upload-First.
+        // Toda variable sospechosa de ser archivo debe llegar al backend purgada (Como un String UUID de S3).
+        if (variables != null) {
+            variables.forEach((key, value) -> {
+                if (key.toLowerCase().contains("file") && value != null) {
+                   try {
+                       java.util.UUID.fromString(value.toString()); // Intento de Cadeo UUID Extricto
+                   } catch (IllegalArgumentException e) {
+                       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                           "GAP-2 (Sec-Violation): Ingesta Binaria o Base64 Rechazada. Variables de archivo DEBEN ser IDs relacionales UUID apuntando a S3.");
+                   }
+                }
+            });
         }
 
         // 1. Inyectamos silenciosamente las variables dinámicas de Frontend en el Scope de Camunda

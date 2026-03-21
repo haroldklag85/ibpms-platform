@@ -1,8 +1,6 @@
 package com.ibpms.poc.application.service.security;
 
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,7 +23,7 @@ public class AiRateLimiterService {
 
     // Política Estricta: Máximo 5 Peticiones. Se recarga el cubo a razón de 5 por cada 1 Minuto.
     private Bucket createNewBucket() {
-        Bandwidth limit = Bandwidth.classic(5, Refill.greedy(5, Duration.ofMinutes(1)));
+        Bandwidth limit = Bandwidth.builder().capacity(5).refillGreedy(5, Duration.ofMinutes(1)).build();
         return Bucket.builder().addLimit(limit).build();
     }
 

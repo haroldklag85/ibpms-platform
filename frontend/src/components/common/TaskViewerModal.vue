@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
 import { z } from 'zod';
 import apiClient from '@/services/apiClient';
+import FormRenderer from '@/components/forms/FormRenderer.vue';
 
 // ==========================================
 // 1. PROPS Y TYPES (El Camaleón)
@@ -18,6 +19,7 @@ interface TaskContext {
     [key: string]: any; // Whitelist ya filtrado por BFF
   };
   requiresEvidence?: boolean; // CA-5 Flag de Fricción TRD
+  formSnapshot?: any[]; // CA-78 Ley del Abuelo In-Flight
 }
 
 const props = defineProps<{
@@ -202,8 +204,14 @@ const handleEscalate = () => {
       <!-- BODY DEL FORMULARIO CHAMELEON -->
       <div class="p-6 flex-1 overflow-y-auto space-y-6">
         
-        <!-- Slider de Progreso (Solamente en AGILE) -->
-        <div v-if="context.sourceEngine === 'AGILE'" class="space-y-2">
+        <!-- Si tiene Snapshot de Formulario (CA-78) -->
+        <div v-if="context.formSnapshot && context.formSnapshot.length > 0" class="bg-indigo-50/30 p-4 rounded-xl border border-indigo-100 mb-4">
+           <h3 class="text-xs font-bold text-indigo-800 mb-4 border-b border-indigo-100 pb-2 flex items-center gap-2"><span class="material-symbols-outlined text-[14px]">history</span> Snapshot In-Flight (CA-78)</h3>
+           <FormRenderer :schema="context.formSnapshot" v-model="formData" />
+        </div>
+
+        <!-- Slider de Progreso (Solamente en AGILE y si NO hay formSnapshot) -->
+        <div v-if="context.sourceEngine === 'AGILE' && (!context.formSnapshot || context.formSnapshot.length === 0)" class="space-y-2">
           <label class="block text-sm font-semibold text-gray-700 flex justify-between">
             <span>Progreso Físico de la Tarea</span>
             <span class="text-blue-600 font-bold">{{ formData.progressPercentage }}%</span>

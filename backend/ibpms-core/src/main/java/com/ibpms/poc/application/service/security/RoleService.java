@@ -40,6 +40,7 @@ public class RoleService {
         return roleRepository.findAll();
     }
 
+    @SuppressWarnings("null")
     public void deleteRole(UUID id) {
         roleRepository.findById(id).ifPresent(r -> logAuditEntry(r, "DELETE"));
         roleRepository.deleteById(id);

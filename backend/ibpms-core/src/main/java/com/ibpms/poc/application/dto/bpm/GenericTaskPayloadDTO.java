@@ -18,6 +18,8 @@ public class GenericTaskPayloadDTO {
     private String description;
     // Espacio para 5 variables dinámicas seguras (Whitelisted strings)
     private Map<String, String> dynamicFields;
+    // CA-72: Hash Optimista de la versión al momento de la consulta
+    private Integer syncVersionId;
 
     public GenericTaskPayloadDTO() {}
 
@@ -30,6 +32,18 @@ public class GenericTaskPayloadDTO {
         this.priority = priority;
         this.description = description;
         this.dynamicFields = dynamicFields;
+    }
+
+    public GenericTaskPayloadDTO(String taskId, String processInstanceId, String caseId, String clientName, Double amount, String priority, String description, Map<String, String> dynamicFields, Integer syncVersionId) {
+        this.taskId = taskId;
+        this.processInstanceId = processInstanceId;
+        this.caseId = caseId;
+        this.clientName = clientName;
+        this.amount = amount;
+        this.priority = priority;
+        this.description = description;
+        this.dynamicFields = dynamicFields;
+        this.syncVersionId = syncVersionId;
     }
 
     public String getTaskId() { return taskId; }
@@ -48,4 +62,6 @@ public class GenericTaskPayloadDTO {
     public void setDescription(String description) { this.description = description; }
     public Map<String, String> getDynamicFields() { return dynamicFields; }
     public void setDynamicFields(Map<String, String> dynamicFields) { this.dynamicFields = dynamicFields; }
+    public Integer getSyncVersionId() { return syncVersionId; }
+    public void setSyncVersionId(Integer syncVersionId) { this.syncVersionId = syncVersionId; }
 }

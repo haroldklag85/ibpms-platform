@@ -2,6 +2,7 @@ package com.ibpms.poc.infrastructure.web;
 
 import com.ibpms.poc.application.dto.CreateFormDesignDTO;
 import com.ibpms.poc.application.dto.FormDesignDTO;
+import com.ibpms.poc.application.service.FormConcurrencyLockService;
 import com.ibpms.poc.application.service.FormDesignService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,9 +25,11 @@ import java.util.UUID;
 public class FormDesignController {
 
     private final FormDesignService formDesignService;
+    private final FormConcurrencyLockService lockService;
 
-    public FormDesignController(FormDesignService formDesignService) {
+    public FormDesignController(FormDesignService formDesignService, FormConcurrencyLockService lockService) {
         this.formDesignService = formDesignService;
+        this.lockService = lockService;
     }
 
     /**
@@ -79,10 +82,45 @@ public class FormDesignController {
 
     /**
      * Eliminar (Soft delete).
+     * GAP 5 (CA-26): Si el Motor detona IllegalStateException informando que
+     * hay 1 o más instancias de procesos activas, se escuda con un HTTP 409 Conflict.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarFormulario(@PathVariable UUID id) {
-        formDesignService.eliminar(id);
+    public ResponseEntity<Object> eliminarFormulario(@PathVariable UUID id) {
+        try {
+            formDesignService.eliminar(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException expectedRejection) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(java.util.Map.of("error", "El Formulario está en uso por Trámites Activos", "details", expectedRejection.getMessage()));
+        }
+    }
+
+    /**
+     * GAP-4: Trata de apoderarse del Formulario para Edición Exclusiva.
+     * Retorna HTTP 423 si otro UI Tab ya lo tiene bloqueado.
+     */
+    @PostMapping("/{id}/lock")
+    public ResponseEntity<Void> acquireLock(
+            @PathVariable UUID id,
+            @RequestHeader(value = "X-User-Id", defaultValue = "system") String userId) {
+        
+        boolean acquired = lockService.acquireLock(id.toString(), userId);
+        if (!acquired) {
+            return ResponseEntity.status(HttpStatus.LOCKED).build(); // 423
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * GAP-4: Libera el candado proactivamente al cerrar la pestaña web.
+     */
+    @DeleteMapping("/{id}/lock")
+    public ResponseEntity<Void> releaseLock(
+            @PathVariable UUID id,
+            @RequestHeader(value = "X-User-Id", defaultValue = "system") String userId) {
+        
+        lockService.releaseLock(id.toString(), userId);
         return ResponseEntity.noContent().build();
     }
 

@@ -11,6 +11,7 @@ public class FormComponentDTO {
     private Boolean required;
     private Boolean readonly;
     private Boolean hidden;
+    private Boolean isPII;
     private Integer rows;
     private Object defaultValue;
     private String catalogSource;
@@ -102,6 +103,14 @@ public class FormComponentDTO {
 
     public void setHidden(Boolean hidden) {
         this.hidden = hidden;
+    }
+
+    public Boolean getIsPII() {
+        return isPII;
+    }
+
+    public void setIsPII(Boolean isPII) {
+        this.isPII = isPII;
     }
 
     public Integer getRows() {

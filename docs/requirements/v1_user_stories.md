@@ -230,11 +230,12 @@ Feature: Web IDE Form Code Generation
     Then el iBPMS encapsulará todo el componente inyectado usando el estándar HTML5 "Shadow DOM"
     And ninguna de las clases CSS inyectadas podrá sangrar (Style Bleed) hacia el exterior ni distorsionar la barra superior o menús laterales de Tailwind corporativo.
 
-  Scenario: [Arquitectura] Render Functions y Teleportación (CA-7)
+  Scenario: [Arquitectura] Render Functions, Teleportación y Z-Index Orchestrator (CA-07)
     Given una directriz para renderizar componentes infinitamente anidados (Ej: Grillas dentro de Módulos dentro de Secciones)
     Then el motor subyacente de Vue prescindirá del HTML rígido (`<template>`) utilizando funciones programáticas puras de Virtual DOM (`h()`) para renderizado ultrarrápido
-    And los Tooltips dinámicos o ventanas emergentes forzarán el uso de la etiqueta nativa `<Teleport to="body">` para romper el encierro del z-index y sobreponerse perfectamente en la jerarquía visual del monitor.
-    And los Tooltips dinámicos o ventanas emergentes forzarán el uso de la etiqueta nativa `<Teleport to="body">` para romper el encierro del z-index y sobreponerse perfectamente en la jerarquía visual del monitor.
+    And los Tooltips y Modales usarán la etiqueta nativa `<Teleport to="body">` rompiendo el z-index local.
+    But OBLIGATORIAMENTE el DOM instanciará un Orquestador Global (Z-Index Manager) con jerarquía dogmática:
+    And `Z-900` para Modales UI, `Z-1000` para Tooltips, y `Z-5000` restrictivo para Cobertura de Errores Fatales (SweetAlert/Toasts), garantizando que las fallas de red del Motor NUNCA queden ocultas detrás del formulario.
 
   Scenario: [Arquitectura ERP] Navegación Modular y Agrupación de Malla (CA-8)
     Given que el Arquitecto está diseñando un "iForm Maestro" de alta densidad (Ej: 100+ campos)
@@ -260,9 +261,15 @@ Feature: Web IDE Form Code Generation
     And Números y Rangos: `number`, `range`, `meter`, `progress`.
     And Fechas y Tiempos: `date`, `datetime-local`, `time`, `month`, `week`.
     And Selección y Opciones: `select` (con sus `option` y `optgroup`), `datalist`, `checkbox`, `radio`.
-    And Selección y Opciones: `select` (con sus `option` y `optgroup`), `datalist`, `checkbox`, `radio`.
     And Estructura y Acción: `submit`, `reset`, `button`, `image`, `file`, `color`, `output`, `fieldset`, `legend`, `label`.
     And cada uno de estos componentes emitirá su tipo de dato UI y su esquema Zod correspondiente para la validación bidireccional.
+
+  Scenario: Componente de Ventana Emergente (Pop-ups Informativos) (CA-11B)
+    Given la necesidad del Arquitecto de mostrar "Avisos" o Términos y Condiciones obligatorios
+    When arrastra el componente "Modal Informativo" a la grilla y lo asocia a un Botón (Ej: "Ver Políticas") o a una Regla de Estado de Carga
+    Then la plataforma invocará un `<Teleport to="body">` (bajo la jerarquía SRE Z-900) para oscurecer el fondo.
+    And presentará un diálogo flotante (Pop-up) en lectura plana, con un botón obligatorio de [Entendido] para cerrarlo.
+    But por gobernanza V.I.D.A., este componente es estéril (Carece de `I/O Binding` a Camunda); existe puramente para control de notificaciones UI y no contamina el Request JSON.
 
   Scenario: [Integración Motor] Drag & Drop Sensorial de Process Variables (CA-12)
     Given que el Arquitecto está diseñando en el Mónaco IDE (Pantalla 7) vinculado a una User Task (Ej: "Aprobar Crédito")
@@ -337,10 +344,11 @@ Feature: Web IDE Form Code Generation
     And rutea el archivo automáticamente a la Bóveda SGDEA Interna (Pantalla 12) o a Microsoft SharePoint según indique la TRD
     And NO se guarda en la Base de Datos transaccional (Diferido a V2).
 
-  Scenario: Validación Proactiva de Zod (CA-22)
-    Given un usuario final está diligenciando el formulario en su Workdesk
+  Scenario: Validación Reactiva Zod Defensiva (Debounce & Blur) (CA-22)
+    Given un usuario final está diligenciando un iForm Maestro denso en su Workdesk
     When incumple una regla de validación (Ej: escribe 3 números en un campo que exige 10)
-    Then el formulario muestra el mensaje de error "en vivo" proactivamente mientras teclea, sin esperar al botón de [Enviar].
+    Then el formulario NO re-evaluará el AST global de Zod en cada pulsación de tecla (Keystroke) para proteger el Event Loop del navegador (Prevenir DOM Thrashing).
+    And la inyección del error en vivo se disparará exclusivamente mediante validación perezosa (`@blur` al perder el foco) O mediante un `Debounce` estricto de 400ms después de que el operario deje de escribir.
 
   Scenario: Estilos CSS Corporativos Estandarizados V1 (CA-23)
     Given el Arquitecto diseña un formulario
@@ -581,6 +589,133 @@ Feature: Web IDE Form Code Generation
     # NOTA: Diferido a V2. Para V1 solo existe Texto Plano Textarea.
     Given el Arquitecto requiere que el usuario entregue justificaciones extensas
     Then dispone de un componente de Texto Enriquecido (Word-like, con negritas, listas y cursivas).
+	
+	  # ==============================================================================
+  # E. HERRAMIENTAS AVANZADAS, SIMULACIÓN Y QA AUTOMATIZADO
+  # ==============================================================================
+  Scenario: Generación Autónoma de Pruebas Unitarias QA (Auto-Vitest) (CA-68)
+    Given un formulario visual completamente tipado y validado mediante la capa Zod
+    When el Arquitecto de Diseño despliega el menú "Herramientas Avanzadas" y selecciona [Generar Suite de Pruebas]
+    Then el Motor de Formulario (ZodBuilder) analizará el Árbol AST del esquema
+    And auto-escribirá un archivo de código `.spec.ts` completo (Vitest/Jest) abarcando pruebas de Límites (Boundary Tests), validaciones de Nulos y coerción de Tipos
+    And entregándole a los ingenieros de QA una cobertura base del 80% en cero segundos, acortando dramáticamente el tiempo de salida a producción (Time-to-Market).
+
+  Scenario: Simulador Multi-Rol en Tiempo Real (iForm Maestro) (CA-69)
+    Given el diseño de un formulario "Maestro" multi-etapa que atraviesa varias áreas operativas (Ej: Área Comercial -> Área Legal)
+    When el diseñador finaliza el mapeo condicional y activa el `[Modo Simulador]` en el Header
+    Then la interfaz inhabilitará la edición y desplegará un Dropdown de "Simular como Rol: [X]"
+    And al seleccionar "Área Legal", el DOM silenciará u ocultará inmediatamente los campos configurados como `Read-Only` o `Hidden` para ese rol específico
+    And permitiendo auditar lógicamente el control de acceso en caliente, sin necesidad de compilar o cambiar de usuario real en el sistema.
+
+  # ==============================================================================
+  # F. EXPOSICIÓN B2C (PÚBLICA) Y RESILIENCIA OPERATIVA
+  # ==============================================================================
+  Scenario: Modo Trámite Público Perimetral (Bypass JWT Seguro) (CA-70)
+    Given la necesidad de someter un formulario a clientes externos sin credenciales EntraID (Ej: Formulario PQR / Denuncias)
+    When el Arquitecto activa el parámetro 🌐 `[Permitir Enlace Público]`
+    Then el sistema generará una URL Criptográfica transitoria
+    And el Router Vue (US-051) marcará la ruta con `meta: { isPublic: true }`, eximiendo la intercepción de autenticación JWT.
+    And OBLIGATORIAMENTE, el API Gateway montará políticas de *Rate Limiting* estricto y exigirá inyección de *reCAPTCHA v3* en el DOM para evitar que ataques de denegación de servicio (DDoS/Bots) llenen la base de datos de basura anónima.
+
+  Scenario: Máquina del Tiempo JSON (Soft-Versioning Local) (CA-71)
+    Given un usuario diagramando un formulario complejo que accidentalmente borra una pestaña o un Grid entero
+    When navega a la sección de "Herramientas Avanzadas > Historial JSON"
+    Then el sistema revelará un listado cronológico de "*Snapshots* Dinámicos" del esquema
+    And permitirá inyectar y sobreescribir el AST visual del lienzo (`restore()`) devolviendo la interfaz exactamente al estado estructural de hace 15, 30 o 60 minutos, previniendo crisis por pérdida de trabajo.
+
+  Scenario: Resiliencia Periférica Offline y Tolerancia a Conflictos (CA-72)
+    Given un operador llenando un formulario crítico que sufre un micro-corte de Red (HTTP 5xx / Network Error)
+    Then el sistema ejecutará un Fallback serializando el JSON hacia el `LocalStorage` del navegador de forma segura.
+    When la red regrese y el Service Worker intente empujar ("Sync") el borrador guardado localmente hacia el Servidor
+    Then el Frontend deberá OBLIGATORIAMENTE adjuntar el `VersionId` (Optimistic Hash) original del caso.
+    And si un supervisor ya había modificado o cancelado el caso en el Servidor durante ese periodo Offline, el Backend detonará un `HTTP 409 Conflict`, previniendo que la data vieja sobreescriba corruptamente la verdad transaccional.
+
+  # ==============================================================================
+  # 3.1 mejoras	
+  # ==============================================================================
+  # A. EXPANSIÓN B2B: GENERACIÓN POR IA Y LIBRERÍA DE FRAGMENTOS
+  # ==============================================================================
+  Scenario: El Escáner Mágico (AI Prompt-to-Form & Document-to-Form) (CA-73)
+    Given el lienzo en blanco del IDE de Formularios (Pantalla 7)
+    When el Arquitecto sube un documento legacy (PDF/Imagen) o escribe un Prompt en lenguaje natural (Ej: "Genera formulario de crédito hipotecario")
+    Then el Asistente IA Multimodal analizará el documento o texto.
+    And autogenerará el layout visual en Vue 3 y el esquema Zod de manera instantánea, mapeando tipos de datos, labels y campos requeridos.
+    And el Arquitecto retomará el control manual sobre el lienzo generado para refinar la UI, reduciendo el "Time-to-Market" de la digitalización.
+
+  Scenario: Diccionario Global y Fragmentos Reutilizables (Snippets) (CA-74)
+    Given la necesidad de estandarizar la recolección de datos en toda la empresa (Prevenir Torre de Babel)
+    Then la plataforma TIENE PROHIBIDO leer variables de Camunda para autogenerar el formulario (El proceso no dicta el dato).
+    And el IDE desplegará un autocompletado conectado al "Diccionario de Datos Maestro", sugiriendo variables corporativas (Ej: `cliente_id`) que heredan validaciones Regex pre-aprobadas.
+    And el Arquitecto podrá seleccionar un grupo de campos y pulsar `[Guardar como Fragmento]`, empaquetándolos como un "Lego" reutilizable en la Paleta lateral.
+
+  # ==============================================================================
+  # B. GOBERNANZA DE DATOS (V.I.D.A.) Y SHIFT-LEFT SECURITY
+  # ==============================================================================
+  Scenario: El Peaje Analítico (Data Diet / Prevención de Campos Huérfanos) (CA-75)
+    Given el panel de propiedades de cualquier componente visual en el IDE
+    When el Arquitecto arrastra un nuevo campo
+    Then el sistema le exigirá OBLIGATORIAMENTE declarar el "Destino Estratégico" del dato (Dropdown: `Regla DMN`, `Integración Externa`, `Documento PDF SGDEA`, `Analítica Pasiva`).
+    And si el dato se marca como `Analítica Pasiva` (no aporta a la ruta crítica del proceso), el IDE DESHABILITARÁ y bloqueará físicamente el switch de "Obligatorio" (Zod required).
+    And garantizando arquitectónicamente la "Dieta de Datos" e impidiendo generar fricción al usuario final por datos inútiles.
+
+  Scenario: El Sello Radiactivo de Privacidad (Data Classification PII) (CA-76)
+    Given el Arquitecto agregando campos confidenciales (Ej: Cédula, Diagnóstico Médico, Sueldo)
+    Then dispondrá de un Master Switch de Ciberseguridad: `[🔒 Clasificar como PII / Sensible]`.
+    And al activarlo, el IDE inyectará un metadato estructurado en el esquema Zod.
+    And esta etiqueta instruirá imperativamente al Backend para que ofusque/encripte este dato en reposo (AES-256) y lo censure si es enviado al motor analítico (BAM) o a los Agentes LLM.
+    And los campos tipo "Password" enmascararán el valor en la UI (`***`) nativamente.
+
+  Scenario: Integración Autocompletado Gobernado y Escudo Anti-DDoS (CA-77)
+    Given el Arquitecto diseña un campo configurado como "Gatillo" de autocompletado externo (Ej: Buscar RUT)
+    Then el IDE TIENE ESTRICTAMENTE PROHIBIDO permitir la inyección de URLs o código JavaScript crudo (`fetch` / `axios`) en las propiedades del campo (Prevención SSRF).
+    And obligará al usuario a seleccionar exclusivamente un "Conector Homologado" previamente registrado en el Hub de Integraciones (US-033).
+    And el Frontend aplicará un `Debounce` obligatorio de 500ms al teclear, delegando la petición al BFF (Backend) para evitar fugas de datos desde el cliente.
+
+  # ==============================================================================
+  # C. ARQUITECTURA CORE: COMPILACIÓN BIDIRECCIONAL Y RENDERIZADO
+  # ==============================================================================
+  Scenario: Factoría Reactiva Zod On-The-Fly y Renderizado Bidireccional (CA-78)
+    Given el entorno dividido: Canvas Visual (Izquierda) y Mónaco IDE (Derecha)
+    When el Arquitecto arrastra un componente visual y marca restricciones (Ej: Requerido, Mínimo 5)
+    Then el Mónaco IDE redactará en vivo el código Vue 3 y la regla matemática `z.string().min(5)`.
+    And el enlace es bidireccional: si se borra la regla en el JS, el Canvas pierde la validación en milisegundos.
+    And al renderizarse en el Workdesk operativo, el sistema NO descargará archivos `.js` estáticos.
+    And instanciará el esquema dinámicamente usando una factoría `Zod` conectada a la memoria reactiva (`reactive()`) de Vue.
+
+  Scenario: Sandboxing Estricto y Aislamiento Perimetral (Anti-XSS/RCE) (CA-79)
+    Given que el Arquitecto inyecta lógica condicional (Cross-Field Logic: `if Monto > 1000`) o CSS exótico
+    When el Formulario se renderiza operativamente en el Workdesk
+    Then el Frontend encapsulará el componente utilizando `Shadow DOM`, impidiendo que el CSS distorsione el Layout corporativo (Style Bleed).
+    And prohibirá estructuralmente la función `eval()` o `new Function()`. Toda expresión JS será parseada por un Abstract Syntax Tree (AST Sandbox) ciego a `window`, `document` o `fetch`.
+
+  # ==============================================================================
+  # D. ESTRUCTURAS COMPLEJAS, ESTADO Y RESILIENCIA
+  # ==============================================================================
+  Scenario: Reactividad Controlada en Formularios Densos (Lazy Validation) (CA-80)
+    Given un usuario final diligenciando un "iForm Maestro" con alta densidad de inputs (+100 campos)
+    When el usuario digita información a alta velocidad
+    Then la validación proactiva de Zod TIENE PROHIBIDO ejecutarse en el evento síncrono por cada tecla presionada (`@input`).
+    And el Frontend aplicará `Lazy Validation`, evaluando el esquema individualmente al perder el foco (`@blur`), protegiendo el Main Thread de Vue (Prevención DOM Thrashing).
+    And las Máscaras Visuales (Ej: `$ 1.500,00`) mostrarán formato estético en UI, pero el formulario despojará la máscara en secreto y enviará el valor numérico crudo (`1500`) en el Submit.
+
+  Scenario: Anclaje de Versión para Procesos In-Flight (Lazy Patching) (CA-81)
+    Given que el Arquitecto publica la `V2` de un Formulario añadiendo campos obligatorios
+    When un operario abre en el Workdesk un caso vivo (In-Flight) instanciado hace 2 meses bajo la `V1`
+    Then el BFF (Backend for Frontend) inyectará ESTRICTAMENTE el JSON Schema de la versión `V1` originaria a la tarea en vuelo.
+    And el sistema TIENE PROHIBIDO exigirle al usuario final campos de la V2 que no existían cuando él inició el trámite, evitando Crash 500 por desajuste de JSON.
+
+  Scenario: Autoguardado Volátil, Limpieza de Fantasmas y Smart Buttons (CA-82)
+    Given un usuario operando un formulario en el Workdesk
+    Then cada interacción disparará un "Auto-Guardado" silente en LocalStorage atado al `Task_ID`.
+    And si el campo B es visible solo cuando A es "Sí", y el usuario cambia A a "No", el campo B desaparece Y PURGA automáticamente su valor interno (Limpieza de Data Fantasma).
+    And si el usuario sube PDFs al `<Dropzone>` (Upload-First) pero cierra la pestaña sin hacer Submit, el Frontend disparará un `Beacon` asíncrono ordenando al Backend destruir esos archivos huérfanos.
+    And dispondrá de "Smart Buttons" nativos (`[Completar]`, `[⚠️ Escalar Error BPMN]`) envueltos en interceptores de red globales `try/catch`.
+
+  Scenario: Sandbox de Pruebas Zod In-Browser (Shift-Left QA) (CA-83)
+    Given el diseño finalizado del iForm Maestro
+    Then el IDE proveerá una "Consola QA embebida" (Simulator).
+    And generará automáticamente Payloads extremos (Fuzzing) simulando Paths Felices y Tristes en la memoria RAM del navegador, certificando matemáticamente el contrato antes del despliegue.
+	
 ```
 **Trazabilidad UX:** Wireframes Pantalla 7 (IDE Web Pro-Code para Formularios).
 

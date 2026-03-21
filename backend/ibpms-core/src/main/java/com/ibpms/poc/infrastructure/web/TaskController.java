@@ -94,6 +94,7 @@ public class TaskController {
     public ResponseEntity<Void> completeTask(
             @PathVariable String taskId,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @RequestHeader(value = "If-Match", required = false) String ifMatchToken,
             @Valid @RequestBody TaskCompleteRequest requestPayload) {
 
         // CA-47 & CA-50: Garantizar extracción estricta y limpia de variables
@@ -107,9 +108,24 @@ public class TaskController {
         // 1. Limpieza de máscaras estéticas (CA-31)
         formFieldCleanserService.cleanseVariables(variables);
 
-        // 2. Auditoría CA-12: Capturar el delta de cambios
+        // 2. Auditoría CA-12: Capturar el delta de cambios y Aserción Optimista (CA-72)
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
         if (task != null) {
+            
+            // CA-72 (US-003): Resiliencia Offline y Bloqueo Optimista
+            if (ifMatchToken != null && !ifMatchToken.isBlank()) {
+                try {
+                    int uiVersion = Integer.parseInt(ifMatchToken.replace("\"", "").trim());
+                    int dbVersion = ((org.camunda.bpm.engine.impl.persistence.entity.TaskEntity) task).getRevision();
+                    
+                    if (uiVersion != dbVersion) {
+                        return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).build(); // 409
+                    }
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).build(); // 400
+                }
+            }
+
             String processInstanceId = task.getProcessInstanceId();
             Map<String, Object> oldVariables = taskService.getVariables(taskId);
             String username = SecurityContextHolder.getContext() != null

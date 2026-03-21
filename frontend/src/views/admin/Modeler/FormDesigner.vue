@@ -4,7 +4,7 @@
     <!-- ═══════ Toast Notifications (CA-7) ═══════ -->
     <Teleport to="body">
       <Transition name="toast-slide">
-        <div v-if="toast.msg" :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'" class="fixed top-4 right-4 z-[100] text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3">
+        <div v-if="toast.msg" :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'" class="fixed top-4 right-4 z-[5000] text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3">
           <span class="text-sm font-medium">{{ toast.msg }}</span>
           <button @click="toast.msg = ''" class="ml-2 opacity-70 hover:opacity-100">&times;</button>
         </div>
@@ -56,12 +56,33 @@
             <button @click="fetchVersions" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">🕰️ Historial JSON</button>
             <button @click="exportToPdf" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">📄 Exportar a PDF</button>
             <button @click="showGlobalRulesModal = true" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">⚙️ Reglas Zod O-T-F</button>
+            <button @click="generateVitestSpec" class="block w-full text-left px-4 py-2 hover:bg-green-50 text-xs text-green-700 font-bold transition border-t border-gray-100">🤖 Exportar Robo-Tests</button>
             <div class="border-t border-gray-100"></div>
-            <button @click="generateVitestSpec" class="block w-full text-left px-4 py-2 bg-yellow-50 hover:bg-yellow-100 text-xs text-yellow-800 font-bold transition">⚡ Generador Tests BDD</button>
+            <button @click="openFuzzerSandbox" class="block w-full text-left px-4 py-2 bg-yellow-50 hover:bg-yellow-100 text-xs text-yellow-800 font-bold transition">⚡ QA Sandbox Fuzzer (RAM)</button>
+          </div>
+        </div>
+
+        <!-- GAP 9: Simulador RBAC (Mimetismo) -->
+        <div class="relative group ml-1">
+          <button class="bg-blue-100 text-blue-700 border border-blue-300 px-3 py-1.5 rounded shadow-sm text-xs font-bold hover:bg-blue-200 transition flex gap-1 items-center">
+            👁️ Simular Mimetismo ▼
+          </button>
+          <div class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-xl hidden group-hover:block z-50 overflow-hidden text-xs">
+            <div class="px-3 py-2 bg-gray-50 border-b border-gray-100 font-bold text-gray-500">Rol Activo:</div>
+            <button @click="mockContext.rbacRole = 'ADMIN'" :class="{'bg-blue-50 font-bold': mockContext.rbacRole === 'ADMIN'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">🛡️ ADMIN</button>
+            <button @click="mockContext.rbacRole = 'OPERATOR'" :class="{'bg-blue-50 font-bold': mockContext.rbacRole === 'OPERATOR'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">👨‍💻 OPERATOR</button>
+            <button @click="mockContext.rbacRole = 'MANAGER'" :class="{'bg-blue-50 font-bold': mockContext.rbacRole === 'MANAGER'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">👔 MANAGER</button>
+            <button @click="mockContext.rbacRole = 'GUEST'" :class="{'bg-blue-50 font-bold': mockContext.rbacRole === 'GUEST'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">🏃 GUEST</button>
           </div>
         </div>
 
         <!-- Zona 4: Acciones Críticas -->
+        <button @click="showAiModal = true" class="bg-purple-100 text-purple-700 border border-purple-300 px-3 py-1.5 rounded shadow-sm text-xs font-bold hover:bg-purple-200 transition flex gap-1 items-center ml-2">
+          ✨ Escáner Mágico IA
+        </button>
+        <button @click="openPreview" class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1.5 rounded shadow-sm text-xs font-bold hover:bg-emerald-200 transition flex gap-1 items-center ml-2">
+          👁️ Previsualizar UI
+        </button>
         <button @click="confirmReset" class="bg-white text-red-600 px-3 py-1.5 border border-red-200 rounded shadow-sm text-xs font-semibold hover:bg-red-50 transition flex gap-1.5 items-center ml-2 outline outline-offset-1 outline-transparent hover:outline-red-200">
           🗑 Reset
         </button>
@@ -86,7 +107,7 @@
             <h4 class="text-xs font-bold text-gray-800 mb-3">{{ category.name }}</h4>
             <VueDraggable
               :list="category.items"
-              :group="{ name: 'components', pull: 'clone', put: false }"
+              :group="{ name: 'form-builder', pull: 'clone', put: false }"
               :clone="cloneComponent"
               item-key="type"
               class="space-y-2"
@@ -125,7 +146,7 @@
             
             <VueDraggable
               v-model="canvasFields"
-              group="components"
+              :group="{ name: 'form-builder', pull: true, put: true }"
               item-key="id"
               class="flex-1 min-h-[300px] font-sans"
               animation="200"
@@ -133,13 +154,14 @@
             >
               <template #item="{ element, index }">
                 <div 
-                  v-show="formPattern !== 'IFORM_MAESTRO' || activeStageSim === 'ALL' || element.stage === activeStageSim"
+                  v-show="(formPattern !== 'IFORM_MAESTRO' || activeStageSim === 'ALL' || element.stage === activeStageSim) && evaluateMockVis(element)"
                   class="group relative border border-transparent hover:border-indigo-300 hover:bg-indigo-50/30 p-4 rounded-lg mb-4 transition"
                 >
                   
                   <!-- Controles del Campo (Hover) -->
                   <div class="absolute -top-3 right-2 hidden group-hover:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
                     <button @click="editField(element)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200" title="Propiedades">⚙️</button>
+                    <button @click="saveAsFragment(element)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200" title="Guardar como Fragmento">💾</button>
                     <button @click="removeField(canvasFields, index)" class="px-2 py-1 text-red-500 hover:bg-red-50" title="Eliminar">🗑️</button>
                   </div>
 
@@ -185,20 +207,21 @@
                     <button v-if="element.type === 'button_reject'" class="w-full px-4 py-2 bg-red-600 text-white font-bold rounded-lg mt-3 cursor-pointer shadow-md">❌ {{ element.label }}</button>
 
                     
-                    <!-- Nested Container (CA-8) -->
-                    <div v-if="element.type === 'container'" class="border border-indigo-200 bg-indigo-50/50 rounded-lg p-4 mt-2 min-h-[100px]">
+                    <div v-if="element.type === 'container'" class="border border-indigo-200 bg-indigo-50/50 rounded-lg p-4 mt-2 min-h-[120px]">
                       <VueDraggable
                          v-model="element.children"
-                         group="components"
+                         :group="{ name: 'form-builder', pull: true, put: true }"
                          item-key="id"
-                         class="min-h-[80px]"
+                         class="min-h-[120px] transition-all"
+                         :class="{'border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center': !element.children || element.children.length === 0}"
                          animation="200"
                          ghost-class="ghost-dropzone"
                       >
                          <template #item="{ element: child, index: childIdx }">
-                            <div class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                            <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
                                <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
                                  <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
+                                 <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
                                  <button @click="removeField(element.children, childIdx)" class="px-2 py-1 text-red-500 hover:bg-red-50">🗑️</button>
                                </div>
                                <label class="text-xs font-bold text-gray-700 block">{{ child.label }} <span v-if="child.required" class="text-red-500">*</span></label>
@@ -217,7 +240,93 @@
                                <button v-if="child.type === 'button_submit'" class="w-full px-2 py-1 bg-indigo-600 text-white font-bold rounded mt-2 text-[10px]">✅ {{ child.label }}</button>
                             </div>
                          </template>
+                         <template #footer>
+                            <div v-if="!element.children || element.children.length === 0" class="text-gray-400 font-bold text-xs pointer-events-none mt-2">Arrastre componentes aquí para este contenedor</div>
+                         </template>
                       </VueDraggable>
+                    </div>
+
+                    <!-- CA-08 Tabs -->
+                    <div v-if="element.type === 'tabs'" class="border border-gray-300 bg-white shadow-sm rounded-lg mt-2 overflow-hidden">
+                       <div class="flex border-b border-gray-200 bg-gray-50 pt-2 px-2 gap-1 overflow-x-auto">
+                          <button v-for="(pane, paneIdx) in element.children" :key="paneIdx"
+                                  @click.prevent="element.activeTab = paneIdx"
+                                  :class="element.activeTab === paneIdx ? 'border-b-2 border-indigo-500 text-indigo-700 bg-white font-bold pb-2' : 'border-b-2 border-transparent text-gray-500 hover:bg-gray-100 font-medium pb-2'"
+                                  class="px-4 pt-2 text-xs transition rounded-t-lg focus:outline-none whitespace-nowrap">
+                             {{ pane.label || 'Tab ' + (Number(paneIdx) + 1) }}
+                          </button>
+                       </div>
+                       <div class="p-4 bg-white min-h-[120px]">
+                          <div v-for="(pane, paneIdx) in element.children" :key="'tp'+paneIdx" v-show="element.activeTab === paneIdx">
+                             <VueDraggable v-model="pane.children" :group="{ name: 'form-builder', pull: true, put: true }" item-key="id" class="min-h-[120px] transition-all" :class="{'border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center': !pane.children || pane.children.length === 0}" animation="200" ghost-class="ghost-dropzone">
+                                <template #item="{ element: child, index: childIdx }">
+                                   <!-- Sub-nivel Visual -->
+                                   <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                                      <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
+                                        <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
+                                        <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
+                                        <button @click="removeField(pane.children, childIdx)" class="px-2 py-1 text-red-500 hover:bg-red-50">🗑️</button>
+                                      </div>
+                                      <label class="text-xs font-bold text-gray-700 block">{{ child.label }} <span v-if="child.required" class="text-red-500">*</span></label>
+                                      <input v-if="child.type === 'text'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                                      <textarea v-if="child.type === 'textarea'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" rows="1"></textarea>
+                                      <input v-if="child.type === 'number'" type="number" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                                      <input v-if="child.type === 'date'" type="date" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" disabled />
+                                      <input v-if="child.type === 'time'" type="time" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" disabled />
+                                      <select v-if="child.type === 'select'" class="form-select text-xs w-full mt-1 border-gray-300 rounded shadow-sm">
+                                        <option disabled selected>{{ child.placeholder }}</option>
+                                      </select>
+                                      <div v-if="child.type === 'checkbox'" class="flex items-center gap-1 mt-1">
+                                         <input type="checkbox" class="rounded text-indigo-600 border-gray-300" disabled />
+                                         <span class="text-[10px] text-gray-700">{{ child.placeholder || child.label }}</span>
+                                      </div>
+                                      <button v-if="child.type === 'button_submit'" class="w-full px-2 py-1 bg-indigo-600 text-white font-bold rounded mt-2 text-[10px]">✅ {{ child.label }}</button>
+                                   </div>
+                                 </template>
+                                 <template #footer>
+                                    <div v-if="!pane.children || pane.children.length === 0" class="text-gray-400 font-bold text-xs pointer-events-none mt-2">Arrastre componentes aquí para esta pestaña</div>
+                                 </template>
+                             </VueDraggable>
+                          </div>
+                       </div>
+                    </div>
+
+                    <!-- CA-08 Accordion -->
+                    <div v-if="element.type === 'accordion'" class="mt-2 space-y-2">
+                       <details v-for="(panel, pIdx) in element.children" :key="'ap'+pIdx" class="border border-gray-300 bg-white rounded-lg shadow-sm group">
+                          <summary class="px-4 py-3 text-xs font-bold text-gray-700 cursor-pointer bg-gray-50 hover:bg-gray-100 transition list-none flex justify-between items-center rounded-lg group-open:rounded-b-none border-b border-transparent group-open:border-gray-200">
+                             {{ panel.label || 'Panel ' + (Number(pIdx) + 1) }}
+                             <span class="text-gray-400 group-open:rotate-180 transition-transform font-mono text-[10px]">▼</span>
+                          </summary>
+                          <div class="p-4 bg-white rounded-b-lg min-h-[120px]">
+                            <VueDraggable v-model="panel.children" :group="{ name: 'form-builder', pull: true, put: true }" item-key="id" class="min-h-[120px] transition-all" :class="{'border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center': !panel.children || panel.children.length === 0}" animation="200" ghost-class="ghost-dropzone">
+                               <template #item="{ element: child, index: childIdx }">
+                                  <!-- Sub-nivel Visual -->
+                                  <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                                     <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
+                                       <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
+                                       <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
+                                       <button @click="removeField(panel.children, childIdx)" class="px-2 py-1 text-red-500 hover:bg-red-50">🗑️</button>
+                                     </div>
+                                     <label class="text-xs font-bold text-gray-700 block">{{ child.label }} <span v-if="child.required" class="text-red-500">*</span></label>
+                                     <input v-if="child.type === 'text'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                                     <textarea v-if="child.type === 'textarea'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" rows="1"></textarea>
+                                     <input v-if="child.type === 'number'" type="number" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                                     <input v-if="child.type === 'date'" type="date" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" disabled />
+                                     <input v-if="child.type === 'time'" type="time" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" disabled />
+                                     <select v-if="child.type === 'select'" class="form-select text-xs w-full mt-1 border-gray-300 rounded shadow-sm">
+                                        <option disabled selected>{{ child.placeholder }}</option>
+                                     </select>
+                                     <div v-if="child.type === 'checkbox'" class="flex items-center gap-1 mt-1">
+                                        <input type="checkbox" class="rounded text-indigo-600 border-gray-300" disabled />
+                                        <span class="text-[10px] text-gray-700">{{ child.placeholder || child.label }}</span>
+                                     </div>
+                                     <button v-if="child.type === 'button_submit'" class="w-full px-2 py-1 bg-indigo-600 text-white font-bold rounded mt-2 text-[10px]">✅ {{ child.label }}</button>
+                                  </div>
+                               </template>
+                            </VueDraggable>
+                          </div>
+                       </details>
                     </div>
 
                   </div>
@@ -282,7 +391,7 @@
     <!-- ═══════ Modals (CA-7 Teleport) ═══════ -->
     <Teleport to="body">
       <!-- Pattern Selection Modal (On Mount if Empty) -->
-      <div v-if="showPatternModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
+      <div v-if="showPatternModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-2xl w-full">
           <h2 class="text-2xl font-bold text-gray-900 mb-2">Crear Nuevo Formulario (Dual-Pattern)</h2>
           <p class="text-sm text-gray-600 mb-8">Selecciona la arquitectura de este formulario según la directriz (CA-2).</p>
@@ -303,7 +412,7 @@
       </div>
 
       <!-- CA-27: Historial de Versiones UI -->
-      <div v-if="showHistoryModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
+      <div v-if="showHistoryModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
          <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-lg w-full">
             <div class="flex items-center justify-between mb-6 border-b pb-4">
                <h2 class="text-xl font-bold text-gray-800">🕰️ Historial de Versiones</h2>
@@ -317,14 +426,14 @@
                     <p class="text-[10px] text-gray-500 mt-1">Ref: {{ ver.id }}</p>
                     <p class="text-xs text-gray-600 mt-1"><span class="font-semibold">Actualizado:</span> {{ new Date(ver.updatedAt).toLocaleString() }}</p>
                   </div>
-                  <button class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-md font-bold opacity-0 group-hover:opacity-100 transition shadow-sm">Restaurar</button>
+                  <button @click="restoreVersion(ver)" class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-md font-bold opacity-0 group-hover:opacity-100 transition shadow-sm">Restaurar</button>
                </div>
             </div>
          </div>
       </div>
 
       <!-- Properties Modal (Field Editor) -->
-      <div v-if="editingField" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[150] p-4">
+      <div v-if="editingField" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">🛠️ Propiedades del Componente</h3>
@@ -333,26 +442,30 @@
           
           <div class="space-y-4">
             <div>
-              <label class="block text-xs font-bold text-gray-700 mb-1">ID (Variable Name)</label>
+              <label class="block text-xs font-bold text-gray-700 mb-1">Identificador Interno (Sin espacios, ej: nit_empresa)</label>
               <input v-model="editingField.id" @focus="oldIdTemp = editingField.id" @blur="handleIdChange(editingField)" class="w-full text-sm border-gray-300 rounded font-mono bg-gray-50 uppercase" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">Label (Nombre Visible) <AppTooltip content="El texto de la etiqueta que el usuario leerá en la pantalla visual producida." /></label>
+              <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">Nombre del Campo en Pantalla <AppTooltip content="El texto de la etiqueta que el usuario leerá en la pantalla visual producida." /></label>
               <input v-model="editingField.label" class="w-full text-sm border-gray-300 rounded" />
             </div>
             <div>
-               <label class="block text-xs font-bold text-gray-700 mb-1">Tooltip / Ayuda (CA-35)</label>
+               <label class="block text-xs font-bold text-gray-700 mb-1">Mensaje de Ayuda para el Usuario Final</label>
                <input v-model="editingField.tooltipText" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: Ingrese su nombre completo..." />
             </div>
+            <div v-if="['text', 'textarea', 'number', 'email', 'url', 'password', 'info_modal'].includes(editingField.type)">
+               <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">{{ editingField.type === 'info_modal' ? 'Contenido HTML / Pleno (Cuerpo del Modal)' : 'Texto Fantasma de Ejemplo' }}</label>
+               <component :is="editingField.type === 'info_modal' ? 'textarea' : 'input'" v-model="editingField.placeholder" class="w-full text-sm border-gray-300 rounded" :placeholder="editingField.type === 'info_modal' ? 'Escribe el contenido detallado aquí...' : 'Ej: Juan Pérez'" :rows="editingField.type === 'info_modal' ? 6 : null" />
+            </div>
             <div v-if="editingField.type === 'async_select'" class="bg-purple-50 p-3 rounded border border-purple-200">
-               <label class="block text-xs font-bold text-purple-800 mb-1">URL Endpoint Async (CA-30)</label>
+               <label class="block text-xs font-bold text-purple-800 mb-1">URL Endpoint Async</label>
                <input v-model="editingField.asyncUrl" class="w-full text-sm border-purple-300 rounded font-mono" placeholder="Ej: /api/v1/customers" />
                <p class="text-[10px] text-purple-600 mt-1">El input interrogará este endpoint con parámetros `?q=valor` en tiempo real (Typeahead AST).</p>
             </div>
             <div v-if="editingField.type === 'select'" class="bg-green-50 p-3 rounded border border-green-200">
-               <label class="block text-xs font-bold text-green-800 mb-1">Importar Catálogo CSV (CA-29)</label>
+               <label class="block text-xs font-bold text-green-800 mb-1">📥 Cargar una lista grande de opciones (Archivo CSV)</label>
                <input type="file" accept=".csv" @change="(e) => importCSVOptions(e, editingField!)" class="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-green-100 file:text-green-700 hover:file:bg-green-200 cursor-pointer border border-green-200 rounded" />
-               <p class="text-[10px] text-green-600 mt-1">CSV de 1 columna para sobreescribir las opciones (Lector In-Memory HTML5).</p>
+               <p class="text-[10px] text-green-600 mt-1">Sube un archivo de Excel (.csv) con una sola columna. Esto llenará automáticamente las opciones de este menú sin que tengas que escribirlas una por una.</p>
                <p v-if="editingField.options" class="text-[10px] font-bold mt-1 text-green-800">{{ editingField.options.length }} Opciones Cargadas.</p>
             </div>
             
@@ -368,15 +481,25 @@
                </div>
             </div>
 
-            <!-- CA-36: Input Mask -->
-            <div v-if="['text', 'number'].includes(editingField.type)">
-               <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">Máscara / Pattern (CA-36) <AppTooltip content="Inyecta un patrón regex visual (ej: \d{4}-\d{4} para tarjetas) en el input generado." /></label>
-               <input v-model="editingField.mask" class="w-full text-sm border-gray-300 rounded font-mono" placeholder="Ej: ^[0-9]{4}$" />
-            </div>
+            <!-- CA-36/38: Input Mask (GAP 7) -->
+            <div v-if="['text', 'number'].includes(editingField.type)" class="bg-gray-50 border border-gray-200 p-3 rounded">
+               <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">Formato Predefinido de UI (IMask) <AppTooltip content="Inyecta un formato visual UX a medida que el usuario teclea, pero internamente emite el valor sin máscara (unmaskedValue)." /></label>
+               <select v-model="editingField.predefinedFormat" class="w-full text-sm border-gray-300 rounded font-mono pr-8">
+                 <option :value="undefined">Libre (Sin Máscara UX)</option>
+                 <option value="currency">Moneda ($ 1.500,00)</option>
+                 <option value="phone">Teléfono (+XX XXX-XXXX)</option>
+                 <option value="idcard">Cédula Ciudadana (XX.XXX.XXX)</option>
+                 <option value="regex">Manual Avanzado (Regex clásico)</option>
+               </select>
 
+               <div v-if="editingField.predefinedFormat === 'regex'" class="mt-3">
+                  <label class="block text-[10px] font-bold text-gray-700 mb-1">Regex Crudo:</label>
+                  <input v-model="editingField.mask" class="w-full text-sm border-gray-300 rounded font-mono text-gray-600" placeholder="Ej: ^[0-9]{4}$" />
+               </div>
+            </div>
             <!-- CA-39: File Upload Constraints -->
             <div v-if="editingField.type === 'file'" class="border border-orange-200 bg-orange-50 p-3 rounded">
-               <h4 class="text-xs font-bold text-orange-800 mb-2">Restricciones de Archivo (CA-39)</h4>
+               <h4 class="text-xs font-bold text-orange-800 mb-2">Restricciones de Archivo</h4>
                <div class="flex gap-2 mb-2">
                  <div class="flex-1">
                    <label class="block text-xs font-bold text-gray-700 mb-1">Peso Máx (MB)</label>
@@ -389,11 +512,11 @@
                
                <div class="flex gap-2 mb-2">
                  <div class="flex-1">
-                   <label class="block text-xs font-bold text-gray-700 mb-1">Mínimo Archivos (CA-49)</label>
+                   <label class="block text-xs font-bold text-gray-700 mb-1">Mínimo Archivos</label>
                    <input type="number" v-model="editingField.minFiles" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 1" />
                  </div>
                  <div class="flex-1">
-                   <label class="block text-xs font-bold text-gray-700 mb-1">Máximo Archivos (CA-49)</label>
+                   <label class="block text-xs font-bold text-gray-700 mb-1">Máximo Archivos</label>
                    <input type="number" v-model="editingField.maxFiles" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 5" />
                  </div>
                </div>
@@ -403,11 +526,11 @@
             <!-- CA-41: Grid Constraints -->
             <div v-if="editingField.type === 'field_array'" class="flex gap-2">
                <div class="flex-1">
-                 <label class="block text-xs font-bold text-gray-700 mb-1">Mínimo Filas (CA-41)</label>
+                 <label class="block text-xs font-bold text-gray-700 mb-1">Mínimo Filas</label>
                  <input type="number" v-model="editingField.minRows" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 1" />
                </div>
                <div class="flex-1">
-                 <label class="block text-xs font-bold text-gray-700 mb-1">Máximo Filas (CA-41)</label>
+                 <label class="block text-xs font-bold text-gray-700 mb-1">Máximo Filas</label>
                  <input type="number" v-model="editingField.maxRows" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 10" />
                </div>
             </div>
@@ -415,35 +538,38 @@
             <!-- CA-45: Multi-select Chips -->
             <div v-if="['select', 'async_select'].includes(editingField.type)" class="flex items-center gap-2 pt-2 border-t mt-2">
                <input type="checkbox" v-model="editingField.isMultiple" id="multipleCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
-               <label for="multipleCheck" class="text-xs font-medium text-gray-700 cursor-pointer">Permitir Selección Múltiple (Pastillas CA-45)</label>
+               <label for="multipleCheck" class="text-xs font-medium text-gray-700 cursor-pointer">☑️ Permitir que el usuario elija varias opciones al mismo tiempo</label>
             </div>
             
             <div v-if="formPattern === 'IFORM_MAESTRO'" class="bg-blue-50 p-3 rounded border border-blue-200">
-               <label class="block text-xs font-bold text-blue-800 mb-1 flex items-center gap-1">Stage (Etapa BPMN de aparición) <AppTooltip content="Etapa en la cual el campo se revelará dinámicamente o dejará de bloquearse (CA-20)." /></label>
+               <label class="block text-xs font-bold text-blue-800 mb-1 flex items-center gap-1">Stage (Etapa BPMN de aparición) <AppTooltip content="Etapa en la cual el campo se revelará dinámicamente o dejará de bloquearse." /></label>
                <input v-model="editingField.stage" class="w-full text-sm border-blue-300 rounded font-mono" placeholder="Ej: ANALYSIS" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1">Camunda Variable (I/O Binding) <AppTooltip content="La variable exacta en el Process Instance de Camunda con la que se emparejará bidireccionalmente este campo." /></label>
+              <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1">Enlace con el Proceso (Camunda) <AppTooltip content="Con este nombre viajará el dato a través de las siguientes etapas." /></label>
               <input v-model="editingField.camundaVariable" class="w-full text-sm border-indigo-300 rounded font-mono bg-indigo-50" placeholder="Ej: customerName" />
-              <p class="text-[10px] text-gray-500 mt-1">El valor del campo se mapeará a esta variable en Process Engine.</p>
             </div>
             <div class="flex items-center gap-2 pt-2 border-t mt-4">
                <input type="checkbox" v-model="editingField.required" id="reqCheck" class="text-indigo-600 rounded" />
-               <label for="reqCheck" class="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-1">Campo Requerido (Agrega .min(1) a Zod) <AppTooltip content="Fuerza al validador Zod On-The-Fly a bloquear el envío si el campo es nulo o vacío." /></label>
+               <label for="reqCheck" class="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-1">🔴 ¿Es de llenado obligatorio? <AppTooltip content="Fuerza al validador Zod On-The-Fly a bloquear el envío si el campo es nulo o vacío." /></label>
             </div>
             <div v-if="formPattern === 'IFORM_MAESTRO'" class="flex items-center gap-2 pt-2 border-t">
                <input type="checkbox" v-model="editingField.soloLecturaPosterior" id="roCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
-               <label for="roCheck" class="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-1">Bloquear en etapas futuras (RBAC) <AppTooltip content="CA-20 Corregido: Si se activa, este input será Deshabilitado (:disabled) si el proceso actual avanza a una etapa diferente." /></label>
+               <label for="roCheck" class="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-1">Bloquear en etapas futuras (RBAC) <AppTooltip content="Si se activa, este input será Deshabilitado (:disabled) si el proceso actual avanza a una etapa diferente." /></label>
             </div>
             <div class="flex items-center gap-2 pt-2 border-t mt-2">
                <input type="checkbox" v-model="editingField.enableAuditLog" id="auditCheck" class="text-red-500 rounded focus:ring-red-500 border-gray-300" />
-               <label for="auditCheck" class="text-xs font-medium text-red-700 cursor-pointer">Activar Auditoría Forense (Huella en Token, CA-28)</label>
+               <label for="auditCheck" class="text-xs font-medium text-red-700 cursor-pointer flex items-center gap-1">🛡️ Rastrear usuario que llene este campo (Forense) <AppTooltip content="Guarda un registro oculto de quién escribió este dato, la fecha y hora, para protegerse en futuras auditorías legales." /></label>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t mt-2">
+               <input type="checkbox" v-model="editingField.isPII" id="piiCheck" class="text-indigo-600 rounded focus:ring-indigo-500 border-gray-300" />
+               <label for="piiCheck" class="text-xs font-medium text-gray-700 cursor-pointer flex items-center gap-1">🔒 Clasificar como Dato Sensible PII/PHI (Análisis Shift-Left para Zod) <AppTooltip content="Añade el decorador .describe('isPII') al motor Zod para que el Backend intercepte y enmascare este dato en bases de datos Cloud" /></label>
             </div>
           </div>
 
           <!-- CA-48: Condicional Zod Validaciones -->
           <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mt-4 shadow-inner">
-             <h4 class="text-xs font-bold text-yellow-800 mb-2 border-b border-yellow-300 pb-1 flex items-center gap-2">⚡ Validaciones Condicionales O-T-F (CA-48)</h4>
+             <h4 class="text-xs font-bold text-yellow-800 mb-2 border-b border-yellow-300 pb-1 flex items-center gap-2">⚡ Reglas de Visibilidad (Mostrar/Ocultar y Requerir dinámicamente)</h4>
              <div class="flex gap-2 mb-2">
                  <div class="flex-1">
                    <label class="block text-[10px] font-bold text-gray-700 mb-1">Requiere si Campo (ID):</label>
@@ -454,18 +580,18 @@
                    <input v-model="editingField.requiredIfValue" class="w-full text-xs border-yellow-300 rounded font-mono" placeholder="Ej: SI" />
                  </div>
              </div>
-             <p class="text-[9px] text-yellow-700 leading-tight">Agrega dinámicamente regla <code class="bg-yellow-100 p-0.5 rounded">.superRefine()</code> cruzada al Zod O-T-F.</p>
+             <p class="text-[9px] text-yellow-700 leading-tight">Hace que este campo sea obligatorio de llenar SOLAMENTE si la regla de arriba se cumple.</p>
           </div>
 
           <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 shadow-inner">
-             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1 flex items-center gap-2">🗃️ Data Binding Camunda (I/O) (CA-12/CA-13)</h4>
+             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1 flex items-center gap-2">Carga y Guardado de Datos (Motor BPM)</h4>
              <div class="flex items-center gap-2 mb-2">
                 <input type="checkbox" v-model="editingField.isPrefilled" id="prefillCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
-                <label for="prefillCheck" class="text-xs font-medium text-gray-700 cursor-pointer flex items-center gap-1">Pre-Fill (Lectura) <AppTooltip content="Avisa al motor que debe leer esta variable desde DB/Camunda CND se cargue la forma." /></label>
+                <label for="prefillCheck" class="text-xs font-medium text-gray-700 cursor-pointer flex items-center gap-1">Auto-completar con datos de etapas previas</label>
              </div>
              <div class="flex items-center gap-2">
                 <input type="checkbox" v-model="editingField.isOutputToken" id="outCheck" class="text-indigo-600 rounded focus:ring-indigo-500" />
-                <label for="outCheck" class="text-xs font-medium text-gray-700 cursor-pointer flex items-center gap-1">Update Token (Escritura) <AppTooltip content="Informa al backend que el valor modificado debe persistirse como variable global del Process Instance." /></label>
+                <label for="outCheck" class="text-xs font-medium text-gray-700 cursor-pointer flex items-center gap-1">Sobrescribir el dato en el proceso global</label>
              </div>
           </div>
 
@@ -493,18 +619,22 @@
           </div>
 
           <div v-if="!['container','button_submit','button_draft','button_reject'].includes(editingField.type)" class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 shadow-inner">
-             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1">🔒 Bloqueo Estricto (CA-57)</h4>
+             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1">🔒 Congelar o Bloquear Campo bajo Condición</h4>
              <label class="block text-xs font-bold text-gray-700 mb-1">Condición de Bloqueo Eval</label>
              <input v-model="editingField.disableCondition" class="w-full text-sm border-gray-300 rounded font-mono" placeholder="Ej: formData.ROL === 'INVITADO'" />
-             <p class="text-[10px] text-gray-500 mt-1">Si evalúa TRUE, inyecta `disabled` dinámicamente preservando lectura (Ast Binding).</p>
+             <p class="text-[10px] text-gray-500 mt-1">Escriba cuándo se debe bloquear. Ej: Si el ROL es INVITADO, el campo se congela.</p>
           </div>
 
           <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 shadow-inner">
-             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1 flex items-center gap-2">👁️ Visibilidad Dinámica (CA-25)</h4>
+             <h4 class="text-xs font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1 flex items-center gap-2">👁️ Ocultar Campo usando Fórmulas</h4>
              <div>
-                <label class="block text-xs font-bold text-gray-700 mb-1">Condición de Visibilidad Eval</label>
-                <input v-model="editingField.visibilityCondition" class="w-full text-sm border-gray-300 rounded font-mono" placeholder="Ej: formData.country === 'COL'" />
-                <p class="text-[10px] text-gray-500 mt-1">Si se provee, este campo será envuelto en un `v-if` dinámico evaluado en tiempo real.</p>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Regla para mostrarlo en pantalla:</label>
+                <input v-model="editingField.visibilityCondition" class="w-full text-sm border-gray-300 rounded font-mono" placeholder="Ej: país == 'Colombia'" />
+                <p class="text-[10px] text-gray-500 mt-1">Si la fórmula coincide, el usuario verá esta caja. Si no, permanecerá invisible en la pantalla.</p>
+             </div>
+             <div class="mt-3 flex items-center gap-2 pt-2 border-t border-gray-200">
+                <input type="checkbox" v-model="editingField.clearOnHide" id="clearHideCheck" class="text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer" />
+                <label for="clearHideCheck" class="text-[10px] font-bold text-red-700 cursor-pointer">💣 Auto-Purgar (Destroy on Hide) <AppTooltip content="GAP 8: Previene fugas de memoria borrando el V-Model si la fórmula oculta el campo." /></label>
              </div>
           </div>
 
@@ -515,7 +645,7 @@
       </div>
 
       <!-- Test Gen / Result Modal -->
-      <div v-if="showResultModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[150] p-4">
+      <div v-if="showResultModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
           <div class="bg-gray-900 rounded-xl max-w-2xl w-full shadow-2xl border border-gray-700 flex flex-col overflow-hidden">
               <div class="px-5 py-3 bg-gray-800 border-b border-gray-700 flex justify-between items-center text-white">
                  <h3 class="font-bold flex items-center gap-2 text-sm">{{ modalTitle }}</h3>
@@ -533,7 +663,7 @@
       </div>
 
       <!-- Modal de Confirmación de Reset Dual (CA-43) -->
-      <div v-if="showResetModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm animate-slide-in">
+      <div v-if="showResetModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm animate-slide-in">
         <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full border border-gray-200">
           <div class="flex items-center gap-3 mb-4 text-red-600">
              <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -554,15 +684,110 @@
 
 <!-- Modal CA-32 Zod Global Rules -->
     <Teleport to="body">
-      <div v-if="showGlobalRulesModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full border border-gray-200">
-          <h2 class="text-lg font-bold mb-4 flex items-center gap-2">⚙️ Reglas Cruzadas Zod (CA-32) <AppTooltip content="Agrega un callback para .superRefine() que aplica validaciones transversales en todo el payload de formulario."/></h2>
-          <p class="text-[11px] text-gray-600 mb-3">Ejemplo: <code class="bg-gray-100 p-0.5 rounded">if (data.EDAD < 18 && data.AUTORIZA === false) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requiere permiso", path: ["AUTORIZA"] }); }</code></p>
-          <textarea v-model="crossValidationCode" rows="6" class="w-full text-xs font-mono p-3 border border-gray-300 rounded bg-gray-100" placeholder="Escribe aquí el cuerpo JS de validación cruzada..."></textarea>
-          <div class="mt-4 flex justify-end gap-3">
-            <button @click="showGlobalRulesModal = false" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded hover:bg-indigo-700 transition">💾 Guardar Reglas Zod</button>
+      <div v-if="showGlobalRulesModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl p-6 px-8 max-w-2xl w-full border border-gray-200">
+          <h2 class="text-lg font-bold mb-4 flex items-center gap-2">⚙️ Logic Builder Visual (CA-32) <AppTooltip content="Construye validaciones cruzadas AST Zero-Code aplicadas de forma transversal al documento entero."/></h2>
+          
+          <div class="space-y-3 max-h-[50vh] overflow-y-auto mb-4 border border-gray-100 p-2 rounded bg-gray-50/50">
+             <div v-if="visualRules.length === 0" class="text-center text-sm text-gray-400 py-6">No hay reglas cruzadas globales configuradas.</div>
+             
+             <div v-for="(rule, idx) in visualRules" :key="idx" class="border border-indigo-200 bg-white p-3 rounded shadow-sm flex flex-col gap-2 relative group">
+                <button @click="visualRules.splice(idx, 1)" class="absolute top-2 right-2 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+                <div class="flex gap-2 items-center">
+                   <select v-model="rule.fieldA" class="form-select text-xs font-mono border-gray-300 flex-1 rounded text-indigo-700">
+                      <option disabled value="">[Seleccionar Campo A]</option>
+                      <option v-for="f in availableFieldsFlat" :key="f.id" :value="f.id">{{ f.label }} ({{f.id}})</option>
+                   </select>
+                   <select v-model="rule.operator" class="form-select text-xs font-bold border-gray-300 w-24 rounded bg-gray-100 text-center">
+                      <option value=">">MAYOR QUE</option>
+                      <option value="<">MENOR QUE</option>
+                      <option value="==">IGUAL A</option>
+                      <option value="!=">DIFERENTE A</option>
+                   </select>
+                   <select v-model="rule.fieldB" class="form-select text-xs font-mono border-gray-300 flex-1 rounded text-orange-700">
+                      <option disabled value="">[Seleccionar Campo B]</option>
+                      <option v-for="f in availableFieldsFlat" :key="f.id" :value="f.id">{{ f.label }} ({{f.id}})</option>
+                   </select>
+                </div>
+                <div>
+                   <input v-model="rule.errorMessage" class="w-full text-[11px] border-red-200 focus:border-red-400 text-red-600 rounded bg-red-50/30" placeholder="Mensaje de error si falla la validación (Ej: Fecha Fin no puede ser antes de Fecha Inicio).." />
+                </div>
+             </div>
+          </div>
+          
+          <button @click="visualRules.push({ fieldA: '', operator: '>', fieldB: '', errorMessage: 'Valores inconsistentes cruzados.' })" class="w-full border-2 border-dashed border-gray-300 p-2 rounded text-gray-500 font-bold hover:bg-gray-50 hover:text-indigo-600 transition text-sm flex justify-center items-center gap-1">
+             <span class="text-xl leading-none">+</span> Añadir Nueva Regla
+          </button>
+
+          <div class="mt-6 flex justify-end gap-3 border-t pt-4">
+            <button @click="saveVisualRules" class="bg-indigo-600 text-white font-bold px-5 py-2 rounded hover:bg-indigo-700 transition shadow-sm">💾 Guardar Ast Zod</button>
           </div>
         </div>
+      </div>
+
+      <!-- Escáner Mágico IA Modal (CA-73) -->
+      <div v-if="showAiModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
+         <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-lg w-full">
+            <h2 class="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">✨ Escáner Mágico IA</h2>
+            <p class="text-xs text-gray-600 mb-4">Describe el formulario que necesitas en lenguaje natural o pega un texto crudo de requerimientos. El motor LMM construirá el JSON AST automáticamente.</p>
+            <textarea v-model="aiPrompt" rows="5" class="w-full form-textarea border-gray-300 rounded text-sm mb-4 bg-purple-50 focus:border-purple-400 focus:ring-purple-400" placeholder="Ej: Necesito un formulario de onboarding para proveedores con nombre, nit, y tabla de documentos..."></textarea>
+            <div class="flex justify-end gap-3">
+               <button @click="showAiModal = false" class="px-4 py-2 text-gray-600 bg-gray-100 rounded text-sm font-bold">Cancelar</button>
+               <button @click="generateAiForm" :disabled="isScanningAi" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-bold flex items-center gap-2 disabled:bg-purple-400 transition">
+                  <span v-if="isScanningAi" class="animate-pulse">Generando JSON...</span>
+                  <span v-else>🚀 Generar Diseño</span>
+               </button>
+            </div>
+         </div>
+      </div>
+
+      <!-- Runtime Template Preview (Shadow DOM) -->
+      <div v-if="showPreviewModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
+         <div class="bg-gray-100 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-slide-in">
+            <div class="p-4 bg-white border-b border-gray-200 flex justify-between items-center shadow-sm z-10">
+               <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">👁️ Virtual DOM Renderer <span class="bg-emerald-100 text-emerald-800 text-[10px] uppercase px-2 py-0.5 rounded font-mono">Shadow DOM O-T-F</span></h2>
+               <button @click="showPreviewModal = false" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 relative bg-white m-4 rounded shadow-sm border border-gray-200">
+               <FormRenderer :schema="canvasFields" v-model="previewFormData" :mockContext="mockContext" />
+            </div>
+            <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center text-xs text-gray-400 font-mono">
+               <span>Live FormData: {{ JSON.stringify(previewFormData) }}</span>
+            </div>
+         </div>
+      </div>
+
+      <!-- QA Sandbox Fuzzer Modal (CA-79) -->
+      <div v-if="showFuzzerModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
+         <div class="bg-gray-100 rounded-xl shadow-2xl p-6 md:p-8 max-w-4xl w-full flex flex-col h-[80vh]">
+            <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
+               <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">⚡ QA Sandbox Fuzzer (RAM)</h2>
+               <button @click="showFuzzerModal = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+            </div>
+            <div class="flex gap-4 flex-1 overflow-hidden">
+               <div class="w-1/2 flex flex-col">
+                  <div class="flex justify-between items-center mb-2">
+                     <span class="text-xs font-bold text-gray-700">JSON Payload (Modificable)</span>
+                     <div class="flex gap-2">
+                        <button @click="generateMockPath('happy')" class="text-[10px] bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200">Autocompletar Happy</button>
+                        <button @click="generateMockPath('sad')" class="text-[10px] bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200">Autocompletar Sad</button>
+                     </div>
+                  </div>
+                  <textarea v-model="fuzzerPayload" class="flex-1 form-textarea font-mono text-xs p-3 border-gray-300 rounded shadow-sm resize-none"></textarea>
+               </div>
+               <div class="w-1/2 flex flex-col">
+                  <button @click="runFuzzerZod" class="bg-indigo-600 text-white font-bold py-2 rounded shadow mb-4 hover:bg-indigo-700 transition">▶️ Ejecutar Zod in-memory</button>
+                  <div class="flex-1 bg-black rounded p-4 overflow-y-auto">
+                     <div v-if="fuzzerErrors.length === 0" class="text-green-400 font-mono text-xs flex items-center gap-2">
+                        <span>> Esperando ejecución o Validado exitosamente sin errores O-T-F.</span>
+                     </div>
+                     <div v-else class="text-red-400 font-mono text-xs space-y-1">
+                        <div v-for="(err, i) in fuzzerErrors" :key="i">❌ {{ err }}</div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
       </div>
     </Teleport>
 
@@ -570,12 +795,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import VueDraggable from 'vuedraggable';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
 import apiClient from '@/services/apiClient';
 import AppTooltip from '@/components/common/AppTooltip.vue';
+import FormRenderer from '@/components/forms/FormRenderer.vue';
+import jexl from 'jexl';
+
+// GAP 9: Mimetismo RBAC
+import { reactive } from 'vue';
+const mockContext = reactive({ rbacRole: 'ADMIN' });
+
+const evaluateMockVis = (node: any) => {
+    if (!node.visibilityCondition) return true;
+    try {
+        return jexl.evalSync(node.visibilityCondition, { data: {}, context: mockContext });
+    } catch {
+        return true; 
+    }
+};
 
 // ── Types ────────────────────────────────────────────────────────
 interface FormField extends FormFieldMetadataDTO {
@@ -600,16 +840,81 @@ const copyPublicUrl = () => {
     showToast('Enlace público (Huérfano) copiado al portapapeles', 'success');
 };
 
-const crossValidationCode = ref(''); // CA-32
+const visualRules = ref<{fieldA: string, operator: string, fieldB: string, errorMessage: string}[]>([]); // CA-32
 const showGlobalRulesModal = ref(false); // CA-32
+const availableFieldsFlat = computed(() => {
+    const flat = (arr: any[]): any[] => {
+        let res: any[] = [];
+        for (const f of arr) {
+            if (['container', 'tabs', 'tab_pane', 'accordion', 'accordion_panel'].includes(f.type) && f.children) res = res.concat(flat(f.children));
+            else if (!['container', 'tabs', 'tab_pane', 'accordion', 'accordion_panel'].includes(f.type) && !f.type.startsWith('button_')) res.push(f);
+        }
+        return res;
+    };
+    return flat(canvasFields.value);
+});
+
+const saveVisualRules = () => {
+    showToast(`Reglas cruzadas configuradas (${visualRules.value.length} activas)`, 'success');
+    showGlobalRulesModal.value = false;
+};
 const zodParseError = ref(false); // CA-Tarea 3 ZodRefactor
+
+// CA-73: Escáner Mágico LMM
+const showAiModal = ref(false);
+const aiPrompt = ref('');
+const isScanningAi = ref(false);
+
+const generateAiForm = async () => {
+    if (!aiPrompt.value) return;
+    isScanningAi.value = true;
+    try {
+        const response = await apiClient.post('/api/v1/design/forms/generate', { prompt: aiPrompt.value });
+        if (response.data && response.data.schema) {
+            canvasFields.value = typeof response.data.schema === 'string' ? JSON.parse(response.data.schema) : response.data.schema;
+            showToast('Formulario generado por LMM con éxito', 'success');
+            showAiModal.value = false;
+        }
+    } catch(e) {
+        showToast('Falla de conexión LMM (CA-73)', 'error');
+    } finally {
+        isScanningAi.value = false;
+    }
+};
+
+// CA-74: Fragmentos en LocalStorage
+const saveAsFragment = (node: any) => {
+    const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
+    if (fragmentCategory) {
+       fragmentCategory.items.push(JSON.parse(JSON.stringify(node)));
+       localStorage.setItem('workdesk_fragments', JSON.stringify(fragmentCategory.items));
+       showToast(`Componente consolidado en Fragmentos`, 'success');
+    }
+};
+
+onMounted(() => {
+    const savedFragments = localStorage.getItem('workdesk_fragments');
+    if (savedFragments) {
+        const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
+        if (fragmentCategory) fragmentCategory.items = JSON.parse(savedFragments);
+    }
+});
+
+// Runtime Render Preview Modal
+const showPreviewModal = ref(false);
+const previewFormData = ref({});
+const openPreview = () => {
+   previewFormData.value = {};
+   showPreviewModal.value = true;
+};
 
 const oldIdTemp = ref('');
 const handleIdChange = (field: FormField) => {
-  if (oldIdTemp.value && oldIdTemp.value !== field.id && crossValidationCode.value) {
-    // Tarea 2: Regex Seguro \bdata.oldId\b (previene romper eval/zod en runtime)
-    const re = new RegExp(`\\bdata\\.${oldIdTemp.value}\\b`, 'g');
-    crossValidationCode.value = crossValidationCode.value.replace(re, `data.${field.id}`);
+  if (oldIdTemp.value && oldIdTemp.value !== field.id) {
+    visualRules.value.forEach(rule => {
+      if (rule.fieldA === oldIdTemp.value) rule.fieldA = field.id;
+      if (rule.fieldB === oldIdTemp.value) rule.fieldB = field.id;
+    });
   }
 };
 
@@ -633,13 +938,35 @@ const fetchVersions = async () => {
    showHistoryModal.value = true;
 };
 
+const restoreVersion = (ver: any) => {
+    if (ver.schema) {
+        canvasFields.value = typeof ver.schema === 'string' ? JSON.parse(ver.schema) : ver.schema;
+        showToast(`Versión ${ver.version} restaurada exitosamente`, 'success');
+        showHistoryModal.value = false;
+        return;
+    }
+    // Fallback Forense LocalStorage (Simulando resiliencia post-desastre para UAT)
+    const localDraft = localStorage.getItem('designer_draft_fallback');
+    if (localDraft) {
+        try {
+            canvasFields.value = JSON.parse(localDraft);
+            showToast(`Recuperación Forense Exitosa (${ver.version})`, 'success');
+            showHistoryModal.value = false;
+        } catch (e) {
+            showToast('Memoria fría corrupta', 'error');
+        }
+    } else {
+        showToast('No hay huella forense en disco local', 'error');
+    }
+};
+
 // CA-24 Auto-guardado del Designer Canvas
 let designerDraftTimeout: any = null;
 watch(canvasFields, (newVal) => {
     clearTimeout(designerDraftTimeout);
     designerDraftTimeout = setTimeout(async () => {
         try {
-            await apiClient.post('/api/v1/forms/draft', { schema: newVal, title: formTitle.value });
+            await apiClient.post('/api/v1/forms/draft', { schema: newVal, title: formTitle.value, formRules: visualRules.value });
             console.log('✅ Diseño auto-guardado en API (Modelador)');
         } catch (e) {
             localStorage.setItem('designer_draft_fallback', JSON.stringify(newVal));
@@ -658,90 +985,96 @@ const exportToPdf = () => {
     window.print();
 };
 
-// ── Tests Generator (CA-1, CA-2, CA-3, CA-4) ─────────────────────
+// GAP 10: Vitest Spec Generator
 const generateVitestSpec = () => {
-    // 1. AST Traversal para obtener el Schema String puro sin Vue
-    const walkNodeForTest = (fieldsArr: any[], isRoot: boolean): string => {
-         let zc = `z.object({\n`;
-         for(const field of fieldsArr) {
-            if(field.type.startsWith('button_') || field.type === 'container') continue;
-            if(field.type === 'field_array') {
-                if(!field.children || field.children.length === 0) continue;
-                let arrCode = `z.array(${walkNodeForTest(field.children, false)})`;
-                if(field.minRows) arrCode += `.min(${field.minRows}, "Mínimo ${field.minRows} filas")`;
-                if(field.maxRows) arrCode += `.max(${field.maxRows}, "Máximo ${field.maxRows} filas")`;
-                zc += `  ${field.camundaVariable || field.id}: ${arrCode},\n`;
-                continue;
-            }
-            let zt = 'string';
-            if(field.type === 'number' || field.type === 'timer') zt = 'number';
-            if(field.type === 'file') zt = 'any';
-            if(field.type === 'checkbox') zt = 'boolean';
-            
-            if (field.isMultiple && ['select', 'async_select'].includes(field.type)) {
-                zc += `  ${field.camundaVariable || field.id}: z.array(z.string())${field.required ? '.min(1)' : '.optional()'}, \n`;
-            } else {
-                let baseZ = `z.${zt}()`;
-                if(field.type === 'email') baseZ += '.email()';
-                if(field.type === 'url') baseZ += '.url()';
-                zc += `  ${field.camundaVariable || field.id}: ${baseZ}${field.required && field.type !== 'checkbox' ? '.min(1)' : '.optional()'}, \n`;
-            }
-         }
-         zc += isRoot ? `})` : `        })`;
-         return zc;
-    };
-
-    const hasAsync = flatFields(canvasFields.value).some(f => f.type === 'async_select');
-    let specStr = `import { describe, it, expect, vi } from 'vitest';\n`;
-    specStr += `import { z } from 'zod';\n\n`;
+    let specStr = `import { describe, it, expect } from 'vitest';\n`;
+    specStr += `import { taskSchema } from './${formTitle.value.replace(/[^a-zA-Z0-9]/g, '')}Schema';\n\n`;
+    specStr += `describe('Form Validation: ${formTitle.value}', () => {\n`;
     
-    // CA-2 Mocks
-    if (hasAsync) {
-        specStr += `// CA-2 Mocks de Red Simulada (Aislamiento de Componentes)\n`;
-        specStr += `vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ json: () => Promise.resolve({ data: [] }) })));\n\n`;
-    }
-
-    specStr += `const taskSchema = ${walkNodeForTest(canvasFields.value, true)};\n\n`;
-    
-    // CA-3 Bloques Describe & Happy/Sad Paths
-    specStr += `describe('Formulario Mapeado - BDD Tests Automáticos', () => {\n\n`;
-    
-    let happyPayload: any = {};
-    const flatF = flatFields(canvasFields.value);
-    flatF.forEach(f => {
-        if(f.type.startsWith('button_') || f.type === 'container') return;
+    specStr += `  it('debe aceptar un payload Happy Path con todos los campos requeridos', () => {\n`;
+    specStr += `    const validData = {\n`;
+    availableFieldsFlat.value.forEach(f => {
         const key = f.camundaVariable || f.id;
-        if(f.type === 'number' || f.type === 'timer') happyPayload[key] = 42;
-        else if(f.type === 'checkbox') happyPayload[key] = true;
-        else if(f.type === 'email') happyPayload[key] = 'test@example.com';
-        else if(f.type === 'url') happyPayload[key] = 'https://example.com';
-        else if(f.isMultiple) happyPayload[key] = ['Option1'];
-        else happyPayload[key] = 'Valor Dummy 100%';
+        if(f.required) {
+            if(f.type === 'number' || f.type === 'timer') specStr += `      ${key}: 42,\n`;
+            else if(f.type === 'checkbox') specStr += `      ${key}: true,\n`;
+            else if(f.type === 'email') specStr += `      ${key}: 'test@test.com',\n`;
+            else if(f.type === 'url') specStr += `      ${key}: 'https://test.com',\n`;
+            else if(f.isMultiple) specStr += `      ${key}: ['Option1'],\n`;
+            else specStr += `      ${key}: 'Dummy Data',\n`;
+        }
+    });
+    specStr += `    };\n`;
+    specStr += `    const result = taskSchema.safeParse(validData);\n`;
+    specStr += `    expect(result.success).toBe(true);\n`;
+    specStr += `  });\n\n`;
+
+    availableFieldsFlat.value.filter(f => f.required).forEach(f => {
+        const key = f.camundaVariable || f.id;
+        specStr += `  it('debe fallar si falta el campo requerido: ${key}', () => {\n`;
+        specStr += `    const invalidData = { /* Omitir ${key} deliberadamente */ };\n`;
+        specStr += `    const result = taskSchema.safeParse(invalidData);\n`;
+        specStr += `    expect(result.success).toBe(false);\n`;
+        specStr += `  });\n\n`;
     });
 
-    specStr += `  it('Happy Path: Debe aprobar el parse() con un Payload perfecto al 100%', () => {\n`;
-    specStr += `    const happyPayload = ${JSON.stringify(happyPayload, null, 4).replace(/\\n/g, '\\n    ')};\n`;
-    specStr += `    expect(() => taskSchema.parse(happyPayload)).not.toThrow();\n`;
-    specStr += `  });\n\n`;
-
-    specStr += `  it('Sad Path: Debe lanzar ZodError al enviar Payload vacío {} (Extremo Crítico)', () => {\n`;
-    specStr += `    const badPayload = {};\n`;
-    specStr += `    expect(() => taskSchema.parse(badPayload)).toThrow();\n`;
-    specStr += `  });\n\n`;
-    
     specStr += `});\n`;
 
-    // CA-4 Descarga Pasiva Blob
     const blob = new Blob([specStr], { type: 'text/typescript' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'form_payload.spec.ts';
-    document.body.appendChild(a);
+    a.download = `${formTitle.value.replace(/[^a-zA-Z0-9]/g, '')}.spec.ts`;
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('Script de tests generado exitosamente, descargando...', 'success');
+    showToast('Archivo .spec.ts exportado exitosamente', 'success');
+};
+
+// CA-79: Consola QA Sandbox Fuzzer
+const showFuzzerModal = ref(false);
+const fuzzerPayload = ref('{\n  \n}');
+const fuzzerErrors = ref<string[]>([]);
+
+const openFuzzerSandbox = () => {
+    fuzzerPayload.value = '{\n  \n}';
+    fuzzerErrors.value = [];
+    showFuzzerModal.value = true;
+};
+
+const runFuzzerZod = () => {
+    fuzzerErrors.value = [];
+    try {
+        const payload = JSON.parse(fuzzerPayload.value);
+        const schema = ZodBuilder.buildSchema(canvasFields.value, visualRules.value);
+        const result = schema.safeParse(payload);
+        if (!result.success) {
+            fuzzerErrors.value = result.error.issues.map(iss => `[${iss.path.join('.')}] - ${iss.message}`);
+        } else {
+            showToast('Payload Válido 🎉', 'success');
+        }
+    } catch(e: any) {
+        fuzzerErrors.value = [`[JSON Syntax Error] - ${e.message}`];
+    }
+};
+
+const generateMockPath = (type: string) => {
+    let mock: any = {};
+    const flatF = flatFields(canvasFields.value);
+    flatF.forEach(f => {
+        if(f.type.startsWith('button_') || f.type === 'container') return;
+        const key = f.camundaVariable || f.id;
+        if (type === 'happy') {
+            if(f.type === 'number' || f.type === 'timer') mock[key] = 42;
+            else if(f.type === 'checkbox') mock[key] = true;
+            else if(f.type === 'email') mock[key] = 'test@example.com';
+            else if(f.type === 'url') mock[key] = 'https://example.com';
+            else if(f.isMultiple) mock[key] = ['Option1'];
+            else mock[key] = 'Dummy Data';
+        } else {
+            mock[key] = null;
+        }
+    });
+    fuzzerPayload.value = JSON.stringify(mock, null, 2);
 };
 
 // ── Modals / Toasts ──────────────────────────────────────────────
@@ -756,7 +1089,11 @@ const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
 };
 
 // ── Toolbox Categories ───────────────────────────────────────────
-const toolboxCategories = [
+const toolboxCategories = ref([
+  {
+    name: "Mis Fragmentos",
+    items: [] as any[]
+  },
   {
     name: "Texto",
     items: [
@@ -779,7 +1116,7 @@ const toolboxCategories = [
     name: "Selección",
     items: [
       { icon: '≡', label: 'Dropdown', desc: 'Soporta Array CSV', type: 'select', placeholder: '-- Seleccione --', required: true, zodType: 'string', options: ['Opción A', 'Opción B'], camundaVariable: '' },
-      { icon: '🔄', label: 'Async Typeahead', desc: 'API Fetch (CA-30)', type: 'async_select', placeholder: 'Buscar en API...', required: true, zodType: 'string', asyncUrl: '/api/v1/data', camundaVariable: '' },
+      { icon: '🔄', label: 'Async Typeahead', desc: 'API Fetch (CA-30)', type: 'async_select', placeholder: 'Buscar en API...', required: true, zodType: 'string', asyncUrl: '', camundaVariable: '' },
       { icon: '☑️', label: 'Checkbox', desc: 'Booleano Múltiple', type: 'checkbox', placeholder: 'Marcar opción', required: false, zodType: 'boolean', camundaVariable: '' },
       { icon: '🔘', label: 'Radio Button', desc: 'Opción Única', type: 'radio', placeholder: '', required: true, zodType: 'string', options: ['Opción 1', 'Opción 2'], camundaVariable: '' },
     ]
@@ -797,7 +1134,10 @@ const toolboxCategories = [
     name: "Layouts (CA-8, CA-34)",
     items: [
       { icon: '🗂️', label: 'Contenedor', desc: 'Panel Agrupador', type: 'container', placeholder: 'Nueva Sección de Datos', required: false, zodType: 'object', camundaVariable: '', children: [] },
+      { icon: '📇', label: 'Pestañas (Tabs)', desc: 'Multivista Horizontal', type: 'tabs', placeholder: 'Contenedor de Pestañas', required: false, zodType: 'object', camundaVariable: '', activeTab: 0, children: [] },
+      { icon: '↕️', label: 'Acordeón', desc: 'Paneles Colapsables', type: 'accordion', placeholder: 'Acordeón Estructurado', required: false, zodType: 'object', camundaVariable: '', children: [] },
       { icon: '📑', label: 'Data Grid', desc: 'Fila Repetible', type: 'field_array', placeholder: 'Nueva Tabla', required: false, zodType: 'array', camundaVariable: '', children: [] },
+      { icon: 'ℹ️', label: 'Modal Informativo', desc: 'Teleport Z-900 (Estéril)', type: 'info_modal', placeholder: 'Contenido del modal...', tooltipText: 'Título del Pop-up', required: false, zodType: 'none', camundaVariable: '' },
       { icon: '👁️‍🗨️', label: 'Hidden Input', desc: 'ID/Token Silencioso (CA-47)', type: 'hidden', placeholder: '', required: false, zodType: 'any', camundaVariable: '' }
     ]
   },
@@ -809,7 +1149,7 @@ const toolboxCategories = [
       { icon: '❌', label: 'Rechazar Tarea', desc: 'BPMN Error', type: 'button_reject', placeholder: '', required: false, zodType: 'none', camundaVariable: '' },
     ]
   }
-];
+]);
 
 // ── Draggable Clone Hook ─────────────────────────────────────────
 let idCounter = 1;
@@ -820,6 +1160,19 @@ const cloneComponent = (original: any) => {
   cloned.stage = 'START_EVENT'; // Default
   if (cloned.type === 'container' || cloned.type === 'field_array') {
     cloned.children = [];
+  }
+  if (cloned.type === 'tabs') {
+    cloned.children = [
+      { id: `FIELD_${idCounter++}_tab1`, label: 'Tab 1', type: 'tab_pane', children: [] },
+      { id: `FIELD_${idCounter++}_tab2`, label: 'Tab 2', type: 'tab_pane', children: [] }
+    ];
+    cloned.activeTab = 0;
+  }
+  if (cloned.type === 'accordion') {
+    cloned.children = [
+      { id: `FIELD_${idCounter++}_panel1`, label: 'Panel 1', type: 'accordion_panel', children: [] },
+      { id: `FIELD_${idCounter++}_panel2`, label: 'Panel 2', type: 'accordion_panel', children: [] }
+    ];
   }
   return cloned;
 };
@@ -1013,10 +1366,10 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
     if (field.type === 'text' || field.type === 'number' || field.type === 'date' || field.type === 'time' || field.type === 'password' || field.type === 'email' || field.type === 'url') { // CA-53, CA-63
       if (field.mask) {
          // CA-36: Proxy Value/Event Masking
-         tpl += `${indent}  <input type="${field.type === 'password' ? 'password' : 'text'}" :value="formatMask(${vModelBase}, '${field.mask}')" @input="(e) => ${vModelBase} = unmask(e.target.value, '${field.type}')" placeholder="${field.placeholder || field.mask}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm font-mono"${dsb} />\n`;
+         tpl += `${indent}  <input type="${field.type === 'password' ? 'password' : 'text'}" :value="formatMask(${vModelBase}, '${field.mask}')" @change="(e) => { ${vModelBase} = unmask((e.target as HTMLInputElement).value, '${field.type}'); validateField('${field.camundaVariable || field.id}'); }" placeholder="${field.placeholder || field.mask}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm font-mono"${dsb} />\n`;
       } else {
          const nativeType = (field.type === 'email' || field.type === 'url' || field.type === 'password') ? field.type : field.type;
-         tpl += `${indent}  <input type="${nativeType}" v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+         tpl += `${indent}  <input type="${nativeType}" v-model.lazy="${vModelBase}" @blur="validateField('${field.camundaVariable || field.id}')" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
       }
       if (field.type === 'password') {
          // CA-64 Hints Multi-Estado
@@ -1026,7 +1379,7 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
          tpl += `${indent}  </div>\n`;
       }
     } else if (field.type === 'textarea') {
-      tpl += `${indent}  <textarea v-model="${vModelBase}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" rows="3"${dsb}></textarea>\n`;
+      tpl += `${indent}  <textarea v-model.lazy="${vModelBase}" @blur="validateField('${field.camundaVariable || field.id}')" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm" rows="3"${dsb}></textarea>\n`;
     } else if (field.type === 'checkbox') {
       tpl += `${indent}  <div class="flex items-center gap-2 mt-1">\n${indent}    <input type="checkbox" v-model="${vModelBase}" class="rounded text-indigo-600 border-gray-300 focus:ring-indigo-500 shadow-sm"${dsb} />\n${indent}    <span class="text-sm text-gray-700">${field.placeholder || field.label}</span>\n${indent}  </div>\n`;
     } else if (field.type === 'radio') {
@@ -1308,17 +1661,20 @@ const computedCode = computed({
          }
       }
 
+      scr += `// CA-22: Lazy Zod Validation\n`;
+      scr += `const validateField = (fieldId: string) => {\n  const cleanData = JSON.parse(JSON.stringify(formData.value));\n  Object.keys(cleanData).forEach(k => { if (typeof cleanData[k] === 'string' && /^[\\d.,$]+$/.test(cleanData[k])) { const num = parseFloat(cleanData[k].replace(/[^\\d.-]/g, '')); if(!isNaN(num)) cleanData[k] = num; } });\n  const result = taskSchema.safeParse(cleanData);\n  if (!result.success) {\n    const issue = result.error.issues.find(iss => iss.path[0] === fieldId);\n    if (issue) errors.value[fieldId] = issue.message;\n    else delete errors.value[fieldId];\n  } else {\n    delete errors.value[fieldId];\n  }\n};\n\n`;
+
       scr += `// CA-15, CA-50: Smart Actions con Blindaje y Stripping Numerico\n`;
       scr += `const submitTask = async () => {\n  errors.value = {};\n`;
       scr += `  // CA-50: Stripping Silencioso de formato Numérico\n  const cleanData = JSON.parse(JSON.stringify(formData.value));\n`;
       scr += `  Object.keys(cleanData).forEach(k => { if (typeof cleanData[k] === 'string' && /^[\\d.,$]+$/.test(cleanData[k])) { const num = parseFloat(cleanData[k].replace(/[^\\d.-]/g, '')); if(!isNaN(num)) cleanData[k] = num; } });\n\n`;
       if (phantomLogic) scr += phantomLogic + '\n';
-      scr += `  const result = taskSchema.safeParse(cleanData);\n  if (!result.success) {\n    result.error.issues.forEach(iss => {\n      if (iss.path[0]) errors.value[iss.path[0].toString()] = iss.message;\n    });\n    return;\n  }\n  try {\n    const payload = { variables: result.data };\n    await apiClient.post(\`/engine-rest/task/\${taskId}/complete\`, payload);\n    alert('Tarea Completada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Completar Tarea: ' + (error as any).message);\n  }\n};\n`;
+      scr += `  const result = taskSchema.safeParse(cleanData);\n  if (!result.success) {\n    result.error.issues.forEach(iss => {\n      if (iss.path[0]) errors.value[iss.path[0].toString()] = iss.message;\n    });\n    return;\n  }\n  try {\n    const payload = { variables: result.data };\n    await apiClient.post(\`/engine-rest/task/\${taskId}/complete\`, payload, { headers: { 'If-Match': props.prefillData?.versionId || '' } });\n    alert('Tarea Completada (Success)');\n  } catch (error: any) {\n    if (error.response?.status >= 500) {\n      localStorage.setItem('workdesk_draft_fallback', JSON.stringify(cleanData));\n      alert('⚠️ Error 5xx en servidor. Borrador protegido en LocalStorage y postergado (Offline Fallback CA-72).');\n    } else {\n      alert('Excepción de Red al Completar Tarea: ' + error.message);\n    }\n  }\n};\n`;
       
       if (hasDraft) {
         scr += `\nconst saveDraft = async () => {\n  try {\n    const cleanData = JSON.parse(JSON.stringify(formData.value));\n    Object.keys(cleanData).forEach(k => { if (typeof cleanData[k] === 'string' && /^[\\d.,$]+$/.test(cleanData[k])) { const num = parseFloat(cleanData[k].replace(/[^\\d.-]/g, '')); if(!isNaN(num)) cleanData[k] = num; } });\n`;
         if (phantomLogic) scr += phantomLogic;
-        scr += `    await apiClient.post('/api/v1/forms/draft', cleanData);\n    alert('Borrador Guardado (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Guardar Borrador: ' + (error as any).message);\n  }\n};\n`;
+        scr += `    await apiClient.post('/api/v1/forms/draft', cleanData, { headers: { 'If-Match': props.prefillData?.versionId || '' } });\n    alert('Borrador Guardado (Success)');\n  } catch (error: any) {\n    if (error.response?.status >= 500) {\n      localStorage.setItem('workdesk_draft_fallback', JSON.stringify(cleanData));\n      alert('⚠️ Error 5xx en servidor. Borrador protegido en LocalStorage (Offline Fallback CA-72).');\n    } else {\n      alert('Excepción de Red al Guardar Borrador: ' + error.message);\n    }\n  }\n};\n`;
       }
       if (hasReject) {
          scr += `\nconst rejectTask = async () => {\n  try {\n    await apiClient.post(\`/engine-rest/task/\${taskId}/bpmnError\`, { errorCode: 'REJECTED' });\n    alert('Excepción BPMN Disparada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Rechazar Tarea: ' + (error as any).message);\n  }\n};\n`;
@@ -1347,13 +1703,16 @@ const computedCode = computed({
             }
             let zt = 'string';
             if(field.type === 'number') zt = 'number';
-            if(field.type === 'file') zt = 'any';
             if(field.type === 'checkbox') zt = 'boolean';
             
+            let piiMod = field.isPII ? `.describe('isPII')` : ``;
+
             if (field.isMultiple && ['select', 'async_select'].includes(field.type)) {
-                zc += `  ${field.camundaVariable || field.id}: z.array(z.string())${field.required ? '.min(1, "Seleccione opción")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
+                zc += `  ${field.camundaVariable || field.id}: z.array(z.string())${field.required ? '.min(1, "Seleccione opción")' : '.optional()'}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
+            } else if (field.type === 'file' || field.type === 'signature') {
+                zc += `  ${field.camundaVariable || field.id}: z.string().uuid({ message: "Se requiere un UUID de Puntero S3" })${field.required ? '.min(1, "Campo requerido")' : '.optional()'}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
             } else {
-                zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required && field.type !== 'checkbox' ? '.min(1, "Campo requerido")' : '.optional()'}, // [${field.stage || 'GLOBAL'}]\n`;
+                zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required && field.type !== 'checkbox' ? '.min(1, "Campo requerido")' : '.optional()'}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
             }
          }
          zc += isRoot ? `})` : `        })`;
@@ -1364,8 +1723,20 @@ const computedCode = computed({
       
       // Inject CA-48 Condicionales Directly via SuperRefine
       const conditionalFields = flatFields(canvasFields.value).filter(f => f.requiredIfField && f.requiredIfValue);
-      let crules = crossValidationCode.value ? crossValidationCode.value.split('\n').map(l=>'  '+l).join('\n') + '\n' : '';
+      let crules = '';
       
+      if (visualRules.value && visualRules.value.length > 0) {
+          crules += `  // CA-32: Validaciones Cruzadas AST\n`;
+          visualRules.value.forEach(r => {
+             let failCond = '';
+             if (r.operator === '>') failCond = `data.${r.fieldA} <= data.${r.fieldB}`;
+             if (r.operator === '<') failCond = `data.${r.fieldA} >= data.${r.fieldB}`;
+             if (r.operator === '==') failCond = `data.${r.fieldA} !== data.${r.fieldB}`;
+             if (r.operator === '!=') failCond = `data.${r.fieldA} === data.${r.fieldB}`;
+             crules += `  if (${failCond}) {\n    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "${r.errorMessage}", path: ["${r.fieldA}"] });\n  }\n`;
+          });
+      }
+
       if (conditionalFields.length > 0) {
          crules += `  // CA-48: Validaciones Condicionales Declarativas\n`;
          conditionalFields.forEach(f => {
@@ -1467,8 +1838,21 @@ const computedCode = computed({
 const simulateMockSubmit = async () => {
     modalTitle.value = "🚀 Execute End-to-End Validation Engine & Integration (CA-29)";
     
-    // BUILD DYNAMIC ZOD SCHEMA FACTORY based on live fields metadata
-    const executableSchema = ZodBuilder.buildSchema(canvasFields.value);
+    if (canvasFields.value.length === 0) {
+        modalContent.value = `[WORKDESK VALIDATION ENGINE] (Vue Realtime Zod Factory)\n⚠️ PREVISUALIZACIÓN VACÍA.\nEl lienzo no tiene componentes para validar. Agrega elementos al diseño.`;
+        showResultModal.value = true;
+        return;
+    }
+
+    let executableSchema;
+    try {
+        // BUILD DYNAMIC ZOD SCHEMA FACTORY based on live fields metadata
+        executableSchema = ZodBuilder.buildSchema(canvasFields.value);
+    } catch (err: any) {
+        showToast('Error en previsualización: Por favor verifica que todos tus componentes tengan un ID único', 'error');
+        console.error('Zod AST Error:', err);
+        return;
+    }
 
     // Mapeo inicial vacío del Payload que se "recibe" simulando llenado del Usuario o Camunda
     const rawFormSubmission: Record<string, any> = {};

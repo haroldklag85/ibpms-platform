@@ -28,7 +28,7 @@ public class DmnFeelSandboxConfig {
         
         // Camunda >7.13 utiliza Scala FEEL Engine por defecto.
         // Impedir que las Celdas DMN invoquen clases estáticas Java del Host.
-        processEngineConfiguration.setDmnFeelEnableCustomFunctionDeclarations(false);
+        // processEngineConfiguration.setDmnFeelEnableCustomFunctionDeclarations(false); // Eliminado: No existe en la API actual.
         // Desactiva la interpolación de Contexto de Spring-Beans dentro del marco matemático.
         processEngineConfiguration.setBeans(null);
 

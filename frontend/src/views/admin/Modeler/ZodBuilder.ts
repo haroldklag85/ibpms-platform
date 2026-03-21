@@ -32,20 +32,21 @@ export interface FormFieldMetadataDTO {
     timerMode?: 'manual' | 'background' | 'api'; // CA-58: Cronómetro
     columns?: number; // CA-55: Layout Multicolumna
     children?: FormFieldMetadataDTO[]; // CA-8: Recursive Nested Support
+    isPII?: boolean; // GAP-1: Shift-Left Security PII
 }
 
 export class ZodBuilder {
     /**
      * Construye dinámicamente un esquema Zod real ejecutable en memoria a partir del arreglo de metadatos de campos visuales.
      */
-    static buildSchema(fields: FormFieldMetadataDTO[]): z.ZodObject<any> {
+    static buildSchema(fields: FormFieldMetadataDTO[], formRules?: any[]): z.ZodTypeAny {
         const shape: Record<string, ZodTypeAny> = {};
 
         const flatFields = (arr: FormFieldMetadataDTO[]): FormFieldMetadataDTO[] => {
             let res: FormFieldMetadataDTO[] = [];
             for (const f of arr) {
-                if (f.type === 'container' && f.children) res = res.concat(flatFields(f.children));
-                else if (f.type !== 'container' && !f.type.startsWith('button_')) res.push(f);
+                if (['container', 'tabs', 'tab_pane', 'accordion', 'accordion_panel'].includes(f.type) && f.children) res = res.concat(flatFields(f.children));
+                else if (!['container', 'tabs', 'tab_pane', 'accordion', 'accordion_panel', 'info_modal'].includes(f.type) && !f.type.startsWith('button_')) res.push(f);
             }
             return res;
         };
@@ -116,7 +117,7 @@ export class ZodBuilder {
                     break;
                 case 'file':
                 case 'signature': // CA-31
-                    fieldSchema = z.string();
+                    fieldSchema = z.string().uuid({ message: "Se requiere un UUID de Puntero S3" });
                     if (field.required) {
                         fieldSchema = (fieldSchema as z.ZodString).min(1, 'Campo requerido');
                     }
@@ -129,10 +130,45 @@ export class ZodBuilder {
                 fieldSchema = fieldSchema.optional();
             }
 
+            if (field.isPII) {
+            fieldSchema = fieldSchema.describe(JSON.stringify({ isPII: true }));
+        }
             const bindingKey = field.camundaVariable || field.id;
             shape[bindingKey] = fieldSchema;
         });
+        const baseSchema = z.object(shape);
 
-        return z.object(shape);
+        if (formRules && formRules.length > 0) {
+            return baseSchema.superRefine((data, ctx) => {
+                formRules.forEach(rule => {
+                    const valA = data[rule.fieldA];
+                    const valB = data[rule.fieldB];
+                    let isInvalid = false;
+                    
+                    if (valA !== undefined && valB !== undefined) {
+                        // Coerción temporal para fechas si son strings ISO
+                        const a = !isNaN(Date.parse(valA)) && isNaN(Number(valA)) ? new Date(valA).getTime() : Number(valA) || valA;
+                        const b = !isNaN(Date.parse(valB)) && isNaN(Number(valB)) ? new Date(valB).getTime() : Number(valB) || valB;
+
+                        switch (rule.operator) {
+                            case '>': isInvalid = a <= b; break;
+                            case '<': isInvalid = a >= b; break;
+                            case '==': isInvalid = a !== b; break;
+                            case '!=': isInvalid = a === b; break;
+                        }
+                    }
+
+                    if (isInvalid) {
+                        ctx.addIssue({
+                            code: z.ZodIssueCode.custom,
+                            message: rule.errorMessage || 'Validación cruzada fallida',
+                            path: [rule.fieldA]
+                        });
+                    }
+                });
+            });
+        }
+
+        return baseSchema;
     }
 }

@@ -50,6 +50,11 @@ const router = createRouter({
                     component: () => import('@/views/admin/Modeler/BpmnDesigner.vue'),
                 },
                 {
+                    path: 'admin/modeler/list',
+                    name: 'FormList',
+                    component: () => import('@/views/admin/Modeler/FormList.vue'),
+                },
+                {
                     path: 'admin/modeler/forms',
                     name: 'FormDesigner',
                     component: () => import('@/views/admin/Modeler/FormDesigner.vue'),

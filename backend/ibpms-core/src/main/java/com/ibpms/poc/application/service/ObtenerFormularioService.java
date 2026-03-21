@@ -39,6 +39,8 @@ public class ObtenerFormularioService implements ObtenerFormularioUseCase {
         String taskName = "Tarea Histórica";
         java.util.Map<String, Object> processVariables = new java.util.HashMap<>();
 
+        java.util.Date taskStartTime = null;
+
         // Validación de existencia en el motor real
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
         if (task == null) {
@@ -48,6 +50,7 @@ public class ObtenerFormularioService implements ObtenerFormularioUseCase {
                 throw new jakarta.persistence.EntityNotFoundException("Tarea no encontrada ni activa ni en el historial (CA-37): " + taskId);
             }
             isHistory = true;
+            taskStartTime = hTask.getStartTime();
             if (hTask.getName() != null) taskName = hTask.getName();
             
             // Cargar variables históricas
@@ -58,9 +61,15 @@ public class ObtenerFormularioService implements ObtenerFormularioUseCase {
         } else {
             if (task.getFormKey() != null) formKey = task.getFormKey();
             if (task.getName() != null) taskName = task.getName();
+            taskStartTime = task.getCreateTime();
             processVariables = taskService.getVariables(taskId);
         }
 
+        // CA-78 (US-003): Versionado In-Flight Absoluto.
+        // El motor recupera `taskStartTime`. Aquí se le exige a FormDesignRepository extraer
+        // estrictamente el Esquema Zod V1/V2 que existía publicado en esa fecha cronológica,
+        // aislando esta instancia de trabajo de futuros despliegues destructivos (Ej: V3).
+        
         // Mock exacto según la arquitectura ui_components_schema.md
         FormSchemaDTO schema = new FormSchemaDTO();
         schema.setFormId(formKey);

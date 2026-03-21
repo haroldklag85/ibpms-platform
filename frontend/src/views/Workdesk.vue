@@ -90,10 +90,23 @@
     </div>
 
     <!-- Main Content 75/25 Split -->
-    <main class="flex-1 flex overflow-hidden">
+    <main class="flex-1 flex overflow-hidden flex-col md:flex-row">
       <!-- 75% Cards -->
-      <section :class="isMetricsPanelOpen ? 'lg:w-3/4 border-r border-gray-200' : 'w-full'" class="w-full flex flex-col bg-gray-50 overflow-hidden transition-all duration-300">
-        <div class="h-12 bg-white border-b border-gray-200 px-6 flex items-center justify-between flex-shrink-0">
+      <section :class="isMetricsPanelOpen ? 'lg:w-3/4 border-r border-gray-200' : 'w-full'" class="w-full flex flex-col bg-gray-50 overflow-hidden transition-all duration-300 relative">
+        
+        <!-- CA-7: Componentes Dinámicos Aditivos -->
+        <div v-if="dynamicComponents.length > 0" class="w-full shrink-0 flex flex-col max-h-[45vh] overflow-y-auto border-b-4 border-slate-300 shadow-md">
+           <div class="sticky top-0 bg-slate-800 px-4 py-2 flex items-center justify-between z-10 border-b border-slate-700 shadow-sm">
+               <span class="text-[10px] font-black tracking-widest text-indigo-400 uppercase flex items-center gap-2">
+                 <span class="material-symbols-outlined text-[14px]">extension</span> Módulo Aditivo (RBAC Inject)
+               </span>
+           </div>
+           <div class="relative bg-white flex-1 overflow-auto rounded-b-lg">
+               <component v-for="(Comp, idx) in dynamicComponents" :key="'comp-'+idx" :is="Comp" />
+           </div>
+        </div>
+
+        <div class="h-12 bg-white border-b border-gray-200 px-6 flex items-center justify-between flex-shrink-0 shadow-sm z-20">
           <div class="flex items-center gap-4">
              <button @click="isMetricsPanelOpen = !isMetricsPanelOpen" class="p-1 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition -ml-2" :title="isMetricsPanelOpen ? 'Ocultar Resumen Panel Derecho' : 'Mostrar Resumen'">
                 <span class="material-symbols-outlined text-xl">{{ isMetricsPanelOpen ? 'dock_to_right' : 'dock_to_left' }}</span>
@@ -269,8 +282,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, defineAsyncComponent, computed } from 'vue';
 import { useWorkdeskStore } from '@/stores/useWorkdeskStore';
+import { useAuthStore } from '@/stores/authStore';
 
 const store = useWorkdeskStore();
 const toastSuccess = ref('');
@@ -283,7 +297,19 @@ const isMetricsPanelOpen = ref(true);
 // ==========================================
 // Gap CA-8: Toggle oculto Anti Cherry-Picking
 // ==========================================
-const FEATURE_FORCE_QUEUE = false;
+const FEATURE_FORCE_QUEUE = (import.meta as any).env.VITE_FEATURE_FORCE_QUEUE === 'true' || false;
+
+// ── CA-7: Inyección Dinámica ──
+const authStore = useAuthStore();
+const AdminMetricsWidget = defineAsyncComponent(() => import('@/views/admin/Analytics/DashboardBAM.vue'));
+
+const dynamicComponents = computed(() => {
+    const list = [];
+    if (authStore.hasAnyRole(['ROLE_SUPER_ADMIN', 'Global Admin'])) {
+        list.push(AdminMetricsWidget);
+    }
+    return list;
+});
 
 // ==========================================
 // Búsqueda & Delegación & Filtros Dinámicos (Gaps CA-2, CA-4)

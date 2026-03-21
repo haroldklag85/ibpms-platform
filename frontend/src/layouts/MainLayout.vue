@@ -28,101 +28,53 @@
         </button>
       </div>
       
-      <!-- Navigation Menu -->
-      <nav class="flex-1 overflow-y-auto overflow-x-hidden px-3 no-scrollbar flex flex-col gap-1 w-full">
-        <!-- SECCIÓN 1: OPERATIVA -->
-        <p v-if="!isSidebarCollapsed" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 mt-2 px-2 fade-in">Área Operativa</p>
+      <!-- Navigation Menu Dinámico (CA-6) -->
+      <nav class="flex-1 overflow-y-auto overflow-x-hidden px-3 no-scrollbar flex flex-col gap-1 w-full relative">
+         <!-- Spinner Loading -->
+         <div v-if="menuStore.isLoading" class="flex justify-center p-4">
+            <span class="material-symbols-outlined animate-spin text-slate-500">sync</span>
+         </div>
+         
+         <template v-else v-for="(group, gIdx) in menuStore.layout" :key="'g'+gIdx">
+            <template v-if="!group.roles || authStore.hasAnyRole(group.roles)">
+               
+               <!-- Separador Visual / Título del Grupo -->
+               <div v-if="gIdx > 0" class="h-px bg-slate-800 my-4 mx-2"></div>
+               <p v-if="!isSidebarCollapsed" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 fade-in">{{ group.title }}</p>
 
-        <router-link to="/" class="nav-item group/link" active-class="nav-active" title="Inicio">
-          <span class="material-symbols-outlined nav-icon">home</span>
-          <span v-if="!isSidebarCollapsed" class="nav-text">Inicio</span>
-          <!-- Tooltip en modo colapsado -->
-          <div v-if="isSidebarCollapsed" class="tooltip-mockup">Inicio</div>
-        </router-link>
+               <!-- Renderizado Plano (Si es Workdesk/Operación) o Acordeón para otros -->
+               <template v-if="group.title === 'Workdesk'">
+                   <router-link v-for="(item, iIdx) in group.items" :key="'w'+iIdx" :to="item.path" class="nav-item group/link" active-class="nav-active" :title="item.label">
+                      <span class="material-symbols-outlined nav-icon">{{ item.icon }}</span>
+                      <span v-if="!isSidebarCollapsed" class="nav-text flex-1">{{ item.label }}</span>
+                      <div v-if="isSidebarCollapsed" class="tooltip-mockup">{{ item.label }}</div>
+                   </router-link>
+               </template>
 
-        <router-link to="/workdesk" class="nav-item group/link" active-class="nav-active" title="Bandeja Unificada">
-          <span class="material-symbols-outlined nav-icon">work</span>
-          <span v-if="!isSidebarCollapsed" class="nav-text flex-1">Workdesk</span>
-          <span v-if="!isSidebarCollapsed" class="bg-indigo-600/20 text-indigo-400 text-[10px] px-1.5 py-0.5 rounded font-bold">12</span>
-          <div v-if="isSidebarCollapsed" class="tooltip-mockup">Workdesk <span class="text-indigo-400 ml-1">12</span></div>
-        </router-link>
+               <!-- Renderizado Acordeón -->
+               <template v-else>
+                   <div 
+                      @click="toggleGroup(group.title)" 
+                      class="nav-item cursor-pointer group/admin relative flex items-center"
+                      :class="{ 'bg-slate-800/50 text-white': isGroupExpanded(group.title) && !isSidebarCollapsed }"
+                      :title="group.title"
+                   >
+                      <span class="material-symbols-outlined nav-icon" :class="{ 'text-indigo-400': isGroupExpanded(group.title) }">account_tree</span>
+                      <span v-if="!isSidebarCollapsed" class="nav-text flex-1" :class="{ 'font-semibold': isGroupExpanded(group.title) }">{{ group.title }}</span>
+                      <span v-if="!isSidebarCollapsed" class="material-symbols-outlined text-[16px] text-slate-500 transition-transform duration-200" :class="{ 'rotate-180': isGroupExpanded(group.title) }">expand_more</span>
+                      <div v-if="isSidebarCollapsed" class="tooltip-mockup">{{ group.title }}</div>
+                   </div>
 
-        <router-link to="/inbox" class="nav-item group/link" active-class="nav-active" title="Inbox Mail">
-          <span class="material-symbols-outlined nav-icon">mail</span>
-          <span v-if="!isSidebarCollapsed" class="nav-text flex-1">Inbox Mail</span>
-          <span v-if="!isSidebarCollapsed" class="bg-red-500/20 text-red-400 text-[10px] px-1.5 py-0.5 rounded font-bold">5</span>
-          <div v-if="isSidebarCollapsed" class="tooltip-mockup">Inbox Mail <span class="text-red-400 ml-1">5</span></div>
-          <!-- Punto rojo si está colapsado y hay notificaciones (simulación) -->
-          <span v-if="isSidebarCollapsed" class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-[#1A1C1E]"></span>
-        </router-link>
+                   <!-- Sub-Items del Acordeón -->
+                   <div v-show="isGroupExpanded(group.title) && !isSidebarCollapsed" class="flex flex-col gap-1 pl-9 pr-2 mt-1 fade-in">
+                      <router-link v-for="(item, iIdx) in group.items" :key="'i'+iIdx" :to="item.path" class="sub-nav-item" active-class="sub-nav-active">
+                          <span class="material-symbols-outlined text-[14px] mr-2">{{ item.icon }}</span> {{ item.label }}
+                      </router-link>
+                   </div>
+               </template>
 
-        <router-link to="/kanban" class="nav-item group/link" active-class="nav-active" title="Proyectos (Kanban)">
-          <span class="material-symbols-outlined nav-icon">view_kanban</span>
-          <span v-if="!isSidebarCollapsed" class="nav-text">Proyectos Kanban</span>
-          <div v-if="isSidebarCollapsed" class="tooltip-mockup">Proyectos Kanban</div>
-        </router-link>
-
-        <router-link to="/admin/project-builder" class="nav-item group/link" active-class="nav-active" title="Plantillas">
-          <span class="material-symbols-outlined nav-icon">architecture</span>
-          <span v-if="!isSidebarCollapsed" class="nav-text">Constructor Plantillas</span>
-          <div v-if="isSidebarCollapsed" class="tooltip-mockup">Constructor Plantillas</div>
-        </router-link>
-
-        <router-link to="/admin/analytics/bam" class="nav-item group/link" active-class="nav-active" title="Dashboards BAM">
-          <span class="material-symbols-outlined nav-icon">analytics</span>
-          <span v-if="!isSidebarCollapsed" class="nav-text">Dashboards BAM</span>
-          <div v-if="isSidebarCollapsed" class="tooltip-mockup">Dashboards BAM</div>
-        </router-link>
-
-        <div class="h-px bg-slate-800 my-4 mx-2"></div>
-
-        <!-- SECCIÓN 2: ADMINISTRACIÓN (Acordeón) -->
-        <p v-if="!isSidebarCollapsed" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 fade-in">System Design</p>
-
-        <!-- Botón Toggle de Acordeón Admin -->
-        <div 
-          @click="toggleAdminMenu" 
-          class="nav-item cursor-pointer group/admin relative flex items-center"
-          :class="{ 'bg-slate-800/50 text-white': isAdminExpanded && !isSidebarCollapsed }"
-          title="Administración del Sistema"
-        >
-          <span class="material-symbols-outlined nav-icon" :class="{ 'text-indigo-400': isAdminExpanded }">settings_suggest</span>
-          <span v-if="!isSidebarCollapsed" class="nav-text flex-1" :class="{ 'font-semibold': isAdminExpanded }">Administración</span>
-          <span v-if="!isSidebarCollapsed" class="material-symbols-outlined text-[16px] text-slate-500 transition-transform duration-200" :class="{ 'rotate-180': isAdminExpanded }">expand_more</span>
-          <div v-if="isSidebarCollapsed" class="tooltip-mockup">Administración</div>
-        </div>
-
-        <!-- Submenú de Administración (Solo visible si expandido el acordeón y No colapsado el sidebar) -->
-        <!-- Si el sidebar se colapsa, obligamos a ocultar el submenú para mantener UX de iconos limpios, o podríamos transformarlo en un flyout, pero por ahora se oculta de la barra fina -->
-        <div v-show="isAdminExpanded && !isSidebarCollapsed" class="flex flex-col gap-1 pl-9 pr-2 mt-1 fade-in">
-           <router-link to="/admin/modeler/bpmn" class="sub-nav-item" active-class="sub-nav-active">
-              <span class="material-symbols-outlined text-[14px] mr-2">account_tree</span> Diseño BPMN
-           </router-link>
-           <router-link to="/admin/modeler/forms" class="sub-nav-item" active-class="sub-nav-active">
-              <span class="material-symbols-outlined text-[14px] mr-2">dynamic_form</span> Formularios
-           </router-link>
-           <router-link to="/admin/modeler/dmn" class="sub-nav-item" active-class="sub-nav-active">
-              <span class="material-symbols-outlined text-[14px] mr-2">psychology</span> Reglas IA
-           </router-link>
-           <router-link to="/admin/integration/catalog" class="sub-nav-item" active-class="sub-nav-active">
-              <span class="material-symbols-outlined text-[14px] mr-2">cable</span> Integración API
-           </router-link>
-           <router-link v-if="authStore.roles.includes('ROLE_SUPER_ADMIN')" to="/admin/security/identity" class="sub-nav-item" active-class="sub-nav-active">
-              <span class="material-symbols-outlined text-[14px] mr-2">shield_person</span> Seguridad (RBAC)
-           </router-link>
-           <router-link to="/admin/integration/builder" class="sub-nav-item" active-class="sub-nav-active">
-              <span class="material-symbols-outlined text-[14px] mr-2">extension</span> Extensiones
-           </router-link>
-           <router-link to="/admin/projects/manager" class="sub-nav-item" active-class="sub-nav-active">
-              <span class="material-symbols-outlined text-[14px] mr-2">folder_managed</span> Gestor Proyectos
-           </router-link>
-           <router-link to="/admin/projects/agile-hub" class="sub-nav-item" active-class="sub-nav-active">
-              <span class="material-symbols-outlined text-[14px] mr-2">speed</span> Hub Ágil
-           </router-link>
-           <router-link to="/admin/mailboxes" class="sub-nav-item" active-class="sub-nav-active">
-              <span class="material-symbols-outlined text-[14px] mr-2">mark_email_read</span> Buzones SAC
-           </router-link>
-        </div>
+            </template>
+         </template>
 
       </nav>
 
@@ -217,14 +169,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useMenuStore } from '@/stores/useMenuStore';
 
 const router = useRouter();
 const preferencesStore = usePreferencesStore();
 const authStore = useAuthStore();
+const menuStore = useMenuStore();
+
+onMounted(() => {
+    // CA-6: Hidratación dinámica del árbol Topológico de Rutas
+    menuStore.fetchMenuLayout();
+});
 
 // CA-11: Indicador Tipográfico Multi-Rol (Extrae y formatea máximo 2 roles del JWT EntraID)
 const topRolesTipText = computed(() => {
@@ -238,24 +197,21 @@ const topRolesTipText = computed(() => {
 // Estado del Sidebar principal (Colapsado para lectura profunda o expandido)
 const isSidebarCollapsed = ref(true);
 
-// Estado del Submenú Acordeón de Administración
-const isAdminExpanded = ref(false);
+// Estado dinámico de Acordeones
+const expandedGroups = ref<Record<string, boolean>>({});
+
+const isGroupExpanded = (title: string) => {
+    return !!expandedGroups.value[title];
+};
+
+const toggleGroup = (title: string) => {
+    expandedGroups.value[title] = !expandedGroups.value[title];
+};
 
 const toggleSidebar = () => {
     isSidebarCollapsed.value = !isSidebarCollapsed.value;
-    // Si colapso el sidebar, opcionalmente repliego el admin menu para limpieza visual al volver a abrir
     if(isSidebarCollapsed.value) {
-       isAdminExpanded.value = false;
-    }
-};
-
-const toggleAdminMenu = () => {
-    // Si el menú estaba colapsado y pido abrir admin, despliego primero el sidebar
-    if (isSidebarCollapsed.value) {
-        isSidebarCollapsed.value = false;
-        isAdminExpanded.value = true;
-    } else {
-        isAdminExpanded.value = !isAdminExpanded.value;
+       expandedGroups.value = {};
     }
 };
 

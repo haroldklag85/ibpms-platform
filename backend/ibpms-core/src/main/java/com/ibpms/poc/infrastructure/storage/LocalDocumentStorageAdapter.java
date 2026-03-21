@@ -21,4 +21,19 @@ public class LocalDocumentStorageAdapter implements DocumentStoragePort {
             throw new RuntimeException("Error guardando el archivo temporal (CA-21)", e);
         }
     }
+
+    @Override
+    public String uploadFile(String fileName, java.io.InputStream data, long length, String mimeType) {
+        return "";
+    }
+
+    @Override
+    public java.io.InputStream downloadFile(String blobUri) {
+        return null;
+    }
+
+    @Override
+    public String generateSecureUrl(String blobUri) {
+        return blobUri;
+    }
 }

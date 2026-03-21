@@ -1,6 +1,7 @@
 package com.ibpms.poc.infrastructure.web;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -118,6 +119,8 @@ public class BpmnDesignController {
             "message", "Solicitud de migración en lote enviada al JobExecutor con éxito.",
             "status", "MIGRATION_QUEUED"
         ));
+    }
+
     /**
      * CA-15: Listado Cronológico de Versiones Desplegadas.
      */

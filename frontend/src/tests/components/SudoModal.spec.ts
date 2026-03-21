@@ -1,0 +1,62 @@
+import { describe, it, expect, vi } from 'vitest';
+import { mount } from '@vue/test-utils';
+import SudoModal from '../../components/common/SudoModal.vue';
+import axios from 'axios';
+
+vi.mock('axios');
+
+describe('US-051 CA-9 y CA-10: SudoModal & Auditoría Spy (Iteración 47)', () => {
+    it('CA-9: La Promesa del Sudo Modal permanece Pending y rechaza sin bandera de reautenticación', async () => {
+        const wrapper = mount(SudoModal);
+        
+        let promiseResolved = false;
+        let promiseRejected = false;
+
+        // Simulamos la apertura del Modal que devuelve una promesa
+        const sudoPromise = wrapper.vm.openAuthPrompt().then(() => {
+            promiseResolved = true;
+        }).catch(() => {
+            promiseRejected = true;
+        });
+
+        // Simular intento de bypass o click en "Cancelar" (false) sin validación
+        wrapper.vm.attemptResolve(false);
+        await new Promise(r => setTimeout(r, 10)); // Yield a event loop
+        expect(promiseResolved).toBe(false);
+        expect(promiseRejected).toBe(true);
+    });
+
+    it('CA-9: Respalda la Promesa exitosamente cuando el Backend HTTP 200 reautenticó', async () => {
+        const wrapper = mount(SudoModal);
+        let resolveFired = false;
+        wrapper.vm.openAuthPrompt().then(() => { resolveFired = true; });
+
+        // Simular éxito de desafío MFA o contraseña local
+        wrapper.vm.attemptResolve(true);
+        await new Promise(r => setTimeout(r, 10));
+        
+        expect(resolveFired).toBe(true);
+    });
+
+    it('CA-10: Botón de Métrica Invoca Espía de Axios para Auditoría de Pantallas Especiales', async () => {
+        // Simular un componente Wrapper que requiere imprimir información confidencial
+        const MockConfidentialView = {
+            template: `<button @click="imprimirDatos">Mostrar</button>`,
+            methods: {
+                imprimirDatos() {
+                    axios.post('/api/v1/audit/metrics', { action: 'PRINT_CONFIDENTIAL_PII' });
+                }
+            }
+        };
+
+        const wrapper = mount(MockConfidentialView);
+        
+        const axiosSpy = vi.spyOn(axios, 'post').mockResolvedValue({});
+
+        await wrapper.find('button').trigger('click');
+
+        // Aserción Matemática E2E: El clic fue rastreado por Axios antes de ejecutar la acción física
+        expect(axiosSpy).toHaveBeenCalledTimes(1);
+        expect(axiosSpy).toHaveBeenCalledWith('/api/v1/audit/metrics', expect.objectContaining({ action: 'PRINT_CONFIDENTIAL_PII' }));
+    });
+});

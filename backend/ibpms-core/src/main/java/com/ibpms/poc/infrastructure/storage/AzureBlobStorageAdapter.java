@@ -7,6 +7,7 @@ import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.ibpms.poc.application.port.out.DocumentStoragePort;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * Configurado para apuntar a Azurite (emulador) en V1 según application.yml.
  */
 @Component
+@Primary
 @Slf4j
 public class AzureBlobStorageAdapter implements DocumentStoragePort {
 
@@ -47,6 +49,11 @@ public class AzureBlobStorageAdapter implements DocumentStoragePort {
         } catch (Exception e) {
             log.warn("No se pudo conectar a Azure Blob Storage. La carga de documentos fallará: {}", e.getMessage());
         }
+    }
+
+    @Override
+    public String saveDocument(java.util.UUID documentId, org.springframework.web.multipart.MultipartFile file) {
+        return "";
     }
 
     @Override

@@ -4105,7 +4105,98 @@ Feature: Secure Customer Onboarding and Identity (CIAM)
 ```
 
 ---
+### US-051: Matriz de Gobernanza Visual y Enrutamiento RBAC (Frontend)
+**Como** Administrador de Seguridad (CISO) / Arquitecto Frontend
+**Quiero** que el motor de Vue.js gestione la visibilidad del DOM, la navegación de rutas y el estado reactivo con seguridad militar
+**Para** garantizar cero fugas de información por parpadeos visuales (FOUC), proteger contra la adivinación de rutas por atacantes (URL Guessing), y soportar la fusión de múltiples roles dinámicos sin asfixiar la UX.
 
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Frontend Visual Governance, Anti-FOUC and SRE Router Guards
+
+  # ==============================================================================
+  # A. RESOLUCIÓN DEL ESTADO Y PREVENCIÓN DE AMNESIA (GAPs 16 y 17)
+  # ==============================================================================
+  Scenario: Hidratación Síncrona del Estado Reactivo (Anti-Amnesia de F5)
+    Given la arquitectura Single Page Application (SPA) basada en Vue 3 y Pinia
+    When un usuario logueado presiona [F5] o recarga directamente una URL profunda (Ej: `/admin/modeler`)
+    Then el interceptor de navegación (`router.beforeResolve`) TIENE PROHIBIDO evaluar los permisos instantáneamente.
+    And deberá invocar una promesa bloqueante (`await hydrateAuth()`) forzando al Router a esperar a que Pinia recupere el Token del LocalStorage y recalcule los Claims.
+    And previniendo falsos positivos de expulsión (403) causados por la latencia de lectura de la memoria RAM.
+
+  Scenario: El Telón de Acero y Prevención de Destello Confidencial (FOUC)
+    Given el proceso de montaje asíncrono de componentes con directivas de visibilidad (`v-if="hasPermission()"`)
+    When el usuario ingresa a la aplicación o cambia de ruta principal
+    Then la aplicación TIENE ESTRICTAMENTE PROHIBIDO renderizar el Layout interactivo por partes.
+    And el Frontend mantendrá un `[Skeleton Loader Transversal]` de pantalla completa.
+    And el "Telón" visual solo se levantará cuando el 100% de la topología RBAC y las promesas asíncronas se hayan resuelto, garantizando cero destellos (FOUC) de botones o menús prohibidos.
+
+  # ==============================================================================
+  # B. DEFENSA PERIMETRAL Y RUTAS (GAP 18)
+  # ==============================================================================
+  Scenario: Gaslighting Cibernético (Security by Obscurity 404 vs 403)
+    Given un usuario operativo o externo que adivina e intenta acceder a una URL restringida (URL Guessing)
+    When el Router Guard intercepta la navegación detectando permisos insuficientes (Token válido, pero sin Rol)
+    Then la arquitectura TIENE PROHIBIDO redirigirlo al Workdesk `/` emitiendo un "403 Forbidden" (lo cual confirmaría que la ruta confidencial existe).
+    And el Router inyectará de frente el componente `NotFound404.vue` (Página no encontrada) manteniendo intacta la URL en la barra de direcciones.
+    And impidiendo matemáticamente que un hacker logre mapear la estructura de directorios del sistema.
+
+  Scenario: Jerarquía de Redirección y Atesorador de Enlaces
+    Given el Router Guard evaluando una excepción de acceso
+    When determina la causal de la penalización
+    Then si el Token JWT EXPIRÓ (401): Redirigirá pasivamente a `/login`, limpiando el Storage.
+    And si el Token VIVE pero el usuario guardó un "Hyperlink Viejo" de un menú al que ya no tiene acceso: Aplicará el escenario de Falso 404 SIN destruir su LocalStorage, protegiendo los borradores lícitos que esté trabajando en otras pestañas.
+
+  Scenario: Excepciones Perimetrales Controladas (Magic Links y Docs)
+    Given la existencia de rutas transitorias y documentación técnica
+    Then el Router Guard poseerá una bandera `meta: { isPublic: true }`.
+    And omitirá la evaluación RBAC pesada para: Pantallas B2C accedidas mediante "Magic Links" (US-050), y Rutas técnicas locales (Swagger/Storybook), acelerando la carga sin comprometer el Core.
+
+  # ==============================================================================
+  # C. COMPOSICIÓN DINÁMICA DE MENÚS Y PRIVILEGIOS
+  # ==============================================================================
+  Scenario: Backend-Driven UI, Auto-Colapso de Nodos y Caché de Menú
+    Given la fusión de múltiples roles en un mismo usuario
+    When el Sidebar calcula las carpetas a renderizar
+    Then la matriz de "Permisos vs Rutas" NO vivirá codificada en duro (Hardcoded) en el Router de Vue, sino que será inyectada mediante un JSON asíncrono desde el Backend.
+    And si el cruce de roles oculta todos los sub-menús de una categoría padre (Ej: Ocultamos BPMN y Formularios), la carpeta padre completa "Administración" se ocultará automáticamente del DOM (Auto-Collapse).
+    And el árbol de navegación resultante será cacheado en Pinia tras el Login para no re-computar directivas en cada transición de vista.
+
+  Scenario: Dashboard Bifurcado por Composición de Widgets
+    Given la ruta raíz del sistema `/` (Workdesk)
+    When diferentes roles (Operador vs Súper Admin) acceden a la misma URL
+    Then el sistema TIENE PROHIBIDO redirigir a rutas hardcodeadas separadas (Ej: `/dashboard-admin`).
+    And utilizará la misma vista raíz inyectando dinámicamente (Component Composition) los *Widgets* (Grafana vs Grillas Kanban) según los permisos aditivos de Pinia en la misma coordenada web.
+
+  Scenario: Dependencias Cruzadas y Privilegios de Solo Lectura (Granularidad CRUD)
+    Given un Arquitecto de Procesos que necesita invocar una Regla IA dentro de su diagrama BPMN
+    Then el Frontend le otorgará un privilegio degradado (Read-Only) hacia la ruta del Diccionario de la IA.
+    And le permitirá consultar el catálogo, pero la directiva condicional a nivel de componente ocultará/destruirá físicamente los botones de `[+ Nueva Regla]` y `[Eliminar]`, reservados para el Administrador IA.
+
+  # ==============================================================================
+  # D. CONTROLES DE ALTA FRICCIÓN Y SALVAVIDAS
+  # ==============================================================================
+  Scenario: Re-Autenticación para Funciones Destructivas (Sudo Mode)
+    Given una sesión iniciada bajo el rol máximo de `ROLE_SUPER_ADMIN`
+    When este usuario intenta ejecutar una acción destructiva (Ej: Purgar BD, Borrar Tenant)
+    Then la validación estándar del Router NO es suficiente.
+    And el Frontend suspenderá el POST y renderizará un "Re-Prompt" (Modal de Seguridad) exigiendo la re-digitación de la contraseña o token EntraID para confirmar la transacción, previniendo secuestros de sesión en PCs desbloqueadas.
+
+  Scenario: Auditoría Forzosa al Revelar Secretos API (El Ojo de Sauron)
+    Given el rol `ROLE_INTEGRITY_ENGINEER` ingresando a la vista "Integraciones API"
+    When el componente se monta para mostrar credenciales o Tokens OAuth estáticos
+    Then los Secretos se renderizarán ofuscados por defecto (`*****************`).
+    And al hacer clic en "Mostrar 👁️", el Frontend disparará obligatoriamente un evento asíncrono de Telemetría (Audit-Log POST) hacia el backend registrando la visualización del secreto en ese milisegundo.
+
+  Scenario: Revocación en Caliente y Botón de Pánico Incondicional (Return Home)
+    Given la operativa en tiempo real del Frontend
+    When un Súper Administrador revoca un rol a un usuario conectado
+    Then un evento WebSocket (`[ROLE_REVOKED]`) obligará a Pinia a expulsar al usuario al `/login` en vivo.
+    And en caso de que un usuario quede atrapado en un "Dead Loop" de redirecciones por fallos de permisos locales, el *Master Layout* garantizará la renderización incondicional del botón `[Cerrar Sesión / Ir al Inicio]` por fuera del `router-view` para forzar la limpieza del estado.
+```
+**Trazabilidad UX:** Componentes de Navegación Global Vue Router (`router/index.ts`) y Menú Lateral (`MainLayout.vue`).
+
+---
 
 # 🚀 ROADMAP VERSIÓN 2 (V2) - EN REFINAMIENTO
 *(Todas las funcionalidades, épicas e historias de usuario declaradas a partir de este punto pertenecen estructural y financieramente a la Fase 2 del Proyecto iBPMS. No forman parte del alcance del MVP V1).*

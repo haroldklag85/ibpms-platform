@@ -11,6 +11,7 @@ const router = createRouter({
             path: '/login',
             name: 'Login',
             component: () => import('@/views/Login.vue'),
+            meta: { isPublic: true } // CA-5: Exención
         },
         {
             path: '/',
@@ -71,7 +72,7 @@ const router = createRouter({
             path: '/public/start/:processKey',
             name: 'PublicIntake',
             component: () => import('@/views/public/PublicIntake.vue'),
-            meta: { requiresAuth: false }
+            meta: { requiresAuth: false, isPublic: true } // CA-5
         },
         // --- Bloque 3: Service Delivery Intake ---
         {
@@ -91,7 +92,7 @@ const router = createRouter({
             name: 'CustomerPortal',
             component: () => import('@/views/public/CustomerPortal.vue'),
             // No auth required
-            meta: { requiresAuth: false }
+            meta: { requiresAuth: false, isPublic: true } // CA-5
         },
         // --- Bloque A: Project Builder ---
         {
@@ -175,7 +176,7 @@ const router = createRouter({
     ]
 });
 
-// Navigation Guard estricto
-router.beforeEach(rbacGuard);
+// CA-1: Navigation Guard asíncrono estricto
+router.beforeResolve(rbacGuard);
 
 export default router;

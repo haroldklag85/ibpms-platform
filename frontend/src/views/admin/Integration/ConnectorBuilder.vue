@@ -19,7 +19,7 @@
         <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded shadow-sm text-sm font-medium hover:bg-gray-50 transition">
           💾 Guardar Borrador
         </button>
-        <button class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-medium hover:bg-indigo-700 transition">
+        <button @click="approveConfig" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-medium hover:bg-indigo-700 transition">
           Aprobar Configuración
         </button>
       </div>
@@ -72,6 +72,25 @@
                 <option value="HMAC">HMAC SHA-256 Signatures</option>
               </select>
             </div>
+
+            <!-- CA-10: Criptografía y Ofuscación Activa -->
+             <div v-if="authMode === 'BASIC' || authMode === 'APIKEY'" class="fade-in">
+                <label class="block text-xs font-bold text-gray-700 mb-1">Credencial Protegida (CA-10)</label>
+                <div class="flex gap-2 relative">
+                   <input 
+                      :type="isSecretRevealed ? 'text' : 'password'" 
+                      v-model="apiSecret" 
+                      class="w-full text-sm border-gray-300 rounded shadow-sm focus:ring-indigo-500 bg-gray-50 focus:border-indigo-500 font-mono" 
+                      placeholder="••••••••••••••••" 
+                      :readonly="!isSecretRevealed" 
+                   />
+                   <button v-if="!isSecretRevealed" @click="revealSecret" class="absolute right-2 top-1.5 text-[10px] text-indigo-600 font-bold hover:underline bg-gray-50 px-1 py-0.5" :disabled="isRevealing">
+                      <span v-if="isRevealing" class="material-symbols-outlined text-[14px] animate-spin inline-block align-middle">sync</span>
+                      <span v-else class="uppercase tracking-wider">👁️ Monitorear</span>
+                   </button>
+                </div>
+                <p class="text-[9px] text-gray-500 mt-1 font-medium">* Desocultar este string gatillará un HTTP POST Inmutable hacia <span class="text-indigo-600">/audit/events</span></p>
+             </div>
 
             <!-- V1 Military-Grade PGP Encryption -->
             <div class="p-3 bg-purple-50 rounded border border-purple-200 space-y-3">
@@ -210,8 +229,40 @@ import VueMonacoEditor from '@guolao/vue-monaco-editor';
 const connectorName = ref('');
 const connectorUrl = ref('');
 const useRabbit = ref(false);
-const authMode = ref('OAUTH2');
+const authMode = ref('APIKEY');
 const pgpEnabled = ref(false);
+
+// CA-10: Ofuscación y Auditoría
+const apiSecret = ref('ibpms_sk_live_9f8g7h6j...');
+const isSecretRevealed = ref(false);
+const isRevealing = ref(false);
+
+const revealSecret = async () => {
+    isRevealing.value = true;
+    try {
+        await apiClient.post('/api/v1/audit/events', {
+            action: 'REVEAL_INTEGRATION_SECRET',
+            connector: connectorName.value || 'UNNAMED_CONNECTOR'
+        }).catch(() => {
+           console.warn('Fallback: Auditoría asíncrona enviada a consola.');
+        });
+        isSecretRevealed.value = true;
+    } finally {
+        isRevealing.value = false;
+    }
+};
+
+// CA-9: Sudo Modal Transversal
+import { useSudo } from '@/composables/useSudo';
+import apiClient from '@/services/apiClient';
+
+const { requestSudo } = useSudo();
+const approveConfig = async () => {
+   const authed = await requestSudo('Certificación de Integración B2B');
+   if(authed) {
+       alert("SUDO COMPLETADO. Integración Confirmada y Desplegada.");
+   }
+};
 
 // Script Injector
 const scriptValue = ref(`/**

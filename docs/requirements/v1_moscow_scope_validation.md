@@ -13,7 +13,7 @@
 4.  **IDE Pro-Code de Formularios (Vue 3/Zod - MUST):** Constructor Web (Low-Code/Pro-Code) basado en Mónaco Editor. Permite al usuario elegir entre crear un "iForm Maestro" (Expediente multi-etapa/rol) o un "Formulario Simple" (un solo paso). El sistema genera automáticamente archivos `.vue` nativos, validaciones `.zod`, e integra tipado TypeScript.
 5.  **Motor DMN & Traductor IA (NLP a DMN):** Ejecución de tablas de decisión generadas mediante IA (Lenguaje Natural a DMN).
 6.  **Copiloto AI de Correos M365 ("Human-in-the-Loop"):** Agente Virtual integrado vía Graph API que lee buzones entrantes, detecta intención, cruza con CRM, propone borradores de respuesta e incorpora *Feedback Loops (MLOps)*, *Políticas Multi-Buzón* y trazabilidad *eDiscovery* innegociable antes de la intervención humana (Pantalla 2C).
-7.  **Seguridad Base (ABAC/RBAC):** Login con Azure AD (OIDC/SAML) y segregación de tareas por grupos/jerarquías en el motor.
+7.  **Seguridad Avanzada, ABAC/RBAC y Gobernanza Visual:** Login con Azure AD (OIDC/SAML), segregación estricta de tareas por grupos, y controles de alta fricción (Sudo Mode) para acciones destructivas. Adicionalmente, incluye el mecanismo de "Ciber-Gaslighting" en frontend para ocultar el enrutamiento de módulos no autorizados a nivel de DOM (US-051).
 8.  **Gestión Kanban (Operativa y Proyectos):** Soporte para gestión de proyectos ágiles (sin dependencia BPMN) y manejo de minitareas/checklists tipo Kanban dentro de actividades normales del proceso.
 9.  **Dashboards Estratégicos (Process Health):** Visualización de cuellos de botella y salud de proyectos acoplando herramientas analíticas consolidadas de mercado (Grafana / PowerBI) directamente a las vistas SQL del backend.
 10. **Catálogo Federado de Servicios (CRM Sync - MUST):** Conector API resistente hacia CRM externo para consultar catálogo, implementar modo degradado (Caché), soporte de sincronización (Scheduled/On-Demand) y Mapeo Variable JSON con auditoría obligatoria de versiones usadas en cada caso.
@@ -24,12 +24,20 @@
 ---
 
 ## 🟡 SHOULD HAVE (Debería tener - Alto Impacto, pero evitable en mes 1)
-*Crítico, pero si se retrasa 30 días post-lanzamiento, el MVP sigue operando.*
+*Crítico, pero si se retrasa 30 días post-lanzamiento, el MVP sigue operando. Aquí residen todos los módulos cognitivos V1.2.*
 
 1.  **Generador Documental Jurídico Básico (PDF):** Inyectar el JSON a un template `.docx`/HTML simple para generar un documento autimático.
 2.  **Notificaciones Proactivas (SLA):** Alertas in-app y correos automáticos antes de que venza una tarea. *(En el MVP puro, el usuario debe revisar su bandeja proactivamente).*
 3.  **Catálogo Federado (Reglas de Negocio - SHOULD):** Soporte multi-idioma nativo para los catálogos traídos del CRM, *Overrides Operativos* locales en iBPMS por sobre los campos del CRM, y exposición API Multi-tenant para portales de clientes.
-
+4.  **Consultor Digital AI (Machine Learning):** Nada de análisis predictivo ni rediseño autónomo de procesos en V1. Todo se abordará en V1.2.
+5.  **Auditor Digital AI (Organizacional Autónomo):** La auditoría activa y transversal de toda la operación queda para V1.2. (*Excepción: Se promovió a V1 el "Copiloto AI Diseñador" limitado estrictamente a enseñar y auditar diagramas dentro de la Pantalla 6*).
+6.  **IA Natural Flow (Core Agentic):** El motor no será agentic en la V1; la IA se usará mediante modelo conversacional API-first solo para facilitar configuraciones (como el DMN).
+7.  **Zero-UI / Headless Completo:** El usuario deberá entrar a la interfaz (Workbench) al menos en el 50% de las operativas; no operaremos *solo* por WhatsApp/Chatbots aún.
+8.  **Módulos Verticales Restantes (Roadmap SaaS V1.2):** Componentes hiper-especializados como el *RAG Documental (Legal)*, *Web Scraping Silencioso (RPA Legal)*, y el *Escaneo Integrado OCR/ICR (Hotelero)*. Estos justifican la venta de la V2. El módulo de Copiloto M365 fue promovido a V1.
+9. **Validación de Criterios (Pivot Estratégico V1.2):**
+- Cumple con la restricción de "5-6 Meses TTM (Ajustado por IA Agentic)".
+- Protege la deuda técnica ("Hexagonal" está en Must Have).
+- El alcance de la V1 se fusiona agresivamente con las capacidades LLM (SHOULD HAVE V1.2), convirtiendo al iBPMS en un competidor feroz desde su concepción, sin asfixiar la salida a producción.
 ---
 
 ## 🟠 COULD HAVE (Podría tener - Funciones "Nice to Have")
@@ -41,17 +49,11 @@
 
 ---
 
-## 🔴 WON'T HAVE (Excluido de la V1 - Pertenece a la V2)
-*Funcionalidades prohibidas en el scope de 3 meses. Intentar incluirlas pondrá en riesgo el lanzamiento.*
+## 🔴 WON'T HAVE (Excluido de la V1 - Pertenece a V2/V3 Futuras)
+*Funcionalidades prohibidas en el scope de los próximos 6 meses.*
 
-1.  **Consultor Digital AI (Machine Learning):** Nada de análisis predictivo ni rediseño autónomo de procesos en V1. Todo se abordará en V2.
-2.  **Auditor Digital AI (Organizacional Autónomo):** La auditoría activa y transversal de toda la operación queda para V2. (*Excepción: Se promovió a V1 el "Copiloto AI Diseñador" limitado estrictamente a enseñar y auditar diagramas dentro de la Pantalla 6*).
-3.  **IA Natural Flow (Core Agentic):** El motor no será agentic en la V1; la IA se usará mediante modelo conversacional API-first solo para facilitar configuraciones (como el DMN).
-4.  **Zero-UI / Headless Completo:** El usuario deberá entrar a la interfaz (Workbench) al menos en el 50% de las operativas; no operaremos *solo* por WhatsApp/Chatbots aún.
-5.  **Módulos Verticales Restantes (Roadmap SaaS V2):** Componentes hiper-especializados como el *RAG Documental (Legal)*, *Web Scraping Silencioso (RPA Legal)*, y el *Escaneo Integrado OCR/ICR (Hotelero)*. Estos justifican la venta de la V2. El módulo de Copiloto M365 fue promovido a V1.
+1.  **Refactorización a Microservicios Puros:** La V1 y V1.2 mantendrán el Monolito Modular Hexagonal. Romper el ecosistema en microservicios independientes Kubernetes queda vetado.
+2.  **Theming / White-Labeling Dinámico por Tenant:** La posibilidad de personalizar CSS/Colores dinámicamente desde panel administrativo por cliente queda fuera. Todo usará la paleta corporativa estándar.
 
 ---
-**Validación de Criterios (Pivot Estratégico):**
-- Cumple con la restricción de "5-6 Meses TTM (Ajustado por IA)".
-- Protege la deuda técnica ("Hexagonal" está en Must Have).
-- El producto sale al mercado inmediatamente como una plataforma "Agentic" (AI-First) gracias a la inclusión del Copiloto M365 en V1, superando a competidores legacy.
+

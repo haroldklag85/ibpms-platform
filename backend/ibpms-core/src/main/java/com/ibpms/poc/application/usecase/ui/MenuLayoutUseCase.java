@@ -21,6 +21,10 @@ public class MenuLayoutUseCase {
     public List<MenuItemDTO> getBuildLayoutForUser(Set<String> userRoles) {
         List<MenuItemDTO> layout = new ArrayList<>();
 
+        // RAMA 0: Home (Acceso Universal)
+        MenuItemDTO home = new MenuItemDTO("Inicio", "mdi-home", "/home");
+        layout.add(home);
+
         // RAMA 1: Operativa Base (Todos tienen acceso a su Workdesk)
         MenuItemDTO dashboard = new MenuItemDTO("Mi Workdesk", "mdi-desktop-mac", "/workdesk");
         layout.add(dashboard);

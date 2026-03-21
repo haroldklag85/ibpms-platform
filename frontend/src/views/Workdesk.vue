@@ -94,15 +94,24 @@
       <!-- 75% Cards -->
       <section :class="isMetricsPanelOpen ? 'lg:w-3/4 border-r border-gray-200' : 'w-full'" class="w-full flex flex-col bg-gray-50 overflow-hidden transition-all duration-300 relative">
         
-        <!-- CA-7: Componentes Dinámicos Aditivos -->
+        <!-- CA-7: Componentes Dinámicos Aditivos (Protegido por Suspense Boundary) -->
         <div v-if="dynamicComponents.length > 0" class="w-full shrink-0 flex flex-col max-h-[45vh] overflow-y-auto border-b-4 border-slate-300 shadow-md">
            <div class="sticky top-0 bg-slate-800 px-4 py-2 flex items-center justify-between z-10 border-b border-slate-700 shadow-sm">
                <span class="text-[10px] font-black tracking-widest text-indigo-400 uppercase flex items-center gap-2">
                  <span class="material-symbols-outlined text-[14px]">extension</span> Módulo Aditivo (RBAC Inject)
                </span>
            </div>
-           <div class="relative bg-white flex-1 overflow-auto rounded-b-lg">
-               <component v-for="(Comp, idx) in dynamicComponents" :key="'comp-'+idx" :is="Comp" />
+           <div class="relative bg-white flex-1 overflow-auto rounded-b-lg min-h-[160px]">
+               <Suspense>
+                  <div class="flex flex-col">
+                     <component v-for="(Comp, idx) in dynamicComponents" :key="'comp-'+idx" :is="Comp" />
+                  </div>
+                  <template #fallback>
+                     <div class="flex items-center justify-center h-40 text-xs font-bold text-slate-400 animate-pulse">
+                        <span class="material-symbols-outlined mr-2 animate-spin">refresh</span> Acoplando Widgets...
+                     </div>
+                  </template>
+               </Suspense>
            </div>
         </div>
 
@@ -131,12 +140,12 @@
            </div>
            
            <!-- CSS Grid Cards Stitch (CA-3 Visual Remodel) -->
-           <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-6">
+           <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 items-stretch">
              <div 
                v-for="task in filteredItems" 
                :key="task.unifiedId"
                @click="mockOpenTask(task)"
-               class="rounded-xl shadow-sm border overflow-hidden flex flex-col transition-all group cursor-pointer h-fit"
+               class="rounded-xl shadow-sm border overflow-hidden flex flex-col transition-all group cursor-pointer min-h-[220px]"
                :class="task.isSlaAtRisk ? 'bg-orange-50/50 border-orange-300 hover:border-orange-500 hover:bg-orange-50 hover:shadow-md' : 'bg-white border-gray-200 hover:border-indigo-400 hover:shadow-md'"
              >
                <!-- SLA Top Bar -->
@@ -177,21 +186,21 @@
                    </span>
                  </div>
                  
-                 <div class="pt-4 mt-2 border-t border-gray-100 flex items-center justify-between">
+                 <div class="pt-4 mt-auto border-t border-gray-100 flex items-center justify-between">
                    <div class="flex items-center gap-3">
-                     <div v-if="task.assignee" class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs ring-2 ring-indigo-50 shadow-sm uppercase">
+                     <div v-if="task.assignee" class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs ring-2 ring-indigo-50 shadow-sm uppercase shrink-0">
                        {{ task.assignee.substring(0,2) }}
                      </div>
-                     <div v-else class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+                     <div v-else class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 shrink-0">
                        <span class="material-symbols-outlined text-gray-400 text-sm">person_off</span>
                      </div>
-                     <div class="flex flex-col">
+                     <div class="flex flex-col min-w-0">
                        <span class="text-[9px] text-gray-400 uppercase font-bold tracking-tight">Asignado</span>
                        <span class="text-xs font-semibold text-gray-700 truncate max-w-[120px]" v-if="task.assignee">{{ task.assignee }}</span>
-                       <span class="text-xs font-semibold text-gray-400 italic" v-else>Sin Asignar</span>
+                       <span class="text-xs font-semibold text-gray-400 italic truncate" v-else>Sin Asignar</span>
                      </div>
                    </div>
-                   <span class="material-symbols-outlined text-gray-300 text-lg group-hover:text-indigo-400 transition-colors">arrow_forward</span>
+                   <span class="material-symbols-outlined text-gray-300 text-lg group-hover:text-indigo-400 transition-colors shrink-0">arrow_forward</span>
                  </div>
                </div>
              </div>

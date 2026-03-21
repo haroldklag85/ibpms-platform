@@ -182,4 +182,31 @@ describe('Workdesk.vue (US-001 Hybrid CQRS & SLA Ticking)', () => {
         expect(slaBadgeWarning.exists()).toBe(true);
         expect(slaBadgeWarning.text()).toContain('Advertencia SLA');
     });
+
+    it('HOTFIX US-051 Regresión: Aserción matemática de Estructura Grid y Cards Operativas', async () => {
+        const store = useWorkdeskStore();
+        
+        // Simular que el usuario tiene un Rol Raso/Operativo
+        const authStoreMock = { userRoles: ['OPERATOR_ROLE'] };
+
+        const wrapper = mount(Workdesk, {
+            global: { 
+                plugins: [pinia],
+                provide: { auth: authStoreMock }
+            }
+        });
+
+        await wrapper.vm.$nextTick();
+        
+        // Aserción 1: Validar matemáticamente que el layout no fue destrozado (CSS Grid)
+        expect(wrapper.find('.grid').exists()).toBe(true);
+
+        // Aserción 2: Confirmar que las Cards de "Acciones Operativas" se renderizan en el DOM
+        // Asumiendo que las tarjetas tienen una clase distintiva "q-card", "card", o se envuelven en div
+        // y contienen el texto "Acciones Operativas" o similar.
+        const cardSectionHtml = wrapper.html();
+        
+        // Verificamos el montaje de la lógica base de las tarjetas
+        expect(cardSectionHtml).toContain('Acciones Operativas');
+    });
 });

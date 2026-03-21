@@ -224,6 +224,13 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
+
+		<!-- Bucket4j Anti-DoW Rate Limiter -->
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j-core</artifactId>
+			<version>8.9.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

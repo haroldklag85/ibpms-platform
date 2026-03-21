@@ -1352,93 +1352,88 @@ Feature: Standalone Project Template Builder (WBS)
 ### US-027: Copiloto IA (Auditoría ISO 9001 y Generador Consultivo BPMN)
 **Como** Arquitecto Modelador de Procesos
 **Quiero** un asistente IA interactivo embebido en el diseñador (Pantalla 6)
-**Para** que audite mis diagramas buscando brechas de calidad (ISO 9001), O genere un proceso BPMN 2.0 desde cero a partir de documentos adjuntos e iteraciones de preguntas aclaratorias en lenguaje natural.
+**Para** que audite mis diagramas buscando brechas de calidad (ISO 9001 y BPMN 2.0), O genere un proceso BPMN 2.0 desde cero a partir de documentos adjuntos e iteraciones de preguntas aclaratorias en lenguaje natural.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: AI Copilot para Diseño y Auditoría BPMN
+Feature: AI Copilot Generator, SRE Layout, AppSec & UX Governance
 
-  Scenario: Diagnóstico de Calidad y Sugerencia ISO 9001 (Modo Tutor Alerta)
-    Given que el Arquitecto está dibujando un proceso en el lienzo y hace clic en "Consultar a IA Copilot"
-    When el sistema envía el XML en memoria y el contexto semántico al LLM API
-    Then el Agente IA debe analizar la estructura devolviendo un reporte en la UI
-    And destacar áreas de mejora (Ej: "⚠️ Alerta ISO 9001: La compuerta no tiene validación humana")
-    And sugerir componentes correctos de BPMN 2.0 para reemplazar antipatrones
-    But la IA NUNCA bloqueará el diseño o el despliegue; emitirá mensajes de alerta y el usuario Arquitecto tendrá la decisión final vinculante.
+  # ==============================================================================
+  # A. EFICIENCIA SRE, AUTO-LAYOUT Y AHORRO DE TOKENS (GAPs 18, 19, 20)
+  # ==============================================================================
+  Scenario: Soberanía Geométrica y Prevención de Spaghetti (Auto-Layout) (CA-01)
+    Given la incapacidad de los LLMs para calcular coordenadas (X,Y) espaciales precisas
+    When el Agente IA genera el proceso (Hit-The-Canvas)
+    Then el LLM devolverá EXCLUSIVAMENTE el marcado lógico semántico (`<bpmn:process>`).
+    And la arquitectura PROHÍBE que el LLM calcule topología `BPMNDi`.
+    And un Middleware Backend (Librería de Auto-Layout) inyectará matemáticamente las coordenadas X,Y antes de enviarlo al Frontend, previniendo el colapso geométrico del navegador.
 
-  Scenario: Ingesta Documental, RAG Teórico y Setup Inicial (Modo Generador Analógico)
-    Given un lienzo en blanco en la Pantalla 6
-    When el Arquitecto activa el modo "Generar Proceso con IA"
-    Then el sistema despliega un chat conversacional y habilita un área de Dropzone
-    And permite adjuntar archivos de soporte de negocio (Ej: Manuales PDF, Procedimientos DOCX) junto con un prompt inicial de intención conceptual
-    And el Agente IA Backend cruza este prompt contra una Base de Conocimiento "RAG Interna" pre-cargada con el estándar nativo BPMN 2.0 (Camunda Engine Syntax), manuales ISO 9001 y patrones arquitectónicos de iBPMS para anclar el contexto y anular las alucinaciones técnicas desde el minuto 0.
+  Scenario: Minificación de Tokens Prompeados (Context Optimization) (CA-02)
+    Given el Arquitecto solicita a la IA "Auditar" el diagrama actual (ISO 9001) o extenderlo
+    Then el Backend TIENE PROHIBIDO enviar el XML crudo con coordenadas al LLM.
+    And decantará el XML a un JSON semántico ligero (puramente Nodos y Flujos), abaratando el costo de la facturación Cloud (Tokens) en un 70%.
 
-  Scenario: Entrevista Aclaratoria Anti-Alucinación de Mapeo de Roles (Iterative Prompting)
-    Given que el LLM procesa la solicitud inicial, el RAG interno y los documentos adjuntos
-    When el motor detecta vacíos lógicos procedimentales o roles documentales no existentes en el sistema actual (Ej: "Detecto Rol 'Gerencia', mapear a existente o crear genérico?")
-    Then en lugar de inventar Lanes o lógica (Alucinación Zero-Tolerance), devuelve una pregunta aclaratoria al Arquitecto en el chat
-    And el proceso de renderizado de cajas se pausa estrictamente hasta que el humano resuelva funcionalmente la duda conversacionalmente.
+  Scenario: Ingesta Documental Asíncrona, Multimodal y Antivirus (CA-03)
+    Given que el Arquitecto sube un PDF/DOCX o Imagen de flujograma al Dropzone (Max 5 archivos / 100 págs)
+    Then el Frontend mostrará una métrica de límite dinámico (Ej: `Páginas: 45/100`).
+    And el archivo pasará por un escáner Anti-Malware (ClamAV Cloud) en milisegundos.
+    And la extracción de texto y visión multimodal (GPT-4V/Tika) se delegará a una Cola de RabbitMQ con WebWorkers, sin saturar los Hilos HTTP.
 
-  Scenario: Renderizado Automático de XML en el Lienzo (Hit-the-Canvas)
-    Given que la IA ha recolectado y entendido el 100% del requerimiento lógico
-    When el Arquitecto da la orden final de "Generar Diagrama"
-    Then el backend (Agentic Engine) estructura y valida el esqueleto XML basado en el estándar rígido BPMN 2.0 (restringido por el RAG semántico)
-    And el Frontend de la Pantalla 6 lo inyecta y dibuja visualmente en el lienzo nativo (`bpmn-js`) utilizando una librería genérica de `Auto-Layout` estructural (arborescente de Izquierda a Derecha)
-    And el Arquitecto retoma el control manual absoluto para conectar formularios, mapear APIs y embellecer/reacomodar las coordenadas (X, Y) antes de oprimir el botón de [DESPLEGAR].
+  # ==============================================================================
+  # B. SEGURIDAD APPSEC, RAG POISONING Y DO-W
+  # ==============================================================================
+  Scenario: RAG Efímero, Aislamiento Vectorial y Anti-Poisoning (CA-04)
+    Given la vectorización de documentos en `pgvector`
+    Then los TextChunks nacerán con un `Time-To-Live (TTL)` efímero atado a la sesión del Chat.
+    And toda consulta a la base vectorial incluirá el `tenant_id` y `session_id` obligatoriamente.
+    And al cerrar el diseñador, la base vectorial y los archivos en S3 se autodestruirán, previniendo RAG Poisoning corporativo transversal y el "Embedding Bloat".
 
-  Scenario: Límite de Parada Anti-Fatiga en Entrevista (Triage Batching)
-    Given la activación del modo Entrevista Aclaratoria Anti-Alucinación
-    When el LLM detecta un alto volumen de vacíos lógicos (Ej: 15 excepciones no documentadas en el PDF)
-    Then la IA dosificará las preguntas obligatoriamente en lotes de máximo 3 consultas por interacción en el chat
-    And preservando la UX del Arquitecto contra la fatiga cognitiva hasta resolver el 100% de la ambigüedad por etapas.
+  Scenario: Mitigación Denial of Wallet (DoW) y Prevención XSS/Prompt Injection (CA-05)
+    Given la exposición del Endpoint del LLM a los empleados
+    Then el API Gateway impondrá Rate Limiting estricto (Ej: Max 5 generaciones/min).
+    And el Backend seudonimizará los nombres de tareas (PII) antes de enviarlos al LLM.
+    And el Frontend aplicará `DOMPurify` brutal sobre el XML entrante para evitar Cross-Site Scripting (XSS) reflectivo.
+    And si el Backend detecta "Prompt Injection" intencional 3 veces consecutivas, castigará al usuario revocando dinámicamente el `ROLE_PROCESS_ARCHITECT` y alertará al CISO.
 
-  Scenario: Segregación Crítica de Formularios (Separation of Concerns hacia US-003)
-    Given que la IA modela de forma exitosa requerimientos de intervención humana (`User Task`)
-    When el PDF especifica los campos del formulario (Ej: Nombre, Ingresos, Cédula)
-    Then el Agente BPMN se abstiene explícitamente de generar el "Esquema VUE/Zod" interno para cumplir con el Principio de Responsabilidad Única
-    And únicamente anclará un componente nativo de BPMN 2.0 (`TextAnnotation` o "Nota Adhesiva") sobre la tarea visual dictando: "AI Info: Construir aquí el Formulario Zod con el Auxiliar de la US-003".
+  # ==============================================================================
+  # C. RESTRICCIONES BPMN Y COMPORTAMIENTO COGNITIVO
+  # ==============================================================================
+  Scenario: Topología Restringida, Traducción Activa y Manejo de Bucles (CA-06)
+    Given la generación de XML a partir de NLP
+    Then el Agente estará limitado en V1 a instanciar: `UserTasks`, `ServiceTasks`, `Gateways` y `ErrorBoundaryEvents` para planes B.
+    And tiene PROHIBIDO generar Sub-Procesos Embebidos (`CallActivities`) o Eventos de Señal complejos.
+    And ante directivas de "Repetir proceso", dibujará un `SequenceFlow` en reversa (Loop), prohibiendo la duplicación lineal.
+    And sin importar el idioma del PDF (Inglés/Mandarín), generará el XML y el Chat estrictamente en Español (Traducción Activa).
 
-  Scenario: Trazabilidad y Auto-Destrucción del Hilo (Storage Management)
-    Given la culminación exitosa de la generación conversacional y el despliegue de la versión en el motor
-    Then el Agente purga de su memoria volátil el chat para preservar almacenamiento
-    And extrae un resumen del hilo lógico como "Bitácora Copilot" persistiendo ese documento anexo inamovible a la Verisón del XML en la Base de Datos para futuras auditorías de compliance.
+  Scenario: Triage Conversacional, Píldoras Rápidas y Roles Faltantes (CA-07)
+    Given que el LLM detecta contradicciones documentales o roles inexistentes en EntraID
+    When la IA pausa la inyección y genera una consulta (Triage)
+    Then dosificará las preguntas (Máx 3 por lote) y ofrecerá "Píldoras de Respuesta Rápida" (Ej: `[Usar Rol Existente]`, `[Omitir]`).
+    And si debe crear un rol nuevo, usará un ID temporal (Ej: `rol_dummy`) e inyectará un `TextAnnotation` (Nota Adhesiva) recordando al humano crearlo.
+    And los Gateways dibujados por IA NO tendrán expresiones matemáticas inyectadas, delegando esa lógica al humano.
 
-  Scenario: Edición Conversacional Retroactiva (Soft-Undo)
-    Given que el Arquitecto comete un error en alguna instrucción en el chat de la Pantalla 6
-    Then el sistema permite modificar o corregir textualmente su mensaje previo enviado a la IA
-    And el motor re-calibra recursivamente la lógica y las cajas asimilando la nueva reescritura.
+  # ==============================================================================
+  # D. UX, RECUPERABILIDAD Y PREVENCIÓN DE ERRORES
+  # ==============================================================================
+  Scenario: UX No Bloqueante, Transmutación Visual y Undo Atómico (CA-08)
+    Given el evento Hit-the-Canvas y la espera de respuestas
+    Then el Chat NO bloqueará el Canvas (Modal Overlay prohibido); el usuario mantendrá capacidades de `Drag to Pan` y `Zoom` libremente.
+    And las nuevas cajas inyectadas brillarán con un "Halo Verde" efímero.
+    And si el humano presiona `CTRL + Z`, el framework revertirá atómicamente (en 1 solo paso) toda la inyección de la IA.
+    And la IA aplicará "Smart Merge", respetando las cajas que el humano haya borrado a mano previamente.
+    And si el chat está minimizado, un Badge Rojo y un PING sonoro alertarán de preguntas pendientes.
 
-  Scenario: Límites de Contexto Perimetral Documental
-    Given el proceso de subida de adjuntos (Dropzone) inicial 
-    When el usuario intenta subir anexos que exceden los límites paramétricos
-    Then la plataforma impone limitantes restrictivos duros: Topecito estadístico de "5 archivos máximo" o un consolidado de "100 páginas en total" para impedir ataques de agotamiento por Tokens hacia los Endpoints de Vertex/OpenAI.
+  Scenario: Tolerancia Humana a ISO 9001 y Limpieza de Notas (CA-09)
+    Given las alertas ISO 9001 (con Popovers gráficos de Antes/Después) y Notas Adhesivas en el lienzo
+    When el Arquitecto ignora una alerta visual editando otras partes 3 veces consecutivas
+    Then el Copiloto desistirá asumiendo la responsabilidad humana (Override), silenciando la alerta visual y guardando el log forense con tipografía en **Negritas** para decisiones categóricas.
+    And si el Frontend detecta que el humano vinculó el Formulario (Pantalla 7) esperado, borrará automáticamente la Nota Adhesiva obsoleta asociada.
 
-  Scenario: Diseño Paramétrico de Ramificaciones (Gateways vs Timers)
-    Given la traducción lingüística a XML estructurado por la IA
-    When la IA reconoce desvíos en el flujo natural del negocio
-    Then forzosamente diagramará un `ExclusiveGateway` riguroso conectado a Expresiones Variables JSON (`${credito == 'rechazado'}`)
-    And ante indefiniciones temporales ("esperar una respuesta") delegará por omisión la designación a Tareas Manuales (`UserTask`) sin arriesgar Timer Events ciegos no explícitos en el documento original.
-
-  Scenario: Tratamiento de Reintentos Críticos y Roles Fantasmas
-    Given la identificación de Integraciones a Sistemas Externos (Ej. Buró de Crédito)
-    When la IA pinta un `ServiceTask`, consultará proactivamente al humano sobre planes B (Caminos compensatorios / HTTP 500)
-    And no tendrá potestad en absoluto de transar Usuarios, Grupos o Roles Active Directory en duro en Pantalla 14, conformándose ciegamente con renderizar *Lanes* referenciales.
-
-  Scenario: Seguridad Perimetral y Red-Teaming (Prompt Injection)
-    When el Arquitecto intenta violentar las directrices ordenando intromisión ajena al diseño (Ej. Inyección SQL, Hackeo o Consultas exógenas)
-    Then la IA retornará neutral y corporativamente: "Lo siento, mi configuración bloquea este comportamiento. Solo puedo diseñar diagramas BPMN"
-    And silenciosamente detona el disparo de una Alerta Security levantando un *Flag* del Sistema de Auditoría (US-042) hacia el Rol causante.
-
-  Scenario: Modos Borrador Restringidos (Executable Flag)
-    Given un flujo con excepciones críticas (Caminos rotos) inaceptadas por Camunda Engine
-    When el Arquitecto se obstina en inyectar el diagrama Hit-the-Canvas a medio digerir
-    Then la IA pinta el XML pero somete el Diagrama asignando forzósamente la etiqueta `<bpmn:process isExecutable="false">` 
-    And incapacitando dicho Proceso de Instanciarse Operativamente por cualquier Botón de P0, blindando la salud del motor hasta que otro Arquitecto lo corrija manualmente.
-
-  Scenario: Feedback Loop Distribuido de Aprendizaje Continuo
-    Given el modelo final exportado al lienzo visual y modificado mecánicamente por el operador mediante flechas manuales o borrados
-    Then el backend recogerá esa asimetría entre "Lo que sugirió la IA" vs "Lo que el humano dejó final"
-    And enviará la traza (Deltas de Modificación) al repositorio vectorial (RAG) o como fine-tuning pasivo del tenant para automejorar y acentuar las inferencias corporativas de cara a futuros diseños similares.
+  Scenario: El Antídoto contra el Despliegue Fantasma (Executable Flag) (CA-10)
+    Given que la IA generó un flujo con caminos lógicos rotos o inconclusos
+    When el XML incluya la etiqueta `<bpmn:process isExecutable="false">`
+    Then el Frontend cruzará esta bandera e imprimirá un Banner Bloqueante Rojo sobre el Canvas dictando: "Diseño Corrompido por la IA. Repare el Nodo [ID] antes de desplegar".
+    And el botón `[🚀 DESPLEGAR]` (US-005) permanecerá físicamente inhabilitado.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN - Panel Lateral de Copilot interactivo y Dropzone).
 
@@ -1447,106 +1442,101 @@ Feature: AI Copilot para Diseño y Auditoría BPMN
 ## ÉPICA 5: Modelado de Reglas de Negocio con IA (DMN)
 Permite a los usuarios de negocio (no técnicos) generar reglas lógicas complejas utilizando lenguaje natural.
 
-### US-007: Generar tabla DMN desde lenguaje natural (NLP)
+
+### US-007: Generador Cognitivo de DMN (NLP a Tablas de Decisión)
 **Como** Arquitecto de Procesos / Usuario de Negocio
-**Quiero** escribir una regla de negocio en lenguaje natural (ej. "Si el reclamo es mayor a 1000, rechazar")
-**Para** que la IA la traduzca instantáneamente a una tabla DMN (JSON/XML) sin tener que aprender la notación técnica.
+**Quiero** escribir políticas de negocio en lenguaje natural (ej. "Aprobar si monto < 1000")
+**Para** que el iBPMS las traduzca de forma segura, asíncrona y estructurada a una tabla matemática DMN (Hit Policy: FIRST), erradicando la ambigüedad humana sin exponer datos PII a modelos LLM externos y protegiendo el performance del servidor.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: NLP to DMN Translation via LLM API
+Feature: NLP to DMN Translation, SRE Architecture & AppSec Governance
 
-  Scenario: Prevención de Variables Fantasma (Diccionario Restringido)
-    Given el Taller DMN con IA (Pantalla 4)
-    When el usuario redacta el prompt con la regla de negocio
-    Then la interfaz obliga al usuario a mapear textualmente sus palabras contra un Dropdown Selectivo de "Variables Disponibles" (Inputs/Outputs extraídos de los Formularios previos)
-    And el LLM rechaza procesar columnas que no existan en el diccionario duro.
+  # ==============================================================================
+  # A. SRE, DESEMPEÑO Y ARQUITECTURA CLOUD (Anti-Timeout y Ahorro)
+  # ==============================================================================
+  Scenario: Streaming Asíncrono de Generación (Server-Sent Events) (CA-01)
+    Given la latencia inherente de los modelos fundacionales (LLMs) al generar tablas complejas
+    When el usuario envía el Prompt
+    Then la arquitectura TIENE PROHIBIDO usar peticiones HTTP síncronas bloqueantes que arriesguen un error `504 Gateway Timeout`.
+    And el Backend abrirá un canal de Server-Sent Events (SSE).
+    And el Frontend pre-renderizará la grilla DMN visualmente (Fila por Fila) a medida que lleguen los fragmentos, mitigando la ansiedad del usuario mediante un Skeleton Loader.
 
-  Scenario: Acoplamiento Rígido de Rutas de Salida (BPMN Outputs)
-    Given que la DMN direcciona el flujo BPMN (Ej: "Aprobado" va a Tarea A, "Rechazado" va a Tarea B)
-    When el LLM genera la columna de Output de la Matriz DMN
-    Then el Agente IA Backend restringe el vocabulario de salida del LLM para que coincida 100% con los "Gateway Paths" existentes en el diagrama de la Pantalla 6, previniendo errores de enrutamiento.
+  Scenario: Mitigación Denial of Wallet (DoW) y Caché Criptográfica (CA-02)
+    Given la exposición de la API del LLM a los constructores internos
+    Then el API Gateway impondrá un Rate Limiting estricto (Ej: Max 5 generaciones/minuto por usuario) para evitar facturas catastróficas.
+    And el Backend calculará el Hash del (Prompt + Diccionario); si existe un match exacto en Redis, devolverá la tabla DMN cacheadada instantáneamente, evadiendo el costo Cloud del LLM.
 
-  Scenario: El LLM como Auditor Lógico Estructural (Anti-Contradicciones)
-    Given una regla donde el usuario escribe "Rechazar montos >100" y "Aprobar montos >50"
-    When envia el prompt a generar
-    Then el LLM detecta matemáticamente la colisión de los rangos para $150
-    And en vez de generar XML basura, aborta el proceso retornando un "Error de Sintaxis de Negocios" indicándole al humano la contradicción en el chat.
+  Scenario: Garbage Collection y Compresión XML (CA-03)
+    Given las múltiples iteraciones (Borradores) que un usuario genera en el Chat
+    Then los XMLs temporales NO sellados vivirán en el LocalStorage del Frontend y serán purgados físicamente de PostgreSQL a las 24h mediante un Job.
+    And al aprobar (Sellar) la versión final, el Backend purgará todos los espacios en blanco inútiles (XML Minification) antes de hacer COMMIT, reduciendo drásticamente el peso en disco.
+    And el Backend despachará un Job asíncrono para inicializar el DMN en Camunda (Warm-Up Cache) eliminando la latencia en frío de la primera ejecución operativa.
 
-  Scenario: Red de Seguridad por Defecto (Catch-All Rule)
-    Given que el LLM genera exitosamente una tabla DMN de 5 reglas lógicas
-    Then el sistema inyecta incondicional y automáticamente una 6ta regla final (Hit Policy: ANY/UNIQUE)
-    And esta fila actúa como "Catch-All": Si los inputs no hacen match con ninguna de las 5 reglas, el Output forzado será "Requiere Revisión Humana", evitando fallas silenciosas en producción.
+  # ==============================================================================
+  # B. SEGURIDAD (APPSEC), PRIVACIDAD Y HARDENING
+  # ==============================================================================
+  Scenario: Sandboxing Anti-RCE y Prevención XSS (CA-04)
+    Given la inyección de código por parte de la IA o de un humano en modo desarrollador
+    Then el motor FEEL de Camunda será encapsulado en un Sandbox estricto de Java, bloqueando cualquier intento de Ejecución Remota de Código (RCE) o acceso a métodos del sistema.
+    And el Middleware envolverá el Prompt en "System Instructions" anti-Jailbreak.
+    And el Frontend aplicará escapado HTML estricto (DOMPurify) a toda celda renderizada para prevenir Cross-Site Scripting (XSS).
+    And los Secrets de las APIs de IA (OpenAI/Anthropic) vivirán exclusivamente inyectados como Variables de Entorno en el Vault, jamás en base de datos.
 
-  Scenario: Human in the Loop (Aprobación Visual DMN)
-    Given el XML generado por el LLM en el backend
-    When retorna al Frontend
-    Then el usuario no lo inyecta automáticamente a producción
-    And es redirigido a una "Calculadora Visual" (Spreadsheet Mode)
-    And para activarlo, el usuario debe oprimir explícitamente [Sellar y Aprobar DMN].
+  Scenario: Seudonimización PII y Anti-Spoofing Forense (CA-05)
+    Given el mapeo de variables estructurales hacia el LLM externo
+    Then el Backend seudonimizará los nombres de las variables (Ocultando indicios PII) antes de enviarlos a la nube.
+    And al guardar la Auditoría del Prompt, el Backend extraerá la identidad criptográfica del Autor directamente desde el Token JWT, haciendo imposible la falsificación de identidad (Spoofing) desde el cliente.
 
-  Scenario: Edición Analógica Post-IA
-    Given la matriz DMN visual generada en la UI
-    When el usuario detecta que el 95% está bien pero un rango está mal
-    Then puede editar numéricamente la celda de la columna en duro, omitiendo al LLM para afinar el 5% restante sin reprocesar el prompt.
+  Scenario: Inmutabilidad DMN y RBAC (BOLA/IDOR) (CA-06)
+    Given una tabla DMN en estado "Activa" o "Aprobada"
+    When un atacante o usuario intenta hacer un `PUT` directo al endpoint REST para alterar un valor
+    Then el Backend interceptará y arrojará `403 Forbidden` absoluto; cualquier modificación análoga o por IA genera obligatoriamente una V2.
+    And al reciclar DMNs globales, el Backend validará que el usuario posea el rol `ROLE_PROCESS_ARCHITECT` y pertenezca al `Tenant_ID` dueño de la regla.
 
-  Scenario: Versionamiento y Gobernanza Viva
-    Given una tabla DMN activa (V1) corriendo en Camunda
-    When el usuario pide a la IA cambiar los topes financieros produciendo V2
-    Then V2 queda en estado "Borrador de DMN"
-    And se requiere la aprobación explícita de un "Administrador del Sistema" mediante un botón maestro para publicar la V2
-    And las tareas en ejecución hoy seguirán transitando bajo las leyes de la V1.
+  # ==============================================================================
+  # C. INTEGRIDAD MATEMÁTICA Y REGLAS DE NEGOCIO
+  # ==============================================================================
+  Scenario: Resolución Matemática Segura (Hit Policy: FIRST) y Catch-All (CA-07)
+    Given la posibilidad de que el LLM o el humano generen rangos solapados
+    When el motor ensamble la tabla DMN final
+    Then inyectará estructuralmente la política `Hit Policy = FIRST` (evaluación descendente con parada en la primera coincidencia), erradicando las excepciones de colisión de Camunda (`UNIQUE`).
+    And inyectará una Fila Final inamovible (Candado Visual 🔒) actuando como "Catch-All Rule" obligatoria para valores Nulos, enrutando a `[Revisión Humana]`.
 
-  Scenario: Arquitectura LLM Hexagonal (Agnóstica)
-    Given el llamado del Backend a la API del Modelo de IA
-    Then el código se estructura usando Patrón Adaptador/Puerto
-    And permite cambiar mediante variable de entorno entre `OpenAI GPT-4o`, `Claude 3 Opus` o `Google Gemini` según evolución de leyes de datos sin refactorizar el núcleo del Taller DMN.
+  Scenario: Variables Planas, Coerción de Tipos y Prohibición Date-Math (CA-08)
+    Given las directrices del Diccionario Zod de la Pantalla 7
+    Then la IA tiene prohibido usar "Dot Notation" (Ej: `Cliente.Mora`); procesará exclusivamente variables planas de primer nivel para V1.
+    And el Backend validará que los tipos de datos en la regla coincidan con Zod (Type Coercion).
+    And la IA tiene prohibido hacer Date-Math (resta de fechas); el Frontend/Zod pre-calculará esos valores enteros antes del flujo.
+    And toda evaluación de texto aplicará funciones de normalización `lowercase()` en FEEL para ignorar la sensibilidad a mayúsculas.
 
-  Scenario: Auditoría Forense de Prompts
-    Given la generación final de un archivo `.dmn`
-    Then el sistema graba en BD el XML generado junto con la llave foránea del usuario ejecutor, la estampa de tiempo, y el "Texto Prompt Exacto" que originó esta matriz, como prueba forense ante auditorías legales.
+  Scenario: Límites Cognitivos, Outputs Atómicos y Validación Inversa (CA-09)
+    Given la generación de XML DMN (Vía IA o Modo Desarrollador XML Upload)
+    Then la estructura generada exigirá Salidas Atómicas (Máximo 1 Output Compuesto en V1).
+    And el tamaño del Prompt será truncado al "Token Limit" para evitar fallas de contexto.
+    And el Backend ejecutará un `Overlap Check` y rechazará XMLs con disyunciones vacías.
+    And el Backend impondrá un Hard-Stop paramétrico de máximo 50 filas generadas; superarlo bloquea la transacción.
 
-  Scenario: Límites de Complejidad Configurables
-    Given un usuario intentando armar una red de políticas masivas (Ej. 500 ramificaciones)
-    When el sistema detecta que la tabulación excede el límite de N variables (Configurable por Administrador, Ej. max 50 filas)
-    Then bloquea la generación previniendo desbordamiento del contexto del LLM y sugiriendo subdividir el flujo.
+  # ==============================================================================
+  # D. EXPERIENCIA DE USUARIO (UX/UI) Y GOBERNANZA
+  # ==============================================================================
+  Scenario: Ergonomía de Alta Densidad y Rescate (Virtual Scrolling) (CA-10)
+    Given el renderizado de una matriz de 50 filas x 10 columnas en la Pantalla 4
+    Then Vue 3 implementará `Virtual Scrolling` (DOM perezoso) para evitar congelamientos de RAM en el cliente.
+    And la grilla soportará navegación nativa por teclado (Enter, Tab) imitando a MS Excel.
+    And el `LocalStorage` rescatará cualquier edición análoga en curso si el usuario cierra la pestaña por accidente.
 
-  Scenario: Modo Desarrollador (Bypass de IA y Autoría Manual)
-    Given un usuario técnico (Ej. Desarrollador o Arquitecto Avanzado) en la Pantalla 4
-    When decide no utilizar el chat de Inteligencia Artificial
-    Then el sistema debe proveer una pestaña de "Autoría Manual"
-    And permitirle construir la tabla DMN usando la interfaz típica de Spreadsheet (Hoja de cálculo) desde cero
-    And o permitirle hacer un Drag & Drop para importar un archivo `.dmn` externo (Ej. creado en Camunda Modeler de escritorio) directamente al motor.
+  Scenario: Explicabilidad Visual (XAI) y Simulador de Decisiones (CA-11)
+    Given la incomprensión de sintaxis matemática por usuarios de negocio
+    Then la UI inyectará una columna autogenerada "Explainable DMN" que traduzca el código FEEL a oraciones humanas legibles.
+    And existirá un botón `[🧪 Probar DMN / Simulator]` donde el usuario podrá digitar variables de prueba (Ej: Mora=500), y el Frontend iluminará visualmente en verde la Fila que Camunda ejecutaría en la vida real.
 
-  Scenario: Reutilización Modular de Reglas DMN (Globales) (CA-12)
-    Given la creación exitosa de un Modelo DMN ("Scoring Riesgo") en la Pantalla 4 conectado al Proceso A
-    When el Analista diseña un Proceso B totalmente distinto en la Pantalla 6
-    Then el sistema le permite invocar y enlazar esa misma tabla DMN "Scoring Riesgo" existente
-    And fomentando la reutilización transversal de políticas sin duplicar lógica en el motor.
-
-  Scenario: Aislamento de Responsabilidad Temporal (Sin Date-Math IA) (CA-13)
-    Given el Taller DMN interactivo
-    When el usuario solicita reglas basadas en intervalos de tiempo complejos (Ej. "Si pasaron 30 días")
-    Then el sistema recomienda en su UI utilizar "Timers" nativos de Camunda (Eventos BPMN)
-    And no exige a la IA inferir operaciones matemáticas de fechas en la V1 protegiendo la fiabilidad.
-
-  Scenario: Política Defensiva Obligatoria en Datos Nulos (CA-14)
-    Given una columna de entrada donde el usuario olvidó digitar el valor en la Pantalla 7
-    When el motor ejecuta el caso evaluando "Null" contra las reglas condicionales
-    Then la tabla DMN autogenerada por la IA debe contener SIEMPRE una directriz que intercepta el valor "Null"
-    And lo redirecciona obligatoriamente por diseño hacia una salida de precaución (Ej. "Revisión Humana").
-
-  Scenario: Política de Restricción Rígida de Choque (Hit Policy UNIQUE) (CA-15)
-    Given la naturaleza abstracta y no determinista de los usuarios de negocio
-    When la IA transita del NLP hacia la estructura DMN formal
-    Then el motor de generación encripta estructuralmente la tabla a Hit Policy "UNIQUE"
-    And garantizando matemáticamente que solo 1 regla podrá ser verdadera a la vez, erradicando fallos catastróficos por traslape numérico de negocio.
-
-  Scenario: Escalabilidad Estructural de Pantallas P6 > P7 > P4 (CA-16)
-    Given que el Arquitecto está diagramando en la Pantalla 6 pero olvidó crear el Formulario (Pantalla 7) antes
-    When selecciona la [Business Rule Task] y necesita variables para armar la red DMN
-    Then el Modal invocado le permite "Crear Nuevo Formulario al Vuelo" (Mini-Pantalla 7) sin perder el progreso de su diagrama
-    And una vez creadas las variables rápidas (P7), el flujo lo salta a la Pantalla 4 (Taller DMN) para mapearlas.
+  Scenario: Contención de Pánico y Trazabilidad del Chat (CA-12)
+    Given que el usuario termina de editar la DMN y decide publicar
+    When el usuario presiona [Publicar V2]
+    Then el Frontend desplegará un Modal Inevitable exigiendo digitar `CONFIRMO_V2` para evitar clics accidentales.
+    And existirá un botón de `[ ⏪ Revertir a V1 ]` explícito para rollback rápido.
+    And el historial del Chat NLP persistirá visualmente atado a esa Versión, y los colores de la grilla cumplirán la norma WCAG AA para diferenciar celdas hechas por IA vs editadas a mano.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 4 (Taller DMN) y su invocación desde Pantalla 6 (Diseñador BPMN).
 

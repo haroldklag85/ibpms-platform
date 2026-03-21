@@ -57,4 +57,28 @@ describe('US-051 CA-6: MainLayout Renderizado Dinámico (Iteración 47)', () => 
         expect(nestedLinks.some(n => n.text().includes('Gestión Usuarios'))).toBe(true);
         expect(nestedLinks.some(n => n.text().includes('Matrices RBAC'))).toBe(true);
     });
+
+    it('HOTFIX US-051 Regresión: Garantiza el anclaje del botón "Inicio" inyectado desde el JSON del Backend', async () => {
+        const mockMenuTree = [
+            {
+                id: 'menu-home',
+                path: '/home',
+                label: 'Inicio',
+                icon: 'HomeIcon'
+            }
+        ];
+
+        const wrapper = mount(MainLayout, {
+            global: {
+                plugins: [router],
+                provide: { navigationMenu: mockMenuTree }
+            }
+        });
+
+        await wrapper.vm.$nextTick();
+        
+        // Aserción matemática estructural: El nodo 'Inicio' NO puede desaparecer del Layout
+        const homeLink = wrapper.findAll('*').filter(node => node.text().includes('Inicio'));
+        expect(homeLink.length).toBeGreaterThan(0);
+    });
 });

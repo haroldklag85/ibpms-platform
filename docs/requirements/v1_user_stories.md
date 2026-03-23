@@ -4605,7 +4605,78 @@ Bandeja de Entrada Común: Simular la carpeta .agentic-sync/ creando una tabla e
 ```
 
 
+###US-053: Antigravity Command Center (Fábrica de Agentes IA y Arbitraje FinOps B2B)
+**Como** Administrador del Tenant (Cliente B2B)
+**Quiero** un panel de control para crear "Agentes de IA" y gestionar mi consumo mediante un Modelo Híbrido (Cuota de Suscripción Base vs. Billetera de Reserva Prepaga)
+**Para** orquestar fuerza laboral artificial en mis procesos BPMN sin riesgo de facturas sorpresa, garantizando que mis flujos críticos no colapsen por falta de fondos y auditando el costo exacto de cada Agente.
 
+**Criterios de Aceptación (CA)**
+```gherkin
+Feature: AI Agent Factory, B2B Token Arbitrage & BPMN FinOps Resilience
+
+  # ==============================================================================
+  # A. LÓGICA DE CONSUMO HÍBRIDO (ARBITRAJE DE TOKENS) Y DASHBOARD VISUAL
+  # ==============================================================================
+  Scenario: Bifurcación Visual de Suscripción vs. Billetera (The Antigravity UI) (CA-01)
+    Given la interfaz del "Antigravity Command Center" (Panel de Gobernanza IA)
+    Then el Frontend renderizará dos secciones financieramente independientes:
+    And 1. "MODEL QUOTA" (La Suscripción): Barras de progreso horizontales separadas por Tier de Inteligencia (Ej: `Gemini 1.5 Flash` vs `Gemini 1.5 Pro`). Se miden en Tokens virtualizados y muestran su fecha/hora de reseteo automático mensual.
+    And 2. "MODEL CREDITS" (La Reserva Prepaga): Un contador numérico general tipo cuenta bancaria con el Saldo Vitalicio comprado por el cliente.
+
+  Scenario: Transición Controlada y Bloqueo de Factura Sorpresa (Opt-In Overages) (CA-02)
+    Given que un Agente IA agota el 100% de la "Model Quota" de su Tier asignado
+    When el Agente intenta ejecutar una nueva inferencia para un proceso
+    Then el sistema verificará el interruptor maestro `[Enable AI Credit Overages]` en la UI.
+    And si está APAGADO, la transacción se aborta inmediatamente (Hard-Stop) para proteger el presupuesto del cliente.
+    And si está ENCENDIDO, el sistema ejecuta un Auto-Deduct silencioso, restando los tokens de la "Billetera Prepaga" (Model Credits), aplicando un multiplicador de costo si el Agente usa un modelo Premium.
+
+  Scenario: Alertas Proactivas de Umbral (Thresholds) (CA-03)
+    Given el consumo en tiempo real de una "Model Quota"
+    When la barra de consumo alcance matemáticamente el 80% y luego el 95%
+    Then un proceso asíncrono despachará alertas automatizadas (Campana UI y Email) al Administrador del Tenant.
+    And advirtiendo el inminente bloqueo operativo o la transición inminente hacia la facturación prepaga.
+
+  # ==============================================================================
+  # B. FÁBRICA DE AGENTES Y PRESUPUESTOS POR ROL
+  # ==============================================================================
+  Scenario: Creación de Agentes y Control de Gasto Granular (CA-04)
+    Given la pestaña "Fábrica de Agentes"
+    When el Administrador pulsa `[+ Crear Nuevo Agente]`
+    Then el sistema exigirá definir: Nombre, Motor LLM Agnóstico (Ej: Gemini Ultra), y el `System Prompt` (Rol y Reglas del agente).
+    And el panel incluirá un candado financiero individual: `[x] Autorizar a este Agente a consumir de la Billetera Prepaga`.
+    And si este candado está desmarcado, el Agente NUNCA podrá gastar dinero extra, fallando silenciosamente al agotarse la cuota gratuita mensual, incluso si el interruptor maestro del Tenant está encendido.
+
+  # ==============================================================================
+  # C. RESILIENCIA DEL MOTOR BPMN ANTE FALTA DE FONDOS
+  # ==============================================================================
+  Scenario: Suspensión Elegante de Service Tasks (Camunda Incident) (CA-05)
+    Given un Proceso BPMN automatizado que invoca a un Agente IA en segundo plano
+    When el Backend detecta que la Suscripción está agotada Y la Billetera Prepaga no tiene fondos (o el Overage está apagado)
+    Then la arquitectura TIENE ESTRICTAMENTE PROHIBIDO lanzar una excepción fatal HTTP 500 que destruya la instancia del proceso de negocio.
+    And el Worker interceptará el fallo financiero y levantará un "Incidente de Camunda" (Estado: `ESPERANDO_SALDO_IA`).
+    And la tarea quedará congelada de manera indefinida hasta que el cliente recargue fondos y el Administrador presione `[Reintentar]` en la cabina de control, retomando el flujo ileso.
+
+  # ==============================================================================
+  # D. ADMINISTRACIÓN DE CARTERA, CADUCIDAD Y TRAZABILIDAD
+  # ==============================================================================
+  Scenario: Reglas de Caducidad Asimétrica (Rollover y Reset) (CA-06)
+    Given la llegada del día 1 de cada mes a las 00:00 UTC
+    Then un Cron Job reseteará las "Model Quotas" (Suscripción base) a su valor nominal inicial (Use-it-or-lose-it).
+    And el saldo de los "Model Credits" (Billetera Prepaga) TIENE PROHIBIDO ser reseteado o caducar, acumulándose vitaliciamente mes a mes.
+
+  Scenario: Trazabilidad FinOps Exacta en la Factura (Billing Source) (CA-07)
+    Given una invocación exitosa a cualquier API de IA (Google/Anthropic)
+    Then el Backend registrará el costo real consumido leyendo el Payload de respuesta (Prompt Tokens + Completion Tokens).
+    And inyectará OBLIGATORIAMENTE en la bitácora inmutable una columna `billing_source` cuyo valor será `SUBSCRIPTION_QUOTA` o `OVERAGE_WALLET`.
+    And registrará el `Agent_ID` asociado, permitiendo exportar reportes gerenciales para auditar qué procesos salieron gratis y cuáles costaron saldo de reserva.
+
+  Scenario: Inyección Manual de Saldo Offline (MVP V1) (CA-08)
+    Given un cliente que adquiere un paquete de "Tokens de Reserva" pagando una factura externa (Offline)
+    Then el sistema proveerá un endpoint administrativo protegido (Exclusivo para el Súper Admin del iBPMS).
+    And permitirá inyectar recargas manuales (Top-Ups) sumando créditos a la billetera vitalicia del Tenant.
+    And la integración nativa de pasarelas de pago automáticas (Stripe/PayPal) queda diferida para V2.
+
+```
 ---
 
 

@@ -108,6 +108,92 @@ Feature: Workdesk Loading and Real-Time Grid
     When se renderiza la lista o grilla unificada de tareas
     Then la interfaz debe dividir y renderizar las tarjetas a través de una paginación
     And establecerá un límite estricto de máximo 15 tarjetas (Task Cards) por página, para garantizar el rendimiento y la legibilidad.
+	
+  # ==============================================================================
+  # A. US-001.1
+  # ==============================================================================
+  # A. DESEMPEÑO SRE, EFECTO ESTAMPIDA Y PAGINACIÓN (Anti-DDoS)
+  # ==============================================================================
+  Scenario: Paginación Segura, Carga Matutina y Búsqueda Server-Side (CA-10)
+    Given la entrada concurrente de usuarios (Thundering Herd) a las 8:00 AM
+    When el Frontend solicita la grilla unificada de tareas
+    Then el Backend absorberá el impacto utilizando Caché (Redis/Memcached) para las consultas unificadas base.
+    And implementará Paginación Server-Side estricta, prohibiendo búsquedas híbridas client-side (Cierre de Jitter visual).
+    And el Backend aplicará un "Hard Limit" arquitectónico, retornando `HTTP 400` si la red solicita manipular la paginación a `> 100` registros (Prevención DDoS).
+    And las búsquedas de texto usarán índices optimizados (Ej: `pg_trgm`) en BD y el Frontend aplicará un Debounce de 300ms antes de emitir el Request.
+    And el Frontend mostrará un Skeleton Loader transicional, prohibiendo Spinners que bloqueen la pantalla.
+    And el buscador solo rastreará tareas "Vivas/Completables", excluyendo casos históricos cerrados y tareas "Suspendidas" en Camunda.
+
+  # ==============================================================================
+  # B. UX, ACCESIBILIDAD (A11y) Y EFICIENCIA DE MEMORIA
+  # ==============================================================================
+  Scenario: El Reloj de un Solo Corazón y Accesibilidad Visual (Anti DOM-Thrashing) (CA-11)
+    Given la necesidad de renderizar 50 temporizadores de SLA "vivos" en pantalla
+    Then la arquitectura Frontend TIENE PROHIBIDO instanciar múltiples `setInterval` por tarjeta.
+    And implementará un `Global Heartbeat Store` en Vue/Pinia basado en `requestAnimationFrame` del cual todas las tarjetas heredarán la reactividad pasivamente.
+    And los colores del semáforo SLA estarán obligatoriamente acompañados de Iconografía (⚡ Rojo, ⏳ Amarillo, ✔️ Verde) usando SVGs in-line para garantizar la legibilidad en el 8% de daltónicos y evitar cargas asíncronas de PNGs.
+    And la UI poseerá un interruptor `[Mute]` para silenciar notificaciones sonoras push de vencimiento de SLA.
+
+  Scenario: Ergonomía Visual, KeepAlive y Empty States Gamificados (CA-12)
+    Given la navegación intensiva del operador entre el Workdesk y los Formularios
+    When el operador regresa al Workdesk presionando "Atrás"
+    Then el Frontend utilizará `<keep-alive>` cacheando la página, filtros y scroll en RAM, garantizando carga en 0ms.
+    And si el operador resuelve todas las tareas de la página actual y queda vacía, la grilla lo redirigirá automáticamente a la Página 1 (Prevención de Last Page Empty).
+    And si la bandeja total llega a cero, se renderizará un `Empty State` con Gamificación pasiva (Ilustración de felicitación) en lugar de una tabla muerta.
+    And la Grilla soportará "Densidad Condensada" y se degradará a "Card Layout" en móviles (<768px) ocultando las columnas 4 y 5.
+    And los detalles secundarios se mostrarán vía Tooltips sobre el Nombre (Zero-Click Context).
+    And la botonera de paginación estará fija (Sticky) arriba y abajo de la tabla.
+
+  Scenario: Minificación WebSocket, Desvanecimiento y Throttling (CA-13)
+    Given la necesidad de sincronizar eventos en tiempo real (Ej: Tarea reclamada por otra persona o Batch Uploads)
+    Then el payload del WebSocket será atómico, enviando solo la instrucción y el ID (Ej: `{action: 'REMOVE', id: 'TK-123'}`) ahorrando 99% de I/O de red.
+    And el Frontend aplicará un `Debounce/Throttling` inyectando actualizaciones masivas en bloques de 2 segundos para no congelar el renderizado del Main Thread.
+    And el Frontend NO hará desaparecer la fila de golpe (evitando saltos de renglón).
+    And ejecutará una animación CSS (`opacity: 0`) acompañada de un Toast discreto: "Tarea reclamada por otro equipo".
+    And la identidad de terceros en la tabla grupal se ofuscará mostrando solo "En gestión por otro Agente" (Privacidad Operativa).
+
+  # ==============================================================================
+  # C. PREVENCIÓN DE FUGAS (IDOR, PII) Y SEGURIDAD
+  # ==============================================================================
+  Scenario: Sanitización del Payload DTO, Aislamiento Multi-Tenant y SQLi (CA-14)
+    Given el retorno de datos desde la Base de Datos hacia el Workdesk
+    Then el Backend emitirá un DTO estrictamente sanitizado, purgando contraseñas, PII y las variables internas de Camunda para prevenir Data Leaks en la Pestaña "Network".
+    And las 5 columnas estándar serán rígidas (Polimorfismo columnar prohibido en V1 para asegurar performance).
+    And toda consulta a la capa Repository inyectará OBLIGATORIAMENTE `tenantId = :myTenant` y aplicará el `bind` del ORM, neutralizando inyecciones SQL (`SQLi`).
+    And si la plataforma detecta un error `401 Unauthorized` por caída severa, destruirá la sesión local exigiendo Re-Login, sin confiar visualmente en cachés obsoletos.
+
+  Scenario: Delegación Segura (Prevención IDOR) e Interfaz Cinética (CA-15)
+    Given el Toggle para ver las tareas de "Mi Asistente"
+    When el Ejecutivo presiona el botón enviando el `user_id` del asistente
+    Then el Backend VALIDARÁ PERIMETRALMENTE el RBAC, comprobando que el Ejecutivo logueado sea jerárquicamente el superior de ese ID.
+    And si se altera la URL para espiar a otro usuario, el servidor arrojará `403 Forbidden` (Prevención IDOR).
+    And al cargar la vista delegada, el Frontend aplicará un destello visual o Banner permanente alertando: "Estás viendo el escritorio de [Nombre]", mitigando errores operativos.
+
+  # ==============================================================================
+  # D. ENRUTAMIENTO INTELIGENTE Y REGLAS DE NEGOCIO
+  # ==============================================================================
+  Scenario: Anti Cherry-Picking y Enrutamiento por Habilidades (Skill-Based) (CA-16)
+    Given la activación del interruptor administrativo "Atender Siguiente" (Anti Cherry-Picking)
+    When el operario oprime el botón
+    Then el motor Backend NO asignará ciegamente la tarea más crítica del sistema global.
+    And cruzará matemáticamente la tarea más antigua/crítica contra el "Array de Skills" funcionales del operario (Skill-Based Routing).
+    And proveerá un mecanismo de "Pausa / Skipeo Justificado" si la tarea exige contactar a un cliente que no responde, previniendo el secuestro operativo.
+    And este interruptor administrativo dejará huella inmutable en el Audit Log Central, prohibiendo encendidos fantasma en madrugadas.
+
+  Scenario: Jerarquía Multi-Origen y Resolución de Ambigüedades (CA-17)
+    Given la unificación de tareas de Camunda (BPMN) y Entidades Locales (Kanban)
+    When dos tareas de orígenes distintos expiren exactamente en la misma hora
+    Then la base de datos resolverá el desempate aplicando una regla de ordenamiento por "Prioridad de Impacto Financiero" y luego "Fecha de Creación".
+    And las tareas sin fecha de vencimiento (`dueDate = null`) se ponderarán matemáticamente como "SLA Infinito" enviándose al fondo del grid (`NULLS LAST`).
+    And si una tarea tiene un impacto financiero masivo, el Grid inyectará un badge `[Impacto 🔥]` que rebatirá el orden visual del SLA general, posicionándola en Top 1.
+    And la 4ta Columna "Avance" mapeará el nombre literal de la tarea BPMN contra el total de etapas del proceso de forma determinista.
+
+  Scenario: Degradación Elegante Multi-Motor y Prioridad de Reapertura (CA-18)
+    Given una caída temporal de la API transaccional de Camunda (HTTP 500)
+    When el usuario carga su Workdesk en ese instante
+    Then la interfaz aplicará Degradación Elegante, cargando exitosamente las tareas Kanban vivas de la Base Relacional sin emitir un 500 fatal screen.
+    And proyectará un Toast advirtiendo: "Sincronización BPMN degradada".
+    And si el operario hace Logout y entra en otra máquina, el Workdesk priorizará abrir su tablero general unificado en lugar de forzarlo a entrar a la tarea específica de ayer.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Workdesk - Escritorio de Tareas).
 
@@ -880,6 +966,81 @@ Feature: Task Completion with Form Data
     When el usuario final adjunta un documento pesado (Ej: PDF de 10MB)
     Then el Frontend ejecutará una carga asíncrona temprana (Pre-Submit) hacia la Bóveda SGDEA (`/api/v1/documents/upload-temp`) obteniendo un Identificador Único (`UUID`).
     And al presionar [Enviar], el POST a `/complete` enviará EXCLUSIVAMENTE el JSON plano referenciando el ID (`{"cedula_pdf": "UUID-123"}`), teniendo PROHIBIDO arquitectónicamente enviar payloads Multipart o Base64 contra el motor de procesos Camunda.
+	
+  # ==============================================================================
+  # US-029.1
+  # ==============================================================================
+  # A. INICIALIZACIÓN, BFF Y RECUPERACIÓN DE BORRADORES (UX & SRE)
+  # ==============================================================================
+  Scenario: Inyección Megalítica de Contexto (Patrón BFF) (CA-10)
+    Given la entrada física a la vista de la tarea operativa (Pantalla 2)
+    When el Frontend inicializa el componente Vue
+    Then despachará UNA (1) única petición GET consolidada a `/api/v1/workbox/tasks/{id}/form-context`.
+    And el Backend (BFF) inyectará el Mega-DTO: [Esquema Zod Vigoroso + Layout UI + Data Histórica (prefillData)].
+    And este DTO incluirá la versión exacta del esquema (`schema_version`) para prevenir choques generacionales si el Arquitecto modifica el diseño mientras el caso está en vuelo.
+
+  Scenario: Autoguardado Híbrido y Cifrado PII en LocalStorage (CA-11)
+    Given la digitación continua de un analista en un formulario extenso
+    Then el Frontend guardará el borrador (Draft) en el `LocalStorage` del navegador atado al `Task_ID`.
+    But si el esquema Zod marca campos como `PII/Sensibles` (US-003), el Frontend DEBE aplicar cifrado simétrico (AES) usando una llave derivada de la sesión antes de escribir en LocalStorage.
+    And disparará peticiones silenciosas de Merge Commit al Backend (Snapshot Volátil) solo bajo un Debounce de 10s de inactividad, usando una validación Zod "Parcial" (permitiendo nulos pero castigando tipos inválidos).
+
+  # ==============================================================================
+  # B. EJECUCIÓN, IDEMPOTENCIA Y ADUANA DE ARCHIVOS (APPSEC)
+  # ==============================================================================
+  Scenario: Idempotencia y Protección Anti-Doble Clic (El Dedo Tembloroso) (CA-12)
+    Given el usuario pulsa [Enviar Formulario] múltiples veces por ansiedad o lag
+    When el Payload JSON impacta el endpoint POST `/complete`
+    Then el Frontend inyectará un Header `Idempotency-Key` (UUID único por montaje de componente).
+    And el API Gateway/Backend procesará únicamente la primera transacción.
+    And las peticiones subsecuentes idénticas retornarán un `HTTP 200 OK` silenciado desde la Caché, protegiendo a Camunda de excepciones `OptimisticLocking` o doble gasto en el Event Sourcing.
+
+  Scenario: Desacoplamiento de Carga Binaria (Upload-First) y Escudo Anti-IDOR (CA-13)
+    Given el patrón donde el cliente envía un UUID de un PDF en el POST final (`{"cedula": "UUID-123"}`)
+    When el Backend recibe el Payload de cierre de formulario
+    Then la arquitectura TIENE ESTRICTAMENTE PROHIBIDO enlazar ciegamente ese archivo a la tarea.
+    And el Backend validará en la tabla de adjuntos temporales que `UUID-123` pertenezca al `user_id` logueado Y haya sido subido en el contexto de esa misma `task_id` (Defensa Anti-IDOR).
+    And si detecta un UUID ajeno, abortará la transacción con `HTTP 403 Forbidden`.
+    And un Cron Job nocturno destruirá físicamente de S3/SGDEA cualquier archivo temporal (TTL > 24h) sin confirmación transaccional para evitar facturas por basura infinita.
+
+  Scenario: Seguridad Asimétrica y Prevención Replay en Micro-Tokens (CA-14)
+    Given una validación asíncrona externa (Ej: Validar NIT) gatillada `OnBlur` que retorna un Micro-Token
+    When el Frontend adjunta este token en el POST `/complete` final
+    Then el Backend verificará matemáticamente su firma (Zero-Trust) para no repetir la llamada externa.
+    And la arquitectura PROHÍBE el re-uso de tokens (Replay Attacks); el Token DEBE contener en sus Claims el `taskId` exacto y un `jti` que será invalidado en Redis un milisegundo después del Submit exitoso.
+
+  # ==============================================================================
+  # C. VALIDACIÓN ZERO-TRUST Y FIELD-LEVEL RBAC
+  # ==============================================================================
+  Scenario: Zod Isomórfico y Guillotina de Datos Fantasma (CA-15)
+    Given la existencia de esquemas Zod bidireccionales
+    When un atacante bypassea la UI enviando un POST adulterado vía API (Ej: Editando un campo de 'Solo Lectura')
+    Then el Backend ejecutará OBLIGATORIAMENTE el mismo `schema.json` Zod utilizado en el diseño.
+    And cruzará los permisos de escritura del Rol del usuario contra los campos recibidos; si inyectó datos no autorizados, aplicará un `.strip()` silencioso descartando el campo adulterado, o abortará con `HTTP 403 Forbidden`.
+    And rechazará con `HTTP 400 Bad Request` cualquier asimetría de tipos de datos.
+
+  # ==============================================================================
+  # D. PERSISTENCIA CQRS Y PROTECCIÓN DE CAMUNDA ENGINE
+  # ==============================================================================
+  Scenario: Exclusión Topológica Estratégica de Camunda y ACID Fallback (CA-16)
+    Given el cierre exitoso de la transacción CQRS (Guardado del Evento Inmutable)
+    When el Backend notifica a Camunda 7 para avanzar el Token BPMN (`taskService.complete()`)
+    Then el Backend TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo (Textos largos, JSONs complejos) hacia la tabla `ACT_RU_VARIABLE` del Engine.
+    And solo enviará un DTO minificado con las variables lógicas requeridas por los Gateways.
+    And si Camunda sufre un Timeout (HTTP 5xx), el Backend aplicará un Rollback estricto de la transacción CQRS (Patrón Saga inverso) y devolverá un `HTTP 500 Crudo`, previniendo falsos positivos de guardado en la UI.
+
+  Scenario: Consistencia Eventual UX y Read-Your-Own-Writes (RYOW) (CA-17)
+    Given que el POST a `/complete` finaliza exitosamente (HTTP 200 OK)
+    Then el Frontend ejecutará síncronamente una purga, destruyendo la llave del borrador en el `LocalStorage`.
+    And eliminará proactivamente esa tarea específica del Store en RAM (Pinia) del Workdesk ANTES de redirigir al usuario al Home (RYOW).
+    And esto garantizará que el usuario no vea su tarea "ya completada" flotando como un fantasma en su bandeja por culpa de la latencia asíncrona de proyección de lectura del CQRS.
+    
+  Scenario: Integridad de Asignación Concurrente (Implicit Locking) (CA-18)
+    Given que una tarea "TK-400" está asignada explícitamente a `maria.perez`
+    When `pedro.gomez` intercepta vulnerablemente la URL e intenta someter un POST a `/tasks/TK-400/complete`
+    Then el Core iBPMS examina deductivamente el `assignee` de la tarea de Camunda contra la identidad central del Security Context (JWT).
+    And aborta transaccionalmente la colisión inyectando un lapidario `HTTP 403 Forbidden`.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Detalle / Formulario Dinámico).
 
@@ -4322,6 +4483,131 @@ Feature: Frontend Visual Governance, Anti-FOUC and SRE Router Guards
 **Trazabilidad UX:** Componentes de Navegación Global Vue Router (`router/index.ts`) y Menú Lateral (`MainLayout.vue`).
 
 ---
+
+## ÉPICA 10: Persistencia Hexagonal y Patrón CQRS
+Regula la inmutabilidad de los datos recolectados, previniendo la contaminación del Motor BPMN y aislando las lecturas masivas de las escrituras transaccionales.
+
+### US-029: Ejecución y Persistencia Inmutable de Formularios (CQRS & Event Sourcing)
+**Como** Analista / Motor Backend Hexagonal
+**Quiero** diligenciar la información de mi tarea, almacenando las subidas temporales (Drafts) y transacciones finales de forma inmutable
+**Para** garantizar cero bloqueos concurrentes, trazabilidad absoluta y finalizar exitosamente mi actividad sin contaminar el motor de Camunda (separando lectura de escritura).
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Hexagonal CQRS Persistence and Task Completion
+
+  # ==============================================================================
+  # A. INGESTA, CONTEXTO UI Y ARCHIVOS
+  # ==============================================================================
+  Scenario: Inyección Megalítica de Contexto (Patrón BFF) (CA-1)
+    Given la entrada física a la vista de la tarea (Pantalla 2)
+    When el Frontend inicializa el componente Vue
+    Then despachará UNA (1) única petición consolidada GET `/api/v1/workbox/tasks/{id}/form-context`
+    And el Backend obrará como BFF inyectando en un Mega-DTO la triada: El Schema Zod, el Layout, y las Variables de Solo Lectura extraídas de Camunda.
+
+  Scenario: Hibridación de Datos Históricos vs Nuevos Contratos (Lazy Patching) (CA-2)
+    Given el BFF inyectando `prefillData` V1 hacia un Formulario Zod nuevo V2
+    When existan campos obligatorios nuevos en V2 que no venían en la data V1 (`null`)
+    Then el esquema Zod los evaluará como inválidos iluminando el input en ROJO
+    And bloqueará físicamente el botón [Enviar] obligando al analista a auditar el dato (Guillotina en Escritura).
+
+  Scenario: Desacoplamiento de Carga Binaria (Upload-First Pattern) (CA-3)
+    Given un formulario Zod `<InputFile>`
+    When el usuario final adjunta un PDF pesado
+    Then el Frontend ejecutará una carga asíncrona temprana (Pre-Submit) a la Bóveda obteniendo un Identificador (`UUID`).
+    And al hacer [Enviar], el POST enviará EXCLUSIVAMENTE el JSON referenciando el ID (`{"archivo": "UUID-123"}`), prohibiendo arquitectónicamente enviar payloads Multipart contra el motor.
+
+  # ==============================================================================
+  # B. RESILIENCIA OFFLINE Y DRAFTS
+  # ==============================================================================
+  Scenario: Trazabilidad Volátil, Draft Sync y Garbage Collection (CA-4)
+    Given la digitación continua de un analista en un iForm masivo
+    Then el Frontend guardará el borrador (Draft) asíncronamente en el `LocalStorage` a cada tecla.
+    And disparará peticiones silenciosas de *Merge Commit* al Backend ÚNICAMENTE con un Debounce ininterrumpido de 10 segundos, salvando un Snapshot volátil sin validación Zod.
+    And cuando el POST a `/complete` finalice (HTTP 200), el Frontend ejecutará una purga síncrona de esa llave LocalStorage.
+    And un Cron Backend eliminará cualquier borrador con > 72 horas.
+
+  # ==============================================================================
+  # C. VALIDACIÓN SEVERA, MICRO-TOKENS Y LOCKING
+  # ==============================================================================
+  Scenario: Choque Gnoseológico Zod (Validación Bilateral Severa) (CA-5)
+    Given esquemas Zod en el Frontend (US-003)
+    When un atacante intenta bypassear la UI enviando un POST de formulario adulterado por API REST
+    Then el API Gateway/BFF interceptará el Payload ejecutando OBLIGATORIAMENTE el mismo `schema.json` Zod generado en diseño.
+    And rechazará con `HTTP 400 Bad Request` cualquier asimetría de tipos (Isomorfismo).
+
+  Scenario: Seguridad Asimétrica y Micro-Tokens Criptográficos (Zero-Trust) (CA-6)
+    Given una validación asíncrona (Ej: Validar NIT) gatillada `OnBlur`
+    When el Backend consulta la API externa exitosamente, retorna un "Micro-Token JWT" efímero.
+    Then al momento del Submit final (`/complete`), el Frontend adjuntará este Micro-Token.
+    And el Backend omitirá re-consultar la API pesada externa, limitándose a verificar matemáticamente la firma del Micro-Token autorizando el COMMIT en milisegundos.
+
+  Scenario: Integridad de Asignación Concurrente (Implicit Locking) (CA-7)
+    Given que una tarea "TK-400" está explícitamente asignada a `maria.perez`
+    When `pedro.gomez` intercepta vulnerablemente la URL e intenta someter un POST a `/complete`
+    Then el Core iBPMS cruza el `{delegatedUserId}` contra la identidad central del JWT.
+    And aborta la colisión inyectando un lapidario `HTTP 403 Forbidden` o `409 Conflict`.
+
+  # ==============================================================================
+  # D. PERSISTENCIA CQRS (El Envío Final)
+  # ==============================================================================
+  Scenario: Separación de Responsabilidades y Event Sourcing (CQRS) (CA-8)
+    Given un JSON perfectamente validado resultante del "iForm Maestro"
+    When el analista pulsa [Enviar Final] realizando POST a `/api/v1/workbox/tasks/{id}/complete`
+    Then el Backend separará el flujo: inyectará el Comando (`Form_Submitted_Event`) en la tabla inmutable de Eventos garantizando historial.
+    And un Worker asíncrono proyectará (`Projection`) esos datos a la tabla relacional aplanada para lecturas hiperveloces.
+    
+  Scenario: Exclusión Topológica Estratégica de Camunda Engine (CA-9)
+    Given la inmutabilidad validada en Postgres Oauth
+    Then el Backend TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo de negocio hacia la tabla `ACT_RU_VARIABLE` del Engine de Camunda.
+    And a Camunda solo se le enviará un DTO minificado (Ej: `{ "aprobado": true, "form_storage_id": "ABC-123" }`) con variables mínimas lógicas para Gateways.
+
+  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas) (CA-10)
+    Given el Payload aplanado y guardado en CQRS
+    When el orquestador (Camunda 7) sufre un Crash HTTP en su API REST interna y no avanza la tarea
+    Then el Backend iBPMS abortará inmediatamente la transacción base (Rollback Compensatorio de CQRS PostgreSQL).
+    And devolverá un error HTTP 500 Crudo ("Motor No Disponible") a la UI en Pantalla 2.
+    And se prohíbe generar falsos positivos HTTP 202 ("Guardado para después"), unificando el error visual vs Motor.
+```
+**Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Tarea) y BFF Invisible.
+
+---
+
+### US-052: Motor de Orquestación Multi-Agente IA (Arquitectura y Gobernanza de Contextos)
+Descripción: 
+**Como** Administrador de la Plataforma iBPMS, 
+**Quiero** configurar y operar un motor de inteligencia artificial compuesto por 4 Agentes Especializados (Orquestador, Backend, Frontend y QA) con inyección de contexto dinámica y reglas diferenciadas, 
+**Para** evitar la saturación de tokens (Context Overload), prevenir alucinaciones mediante separación estricta de memorias y emular una fábrica de software autónoma segura dentro del iBPMS.
+
+Contexto de Negocio & Arquitectura
+Actualmente, los motores de IA monolíticos pierden el contexto o alucinan si se les sobrecarga con reglas. Esta historia establece la infraestructura para que el iBPMS administre reglas globales (CORE) que aplican a todos los agentes, y políticas modulares (Específicas) que solo se inyectan en tiempo de ejecución ("Just-in-Time"), replicando el modelo exitoso de Antigravity.
+
+**Criterios de Aceptación (CA)**
+```gherkin
+CA-01: Definición del Rol "Arquitecto Orquestador"
+Criterio: El sistema debe inicializar un Agente Maestro sin capacidad de escritura de código productivo. Given que un usuario solicita la creación de un nuevo proceso BPMN complejo a la IA, When la petición ingresa al motor de orquestación, Then el sistema invoca exclusiva y aisladamente al "Agente Orquestador", And este agente debe generar contratos de delegación (Handoffs JSON/Markdown) dirigidos a los Agentes Especialistas en lugar de intentar programar la solución.
+
+CA-02: Separación Estricta de Memoria entre Especialistas (Backend, Frontend, QA)
+Criterio: Los estados conversacionales de los 4 agentes jamás deben compartirse directamente para prevenir contaminación cruzada. Given que el Orquestador ha diseñado un Handoff para el "Especialista Backend", When el sistema despierta al Agente Backend en su propio hilo de ejecución (Thread), Then el Agente Backend DEBE tener un "System Prompt" en blanco respecto a las charlas del Orquestador, conociendo única y exclusivamente las instrucciones pasadas a través del paquete Handoff.
+
+CA-03: Administración de Reglas CORE Universales (Equivalente a .cursorrules)
+Criterio: Existencia de un repositorio de directrices globales obligatorias. Given que un administrador de plataforma ha configurado reglas críticas de seguridad (Ej. Inmunidad de Arranque / Zero-Trust Git) en el panel de Configuración AI Core, When el sistema arranca cualquier instancia de los 4 Agentes de IA, Then el motor iBPMS inyecta automáticamente esas reglas CORE en el inicio del System Prompt, consumiéndolas obligatoriamente en cada inferencia de red neuronal.
+
+CA-04: Inyección Modular "Just-In-Time" (Equivalente a scaffolding/workflows/)
+Criterio: Optimización de tokens mediante políticas específicas de rol bajo demanda. Given que el sistema almacena manuales extensos (Reglas UX/UI, Arquitectura Hexagonal Java, Guías funcionales QA), When el Orquestador delega una tarea de interfaz de usuario al "Agente Frontend", Then el motor iBPMS inyecta en la memoria RAM del Agente Frontend únicamente la Política Modular de "Reglas UX/UI", omitiendo el peso de los manuales de Java o QA para maximizar la capacidad de razonamiento del LLM sin sobrepasar su Ventana de Contexto (Context Limit).
+
+CA-05: El Humano como Bus de Datos (Enrutador de Aprobaciones)
+Criterio: La aplicación del Gobierno Técnico estricto donde el humano no es aprobador autónomo. Given que un Agente Especialista (ej. Backend) termina su plan de implementación y requiere validación, When la IA emite un mensaje de estado PENDING_APPROVAL, Then la UI del iBPMS no le pide al humano que lo valide técnicamente, sino que le notifica: "El Agente Backend requiere revisión técnica. Lleva este plan al Agente Orquestador", And el motor iBPMS transfiere el payload al Orquestador, quien lo audita, evalúa los "GAPs", y emite el veredicto definitivo de regreso a la cola de ejecución.
+
+Notas de Implementación (Non-Functional Requirements)
+Aislamiento Tecnológico: Las llamadas a la API de LLM (OpenAI / Gemini) deben hacerse en sesiones HTTP aisladas.
+Bandeja de Entrada Común: Simular la carpeta .agentic-sync/ creando una tabla en Base de Datos ai_handoff_queue donde los agentes depositarán sus contratos en estado DRAFT, APPROVED y STASHED.
+```
+
+
+
+---
+
 
 # 🚀 ROADMAP VERSIÓN 2 (V2) - EN REFINAMIENTO
 *(Todas las funcionalidades, épicas e historias de usuario declaradas a partir de este punto pertenecen estructural y financieramente a la Fase 2 del Proyecto iBPMS. No forman parte del alcance del MVP V1).*

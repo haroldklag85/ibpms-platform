@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="16-create-ibpms-profile" author="backend-sre-agent">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ibpms_profile"/>
+            </not>
+        </preConditions>
+        <createTable tableName="ibpms_profile">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="profile_name" type="VARCHAR(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="16-create-sys-role" author="backend-sre-agent">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="sys_role"/>
+            </not>
+        </preConditions>
+        <createTable tableName="sys_role">
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="process_definition_id" type="VARCHAR(100)"/>
+            <column name="lane_id" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="16-create-profile-bpmn-assignment" author="backend-sre-agent">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="profile_bpmn_assignment"/>
+            </not>
+        </preConditions>
+        <createTable tableName="profile_bpmn_assignment">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="profile_id" type="UUID"/>
+            <column name="bpmn_process_key" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bpmn_lane_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="profile_bpmn_assignment" baseColumnNames="profile_id"
+                                 constraintName="fk_profile_bpmn_assignment"
+                                 referencedTableName="ibpms_profile" referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -2,7 +2,7 @@
   <div class="p-6 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto space-y-6">
       <!-- HEADER -->
-      <header class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <header class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex-col sm:flex-row gap-4">
         <div>
           <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <span class="material-symbols-outlined text-indigo-600">list_alt</span>
@@ -10,9 +10,20 @@
           </h1>
           <p class="text-sm text-gray-500 mt-1">Diccionario central de metadatos Zero-Code</p>
         </div>
-        <button @click="$router.push('/admin/modeler/forms')" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-sm transition flex items-center gap-2">
-          <span class="material-symbols-outlined text-sm">add</span> Crear Nuevo
-        </button>
+        
+        <div class="flex items-center gap-4 w-full sm:w-auto">
+          <!-- SEARCH FIELD (Server-Side) -->
+          <div class="relative w-full sm:w-64">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+              <span class="material-symbols-outlined text-[18px]">search</span>
+            </span>
+            <input type="text" v-model="searchQuery" @input="onSearchInput" placeholder="Buscar por Nombre / API..." class="w-full pl-9 pr-4 py-2 bg-gray-50 hover:bg-white border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg text-sm transition-all outline-none">
+          </div>
+
+          <button @click="$router.push('/admin/modeler/forms/designer')" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-sm transition flex items-center gap-2 whitespace-nowrap">
+            <span class="material-symbols-outlined text-sm">add</span> Crear Nuevo
+          </button>
+        </div>
       </header>
 
       <!-- ALERTS -->
@@ -40,7 +51,7 @@
              <tr v-else-if="forms.length === 0">
                <td colspan="4" class="p-8 text-center text-gray-500 font-medium">Bóveda vacía. No existen formularios.</td>
              </tr>
-             <tr v-for="form in forms" :key="form.id" class="hover:bg-indigo-50/30 transition-colors">
+             <tr v-for="form in forms" :key="form.id" @click="$router.push(`/admin/modeler/forms/designer?id=${form.id}`)" class="hover:bg-indigo-50/50 transition-colors cursor-pointer group">
                <td class="px-6 py-4 whitespace-nowrap">
                   <div class="font-mono text-sm font-semibold text-indigo-700">{{ form.id }}</div>
                   <div class="text-xs text-gray-400 mt-0.5">Autor: {{ form.author || 'Sistema' }}</div>
@@ -55,10 +66,10 @@
                   </span>
                </td>
                <td class="px-6 py-4 whitespace-nowrap text-center space-x-3">
-                  <button @click="$router.push(`/admin/modeler/forms?id=${form.id}`)" class="text-indigo-600 hover:text-indigo-900 font-medium text-sm transition-colors" title="Editar Arquitectura">
+                  <button @click.stop="$router.push(`/admin/modeler/forms/designer?id=${form.id}`)" class="text-indigo-600 hover:text-indigo-900 font-medium text-sm transition-colors" title="Editar Arquitectura">
                     <span class="material-symbols-outlined text-[20px] align-middle">edit</span>
                   </button>
-                  <button @click="deleteForm(form.id)" class="text-red-500 hover:text-red-700 font-medium text-sm transition-colors" title="Eliminar Registro">
+                  <button @click.stop="deleteForm(form.id)" class="text-red-500 hover:text-red-700 font-medium text-sm transition-colors" title="Eliminar Registro">
                     <span class="material-symbols-outlined text-[20px] align-middle">delete</span>
                   </button>
                </td>
@@ -80,10 +91,22 @@ const isLoading = ref(true);
 const alertMsg = ref('');
 const alertType = ref<'success' | 'error'>('success');
 
+// Search Bar State
+const searchQuery = ref('');
+let searchTimeout: any = null;
+
+const onSearchInput = () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        fetchForms();
+    }, 400); // Debounce de 400ms Server-Side Search
+};
+
 const fetchForms = async () => {
     isLoading.value = true;
     try {
-        const response = await apiClient.get('/api/v1/forms');
+        const queryParam = searchQuery.value ? `?search=${encodeURIComponent(searchQuery.value)}` : '';
+        const response = await apiClient.get(`/api/v1/forms${queryParam}`);
         forms.value = response.data || [];
     } catch (error) {
         showAlert('Error recuperando diccionario de formularios.', 'error');

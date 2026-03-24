@@ -58,8 +58,34 @@ services:
       timeout: 5s
       retries: 5
 
+  # 4. Backend Core (Spring Boot - Dev Mode)
+  # Container agnóstico para Hot-Reloading de código sin requerir Maven en el Host
+  ibpms-core:
+    image: maven:3.9.6-eclipse-temurin-21
+    container_name: ibpms-core-dev
+    restart: unless-stopped
+    working_dir: /app/ibpms-core
+    environment:
+      - POSTGRES_HOST=ibpms-postgres
+      - RABBITMQ_HOST=ibpms-rabbitmq
+      - REDIS_HOST=ibpms-redis
+    volumes:
+      - ./backend:/app
+      - maven_data:/root/.m2
+    ports:
+      - "8080:8080"
+    command: mvn spring-boot:run -DskipTests
+    depends_on:
+      ibpms-postgres:
+        condition: service_healthy
+      ibpms-rabbitmq:
+        condition: service_healthy
+      ibpms-redis:
+        condition: service_healthy
+
 volumes:
   # Volúmenes persistentes para que los datos no se pierdan al apagar la computadora / detener Docker
   postgres_data:
   rabbitmq_data:
   redis_data:
+  maven_data:

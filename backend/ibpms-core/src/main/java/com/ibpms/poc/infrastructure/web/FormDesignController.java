@@ -35,10 +35,15 @@ public class FormDesignController {
     /**
      * Catálogo de formularios (solo última versión activa).
      */
+    /**
+     * Catálogo de formularios (Desactivado para ceder root a FormDirectoryController CA-85)
+     */
+    /*
     @GetMapping
     public ResponseEntity<List<FormDesignDTO>> listarCatalogo() {
         return ResponseEntity.ok(formDesignService.listarCatalogo());
     }
+    */
 
     /**
      * Obtener diseño histórico inmutable (Para renderizar Front en tareas viejas).

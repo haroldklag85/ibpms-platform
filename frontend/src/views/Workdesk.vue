@@ -278,8 +278,11 @@
                  <p class="text-xs text-indigo-800 font-bold uppercase tracking-widest">CQRS Engine</p>
                </div>
                <p class="text-sm text-slate-800 font-medium tracking-tight">Sync Eventual: <br/>
-                 <span class="font-bold text-emerald-600 flex items-center mt-2 gap-1.5 bg-emerald-50 px-2 py-1 rounded w-fit text-xs border border-emerald-100 animate-pulse">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ONLINE VERDE
+                 <span v-if="!store.isError && store.stompConnected" class="font-bold text-emerald-600 flex items-center mt-2 gap-1.5 bg-emerald-50 px-2 py-1 rounded w-fit text-xs border border-emerald-100 animate-pulse">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ONLINE
+                 </span>
+                 <span v-else class="font-bold text-red-600 flex items-center mt-2 gap-1.5 bg-red-50 px-2 py-1 rounded w-fit text-xs border border-red-200 animate-pulse" title="Conexión Rechazada o STOMP Caído">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> OFFLINE
                  </span>
                </p>
              </div>

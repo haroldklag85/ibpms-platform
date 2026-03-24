@@ -15,6 +15,7 @@ public class AiFormGeneratorUseCase {
 
     public String generateFormJson(String prompt) {
         // System Prompt Oculto para blindar la estructura y prevenir "Markdown Charlatán"
+        @SuppressWarnings("unused")
         String systemPrompt = "Eres un arquitecto UI experto en Vue 3 y Zod. " +
             "GENERARÁS EXCLUSIVAMENTE UN OBJETO JSON VÁLIDO. PROHIBIDO ESCRIBIR TEXTO LIBRE O MARKDOWN. " +
             "El esquema debe contener un array 'components' donde cada uno tiene: " +

@@ -50,7 +50,7 @@ export const useMenuStore = defineStore('menu', () => {
                         items: [
                            { path: '/admin/modeler/bpmn', icon: 'account_tree', label: 'Venture Modeler' },
                            { path: '/admin/modeler/dmn', icon: 'rule', label: 'DMN Copilot' },
-                           { path: '/admin/modeler/forms', icon: 'dynamic_form', label: 'Form Engine' }
+                           { path: '/admin/modeler/list', icon: 'dynamic_form', label: 'Form Engine' }
                         ]
                     },
                     {

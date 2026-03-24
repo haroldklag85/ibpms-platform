@@ -17,10 +17,21 @@ import java.util.Map;
 public class FormCatalogController {
 
     /**
+     * Root GET movido a FormDirectoryController para evitar colisiones.
+     */
+    /*
+    @GetMapping
+    public ResponseEntity<List<Object>> rootPath() {
+        return ResponseEntity.ok(Collections.emptyList());
+    }
+    */
+
+    /**
      * CA-39: Directorio transversal de formularios activos.
      * Nutre el dropdown de "Form Key" en el BPMN Modeler.
+     * (Mapeo desplazado a /active para evitar AmbiguousHandler con FormDirectoryController de la UI principal).
      */
-    @GetMapping
+    @GetMapping("/active")
     public ResponseEntity<List<Map<String, Object>>> getActiveForms() {
         return ResponseEntity.ok(List.of(
             Map.of("id", "frm_aprobacion", "name", "Formulario Aprobación", "type", "SIMPLE"),

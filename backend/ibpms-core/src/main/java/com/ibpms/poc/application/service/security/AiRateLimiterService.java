@@ -1,6 +1,7 @@
 package com.ibpms.poc.application.service.security;
 
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bandwidth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

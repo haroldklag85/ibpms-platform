@@ -12,6 +12,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Collection;
+import org.xml.sax.InputSource;
 
 import com.ibpms.poc.application.dto.DeploymentValidationResponse;
 import org.camunda.bpm.model.bpmn.Bpmn;

@@ -351,18 +351,21 @@
         
         <!-- Tabs -->
         <div class="flex bg-[#252526] text-xs font-mono font-medium text-gray-400 border-b border-[#3e3e42] shrink-0 overflow-x-auto">
-          <button @click="activeCodeTab = 'TEMPLATE'" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-emerald-500': activeCodeTab === 'TEMPLATE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
+          <button @click="attemptTabChange('JSON')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-yellow-500': activeCodeTab === 'JSON' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
+             <span class="text-yellow-400 font-bold">{ }</span> json
+          </button>
+          <button @click="attemptTabChange('TEMPLATE')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-emerald-500': activeCodeTab === 'TEMPLATE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
             <span class="text-emerald-400">&lt;&gt;</span> template
           </button>
-          <button @click="activeCodeTab = 'SCRIPT'" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-blue-500': activeCodeTab === 'SCRIPT' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
+          <button @click="attemptTabChange('SCRIPT')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-blue-500': activeCodeTab === 'SCRIPT' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
             <span class="text-blue-400">&lt;script setup&gt;</span>
             <AppTooltip content="Código Vue.js autogenerado con Composition API (Solo Lectura)." />
           </button>
-          <button @click="activeCodeTab = 'STYLE'" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-pink-500': activeCodeTab === 'STYLE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
+          <button @click="attemptTabChange('STYLE')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-pink-500': activeCodeTab === 'STYLE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
             <span class="text-pink-400">&lt;style scoped&gt;</span>
             <AppTooltip content="Estilizado CSS inyectado para Tailwind y clases utilitarias (Solo Lectura)." />
           </button>
-          <button @click="activeCodeTab = 'ZOD'" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-indigo-500': activeCodeTab === 'ZOD' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
+          <button @click="attemptTabChange('ZOD')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-indigo-500': activeCodeTab === 'ZOD' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
              <span class="text-indigo-400 font-bold">Z</span> zod
           </button>
           <div class="ml-auto px-4 flex items-center group relative cursor-help">
@@ -796,12 +799,14 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import VueDraggable from 'vuedraggable';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
 import apiClient from '@/services/apiClient';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 import FormRenderer from '@/components/forms/FormRenderer.vue';
+// @ts-ignore
 import jexl from 'jexl';
 
 // GAP 9: Mimetismo RBAC
@@ -822,9 +827,13 @@ interface FormField extends FormFieldMetadataDTO {
   soloLecturaPosterior?: boolean; // CA-20
   asyncUrl?: string; // CA-30
   enableAuditLog?: boolean; // CA-28
+  predefinedFormat?: string; // CA-36
+  mask?: string; // CA-36
+  clearOnHide?: boolean; // CA-8
 }
 
 // ── State ────────────────────────────────────────────────────────
+const route = useRoute();
 const formTitle = ref('Solicitud Onboarding (V1)');
 const formPattern = ref<'SIMPLE' | 'IFORM_MAESTRO' | null>(null);
 const showPatternModal = ref(true);
@@ -892,7 +901,36 @@ const saveAsFragment = (node: any) => {
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
+    // 1. Fetch form if ID is present
+    const formId = route.query.id as string;
+    if (formId) {
+        try {
+            const response = await apiClient.get(`/api/v1/forms/${formId}`);
+            if (response.data && response.data.schemaVariables) {
+                canvasFields.value = typeof response.data.schemaVariables === 'string' 
+                   ? JSON.parse(response.data.schemaVariables) 
+                   : response.data.schemaVariables;
+                
+                formTitle.value = response.data.title || response.data.name || formTitle.value;
+                formPattern.value = response.data.pattern || null;
+                showToast(`Formulario ${formId} cargado desde API`, 'success');
+            }
+        } catch(e) {
+            showToast('Error cargando formulario remoto desde API', 'error');
+        }
+    } else {
+        // Fallback local Amnesia Cero
+        const localStoreKey = 'form_draft_ca85_modeler';
+        const savedCA85Msg = localStorage.getItem(localStoreKey);
+        if (savedCA85Msg && canvasFields.value.length === 0) {
+            try {
+                canvasFields.value = JSON.parse(savedCA85Msg);
+                showToast('Borrador restaurado (CA-85 Amnesia Cero)', 'success');
+            } catch (e) {}
+        }
+    }
+
     const savedFragments = localStorage.getItem('workdesk_fragments');
     if (savedFragments) {
         const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
@@ -962,6 +1000,8 @@ const restoreVersion = (ver: any) => {
 
 // CA-24 Auto-guardado del Designer Canvas
 let designerDraftTimeout: any = null;
+let amnesiaDebounce: ReturnType<typeof setTimeout>; // CA-85
+
 watch(canvasFields, (newVal) => {
     clearTimeout(designerDraftTimeout);
     designerDraftTimeout = setTimeout(async () => {
@@ -973,9 +1013,35 @@ watch(canvasFields, (newVal) => {
             console.warn('⚠️ Fallback a LocalStorage activado para autoguardado del modelador');
         }
     }, 2000);
+
+    // CA-85 Amnesia Cero Local Storage con Debounce 5s
+    clearTimeout(amnesiaDebounce);
+    amnesiaDebounce = setTimeout(() => {
+        localStorage.setItem('form_draft_ca85_modeler', JSON.stringify(newVal));
+        console.log('[CA-85] Amnesia Cero: Borrador de Mónaco/Lienzo persistido preventivamente');
+    }, 5000);
 }, { deep: true });
 
-const activeCodeTab = ref<'TEMPLATE' | 'SCRIPT' | 'ZOD' | 'STYLE'>('TEMPLATE');
+const activeCodeTab = ref<'TEMPLATE' | 'SCRIPT' | 'ZOD' | 'STYLE' | 'JSON'>('TEMPLATE');
+const localJsonCode = ref('');
+
+const attemptTabChange = (targetTab: 'TEMPLATE' | 'SCRIPT' | 'ZOD' | 'STYLE' | 'JSON') => {
+   if (activeCodeTab.value === 'JSON') {
+       try {
+           const parsed = JSON.parse(localJsonCode.value || JSON.stringify(canvasFields.value));
+           canvasFields.value = parsed;
+           zodParseError.value = false;
+       } catch (e: any) {
+           zodParseError.value = true;
+           showToast('BARRICADA JSON: Estructura malformada. ' + e.message, 'error');
+           return; // Aborta físicamente el cambio de pestaña (CA-84)
+       }
+   } else if (targetTab === 'JSON') {
+       localJsonCode.value = JSON.stringify(canvasFields.value, null, 2);
+   }
+   activeCodeTab.value = targetTab;
+};
+
 const editingField = ref<FormField | null>(null);
 
 const showResetModal = ref(false); // Modal de Reset CA-43
@@ -1157,7 +1223,7 @@ const cloneComponent = (original: any) => {
   const cloned = JSON.parse(JSON.stringify(original));
   cloned.id = `FIELD_${idCounter++}`;
   cloned.camundaVariable = cloned.id.toLowerCase();
-  cloned.stage = 'START_EVENT'; // Default
+  cloned.stage = activeStageSim.value === 'ALL' ? 'START_EVENT' : activeStageSim.value; // CA-2: Hereda el BPMN Context local
   if (cloned.type === 'container' || cloned.type === 'field_array') {
     cloned.children = [];
   }
@@ -1506,6 +1572,9 @@ const generateFieldHTML = (field: any, indent: string = '      ', parentBinding:
 // ── Generators & Parsers (Bidireccional AST-Sandbox) ────────────────────────
 const computedCode = computed({
   get: () => {
+    if (activeCodeTab.value === 'JSON') {
+       return localJsonCode.value || JSON.stringify(canvasFields.value, null, 2);
+    }
     if (activeCodeTab.value === 'TEMPLATE') {
       let tpl = `<template>\n  <form @submit.prevent="submitTask" class="space-y-4">`;
       tpl += `\n    <!-- CA-46: Sello Visual de Aprobatoria (Si existe en prefillData) -->\n    <div v-if="props.prefillData?.approvedBy" class="bg-green-50 border border-green-200 text-green-800 p-3 rounded-md flex items-center gap-3 no-print">\n      <span class="text-2xl">✅</span>\n      <div>\n        <p class="text-sm font-bold">Fase Aprobada Anteriomente</p>\n        <p class="text-xs">Revisor: {{ props.prefillData.approvedBy }}</p>\n      </div>\n    </div>\n`;
@@ -1755,7 +1824,21 @@ const computedCode = computed({
   },
   set: (newCode: string) => {
     // CA-4: Parseo seguro usando Regex (AST Ligero in-memory), PROHIBIDO eval() o new Function()
-    if (activeCodeTab.value === 'TEMPLATE') {
+    
+    // 🛡️ XSS Barricade (Security Gate) AST
+    if (/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi.test(newCode) || /\bon\w+\s*=/gi.test(newCode)) {
+       zodParseError.value = "⚠️ ALERTA (XSS): Sintaxis destructiva purgada. Se prohíben scripts o inyección de eventos DOM.";
+       showToast(zodParseError.value, 'error');
+       return; // Cut-off del Event Loop AST
+    }
+    zodParseError.value = ''; // Clean Gate Flag
+
+    if (activeCodeTab.value === 'JSON') {
+       localJsonCode.value = newCode;
+       // No parseamos aquí para evitar crashear el V-DOM en tiempo real. 
+       // Se valida en el change de pestaña (attemptTabChange) - Barricada JSON CA-84.
+    }
+    else if (activeCodeTab.value === 'TEMPLATE') {
       const inputRegex = /v-model="formData\.([^"]+)"/g;
       let m;
       const ids = new Set<string>();

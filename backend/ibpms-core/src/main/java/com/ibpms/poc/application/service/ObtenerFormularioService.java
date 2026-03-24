@@ -39,6 +39,7 @@ public class ObtenerFormularioService implements ObtenerFormularioUseCase {
         String taskName = "Tarea Histórica";
         java.util.Map<String, Object> processVariables = new java.util.HashMap<>();
 
+        @SuppressWarnings("unused")
         java.util.Date taskStartTime = null;
 
         // Validación de existencia en el motor real

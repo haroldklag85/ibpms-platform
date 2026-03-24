@@ -11,8 +11,13 @@ import java.time.LocalDateTime;
 @Table(name = "ibpms_idempotency_key")
 public class IdempotencyKeyEntity {
 
+    /**
+     * HOTFIX (US-029): Resolución de BeanCreationException en Tomcat 8080.
+     * Se renombra el identificador JPA a "idempotency_key" previniendo
+     * la falla del ApplicationContext durante el análisis de esquema.
+     */
     @Id
-    @Column(name = "id", length = 36, nullable = false, updatable = false)
+    @Column(name = "idempotency_key", length = 36, nullable = false, updatable = false)
     private String idempotencyKey;
 
     @Column(name = "response_payload", columnDefinition = "json")

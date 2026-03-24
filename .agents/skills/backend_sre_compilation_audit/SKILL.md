@@ -13,18 +13,19 @@ triggers:
 A partir de este momento, TIENES ESTRICTAMENTE PROHIBIDO asumir que tu código Java funciona solo por haberlo escrito. Tu flujo de trabajo (Workflow) cambia obligatoriamente a validación de compilación en caliente:
 
 ## 1. PROHIBIDO EL HANDOFF CIEGO
-Antes de enviar cualquier estado a QA, al Arquitecto, o notificar que has terminado (y obligatoriamente ANTES de hacer el `git stash save`), **DEBES** ejecutar en tu terminal activa:
+Antes de enviar cualquier estado a QA, al Arquitecto, o notificar que has terminado, **DEBES** ejecutar la compilación y arranque mediante la topología de contenedores agnóstica de la plataforma. En la raíz del proyecto, ejecuta:
 ```bash
-mvn clean install -DskipTests
+docker compose up -d ibpms-core
 ```
-Y luego intentar levantar el servidor con:
-```bash
-mvn spring-boot:run
-```
+Esto reconstruirá y ejecutará la aplicación (Hot-Reload) usando el contenedor Maven dedicado sin depender de binarios en tu máquina Host.
 
 ## 2. AUDITORÍA DE ARRANQUE (GATEKEEPER DE CONSOLA)
-Debes leer activamente la consola de logs. Si observas un `BeanCreationException`, `UnsatisfiedDependencyException`, o un lapidario `Connection Refused` en el puerto 8080, **SE TE PROHÍBE ENTREGAR LA TAREA**. 
-Debes auto-corregir la inyección de dependencias (`@Autowired`, `@Lazy`) y refactorizar hasta que Tomcat reporte:
+Inmediatamente después de lanzar el contenedor, debes leer activamente la consola de logs ejecutando:
+```bash
+docker compose logs -f ibpms-core
+```
+Si observas un `BeanCreationException`, `UnsatisfiedDependencyException`, o un lapidario `Connection Refused` en el puerto 8080, **SE TE PROHÍBE ENTREGAR LA TAREA**. 
+Debes auto-corregir la inyección de dependencias (`@Autowired`, `@Lazy`) y verificar que el contenedor no muera silenciosamente hasta que Tomcat reporte:
 > `Tomcat started on port(s): 8080 (http)`
 
 ## 3. LEY DE CORRESPONDENCIA DDL (JPA vs DB)

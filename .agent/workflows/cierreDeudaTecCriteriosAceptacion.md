@@ -27,6 +27,8 @@ Al final de TODO archivo `handoff` que crees, DEBES INCLUIR obligatoriamente el 
 > 3. Debes guardar tu solicitud de revisión y resumen de tu plan en un archivo físico llamado `.agentic-sync/approval_request_[ROL].md`.
 > 4. Al grabar el archivo, detente y dile al Humano en el chat: *"Humano, he dejado mi solicitud de revisión en `.agentic-sync/approval_request_[ROL].md`. Por favor, ve al chat del Arquitecto Líder, entrégale el mensaje y regrésame su respuesta formal."*
 > 5. Espera en este chat. Cuando el humano regrese con el veredicto del Arquitecto, léelo. Si el Arquitecto te aprueba, pasa a modo `EXECUTION`, programa y finaliza empaquetando obligatoriamente con `git stash save "temp-[ROL]-US[X]"`.
+> 6. **SI TU ROL ES BACKEND (JAVA):** Antes de entregar tu trabajo y armar el `stash`, es OBLIGATORIO que abras tu terminal interactiva, ejecutes `mvn clean install -DskipTests` y levantes el servidor con `mvn spring-boot:run` para validar que tu código compila y despierta en el puerto 8080 (Zero-Trust Compilation). Adicionalmente, **ANTES DE PRODUCIR CÓDIGO DEBES LEER** tu doctrina oficial en el archivo: `.agents/skills/backend_sre_compilation_audit/SKILL.md`.
+> 7. **ETIQUETADO DE IDENTIDAD (AVATAR) OBLIGATORIO:** A partir del instante en que recibas este Handoff, TODOS y cada uno de los mensajes que generes en tu chat deben comenzar firmemente con una etiqueta que delate tu Rol (Ej: `[⚙️ BACKEND - JAVA]`, `[🎨 FRONTEND - VUE]`, o `[🕵️ QA - E2E]`). Queda totalmente prohibido responder sin tu Collar de Identificación al inicio.
 
 ### Fase 2: Instrucciones para el Delegado Humano
 Una vez asegurada la creación de los Handoffs en `.agentic-sync/`, envíale este mensaje al usuario:

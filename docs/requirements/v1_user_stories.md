@@ -801,7 +801,33 @@ Feature: Web IDE Form Code Generation
     Given el diseño finalizado del iForm Maestro
     Then el IDE proveerá una "Consola QA embebida" (Simulator).
     And generará automáticamente Payloads extremos (Fuzzing) simulando Paths Felices y Tristes en la memoria RAM del navegador, certificando matemáticamente el contrato antes del despliegue.
-	
+
+  Scenario: Manejo Amigable de Errores de Sintaxis en el Mónaco IDE (CA-84)
+    Given el Arquitecto está editando el código Vue o Zod manualmente en el panel de Mónaco IDE
+    When introduce un error de sintaxis (Ej: falta una coma, llave de cierre, o tipado incorrecto)
+    Then la plataforma TIENE PROHIBIDO colapsar con una pantalla blanca (Fatal Error) impidiendo seguir trabajando
+    And el editor Mónaco interceptará el error de compilación en tiempo real (debounced)
+    And subrayará de rojo (Squiggly Line) la línea conflictiva
+    And proyectará en la zona inferior un panel amigable con mensajes legibles para un humano (Ej: "Hay un error de sintaxis cerca de la línea 14").
+
+  Scenario: Auto-Guardado y Recuperación de Sesión en el Diseñador (CA-85)
+    Given el Arquitecto está construyendo un formulario extenso en la Pantalla 7 (IDE Web)
+    When ocurre una desconexión de red, apagón, o un cierre accidental de la pestaña
+    Then el sistema debe garantizar la preservación del progreso inyectando el estado del lienzo en el `LocalStorage` del navegador de forma reactiva a cada cambio.
+    And al regresar a la Pantalla 7, la aplicación detectará el borrador huérfano y mostrará un banner amigable: "Detectamos un borrador no guardado. ¿Desea restaurar su trabajo previo?" permitiendo recuperar el Canvas intacto.
+
+  Scenario: Catálogo y Explorador de Formularios (Form Manager Dashboard) (CA-86)
+    Given la necesidad del Arquitecto de buscar, re-editar o consultar versiones de formularios pre-existentes
+    When el usuario ingresa al módulo de "Formularios" (Pantalla 7 Principal)
+    Then EL SISTEMA NO CARGARÁ el IDE en blanco directamente, sino que presentará un "Catálogo o Grilla de Formularios"
+    And esta Grilla incluirá un Buscador `Server-side` para buscar por Nombre de Negocio o ID Técnico.
+    And cada fila o tarjeta mostrará: 
+      - Nombre del Formulario (Ej: "Onboarding VIP")
+      - Tipo: (Simple vs iForm Maestro)
+      - Versión Activa (Ej: `v3`)
+      - Fecha de Última Modificación y Autor
+    And al hacer clic sobre un formulario, se abrirá en el Lienzo IDE. Si se desea ver el historial de diseño de ese formulario en particular, la grilla ofrecerá la opción de [Ver Historial de Versiones] para realizar Rollbacks.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 7 (IDE Web Pro-Code para Formularios).
 
@@ -1265,11 +1291,14 @@ Feature: BPMN Process Deployment
     Then inyecta silenciosamente un valor nulo (`null`) en la base de datos para no colapsar el hilo de ejecución (Amnistía Técnica)
     And cuando el operario de negocio abra esa instancia en su Workdesk (Pantalla 2), el Frontend renderizará el formulario Zod V2, detectará el `null` imperdonable, pintará el campo en ROJO y bloqueará físicamente el avance funcional hasta que el dueño del proceso pregunte y digite la `Cédula` real (Lazy Validation).
 
-  Scenario: Principio de Ley Vigente para Reglas de Decisión DMN (Late Binding) (CA-12)
+---refinamiento---
+Scenario: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquiridos) (CA-12)
     Given un proceso V1 con tokens en vuelo que se aproxima a una Business Rule Task (DMN)
-    When el Director de Riesgos actualiza y publica una nueva versión de la tabla DMN
-    Then los tokens de la V1 (junto con los de las nuevas versiones) que pisen la compuerta un milisegundo después de la publicación, serán evaluados con la nueva regla matemática
-    And demostrando que las reglas DMN no tienen nostalgia y aplican Late Binding.
+    When el Director de Riesgos publica una nueva versión de la tabla DMN (V2)
+    Then el Arquitecto BPMN DEBE haber configurado previamente en el Modeler si la compuerta usa `Binding: LATEST` o `Binding: DEPLOYMENT`.
+    And si elige `LATEST`, el motor evaluará con la nueva V2 publicada (Late Binding).
+    And si elige `DEPLOYMENT` (Por defecto), el motor evaluará EXCLUSIVAMENTE contra la versión exacta de la DMN que estaba activa en el milisegundo en que nació el caso (Deployment Binding).
+    And garantizando así la protección jurídica y previniendo rechazos ilegales a clientes por cambiar las "reglas del juego" a mitad del trámite.
 
   Scenario: Tablero de Resiliencia y Morgue de Tokens (CA-13)
     Given un error técnico no controlado durante una migración asíncrona (Ej: Caída de red o base de datos)
@@ -1594,6 +1623,22 @@ Scenario: Prohibición de Trabajo Síncrono en Camunda (External Task Pattern) (
     Then la arquitectura del iBPMS TIENE ESTRICTAMENTE PROHIBIDO usar `Java Delegates` o expresiones síncronas que ejecuten código pesado dentro del hilo (Thread) principal de Camunda.
     And el motor forzará estructuralmente el uso del patrón `External Task` (Trabajadores Externos).
     And Camunda simplemente publicará la intención de trabajo en un Topic (Ej: `topic="generar_pdf"`), liberando su memoria inmediatamente, a la espera de que los microservicios satélite (Workers) hagan el trabajo pesado y reporten el resultado asíncronamente.
+
+---refinamiento---
+Scenario: Aislamiento Transaccional del Sandbox en Producción (Zero-Blast Radius) (CA-63)
+    Given la ejecución de una simulación de proceso directamente en Producción (Modo Sandbox activado)
+    When el token simulado alcanza una `ServiceTask` externa (Hub US-033) o una `SendTask` (Correos US-049)
+    Then el Engine inyectará obligatoriamente una variable/header oculto en el contexto: `X-Sandbox-Mode: true`.
+    And los Workers de Integración y Notificaciones interceptarán esta bandera de forma imperativa.
+    And ABORTARÁN cualquier petición de red HTTP o envío de correo SMTP real.
+    And devolverán un `Mock Response` (HTTP 200 OK simulado) al motor Camunda, protegiendo a los clientes y sistemas ERP de recibir basura transaccional durante las pruebas del Arquitecto.
+
+Scenario: Intervención de Emergencia sobre Bloqueo Pesimista (Break-Lock)  (CA-64)
+    Given un proceso BPMN bloqueado para edición por el "Lock Pesimista" de un Arquitecto ausente o cuyo PC falló
+    When la parálisis del lienzo afecta el mantenimiento y un usuario con el rol `Super_Admin` accede al Catálogo (Pantalla 6)
+    Then el sistema le habilitará un botón de emergencia rojo `[ 🔓 Romper Candado (Break-Lock) ]`.
+    And al ejecutarlo, el Backend destruirá el lock en la Base de Datos, liberando el proceso para edición inmediata.
+    And registrará inamoviblemente en el Audit Log quién y cuándo forzó la liberación del diseño corporativo retenido por otro empleado.
 
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).
@@ -2891,6 +2936,15 @@ Scenario: Gestión del Ciclo de Vida Operativo y Destrucción del Token (CA-7)
     When un Administrador autorizado ejerce la acción restrictiva de 'Soft Delete' (CA-7)
     Then el caso se cancela y anula internamente dentro de Camunda
     And el sistema mantiene un estricto Silencio Transaccional hacia el exterior, NO despachando ningún correo electrónico de notificación, advertencia o disculpa hacia el cliente final o solicitante.
+
+Scenario: Evento Compensatorio SGDEA por Aborto de Caso (Saga Pattern Documental) (CA-13)
+    Given un proceso vivo ("In-Flight") que ha acumulado archivos físicos en la bóveda SGDEA (SharePoint/S3)
+    When un Administrador ejecuta el `Soft Delete / Abortar Caso` desde el Workdesk o panel administrativo
+    Then el Backend NO se limitará a aniquilar el Token en Camunda.
+    And despachará un Evento de Compensación asíncrono (Patrón Saga) hacia el Módulo Documental (US-035).
+    And ordenará el archivado lógico, etiquetado (`status=ABORTED_ORPHAN`) o traslado a Papelera de todos los UUIDs físicos asociados a ese caso.
+    And previniendo el pago de almacenamiento en la nube infinito por basura de procesos abortados.
+
 ```
 
 **Trazabilidad UX:** Wireframes Pantalla 16 (Intake Administrativo).
@@ -3278,6 +3332,13 @@ Feature: Intelligent Intake Funnel Management
     When el operador de Trinchera la recibe y visualiza en su lista del Workdesk (Inbox Pantalla 5)
     Then el Frontend renderiza un distintivo gráfico inconfundible (Ej: Ícono de IA o Marco de color)
     And alerta al operador que la existencia de este caso provino originalmente de deducción MLOps.
+
+    Scenario: Disparo Automático de Onboarding B2C post-Intake (Cierre GAP CIAM)
+    Given un Intake en cuarentena asociado a un correo de un cliente nuevo que NO existe en el Identity Provider local
+    When el Administrador presiona [Aprobar] y la tarjeta se promueve a instancia BPMN tras la ventana de gracia
+    Then el Backend disparará asíncronamente el flujo de la US-050 enviando un "Magic Link" de bienvenida al correo original.
+    And atará el `Process_Instance_ID` recién nacido a su nuevo `CRM_ID`.
+    And garantizando que al crear su contraseña y entrar al Portal B2C (US-026), el ciudadano vea su trámite inmediatamente activo sin procesos manuales de IT, cerrando el bucle de auto-servicio.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 16 (Intelligent Intake y Embudo Administrativo).
 
@@ -4357,6 +4418,13 @@ Feature: Central Outbound Notification Engine
     And empaquetará los binarios transmutándolos a formato adjunto (`Attachments`) en la trama del correo electrónico saliente.
     And DESTRUIRÁ los binarios de la RAM inmediatamente después de recibir el "200 OK" de despacho para mantener el servidor web ligero.
 
+Scenario: Infraestructura de Notificaciones In-App (WebSocket Campana)
+    Given la necesidad de alertar a un usuario internamente (Ej: SLA a punto de vencer, Tarjeta IA asignada)
+    When el Motor de Notificaciones procesa un evento configurado con el canal `IN_APP`
+    Then el sistema persistirá el registro en la tabla relacional `ibpms_inapp_notifications` con estado `is_read = false`.
+    And despachará instantáneamente un push payload vía WebSocket al Frontend del usuario objetivo.
+    And el Frontend incrementará el contador rojo (Badge) de la Campana en el Master Header de forma reactiva, sin requerir refresco de pantalla (F5).
+    And la UI proveerá un endpoint ligero `PATCH /read` que se disparará al abrir el panel, atenuando el contador.
 
 ```
 ### US-050: Identidad y Onboarding de Clientes Externos (CIAM / Zero-Public-Signup)
@@ -4410,12 +4478,13 @@ Feature: Frontend Visual Governance, Anti-FOUC and SRE Router Guards
     And deberá invocar una promesa bloqueante (`await hydrateAuth()`) forzando al Router a esperar a que Pinia recupere el Token del LocalStorage y recalcule los Claims.
     And previniendo falsos positivos de expulsión (403) causados por la latencia de lectura de la memoria RAM.
 
-  Scenario: El Telón de Acero y Prevención de Destello Confidencial (FOUC)
-    Given el proceso de montaje asíncrono de componentes con directivas de visibilidad (`v-if="hasPermission()"`)
-    When el usuario ingresa a la aplicación o cambia de ruta principal
-    Then la aplicación TIENE ESTRICTAMENTE PROHIBIDO renderizar el Layout interactivo por partes.
-    And el Frontend mantendrá un `[Skeleton Loader Transversal]` de pantalla completa.
-    And el "Telón" visual solo se levantará cuando el 100% de la topología RBAC y las promesas asíncronas se hayan resuelto, garantizando cero destellos (FOUC) de botones o menús prohibidos.
+Scenario: Renderizado Progresivo Estricto y FOUC Controlado (LCP Optimization)
+    Given el proceso de montaje de la aplicación (SPA Vue 3)
+    When el usuario ingresa a la URL
+    Then el Frontend renderizará INMEDIATAMENTE el App Shell (Sidebar y Header Maestros) basándose en los Claims básicos del JWT en Caché para garantizar una métrica óptima de Largest Contentful Paint (LCP).
+    And el `[Skeleton Loader Transversal]` se aplicará ESTRICTAMENTE solo sobre el contenedor `<Router View>` (Main Content).
+    And este Skeleton central solo se destruirá cuando las promesas asíncronas de permisos RBAC del Backend se resuelvan completamente.
+    And garantizando fluidez de navegación ultrarrápida sin generar parpadeos (FOUC) de botones prohibidos en la zona de trabajo.
 
   # ==============================================================================
   # B. DEFENSA PERIMETRAL Y RUTAS (GAP 18)
@@ -4605,7 +4674,7 @@ Bandeja de Entrada Común: Simular la carpeta .agentic-sync/ creando una tabla e
 ```
 
 
-###US-053: Antigravity Command Center (Fábrica de Agentes IA y Arbitraje FinOps B2B)
+### US-053: Antigravity Command Center (Fábrica de Agentes IA y Arbitraje FinOps B2B)
 **Como** Administrador del Tenant (Cliente B2B)
 **Quiero** un panel de control para crear "Agentes de IA" y gestionar mi consumo mediante un Modelo Híbrido (Cuota de Suscripción Base vs. Billetera de Reserva Prepaga)
 **Para** orquestar fuerza laboral artificial en mis procesos BPMN sin riesgo de facturas sorpresa, garantizando que mis flujos críticos no colapsen por falta de fondos y auditando el costo exacto de cada Agente.
@@ -4675,6 +4744,14 @@ Feature: AI Agent Factory, B2B Token Arbitrage & BPMN FinOps Resilience
     Then el sistema proveerá un endpoint administrativo protegido (Exclusivo para el Súper Admin del iBPMS).
     And permitirá inyectar recargas manuales (Top-Ups) sumando créditos a la billetera vitalicia del Tenant.
     And la integración nativa de pasarelas de pago automáticas (Stripe/PayPal) queda diferida para V2.
+
+Scenario: Downgrade Automático por Falta de Fondos Premium (Fallback Cognitivo)
+    Given un Agente IA configurado para usar un modelo Premium (Ej: Gemini Ultra) y el interruptor Overage apagado
+    When el Agente intenta inferir y el Billing Engine rechaza la transacción por fondos insuficientes en su Tier
+    Then el Backend TIENE PROHIBIDO suspender la tarea BPMN de manera inmediata levantando el incidente.
+    And el motor intentará un "Downgrade Fallback" automático hacia el modelo Estándar (Ej: Gemini Flash) SI Y SOLO SI este Tier aún posee cuota mensual gratuita.
+    And si el modelo Estándar logra resolverlo, el proceso avanza estampando en la auditoría: `[PROCESADO_POR_FALLBACK]`.
+    And solo si el modelo Estándar también agota sus tokens (Bolsa en 0), el Worker levantará el incidente en Camunda (`ESPERANDO_SALDO_IA`), priorizando siempre la continuidad operativa.
 
 ```
 ---

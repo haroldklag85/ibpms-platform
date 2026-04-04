@@ -13,15 +13,15 @@ El objetivo es garantizar que cada agente especializado opere con una memoria ai
 ### 👑 Agente Arquitecto Líder (Orquestador)
 *   **Rol:** Project Manager, Diseñador de Soluciones y Revisor de Código.
 *   **Límites:** **TIENE ESTRICTAMENTE PROHIBIDO PROGRAMAR CÓDIGO FUNCIONAL** (Vue/Java) o cambiar de personalidad. Su contexto se mantiene limpio y enfocado en la arquitectura (Gherkin, C4 Model, .cursorrules).
-*   **Responsabilidad:** Leer los requerimientos, dividir el trabajo, redactar los contratos (Entradas/Salidas) y delegar las tareas a los subagentes bloqueando su contexto mediante archivos físicos. Efectúa la auditoría final usando `git stash pop` y consolida el `commit`.
+*   **Responsabilidad:** Leer los requerimientos, dividir el trabajo, redactar los contratos (Entradas/Salidas) y delegar las tareas a los subagentes bloqueando su contexto mediante archivos físicos. Efectúa la auditoría final leyendo los commits nuevos y consolida el `merge` contra main solo con la autorizacion humana.
 
 ### ⚙️ Agente Backend (Especialista Java/Spring Boot)
 *   **Memoria Aislada:** Debe ser invocado en una **NUEVA VENTANA DE CHAT**. No conoce de UI, Vue ni de requerimientos comerciales más allá del contrato que se le entrega.
-*   **Responsabilidad:** Leer su instrucción delegada, programar la Arquitectura Hexagonal, realizar pruebas unitarias (JUnit) y empaquetar su trabajo exclusivamente con `git stash save "temp-backend-US[X]"`.
+*   **Responsabilidad:** Leer su instrucción delegada, programar la Arquitectura Hexagonal, realizar pruebas unitarias (JUnit) y subir su trabajo exclusivamente mediante `git commit` en su propia rama lateral (Ej. `sprint-1/...`).
 
 ### 🎨 Agente Frontend (Especialista Vue 3/TypeScript)
 *   **Memoria Aislada:** Invocar en su propia **NUEVA VENTANA DE CHAT**. No conoce el código interno de Java ni la base de datos.
-*   **Responsabilidad:** Consumir el API real, construir componentes interactivos en Vue/Tailwind respetando los contratos DTO, y empaquetar obligatoriamente con `git stash save "temp-frontend-US[X]"`.
+*   **Responsabilidad:** Consumir el API real, construir componentes interactivos en Vue/Tailwind respetando los contratos DTO, y subir obligatoriamente su trabajo mediante `git commit` en su propia rama lateral (Ej. `sprint-1/...`).
 
 ### 🔎 Agente QA / DevOps 
 *   **Memoria Aislada:** Invocar en su propia **NUEVA VENTANA DE CHAT**.
@@ -33,7 +33,7 @@ Dado que los agentes operan en chats (memorias) separados, **se prohíbe la dele
 
 1.  **Orquestación Escrita:** El Arquitecto Líder analiza la tarea y crea **archivos Markdown de delegación** en la carpeta oculta `.agentic-sync/` (Ej. `.agentic-sync/handoff_frontend_US003.md`). Estos archivos contienen el contexto exacto y minucioso para ese rol específico.
 2.  **Invocación en Salas Limpias:** El usuario humano actúa como el canal de activación. Abre un nuevo chat y envía un "Puntero Corto" al agente especialista. Ej: *"Actúa como Agente Frontend y ejecuta estrictamente lo solicitado en el archivo `.agentic-sync/handoff_frontend_US003.md`"*.
-3.  **Ejecución y Empaquetado:** El especialista lee el archivo, programa sus capas, guarda en el *Stash* y lo notifica en su propio chat.
-4.  **Auditoría y Cierre:** El humano regresa a la ventana del Arquitecto Líder e informa la finalización del especialista. El Arquitecto Líder recupera el código (`git stash pop`), lo revisa basándose únicamente en el *diff* (para mantener su memoria estable) y aprueba el *commit*.
+3.  **Ejecución y Empaquetado:** El especialista lee el archivo, programa sus capas, consolida los cambios mediante `git commit` y `git push` en su propia rama, y lo notifica en su propio chat.
+4.  **Auditoría y Cierre:** El humano regresa a la ventana del Arquitecto Líder e informa la finalización del especialista. El Arquitecto Líder comprueba el código basándose únicamente en el *diff* de la rama secundaria contra main (para mantener su memoria estable) y aprueba la fusión (Merge).
 
 > **Resultado:** Este diseño erradica las alucinaciones por cruce de dominios, garantiza trazabilidad absoluta en el disco (`.agentic-sync/`) y mantiene a cada agente operando dentro de su zona de genio con máxima precisión.

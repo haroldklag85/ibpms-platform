@@ -34,4 +34,4 @@ El entorno estricto de Spring Boot (ej. con validación estricta de Hibernate `v
 *   Si olvidas este script de la base de datos, el contenedor morirá y tu evaluación técnica será calificada como "Negligencia Grave".
 
 **Tu código NO es válido hasta que la JVM viva lo demuestre en el puerto 8080.**
-Una vez que valides el éxito del arranque en consola, cancela el proceso interactivo de Spring Boot (`Ctrl+C` o enviando input de terminación), efectúa tu empaquetado seguro y notifica al Humano Enrutador.
+Una vez que valides el éxito del arranque en consola, cancela el proceso interactivo de Spring Boot (`Ctrl+C` o enviando input de terminación), efectúa `git commit` asegurándote de estar posicionado en tu rama respectiva (`sprint-X/...`) y notifica al Humano Enrutador.

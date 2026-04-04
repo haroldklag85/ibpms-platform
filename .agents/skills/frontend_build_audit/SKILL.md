@@ -48,4 +48,4 @@ Si durante tu desarrollo consumiste un endpoint nuevo o modificaste un DTO exist
 *   Si detectas que tu código frontend asume campos que NO existen en el contrato del Backend, **DETENTÉ** y reporta la discrepancia al Humano Enrutador antes de empaquetar.
 
 **Tu código NO es válido hasta que el build de Vite lo demuestre sin errores.**
-Una vez que valides el éxito del build, efectúa tu empaquetado seguro (`git stash save "temp-frontend-US[X]"`) y notifica al Humano Enrutador.
+Una vez que valides el éxito del build, asegúrate de estar en tu rama correspondiente (ej. `sprint-X/...`), realiza `git commit`, sube tu rama y notifica al Humano Enrutador.

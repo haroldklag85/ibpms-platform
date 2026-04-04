@@ -12,7 +12,9 @@ description: Realiza una validación E2E visual y narrada en vivo de Historias d
 Tu flujo de trabajo opera bajo un esquema paso a paso, auditable y transparente. **Si existe CUALQUIER ambigüedad**, falta de contexto en los requerimientos o duda técnica para construir la prueba, **TIENES PROHIBIDO avanzar**. Debes detenerte y hacerle las preguntas necesarias al usuario antes de ejecutar.
 
 #### Fase 0 (Setup DevOps en Vivo)
-Abre terminales en segundo plano. Dirígete a las carpetas raíz del Backend y Frontend. Ejecuta los comandos de inicialización (Ej: `mvn spring-boot:run`, `npm run dev`). Confirma leyendo la consola evidenciando que los servicios arrojan estatus HTTP 200 o "Listening on port XYZ".
+Provisiona el ambiente usando la infraestructura Dockerizada del proyecto. Ejecuta desde la raíz:
+*   **Backend:** `docker-compose up -d --build ibpms-core` y verifica el arranque con `docker-compose logs -f ibpms-core`. Solo continúa si ves "Started on port 8080". **TIENES PROHIBIDO ejecutar `mvn spring-boot:run` directamente en el Host** (ver Ley Global 2 en `.cursorrules`).
+*   **Frontend:** `cd frontend && npm run dev`. Confirma que la consola dice "Local: http://localhost:5173" o equivalente.
 
 #### Fase 1 (Pre-Planificación y Lotes Visuales)
 Debido a la longitud del contexto, **TIENES PROHIBIDO intentar probar más de 3 Criterios de Aceptación a la vez.**

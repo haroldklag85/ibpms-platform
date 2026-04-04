@@ -19,8 +19,8 @@ Dentro de este modelo operativo, el usuario humano no debe participar como aprob
 Asegurar que cualquier solicitud de permiso, validación o autorización para ejecutar una solución técnica sea dirigida únicamente al agente Arquitecto Líder de Software, evitando que otros agentes pidan aprobación directamente al usuario humano.
 
 ## Instrucciones para el agente
-1. No solicites permisos, aprobaciones ni validaciones técnicas directamente al usuario humano.
-2. Cuando una tarea requiera revisión, autorización o auditoría técnica, escala la solicitud exclusivamente al agente Arquitecto Líder de Software.
+1. No solicites permisos, aprobaciones ni validaciones técnicas directamente al usuario humano. **(Excepción crítica: Si encuentras una contradicción ineludible entre el Código y el SSOT documental que viole la 'Ley 0 RAG-First', ROMPE la gobernanza del Arquitecto y alerta directa y exclusivamente al Usuario Humano).**
+2. Cuando una tarea requiera revisión, autorización o auditoría técnica de rutina, escala la solicitud exclusivamente al agente Arquitecto Líder de Software.
 3. Considera al agente Arquitecto Líder de Software como la única autoridad para evaluar la viabilidad técnica de la solución planteada y aprobar o rechazar su ejecución.
 4. Antes de ejecutar cambios relevantes, presenta al Arquitecto Líder de Software el análisis técnico correspondiente.
 5. Espera la decisión del Arquitecto Líder de Software antes de continuar con la implementación.
@@ -47,9 +47,17 @@ Asegurar que cualquier solicitud de permiso, validación o autorización para ej
 - No reemplazar al Arquitecto Líder de Software como aprobador por otro agente.
 - No asumir aprobación implícita si el Arquitecto Líder de Software no se ha pronunciado.
 - No desordenar la jerarquía de validación entre agentes.
+- **(Excepción UAT):** El Agente QA tiene autorización especial para coordinar directamente con el Usuario Humano la marcha de los lotes de prueba (avanzar, detenerse, repetir). Esta excepción no aplica para decisiones arquitectónicas ni de diseño, solo para el flujo operativo de ejecución de pruebas.
 
 ## Supuestos detectados
 - Se asume que el Arquitecto Líder de Software tiene autoridad técnica para aprobar o rechazar soluciones.
 - Se asume que el usuario humano solo desea interactuar directamente con el Arquitecto Líder de Software.
 - Se asume que los demás agentes operan como especialistas ejecutores o consultivos dentro del flujo.
 - Se asume que ya existe o se desea implementar un modelo de gobierno entre agentes.
+
+## Protocolo de Failover (Resiliencia Operativa)
+Si el Agente Arquitecto Líder de Software no responde, su contexto está degradado (amnesia, respuestas incoherentes, loops) o ha sido explícitamente cerrado por el usuario humano tras 2 intentos de comunicación fallidos:
+1. El subagente afectado tiene autorización de escalar directamente al Usuario Humano.
+2. Debe presentar evidencia escrita de su solicitud (el archivo `approval_request_[ROL].md` en `.agentic-sync/`).
+3. El Usuario Humano asumirá temporalmente el rol de aprobador técnico hasta que se restaure una sesión limpia del Arquitecto Líder.
+4. Esta excepción NO otorga al subagente permiso para hacer `git commit`. El empaquetado sigue siendo obligatoriamente vía `git stash`.

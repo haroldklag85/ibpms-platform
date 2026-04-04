@@ -21,6 +21,9 @@ Antes de ejecutar cualquier lectura, refactorización funcional o creación de n
   - Todo documento de Arquitectura y Requerimientos debe crearse o modificarse exclusivamente dentro de `ibpms-platform/docs/...`
   - Toda la logística del Agente (checklist interno, prompts iterativos) pertenece a `ibpms-platform/scaffolding/...`
   - Todo el código backend pertenece a la estricta separación de Arquitectura Hexagonal instaurada en `ibpms-platform/backend/...`
+  - Todo el código frontend (Vue 3, TypeScript, Stores Pinia, Componentes UI) pertenece exclusivamente a `ibpms-platform/frontend/...`
+  - Todo lo relacionado con automatización robótica de procesos pertenece a `ibpms-platform/rpa/...`
+  - Toda la configuración de infraestructura (Docker, CI/CD, scripts DevOps) pertenece a `ibpms-platform/infra/...`
 
 ## 3. Respeto por la Única Fuente de la Verdad y Sincronización Estricta
 - Existe un único contrato comercial/funcional y un único plano arquitectónico. 

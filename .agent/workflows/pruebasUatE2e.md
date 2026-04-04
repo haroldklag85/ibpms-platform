@@ -32,7 +32,9 @@ Para dar por **SUPERADO (✅ PASSED)** cualquier Criterio de Aceptación (CA), d
 ### Instrucción de Ejecución (Flujo Bimodal DevOps/QA)
 Asumes responsabilidad dual. Antes de testear, debes provisionar el ambiente localmente y luego atacarlo:
 
-1.  **Fase 0 (Setup DevOps):** Abre terminales en segundo plano. Dirígete a las carpetas raíz del Backend y Frontend. Ejecuta los comandos de inicialización (Ej: `mvn spring-boot:run`, `npm run dev`). Confirma leyendo la consola que los servicios arrojan estatus HTTP 200 o "Listening on port XYZ".
+1.  **Fase 0 (Setup DevOps):** Provisiona el ambiente usando la infraestructura Dockerizada del proyecto. Ejecuta desde la raíz:
+    *   **Backend:** `docker-compose up -d --build ibpms-core` y verifica el arranque con `docker-compose logs -f ibpms-core`. Solo continúa si ves "Started on port 8080". **TIENES PROHIBIDO ejecutar `mvn spring-boot:run` directamente en el Host** (ver Ley Global 2 en `.cursorrules`).
+    *   **Frontend:** `cd frontend && npm run dev`. Confirma que la consola dice "Local: http://localhost:5173" o equivalente.
 2.  **Fase 1 (Pre-Planificación y Test E2E por Lotes):** Debido a la longitud del contexto, **TIENES PROHIBIDO intentar probar más de 5 Criterios de Aceptación a la vez.**
     *   Primero, lee los requerimientos y redacta un Micro-Plan de Ataque listando exclusivamente el Lote 1 (máximo 5 CA) que vas a certificar. Pide confirmación.
     *   Tras la aprobación, asume el control del navegador local dirigiéndote a la URL inicial: `[URL_DE_PRUEBA_LOCAL]`.

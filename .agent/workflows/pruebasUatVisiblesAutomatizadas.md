@@ -29,7 +29,7 @@ Tu flujo de trabajo consiste en analizar los requerimientos, escribir un archivo
 3.  Notifica al usuario que el script ha sido creado exitosamente.
 
 #### Fase 3: Ejecución en Vivo (Modo UI)
-1.  Tu entorno Playwright ya está configurado para levantar el Frontend automáticamente (vía `webServer` en la config). Antes de correr, advierte al usuario si necesita encender su backend Java por separado (si no está encendido).
+1.  Tu entorno Playwright ya está configurado para levantar el Frontend automáticamente (vía `webServer` en la config). Antes de correr, asegúrate de que el Backend esté vivo ejecutando `docker-compose up -d --build ibpms-core` desde la raíz y verificando con `docker-compose logs -f ibpms-core` que diga "Started on port 8080". **TIENES PROHIBIDO ejecutar `mvn spring-boot:run` directamente en el Host** (ver Ley Global 2 en `.cursorrules`).
 2.  Anuncia en el chat:
     > 🤖 **¡Lanzando Automatización con Playwright!**
     > **Ejecutando Test para:** [ID_DE_LA_US]

@@ -1,0 +1,17 @@
+node_modules/
+target/
+dist/
+build/
+.git/
+.idea/
+logs/
+*.log
+.DS_Store
+
+# Bloqueo estricto de Scope Creep (Blindaje Cognitivo MVP V1)
+docs/requirements/future_roadmap/
+
+# Archivos pesados en la raíz (liberación de capacidad RAG ~4MB)
+doc.json
+temp_tree.txt
+us*.txt

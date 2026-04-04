@@ -14,11 +14,11 @@ El iBPMS es desarrollado por un escuadrón iterativo compuesto por un Humano (Pr
 - **Regla Estricta:** NINGÚN Agente Especialista (Ej. Arquitecto lider Software, Frontend, Backend, QA, Product Owner ) tiene autoridad para hacer un Commit o Push directo a esta rama cuando esté desarrollando código transaccional.
 - **Condición de Entrada:** El código solo entra a `main` si compila, no rompe el sistema y ha sido aprobado con test end to end.
 
-### Ramas de Agentes (Sprints y User Stories)
-- **Naturaleza:** Universos paralelos de trabajo aislado vinculados a una Historia de Usuario (US) específica dentro de un Sprint activo.
-- **Nomenclatura Obligatoria:** `sprint-{numero}/{rol}/us-{numero}-{descripcion}`
-- **Ejemplo:** `sprint-1/backend/us-052-orquestacion`, `sprint-1/frontend/us-012-login`.
-- **Regla Estricta:** Cuando el Humano pida desarrollar una nueva historia de usuario del Backlog (`v1_user_stories.md`), el agente especialista OBLIGATORIAMENTE debe crear y moverse a esta rama vinculada al Sprint (`git checkout -b sprint-1/...`) antes de teclear la primera línea de código.
+### Ramas de Agentes (Sprints y Carrera de Relevos)
+- **Naturaleza:** Universos paralelos de trabajo vinculados a una Historia de Usuario (US). Operan bajo la modalidad de **Carrera de Relevos (Rama Única por US)**.
+- **Nomenclatura Obligatoria:** `sprint-{numero}/us-{numero}-{descripcion}`
+- **Ejemplo:** `sprint-3/us-052-orquestacion`, `sprint-3/us-012-login`.
+- **Regla Estricta:** NO se deben crear ramas divididas por rol (`/backend/`, `/frontend/`) para evitar el "integration hell". Cuando se desarrolle una historia, **TODOS los agentes (Back, Front, QA) heredarán y trabajarán SECUENCIALMENTE sobre la misma rama compartida**. El agente siempre deberá hacer `git pull` antes de comenzar para obtener el código que le dejó el agente anterior.
 
 ### Ramas del Arquitecto Líder (Hotfixes y Core)
 - **Naturaleza:** La "Ambulancia" o el equipo de mantenimiento pesado. Usadas exclusivamente por el Agente Orquestador (Arquitecto lider software) para apagar incendios (bugs), actualizar librerías o resolver fallas inter-modulares que no pertenecen a una US particular.

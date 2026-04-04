@@ -19,7 +19,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.HashMap;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 @RestController

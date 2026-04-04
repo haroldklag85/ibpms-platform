@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@SuppressWarnings("null")
 public class DmnGovernanceUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(DmnGovernanceUseCase.class);

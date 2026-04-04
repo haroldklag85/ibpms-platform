@@ -1,7 +1,6 @@
 package com.ibpms.poc.infrastructure.bpm.config;
 
 import org.camunda.bpm.engine.spring.SpringProcessEngineConfiguration;
-import org.camunda.feel.FeelEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;

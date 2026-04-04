@@ -1,0 +1,150 @@
+### US-001: Obtener Tareas Pendientes en el Workdesk
+**Como** Analista / Usuario de Negocio
+**Quiero** visualizar una lista consolidada de mis tareas pendientes (BPMN o Kanban) al ingresar a la plataforma (Workdesk)
+**Para** saber exactamente qué gestiones operativas debo priorizar y resolver hoy.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Workdesk Loading and Real-Time Grid
+  Scenario: Carga Inicial con Paginación y Prioridad SLA (CA-1)
+    Given que el usuario "juan.perez" ingresa al Workdesk
+    When el sistema consulta las tareas pendientes
+    Then el backend retorna estrictamente el primer bloque de tareas (Paginadas, Ej: 50) para proteger el performance
+    And el ordenamiento forzoso por defecto es "SLA más Crítico (Fecha Vencimiento Ascendente) primero", sin importar origen.
+
+  Scenario: Búsqueda Estratégica Híbrida local vs remota (CA-2)
+    Given la barra de búsqueda en el Workdesk
+    When Juan busca el caso "EXP-90X"
+    Then el Frontend filtra inmediatamente sobre las 50 tareas precargadas en memoria
+    And paralelamente dispara una petición asíncrona a la Base de Datos para asegurar que no existan coincidencias en otras páginas ocultas, refrescando el resultado final.
+
+  Scenario: Consolidación UI Unificada de BPMN y Kanban (CA-3)
+    Given la disparidad estructural entre tareas de Proceso (Camunda) y Proyectos (Gantt)
+    When se renderiza la tabla o tarjetas unificadas en la misma pestaña activa
+    Then la interfaz utiliza un patrón de "Data Grid Universal" garantizando 5 columnas estandarizadas: [Nombre, SLA, Estado, Avance, Recurso]
+    And añade un ícono o badge visual a la izquierda del Nombre (Ej: ⚡ Flujo, 📅 Proyecto) permitiendo identificación rápida sin corromper la uniformidad de la tabla.
+
+  Scenario: Alternador de Vistas por Delegación (CA-4)
+    Given que un Asistente le delega permisos temporales a su Jefe (Juan)
+    Then el Workdesk de Juan muestra un Interruptor o Dropdown (Toggle) en la cabecera
+    And permite alternar entre `[Mis Tareas]` y `[Tareas de mi Asistente]` sin mezclar visualmente los contextos, evitando desorden operativo.
+
+  Scenario: Ticking Engine Vivo y Semáforos SLA (CA-5)
+    Given las tarjetas o filas del Workdesk cargadas en pantalla
+    Then el componente visual de SLA actúa como un temporizador dinámico "vivo" (Tick-Tock)
+    And cambia de color forzosamente (Semáforo: Verde, Amarillo, Rojo) en tiempo real al acercarse al límite temporal configurado, sin requerir refresco (F5) ni peticiones de polling constantes.
+
+  Scenario: Desaparición Fantasma por Bloqueo o Asignación Externa (CA-6)
+    Given una tarea visible en la "Cola de Grupo" de Juan
+    When un colega la "Reclama" o un "Project Manager (PM)" asigna forzosamente la tarea a otro especialista
+    Then el sistema mediante WebSockets (o Server-Sent Events) recibe el pulso de asignación
+    And oculta instantáneamente esa tarjeta de la vista de Juan para erradicar colisiones.
+
+  Scenario: Degradación Elegante ante Falla BPMN (CA-7)
+    Given una caída temporal de la API / Base de Datos transaccional de Camunda
+    When el usuario carga su Workdesk en ese instante
+    Then la interfaz carga exitosamente las tareas nativas (Planificador Kanban) que siguen vivas y accesibles
+    And proyecta un Toast/Banner amable alertando: "Sincronización de Procesos (BPMN) degradada temporalmente. Estamos trabajando para solucionarlo".
+
+  Scenario: Intervención Administrativa Anti Cherry-Picking (CA-8)
+    Given que el Administrador Global del cliente detecta sesgos de selección (operarios ignorando tareas complejas)
+    When enciende la bandera del sistema de "Enrutamiento Forzoso" (Feature Toggle)
+    Then la vista de Workdesk de los operarios oculta la tabla/lista selectiva
+    And presenta un único call-to-action gigante: `[Atender Siguiente Tarea]`, forzando a resolver matemáticamente lo más crítico o antiguo.
+
+  Scenario: Paginación Máxima de Tarjetas de Tarea (CA-9)
+    Given el Workdesk de un operario (Pantalla 1) con un volumen de casos asignados que supera la capacidad visual
+    When se renderiza la lista o grilla unificada de tareas
+    Then la interfaz debe dividir y renderizar las tarjetas a través de una paginación
+    And establecerá un límite estricto de máximo 15 tarjetas (Task Cards) por página, para garantizar el rendimiento y la legibilidad.
+	
+  # ==============================================================================
+  # A. US-001.1
+  # ==============================================================================
+  # A. DESEMPEÑO SRE, EFECTO ESTAMPIDA Y PAGINACIÓN (Anti-DDoS)
+  # ==============================================================================
+  Scenario: Paginación Segura, Carga Matutina y Búsqueda Server-Side (CA-10)
+    Given la entrada concurrente de usuarios (Thundering Herd) a las 8:00 AM
+    When el Frontend solicita la grilla unificada de tareas
+    Then el Backend absorberá el impacto utilizando Caché (Redis/Memcached) para las consultas unificadas base.
+    And implementará Paginación Server-Side estricta, prohibiendo búsquedas híbridas client-side (Cierre de Jitter visual).
+    And el Backend aplicará un "Hard Limit" arquitectónico, retornando `HTTP 400` si la red solicita manipular la paginación a `> 100` registros (Prevención DDoS).
+    And las búsquedas de texto usarán índices optimizados (Ej: `pg_trgm`) en BD y el Frontend aplicará un Debounce de 300ms antes de emitir el Request.
+    And el Frontend mostrará un Skeleton Loader transicional, prohibiendo Spinners que bloqueen la pantalla.
+    And el buscador solo rastreará tareas "Vivas/Completables", excluyendo casos históricos cerrados y tareas "Suspendidas" en Camunda.
+
+  # ==============================================================================
+  # B. UX, ACCESIBILIDAD (A11y) Y EFICIENCIA DE MEMORIA
+  # ==============================================================================
+  Scenario: El Reloj de un Solo Corazón y Accesibilidad Visual (Anti DOM-Thrashing) (CA-11)
+    Given la necesidad de renderizar 50 temporizadores de SLA "vivos" en pantalla
+    Then la arquitectura Frontend TIENE PROHIBIDO instanciar múltiples `setInterval` por tarjeta.
+    And implementará un `Global Heartbeat Store` en Vue/Pinia basado en `requestAnimationFrame` del cual todas las tarjetas heredarán la reactividad pasivamente.
+    And los colores del semáforo SLA estarán obligatoriamente acompañados de Iconografía (⚡ Rojo, ⏳ Amarillo, ✔️ Verde) usando SVGs in-line para garantizar la legibilidad en el 8% de daltónicos y evitar cargas asíncronas de PNGs.
+    And la UI poseerá un interruptor `[Mute]` para silenciar notificaciones sonoras push de vencimiento de SLA.
+
+  Scenario: Ergonomía Visual, KeepAlive y Empty States Gamificados (CA-12)
+    Given la navegación intensiva del operador entre el Workdesk y los Formularios
+    When el operador regresa al Workdesk presionando "Atrás"
+    Then el Frontend utilizará `<keep-alive>` cacheando la página, filtros y scroll en RAM, garantizando carga en 0ms.
+    And si el operador resuelve todas las tareas de la página actual y queda vacía, la grilla lo redirigirá automáticamente a la Página 1 (Prevención de Last Page Empty).
+    And si la bandeja total llega a cero, se renderizará un `Empty State` con Gamificación pasiva (Ilustración de felicitación) en lugar de una tabla muerta.
+    And la Grilla soportará "Densidad Condensada" y se degradará a "Card Layout" en móviles (<768px) ocultando las columnas 4 y 5.
+    And los detalles secundarios se mostrarán vía Tooltips sobre el Nombre (Zero-Click Context).
+    And la botonera de paginación estará fija (Sticky) arriba y abajo de la tabla.
+
+  Scenario: Minificación WebSocket, Desvanecimiento y Throttling (CA-13)
+    Given la necesidad de sincronizar eventos en tiempo real (Ej: Tarea reclamada por otra persona o Batch Uploads)
+    Then el payload del WebSocket será atómico, enviando solo la instrucción y el ID (Ej: `{action: 'REMOVE', id: 'TK-123'}`) ahorrando 99% de I/O de red.
+    And el Frontend aplicará un `Debounce/Throttling` inyectando actualizaciones masivas en bloques de 2 segundos para no congelar el renderizado del Main Thread.
+    And el Frontend NO hará desaparecer la fila de golpe (evitando saltos de renglón).
+    And ejecutará una animación CSS (`opacity: 0`) acompañada de un Toast discreto: "Tarea reclamada por otro equipo".
+    And la identidad de terceros en la tabla grupal se ofuscará mostrando solo "En gestión por otro Agente" (Privacidad Operativa).
+
+  # ==============================================================================
+  # C. PREVENCIÓN DE FUGAS (IDOR, PII) Y SEGURIDAD
+  # ==============================================================================
+  Scenario: Sanitización del Payload DTO, Aislamiento Multi-Tenant y SQLi (CA-14)
+    Given el retorno de datos desde la Base de Datos hacia el Workdesk
+    Then el Backend emitirá un DTO estrictamente sanitizado, purgando contraseñas, PII y las variables internas de Camunda para prevenir Data Leaks en la Pestaña "Network".
+    And las 5 columnas estándar serán rígidas (Polimorfismo columnar prohibido en V1 para asegurar performance).
+    And toda consulta a la capa Repository inyectará OBLIGATORIAMENTE `tenantId = :myTenant` y aplicará el `bind` del ORM, neutralizando inyecciones SQL (`SQLi`).
+    And si la plataforma detecta un error `401 Unauthorized` por caída severa, destruirá la sesión local exigiendo Re-Login, sin confiar visualmente en cachés obsoletos.
+
+  Scenario: Delegación Segura (Prevención IDOR) e Interfaz Cinética (CA-15)
+    Given el Toggle para ver las tareas de "Mi Asistente"
+    When el Ejecutivo presiona el botón enviando el `user_id` del asistente
+    Then el Backend VALIDARÁ PERIMETRALMENTE el RBAC, comprobando que el Ejecutivo logueado sea jerárquicamente el superior de ese ID.
+    And si se altera la URL para espiar a otro usuario, el servidor arrojará `403 Forbidden` (Prevención IDOR).
+    And al cargar la vista delegada, el Frontend aplicará un destello visual o Banner permanente alertando: "Estás viendo el escritorio de [Nombre]", mitigando errores operativos.
+
+  # ==============================================================================
+  # D. ENRUTAMIENTO INTELIGENTE Y REGLAS DE NEGOCIO
+  # ==============================================================================
+  Scenario: Anti Cherry-Picking y Enrutamiento por Habilidades (Skill-Based) (CA-16)
+    Given la activación del interruptor administrativo "Atender Siguiente" (Anti Cherry-Picking)
+    When el operario oprime el botón
+    Then el motor Backend NO asignará ciegamente la tarea más crítica del sistema global.
+    And cruzará matemáticamente la tarea más antigua/crítica contra el "Array de Skills" funcionales del operario (Skill-Based Routing).
+    And proveerá un mecanismo de "Pausa / Skipeo Justificado" si la tarea exige contactar a un cliente que no responde, previniendo el secuestro operativo.
+    And este interruptor administrativo dejará huella inmutable en el Audit Log Central, prohibiendo encendidos fantasma en madrugadas.
+
+  Scenario: Jerarquía Multi-Origen y Resolución de Ambigüedades (CA-17)
+    Given la unificación de tareas de Camunda (BPMN) y Entidades Locales (Kanban)
+    When dos tareas de orígenes distintos expiren exactamente en la misma hora
+    Then la base de datos resolverá el desempate aplicando una regla de ordenamiento por "Prioridad de Impacto Financiero" y luego "Fecha de Creación".
+    And las tareas sin fecha de vencimiento (`dueDate = null`) se ponderarán matemáticamente como "SLA Infinito" enviándose al fondo del grid (`NULLS LAST`).
+    And si una tarea tiene un impacto financiero masivo, el Grid inyectará un badge `[Impacto 🔥]` que rebatirá el orden visual del SLA general, posicionándola en Top 1.
+    And la 4ta Columna "Avance" mapeará el nombre literal de la tarea BPMN contra el total de etapas del proceso de forma determinista.
+
+  Scenario: Degradación Elegante Multi-Motor y Prioridad de Reapertura (CA-18)
+    Given una caída temporal de la API transaccional de Camunda (HTTP 500)
+    When el usuario carga su Workdesk en ese instante
+    Then la interfaz aplicará Degradación Elegante, cargando exitosamente las tareas Kanban vivas de la Base Relacional sin emitir un 500 fatal screen.
+    And proyectará un Toast advirtiendo: "Sincronización BPMN degradada".
+    And si el operario hace Logout y entra en otra máquina, el Workdesk priorizará abrir su tablero general unificado en lugar de forzarlo a entrar a la tarea específica de ayer.
+```
+**Trazabilidad UX:** Wireframes Pantalla 1 (Workdesk - Escritorio de Tareas).
+
+---
+

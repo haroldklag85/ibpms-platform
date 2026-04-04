@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,10 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.junit.jupiter.api.AfterEach;
+import com.ibpms.poc.AbstractIntegrationTest;
+
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
-public class RoleAuditIntegrationTest {
+@SuppressWarnings("null")
+public class RoleAuditIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -31,8 +34,10 @@ public class RoleAuditIntegrationTest {
     @Autowired
     private RoleAuditLogRepository auditLogRepository;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @AfterEach
+    void tearDown() {
+        auditLogRepository.deleteAllInBatch();
+    }
 
     @Test
     @DisplayName("US-036 p4: Decodificación BLOB - La exportación ISO27001 debe despachar un CSV/ByteStream legible y estricto")

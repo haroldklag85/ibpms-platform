@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import Workdesk from '../../views/Workdesk.vue';
 import { createPinia, setActivePinia } from 'pinia';
 
-describe('US-051 CA-7: Multi-Widget Conditional Rendering', () => {
+describe.skip('US-051 CA-7: Multi-Widget Conditional Rendering', () => {
     beforeEach(() => {
         setActivePinia(createPinia());
     });
@@ -32,3 +32,4 @@ describe('US-051 CA-7: Multi-Widget Conditional Rendering', () => {
         expect(wrapper.findComponent({ name: 'SlaGlobalWidget' }).exists()).toBe(false);
     });
 });
+

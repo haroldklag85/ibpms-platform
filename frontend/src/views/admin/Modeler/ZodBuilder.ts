@@ -37,11 +37,24 @@ export interface FormFieldMetadataDTO {
 
 export class ZodBuilder {
     /**
-     * Construye dinámicamente un esquema Zod real ejecutable en memoria a partir del arreglo de metadatos de campos visuales.
+     * Motor principal de construcción dinámica estructural. Genera un esquema real y asíncrono
+     * (ZodTypeAny) de Zod evaluando el ciclo de vida, mutabilidades y validaciones en tiempo de ejecución.
+     * Esto minimiza la fricción con FormDesigner al separar las reglas visuales del AST rígido subyacente.
+     * 
+     * @param fields Arreglo jerárquico de metadatos descriptivos traídos del Vue Store o FormDesigner.
+     * @param formRules Reglas de validación semántica cruzada interpoladas globalmente (e.g. validación de fechas o saldos).
+     * @returns Schema compilado de tipo z.ZodTypeAny preparado para `.safeParse()`.
      */
     static buildSchema(fields: FormFieldMetadataDTO[], formRules?: any[]): z.ZodTypeAny {
         const shape: Record<string, ZodTypeAny> = {};
 
+        /**
+         * Función recursiva que aplana la estructura en árbol del diseño de la interfaz (Containers, Tabs, Accordions)
+         * abstrayendo los fieldsets visuales de tal forma que Zod solo intercepte inputs de datos mutables puros.
+         * 
+         * @param arr Nodo o Array de Metadatos de Campos Visuales iterado actualmente.
+         * @returns Un array unidimensional estricto libre de layout components.
+         */
         const flatFields = (arr: FormFieldMetadataDTO[]): FormFieldMetadataDTO[] => {
             let res: FormFieldMetadataDTO[] = [];
             for (const f of arr) {

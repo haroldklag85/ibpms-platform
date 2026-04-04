@@ -12,17 +12,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.AfterEach;
 
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.ibpms.poc.AbstractIntegrationTest;
+
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
-public class IdentityManagementIntegrationTest {
+@SuppressWarnings("null")
+public class IdentityManagementIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,6 +47,11 @@ public class IdentityManagementIntegrationTest {
         user.setIsActive(true);
         user = userRepository.saveAndFlush(user);
         this.existingUserId = user.getId();
+    }
+
+    @AfterEach
+    void tearDown() {
+        userRepository.deleteAllInBatch();
     }
 
     @Test

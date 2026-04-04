@@ -50,7 +50,7 @@ export const useMenuStore = defineStore('menu', () => {
                         items: [
                            { path: '/admin/modeler/bpmn', icon: 'account_tree', label: 'Venture Modeler' },
                            { path: '/admin/modeler/dmn', icon: 'rule', label: 'DMN Copilot' },
-                           { path: '/admin/modeler/list', icon: 'dynamic_form', label: 'Form Engine' }
+                           { path: '/admin/modeler/forms', icon: 'dynamic_form', label: 'Form Engine' }
                         ]
                     },
                     {
@@ -59,6 +59,7 @@ export const useMenuStore = defineStore('menu', () => {
                         items: [
                            { path: '/admin/security/identity', icon: 'shield_person', label: 'Seguridad (RBAC)' },
                            { path: '/admin/integration/builder', icon: 'extension', label: 'Extensiones' },
+                           { path: '/admin/integration/dlq', icon: 'queue', label: 'DLQ Dashboard' },
                            { path: '/admin/projects/manager', icon: 'folder_managed', label: 'Gestor Proyectos' },
                            { path: '/admin/projects/agile-hub', icon: 'speed', label: 'Hub Ágil' },
                            { path: '/admin/mailboxes', icon: 'mark_email_read', label: 'Buzones SAC' }

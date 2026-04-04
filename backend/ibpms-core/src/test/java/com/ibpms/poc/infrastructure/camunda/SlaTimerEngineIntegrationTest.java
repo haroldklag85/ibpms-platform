@@ -5,7 +5,6 @@ import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
-import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.task.Task;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,18 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 public class SlaTimerEngineIntegrationTest {
-
-    @Autowired
-    private ProcessEngine processEngine;
-
-    @Autowired
-    private RuntimeService runtimeService;
-
     @Autowired
     private TaskService taskService;
-
-    @Autowired
-    private ManagementService managementService;
 
     @BeforeEach
     void setUp() {

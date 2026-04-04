@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { nextTick } from 'vue';
 import DynamicForm from '@/components/forms/DynamicForm.vue';
 import { z } from 'zod';
 
@@ -40,6 +41,8 @@ describe('DynamicForm.vue', () => {
         const buttons = wrapper.findAll('button');
         const cancelBtn = buttons.find(b => b.text().includes('Cancelar'));
         await cancelBtn!.trigger('click');
+        
+        await nextTick();
 
         expect(wrapper.emitted()).toHaveProperty('cancel');
     });
@@ -52,6 +55,8 @@ describe('DynamicForm.vue', () => {
         const form = wrapper.find('form');
         await form.trigger('submit.prevent');
 
+        await nextTick();
+        
         // Fast forward the setTimeout
         vi.runAllTimers();
 
@@ -82,6 +87,8 @@ describe('DynamicForm.vue', () => {
 
         // Act: Submission goes through with faulty default inputs (age is null)
         await form.trigger('submit.prevent');
+        await nextTick();
+        
         vi.runAllTimers();
 
         // Assert

@@ -17,6 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/admin/service-accounts")
+@SuppressWarnings("null")
 public class ServiceAccountController {
 
     private final ServiceAccountRepository serviceAccountRepository;

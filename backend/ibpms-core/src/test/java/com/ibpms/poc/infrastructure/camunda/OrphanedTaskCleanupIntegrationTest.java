@@ -18,7 +18,6 @@ public class OrphanedTaskCleanupIntegrationTest {
     
     // Asumiremos que el backend emite un Domain Event o que podemos inyectar un manejador sintético
     @Autowired
-    private ApplicationEventPublisher eventPublisher;
 
     @Test
     @DisplayName("US-038 CA-10 Gobernanza: El Listener Asíncrono reacciona a despidos limpiando los Assignees en Camunda")

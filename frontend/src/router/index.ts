@@ -144,6 +144,12 @@ const router = createRouter({
             component: () => import('@/views/admin/Integration/VisualMapper.vue'),
             meta: { requiresAuth: true }
         },
+        {
+            path: '/admin/integration/dlq',
+            name: 'DlqDashboard',
+            component: () => import('@/views/admin/Integration/DlqDashboard.vue'),
+            meta: { requiresAuth: true }
+        },
         // --- Bloque G: SGDEA (Pantalla 12) ---
         {
             path: '/sgdea/vault',

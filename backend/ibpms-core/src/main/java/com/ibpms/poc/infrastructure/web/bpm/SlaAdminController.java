@@ -10,6 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin/sla")
+@SuppressWarnings("null")
 public class SlaAdminController {
 
     private final SlaService slaService;

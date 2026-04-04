@@ -1,0 +1,131 @@
+npm warn Unknown cli config "--run". This will stop working in the next major version of npm.
+
+> ibpms-frontend@1.0.0 test
+> vitest
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/HaroltAndrésGómezAgu/ProyectoAntigravity/ibpms-platform/frontend[39m
+
+ [32m✓[39m src/tests/views/admin/AI/SacConfigManager.spec.ts [2m([22m[2m1 test[22m[2m)[22m[33m 410[2mms[22m[39m
+     [33m[2m✓[22m[39m debe mantener el boton de Guardar deshabilitado hasta que Test Connection sea Exitoso [33m 381[2mms[22m[39m
+ [31m❯[39m src/tests/FormDesigner.spec.ts [2m([22m[2m0 test[22m[2m)[22m
+ [32m✓[39m src/tests/components/DynamicForm.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 171[2mms[22m[39m
+ [32m✓[39m src/components/forms/DynamicForm.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 598[2mms[22m[39m
+     [33m[2m✓[22m[39m Debe renderizar un iForm Maestro ocultando los campos que no pertenecen al "stage" (Dual-Pattern) [33m 366[2mms[22m[39m
+ [31m❯[39m src/tests/components/SudoModal.spec.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m src/tests/components/MainLayout.spec.ts [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 267[2mms[22m[39m
+[31m     [31m×[31m Carga el menú iterativamente desde el Payload JSON de Entra ID/Store[39m[32m 116[2mms[22m[39m
+[31m     [31m×[31m HOTFIX US-051 Regresión: Garantiza el anclaje del botón "Inicio" inyectado desde el JSON del Backend[39m[32m 126[2mms[22m[39m
+ [31m❯[39m src/tests/views/admin/Integration/DlqDashboard.spec.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 1690[2mms[22m[39m
+     [32m✓[39m Debe renderizar la vista del Dashboard DLQ correctamente[32m 93[2mms[22m[39m
+[31m     [31m×[31m Debe inyectar Fake/Mock Data (Fallback) tras simular un API call y mostrar la tabla[39m[33m 822[2mms[22m[39m
+     [33m[2m✓[22m[39m Debe purgar todos los mensajes de la tabla si el usuario hace clic en Purgar Todo [33m 770[2mms[22m[39m
+ [32m✓[39m src/tests/e2e/US003_FormMasterArchitecture.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 182[2mms[22m[39m
+ [32m✓[39m src/tests/e2e/US003_ArchitecturalGaps.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 319[2mms[22m[39m
+ [32m✓[39m src/tests/components/BpmnAiInjection.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 193[2mms[22m[39m
+ [32m✓[39m src/tests/components/PanicModal.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 192[2mms[22m[39m
+ [32m✓[39m src/tests/components/DmnAntiXss.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 99[2mms[22m[39m
+ [32m✓[39m src/tests/views/admin/ProjectBuilder/AgileHub.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 236[2mms[22m[39m
+ [32m✓[39m src/tests/views/admin/ProjectBuilder/TemplateBuilder.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 263[2mms[22m[39m
+ [32m✓[39m src/views/admin/RbacManager/__tests__/RbacManagerView.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 170[2mms[22m[39m
+ [32m✓[39m src/tests/components/CopilotActionPills.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 255[2mms[22m[39m
+ [32m✓[39m src/tests/integration-hub/OutboundDispatcher.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 200[2mms[22m[39m
+ [32m✓[39m src/tests/integration-hub/CryptographyService.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 171[2mms[22m[39m
+ [32m✓[39m src/tests/components/BpmnPreFlight.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 80[2mms[22m[39m
+[90mstderr[2m | src/tests/components/TaskViewerModal.spec.ts[2m > [22m[2mTaskViewerModal.vue (US-039 p2 - Data Flattening & Prefixing)[2m > [22m[2mUS-039 p2: Inyecta el Prefijo `$generic_` a las llaves del payload para impedir Data Bleeding/Overwrites en Camunda
+[22m[39m[Vue warn]: Invalid prop: type check failed for prop "context". Expected Object, got String with value "BPMN". 
+  at <TaskViewerModal isOpen=true taskId="TASK-99" taskTitle="Inspección de Sitio"  ... > 
+  at <VTUROOT>
+
+ [32m✓[39m src/tests/components/TaskViewerModal.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 127[2mms[22m[39m
+ [32m✓[39m src/tests/router/RouterGuard.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m src/tests/stores/authStore.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/tests/utils/DateTransformer.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/tests/components/BpmnAiRecovery.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/tests/stores/useProjectTemplateStore.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [2m[90m↓[39m[22m src/tests/components/WorkdeskWidgets.spec.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m src/tests/views/Workdesk.spec.ts [2m([22m[2m2 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m src/views/__tests__/Workdesk.spec.ts [2m([22m[2m6 tests[22m[2m | [22m[33m6 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m src/views/admin/Modeler/BpmnDesigner.spec.ts [2m([22m[2m5 tests[22m[2m | [22m[33m5 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m src/tests/views/admin/Modeler/BpmnDesigner.spec.ts [2m([22m[2m3 tests[22m[2m | [22m[33m3 skipped[39m[2m)[22m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/tests/FormDesigner.spec.ts[2m [ src/tests/FormDesigner.spec.ts ][22m
+[31m[1mTypeError[22m: __vite_ssr_import_0__.default.create is not a function[39m
+[36m [2m❯[22m src/services/apiClient.ts:[2m5:40[22m[39m
+    [90m  3| [39m
+    [90m  4| [39m// Instancia global con baseUrl que pasa por el Proxy de Vite (/api ->…
+    [90m  5| [39m[35mconst[39m apiClient[33m:[39m [33mAxiosInstance[39m [33m=[39m axios[33m.[39m[34mcreate[39m({
+    [90m   | [39m                                       [31m^[39m
+    [90m  6| [39m    baseURL[33m:[39m [32m'/api/v1'[39m[33m,[39m
+    [90m  7| [39m    headers[33m:[39m {
+[90m [2m❯[22m src/views/admin/Modeler/FormDesigner.vue:[2m806:1[22m[39m
+[90m [2m❯[22m src/tests/FormDesigner.spec.ts:[2m4:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/components/SudoModal.spec.ts[2m [ src/tests/components/SudoModal.spec.ts ][22m
+[31m[1mError[22m: Please provide an instance of axios to mock[39m
+[90m [2m❯[22m new AxiosMockAdapter node_modules/axios-mock-adapter/src/index.js:[2m49:13[22m[39m
+[36m [2m❯[22m setupMockAdapter src/services/mockAdapter.ts:[2m6:18[22m[39m
+    [90m  4| [39m[35mexport[39m [35mconst[39m setupMockAdapter [33m=[39m (apiClient[33m:[39m [33mAxiosInstance[39m) [33m=>[39m {
+    [90m  5| [39m    [90m// Activamos el mock global sobre la instancia de apiClient[39m
+    [90m  6| [39m    [35mconst[39m mock [33m=[39m [35mnew[39m [33mMockAdapter[39m(apiClient[33m,[39m { delayResponse[33m:[39m [34m600[39m })[33m;[39m
+    [90m   | [39m                 [31m^[39m
+    [90m  7| [39m
+    [90m  8| [39m    [90m// 0. Workdesk / Bandeja de Tareas[39m
+[90m [2m❯[22m src/services/apiClient.ts:[2m15:1[22m[39m
+[90m [2m❯[22m src/composables/useSudo.ts:[2m2:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/tests/components/MainLayout.spec.ts[2m > [22mUS-051 CA-6: MainLayout Renderizado Dinámico (Iteración 47)[2m > [22mCarga el menú iterativamente desde el Payload JSON de Entra ID/Store
+[31m[1mAssertionError[22m: expected 0 to be greater than or equal to 2[39m
+[36m [2m❯[22m src/tests/components/MainLayout.spec.ts:[2m51:34[22m[39m
+    [90m 49| [39m        [90m// Aserción 1: Validamos que iteró al nivel superior[39m
+    [90m 50| [39m        [35mconst[39m menuLinks [33m=[39m wrapper[33m.[39m[34mfindAll[39m([32m'.nav-link-top'[39m)[33m;[39m
+    [90m 51| [39m        [34mexpect[39m(menuLinks[33m.[39mlength)[33m.[39m[34mtoBeGreaterThanOrEqual[39m([34m2[39m)[33m;[39m
+    [90m   | [39m                                 [31m^[39m
+    [90m 52| [39m        [34mexpect[39m(wrapper[33m.[39m[34mtext[39m())[33m.[39m[34mtoContain[39m([32m'Administración'[39m)[33m;[39m
+    [90m 53| [39m        [34mexpect[39m(wrapper[33m.[39m[34mtext[39m())[33m.[39m[34mtoContain[39m([32m'Mi Bandeja'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/components/MainLayout.spec.ts[2m > [22mUS-051 CA-6: MainLayout Renderizado Dinámico (Iteración 47)[2m > [22mHOTFIX US-051 Regresión: Garantiza el anclaje del botón "Inicio" inyectado desde el JSON del Backend
+[31m[1mAssertionError[22m: expected 0 to be greater than 0[39m
+[36m [2m❯[22m src/tests/components/MainLayout.spec.ts:[2m82:33[22m[39m
+    [90m 80| [39m        // Aserción matemática estructural: El nodo 'Inicio' NO puede …
+    [90m 81| [39m        const homeLink = wrapper.findAll('*').filter(node => node.text…
+    [90m 82| [39m        [34mexpect[39m(homeLink[33m.[39mlength)[33m.[39m[34mtoBeGreaterThan[39m([34m0[39m)[33m;[39m
+    [90m   | [39m                                [31m^[39m
+    [90m 83| [39m    })[33m;[39m
+    [90m 84| [39m})[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/views/admin/Integration/DlqDashboard.spec.ts[2m > [22mDead Letter Queue Dashboard (DLQ)[2m > [22mDebe inyectar Fake/Mock Data (Fallback) tras simular un API call y mostrar la tabla
+[31m[1mAssertionError[22m: expected 'Dead Letter Queue Dashboard Monitoriz…' to contain 'O365/Exchange'[39m
+
+Expected: [32m"O365/Exchange"[39m
+Received: [31m"Dead Letter Queue Dashboard Monitorización de RabbitMQ y TaskRescue Sincronizar Cluster Mensajes Atascados3Warning Rate12%Reintentos Hoy342 Colas de Retención (DLQ) Purgar TodoReencolar TodoID MensajeExchange / RoutingCausa (Exception)RetriesTimestampAccionesmsg-9a8b...amq.topicRK: camunda.task.createConnection Refused: Postgres DB Pool exhausted. 4 / 5 3/4/2026, 12:31:39 a. m.msg-1f2e...dlx.exchangeRK: email.notification.sendSMTP Auth Failed: Invalid credentials. 2 / 5 2/4/2026, 11:31:39 p. m.msg-bbcc...amq.directRK: integration.s3.uploadS3 Storage Limit Exceeded for Tenant. 5 / 5 3/4/2026, 1:29:59 a. m."[39m
+
+[36m [2m❯[22m src/tests/views/admin/Integration/DlqDashboard.spec.ts:[2m28:32[22m[39m
+    [90m 26| [39m
+    [90m 27| [39m        [90m// 3 Mensajes mockeados deberían estar dibujados[39m
+    [90m 28| [39m        expect(wrapper.text()).toContain('dlx.exchange'); // Fixed fro…
+    [90m   | [39m                               [31m^[39m
+    [90m 29| [39m        [34mexpect[39m(wrapper[33m.[39m[34mtext[39m())[33m.[39m[34mtoContain[39m([32m'camunda.task.create'[39m)[33m;[39m
+    [90m 30| [39m        expect(wrapper.text()).toContain('Connection Refused: Postgres…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m21 passed[39m[22m[2m | [22m[33m5 skipped[39m[90m (30)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m48 passed[39m[22m[2m | [22m[33m17 skipped[39m[90m (68)[39m
+[2m   Start at [22m 01:31:26
+[2m   Duration [22m 33.79s[2m (transform 26.03s, setup 4.05s, import 41.61s, tests 5.70s, environment 111.00s)[22m
+

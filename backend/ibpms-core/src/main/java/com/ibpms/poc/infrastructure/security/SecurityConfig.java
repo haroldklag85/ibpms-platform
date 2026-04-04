@@ -14,7 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import javax.crypto.spec.SecretKeySpec;
-
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 /**
  * Configuración de Spring Security OIDC (OAuth2 Resource Server).
  * Delega la validación de tokens al IdP corporativo (Ej. Entra ID).
@@ -30,6 +31,11 @@ public class SecurityConfig {
     @Bean
     public JwtDecoder jwtDecoder() {
         return NimbusJwtDecoder.withSecretKey(new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256")).build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -51,6 +57,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/process/*/start-anonymous").permitAll()
                         // CA-03 y CA-04 (US-038): Aprovisionamiento JIT y Protocolo Break-Glass
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/sync", "/api/v1/auth/emergency-login").permitAll()
+                        // OpenAPI / Swagger Docs
+                        .requestMatchers("/v3/api-docs/**", "/api/v1/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated())
 
                 // Habilitamos OAUTH2 JWT Validation delegando al Issuer-URI (Properties)

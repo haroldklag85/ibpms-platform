@@ -3,10 +3,8 @@ package com.ibpms.poc.infrastructure.bpm.config;
 import com.ibpms.poc.infrastructure.bpm.calendar.CustomBusinessCalendar;
 import com.ibpms.poc.infrastructure.jpa.repository.bpm.BusinessHoursRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.bpm.HolidayRepository;
-import org.camunda.bpm.engine.impl.calendar.BusinessCalendarManager;
 import org.camunda.bpm.engine.impl.calendar.MapBusinessCalendarManager;
 import org.camunda.bpm.spring.boot.starter.configuration.impl.AbstractCamundaConfiguration;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 /**

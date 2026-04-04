@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.ibpms.poc.application.service.bff.S3DocumentTempService;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Misión Cero: Scaffold S3 Upload-Temp para US-029.

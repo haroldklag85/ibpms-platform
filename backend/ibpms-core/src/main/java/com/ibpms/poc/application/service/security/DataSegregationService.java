@@ -7,8 +7,19 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Servicio de Segregación de Datos (CA-5, CA-4).
- * Enforces Row-Level Security (RLS) on the Workdesk.
+ * <b>Servicio de Segregación de Datos y Protección BOLA/IDOR (CA-5, CA-4)</b>
+ * <p>
+ * Este servicio orquesta la segregación lógica de inquilinos (Multi-Tenancy) y
+ * aplica de manera estricta Políticas de Autorización a Nivel de Objeto (Row-Level Security / RLS).
+ * </p>
+ * <p>
+ * 🚨 <b>CRÍTICO PARA INGENIEROS DE BACKEND:</b> 🚨<br/>
+ * El mecanismo de consulta aquí definido actúa como un "Interceptor Lógico" que mitiga proactivamente
+ * vulnerabilidades de tipo <i>Broken Object Level Authorization (BOLA)</i> o <i>Insecure Direct Object References (IDOR)</i>.
+ * Ninguna interfaz del ecosistema (API REST, GraphQL o Workers) debe realizar consultas de tareas
+ * directas llamando a {@code TaskService#createTaskQuery()} omitiendo este servicio, ya que hacerlo
+ * abre una brecha donde un usuario podría adivinar el ID de una tarea de otro tenant o grupo e interactuar con ella.
+ * </p>
  */
 @Service
 public class DataSegregationService {
@@ -20,14 +31,14 @@ public class DataSegregationService {
     }
 
     /**
-     * Devuelve una query de tareas de Camunda pre-filtrada de forma segura para el
-     * usuario actual.
-     * Garantiza que un usuario no pueda consultar colas que no le corresponden.
+     * Construye un envoltorio (Query) de contingencia mutua para el motor de tareas de Camunda.
+     * Al inyectar iterativamente las restricciones del "Claim" temporal del usuario autenticado
+     * por EntraID/Identity corporativo, enjaulamos el área de acción transaccional, garantizando
+     * aislamiento de datos frente a enumeración en URIs de la API REST o manipulaciones del Frontend.
      *
-     * @param currentUser El ID del usuario EntraID o interno (Identity).
-     * @param userRoles   Roles o Grupos a los que pertenece el usuario (calculados
-     *                    cruzando RoleHierarchy).
-     * @return TaskQuery seguro y filtrado.
+     * @param currentUser El ID verificado en el token del usuario actual (NUNCA provisto por body o path param inyectable).
+     * @param userRoles   Los Roles o Grupos a los que pertenece el usuario verificados en JWT (calculados cruzando RoleHierarchy).
+     * @return Una instancia de {@link TaskQuery} amurallada sobre la cual se puede continuar la operación (Ej: count, appaginate, singleResult).
      */
     public TaskQuery getSecureTaskQuery(String currentUser, List<String> userRoles) {
         TaskQuery query = taskService.createTaskQuery()

@@ -12,6 +12,7 @@ import java.time.Duration;
  * Evita la sobre-escritura trágica entre analistas (Pestañas Múltiples o Colaboradores).
  */
 @Service
+@SuppressWarnings("null")
 public class FormConcurrencyLockService {
 
     private static final Logger log = LoggerFactory.getLogger(FormConcurrencyLockService.class);

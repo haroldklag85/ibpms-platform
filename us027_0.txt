@@ -1,0 +1,90 @@
+### US-027: Copiloto IA (Auditoría ISO 9001 y Generador Consultivo BPMN)
+**Como** Arquitecto Modelador de Procesos
+**Quiero** un asistente IA interactivo embebido en el diseñador (Pantalla 6)
+**Para** que audite mis diagramas buscando brechas de calidad (ISO 9001 y BPMN 2.0), O genere un proceso BPMN 2.0 desde cero a partir de documentos adjuntos e iteraciones de preguntas aclaratorias en lenguaje natural.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: AI Copilot Generator, SRE Layout, AppSec & UX Governance
+
+  # ==============================================================================
+  # A. EFICIENCIA SRE, AUTO-LAYOUT Y AHORRO DE TOKENS (GAPs 18, 19, 20)
+  # ==============================================================================
+  Scenario: Soberanía Geométrica y Prevención de Spaghetti (Auto-Layout) (CA-01)
+    Given la incapacidad de los LLMs para calcular coordenadas (X,Y) espaciales precisas
+    When el Agente IA genera el proceso (Hit-The-Canvas)
+    Then el LLM devolverá EXCLUSIVAMENTE el marcado lógico semántico (`<bpmn:process>`).
+    And la arquitectura PROHÍBE que el LLM calcule topología `BPMNDi`.
+    And un Middleware Backend (Librería de Auto-Layout) inyectará matemáticamente las coordenadas X,Y antes de enviarlo al Frontend, previniendo el colapso geométrico del navegador.
+
+  Scenario: Minificación de Tokens Prompeados (Context Optimization) (CA-02)
+    Given el Arquitecto solicita a la IA "Auditar" el diagrama actual (ISO 9001) o extenderlo
+    Then el Backend TIENE PROHIBIDO enviar el XML crudo con coordenadas al LLM.
+    And decantará el XML a un JSON semántico ligero (puramente Nodos y Flujos), abaratando el costo de la facturación Cloud (Tokens) en un 70%.
+
+  Scenario: Ingesta Documental Asíncrona, Multimodal y Antivirus (CA-03)
+    Given que el Arquitecto sube un PDF/DOCX o Imagen de flujograma al Dropzone (Max 5 archivos / 100 págs)
+    Then el Frontend mostrará una métrica de límite dinámico (Ej: `Páginas: 45/100`).
+    And el archivo pasará por un escáner Anti-Malware (ClamAV Cloud) en milisegundos.
+    And la extracción de texto y visión multimodal (GPT-4V/Tika) se delegará a una Cola de RabbitMQ con WebWorkers, sin saturar los Hilos HTTP.
+
+  # ==============================================================================
+  # B. SEGURIDAD APPSEC, RAG POISONING Y DO-W
+  # ==============================================================================
+  Scenario: RAG Efímero, Aislamiento Vectorial y Anti-Poisoning (CA-04)
+    Given la vectorización de documentos en `pgvector`
+    Then los TextChunks nacerán con un `Time-To-Live (TTL)` efímero atado a la sesión del Chat.
+    And toda consulta a la base vectorial incluirá el `tenant_id` y `session_id` obligatoriamente.
+    And al cerrar el diseñador, la base vectorial y los archivos en S3 se autodestruirán, previniendo RAG Poisoning corporativo transversal y el "Embedding Bloat".
+
+  Scenario: Mitigación Denial of Wallet (DoW) y Prevención XSS/Prompt Injection (CA-05)
+    Given la exposición del Endpoint del LLM a los empleados
+    Then el API Gateway impondrá Rate Limiting estricto (Ej: Max 5 generaciones/min).
+    And el Backend seudonimizará los nombres de tareas (PII) antes de enviarlos al LLM.
+    And el Frontend aplicará `DOMPurify` brutal sobre el XML entrante para evitar Cross-Site Scripting (XSS) reflectivo.
+    And si el Backend detecta "Prompt Injection" intencional 3 veces consecutivas, castigará al usuario revocando dinámicamente el `ROLE_PROCESS_ARCHITECT` y alertará al CISO.
+
+  # ==============================================================================
+  # C. RESTRICCIONES BPMN Y COMPORTAMIENTO COGNITIVO
+  # ==============================================================================
+  Scenario: Topología Restringida, Traducción Activa y Manejo de Bucles (CA-06)
+    Given la generación de XML a partir de NLP
+    Then el Agente estará limitado en V1 a instanciar: `UserTasks`, `ServiceTasks`, `Gateways` y `ErrorBoundaryEvents` para planes B.
+    And tiene PROHIBIDO generar Sub-Procesos Embebidos (`CallActivities`) o Eventos de Señal complejos.
+    And ante directivas de "Repetir proceso", dibujará un `SequenceFlow` en reversa (Loop), prohibiendo la duplicación lineal.
+    And sin importar el idioma del PDF (Inglés/Mandarín), generará el XML y el Chat estrictamente en Español (Traducción Activa).
+
+  Scenario: Triage Conversacional, Píldoras Rápidas y Roles Faltantes (CA-07)
+    Given que el LLM detecta contradicciones documentales o roles inexistentes en EntraID
+    When la IA pausa la inyección y genera una consulta (Triage)
+    Then dosificará las preguntas (Máx 3 por lote) y ofrecerá "Píldoras de Respuesta Rápida" (Ej: `[Usar Rol Existente]`, `[Omitir]`).
+    And si debe crear un rol nuevo, usará un ID temporal (Ej: `rol_dummy`) e inyectará un `TextAnnotation` (Nota Adhesiva) recordando al humano crearlo.
+    And los Gateways dibujados por IA NO tendrán expresiones matemáticas inyectadas, delegando esa lógica al humano.
+
+  # ==============================================================================
+  # D. UX, RECUPERABILIDAD Y PREVENCIÓN DE ERRORES
+  # ==============================================================================
+  Scenario: UX No Bloqueante, Transmutación Visual y Undo Atómico (CA-08)
+    Given el evento Hit-the-Canvas y la espera de respuestas
+    Then el Chat NO bloqueará el Canvas (Modal Overlay prohibido); el usuario mantendrá capacidades de `Drag to Pan` y `Zoom` libremente.
+    And las nuevas cajas inyectadas brillarán con un "Halo Verde" efímero.
+    And si el humano presiona `CTRL + Z`, el framework revertirá atómicamente (en 1 solo paso) toda la inyección de la IA.
+    And la IA aplicará "Smart Merge", respetando las cajas que el humano haya borrado a mano previamente.
+    And si el chat está minimizado, un Badge Rojo y un PING sonoro alertarán de preguntas pendientes.
+
+  Scenario: Tolerancia Humana a ISO 9001 y Limpieza de Notas (CA-09)
+    Given las alertas ISO 9001 (con Popovers gráficos de Antes/Después) y Notas Adhesivas en el lienzo
+    When el Arquitecto ignora una alerta visual editando otras partes 3 veces consecutivas
+    Then el Copiloto desistirá asumiendo la responsabilidad humana (Override), silenciando la alerta visual y guardando el log forense con tipografía en **Negritas** para decisiones categóricas.
+    And si el Frontend detecta que el humano vinculó el Formulario (Pantalla 7) esperado, borrará automáticamente la Nota Adhesiva obsoleta asociada.
+
+  Scenario: El Antídoto contra el Despliegue Fantasma (Executable Flag) (CA-10)
+    Given que la IA generó un flujo con caminos lógicos rotos o inconclusos
+    When el XML incluya la etiqueta `<bpmn:process isExecutable="false">`
+    Then el Frontend cruzará esta bandera e imprimirá un Banner Bloqueante Rojo sobre el Canvas dictando: "Diseño Corrompido por la IA. Repare el Nodo [ID] antes de desplegar".
+    And el botón `[🚀 DESPLEGAR]` (US-005) permanecerá físicamente inhabilitado.
+```
+**Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN - Panel Lateral de Copilot interactivo y Dropzone).
+
+---
+

@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.net.URI;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Manejador Global de Excepciones — RFC 7807 Problem Details.
  * Todas las respuestas de error siguen el mismo formato JSON estándar.
@@ -18,6 +22,7 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     /** 400 — Error de validación de campos (@Valid) */
+    @ApiResponse(responseCode = "400", description = "Error de validación de campos en el Payload", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationError(MethodArgumentNotValidException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
@@ -31,6 +36,7 @@ public class GlobalExceptionHandler {
     }
 
     /** 400 — Petición malformada (XML Inválido, argumentos faltantes) */
+    @ApiResponse(responseCode = "400", description = "Petición estructuralmente malformada", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
@@ -41,6 +47,7 @@ public class GlobalExceptionHandler {
     }
 
     /** 404 — Recurso no encontrado */
+    @ApiResponse(responseCode = "404", description = "El recurso solicitado no fue encontrado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
     public ProblemDetail handleNotFound(jakarta.persistence.EntityNotFoundException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
@@ -51,6 +58,7 @@ public class GlobalExceptionHandler {
     }
 
     /** 409 — Conflicto de idempotencia */
+    @ApiResponse(responseCode = "409", description = "Conflicto por violación de reglas de Idempotencia o Estado Híbrido", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(IllegalStateException.class)
     public ProblemDetail handleConflict(IllegalStateException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
@@ -61,6 +69,7 @@ public class GlobalExceptionHandler {
     }
 
     /** 409 — Conflicto de Tarea ya Asignada */
+    @ApiResponse(responseCode = "409", description = "La tarea BPMN ya fue reclamada por otro usuario", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(com.ibpms.poc.domain.exception.TaskAlreadyClaimedException.class)
     public ProblemDetail handleTaskAlreadyClaimed(com.ibpms.poc.domain.exception.TaskAlreadyClaimedException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
@@ -71,6 +80,7 @@ public class GlobalExceptionHandler {
     }
 
     /** 400 — Límite de Rebotes Superado */
+    @ApiResponse(responseCode = "400", description = "Límite cíclico de reasignaciones superado en BPMN (Ping-Pong)", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(com.ibpms.poc.domain.exception.TaskReassignmentLimitException.class)
     public ProblemDetail handleReassignmentLimit(com.ibpms.poc.domain.exception.TaskReassignmentLimitException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
@@ -81,6 +91,7 @@ public class GlobalExceptionHandler {
     }
 
     /** 500 — Error interno genérico */
+    @ApiResponse(responseCode = "500", description = "Error interno no controlado en el Engine", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);

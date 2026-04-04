@@ -26,14 +26,14 @@ public class RagIngestionUseCase {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "IDOR RAG Protegido. Vector carece de Segregador Corporal.");
         }
 
-        log.info("[APPSEC-RAG] Archivo {} recibido para RAG Temporal.", file.getOriginalFilename());
+        log.info("[APPSEC-RAG] Archivo {} recibido para RAG Temporal.", (file.getOriginalFilename() != null ? file.getOriginalFilename() : "document"));
 
         // 1. Escáner CLAMAV Simulado
         long virusScanStart = System.currentTimeMillis();
         boolean isVirusFree = simulateClamAvNetworkScan(file);
         
         if (!isVirusFree) {
-            log.error("[APPSEC-RAG] ☢️ ClamAV Detectó Firma Maliciosa en archivo: {}", file.getOriginalFilename());
+            log.error("[APPSEC-RAG] ☢️ ClamAV Detectó Firma Maliciosa en archivo: {}", (file.getOriginalFilename() != null ? file.getOriginalFilename() : "document"));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Escaneo Antivirus Fallido. Ingestión Bloqueada.");
         }
         log.debug("[APPSEC-RAG] Escaneo ClamAV Cero Amenazas. {}ms", (System.currentTimeMillis() - virusScanStart));
@@ -45,7 +45,7 @@ public class RagIngestionUseCase {
 
     private boolean simulateClamAvNetworkScan(MultipartFile file) {
         // Simulación: Archivos que contengan "virus" en su nombre fallan.
-        String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+        String fileName = (file.getOriginalFilename() != null ? file.getOriginalFilename() : "document") != null ? (file.getOriginalFilename() != null ? file.getOriginalFilename() : "document").toLowerCase() : "";
         return !fileName.contains("eicar") && !fileName.contains("virus");
     }
 }

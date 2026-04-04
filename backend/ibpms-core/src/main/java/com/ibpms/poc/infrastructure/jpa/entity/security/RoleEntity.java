@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import java.util.UUID;
 import java.util.Set;
 import java.util.HashSet;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ibpms_security_role")

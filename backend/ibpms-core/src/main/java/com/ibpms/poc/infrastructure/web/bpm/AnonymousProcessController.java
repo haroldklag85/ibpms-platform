@@ -27,7 +27,7 @@ public class AnonymousProcessController {
     public ResponseEntity<Map<String, Object>> startAnonymousProcess(@PathVariable String key, @RequestBody Map<String, Object> variables) {
         
         // Simulación: Validación de la bandera isPublic == true en BD local o API
-        boolean isPublic = true; // TODO: Reemplazar por lookup real (ej. visibilityRepository.isProcessPublic(key))
+        boolean isPublic = true; // SE REQUERIRÁ lookup real en Fase 2 (Refactor Security)
         if (!isPublic) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

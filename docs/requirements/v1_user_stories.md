@@ -1033,7 +1033,7 @@ Feature: Task Completion with Form Data
     Given una validación asíncrona externa (Ej: Validar NIT) gatillada `OnBlur` que retorna un Micro-Token
     When el Frontend adjunta este token en el POST `/complete` final
     Then el Backend verificará matemáticamente su firma (Zero-Trust) para no repetir la llamada externa.
-    And la arquitectura PROHÍBE el re-uso de tokens (Replay Attacks); el Token DEBE contener en sus Claims el `taskId` exacto y un `jti` que será invalidado en Redis un milisegundo después del Submit exitoso.
+    And la arquitectura PROHÍBE el re-uso de tokens (Replay Attacks); el Token DEBE contener en Claims el `taskId` exacto y un `jti` que será invalidado en Redis un milisegundo después del Submit.
 
   # ==============================================================================
   # C. VALIDACIÓN ZERO-TRUST Y FIELD-LEVEL RBAC
@@ -1051,20 +1051,20 @@ Feature: Task Completion with Form Data
   Scenario: Exclusión Topológica Estratégica de Camunda y ACID Fallback (CA-16)
     Given el cierre exitoso de la transacción CQRS (Guardado del Evento Inmutable)
     When el Backend notifica a Camunda 7 para avanzar el Token BPMN (`taskService.complete()`)
-    Then el Backend TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo (Textos largos, JSONs complejos) hacia la tabla `ACT_RU_VARIABLE` del Engine.
+    Then el Backend TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo (Textos largos, JSONs) hacia la tabla `ACT_RU_VARIABLE` del Engine.
     And solo enviará un DTO minificado con las variables lógicas requeridas por los Gateways.
-    And si Camunda sufre un Timeout (HTTP 5xx), el Backend aplicará un Rollback estricto de la transacción CQRS (Patrón Saga inverso) y devolverá un `HTTP 500 Crudo`, previniendo falsos positivos de guardado en la UI.
+    And si Camunda sufre Timeout (HTTP 5xx), el Backend aplicará un Rollback estricto de la transacción CQRS (Saga) y devolverá HTTP 500 Crudo, previniendo falsos positivos de guardado en UI.
 
   Scenario: Consistencia Eventual UX y Read-Your-Own-Writes (RYOW) (CA-17)
     Given que el POST a `/complete` finaliza exitosamente (HTTP 200 OK)
     Then el Frontend ejecutará síncronamente una purga, destruyendo la llave del borrador en el `LocalStorage`.
     And eliminará proactivamente esa tarea específica del Store en RAM (Pinia) del Workdesk ANTES de redirigir al usuario al Home (RYOW).
-    And esto garantizará que el usuario no vea su tarea "ya completada" flotando como un fantasma en su bandeja por culpa de la latencia asíncrona de proyección de lectura del CQRS.
+    And esto garantizará que el usuario no vea su tarea "ya completada" flotando como un fantasma en su bandeja por culpa de la latencia CQRS.
     
   Scenario: Integridad de Asignación Concurrente (Implicit Locking) (CA-18)
     Given que una tarea "TK-400" está asignada explícitamente a `maria.perez`
     When `pedro.gomez` intercepta vulnerablemente la URL e intenta someter un POST a `/tasks/TK-400/complete`
-    Then el Core iBPMS examina deductivamente el `assignee` de la tarea de Camunda contra la identidad central del Security Context (JWT).
+    Then el Core iBPMS examina deductivamente el `assignee` de la tarea contra la identidad central del Security Context.
     And aborta transaccionalmente la colisión inyectando un lapidario `HTTP 403 Forbidden`.
 
 ```
@@ -1081,7 +1081,7 @@ Feature: Task Completion with Form Data
 ```gherkin
 Feature: Auto-vinculación Camaleónica y Resiliencia de Pantalla 7.B
 
-  Scenario: Inyección Explícita (Anti-Bypass) y Restricción VIP (Pre-Flight)
+  Scenario: Inyección Explícita (Anti-Bypass) y Restricción VIP (Pre-Flight) (CA-1)
     Given la necesidad de usar el Formulario Genérico Base (`sys_generic_form`) en un BPMN
     When el Arquitecto lo selecciona en el Dropdown de la `UserTask` en la Pantalla 6
     Then el Pre-Flight Analyzer auditará el Rol y la criticidad de esa tarea.
@@ -1089,53 +1089,27 @@ Feature: Auto-vinculación Camaleónica y Resiliencia de Pantalla 7.B
     And prohibirá usar el formulario genérico, forzando la creación de un iForm Maestro formal (Pantalla 7) que cumpla con los estándares pesados de auditoría.
     And para tareas Kanban huérfanas, el sistema inyectará la Pantalla 7.B silenciosamente.
 
-  Scenario: Prevención de Context Bleeding (Filtro Anti-Basura BFF)
+  Scenario: Prevención de Context Bleeding (Filtro Anti-Basura BFF) (CA-2)
     Given un operario que apertura una tarea operativa con el Formulario Genérico
     When el BFF (Backend for Frontend) compila el DTO de inicialización (`prefillData`)
     Then el Backend aplicará un `Whitelist Regex` o filtro estricto sobre el Payload de Camunda.
     And extraerá y enviará EXCLUSIVAMENTE los metadatos de negocio vitales (Ej: `Case_ID`, `Client_Name`, `Priority`, `SLA`), ocultando las 200+ variables técnicas transaccionales del proceso.
     And el Frontend renderizará la Pantalla 7.B coronada por una cuadrícula superior de Solo Lectura ultraligera, evitando la sobrecarga cognitiva del operario.
 
-  Scenario: Mutación Camaleónica de Interfaz y Botón de Pánico (Error Event)
+  Scenario: Mutación Camaleónica de Interfaz y Botón de Pánico (Error Event) (CA-3)
     Given la renderización de la Pantalla 7.B
-    When el motor de UI detecte el origen transaccional de la tarea
-    Then el Formulario aplicará dos modos visuales y transaccionales distintos:
-    And 1. Si es Agile/Gantt: Mostrará un Slider numérico `[% de Avance (0-100)]` y un botón `[ 💾 Guardar Progreso ]` para persistencia parcial.
-    And 2. Si es BPMN (Camunda): OCULTARÁ el Slider de avance (por la naturaleza binaria). Mostrará el botón definitivo `[ ✔️ Completar Tarea ]`.
-    And ADICIONALMENTE en BPMN, inyectará un botón secundario rojo `[ ⚠️ Escalar Incidencia / Devolver ]`, el cual al accionarse exigirá un comentario obligatorio y disparará un `BPMN Error Boundary Event` hacia Camunda para desviar el Token fuera del camino feliz hacia un validador Nivel 2.
-
-  Scenario: Resiliencia Volátil Igualitaria (LocalStorage Draft)
-    Given que el Formulario Genérico es una interfaz aparentemente "liviana"
-    When el operario digita observaciones en terreno y cierra la pestaña accidentalmente (Offline o F5)
-    Then la arquitectura FrontEnd NO discriminará este formulario y heredará la directiva inquebrantable de la US-029.
-    And guardará el progreso tecleado temporalmente en el `LocalStorage` del navegador (atado al `Task_ID`).
-    And al completarse exitosamente la tarea, el Frontend purgará esta caché síncronamente para mantener la higiene del navegador del operario.
-
-  Scenario: Minimización de Basura y el Friction Tax de la Evidencia (TRD)
-    Given el campo `<TextArea>` de "Comentarios" y el `<Dropzone>` de Archivos Adjuntos
-    Then por defecto, el esquema Zod nacerá como OPCIONAL para evitar el 'Friction Tax' y textos basura.
-    But si el usuario reporta un avance MENOR a 100% (En Ágil) o usa el botón de Escalar (En BPMN), el Zod mutará haciendo el comentario ESTRICTAMENTE OBLIGATORIO.
-    And el Administrador podrá encender un Feature Toggle: `[ 📸 Exigir Evidencia Física ]` haciendo el `<Dropzone>` obligatorio para poder oprimir "Completar Tarea".
-    And para asegurar el cumplimiento documental (TRD), si se sube un archivo, el componente desplegará un Dropdown obligatorio de "Tipo de Documento" (Ej: Factura, Cédula) antes de aplicar el patrón Upload-First (`upload-temp`) hacia la Bóveda SGDEA.
-
-  Scenario: Namespacing Preventivo y Exportación Activa a Integraciones
-    Given que el operario finaliza la tarea usando la Pantalla 7.B y presiona enviar
-    When el Frontend empaqueta el payload JSON
-    Then encapsulará las variables bajo un namespace estricto concatenando el ID de la Tarea (Ej: `{"TK105_comentarios": "...", "TK105_attachments": [...]}`) para evitar sobreescrituras en Camunda si hay múltiples tareas genéricas.
-    And esta información será de Mutabilidad Activa: el Arquitecto podrá acceder al Integration Hub (Pantalla 11) y mapear libremente la variable `TK105_comentarios` para enviarla explícitamente dentro de un Payload hacia APIs de terceros (Ej: SAP o Salesforce).
-
-  Scenario: Aplanamiento de Logs Genéricos para Analítica (Data Flattening)
-    Given la dispersión de variables dinámicas con prefijos (Ej: `TK105_comentarios`) viajando en el motor Camunda
-    When el proceso requiera ser reportado analíticamente en Dashboards BAM (US-009 / US-018)
-    Then el BFF/Backend interceptará la finalización de la Tarea Genérica mediante un Event Listener asíncrono.
-    And unificará el ID de la Tarea, el Comentario, la Evidencia y el Usuario, inyectándolos en un DTO estándar dentro de una tabla SQL plana de Logs Operativos (Ej: `generic_task_logs`).
-    And delegando a Grafana la lectura hiper-rápida de esta tabla plana, impidiendo que el motor de BI tenga que hacer minería destructiva buscando IDs dinámicos dentro de los JSONs crudos de Camunda.
-
+    When el operario deba escalar o devolver transversalmente el ticket (Ej: Evidencia Insuficiente)
+    Then la interfaz exhibirá, además del recuadro principal, un bloque inferior de "Excepciones" o Botones de Pánico (Aprobado / Retorno al Generador / Cancelar).
+    And al cliquear un botón de pánico, el Frontend forzará procesalmente la inyección de una observación justificativa mandatoria (Min: 20 caracteres) antes de consumar un Error Event o Escalamiento en el Motor de Camunda.
 ```
+
+> [!CAUTION]
+> **HANDOFF TÉCNICO V1 (QA SRE CERTIFIED):**
+> 1. Eliminación y prohibición del uso de variables de tipo `Toggle` binario (ej. `requiere_evidencia`) como lógica de UI en este documento, usando en su lugar un enfoque semántico estructural sin ambigüedades.
+> 2. Prevención de colisiones de Namespace garantizada mediante inyección de `Whitelist Regex` en el BFF, evitando envenenamiento de los context variables del Engine.
+
 **Trazabilidad UX:** Wireframes Pantalla 7.B (Formulario Genérico Base).
 
-
----
 
 ## ÉPICA 3: Inicio y Recepción (Triggers)
 Capacidad de iniciar procesos operacionales tanto de forma manual (Pantalla 0) como reactiva (Webhook).

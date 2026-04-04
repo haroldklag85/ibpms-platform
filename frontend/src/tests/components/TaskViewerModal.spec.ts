@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import TaskViewerModal from '../../components/common/TaskViewerModal.vue';
 import { createPinia, setActivePinia } from 'pinia';
@@ -16,7 +16,8 @@ describe('TaskViewerModal.vue (US-039 p2 - Data Flattening & Prefixing)', () => 
                 taskId: taskId,
                 taskTitle: 'Inspección de Sitio',
                 taskFormKey: 'sys_generic_form',
-                candidateGroups: 'INSPECTORES'
+                candidateGroups: 'INSPECTORES',
+                context: 'BPMN' as any
             }
         });
 

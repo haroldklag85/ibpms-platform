@@ -9,7 +9,15 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuración de Infraestructura RabbitMQ para la Gobernanza Asíncrona de Tareas.
- * Implementa Dead-Letter-Queues internamente y Exorcismo de Casos.
+ * 
+ * <p><strong>Guía Arquitectónica para QA (Routing Keys y DLQ):</strong></p>
+ * <ul>
+ *   <li><b>EXCHANGE_NAME (ibpms.task.exchange):</b> Punto de entrada central (DirectExchange) para enrutamiento estático de eventos de tareas.</li>
+ *   <li><b>QUEUE_NAME (ibpms.task.rescue.queue):</b> Cola durable diseñada para persistir mensajes en caso de caída del Broker. A futuro, actuará en conjunto con una Dead Letter Queue (DLQ) para persistir mensajes envenenados tras fallar los reintentos.</li>
+ *   <li><b>ROUTING_KEY (task.unclaim):</b> Clave de enrutamiento específica para la liberación (unclaim) asíncrona de tareas. Los consumidores deben suscribirse a esta directiva para reaccionar al desacople de un Owner sobre el recurso.</li>
+ * </ul>
+ * 
+ * Implementa bases para Dead-Letter-Queues internamente y resiliencia de casos.
  */
 @Configuration
 public class TaskRescueRabbitConfig {

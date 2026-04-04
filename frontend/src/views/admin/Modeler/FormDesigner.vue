@@ -867,7 +867,7 @@ const saveVisualRules = () => {
     showToast(`Reglas cruzadas configuradas (${visualRules.value.length} activas)`, 'success');
     showGlobalRulesModal.value = false;
 };
-const zodParseError = ref(false); // CA-Tarea 3 ZodRefactor
+const zodParseError = ref<boolean | string>(false); // CA-Tarea 3 ZodRefactor
 
 // CA-73: Escáner Mágico LMM
 const showAiModal = ref(false);
@@ -1758,6 +1758,15 @@ const computedCode = computed({
     }
 
     if (activeCodeTab.value === 'ZOD') {
+      /**
+       * Iterador recursivo On-The-Fly (AST Logger).
+       * Analiza el modelo de componentes visual actual del FormDesigner y construye un esquema Zod sintético a string.
+       * Permite a los Ingenieros de UAT visualizar, depurar y copiar código Zod tipado pre-calculado para integraciones M2M.
+       * 
+       * @param fieldsArr - Array de metadatos del componente visual iterado en el nivel de profundidad actual.
+       * @param isRoot - Booleano indicador del nodo superior (Top-Level Array) para forzar cierre JSON estructurado.
+       * @returns {string} - Código TypeScript puro del ZodObject representacional.
+       */
       const walkNode = (fieldsArr: any[], isRoot: boolean): string => {
          let zc = `z.object({\n`;
          for(const field of fieldsArr) {

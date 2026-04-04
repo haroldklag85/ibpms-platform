@@ -26,12 +26,12 @@ public class DmnSimulationIntegrationTest {
         
         // Payload emulando el modelo DMN volátil (Desde la UI del Modeler) y las variables de prueba
         String simulationPayload = "{" +
-                "\"dmnXml\": \"<definitions><decision id='RiskEval'><decisionTable hitPolicy='FIRST'><rule id='r1'><outputEntry><text>'Bajo'</text></outputEntry></rule><rule id='r2'><outputEntry><text>'Alto'</text></outputEntry></rule></decisionTable></decision></definitions>\"," +
+                "\"xml\": \"<definitions><decision id='RiskEval'><decisionTable hitPolicy='FIRST'><rule id='r1'><outputEntry><text>'Bajo'</text></outputEntry></rule><rule id='r2'><outputEntry><text>'Alto'</text></outputEntry></rule></decisionTable></decision></definitions>\"," +
                 "\"variables\": {\"montoCredito\": 50000}" +
                 "}";
 
         // Lanzamos la simulación al endpoint Volátil (Evalúa sin hacer .save() ni .deploy() persistente)
-        mockMvc.perform(post("/api/v1/dmn/simulate")
+        mockMvc.perform(post("/api/v1/dmn-models/simulate")
                 .header("X-Mock-Tester", "QA_Agent_52")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(simulationPayload))

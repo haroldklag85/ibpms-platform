@@ -59,6 +59,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/sync", "/api/v1/auth/emergency-login").permitAll()
                         // OpenAPI / Swagger Docs
                         .requestMatchers("/v3/api-docs/**", "/api/v1/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // DMN Simulation for Tests (Bypass para el test Sandbox DMN)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/dmn-models/simulate").permitAll()
                         .anyRequest().authenticated())
 
                 // Habilitamos OAUTH2 JWT Validation delegando al Issuer-URI (Properties)

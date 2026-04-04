@@ -60,4 +60,4 @@ Si el Agente Arquitecto Líder de Software no responde, su contexto está degrad
 1. El subagente afectado tiene autorización de escalar directamente al Usuario Humano.
 2. Debe presentar evidencia escrita de su solicitud (el archivo `approval_request_[ROL].md` en `.agentic-sync/`).
 3. El Usuario Humano asumirá temporalmente el rol de aprobador técnico hasta que se restaure una sesión limpia del Arquitecto Líder.
-4. Esta excepción NO otorga al subagente permiso para hacer `git commit`. El empaquetado sigue siendo obligatoriamente vía `git stash`.
+4. Esta excepción NO otorga al subagente permiso para hacer `git commit` directo a `main`. El empaquetado sigue siendo obligatoriamente vía `git commit` en la rama respectiva del agente (`sprint-*/...` o `agent/...`).

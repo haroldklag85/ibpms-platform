@@ -2,7 +2,7 @@
 name: backend_sre_compilation_audit
 description: Skill obligatoria para el Agente Backend. Exige auto-compilación con Maven y auditoría de arranque del puerto 8080 antes de entregar cualquier tarea o realizar un handoff.
 triggers:
-  - "Cuando el agente Backend termine de escribir código Java y se prepare para hacer el stash o reportar completitud."
+  - "Cuando el agente Backend termine de escribir código Java y se prepare para consolidar su trabajo vía commit en su rama o reportar completitud."
   - "Al crear o modificar clases @Entity o integraciones de red en Spring Boot."
 ---
 

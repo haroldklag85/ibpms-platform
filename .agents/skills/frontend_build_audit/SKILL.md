@@ -2,7 +2,7 @@
 name: frontend_build_audit
 description: Skill obligatoria para el Agente Frontend. Exige auto-compilación con npm/Vite y auditoría de build exitoso antes de entregar cualquier tarea o realizar un handoff.
 triggers:
-  - "Cuando el agente Frontend termine de escribir código Vue/TypeScript y se prepare para hacer el stash o reportar completitud."
+  - "Cuando el agente Frontend termine de escribir código Vue/TypeScript y se prepare para consolidar su trabajo vía commit en su rama o reportar completitud."
   - "Al crear o modificar componentes Vue, Stores Pinia o clientes API (apiClient.ts)."
 ---
 

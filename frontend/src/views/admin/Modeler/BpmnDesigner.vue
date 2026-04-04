@@ -1471,22 +1471,33 @@ const sendCopilotMessage = async () => {
     const { xml } = await modelerInstance.saveXML({ format: true });
     
     // CA-01 SSE
-    const endpoint = (import.meta as any).env?.VITE_API_URL ? `${(import.meta as any).env.VITE_API_URL}/api/v1/dmn/copilot/stream` : 'http://localhost:8080/api/v1/dmn/copilot/stream';
+    const endpoint = (import.meta as any).env?.VITE_API_URL ? `${(import.meta as any).env.VITE_API_URL}/api/v1/design/processes/copilot/stream` : 'http://localhost:8080/api/v1/design/processes/copilot/stream';
+    
+    // Inyectamos el objeto reactivo para el streming y apuntamos a su índice
+    const activeAiMessage = { role: 'ai', text: '', xmlPayload: undefined, options: undefined };
+    copilotMessages.value.push(activeAiMessage as any);
+    copilotLoading.value = false; // Paramos lottie para dejar ver streaming
+    
     try {
         await fetchEventSource(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('ibpms_token') || ''}` },
             body: JSON.stringify({ prompt, xml }),
             onmessage(msg) {
-                if (msg.event === 'chunk' || msg.data) simulatedText += msg.data;
-                if (msg.data.includes('[END_STREAM]')) throw new Error('GracefulEnd'); 
+                // Fragmentos SSE pasivos
+                const dataText = typeof msg.data === 'string' ? msg.data.replace('[END_STREAM]', '') : '';
+                if (dataText) {
+                    simulatedText += dataText;
+                    activeAiMessage.text += dataText;
+                }
+                if (msg.data && msg.data.includes('[END_STREAM]')) throw new Error('GracefulEnd'); 
             },
             onclose() { throw new Error('GracefulEnd'); },
             onerror(err) { throw err; }
         });
     } catch(e: any) {
         if (e.message !== 'GracefulEnd') {
-             // Fallback
+             activeAiMessage.text += '\n[Conexión SSE perdida o degradada. Usando Fallback de IA Offline]';
              await new Promise(r => setTimeout(r, 2000));
         }
     }
@@ -1509,16 +1520,16 @@ const sendCopilotMessage = async () => {
     // CA-01: Sanear payload puro con DOMPurify
     const cleanXml = DOMPurify.sanitize(aiPayloadXML, { USE_PROFILES: { svg: true } });
 
-    copilotMessages.value.push({
-      role: 'ai',
-      text: prompt.toLowerCase().includes('triage') || prompt.toLowerCase().includes('aclarar') || prompt.toLowerCase().includes('rol') 
-              ? 'He detectado ambigüedad en los Perfiles de Seguridad requeridos. ¿Qué política de identidad deseas aplicar?'
-              : 'Análisis y generación completada atómicamente.',
-      xmlPayload: prompt.toLowerCase().includes('genera') ? cleanXml : undefined,
-      options: prompt.toLowerCase().includes('triage') || prompt.toLowerCase().includes('aclarar') || prompt.toLowerCase().includes('rol')
-              ? ['Usar Rol Existente (SSO)', 'Crear Nuevo Rol IAM', 'Omitir Seguridad (Solo Dev)']
-              : undefined
-    });
+    // Evaluamos el prompt para dotar al SSE de contexto / mocks si no los proveyó el backend
+    if (prompt.toLowerCase().includes('triage') || prompt.toLowerCase().includes('aclarar') || prompt.toLowerCase().includes('rol')) {
+        if (!activeAiMessage.text) activeAiMessage.text = 'He detectado ambigüedad en los Perfiles de Seguridad requeridos. ¿Qué política de identidad deseas aplicar?';
+        activeAiMessage.options = ['Usar Rol Existente (SSO)', 'Crear Nuevo Rol IAM', 'Omitir Seguridad (Solo Dev)'] as any;
+    }
+    
+    if (prompt.toLowerCase().includes('genera') || prompt.toLowerCase().includes('crea')) {
+        if (!activeAiMessage.text) activeAiMessage.text = 'Análisis y generación completada atómicamente.';
+        activeAiMessage.xmlPayload = cleanXml as any;
+    }
 
     if (prompt.toLowerCase().includes('genera') || prompt.toLowerCase().includes('crea')) {
        // CA-08: Inyección Atómica Wrap con Command Stack & Undo/Redo Halo

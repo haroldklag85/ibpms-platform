@@ -64,7 +64,8 @@ public class BpmnDesignController {
                     .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager para comisionar modelos en Producción"));
         }
 
-        if (file.isEmpty() || !(file.getOriginalFilename() != null ? file.getOriginalFilename() : "document").endsWith(".bpmn")) {
+        String originalFilename = java.util.Objects.requireNonNullElse(file.getOriginalFilename(), "document");
+        if (file.isEmpty() || !originalFilename.endsWith(".bpmn")) {
             return ResponseEntity.badRequest().body(Map.of("error", "Debe adjuntar un archivo .bpmn válido."));
         }
 

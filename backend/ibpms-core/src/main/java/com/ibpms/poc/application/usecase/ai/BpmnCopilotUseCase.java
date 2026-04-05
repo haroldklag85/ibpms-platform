@@ -84,7 +84,7 @@ public class BpmnCopilotUseCase {
 
             // Truncamiento Severo de Tokens (1000 Chars Humanos + System Prompt)
             String safePrompt = maskedPrompt != null && maskedPrompt.length() > 1000 
-                ? maskedPrompt.substring(0, 1000) : maskedPrompt;
+                ? maskedPrompt.substring(0, 1000) : (maskedPrompt != null ? maskedPrompt : "");
                 
             log.debug("[SRE-COPILOT] Prompt ensamblado con Segregación Topológica y PII Enmascarado. {}... [System Rule Inyectada]", safePrompt.substring(0, Math.min(20, safePrompt.length())));
             log.trace("[SRE-COPILOT-PROMPT] Reglas Subyacentes: {}", SYSTEM_PROMPT);

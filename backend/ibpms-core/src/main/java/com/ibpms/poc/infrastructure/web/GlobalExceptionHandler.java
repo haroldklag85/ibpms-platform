@@ -11,8 +11,6 @@ import java.net.URI;
 import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Manejador Global de Excepciones — RFC 7807 Problem Details.

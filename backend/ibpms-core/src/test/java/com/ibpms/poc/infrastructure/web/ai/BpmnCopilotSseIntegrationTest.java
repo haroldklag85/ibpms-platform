@@ -1,11 +1,9 @@
 package com.ibpms.poc.infrastructure.web.ai;
 
 import com.ibpms.poc.application.usecase.ai.BpmnLayoutAdapter;
-import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -18,7 +16,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -30,6 +27,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -58,13 +56,13 @@ public class BpmnCopilotSseIntegrationTest {
             http.csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new OncePerRequestFilter() {
                     @Override
-                    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+                    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
                         SecurityContextHolder.getContext().setAuthentication(
                             new UsernamePasswordAuthenticationToken("QA_Agent", null, List.of(new SimpleGrantedAuthority("ROLE_PROCESS_ARCHITECT")))
                         );
                         filterChain.doFilter(request, response);
                     }
-                }, org.springframework.security.web.context.SecurityContextPersistenceFilter.class)
+                }, org.springframework.security.web.context.SecurityContextHolderFilter.class)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             return http.build();
         }

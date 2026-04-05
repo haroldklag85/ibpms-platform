@@ -148,7 +148,7 @@ const router = createRouter({
             path: '/admin/integration/dlq',
             name: 'DlqDashboard',
             component: () => import('@/views/admin/Integration/DlqDashboard.vue'),
-            meta: { requiresAuth: true }
+            meta: { requiresAuth: true, requiredRole: 'ADMIN_IT' }
         },
         // --- Bloque G: SGDEA (Pantalla 12) ---
         {

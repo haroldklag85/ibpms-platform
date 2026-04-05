@@ -1148,6 +1148,19 @@ Feature: Task Completion with Form Data
 **Quiero** disponer de un modelo de formulario genérico pre-asociado a tareas operativas simples
 **Para** no invertir tiempo dibujando decenas de formularios básicos en la Pantalla 7 cuando la actividad es netamente procedimental (captura de evidencia, observaciones y tracking de avance).
 
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-039:**
+> - **US-003 (Pantalla 7 / IDE):** El Pre-Flight Analyzer que decide si un formulario genérico es admisible reside en la lógica de despliegue compartida con el IDE de formularios.
+> - **US-005 (Despliegue BPMN):** El Pre-Flight Analyzer se ejecuta durante el pipeline de despliegue del BPMN (Pantalla 6). La whitelist configurable (CA-5) es una propiedad del Process Definition.
+> - **US-029 (Persistencia CQRS):** El auto-guardado de borradores (CA-7) consume los mismos endpoints de draft que los iForm Maestros.
+> - **US-036 (RBAC / Pantalla 14):** La lista de Roles VIP que bloquean el uso del formulario genérico (CA-6) se administra desde la columna `is_vip_restricted` en `ibpms_roles`.
+> - **US-034 (RabbitMQ):** Los Error Events disparados por los Botones de Pánico (CA-8) se enrutan a través del broker de mensajería para el procesamiento asíncrono.
+
+> [!CAUTION]
+> **HANDOFF TÉCNICO V1 (QA SRE CERTIFIED):**
+> 1. Eliminación y prohibición del uso de variables de tipo `Toggle` binario (ej. `requiere_evidencia`) como lógica de UI en este documento, usando en su lugar un enfoque semántico estructural sin ambigüedades.
+> 2. Prevención de colisiones de Namespace garantizada mediante inyección de `Whitelist Regex` en el BFF, evitando envenenamiento de los context variables del Engine.
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Auto-vinculación Camaleónica y Resiliencia de Pantalla 7.B
@@ -1172,15 +1185,67 @@ Feature: Auto-vinculación Camaleónica y Resiliencia de Pantalla 7.B
     When el operario deba escalar o devolver transversalmente el ticket (Ej: Evidencia Insuficiente)
     Then la interfaz exhibirá, además del recuadro principal, un bloque inferior de "Excepciones" o Botones de Pánico (Aprobado / Retorno al Generador / Cancelar).
     And al cliquear un botón de pánico, el Frontend forzará procesalmente la inyección de una observación justificativa mandatoria (Min: 20 caracteres) antes de consumar un Error Event o Escalamiento en el Motor de Camunda.
+
+
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us039_functional_analysis.md
+  # Tickets: REM-039-01 a REM-039-05
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Definición del Cuerpo Editable del Formulario Genérico (CA-4)
+    # Origen: REM-039-01 — GAP-1 del us039_functional_analysis.md
+    Given la necesidad de que el operario capture evidencia, observaciones y tracking de avance en la Pantalla 7.B
+    Then el cuerpo editable del Formulario Genérico Base contendrá OBLIGATORIAMENTE los siguientes campos pre-construidos:
+    And 1. `textarea` "Observaciones / Notas del Operario" (obligatorio, min 10 chars, max 2000 chars) como campo principal de captura de texto libre.
+    And 2. `dropzone` "Adjuntos de Evidencia" (opcional, max 5 archivos, max 10MB por archivo, tipos permitidos: PDF, JPG, PNG, DOCX, XLSX) para carga drag-and-drop de documentos de soporte.
+    And 3. `select` "Resultado de la Gestión" (obligatorio, opciones configurables por proceso: Ej: "Aprobado", "Rechazado", "Pendiente de Información", "Escalado") como clasificador estandarizado del outcome de la tarea.
+    And estos tres campos son el set mínimo fijo; TIENE PROHIBIDO agregar campos adicionales en runtime porque para formularios complejos se debe usar un iForm Maestro (US-003).
+    And la estructura visual será: [Cuadrícula Metadatos Solo-Lectura] arriba, [Cuerpo Editable: Observaciones + Adjuntos + Resultado] al centro, [Botones de Pánico] abajo.
+
+  Scenario: [REMEDIACIÓN] Configuración de Whitelist Regex por Proceso (CA-5)
+    # Origen: REM-039-02 — GAP-2 del us039_functional_analysis.md
+    Given la exigencia de filtrar variables técnicas de Camunda mediante Whitelist Regex (CA-5)
+    Then la Whitelist será configurable POR PROCESO, no global, para soportar que cada BPMN tenga variables de negocio distintas (Ej: Proceso A usa `Case_ID`, Proceso B usa `Folio_Number`).
+    And la configuración se realizará en la Pantalla 6 (Modeler BPMN) como una propiedad del Process Definition, en un panel "Variables Visibles en Formulario Genérico".
+    And el Arquitecto del BPMN podrá definir una lista de hasta 10 claves de variables permitidas (Ej: `Case_ID, Client_Name, Priority, SLA, Due_Date`).
+    And si NO se configura ninguna whitelist, el BFF aplicará un fallback seguro mostrando SOLO las 4 variables por defecto: `Case_ID`, `Instance_Name`, `Priority` y `Created_At`.
+    And TIENE PROHIBIDO mostrar variables con prefijo `_internal_`, `camunda_`, o `zeebe_` independientemente de la whitelist configurada.
+
+  Scenario: [REMEDIACIÓN] Catálogo Configurable de Roles VIP para Bloqueo Pre-Flight (CA-6)
+    # Origen: REM-039-03 — GAP-3 del us039_functional_analysis.md
+    Given la restricción de que tareas VIP no pueden usar el Formulario Genérico (CA-1)
+    Then la lista de Roles VIP que disparan el Hard-Stop del Pre-Flight Analyzer será configurable desde la Pantalla 14 (RBAC) y NO hardcodeada en el código.
+    And la tabla `ibpms_roles` incluirá una columna booleana `is_vip_restricted` (default: false) que el Super Admin activará para los roles que NO deben operar con formularios genéricos.
+    And los tres roles mencionados en el CA-1 ("Alta Dirección", "Aprobador Financiero", "Sello Legal") serán marcados como `is_vip_restricted = true` durante el seed de datos inicial del sistema.
+    And el Pre-Flight Analyzer consultará esta tabla en tiempo de despliegue del BPMN para evaluar si las UserTasks asignadas a esos carriles (Lanes) pueden usar `sys_generic_form`.
+
+  Scenario: [REMEDIACIÓN] Persistencia y Auto-Guardado del Formulario Genérico (CA-7)
+    # Origen: REM-039-04 — GAP-4 del us039_functional_analysis.md
+    Given que el operario puede redactar observaciones extensas en el formulario genérico
+    Then el Formulario Genérico consumirá los mismos endpoints de borrador definidos en la US-029 (Persistencia CQRS):
+    And `POST /api/v1/drafts/{taskId}` para auto-guardado cada 30 segundos o al detectar inactividad de teclado (debounce 10s).
+    And `GET /api/v1/drafts/{taskId}` para recuperar el borrador al reabrir la tarea.
+    And `DELETE /api/v1/drafts/{taskId}` para limpiar el borrador tras submit exitoso.
+    And si el operario cierra la pestaña accidentalmente, al reabrir la tarea encontrará un banner: "Se detectó un borrador no enviado. ¿Desea restaurarlo?" (mismo patrón del CA-85 de US-003).
+    And los datos finales de submit (observaciones + adjuntos + resultado) se persistirán como variables del proceso en Camunda mediante `runtimeService.setVariables()`.
+
+  Scenario: [REMEDIACIÓN] Mapeo Explícito de Botones de Pánico a Eventos BPMN (CA-8)
+    # Origen: REM-039-05 — GAP-5 del us039_functional_analysis.md
+    Given los tres Botones de Pánico del Formulario Genérico (CA-3)
+    Then cada botón tendrá un comportamiento BPMN estrictamente definido:
+    And Botón "Aprobado": Invoca `taskService.complete(taskId, variables)` inyectando `generic_form_result = "APPROVED"` como variable del proceso. El flujo continúa normalmente por el Sequence Flow default.
+    And Botón "Retorno al Generador": Invoca `taskService.complete(taskId, variables)` inyectando `generic_form_result = "RETURNED"`. El BPMN DEBE tener un Exclusive Gateway posterior que evalúe esta variable para redirigir el token a la tarea anterior del flujo. Si el Gateway no existe, la tarea se completa sin retorno (fail-safe).
+    And Botón "Cancelar": Invoca un BPMN Error Event con `errorCode = "TASK_CANCELLED_BY_OPERATOR"`. El BPMN DEBE tener un Error Boundary Event capturando este código. Si no existe el Boundary Event, Camunda propagará el error al proceso padre o a la morgue de incidentes (Incident).
+    And los tres botones comparten la precondición del CA-3: observación justificativa de min 20 caracteres obligatoria ANTES de ejecutar cualquier acción.
+
 ```
 
-> [!CAUTION]
-> **HANDOFF TÉCNICO V1 (QA SRE CERTIFIED):**
-> 1. Eliminación y prohibición del uso de variables de tipo `Toggle` binario (ej. `requiere_evidencia`) como lógica de UI en este documento, usando en su lugar un enfoque semántico estructural sin ambigüedades.
-> 2. Prevención de colisiones de Namespace garantizada mediante inyección de `Whitelist Regex` en el BFF, evitando envenenamiento de los context variables del Engine.
-
 **Trazabilidad UX:** Wireframes Pantalla 7.B (Formulario Genérico Base).
-
+---
 
 ## ÉPICA 3: Inicio y Recepción (Triggers)
 Capacidad de iniciar procesos operacionales tanto de forma manual (Pantalla 0) como reactiva (Webhook).

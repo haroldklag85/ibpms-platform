@@ -3921,6 +3921,80 @@ Feature: Identity Governance & RBAC Architecture
     Given la ley del "Quien hace no aprueba"
     Then para el MVP V1, el motor iBPMS NO frena estructuralmente a un humano si el BPMN le enruta "Crear Cheque" y "Aprobar Cheque" al mismo tiempo
     And asume este riesgo operativo difiriendo los motores complejos de "Conflict of Interest Avoidance" a V2, confiando en que el diseño del proceso en Pantalla 6 asigne humanos distintos para el flujo iterativo.
+
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us036_functional_analysis.md
+  # Tickets: REM-036-01 a REM-036-07
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Modelo de Datos Relacional para la Matriz RBAC (CA-19)
+    # Origen: REM-036-01 — GAP-1 del us036_functional_analysis.md
+    Given la necesidad de persistir roles, permisos, asignaciones y herencia piramidal definidos en los CA-1 a CA-18
+    Then el Backend TIENE OBLIGACIÓN de implementar el siguiente esquema relacional mínimo en PostgreSQL:
+    And Tabla `ibpms_roles` con columnas: `id`, `name`, `description`, `parent_role_id` (FK auto-referencia para herencia CA-6), `is_template` (boolean para Rol Plantilla CA-3), `source` (ENUM: ENTRA_ID | LOCAL), `created_at`, `updated_at`.
+    And Tabla `ibpms_permissions` con columnas: `id`, `resource` (Ej: PROCESS, FORM, ADMIN_PANEL), `action` (ENUM: INITIATE, EXECUTE, READ, WRITE, DELETE), `process_definition_id` (FK nullable para permisos por proceso CA-4).
+    And Tabla pivote `ibpms_role_permissions` para la relación N:M entre roles y permisos.
+    And Tabla pivote `ibpms_user_roles` con columnas: `user_id`, `role_id`, `assigned_by`, `assigned_at`, soportando Mass Assignment (CA-3) mediante INSERT batch.
+    And la herencia piramidal (CA-6) se resolverá mediante una query recursiva CTE (`WITH RECURSIVE`) que recorra `parent_role_id` para computar los permisos efectivos de un rol en tiempo de consulta.
+    And el esquema se gestionará mediante scripts Liquibase versionados en `db/changelog/`.
+
+  Scenario: [REMEDIACIÓN] Estrategia de Row-Level Security para Privacidad de Colas (CA-20)
+    # Origen: REM-036-02 — GAP-2 del us036_functional_analysis.md
+    Given la exigencia de que cada operario visualice SOLO sus folios asignados en el Workdesk (CA-5)
+    Then la implementación V1 utilizará un interceptor centralizado a nivel de aplicación (Spring AOP `@Aspect` o un `Specification` base de JPA) que inyecte automáticamente el filtro `WHERE assignee_id = :currentUserId` en TODAS las queries del Workdesk.
+    And TIENE PROHIBIDO implementar el filtro como un WHERE manual en cada Repository method, ya que un endpoint olvidado filtraría datos ajenos.
+    And si en el futuro se migra a RLS nativo de PostgreSQL (`CREATE POLICY`), el interceptor de aplicación se desactivará sin afectar la lógica de negocio.
+    And para las Colas Compartidas Públicas, el interceptor reconocerá un flag `is_shared_queue = true` en la definición del proceso y omitirá el filtro de usuario, permitiendo visibilidad colectiva.
+
+  Scenario: [REMEDIACIÓN] Infraestructura de Blacklist JWT para Kill-Session (CA-21)
+    # Origen: REM-036-03 — GAP-3 del us036_functional_analysis.md
+    Given la funcionalidad de Kill-Session (CA-14) que exige destruir sesiones activas instantáneamente
+    Then la implementación del botón Kill-Session en Pantalla 14 invocará un endpoint `POST /api/v1/admin/users/{userId}/revoke-session`.
+    And este endpoint insertará el `jti` (JWT ID) del token activo del usuario en una blacklist de Redis con TTL igual al tiempo restante de vida del token (max 15 minutos según política de US-038 CA-01).
+    And el Spring Security Filter consultará esta blacklist en cada request entrante en menos de 5ms.
+    And esta implementación TIENE DEPENDENCIA DIRECTA con la US-038 CA-01 (Fail-Open Policy), la cual define el comportamiento cuando Redis no está disponible.
+    And el equipo que desarrolle la US-036 TIENE OBLIGACIÓN de coordinarse con el equipo de la US-038 para compartir el mismo servicio de blacklist Redis, prohibiendo crear implementaciones paralelas.
+
+  Scenario: [REMEDIACIÓN] Política de Seguridad para API Keys de Service Accounts (CA-22)
+    # Origen: REM-036-04 — GAP-4 del us036_functional_analysis.md
+    Given la funcionalidad de creación de Service Accounts M2M (CA-10) que genera API Keys sin política de ciclo de vida
+    Then toda API Key generada en Pantalla 14 TIENE OBLIGACIÓN de incluir una fecha de expiración configurable (por defecto: 365 días, máximo: 730 días).
+    And la API Key se almacenará hasheada con SHA-256 en la tabla `ibpms_service_accounts`; el valor en texto plano solo se mostrará UNA VEZ al momento de la creación (como GitHub Personal Access Tokens).
+    And la Pantalla 14 mostrará un indicador visual de API Keys próximas a expirar (menos de 30 días) con alerta amarilla, y expiradas con alerta roja.
+    And el Super Admin podrá regenerar (rotar) una API Key existente, deprecando la anterior inmediatamente e invalidando todas las sesiones activas del Service Account.
+    And todo uso de API Key se registrará en la tabla `ibpms_audit_log` con: `service_account_id`, `endpoint_invocado`, `timestamp_utc`, `ip_origen`.
+
+  Scenario: [REMEDIACIÓN] Comportamiento de Delegación sobre Tareas In-Flight (CA-23)
+    # Origen: REM-036-05 — GAP-5 del us036_functional_analysis.md
+    Given un Gerente que activa una delegación temporal a un suplente (CA-9)
+    When la delegación entra en vigencia según el rango de fechas configurado
+    Then el suplente heredará TANTO el rol delegado COMO las tareas ya asignadas al delegante en la bandeja del Workdesk (tareas in-flight).
+    And las tareas nuevas que lleguen durante el periodo de delegación también se enrutarán al suplente.
+    And al expirar la delegación, las tareas NO completadas por el suplente regresarán automáticamente a la bandeja del delegante original con un sello visual: "[Retornada post-delegación]".
+    And toda la operación de transferencia y retorno de tareas quedará registrada en `ibpms_audit_log` para trazabilidad CISO.
+
+  Scenario: [REMEDIACIÓN] Alcance Explícito del Reporte ISO 27001 en V1 (CA-24)
+    # Origen: REM-036-06 — GAP-6 del us036_functional_analysis.md
+    Given la funcionalidad de generación de reportes de Identity Governance (CA-16)
+    Then para V1 el reporte se generará exclusivamente bajo demanda (on-demand) mediante un botón en Pantalla 14, sin generación programada automática (cron).
+    And el reporte incluirá la fecha y hora UTC de generación, el usuario que lo solicitó, y un hash SHA-256 del contenido para certificar integridad.
+    And cada reporte generado se persistirá como registro histórico en la tabla `ibpms_audit_reports` para comparación entre periodos (Ej: "Estado de permisos en Enero vs Febrero").
+    And la generación programada (cron + envío por email al CISO) queda explícitamente DIFERIDA a V2.
+
+  Scenario: [REMEDIACIÓN] Directriz de Coordinación US-036 vs US-038 (CA-25)
+    # Origen: REM-036-07 — GAP-7 del us036_functional_analysis.md
+    Given el solapamiento funcional entre US-036 (UI y reglas de negocio RBAC) y US-038 (infraestructura JWT, Redis, Sync EntraID)
+    Then la directriz oficial de separación de responsabilidades es:
+    And US-036 es responsable de: la Pantalla 14 (UI completa), la lógica de negocio de roles/permisos, los CRUDs de usuario/rol/delegación, y la generación de reportes.
+    And US-038 es responsable de: la infraestructura de autenticación (JWT lifecycle, Redis blacklist, Fail-Open Policy), la sincronización periódica con EntraID, y el Sudo-Mode para operaciones destructivas.
+    And el servicio de blacklist Redis es un componente COMPARTIDO: ambas historias lo consumen pero su implementación canónica reside en US-038.
+    And TIENE PROHIBIDO que la US-036 implemente su propia lógica de invalidación de tokens separada de la US-038.
+    And ambas historias DEBEN ser asignadas al mismo Arquitecto de Software para garantizar coherencia en el diseño de seguridad.
+
 ```
 **Trazabilidad UX:** Wireframes Pantallas 14, 6, 7 y Workdesk (5).
 

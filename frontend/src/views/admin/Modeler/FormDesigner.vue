@@ -143,6 +143,14 @@
           <!-- CA-6 Shadow DOM (Isolation css context class) -->
           <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative" style="all: revert; box-sizing: border-box;">
             <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans">{{ formTitle }}</h2>
+
+            <div v-if="isHighDensityForm" class="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 shadow-sm rounded flex items-center gap-3">
+               <span class="text-2xl">⚠️</span>
+               <div>
+                  <h4 class="text-sm font-bold">Modo de Alta Densidad Activado (CA-90)</h4>
+                  <p class="text-xs mt-0.5">La profundidad del esquema supera los 200 campos. El Workdesk usará Lazy Mount para no bloquear el hilo principal.</p>
+               </div>
+            </div>
             
             <VueDraggable
               v-model="canvasFields"
@@ -1109,6 +1117,11 @@ const openFuzzerSandbox = () => {
 
 const runFuzzerZod = () => {
     fuzzerErrors.value = [];
+    if (fuzzerPayload.value.length > 50000) {
+        fuzzerErrors.value = ['[SECURITY BLOCK] - Límite de payload superado (Max 50KB). DDoS Prevention.'];
+        showToast('Payload abortado por políticas de firewall de capa 7.', 'error');
+        return;
+    }
     try {
         const payload = JSON.parse(fuzzerPayload.value);
         const schema = ZodBuilder.buildSchema(canvasFields.value, visualRules.value);
@@ -1359,6 +1372,9 @@ const flatFields = (fields: any[]): any[] => {
   }
   return res;
 };
+
+// CA-90: High density form state calculated with performance considerations
+const isHighDensityForm = computed(() => flatFields(canvasFields.value).length > 200);
 
 // HTML generator recursivo para Template (AST to Vue)
 const generateFieldHTML = (field: any, indent: string = '      ', parentBinding: string = 'formData'): string => {

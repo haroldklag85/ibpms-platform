@@ -1208,7 +1208,7 @@ Feature: Auto-vinculación Camaleónica y Resiliencia de Pantalla 7.B
 
   Scenario: [REMEDIACIÓN] Configuración de Whitelist Regex por Proceso (CA-5)
     # Origen: REM-039-02 — GAP-2 del us039_functional_analysis.md
-    Given la exigencia de filtrar variables técnicas de Camunda mediante Whitelist Regex (CA-5)
+    Given la exigencia de filtrar variables técnicas de Camunda mediante Whitelist Regex (CA-2)
     Then la Whitelist será configurable POR PROCESO, no global, para soportar que cada BPMN tenga variables de negocio distintas (Ej: Proceso A usa `Case_ID`, Proceso B usa `Folio_Number`).
     And la configuración se realizará en la Pantalla 6 (Modeler BPMN) como una propiedad del Process Definition, en un panel "Variables Visibles en Formulario Genérico".
     And el Arquitecto del BPMN podrá definir una lista de hasta 10 claves de variables permitidas (Ej: `Case_ID, Client_Name, Priority, SLA, Due_Date`).
@@ -3860,6 +3860,19 @@ Feature: API Connector Configuration and Resiliency
 **Quiero** delegar el rate-limiting y el encolamiento asíncrono a un Message Broker de grado Enterprise (RabbitMQ)
 **Para** garantizar resiliencia extrema frente a picos transaccionales, evitando desbordamientos de memoria (OOM) y caídas de subsistemas.
 
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-034:**
+> - **US-004 (Webhook):** Los webhooks entrantes que exceden la capacidad del motor se encolan en RabbitMQ (CA-6 de US-004: Resiliencia Periférica con Colas).
+> - **US-000 (Resiliencia Integrada):** El health check del clúster RabbitMQ (CA-10) se integra como componente del circuito de salud compuesto de la plataforma.
+> - **US-049 (Notificaciones):** Todas las notificaciones por email se despachan como mensajes P2 vía las colas de RabbitMQ.
+> - **US-033 (Hub de Integraciones):** Los conectores a sistemas externos (MS Graph, ERP) producen mensajes en las colas de integración.
+> - **US-017 (IA Copilot):** Las generaciones de IA (RAG, DMN) son productores Nivel P3 (Batch) en el sistema de prioridades.
+> - **US-036 (RBAC):** El acceso al Dashboard DLQ (CA-8) está restringido al rol `ADMIN_IT` administrado en la Pantalla 14.
+> - **US-038 (JWT/Seguridad):** El botón de Purga de DLQ requiere autenticación Sudo-Mode definida en la infraestructura de seguridad de US-038.
+> - **US-039 (Formulario Genérico):** Los Error Events disparados por los Botones de Pánico se enrutan a través del broker como mensajes P1.
+
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Central Message Queue Orchestration
@@ -3879,6 +3892,87 @@ Feature: Central Message Queue Orchestration
     When ingresan simultáneamente eventos VIP (Ej: Notificaciones de aprobaciones financieras críticas) y eventos de latencia tolerable (Ej: Generación RAG de resúmenes)
     Then RabbitMQ clasifica el tráfico en "Priority Queues" pre-configuradas basándose en metadatos del evento
     And asegura que los procesos de Nivel 1 (Críticos) sean desencolados y procesados antes que las tareas de Nivel 3 (Batch), garantizando el SLA de negocio intacto a pesar del cuello de botella global.
+
+
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us034_functional_analysis.md
+  # Tickets: REM-034-01 a REM-034-07
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Catálogo Oficial de Exchanges, Queues y Routing Keys (CA-4)
+    # Origen: REM-034-01 — GAP-1 del us034_functional_analysis.md
+    Given la necesidad de prevenir la proliferación desordenada de colas y exchanges en el clúster RabbitMQ
+    Then el Arquitecto de Software TIENE OBLIGACIÓN de mantener un catálogo centralizado de la topología de mensajería en el repositorio bajo `docs/architecture/rabbitmq_topology.md` que incluya:
+    And 1. Exchange principal: `ibpms.exchange.topic` (tipo Topic) como punto de entrada único para todos los productores.
+    And 2. Colas nombradas con convención: `ibpms.{dominio}.{accion}` (Ej: `ibpms.notifications.email`, `ibpms.ai.generation`, `ibpms.integrations.webhook`, `ibpms.bpmn.events`).
+    And 3. Routing Keys con convención: `{dominio}.{prioridad}.{accion}` (Ej: `notifications.p1.send`, `ai.p3.generate`, `integrations.p2.sync`).
+    And 4. Dead Letter Exchange: `ibpms.exchange.dlx` que enruta a la cola `ibpms.dlq.global`.
+    And TIENE PROHIBIDO que cualquier developer cree exchanges o colas ad-hoc sin registrarlas previamente en el catálogo y obtener aprobación del Arquitecto.
+
+  Scenario: [REMEDIACIÓN] Idempotencia Obligatoria en Workers Consumidores (CA-5)
+    # Origen: REM-034-02 — GAP-2 del us034_functional_analysis.md
+    Given el riesgo de procesamiento duplicado por reintentos manuales desde la DLQ (CA-2) o reintentos automáticos
+    Then todo Worker consumidor del iBPMS TIENE OBLIGACIÓN de implementar un mecanismo de idempotencia basado en `message_id`:
+    And cada mensaje producido incluirá un header `x-idempotency-key` (UUID v4 generado por el productor).
+    And el Worker consultará una tabla `ibpms_processed_messages` (columnas: `idempotency_key`, `processed_at`, `queue_name`, TTL: 72 horas) antes de procesar.
+    And si el `idempotency_key` ya existe en la tabla, el Worker hará ACK silencioso del mensaje sin reprocesarlo.
+    And la tabla `ibpms_processed_messages` se purgará automáticamente vía un scheduled job cada 24 horas, eliminando registros con más de 72 horas de antigüedad.
+    And como alternativa de mayor rendimiento, el Arquitecto podrá reemplazar la tabla SQL por un SET de Redis con TTL de 72 horas (`SISMEMBER ibpms:idempotency {key}`).
+
+  Scenario: [REMEDIACIÓN] Taxonomía Formal de Niveles de Prioridad (CA-6)
+    # Origen: REM-034-03 — GAP-3 del us034_functional_analysis.md
+    Given la necesidad de jerarquizar el tráfico en Priority Queues (CA-3) con criterios claros
+    Then el sistema implementará exactamente 3 niveles de prioridad con la siguiente taxonomía fija:
+    And Nivel P1 (Crítico / SLA < 5min): Notificaciones de aprobaciones financieras, Kill-Session (US-036 CA-14), Error Events de Camunda, alertas de seguridad. Prefetch count: 1 (procesamiento atómico garantizado).
+    And Nivel P2 (Normal / SLA < 30min): Envío de emails transaccionales (US-049), sincronización EntraID (US-038), webhooks de integración (US-004). Prefetch count: 10.
+    And Nivel P3 (Batch / SLA < 4h): Generación RAG de resúmenes (US-017), reportes masivos (US-036 CA-16), limpieza de borradores (US-003 CA-92). Prefetch count: 50.
+    And la prioridad se asignará como header del mensaje (`x-priority: P1|P2|P3`) por el productor en el momento de publicar. Si no se especifica, el default es P2.
+    And TIENE PROHIBIDO que un productor asigne P1 a eventos que no cumplan con la definición anterior sin aprobación del Arquitecto.
+
+  Scenario: [REMEDIACIÓN] Estrategia de Retry Automático con Backoff Exponencial (CA-7)
+    # Origen: REM-034-04 — GAP-4 del us034_functional_analysis.md
+    Given la ausencia de reintentos automáticos antes de enviar un mensaje a la DLQ
+    Then el clúster RabbitMQ implementará una política de retry automático obligatoria antes de derivar a la Dead Letter Queue:
+    And Intento 1: Inmediato (0ms delay).
+    And Intento 2: Delay de 5 segundos (via `x-message-ttl` en cola de retry).
+    And Intento 3: Delay de 30 segundos.
+    And Intento 4 (final): Delay de 2 minutos. Si falla, el mensaje se enruta al DLX (`ibpms.exchange.dlx`) con header `x-delivery-count: 4`.
+    And el Worker diferenciará errores transitorios (IOException, TimeoutException → reintentar) de errores permanentes (ValidationException, IllegalArgumentException → DLQ directo sin reintentos).
+    And todo mensaje que llegue a la DLQ llevará los headers: `x-original-queue`, `x-first-death-reason`, `x-delivery-count`, `x-last-error-message` para diagnóstico.
+
+  Scenario: [REMEDIACIÓN] Implementación del Dashboard DLQ como Pantalla Custom del iBPMS (CA-8)
+    # Origen: REM-034-05 — GAP-5 del us034_functional_analysis.md
+    Given la necesidad de un Dashboard visual de DLQ accesible para el Administrador IT (CA-2)
+    Then el Dashboard será una pantalla custom del iBPMS (componente Vue) accesible desde la navegación principal, NO un enlace externo al Management UI de RabbitMQ.
+    And la pantalla consumirá un endpoint Backend `GET /api/v1/admin/queues/dlq/summary` que retornará: total de mensajes, agrupación por cola de origen (`x-original-queue`), y timestamp del mensaje más antiguo.
+    And el botón `[Reintentar Mensajes]` invocará `POST /api/v1/admin/queues/dlq/retry` y requerirá un modal de confirmación con la advertencia: "Se reintentarán N mensajes. Los Workers deben ser idempotentes (CA-5)."
+    And el botón `[Purgar Cola]` invocará `DELETE /api/v1/admin/queues/dlq/purge` y requerirá autenticación Sudo-Mode (US-038) con justificación obligatoria de 20+ caracteres.
+    And toda acción sobre la DLQ quedará registrada en `ibpms_audit_log` con: `user_id`, `action` (RETRY|PURGE), `message_count`, `timestamp_utc`.
+    And el acceso a esta pantalla estará restringido al rol `ADMIN_IT` configurado en la Pantalla 14 (US-036).
+
+  Scenario: [REMEDIACIÓN] Política de TTL y Purgado Automático de la Dead Letter Queue (CA-9)
+    # Origen: REM-034-06 — GAP-6 del us034_functional_analysis.md
+    Given el riesgo de crecimiento indefinido de la DLQ en producción
+    Then la cola `ibpms.dlq.global` implementará un TTL de 30 días naturales (`x-message-ttl: 2592000000ms`) para todos los mensajes.
+    And los mensajes que excedan 30 días serán purgados automáticamente por RabbitMQ sin intervención humana.
+    And ANTES de purgar, un scheduled job (`DlqArchiveJob`, ejecutado diariamente) copiará los mensajes próximos a expirar (TTL < 48h) a una tabla de archivo `ibpms_dlq_archive` (columnas: `message_id`, `original_queue`, `headers_json`, `body_summary` truncado a 1KB, `archived_at`) para auditoría forense.
+    And la tabla `ibpms_dlq_archive` tendrá su propia política de retención: 180 días, purgada por el `LocalStorageGarbageCollector` de infraestructura.
+
+  Scenario: [REMEDIACIÓN] Health Check del Clúster RabbitMQ Integrado al Circuito de Resiliencia (CA-10)
+    # Origen: REM-034-07 — GAP-7 del us034_functional_analysis.md
+    Given la criticidad del clúster RabbitMQ como infraestructura troncal de la plataforma
+    Then el Backend expondrá un endpoint de salud `GET /actuator/health/rabbitmq` que verifique la conectividad al clúster cada 15 segundos.
+    And si el health check falla 3 veces consecutivas (45 segundos sin respuesta), el sistema activará un Circuit Breaker (estado OPEN) en todos los productores de mensajes.
+    And durante el Circuit Breaker OPEN, los productores almacenarán temporalmente los mensajes en un buffer local en memoria (máximo 1000 mensajes, FIFO) por un máximo de 5 minutos.
+    And si RabbitMQ regresa dentro de los 5 minutos (Circuit Breaker HALF-OPEN → CLOSED), el buffer se drenará automáticamente reenviando los mensajes encolados.
+    And si RabbitMQ NO regresa en 5 minutos, los mensajes del buffer se persistirán en una tabla de emergencia `ibpms_queue_fallback` y se disparará una alerta crítica al SysAdmin: "RabbitMQ Offline — N mensajes en fallback SQL de emergencia."
+    And este endpoint de salud se integrará con la US-000 (Resiliencia Integrada) como parte del health check compuesto `/actuator/health`.
+
+
 ```
 **Trazabilidad UX:** Operación Backend e Infraestructura (Dead Letter Queue IT Dashboard).
 

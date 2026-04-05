@@ -1322,6 +1322,18 @@ Esta épica aborda el rol del Arquitecto/Administrador para modelar cómo fluye 
 **Quiero** importar un archivo `.bpmn` (BPMN 2.0 XML) generado en el Diseñador Web y desplegarlo en el motor
 **Para** que la plataforma sepa cómo enrutar las tareas secuenciales, paralelas y compuertas lógicas de mi proceso oficial.
 
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-005:**
+> - **US-003 (Pantalla 7 / IDE Formularios):** Los FormKeys del Dropdown (CA-39) consumen el catálogo de formularios. La consistencia Simple/Maestro (CA-40) es dictada por US-003. El Pre-Flight valida integridad del mapping contra variables Zod del formulario (CA-68).
+> - **US-007 (DMN / Pantalla 4):** El Dropdown de Business Rule Tasks (CA-61) consume tablas DMN creadas en US-007. El binding LATEST/DEPLOYMENT (CA-12) es co-responsabilidad.
+> - **US-033 (Hub de Integraciones / Pantalla 11):** El Dropdown de conectores API (CA-45) consume los conectores registrados en US-033. La inmutabilidad de Swagger (CA-52) es co-responsabilidad. El catálogo de Topics (CA-70) se administra desde Pantalla 11.
+> - **US-036 (RBAC / Pantalla 14):** Los roles Designer/Release Manager (CA-21) y los roles autogenerados desde Lanes (CA-6) se administran en Pantalla 14.
+> - **US-029 (Persistencia CQRS):** El auto-guardado de borradores (CA-19) consume los endpoints de draft. Las variables de formulario persistidas validan contra el mapping del BPMN.
+> - **US-034 (RabbitMQ):** El Retry Pattern (CA-58) de Service Tasks procesa vía colas. Los reintentos automáticos dependen de la taxonomía de prioridad (US-034 CA-6).
+> - **US-000 (Resiliencia Integrada):** La morgue de tokens / Centro de Incidentes (CA-13) reside en la capa de resiliencia. Las instancias Sandbox (CA-67) son visibles en Pantalla 15.A.
+> - **US-049 (Notificaciones):** Las notificaciones de aprobación/rechazo de despliegue (CA-69) se canalizan vía el sistema de notificaciones.
+> - **US-039 (Formulario Genérico):** El Pre-Flight Analyzer que bloquea el uso de `sys_generic_form` en tareas VIP (CA-1 de US-039) reside en el pipeline de despliegue de US-005.
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: BPMN Process Deployment
@@ -1734,9 +1746,17 @@ Scenario: Prohibición de Trabajo Síncrono en Camunda (External Task Pattern) (
     And el motor forzará estructuralmente el uso del patrón `External Task` (Trabajadores Externos).
     And Camunda simplemente publicará la intención de trabajo en un Topic (Ej: `topic="generar_pdf"`), liberando su memoria inmediatamente, a la espera de que los microservicios satélite (Workers) hagan el trabajo pesado y reporten el resultado asíncronamente.
 
-> [!CAUTION]
-> ** refinamiento**
-> [] check de completado desarrollo
+
+
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us005_functional_analysis.md
+  # Tickets: REM-005-01 a REM-005-06
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
 Scenario: Aislamiento Transaccional del Sandbox en Producción (Zero-Blast Radius) (CA-63)
     Given la ejecución de una simulación de proceso directamente en Producción (Modo Sandbox activado)
     When el token simulado alcanza una `ServiceTask` externa (Hub US-033) o una `SendTask` (Correos US-049)
@@ -1751,6 +1771,63 @@ Scenario: Intervención de Emergencia sobre Bloqueo Pesimista (Break-Lock)  (CA-
     Then el sistema le habilitará un botón de emergencia rojo `[ 🔓 Romper Candado (Break-Lock) ]`.
     And al ejecutarlo, el Backend destruirá el lock en la Base de Datos, liberando el proceso para edición inmediata.
     And registrará inamoviblemente en el Audit Log quién y cuándo forzó la liberación del diseño corporativo retenido por otro empleado.
+
+  Scenario: [REMEDIACIÓN] Contrato API Explícito para el Endpoint de Despliegue (CA-65)
+    # Origen: REM-005-01 — GAP-1 del us005_functional_analysis.md
+    Given la necesidad de alinear Frontend y Backend en el contrato de despliegue BPMN (CA-1)
+    Then el endpoint `POST /api/v1/design/processes/deploy` aceptará un `multipart/form-data` con los siguientes campos:
+    And Campo obligatorio `file` (tipo: file, extensión: `.bpmn`, max: 5MB) — el diagrama BPMN 2.0 XML.
+    And Campo obligatorio `deploy_comment` (tipo: string, min: 10 chars) — justificación del despliegue para el audit log.
+    And Campo opcional `force_deploy` (tipo: boolean, default: false) — si `true`, salta las advertencias ⚠️ del Pre-Flight (pero NO los errores ❌).
+    And el Response Body del `201 Created` incluirá obligatoriamente: `deployment_id`, `process_definition_id`, `process_definition_key`, `version` (int), `deployed_at` (ISO 8601 UTC), `deployed_by` (user_id).
+    And existirá un endpoint separado de validación: `POST /api/v1/design/processes/validate` que ejecuta el Pre-Flight Analyzer sin desplegar, retornando la lista de errores y advertencias en formato JSON.
+    And el contrato se documentará con OpenAPI/Swagger annotations en el Controller.
+
+  Scenario: [REMEDIACIÓN] Persistencia del Lock Pesimista en Base de Datos (CA-66)
+    # Origen: REM-005-02 — GAP-2 del us005_functional_analysis.md
+    Given el mecanismo de Lock Pesimista para edición concurrente (CA-16, CA-43, CA-64)
+    Then el lock se persistirá en una tabla `ibpms_process_locks` con columnas: `process_definition_key` (PK), `locked_by` (FK user_id), `locked_at` (timestamp UTC), `browser_session_id` (para detectar tabs cerradas).
+    And el lock aplica por `process_definition_key` (todo el proceso, no por versión específica).
+    And el lock NO expiará automáticamente por tiempo (consistente con CA-43) pero SÍ se liberará automáticamente si el Backend detecta que la sesión WebSocket/SSE del navegador del Arquitecto se desconecta (heartbeat cada 30 segundos).
+    And si el heartbeat falla 3 veces consecutivas (90 segundos sin respuesta), el lock se libera automáticamente y se registra en `ibpms_audit_log`: "[AUTO-RELEASE] Lock del proceso X liberado por desconexión del usuario Y".
+    And el Break-Lock de emergencia (CA-64, rol Super Admin) actualizará la misma tabla y registrará quién forzó la liberación.
+    And al reiniciar el servidor de aplicación, los locks persistidos en BD sobreviven y siguen vigentes.
+
+  Scenario: [REMEDIACIÓN] Límites y Gobernanza del Sandbox en Producción (CA-67)
+    # Origen: REM-005-03 — GAP-3 del us005_functional_analysis.md
+    Given la ejecución de instancias Sandbox directamente en el motor de producción (CA-20, CA-41, CA-63)
+    Then el sistema impondrá un límite máximo de 3 instancias Sandbox concurrentes a nivel global del sistema.
+    And si un Arquitecto intenta iniciar una cuarta simulación, el sistema la rechazará con el mensaje: "Límite de Sandbox alcanzado (3/3). Espere a que finalice una simulación en curso."
+    And cada instancia Sandbox tendrá un timeout de auto-destrucción de 10 minutos. Si el token no ha completado su recorrido en ese tiempo, el motor la anulará automáticamente y registrará: "[SANDBOX-TIMEOUT] Instancia sandbox {id} destruida por timeout (10min)."
+    And las instancias Sandbox serán visibles en la Pantalla 15.A (Centro de Incidentes) con un badge visual "[🧪 SANDBOX]" para diferenciarlas de instancias reales, pero NO se mostrarán en los dashboards operativos del Workdesk.
+    And el contador de instancias Sandbox activas se almacenará en Redis (`ibpms:sandbox:count`) con TTL de 15 minutos como failsafe.
+
+  Scenario: [REMEDIACIÓN] Persistencia del Data Mapping como Extension Properties del BPMN XML (CA-68)
+    # Origen: REM-005-04 — GAP-4 del us005_functional_analysis.md
+    Given la configuración del DataMapperGrid (CA-49 a CA-57) donde el Arquitecto mapea variables visualmente
+    Then el mapping finalizado se persistirá como `camunda:inputOutput` extension properties dentro del nodo `ServiceTask` del XML BPMN, garantizando portabilidad del diagrama.
+    And adicionalmente, se almacenará una copia indexada del mapping en la tabla `ibpms_data_mappings` (columnas: `process_definition_key`, `task_id`, `connector_id`, `mapping_json`, `last_validated_at`) para consultas rápidas y validación cruzada.
+    And si el Arquitecto modifica el formulario en la Pantalla 7 (US-003) y elimina o renombra una variable Zod que está referenciada en un mapping existente, el Pre-Flight Analyzer lo detectará como Error ❌: "Variable '{varName}' referenciada en el mapping de la tarea '{taskName}' ya no existe en el formulario."
+    And el Pre-Flight Analyzer validará la integridad de TODOS los mappings del BPMN antes de permitir el despliegue.
+
+  Scenario: [REMEDIACIÓN] Flujo Completo de Solicitud de Despliegue con Rechazo y Notificación (CA-69)
+    # Origen: REM-005-05 — GAP-5 del us005_functional_analysis.md
+    Given el workflow de Solicitud de Despliegue del Designer al Release Manager (CA-34)
+    Then la solicitud se implementará como un registro en la tabla `ibpms_deploy_requests` (columnas: `id`, `process_definition_key`, `requested_by`, `requested_at`, `status` ENUM: PENDING/APPROVED/REJECTED, `reviewed_by`, `reviewed_at`, `review_comment`).
+    And al presionar [📩 Solicitar Despliegue], se creará una tarea visible en el Workdesk del Release Manager con los botones [🚀 Aprobar y Desplegar] y [❌ Rechazar].
+    And al Rechazar, el Release Manager TIENE OBLIGACIÓN de ingresar un comentario de rechazo (min 20 chars) explicando qué debe corregir el Designer.
+    And el Designer recibirá una notificación (bell icon + email vía US-049) informando si su solicitud fue aprobada o rechazada, junto con el comentario del Release Manager.
+    And existirá un historial visible en la Pantalla 6: "[📜 Historial de Solicitudes]" listando todas las solicitudes anteriores con su estado, revisor y comentario.
+
+  Scenario: [REMEDIACIÓN] Catálogo de External Task Topics con Validación Pre-Flight (CA-70)
+    # Origen: REM-005-06 — GAP-6 del us005_functional_analysis.md
+    Given la obligatoriedad de External Task Pattern (CA-62) donde cada Service Task se suscribe a un Topic
+    Then el sistema mantendrá un catálogo oficial de Topics en la tabla `ibpms_external_task_topics` (columnas: `topic_name`, `description`, `worker_class`, `is_active`, `registered_at`).
+    And el campo Topic en las propiedades de la Service Task (Pantalla 6) será un Dropdown que consume este catálogo, NO un campo de texto libre.
+    And los Topics pre-registrados obligatorios para V1 serán: `ibpms.send_email` (US-049), `ibpms.sync_erp` (NetSuite), `ibpms.sync_sharepoint`, `ibpms.generate_pdf`, `ibpms.ai_copilot` (US-017), `ibpms.webhook_outbound` (US-004).
+    And el Pre-Flight Analyzer validará que cada Service Task del BPMN tenga un Topic que exista en el catálogo. Si el Topic no existe, emitirá Error ❌: "La tarea '{taskName}' refiere al topic '{topicName}' que no está registrado en el catálogo de Workers."
+    And el Administrador IT podrá registrar nuevos Topics desde una sección administrable en la Pantalla 11 (Hub de Integraciones).
+
 
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).
@@ -1794,6 +1871,7 @@ Feature: Standalone Project Template Builder (WBS)
     When el Scrum Master elimina 5 de las tareas heredadas del Backlog local del proyecto porque no aplican a su Sprint
     Then el borrado es estrictamente Local (Muta solo el Proyecto Instanciado)
     And la Plantilla original inmutable "V1.0" no pierde las tareas orgánicamente y futuros proyectos las seguirán heredando intactas.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 8 (Project Template Builder).
 

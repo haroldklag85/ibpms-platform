@@ -4253,37 +4253,6 @@ Feature: Consolidación Transversal de Requerimientos y Workflows
 
 ---
 
-### US-050: Identidad y Onboarding de Clientes Externos (CIAM / Zero-Public-Signup)
-**Como** Sistema Core (iBPMS)
-**Quiero** enviar una invitación segura (Magic Link) al correo de un cliente externo
-**Para** que pueda crear su contraseña y acceder al Portal B2C, garantizando que su usuario quede amarrado criptográficamente a su CRM_ID sin abrir formularios de registro público.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Secure Customer Onboarding and Identity (CIAM)
-
-  Scenario: Prohibición de Registro Público (Zero-Public-Signup)
-    Given la pantalla de Login del Portal Externo (portal.ibpms.com)
-    Then la interfaz NO DEBE tener ningún enlace, botón o formulario que diga "Registrarse" o "Crear Cuenta".
-    And la creación de identidades ciudadanas (External Users) solo puede nacer desde el interior del iBPMS (Vía API o evento interno), blindando el sistema contra bots y registros masivos fraudulentos.
-
-  Scenario: Disparo de Invitación (Magic Link) por Evento o Botón
-    Given un Cliente nuevo registrado en el CRM con el ID `CUST-999` y correo `juan@gmail.com`
-    When el proceso BPMN llega a una tarea de "Invitar a Portal" O un analista oprime el botón [Invitar] en la Vista 360 del cliente
-    Then el sistema generará un Token criptográfico de uso único (Magic Link).
-    And el Motor de Notificaciones (US-049) enviará un correo a `juan@gmail.com` con el botón "Crear mi Contraseña de Acceso".
-    And el Magic Link tendrá una caducidad (TTL) rígida paramétrica (Ej: 24 horas).
-
-  Scenario: Aterrizaje y Vinculación Criptográfica (Account Claiming)
-    Given el cliente Juan que hace clic en el Magic Link dentro de las 24 horas permitidas
-    When aterriza en la página de "Definir Contraseña" del Portal B2C
-    Then el sistema verifica que el Token no haya sido usado antes y bloquea la edición del campo de correo electrónico (Read-Only).
-    And Juan digita su contraseña (cumpliendo políticas de seguridad corporativa).
-    And el sistema inscribe la cuenta en el Identity Provider (Azure AD B2C o Cognito / Local).
-    And OBLIGATORIAMENTE graba el valor `CUST-999` como un atributo inmutable (Custom Claim) dentro del Token del usuario (El "Bolsillo Secreto" de la cuenta).
-    And garantizando que a partir de ese momento, cada vez que Juan inicie sesión, su Token JWT contenga su identificador, lo cual activará el escudo Anti-BOLA de la US-026 impidiendo que vea datos de otros clientes.
-```
-
 ## ÉPICA 11: Extensiones Cognitivas AI-Native - Cognitive BPMN (US-032)
 
 ### US-032: Orquestación de IA y Generative Task (RAG)

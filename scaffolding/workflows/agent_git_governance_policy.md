@@ -40,15 +40,18 @@ El iBPMS es desarrollado por un escuadrón iterativo compuesto por un Humano (Pr
 Cuando se asigne una nueva Tarea Técnica:
 
 1. **Planificación y Aislamiento (El Agente):** 
-   - El agente recibe la tarea.
+   - El agente recibe la tarea (asociada a una User Story).
    - Ejecuta: `git checkout main` y `git pull` (Asegura tener lo último).
-   - Ejecuta: `git checkout -b agent/{mi-rol}/{nombre-corto-tarea}`.
+   - Si la rama de la US ya existe (creada por un agente anterior en la Carrera de Relevos):
+     - Ejecuta: `git checkout sprint-{n}/us-{n}-{desc}` y `git pull`.
+   - Si la rama NO existe (es el primer agente en trabajar la US):
+     - Ejecuta: `git checkout -b sprint-{n}/us-{n}-{desc}`.
    - Construye la solución, edita archivos, hace pruebas (si aplica).
 
 2. **Sincronización Transitoria (El Agente):**
-   - El agente hace commit de su trabajo en su rama temporal.
-   - Ejecuta: `git push origin agent/{mi-rol}/{nombre-corto-tarea}`.
-   - Informa al Orquestador y al Humano: *"He finalizado mi tarea en mi rama aislada"*.
+   - El agente hace commit de su trabajo en la rama compartida de la US.
+   - Ejecuta: `git push origin sprint-{n}/us-{n}-{desc}`.
+   - Informa al Orquestador y al Humano: *"He finalizado mi tarea en la rama de la US"*.
 
 3. **La Aduana y el Merge (Orquestador / Humano):**
    - El Humano (o el Agente QA/Orquestador si se le da autoridad) evalúa que el código en esa rama paralela funciona y no rompe nada.

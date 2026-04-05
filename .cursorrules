@@ -94,9 +94,15 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 - **Cuándo leerlo:** Al configurar Bases de Datos, CI/CD, Reglas de Autenticación OIDC, Caché (Redis) o Máximos de Concurrencia.
 - **Para qué sirve:** Garantiza que el código no solo funcione, sino que cumpla métricas corporativas Enterprise de tiempos de respuesta, escalabilidad, y la separación de capas dictaminada por la Arquitectura Hexagonal.
 
+### Nivel 5 (Condicional por Rol): Documentos de Arquitectura y Layout
+- **Cuándo leerlo:** Solo cuando tu rol lo requiera. No es lectura universal.
+- **Si eres Backend:** Consulta `docs/architecture/c4-model.md` (diagramas C4), `docs/architecture/ibpms_core_erd.md` (Entidad-Relación) y `docs/architecture/ui_components_schema.md` (JSON Schema de formularios) antes de crear Entidades, Puertos o Adaptadores.
+- **Si eres Frontend:** Consulta obligatoriamente `scaffolding/workflows/v1_master_layout_policies.md` (15 reglas de geometría, responsive, A11y, Z-Index) antes de construir o modificar cualquier componente visual.
+- **Regla:** Estos documentos complementan los 4 niveles anteriores pero NO los reemplazan. En caso de discrepancia entre un diagrama C4 y el Gherkin, **SIEMPRE PREVALECE EL GHERKIN** (Nivel 2).
+
 ## 3. Resolución de Discrepancias
 
 1. **Gherkin vs PRD:** Si hay una contradicción funcional entre la descripción macro del `functional_requirements.md` y un escenario Gherkin de `v1_user_stories.md`, **SIEMPRE PREVALECE EL GHERKIN** como detalle técnico final.
 2. **Wireframes vs Requirements:** Si un Wireframe (ubicado en `docs/architecture/v1_wireframes.md`) exige un botón que **no existe** en las Historias de Usuario, usted debe consultar al Usuario, *no reinventar una Historia fantasma*.
 
-> **Objetivo Final:** Su obligación como Agente es apegarse 100% al alcance pre-verificado (SSOT). **Si no está escrito en estos 4 archivos, no es un requerimiento de la V1.** Construya lo que se pide; nada más, nada menos.
+> **Objetivo Final:** Su obligación como Agente es apegarse 100% al alcance pre-verificado (SSOT). **Si no está escrito en estos 4 archivos base (+ los condicionales de su rol), no es un requerimiento de la V1.** Construya lo que se pide; nada más, nada menos.

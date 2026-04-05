@@ -1,6 +1,6 @@
 # Validación de Alcance V1 Extendido: Matriz MoSCoW (5-6 Meses TTM)
 
-**Objetivo:** Congelar el alcance del MVP Táctico (V1) para garantizar la salida a producción. *Nota Estratégica:* El alcance de V1 fue modificado para incluir "Agentic Workflows" (M365 Copilot) desde el día 1, extendiendo el TTM pero garantizando un impacto de mercado masivo.
+**Objetivo:** Congelar el alcance del MVP Táctico (V1) para garantizar la salida a producción. *Nota Estratégica:* El alcance de V1 fue modificado para incluir "Agentic Workflows" desde el día 1, extendiendo el TTM pero garantizando un impacto de mercado masivo.
 
 ---
 
@@ -9,7 +9,7 @@
 
 1.  **Core Backend & Arquitectura Hexagonal:** Implementación estricta de puertos y adaptadores. Camunda 7 debe quedar aislado sin código de negocio (Java) empotrado en sus diagramas.
 2.  **Gestión de Procesos (CRUD Básico):** Orquestación de procesos secuenciales y paralelos desde diagramas BPMN pre-creados.
-3.  **Bandeja de Entrada Avanzada (Docketing Inbox):** Bandeja de tareas SPA responsiva con filtros cruzados complejos (Cliente, Proyecto, Etiquetas de Actividad) para gestionar altos volúmenes operativos (Pantalla 1B).
+3.  **Bandeja de Entrada Avanzada (Docketing o SAC como Inbox):** Bandeja de tareas SPA responsiva con filtros cruzados complejos (Cliente, Proyecto, Etiquetas de Actividad) para gestionar altos volúmenes operativos (Pantalla 1B).
 4.  **IDE Pro-Code de Formularios (Vue 3/Zod - MUST):** Constructor Web (Low-Code/Pro-Code) basado en Mónaco Editor. Permite al usuario elegir entre crear un "iForm Maestro" (Expediente multi-etapa/rol) o un "Formulario Simple" (un solo paso). El sistema genera automáticamente archivos `.vue` nativos, validaciones `.zod`, e integra tipado TypeScript.
 5.  **Motor DMN & Traductor IA (NLP a DMN):** Ejecución de tablas de decisión generadas mediante IA (Lenguaje Natural a DMN).
 6.  **Copiloto AI de Correos M365 ("Human-in-the-Loop"):** Agente Virtual integrado vía Graph API que lee buzones entrantes, detecta intención, cruza con CRM, propone borradores de respuesta e incorpora *Feedback Loops (MLOps)*, *Políticas Multi-Buzón* y trazabilidad *eDiscovery* innegociable antes de la intervención humana (Pantalla 2C).
@@ -38,6 +38,7 @@
 - Cumple con la restricción de "5-6 Meses TTM (Ajustado por IA Agentic)".
 - Protege la deuda técnica ("Hexagonal" está en Must Have).
 - El alcance de la V1 se fusiona agresivamente con las capacidades LLM (SHOULD HAVE V1.2), convirtiendo al iBPMS en un competidor feroz desde su concepción, sin asfixiar la salida a producción.
+10.  **Formularios Dinámicos Complejos:** Componentes UI muy avanzados (cálculos en vivo, sub-formularios anidados multinivel).
 ---
 
 ## 🟠 COULD HAVE (Podría tener - Funciones "Nice to Have")
@@ -45,7 +46,7 @@
 
 1.  **Tableros Históricos de Proyecto Complejos:** Audit Log visual detallado tipo *Timeline* amigable para el usuario.
 2.  **Integración Síncrona Compleja con ERP (Sagas):** APIs bidireccionales complejas con sistemas legados. *(En el MVP se puede iniciar con APIs REST asíncronas simples o Webhooks de un solo sentido).*
-3.  **Formularios Dinámicos Complejos:** Componentes UI muy avanzados (cálculos en vivo, sub-formularios anidados multinivel).
+
 
 ---
 

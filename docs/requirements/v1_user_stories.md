@@ -5710,6 +5710,111 @@ Feature: Hexagonal CQRS Persistence, Zero-Trust Validation and Task Completion
     And 3. **Aspectos compartidos delegados:** Cuando un CA de la US-017 necesite describir un comportamiento de Frontend (Ej: "el Frontend muestra un error"), REFERENCIARÁ el CA correspondiente de la US-029 (Ej: "consistente con US-029 CA-20") sin redefinirlo. Aplica recíprocamente desde la US-029 hacia la US-017 según el CA-19 de la US-029.
     And 4. **Endpoint compartido:** `POST /api/v1/workbox/tasks/{id}/complete` es implementado UNA SOLA VEZ en el Backend. La US-017 define QUÉ hace el servidor al recibirlo. La US-029 define QUÉ envía el Frontend y QUÉ muestra antes/durante/después.
     And 5. **Merge Commit Rule:** Si un desarrollador necesita modificar un CA que toca AMBAS historias, debe generar un PR que referencie AMBAS US (Ej: "Implements US-017 CA-01 + US-029 CA-01") para garantizar revisión cruzada.
+
+
+  # ==============================================================================
+  # D. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: docs/requirements/us017_refinamiento_funcional.md (45 preguntas)
+  # Tickets: REF-017-01 a REF-017-10
+  # Propósito: Cerrar vacíos funcionales descubiertos durante el refinamiento
+  #            profundo de 45 preguntas estratificadas.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Exclusión de Borradores del Event Store (CA-09)
+    # Origen: REF-017-01 — Pregunta #2 del refinamiento funcional
+    # Resuelve: Evitar que el Event Store se sature con eventos triviales de autoguardado.
+    Given la existencia de 4 tipos de eventos definidos en el CA-06 del Event Store
+    Then el tipo de evento `FORM_DRAFT_SAVED` se ELIMINA de la lista de eventos admitidos en el Event Store (`form_event_store`)
+    And los borradores (Drafts) viven EXCLUSIVAMENTE en la tabla `task_drafts` (CA-07), que NO es inmutable y se sobrescribe con cada Merge Commit
+    And los tipos de eventos admitidos en V1 del Event Store quedan reducidos a 3: `FORM_SUBMITTED`, `TASK_AUTO_CLAIMED`, `FORM_REJECTED`
+    And esta separación garantiza que la bóveda de eventos solo contenga "actas notariales" (momentos trascendentes) y no "notas de borrador" (trabajo en progreso).
+
+  Scenario: [REFINAMIENTO] Rollback Compensatorio Inmutable con Retry y Timeout (CA-10)
+    # Origen: REF-017-02 — Preguntas #8, #9, #10 del refinamiento funcional
+    # Resuelve: Define que el Rollback NO borra el evento original sino que genera un evento de compensación, y establece timeout + retry.
+    Given que el CA-03 define un Rollback Compensatorio cuando Camunda falla
+    Then el Rollback TIENE ESTRICTAMENTE PROHIBIDO eliminar físicamente (`DELETE`) el evento `FORM_SUBMITTED` del Event Store (eso violaría la inmutabilidad del CA-06)
+    And en su lugar, el Rollback generará un evento compensatorio `FORM_SUBMIT_ROLLED_BACK` en la misma tabla `form_event_store` con una referencia (`original_event_id`) al evento original anulado
+    And el Worker de proyección del CA-01 DEBERÁ ser consciente de estos eventos compensatorios: al proyectar, si un `FORM_SUBMITTED` tiene un `FORM_SUBMIT_ROLLED_BACK` posterior, el evento original se excluye de la tabla analítica  
+    And **Timeout:** El Backend esperará un máximo de **10 segundos** la respuesta de Camunda antes de considerar que el motor está caído
+    And **Retry:** Antes de ejecutar el Rollback, el Backend reintentará la comunicación con Camunda **3 veces** con esperas crecientes (1s, 2s, 4s = 7 segundos de retry + 10s de timeout final = 17 segundos máximos de espera total en el peor caso)
+    And si los 3 reintentos fallan, ENTONCES se ejecuta el Rollback Compensatorio y se devuelve HTTP 500 al Frontend.
+
+  Scenario: [REFINAMIENTO] Estructura Obligatoria del Registro de Rechazo (CA-11)
+    # Origen: REF-017-03 — Preguntas #14, #15 del refinamiento funcional
+    # Resuelve: Define qué campos contiene el `rejectionLogs` del CA-05 y cómo se presenta el historial.
+    Given la inyección de `rejectionLogs` en el BFF `/form-context` definida en el CA-05
+    Then cada entrada del array `rejectionLogs` contendrá OBLIGATORIAMENTE los siguientes campos:
+    And 1. **`rejectedBy`** (string): Nombre completo del revisor que ejecutó el rechazo (no anonimizado — la trazabilidad prevalece en V1).
+    And 2. **`rejectedAt`** (timestamp ISO 8601): Fecha y hora exacta del rechazo.
+    And 3. **`reason`** (string, max 1000 caracteres): Dictamen textual explicando el motivo del rechazo, escrito por el revisor.
+    And 4. **`stageName`** (string): Nombre de la etapa BPMN donde ocurrió el rechazo (Ej: "Control de Calidad", "Aprobación Legal").
+    And 5. **`taskId`** (string): Identificador de la tarea que fue rechazada.
+    And **Presentación en UI (delegado a US-029):** El rechazo MÁS RECIENTE se muestra como Alert principal en la Pantalla 2. El historial completo (si hay más de 1 rechazo) se muestra como sección plegable debajo del Alert, ordenado del más reciente al más antiguo.
+
+  Scenario: [REFINAMIENTO] Cifrado At-Rest de Datos PII en el Event Store (CA-12)
+    # Origen: REF-017-04 — Pregunta #21 del refinamiento funcional
+    # Resuelve: Los datos personales en la bóveda de eventos deben estar protegidos igual que en el LocalStorage del navegador.
+    Given que la US-029 CA-11 exige cifrado PII en el LocalStorage del navegador
+    And que la columna `payload_json` del Event Store puede contener campos PII (Ej: cédula, teléfono, dirección)
+    Then la base de datos PostgreSQL DEBE tener habilitado cifrado at-rest (Transparent Data Encryption o equivalente en la infraestructura) para proteger los datos almacenados en disco
+    And adicionalmente, los campos marcados como `PII/Sensibles` en el esquema Zod (US-003) se cifrarán a nivel de aplicación (AES-256) ANTES de escribir el `payload_json` al Event Store
+    And la llave de cifrado se gestionará a través del servicio de secretos de la infraestructura (Azure Key Vault / AWS KMS), siendo DIFERENTE de la llave usada en el LocalStorage del CA-11 de US-029
+    And para consultas analíticas que requieran datos PII, el Worker de proyección descifrará los campos específicos al proyectar a las tablas analíticas, que a su vez estarán protegidas por permisos de rol `AUDITOR`/`ADMIN_IT`.
+
+  Scenario: [REFINAMIENTO] Validación de Pertenencia al Grupo en Auto-Claim (CA-13)
+    # Origen: REF-017-05 — Pregunta #28 del refinamiento funcional
+    # Resuelve: El Auto-Claim del CA-04 no verifica explícitamente que el usuario pertenezca al grupo de la tarea.
+    Given que el CA-04 define un Auto-Claim para tareas de grupo sin `assignee`
+    Then ANTES de ejecutar el `taskService.claim()`, el Backend DEBERÁ verificar OBLIGATORIAMENTE que el `userId` extraído del JWT sea miembro activo del `candidateGroup` configurado para esa tarea en Camunda
+    And esta verificación se realizará consultando `taskService.createTaskQuery().taskCandidateUser(userId)` o equivalente
+    And si el usuario NO pertenece al grupo, el Auto-Claim se ABORTA con HTTP 403 Forbidden y mensaje: "No tiene permisos para reclamar tareas de este grupo de trabajo"
+    And esta validación es complementaria al Implicit Locking de US-029 CA-07/CA-18, y NO lo reemplaza.
+
+  Scenario: [REFINAMIENTO] Rate-Limiting en Endpoints de Borradores (CA-14)
+    # Origen: REF-017-06 — Pregunta #29 del refinamiento funcional
+    # Resuelve: Protección contra saturación del servidor por exceso de guardados automáticos.
+    Given que el endpoint `PUT /draft` puede recibir peticiones frecuentes por el Debounce de 10s de US-029 CA-24
+    Then los endpoints de borradores (`PUT`, `GET`, `DELETE` del CA-07) tendrán un Rate-Limit de **6 peticiones por minuto por tarea** (consistente con el Debounce de 10 segundos)
+    And las peticiones que excedan este límite recibirán HTTP 429 Too Many Requests con header `Retry-After: 10`
+    And el Frontend (US-029) deberá atrapar este HTTP 429 silenciosamente (sin mostrar error al operario) y reintentar en el próximo ciclo de Debounce.
+
+  Scenario: [REFINAMIENTO] Referencia de Evento Visible para el Operario (CA-15)
+    # Origen: REF-017-07 — Pregunta #34 del refinamiento funcional
+    # Resuelve: El operario necesita un "número de comprobante" para poder citar a soporte ante cualquier incidencia.
+    Given el envío exitoso de un formulario (CA-01 `FORM_SUBMITTED`)
+    Then la respuesta HTTP 200 del endpoint `POST /complete` incluirá en el body un campo `eventReference` con un código legible de máximo 12 caracteres (Ej: `EVT-A3F8K9`)
+    And este código será una representación corta y legible del `event_id` UUID del evento grabado en el Event Store
+    And el Frontend (US-029 CA-21) mostrará esta referencia en la pantalla de confirmación: "Tarea completada exitosamente. Referencia: EVT-A3F8K9"
+    And el operario podrá citar esta referencia a Soporte Técnico para rastrear su envío específico en el Event Store.
+
+  Scenario: [REFINAMIENTO] Eliminación de Borrador como Parte del Flujo de Submit (CA-16)
+    # Origen: REF-017-08 — Pregunta #39 del refinamiento funcional
+    # Resuelve: Evita borradores fantasma eliminando el draft DURANTE el submit, no después.
+    Given que el endpoint `POST /complete` finaliza exitosamente (FORM_SUBMITTED + Camunda avanzado)
+    Then como ÚLTIMO paso del flujo transaccional (antes de retornar HTTP 200), el Backend ejecutará automáticamente la eliminación del borrador (`DELETE /draft`) asociado a esa `taskId` en la tabla `task_drafts`
+    And esta eliminación se ejecuta dentro de la MISMA transacción del `FORM_SUBMITTED` — si la eliminación del draft falla, NO se aborta el submit (el submit tiene prioridad)
+    And el Frontend (US-029) ejecutará la purga de LocalStorage DESPUÉS de recibir el HTTP 200, pero el servidor ya habrá limpiado su parte independientemente.
+
+  Scenario: [REFINAMIENTO] SLA de Latencia Máxima para el Endpoint /complete (CA-17)
+    # Origen: REF-017-09 — Pregunta #41 del refinamiento funcional
+    # Resuelve: Define el tiempo máximo aceptable que el operario espera tras presionar [Enviar].
+    Given que el operario ve el spinner de espera (US-029 CA-20) al presionar [Enviar]
+    Then el endpoint `POST /api/v1/workbox/tasks/{id}/complete` DEBERÁ completar su ciclo completo (validación Backend + grabación Event Store + notificación a Camunda + response) en un máximo de **5 segundos** en condiciones normales de operación
+    And en el peor caso (con los 3 reintentos del CA-10 por falla transitoria de Camunda), el tiempo máximo extendido será de **17 segundos** antes de devolver HTTP 500
+    And si el Backend detecta que el procesamiento superará los 5 segundos SIN error de Camunda (Ej: lentitud de PostgreSQL), registrará un log de alerta para monitoreo proactivo
+    And NO se emitirán respuestas HTTP 202 ("aceptado para después") — el resultado siempre será síncrono: HTTP 200 (éxito) o HTTP 5xx (error).
+
+  Scenario: [REFINAMIENTO] Política de Archivado Anual del Event Store (CA-18)
+    # Origen: REF-017-10 — Pregunta #44 del refinamiento funcional
+    # Resuelve: Previene degradación del rendimiento por acumulación masiva de eventos a lo largo de los años.
+    Given que la tabla `form_event_store` acumulará volúmenes crecientes de datos año tras año
+    Then se implementará una política de archivado automático con las siguientes reglas:
+    And 1. **Eventos con `created_at` mayor a 12 meses** se moverán automáticamente a una tabla de archivo (`form_event_store_archive`) mediante un Job programado mensual.
+    And 2. La tabla de archivo tiene IDÉNTICO esquema que la tabla principal pero reside en un tablespace optimizado para lecturas infrecuentes.
+    And 3. Las tablas de proyección analítica del CA-01 NO se archivan (se mantienen activas para dashboards).
+    And 4. Los eventos archivados siguen siendo INMUTABLES y consultables bajo demanda — el archivado NO es un borrado, es una reubicación.
+    And 5. Los usuarios con rol `AUDITOR` podrán consultar eventos archivados a través de una interfaz administrativa (diferido a V2).
 ```
 
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Tarea) y BFF Invisible.

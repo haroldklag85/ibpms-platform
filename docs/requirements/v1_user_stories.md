@@ -501,6 +501,98 @@ Feature: Task Claiming and Reassignment
     And 5. **Registro de Auditoría:** Cada Auto-Unclaim quedará registrado en el historial de trazabilidad del CA-09 con el motivo: `{ action: 'AUTO_UNCLAIM', reason: 'Inactividad de X horas', previousAssignee, timestamp }`.
     And 6. **Frecuencia del Cron Job:** Se ejecutará cada 15 minutos para detectar tareas que superen el umbral. No se ejecutará fuera del horario laboral configurado del tenant.
 
+
+  # ==============================================================================
+  # C. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: Cuestionario de 45 preguntas del workflow /refinamientoFuncionalUs.md
+  # Propósito: Cerrar huecos descubiertos durante el refinamiento de la US-002.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Superficie de Lectura del Mensaje Interno al Liberar (CA-16)
+    # Origen: Pregunta #7 del Refinamiento Funcional
+    # Resuelve: El CA-04 define que se puede escribir un mensaje al liberar, pero no dónde se lee.
+    Given la liberación de una tarea con Mensaje Interno adjunto (CA-04)
+    Then el mensaje se almacenará como una "Nota Interna" adherida a la tarea en la Base de Datos.
+    And cuando el siguiente operario abra la tarea (en Modo Solo Lectura CA-05 o tras Reclamar), verá un Banner informativo fijo en la parte superior del formulario: "📝 Nota del operario anterior: [contenido del mensaje] — [Nombre, hace X horas]".
+    And la nota permanecerá visible hasta que el nuevo reclamante ejecute su primera acción registrable sobre la tarea (Ej: guardar borrador, completar, o adjuntar archivo).
+    And si la tarea se libera y reclama múltiples veces, solo se mostrará la nota MÁS RECIENTE (no se acumulan).
+    And la nota NO es un sistema de mensajería. No existe un buzón de notificaciones internas. Es una etiqueta adherida a la tarea, como un "post-it" físico.
+
+  Scenario: [REFINAMIENTO] Limpieza de Archivos Adjuntos Transitorios al Liberar (CA-17)
+    # Origen: Pregunta #8 del Refinamiento Funcional
+    # Resuelve: Los archivos subidos al servidor antes de liberar quedan en un "limbo" sin dueño.
+    Given la Amnesia Transaccional del CA-07 activada al liberar una tarea
+    Then los archivos adjuntos subidos al almacenamiento del servidor durante la sesión del operario que libera serán marcados como "Adjuntos Transitorios" (estado `orphaned`).
+    And un proceso de limpieza (Scheduled Job) eliminará los archivos con estado `orphaned` después de 24 horas, permitiendo una ventana de recuperación en caso de error operativo.
+    And el siguiente operario que reclame la tarea NO verá los archivos transitorios del operario anterior. Solo verá los adjuntos que ya estaban confirmados en sesiones anteriores completadas (via US-029 "Completar Tarea").
+    And si la tarea nunca es reclamada por otro operario, los archivos transitorios se eliminan igualmente después de 24 horas.
+    And este mecanismo garantiza que la Amnesia Transaccional sea TOTAL: no solo se borran los datos del formulario (LocalStorage) sino también los archivos del servidor, evitando "basura digital" acumulada por sesiones fallidas.
+
+  Scenario: [REFINAMIENTO] Actualización del Modo Solo Lectura ante Reclamo Externo (CA-18)
+    # Origen: Pregunta #12 del Refinamiento Funcional
+    # Resuelve: El explorador en modo lectura no se entera si otro reclama la tarea.
+    Given un analista explorando una tarea en Modo Solo Lectura (CA-05) mientras otro compañero la reclama
+    When el Backend emite el evento WebSocket `REMOVE` (CA-12) tras el Commit del reclamo
+    Then el explorador recibirá el evento y el formulario mostrará un Banner de aviso superpuesto: "⚠️ Esta tarea fue reclamada por otro compañero y ya no está disponible."
+    And el botón [Reclamar] dentro del formulario se deshabilitará visualmente (gris + candado).
+    And el analista podrá continuar leyendo el formulario (no se cierra abruptamente) pero no podrá ejecutar ninguna acción sobre la tarea.
+    And al cerrar el formulario, la tarea ya no aparecerá en la Cola del Equipo de la grilla (consistente con CA-12/CA-13 de US-001).
+
+  Scenario: [REFINAMIENTO] Extensión de Tiempo ante Pre-Aviso de Auto-Unclaim (CA-19)
+    # Origen: Pregunta #14 del Refinamiento Funcional
+    # Resuelve: El timeout de inactividad castiga procesos complejos que requieren lectura prolongada.
+    Given el Pre-Aviso persistente del CA-15 punto 3 ("Tu tarea será devuelta en 1 hora por inactividad")
+    Then el Banner incluirá dos botones de acción:
+    And 1. **[Necesito más tiempo]:** Reinicia el contador de inactividad por un ciclo completo (4 horas más, o el umbral configurado del tenant). Cada extensión queda registrada en el historial de trazabilidad del CA-09 con motivo: `{ action: 'TIMEOUT_EXTENDED', userId, taskId, timestamp }`.
+    And 2. **[Guardar borrador]:** Ejecuta un guardado del borrador actual en LocalStorage (consistente con US-029), lo cual reinicia el contador automáticamente ya que constituye una acción registrable.
+    And se permite un máximo de 2 extensiones consecutivas por tarea. Tras la segunda extensión, si el operario sigue inactivo, el Auto-Unclaim se ejecutará sin opción de postergación adicional.
+    And el supervisor del equipo será notificado cuando un operario solicite extensiones, como señal de alerta temprana de posible atasco operativo.
+
+  Scenario: [REFINAMIENTO] Motivos Enriquecidos en la Trazabilidad Forense (CA-20)
+    # Origen: Pregunta #18 del Refinamiento Funcional
+    # Resuelve: El historial de trazabilidad (CA-09) solo mostraba rotación sin motivos.
+    Given el Pop-Up de Trazabilidad del CA-09
+    Then cada entrada del historial incluirá un campo `action_type` legible por humanos con los siguientes valores posibles:
+    And `CLAIMED` — "Reclamada voluntariamente" (CA-01/CA-02).
+    And `RELEASED` — "Liberada por el operario" + mensaje interno si existe (CA-04).
+    And `FORCE_UNCLAIMED` — "Despojada por supervisor: [Nombre del supervisor]" + motivo si existe (CA-08/CA-13).
+    And `AUTO_UNCLAIMED` — "Liberada automáticamente por inactividad de [X] horas" (CA-06/CA-15).
+    And `TIMEOUT_EXTENDED` — "Tiempo de inactividad extendido por el operario" (CA-19).
+    And `BULK_CLAIMED` — "Reclamada como parte de un lote de [N] tareas" (CA-02).
+    And el Pop-Up mostrará los eventos como un timeline vertical con íconos de color por tipo: 🟢 reclamos, 🔵 liberaciones, 🟠 despojos, 🔴 auto-unclaims, ⏰ extensiones.
+
+  Scenario: [REFINAMIENTO] Rollback del Optimistic UI tras Fallo Persistente de Red (CA-21)
+    # Origen: Pregunta #20 del Refinamiento Funcional
+    # Resuelve: Si la red nunca vuelve, la "mentira visual" del CA-10 nunca se deshace.
+    Given la activación del Optimistic UI durante un micro-corte de red (CA-10)
+    Then el Frontend ejecutará la siguiente estrategia de reintentos:
+    And 1. **Reintentos con backoff exponencial:** 3 intentos con intervalos de 2s, 4s, 8s (total: 14 segundos de espera máxima).
+    And 2. **Durante los reintentos:** La tarea aparece en "Mi Bandeja" con un indicador visual sutil (ícono de sincronización giratorio ⟳) que comunica: "Confirmando con el servidor..."
+    And 3. **Si los 3 reintentos fallan:** El Frontend ejecutará un rollback visual: retira la tarea de "Mi Bandeja", la devuelve a la "Cola del Equipo" en la grilla, y muestra un Modal informativo: "No pudimos confirmar tu reclamo porque la conexión con el servidor no se restableció. La tarea sigue disponible en la cola del equipo."
+    And 4. **El rollback NUNCA ocurrirá silenciosamente.** El operario siempre será informado explícitamente del fracaso para que no crea que tiene una tarea que no le pertenece.
+    And 5. Si la red se recupera DESPUÉS del rollback, el operario deberá reclamar la tarea manualmente de nuevo.
+
+  Scenario: [REFINAMIENTO] Separación Visual entre Cola de Grupo y Bandeja Personal (CA-22)
+    # Origen: Pregunta #39 del Refinamiento Funcional
+    # Resuelve: No existía distinción visual entre las tareas del grupo y las tareas propias.
+    Given la grilla unificada del Workdesk (US-001)
+    Then la pantalla principal mostrará dos pestañas/tabs en la parte superior de la grilla:
+    And **Tab 1: "Mi Bandeja ([N])"** — Muestra las tareas asignadas al operario autenticado. Los botones disponibles por fila: [Abrir], [Liberar]. El botón [Reclamar] NO aparece aquí.
+    And **Tab 2: "Cola del Equipo ([M])"** — Muestra las tareas sin asignar del grupo/equipo. Los botones disponibles por fila: [Explorar] (CA-05), [Reclamar] (CA-01). Los checkboxes para Bulk Claim (CA-02) solo aparecen en esta tab.
+    And los contadores ([N] y [M]) se actualizarán con cada petición a la grilla y con los eventos WebSocket (CA-12): un REMOVE en la Cola incrementa N y decrementa M; un ADD en la Cola decrementa N e incrementa M.
+    And la Tab activa se preservará en el KeepAlive (consistente con US-001 CA-12).
+    And el toggle de delegación del US-001 CA-04/CA-15 agrega una tercera tab temporal: "Bandeja de [Nombre del subalterno] ([P])".
+
+  Scenario: [REFINAMIENTO] Agregación de Eventos WebSocket para Operaciones Masivas (CA-23)
+    # Origen: Pregunta #45 del Refinamiento Funcional
+    # Resuelve: El Bulk Claim de 20 tareas generaría 20 eventos individuales en ráfaga.
+    Given la ejecución exitosa de un Bulk Claim (CA-02) de N tareas
+    Then el Backend NO emitirá N eventos WebSocket individuales.
+    And en su lugar, emitirá UN SOLO mensaje agregado con una acción de tipo batch del vocabulario WebSocket (US-001 CA-27): `{ action: 'BULK_REMOVE', taskIds: ['TK-1', 'TK-2', ..., 'TK-N'], claimedBy: 'userId' }`.
+    And el Frontend de cada compañero conectado procesará el array y desvanecerá todas las tareas listadas con una animación escalonada (150ms de delay entre cada desvanecimiento) para evitar que 20 tarjetas desaparezcan simultáneamente de forma confusa.
+    And para la operación inversa (si existiera una "liberación masiva" en V2), se usaría: `{ action: 'BULK_ADD', taskIds: [...], payload: [...] }`.
+    And este patrón reduce el tráfico WebSocket de `N × Usuarios_Conectados` mensajes a `1 × Usuarios_Conectados`, logrando hasta un 95% de ahorro de red en operaciones de lote.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Botón: Asignarme Tarea / Claim).
 
@@ -1237,6 +1329,15 @@ Feature: Integrated BDD Zod Testing Sandbox
 **Quiero** diligenciar la información de mi sección habilitada en la vista de la tarea (Pantalla 2) y presionar "Enviar"
 **Para** finalizar exitosamente mi actividad y que el motor continúe al siguiente paso del proceso.
 
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-029:**
+> - **US-003 (Catálogo de Formularios / Pantalla 7):** 🔴 BLOQUEANTE. Sin formularios diseñados (iForm Maestro o Simple), la US-029 no tiene NADA que ejecutar. La Pantalla 2 renderiza formularios creados en la US-003. Los esquemas Zod y el Layout de Vue que consume el BFF (CA-05/CA-10) se generan en la US-003.
+> - **US-002 (Reclamar Tarea / Pantalla 1):** 🔴 BLOQUEANTE. Sin reclamo, la tarea no tiene `assignee` y los CAs de Implicit Locking (CA-07/CA-18) rechazarán todo intento de completar con HTTP 403. El operario DEBE haber reclamado la tarea ANTES de poder abrirla para edición.
+> - **US-017 (CQRS & Event Sourcing):** ⚠️ HISTORIA GEMELA. Comparten el endpoint `/api/v1/workbox/tasks/{id}/complete`. La US-029 gobierna la experiencia del Frontend (Pantalla 2 UI + validación + archivos + borrador + UX). La US-017 gobierna la persistencia del Backend (CQRS + Event Sourcing + protección de Camunda + Rollback Saga). Los CAs duplicados entre ambas se reconcilian con la nota arquitectónica ADR de separación de responsabilidades.
+> - **US-001 (Workdesk / Pantalla 1):** La navegación desde la grilla del Workdesk hacia el detalle de la tarea (Pantalla 2) depende de la infraestructura de rutas y el Store de Pinia de la US-001. El RYOW del CA-17 necesita que el Store de Pinia exista.
+> - **US-036 (RBAC / Pantalla 14):** La validación de permisos per-campo del Zod Isomórfico (CA-15) consume la matriz de roles de la US-036 para determinar qué campos puede escribir cada rol.
+> - **US-035 (SharePoint/SGDEA):** El Upload-First (CA-09) necesita que la bóveda documental temporal exista para almacenar los archivos pre-submit.
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Task Completion with Form Data
@@ -1376,6 +1477,193 @@ Feature: Task Completion with Form Data
     When `pedro.gomez` intercepta vulnerablemente la URL e intenta someter un POST a `/tasks/TK-400/complete`
     Then el Core iBPMS examina deductivamente el `assignee` de la tarea contra la identidad central del Security Context.
     And aborta transaccionalmente la colisión inyectando un lapidario `HTTP 403 Forbidden`.
+
+
+  # ==============================================================================
+  # E. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us029_functional_analysis.md
+  # Tickets: REM-029-01 a REM-029-06
+  # Propósito: Cerrar GAPs detectados por el workflow /analisisEntendimientoUs.md
+  #            antes del inicio de desarrollo de US-029.
+  # Estado: US-029 NO ha sido desarrollada aún.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Reconciliación Arquitectónica US-029 / US-017 (CA-19)
+    # Origen: REM-029-01 — GAP-1 del us029_functional_analysis.md
+    # Resuelve: 13 CAs duplicados entre US-029 y US-017 generan riesgo de implementación divergente.
+    Given la coexistencia de la US-029 (Frontend/UX) y la US-017 (Backend/CQRS) sobre el mismo endpoint `/complete` y la misma Pantalla 2
+    Then se establece la siguiente POLÍTICA DE PROPIEDAD EXCLUSIVA para evitar duplicación:
+    And **US-029 es la FUENTE AUTORITATIVA** para los siguientes aspectos: inicialización del formulario (BFF), autoguardado en LocalStorage, cifrado PII de borradores, feedback visual UX (spinner, confirmación, redirección), carga de archivos (Upload-First), idempotencia Anti-Doble Clic en Frontend, y validación Zod en el navegador.
+    And **US-017 es la FUENTE AUTORITATIVA** para los siguientes aspectos: persistencia CQRS/Event Sourcing, proyección a tablas analíticas, protección topológica de Camunda (exclusión de variables masivas), Rollback Compensatorio (Saga inversa), validación Zod en el Backend (json-schema-validator), y Micro-Tokens criptográficos anti-replay.
+    And cuando un CA de la US-029 mencione un comportamiento de Backend que esté definido en la US-017, la US-029 lo REFERENCIARÁ como dependencia (Ej: "consistente con US-017 CA-14") en lugar de redefinirlo.
+    And cuando un CA de la US-017 mencione un comportamiento de Frontend que esté definido en la US-029, la US-017 lo REFERENCIARÁ como dependencia (Ej: "consistente con US-029 CA-20") en lugar de redefinirlo.
+    And esta reconciliación garantiza que dos desarrolladores leyendo US diferentes NO produzcan implementaciones conflictivas del mismo endpoint.
+
+  Scenario: [REMEDIACIÓN] Feedback Visual Durante el Proceso de Envío (CA-20)
+    # Origen: REM-029-02 — GAP-2 del us029_functional_analysis.md
+    # Resuelve: No se define qué ve el operario entre que presiona [Enviar] y recibe respuesta (2-5 segundos).
+    Given la presión del botón [Enviar] en la Pantalla 2
+    Then el Frontend ejecutará la siguiente secuencia visual para comunicar progreso:
+    And 1. **Inmediatamente al hacer clic:** El botón [Enviar] se deshabilita, cambia su texto a "Enviando..." con un spinner integrado, y se aplica un overlay semitransparente sobre todo el formulario que bloquea cualquier interacción (previene edición accidental durante el proceso).
+    And 2. **Durante la validación local (Zod Frontend):** El overlay muestra un indicador de texto: "Validando datos..."
+    And 3. **Durante la llamada al Backend:** El texto cambia a: "Guardando en el servidor..."
+    And 4. **Si ocurre un error (HTTP 400/500):** El overlay se retira inmediatamente, el botón se reactiva, y se muestran los errores específicos según CA-02 (validación) o CA-04 (motor caído). El formulario regresa al estado editable con TODOS los datos intactos.
+    And el proceso completo NUNCA mostrará una pantalla en blanco ni dejará al operario sin información de lo que está pasando.
+
+  Scenario: [REMEDIACIÓN] Confirmación Visual Post-Submit y Redirección Controlada (CA-21)
+    # Origen: REM-029-03 — GAP-3 del us029_functional_analysis.md
+    # Resuelve: No se define qué ve el operario después del envío exitoso ni si puede deshacer.
+    Given la respuesta exitosa HTTP 200 del endpoint `/complete`
+    Then el Frontend reemplazará el overlay de progreso con una pantalla de confirmación que muestra:
+    And Un ícono de éxito animado (checkmark verde ✅) con el texto: "¡Tarea completada exitosamente!"
+    And El identificador de la tarea completada (Ej: "TK-100 - Aprobación de Crédito").
+    And Esta pantalla de confirmación se mostrará durante 3 segundos antes de redirigir automáticamente al Workdesk (Pantalla 1, Tab "Mi Bandeja" de US-002 CA-22).
+    And El operario también puede hacer clic en "Ir al Workdesk" para redirigir inmediatamente sin esperar.
+    And **NO existe funcionalidad de "deshacer" (Ctrl+Z) en V1.** Una tarea completada es irreversible. Si fue un error, el proceso BPMN tiene sus propios mecanismos de devolución/rechazo (US-017 CA-16 — rejectionLogs). Esta decisión es deliberada para proteger la integridad del Event Sourcing.
+    And durante los 3 segundos de confirmación, el RYOW del CA-17 se ejecuta en paralelo (purga de LocalStorage + eliminación de Pinia).
+
+  Scenario: [REMEDIACIÓN] Navegación de Formularios Multi-Etapa (Wizard Steps) (CA-22)
+    # Origen: REM-029-04 — GAP-4 del us029_functional_analysis.md
+    # Resuelve: Los formularios Maestro de múltiples pasos no tienen navegación definida.
+    Given un iForm Maestro de la US-003 compuesto por N pasos/etapas (Wizard)
+    Then la Pantalla 2 mostrará los siguientes elementos de navegación:
+    And 1. **Barra de Progreso por Pasos:** En la parte superior del formulario, un indicador horizontal con los nombres de cada etapa (Ej: "① Datos del Cliente → ② Verificación → ③ Aprobación"). El paso activo se resalta en color primario. Los pasos completados muestran un checkmark verde. Los pasos con errores de validación muestran un indicador rojo.
+    And 2. **Botones de Navegación:** En la parte inferior del formulario, botones [◀ Anterior] y [Siguiente ▶]. El botón [Siguiente] ejecuta la validación Zod del paso actual ANTES de permitir avanzar. Si hay errores, bloquea el avance y resalta los campos inválidos.
+    And 3. **Botón [Enviar]:** Solo aparece visible en el ÚLTIMO paso. Reemplaza al botón [Siguiente]. No se puede enviar la tarea desde un paso intermedio.
+    And 4. **Autoguardado per-Step:** El autoguardado del CA-11 guarda el borrador completo (todos los pasos) en cada Debounce, pero incluye un campo `currentStep: 3` en el JSON para que al reabrir el borrador, el formulario posicione al operario en el paso exacto donde dejó.
+    And 5. **Navegación libre hacia atrás:** El operario puede retroceder a cualquier paso ya completado para revisar o modificar datos. La validación de pasos anteriores NO se re-ejecuta al retroceder, solo al avanzar o al enviar.
+
+  Scenario: [REMEDIACIÓN] Gobernanza de Delegación para Completar Tareas (CA-23)
+    # Origen: REM-029-05 — GAP-5 del us029_functional_analysis.md
+    # Resuelve: No se define si un supervisor puede completar tareas de un subalterno.
+    Given el toggle de delegación del US-001 CA-04/CA-15 que permite a un supervisor gestionar la bandeja de un subalterno
+    Then se establece la siguiente política para la completación delegada:
+    And 1. **El supervisor SÍ puede completar la tarea de un subalterno**, pero EXCLUSIVAMENTE si previamente ejecutó un Forced Unclaim (US-002 CA-08/CA-13) y luego un Claim a su propio nombre. Es decir: primero la quita del subalterno, luego se la auto-asigna, y entonces puede completarla. No existe un "completar en nombre de otro".
+    And 2. **El CQRS Event Sourcing (US-017) registrará ambas acciones:** el evento `FORCE_UNCLAIMED` por el supervisor Y el evento `FORM_SUBMITTED` por el supervisor. La trazabilidad será completa.
+    And 3. **El CA-07/CA-18 (Implicit Locking) NO se bypassea.** El supervisor debe ser el `assignee` actual para poder enviar. Esto elimina el riesgo de escalación de privilegios lateral.
+    And 4. Esta decisión mantiene la integridad del principio "quien firma, es responsable" y evita ambigüedades legales en procesos regulados.
+
+  Scenario: [REMEDIACIÓN] Contrato API del Merge Commit (Borrador en Servidor) (CA-24)
+    # Origen: REM-029-06 — GAP-6 del us029_functional_analysis.md
+    # Resuelve: El autoguardado silencioso al servidor no tiene endpoint ni reglas definidas.
+    Given el Debounce de 10 segundos de inactividad del CA-11 que dispara un Merge Commit al Backend
+    Then el Frontend enviará el borrador al siguiente endpoint:
+    And `PUT /api/v1/workbox/tasks/{taskId}/draft` — Merge Commit de borrador parcial. Body: `{ currentStep?: number, partialData: {...}, schemaVersion: string }`.
+    And **Validación:** El Backend ejecutará una validación Zod "Parcial" (todos los campos son opcionales EXCEPTO el tipo de dato: si el campo es numérico, el valor debe ser numérico o null). Si un campo tiene tipo incorrecto (Ej: texto en campo numérico), el Merge Commit descarta silenciosamente ESE campo pero guarda los demás. NO retorna error al Frontend.
+    And **Response exitoso:** HTTP 204 No Content (silencioso, el operario no se entera).
+    And **Response fallido:** HTTP 500 o timeout de red. El Frontend NO notifica al operario porque el borrador local (LocalStorage) ya tiene los datos protegidos. Un contador interno registra los fallos consecutivos: si acumula 3 fallos seguidos, muestra un Toast discreto: "El guardado automático en el servidor no está disponible. Tu borrador está seguro en tu navegador."
+    And **Trazabilidad:** Los Merge Commits NO aparecen en el historial de trazabilidad del CA-09 de US-002. Son snapshots efímeros de trabajo en progreso, no eventos de negocio. Se almacenan en una tabla separada `task_drafts` con TTL de 72 horas (consistente con CA-03).
+    And **Seguridad:** El endpoint aplica Implicit Locking — solo el `assignee` actual puede guardar borradores de su propia tarea. Intentos con otro userId retornan HTTP 403.
+
+
+  # ==============================================================================
+  # F. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: Cuestionario de 45 preguntas del workflow /refinamientoFuncionalUs.md
+  # Propósito: Cerrar huecos descubiertos durante el refinamiento de la US-029.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Scroll Automático y Foco en el Primer Campo con Error (CA-25)
+    # Origen: Pregunta #2 del Refinamiento Funcional
+    # Resuelve: En formularios largos (50+ campos), el operario no encuentra el campo con error.
+    Given la respuesta HTTP 400 del CA-02 con un array de campos inválidos
+    Then el Frontend ejecutará automáticamente un scroll suave hacia el PRIMER campo con error de validación.
+    And le dará foco visual al campo (borde rojo pulsante + ícono de alerta) para que el operario vea EXACTAMENTE dónde está el problema.
+    And si el formulario es multi-step (CA-22 Wizard), el Frontend primero navegará al paso que contiene el campo con error ANTES de hacer scroll.
+    And el comportamiento aplica tanto para errores del Frontend (validación Zod local) como del Backend (HTTP 400), garantizando que el operario NUNCA tenga que buscar manualmente un error.
+
+  Scenario: [REFINAMIENTO] Pre-Aviso de Caducidad de Borrador (CA-26)
+    # Origen: Pregunta #3 del Refinamiento Funcional
+    # Resuelve: El operario pierde su borrador tras 72h sin aviso (Ej: vacaciones).
+    Given el proceso de limpieza de borradores huérfanos del CA-03 (TTL de 72 horas)
+    Then el Frontend mostrará un Banner de pre-aviso cuando el borrador local tenga más de 48 horas de antigüedad: "⚠️ Tu borrador de esta tarea se eliminará automáticamente en [X] horas. Guarda o envía tu trabajo pronto."
+    And el Banner aparecerá al abrir la tarea y permanecerá fijo en la parte superior del formulario (debajo de la Nota Interna del US-002 CA-16, si existe).
+    And el operario podrá hacer clic en [Guardar ahora en el servidor] para forzar un Merge Commit (CA-24) que reiniciará el TTL de 72 horas en la tabla `task_drafts`.
+    And si el borrador local ya expiró pero existe un Draft en el servidor (CA-24), el formulario recuperará el progreso del servidor como fallback, mostrando: "Recuperamos tu progreso guardado desde el servidor."
+    And si AMBOS borradores expiraron (local y servidor), el formulario abrirá vacío con un Toast informativo discreto: "No se encontró ningún borrador guardado para esta tarea."
+
+  Scenario: [REFINAMIENTO] Resiliencia ante Cambio de Versión de Esquema Mid-Flight (CA-27)
+    # Origen: Pregunta #4 del Refinamiento Funcional
+    # Resuelve: El operario trabaja 2 horas y al enviar, el servidor rechaza por versión obsoleta del formulario.
+    Given un operario que abrió el formulario con `schema_version: V3` (CA-10) y trabajó durante un período prolongado
+    When el Arquitecto despliega `schema_version: V4` mientras el operario está editando
+    Then al presionar [Enviar], el Backend comparará la versión del esquema enviada (`V3`) con la versión actual (`V4`):
+    And 1. **Si los cambios entre V3 y V4 son solo campos OPCIONALES nuevos:** El Backend ACEPTARÁ el envío con V3 y completará la tarea normalmente. Los campos opcionales nuevos se guardarán como `null`. El operario NO recibe ningún error.
+    And 2. **Si los cambios incluyen campos OBLIGATORIOS nuevos:** El Backend retornará un HTTP 409 Conflict (NO un 400 genérico) con un mensaje legible: `{ "error": "SchemaVersionConflict", "message": "El formulario fue actualizado mientras trabajabas. Se requieren [N] campos nuevos." }`.
+    And 3. **Ante un HTTP 409:** El Frontend mostrará un Modal informativo (NO destruirá el trabajo del operario): "El formulario fue actualizado con nuevos campos obligatorios. Tus datos están seguros. Al cerrar este aviso, el formulario se recargará con los campos nuevos y tus datos se mantendrán." Al aceptar, el Frontend recargará el Mega-DTO BFF con V4, aplicará los datos del operario como `prefillData`, y mostrará los campos nuevos en rojo (Lazy Patching CA-08).
+    And 4. **EN NINGÚN CASO se perderán los datos que el operario ya digitó.** Los datos viajan en el LocalStorage/Draft y se reinyectan automáticamente tras la recarga del esquema.
+
+  Scenario: [REFINAMIENTO] Aduana de Archivos: Tamaño Máximo, Tipos Permitidos y Defensa MIME (CA-28)
+    # Origen: Pregunta #6 del Refinamiento Funcional
+    # Resuelve: No existe límite de tamaño ni lista blanca de tipos de archivo.
+    Given el Upload-First del CA-09 que envía archivos a `/api/v1/documents/upload-temp`
+    Then el sistema aplicará las siguientes restricciones obligatorias:
+    And 1. **Tamaño máximo por archivo:** 25 MB. Archivos que excedan este límite serán rechazados en el Frontend ANTES de iniciar la carga, con el mensaje: "El archivo supera el tamaño máximo permitido de 25 MB."
+    And 2. **Tipo de archivos permitidos (Lista Blanca):** PDF (.pdf), Imágenes (.jpg, .jpeg, .png, .gif), Documentos Office (.docx, .xlsx, .pptx), Texto Plano (.txt, .csv). Cualquier otro tipo será rechazado con: "Tipo de archivo no permitido."
+    And 3. **Validación MIME en el servidor:** El Backend verificará el tipo REAL del archivo (Magic Bytes / encabezado binario) independientemente de la extensión. Si alguien renombra un .exe a .pdf, el servidor lo detectará y rechazará con HTTP 415 Unsupported Media Type.
+    And 4. **Cantidad máxima de archivos por formulario:** 10 archivos (total acumulado). Si el operario intenta adjuntar un undécimo, verá: "Has alcanzado el máximo de 10 archivos adjuntos por tarea."
+    And 5. Estas restricciones podrán ser configurables por tenant en versiones futuras (V2).
+
+  Scenario: [REFINAMIENTO] Feedback Visual Durante la Carga de Archivos (CA-29)
+    # Origen: Pregunta #7 del Refinamiento Funcional
+    # Resuelve: El operario no sabe qué pasa mientras sube un archivo de 10MB (15-30 segundos de espera).
+    Given el patrón Upload-First del CA-09 durante la carga asíncrona de un archivo
+    Then el componente de carga mostrará los siguientes elementos visuales:
+    And 1. **Barra de progreso horizontal:** Con porcentaje numérico (Ej: "Subiendo... 45%") y color verde progresivo. La barra se actualizará en tiempo real con cada fragmento recibido por el servidor.
+    And 2. **Nombre del archivo y tamaño:** Visible durante toda la carga (Ej: "📄 contrato_firmado.pdf — 8.2 MB").
+    And 3. **Botón [✕ Cancelar carga]:** Permite abortar la carga en cualquier momento. Al cancelar, el archivo parcial en el servidor será marcado como `orphaned` y eliminado por el Cron Job del CA-13.
+    And 4. **Al completar la carga:** La barra cambia a verde completo con checkmark (✅) y se muestra el archivo como un chip: "📄 contrato_firmado.pdf ✅ [🗑️ Eliminar]". El operario puede eliminar el archivo antes de enviar el formulario.
+    And 5. **Si la carga falla:** Se muestra un mensaje rojo: "No se pudo subir el archivo. ¿Reintentar?" con botón [Reintentar].
+
+  Scenario: [REFINAMIENTO] Detección de Sesión Duplicada en Múltiples Pestañas (CA-30)
+    # Origen: Pregunta #12 del Refinamiento Funcional
+    # Resuelve: Dos pestañas abiertas con la misma tarea sobrescriben sus borradores mutuamente.
+    Given un operario que abre la misma tarea (Ej: TK-100) en dos pestañas del navegador simultáneamente
+    Then el Frontend detectará la sesión duplicada utilizando un mecanismo de coordinación entre pestañas (BroadcastChannel API o SharedWorker).
+    And la SEGUNDA pestaña mostrará un Banner de advertencia persistente: "⚠️ Esta tarea ya está abierta en otra pestaña. Los cambios que hagas aquí podrían perderse. Te recomendamos trabajar en una sola pestaña."
+    And la segunda pestaña operará en modo de SOLO LECTURA: el operario podrá ver los datos pero los botones [Enviar], [Guardar borrador] y la edición de campos estarán deshabilitados.
+    And al cerrar la primera pestaña, la segunda detectará la liberación y se reactivará como pestaña principal con un Toast: "Ahora eres la pestaña activa. Puedes continuar editando."
+
+  Scenario: [REFINAMIENTO] Indicador de Estado de Sincronización del Borrador (CA-31)
+    # Origen: Pregunta #13 del Refinamiento Funcional
+    # Resuelve: El operario no sabe si su borrador está seguro en el servidor o solo en su PC.
+    Given la edición activa de un formulario con autoguardado (CA-11 y CA-24)
+    Then la barra superior de la Pantalla 2 mostrará un indicador de estado de sincronización con los siguientes estados posibles:
+    And 1. **"☁️ Sincronizado"** (color verde discreto): El borrador existe tanto en el navegador como en el servidor. Si el operario cambia de PC, su trabajo estará disponible.
+    And 2. **"💾 Solo en este navegador"** (color amarillo): El borrador existe solo en LocalStorage. El Merge Commit al servidor aún no se ha ejecutado (Ej: el Debounce de 10s no se ha disparado). Si el operario cambia de PC, no encontrará su progreso.
+    And 3. **"⟳ Sincronizando..."** (animación giratoria): El Merge Commit (CA-24) se está enviando al servidor en este momento.
+    And 4. **"⚠️ Sin conexión al servidor"** (color rojo): Los últimos 3 intentos de Merge Commit fallaron (consistente con CA-24). El borrador está seguro localmente pero no en el servidor.
+    And al hacer clic en el indicador, se muestra un tooltip con la última hora de sincronización exitosa: "Última sincronización: hace 2 minutos."
+
+  Scenario: [REFINAMIENTO] Diálogo Anti-Envío Accidental para Formularios Sin Obligatorios (CA-32)
+    # Origen: Pregunta #15 del Refinamiento Funcional
+    # Resuelve: Un formulario de solo confirmación (0 campos obligatorios) puede completarse con un solo clic accidental.
+    Given un formulario donde TODOS los campos son opcionales o donde no existen campos de ingreso (Ej: formulario de confirmación con solo texto informativo)
+    When el operario presiona el botón [Enviar]
+    Then el Frontend mostrará un Modal de confirmación obligatorio ANTES de ejecutar el POST: "¿Estás seguro de que deseas completar esta tarea? Esta acción no se puede deshacer."
+    And el Modal tendrá dos botones: [Cancelar] (cierra el modal, no envía nada) y [Sí, completar] (ejecuta el flujo normal del CA-01/CA-20).
+    And este Modal solo aparece cuando el formulario NO tiene campos obligatorios. Los formularios CON campos obligatorios ya tienen la protección natural de la validación (el operario DEBE llenar algo para poder enviar), por lo que NO mostrarán este diálogo adicional.
+
+  Scenario: [REFINAMIENTO] Distinción Visual de Campos de Solo Lectura (CA-33)
+    # Origen: Pregunta #17 del Refinamiento Funcional
+    # Resuelve: Los campos de solo lectura se confunden con los editables y el operario intenta escribir en ellos sin éxito.
+    Given la renderización de campos con atributo `readOnly` provenientes del `prefillData` del BFF (CA-05/CA-10)
+    Then los campos de solo lectura se renderizarán con los siguientes indicadores visuales obligatorios:
+    And 1. **Fondo gris claro** (#F5F5F5) diferenciado del fondo blanco de campos editables.
+    And 2. **Sin borde de edición** (borde sólido gris en vez del borde interactivo azul de los editables).
+    And 3. **Ícono de candado (🔒)** posicionado a la izquierda del label del campo.
+    And 4. **Cursor `not-allowed`** al pasar el mouse por encima, comunicando que no se puede interactuar.
+    And 5. **Tooltip al hacer clic:** "Este campo es de solo lectura y contiene información de pasos anteriores del proceso."
+    And estos estilos se aplicarán uniformemente a TODOS los tipos de campo (input, select, textarea, datepicker) para evitar inconsistencias visuales entre controles diferentes.
+
+  Scenario: [REFINAMIENTO] Validación Zod Consciente de Campos Condicionales (CA-34)
+    # Origen: Pregunta #18 del Refinamiento Funcional
+    # Resuelve: La validación exige campos que el operario nunca vio porque la condición de visibilidad no se cumplió.
+    Given un esquema Zod que define campos condicionales (Ej: "Si `decision === 'RECHAZADO'`, el campo `motivo_rechazo` es obligatorio")
+    Then la validación del Frontend (CA-15 Zod Isomórfico) evaluará los campos obligatorios SOLO en función del estado actual de las condiciones del formulario.
+    And si un campo condicional NO fue mostrado al operario (porque su condición de visibilidad no se cumplió), la validación lo IGNORARÁ completamente: no lo exigirá como obligatorio NI lo incluirá en el payload del POST `/complete`.
+    And el Backend ejecutará la MISMA lógica condicional al validar: recibirá en el payload un campo `_visibleFields: ['campo_A', 'campo_B', ...]` que indica qué campos estuvieron activos. El Backend cruzará esta lista contra las reglas de condición del esquema Zod para determinar qué campos son obligatorios en ESE contexto.
+    And si un atacante manipula `_visibleFields` para omitir un campo que SÍ debería ser obligatorio, el Backend recalculará las condiciones de forma independiente (usando los valores del payload) y detectará la inconsistencia, retornando HTTP 400.
+
 
 ```
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Detalle / Formulario Dinámico).

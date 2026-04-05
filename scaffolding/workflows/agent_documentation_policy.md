@@ -28,6 +28,7 @@ Antes de ejecutar cualquier lectura, refactorización funcional o creación de n
 ## 3. Respeto por la Única Fuente de la Verdad y Sincronización Estricta
 - Existe un único contrato comercial/funcional y un único plano arquitectónico. 
 - **SINCRONIZACIÓN OBLIGATORIA (Regla C4 - Implementation Plan):** Si el usuario solicita un cambio arquitectónico y usted modifica los modelos arquitectónicos (`docs/architecture/c4-model.md` o `docs/architecture/c4-model-v2.md`), **ES OBLIGATORIO** actualizar inmediatamente la sección de "Solution-Architecture View" dentro del archivo `docs/architecture/implementation_plan.md` para evitar inconsistencias de diagramas Mermaid entre ambos documentos.
+- **CONVERGENCIA DE ARTEFACTOS SATÉLITE (Regla Anti-Amnesia):** Los artefactos de auditoría y remediación (`us{X}_functional_analysis.md`, `us{X}_gap_remediation_brief.md`, `audit_*_report.md`) son documentos **temporales de diagnóstico**, NO fuentes de verdad. Todo hallazgo resuelto en ellos **DEBE** graduarse como CA formal en `v1_user_stories.md` mediante el workflow `/graduacionAuditoriaAlSsot.md`. Un artefacto satélite sin convergencia al SSOT es deuda documental activa.
 - Discrepancias entre el código (Backend Java) y los requerimientos (`docs/`) deben ser reportadas al usuario de inmediato señalando la incongruencia.
 
 ## 4. Protocolo de Comunicación de Agentes (Agentic Handoff Protocol)

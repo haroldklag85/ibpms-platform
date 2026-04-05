@@ -104,5 +104,6 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 
 1. **Gherkin vs PRD:** Si hay una contradicción funcional entre la descripción macro del `functional_requirements.md` y un escenario Gherkin de `v1_user_stories.md`, **SIEMPRE PREVALECE EL GHERKIN** como detalle técnico final.
 2. **Wireframes vs Requirements:** Si un Wireframe (ubicado en `docs/architecture/v1_wireframes.md`) exige un botón que **no existe** en las Historias de Usuario, usted debe consultar al Usuario, *no reinventar una Historia fantasma*.
+3. **Trazabilidad Inversa (Anti-Amnesia Institucional):** Todo hallazgo de auditoría que haya sido RESUELTO y viva en un artefacto satélite (`us{X}_functional_analysis.md`, `us{X}_gap_remediation_brief.md`, `audit_*_report.md`) **DEBE** graduarse como un Criterio de Aceptación formal dentro de la User Story correspondiente en `v1_user_stories.md`. Si un hallazgo resuelto no existe en el SSOT, la próxima auditoría lo redescubrirá como nuevo. Ver workflow: `.agent/workflows/graduacionAuditoriaAlSsot.md`.
 
 > **Objetivo Final:** Su obligación como Agente es apegarse 100% al alcance pre-verificado (SSOT). **Si no está escrito en estos 4 archivos base (+ los condicionales de su rol), no es un requerimiento de la V1.** Construya lo que se pide; nada más, nada menos.

@@ -828,6 +828,77 @@ Feature: Web IDE Form Code Generation
       - Fecha de Última Modificación y Autor
     And al hacer clic sobre un formulario, se abrirá en el Lienzo IDE. Si se desea ver el historial de diseño de ese formulario en particular, la grilla ofrecerá la opción de [Ver Historial de Versiones] para realizar Rollbacks.
 
+  # ==============================================================================
+  # G. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us003_gap_remediation_brief.md
+  # Tickets: REM-003-01 a REM-003-07
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Persistencia Versionada del Diseño JSON del Formulario (CA-87)
+    # Origen: REM-003-01 | Decisión PO: Opción A PostgreSQL JSONB
+    Given que el Arquitecto finaliza el diseño de un formulario en el Canvas (Pantalla 7) y presiona [Guardar]
+    When el IDE serializa el AST del esquema visual (JSON del Canvas + Esquema Zod + Metadatos)
+    Then el Backend persistirá el diseño completo en la tabla relacional `ibpms_form_definitions` utilizando una columna JSONB de PostgreSQL para el cuerpo del esquema.
+    And cada guardado generará una nueva fila inmutable con `version_id` autoincremental, `created_by`, `created_at` y un hash SHA-256 del contenido para detección de colisiones.
+    And el Backend expondrá los endpoints REST: `GET /api/v1/forms/{formId}/versions` (listar versiones) y `POST /api/v1/forms/{formId}` (crear nueva versión).
+    And TIENE PROHIBIDO utilizar Object Storage (S3/MinIO) como motor primario en V1; la columna JSONB de PostgreSQL es la fuente de verdad transaccional del diseño.
+
+  Scenario: [REMEDIACIÓN] Separación Arquitectónica de Contextos IDE vs Workdesk (CA-88)
+    # Origen: REM-003-02
+    Given la coexistencia de lógica de diseño (IDE, Pantalla 7) y lógica de operación (Workdesk, Pantalla 2) dentro de la US-003
+    Then el Frontend TIENE OBLIGACIÓN de mantener una separación física de módulos entre ambos contextos.
+    And los composables/hooks de validación Zod operativa (Workdesk) residirán en un directorio distinto (`composables/workdesk/`) a los composables del IDE (`composables/ide/`).
+    And los CAs de validación Lazy @blur (CA-22, CA-80) aplican EXCLUSIVAMENTE al contexto Workdesk.
+    And los CAs de errores de Mónaco (CA-84) y Language Servers (CA-17) aplican EXCLUSIVAMENTE al contexto IDE.
+    And ningún composable del IDE debe importar dependencias del Workdesk ni viceversa, para prevenir regresiones cruzadas.
+
+  Scenario: [REMEDIACIÓN] Directriz de Complementariedad QA Sandbox vs Auto-Vitest (CA-89)
+    # Origen: REM-003-03
+    Given la coexistencia de dos herramientas QA: Sandbox In-Browser (CA-83) y Auto-Vitest (CA-68)
+    Then la plataforma los tratará como herramientas COMPLEMENTARIAS con dominios distintos:
+    And el Sandbox In-Browser (CA-83) es la herramienta de quick-check en tiempo de diseño, utilizada por el Arquitecto de Formularios en la Pantalla 7 para validar contratos Zod instantáneamente sin salir del IDE. No genera archivos persistentes.
+    And el Auto-Vitest (CA-68) es la herramienta de regresión persistente, utilizada por el Ingeniero QA para generar archivos `.spec.ts` que se integran al pipeline CI/CD y aseguran cobertura de regresión a largo plazo.
+    And TIENE PROHIBIDO considerar ambas herramientas como redundantes o eliminar una en favor de la otra.
+
+  Scenario: [REMEDIACIÓN] Límites de Rendimiento y Lazy Mount para iForm Maestro (CA-90)
+    # Origen: REM-003-04
+    Given un Arquitecto diseñando un iForm Maestro de alta densidad en el Canvas
+    When la cantidad de componentes visuales supere el umbral configurable `MAX_FORM_FIELDS` (Valor por defecto: 200 campos)
+    Then el IDE emitirá una advertencia visual amigable (Banner amarillo, NO un bloqueo duro) indicando que el formulario supera el límite recomendado de campos y el rendimiento del navegador del operario podría degradarse.
+    And para formularios que superen el umbral, el Motor de Renderizado del Workdesk activará OBLIGATORIAMENTE un patrón de Lazy Mount donde solo la pestaña o acordeón activo monta su DOM, preservando el Main Thread de Vue.
+    And el equipo de QA deberá ejecutar un test de carga con un formulario de 250+ campos y 3 grillas anidadas, midiendo Time-to-Interactive (TTI) para certificar que no exceda 3 segundos en un navegador estándar.
+
+  Scenario: [REMEDIACIÓN] Validación de Contrato de Integración con US-029 (CA-91)
+    # Origen: REM-003-05
+    Given la dependencia crítica de la US-003 con la US-029 (Persistencia CQRS) para Auto-Guardado, Smart Buttons e I/O Mapping
+    Then el Arquitecto de Software TIENE OBLIGACIÓN de certificar la existencia de los siguientes contratos de la US-029 antes de considerar la US-003 como feature-complete:
+    And Endpoint de Auto-Guardado: `POST /api/v1/drafts/{taskId}` (Persistir borrador parcial).
+    And Endpoint de Recuperación: `GET /api/v1/drafts/{taskId}` (Reconstruir borrador al reabrir tarea).
+    And Endpoint de Completado: `POST /api/v1/tasks/{taskId}/complete` (Smart Button Completar con I/O Mapping).
+    And Endpoint de Limpieza: `DELETE /api/v1/drafts/{taskId}` (Purgar borrador post-submit).
+    And si alguno de estos contratos no existe al momento de la integración, se generará un ticket bloqueante contra la US-029 antes de pasar a QA.
+
+  Scenario: [REMEDIACIÓN] Política de Expiración y Limpieza de LocalStorage (CA-92)
+    # Origen: REM-003-06
+    Given la acumulación progresiva de datos en LocalStorage por los mecanismos de Auto-Guardado (CA-24, CA-85), Resiliencia Offline (CA-72) y Snapshots JSON (CA-71)
+    Then el Frontend implementará un servicio `LocalStorageGarbageCollector` que se ejecutará automáticamente al iniciar la SPA.
+    And aplicará una regla de expiración temporal: eliminará entradas con `timestamp` superior a 7 días naturales.
+    And aplicará una regla de cuota espacial: si el volumen total de entradas con prefijo `ibpms_draft_` o `ibpms_snapshot_` supera 50MB estimados, purgará las más antiguas primero (FIFO).
+    And registrará un log discreto en la consola del navegador: `[GC] Purged N stale drafts (X KB freed)`.
+    And TIENE PROHIBIDO tocar claves de LocalStorage que no pertenezcan al dominio de formularios del iBPMS.
+
+  Scenario: [REMEDIACIÓN] Componente Unificado de Vista Solo-Lectura (CA-93)
+    # Origen: REM-003-07
+    Given la coexistencia de dos modos de lectura: Visor Histórico para Auditoría (CA-37) y Vista Imprimible para Visualizadores (CA-56)
+    Then el Frontend implementará un único componente base `FormReadOnlyView` con una prop `mode` que acepta dos valores:
+    And `mode="audit"`: Renderiza el formulario con metadatos de auditoría visibles (quién modificó, cuándo, qué campo cambió) para consumo del Rol Auditor.
+    And `mode="print"`: Renderiza el formulario como un documento de texto limpio sin bordes de input ni metadatos técnicos, optimizado para impresión y lectura plana.
+    And ambos modos comparten el mismo motor de renderizado de campos (zero duplication), diferenciándose únicamente en la capa de presentación de metadatos.
+    And si técnicamente la unificación genera complejidad excesiva, el Arquitecto Frontend puede mantener dos componentes separados SIEMPRE Y CUANDO compartan un composable base común para evitar duplicación de lógica de lectura.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 7 (IDE Web Pro-Code para Formularios).
 
@@ -3873,9 +3944,9 @@ Feature: Multitenant RBAC, EntraID Sync & Identity Governance (Microservices Rea
   Scenario: Tolerancia a Fallos del Kill-Switch (Redis Fail-Open Policy) (CA-01)
     Given la arquitectura de validación de Tokens (JWT) que consulta una Lista Negra en memoria (Redis) en <5ms para bloquear usuarios despedidos
     When el clúster de Redis sufre una caída temporal (Timeout) o partición de red (SPOF)
-    Then la arquitectura TIENE PROHIBIDO bloquear el acceso masivo a la plataforma asfixiando a la empresa (Fail-Closed).
-    And el Gateway DEBE adoptar una postura de resiliencia "Fail-Open Auditado" (Alta Disponibilidad).
-    And validará matemáticamente la firma criptográfica y la caducidad del Token JWT, y si es válido, PERMITIRÁ el paso.
+    Then la arquitectura exigirá un TTL máximo de 15 minutos al Token JWT base, y aplicará protección "Fail-Open Degradado".
+    And el Gateway validará matemáticamente el Token JWT y PERMITIRÁ peticiones de sólo lectura (GET) para mantener viva la vista 360.
+    And FORZARÁ "Fail-Closed" en toda mutación destructiva de estado (POST/PUT/DELETE) exigiendo escalamiento "Sudo-Mode", taponando vulnerabilidades de Separación de Funciones (SoD) si un usuario revocado aprovecha sus 15 minutos en la sombra.
     And paralelamente disparará una alerta técnica crítica al SysAdmin indicando: "Caché Offline - Operando en Degradación Segura sin Lista Negra".
 
   Scenario: Filtro de la Mochila Pesada (Anti-Token Bloat) (CA-02)
@@ -4058,7 +4129,7 @@ Feature: Business SLA Matrix Configuration and Multi-Zone Time-Warp Prevention
     Given que el administrador altera el rango de horas hábiles (Ej: de 17:00 a 16:30) y activa el Toggle de "Aplicar Retroactivamente a Tareas Vivas"
     When el PMO oprime `[Aplicar Matriz]`
     Then el Backend REST rechaza estructuralmente ejecutar el recálculo masivo de manera síncrona/inmediata en esa misma petición HTTP para prevenir Timeouts y Deadlocks de BD.
-    And el sistema encolará un Job Asíncrono de tipo Batch por detrás, el cual iterará la tabla `ACT_RU_JOB` actualizando los `DUEDATE_` en lotes paginados.
+    And el sistema encolará un Job Asíncrono de tipo Batch por detrás que consumirá exclusivamente gRPC o la API asíncrona de Zeebe 8, modificando los Timer Boundary Events de forma nativa sin interactuar jamás con bases relacionales SQL, preservando la arquitectura RocksDB Stateless.
     And el UI mostrará un Modal informativo: "Recálculo masivo en progreso. Los SLAs vivos se actualizarán gradualmente en los próximos minutos".
 
   Scenario: Husos Horarios Estrictos en Geografías Híbridas (Timezones) (CA-4)
@@ -4290,6 +4361,7 @@ Feature: Governing Agile Entropy and Storage Economics
     Then la tabla relacional `ibpms_kanban_tasks` DEBE contar con una columna especializada de tipo `JSONB` (o su equivalente estructurado).
     And el Backend serializará y guardará el Payload completo validado por Zod directamente dentro de esta columna de la entidad.
     And garantizando que la tarjeta Ágil soporte la captura de datos estructurados sin ensuciar la base de datos con tablas hijas.
+    And OBLIGATORIAMENTE este ID KanBan convivirá con el ecosistema de Zeebe en una capa de Proyección CQRS Central (Ej: ibpms_global_worklist_view), inyectando una "Vista 360" en ES/RDBMS que aborte el divorcio entre tareas CMMN y Tareas Ágiles.
 ```
 **Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Restricciones Arquitectónicas / PMO).
 
@@ -4376,23 +4448,14 @@ Feature: Central Outbound Notification Engine
     Then el Notification Engine aplicará una regla paramétrica de "Agrupación Temporal" (Throttling Window, Ej: 15 minutos) por destinatario.
     And en lugar de bombardear al Jefe con 150 correos individuales colapsando su bandeja, el motor consolidará los eventos en un único correo tipo "Digest": `[Alerta Masiva: 150 SLAs han sido vulnerados en los últimos 15 min. Vaya al Dashboard]`, protegiendo la reputación del dominio (Anti-Spam).
 
-    Scenario: Extracción e Inyección de Anexos Físicos (Outbound Attachments)
-    Given el Motor de Notificaciones procesando un correo en la cola de salida
-    When la tarea de Camunda incluya en su Payload un Array de identificadores de archivos (Ej: `attachments: ["UUID-A", "UUID-B"]`)
-    Then el Worker de Notificaciones hará una pausa antes de enviar el correo a Office 365 / SMTP.
-    And se conectará a la Bóveda SGDEA (SharePoint - US-035) utilizando esos UUIDs.
-    And descargará los binarios (Ej: El PDF del Contrato) temporalmente a la memoria RAM.
-    And empaquetará los binarios como archivos adjuntos reales (Attachments) en la trama del correo electrónico.
-    And destruirá los binarios de la RAM inmediatamente después de recibir el "200 OK" del servidor de correos para no saturar el servidor.
-
-  Scenario: Extracción e Inyección de Anexos Físicos (Outbound Attachments)
+  Scenario: Extracción e Inyección de Anexos Físicos con Streaming Activo (Outbound Zero-RAM)
     Given el Motor de Notificaciones procesando un correo en la cola de salida (RabbitMQ)
     When la tarea transaccional de Camunda incluya un Array de identificadores documentales (Ej: `attachments: ["UUID-A"]`)
     Then el Worker de Notificaciones hará una pausa antes de conectarse al servidor SMTP.
     And se autenticará contra la Bóveda SGDEA (SharePoint - US-035) utilizando esos UUIDs.
-    And descargará los binarios (Ej: El PDF del Contrato) temporalmente a la memoria RAM del Worker.
-    And empaquetará los binarios transmutándolos a formato adjunto (`Attachments`) en la trama del correo electrónico saliente.
-    And DESTRUIRÁ los binarios de la RAM inmediatamente después de recibir el "200 OK" de despacho para mantener el servidor web ligero.
+    And TIENE PROHIBIDO descargar binarios corporativos hacia la memoria RAM (Heap) del Servidor para evitar Out Of Memory (OOM).
+    And realizará Piping HTTP bidireccional (Streams directos) hacia MS Graph API, o en su defecto recaerá en staging OS de memoria Flash (`/tmp`).
+    And conectará en caliente el pipeline al formato adjunto (`Attachments`) en la trama del correo electrónico saliente, manteniendo el NodeWorker inmutable.
 
 Scenario: Infraestructura de Notificaciones In-App (WebSocket Campana)
     Given la necesidad de alertar a un usuario internamente (Ej: SLA a punto de vencer, Tarjeta IA asignada)
@@ -4621,7 +4684,7 @@ Feature: Hexagonal CQRS Persistence, Zero-Trust Validation and Task Completion
   Scenario: Zod Isomórfico y Guillotina de Datos Fantasma (Choque Gnoseológico) (CA-9)
     Given la existencia de esquemas Zod bidireccionales en el ecosistema
     When un atacante bypassea la UI enviando un POST adulterado vía API REST (Ej: Editando un campo oculto o de 'Solo Lectura')
-    Then el API Gateway/BFF ejecutará OBLIGATORIAMENTE el mismo `schema.json` Zod utilizado en el diseño gráfico del Frontend (Validación Bilateral Severa)
+    Then los esquemas Zod de Frontend se transpilarán en CI/CD a estándar RFC JSONSchema, y el API Gateway/BFF en Java ejecutará la validación estrictamente mediante la librería genérica json-schema-validator, anulando el cuello de botella de emuladores JS.
     And cruzará los permisos de escritura del Rol del usuario contra los campos recibidos; si inyectó datos no autorizados, aplicará un `.strip()` silencioso descartando el campo adulterado, o abortará con `HTTP 403 Forbidden`
     And rechazará con `HTTP 400 Bad Request` cualquier asimetría de tipos de datos.
 

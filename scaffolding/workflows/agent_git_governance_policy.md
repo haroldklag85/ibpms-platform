@@ -50,7 +50,13 @@ Cuando se asigne una nueva Tarea Técnica:
 
 2. **Sincronización Transitoria (El Agente):**
    - El agente hace commit de su trabajo en la rama compartida de la US.
+   - **Formato de Commit Obligatorio (Trazabilidad por CA):** Todo mensaje de commit DEBE referenciar el CA implementado usando el formato: `feat(US-XXX): CA-NN Descripción corta del cambio`. Ejemplos:
+     - `feat(US-003): CA-43 Data Binding precarga variables Camunda`
+     - `fix(US-005): CA-12 Corregir Late Binding DMN por defecto`
+     - `feat(US-017): CA-8 [REMEDIACIÓN] Idempotencia anti-doble-clic`
+   - Si un commit abarca múltiples CAs, listarlos: `feat(US-003): CA-21,CA-22 Endpoints upload y draft`
    - Ejecuta: `git push origin sprint-{n}/us-{n}-{desc}`.
+   - **Actualización de Cobertura:** Antes de notificar al Orquestador, el agente DEBE actualizar `.agentic-sync/coverage_matrix.md` marcando como ✅ los CAs que implementó en este bloque.
    - Informa al Orquestador y al Humano: *"He finalizado mi tarea en la rama de la US"*.
 
 3. **La Aduana y el Merge (Orquestador / Humano):**

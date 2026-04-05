@@ -8,7 +8,8 @@
         "build": "vite build",
         "preview": "vite preview",
         "test": "vitest",
-        "test:ui": "vitest --ui"
+        "test:ui": "vitest --ui",
+        "test:ct": "playwright test -c playwright-ct.config.ts"
     },
     "dependencies": {
         "@guolao/vue-monaco-editor": "^1.6.0",
@@ -35,6 +36,7 @@
         "zod": "^3.22.4"
     },
     "devDependencies": {
+        "@playwright/experimental-ct-vue": "^1.59.1",
         "@playwright/test": "^1.59.1",
         "@types/dompurify": "^3.0.5",
         "@types/lodash-es": "^4.17.12",

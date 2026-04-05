@@ -1,56 +1,85 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import DlqDashboard from '../../../../views/admin/Integration/DlqDashboard.vue';
+import fs from 'fs';
+import path from 'path';
 
 // Mock del apiClient
 vi.mock('@/services/apiClient', () => ({
   default: {
-    get: vi.fn(() => Promise.reject(new Error('Network Error'))) // Trigger fallback mock
+    get: vi.fn(() => Promise.resolve({ data: [] })),
+    post: vi.fn(() => Promise.resolve({ data: {} })),
+    delete: vi.fn(() => Promise.resolve({ data: {} }))
   }
 }));
 
-describe('Dead Letter Queue Dashboard (DLQ)', () => {
-    it('Debe renderizar la vista del Dashboard DLQ correctamente', () => {
+describe('Dead Letter Queue Dashboard (DLQ) CA-8', () => {
+
+    let componentSource: string;
+
+    beforeEach(() => {
+        // Leemos el componente fuente para análisis estático
+        const componentPath = path.resolve(__dirname, '../../../../../src/views/admin/Integration/DlqDashboard.vue');
+        componentSource = fs.readFileSync(componentPath, 'utf-8');
+    });
+
+    it('TEST-F01: Debe renderizar la vista y NO contener datos MOCK hardcodeados en el script', () => {
+        // Verificamos que el componente no usa arreglos literales de mock, que han sido removidos.
+        const mockArrayPattern = /const\s+fallbackMessages\s*=\s*\[/g;
+        expect(mockArrayPattern.test(componentSource)).toBe(false);
+
+         // Debe de todas maneras montar bien
         const wrapper = mount(DlqDashboard);
         expect(wrapper.text()).toContain('Dead Letter Queue Dashboard');
-        expect(wrapper.text()).toContain('Monitorización de RabbitMQ y TaskRescue');
     });
 
-    it('Debe inyectar Fake/Mock Data (Fallback) tras simular un API call y mostrar la tabla', async () => {
-        const wrapper = mount(DlqDashboard);
-        // Wait for onMounted fetch
-        await flushPromises();
-        // Fallback delay is 600ms
-        await new Promise(r => setTimeout(r, 650));
-        await wrapper.vm.$nextTick();
-
-        // 3 Mensajes mockeados deberían estar dibujados
-        expect(wrapper.text()).toContain('dlx.exchange'); // Fixed from O365/Exchange
-        expect(wrapper.text()).toContain('camunda.task.create');
-        expect(wrapper.text()).toContain('Connection Refused: Postgres DB Pool exhausted.');
-        
-        // Count rows in tbody
-        const rows = wrapper.findAll('tbody tr');
-        expect(rows.length).toBe(3);
+    it('TEST-F02: Debe verificar la AUSENCIA de alert() nativo', () => {
+        const hasAlert = /window\.alert\(|alert\(/g.test(componentSource);
+        expect(hasAlert).toBe(false);
     });
 
-    it('Debe purgar todos los mensajes de la tabla si el usuario hace clic en Purgar Todo', async () => {
+    it('TEST-F03: Debe existir el modal de confirmación para Purga con text area justificación', async () => {
         const wrapper = mount(DlqDashboard);
         await flushPromises();
-        await new Promise(r => setTimeout(r, 650));
+
+        // Forzamos abrir el modal purgando summary local
+        wrapper.vm.summary.totalMessages = 5;
+        wrapper.vm.isPurgeModalOpen = true;
         await wrapper.vm.$nextTick();
+
+        const purgeModalText = wrapper.text();
+        expect(purgeModalText).toContain('Confirmar Purga Masiva');
+        expect(purgeModalText).toContain('Esta acción es destructiva');
         
-        // Verificar que el botón Purgar Todo existe y hacer click
-        const purgeBtn = wrapper.find('button.bg-red-100');
-        expect(purgeBtn.exists()).toBe(true);
-        expect(purgeBtn.text()).toContain('Purgar Todo');
-        
-        await purgeBtn.trigger('click');
+        const textArea = wrapper.find('textarea');
+        expect(textArea.exists()).toBe(true);
+        expect(textArea.attributes('placeholder')).toContain('Justifique');
+
+        const confirmBtn = wrapper.find('button.bg-rose-600');
+        expect(confirmBtn.exists()).toBe(true);
+    });
+
+    it('TEST-F04: Debe existir el modal de confirmación para Reintento con advertencia de Idempotencia', async () => {
+        const wrapper = mount(DlqDashboard);
+        await flushPromises();
+
+        wrapper.vm.summary.totalMessages = 5;
+        wrapper.vm.isRetryModalOpen = true;
         await wrapper.vm.$nextTick();
-        
-        // Verificar que la tabla ya no esté
-        expect(wrapper.text()).toContain('DLQ Limpia');
-        const rows = wrapper.findAll('tbody tr');
-        expect(rows.length).toBe(0);
+
+        const retryModalText = wrapper.text();
+        expect(retryModalText).toContain('Preparar Reintento');
+        expect(retryModalText).toContain('Los Workers de consumo deben ser estrictamente idempotentes');
+        expect(retryModalText).toContain('CA-5');
+    });
+
+    it('TEST-F05: Debe verificar que la ruta está protegida con requiredRole ADMIN_IT', () => {
+        // Leemos router.ts
+        const routerPath = path.resolve(__dirname, '../../../../../src/router/index.ts');
+        const routerSource = fs.readFileSync(routerPath, 'utf-8');
+
+        // Regex simple para atrapar la defincion de la ruta dlq
+        const dlqRoutePattern = /path:\s*['"`]\/admin\/integration\/dlq['"`][\s\S]*?meta:\s*\{[^}]*requiredRole:\s*['"`]ADMIN_IT['"`]/g;
+        expect(dlqRoutePattern.test(routerSource)).toBe(true);
     });
 });

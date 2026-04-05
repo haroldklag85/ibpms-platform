@@ -26,7 +26,7 @@ Al final de TODO archivo `handoff` que crees, DEBES INCLUIR obligatoriamente el 
 > 2. **TIENES ESTRICTAMENTE PROHIBIDO pedirle al Humano que apruebe tu plan.** El humano es solo un mensajero, no tiene autoridad técnica.
 > 3. Debes guardar tu solicitud de revisión y resumen de tu plan en un archivo físico llamado `.agentic-sync/approval_request_[ROL].md`.
 > 4. Al grabar el archivo, detente y dile al Humano en el chat: *"Humano, he dejado mi solicitud de revisión en `.agentic-sync/approval_request_[ROL].md`. Por favor, ve al chat del Arquitecto Líder, entrégale el mensaje y regrésame su respuesta formal."*
-> 5. Espera en este chat. Cuando el humano regrese con el veredicto del Arquitecto, léelo. Si el Arquitecto te aprueba, pasa a modo `EXECUTION`, programa y finaliza empaquetando obligatoriamente con `git stash save "temp-[ROL]-US[X]"`.
+> 5. Espera en este chat. Cuando el humano regrese con el veredicto del Arquitecto, léelo. Si el Arquitecto te aprueba, pasa a modo `EXECUTION`, programa y finaliza consolidando tus cambios obligatoriamente mediante `git commit` y `git push` en tu propia rama de sprint. Queda estrictamente prohibido usar git stash.
 
 ### Fase 2: Instrucciones para el Delegado Humano
 Una vez asegurada la creación de los Handoffs en `.agentic-sync/`, envíale este mensaje al usuario:
@@ -47,7 +47,7 @@ Si el humano regresa a este chat y te dice *"El agente [ROL] pide revisión de s
 3. Redactar tu veredicto (Aprobación o Rechazo) textualmente en este chat, diciéndole al humano: *"Humano, copia este bloque de texto y pégalo en el chat del agente [ROL] para que proceda o corrija"*.
 
 ### Fase 4: Auditoría y Cierre (Gatekeeper Activo)
-*(El Orquestador solo ejecuta esta fase cuando el humano regresa a su chat y avisa que los especialistas terminaron y empaquetaron sus ramas).*
-1. Usar comandos de terminal para ejecutar `git stash pop` para la capa Backend y Frontend.
-2. Revisar la integridad del *diff*. Si hay mocks en Vue o violación Hexagonal en Java, ejecuta `git reset --hard` para abortar el parche y exígele al desarrollador (en su chat) que corrija los errores (que repita el stash). 
-3. Si el código pasa tu auditoría técnica, ejecuta el Commit final y cierra el flujo derivando al humano al bot de QA.
+*(El Orquestador solo ejecuta esta fase cuando el humano regresa a su chat y avisa que los especialistas terminaron e hicieron push a sus ramas).*
+1. Revisar la integridad del *diff* entre `main` y la rama del agente usando comandos de terminal.
+2. Si hay mocks en Vue o violación Hexagonal en Java, exígele al desarrollador (en su chat) que corrija los errores (que suba nuevos commits a su rama). 
+3. Si el código pasa tu auditoría técnica, aprueba y ejecuta el Merge final hacia `main` y cierra el flujo derivando al humano al bot de QA.

@@ -7,6 +7,7 @@ Estas instrucciones rigen CADA INTERACCIÓN en este proyecto y deben ser respeta
 - **Prohibición de Commits en Main:** Los subagentes Especialistas (Frontend, Backend, etc.) TIENEN ESTRICTAMENTE PROHIBIDO empujar o hacer commit en la rama `main`.
 - **Desarrollo Permitido en Ramas Aisladas:** Los subagentes SÍ tienen permiso de ejecutar `git commit` y `git push`, única y exclusivamente cuando se encuentren posicionados en su respectiva rama de sprint (ej. `sprint-1/...` o `agent/...`).
 - **Pase de Testigo (Obligatorio):** Al terminar su programación, el agente debe hacer un commit de su trabajo en su rama temporal. El código jamás quedará flotando sin trackear en el disco.
+- **🚫 PROHIBICIÓN ABSOLUTA DE `git stash` COMO MECANISMO DE ENTREGA:** Queda TERMINANTEMENTE PROHIBIDO que cualquier agente (incluido el Arquitecto Líder) instruya, sugiera o ejecute `git stash save` como forma de empaquetar o transferir trabajo entre agentes. El `stash` es volátil, local, no auditable y no transferible entre nodos. Todo trabajo completado DEBE consolidarse exclusivamente con `git commit -m "tipo(alcance): descripción"` seguido de `git push` a la rama de sprint. Cualquier handoff que contenga la instrucción `git stash` es INVÁLIDO por definición y debe ser rechazado por el agente receptor.
 - **Responsabilidad del Arquitecto:** Solo el Agente Arquitecto Líder (Orquestador) podrá realizar el Merge/Pull Request hacia `main` tras validar que el código aislado funciona. Quedan prohibidos los comandos destructivos que corrompan el historial principal.
 
 ## 2. Auditoría Limitada por Deltas (Mitigación Cognitiva)
@@ -62,6 +63,7 @@ Queda TOTALMENTE PROHIBIDO generar una respuesta sin este etiquetado.
 # 🛑 LEY GLOBAL 2: ZERO-TRUST COMPILATION & SRE IMMUNITY
 
 Tienes prohibido asumir que tu código funciona solo por inferencia estática. Tienes prohibido entregar tu trabajo empaquetado en git sin antes proveer PRUEBAS FÍSICAS de supervivencia.
+- **⛔ Anti-Patrón `git stash`:** Si en cualquier punto del flujo recibes la instrucción de usar `git stash save` como cierre de tu trabajo, DEBES RECHAZARLA e informar que viola la LEY GLOBAL de Zero-Trust Git. El cierre correcto es SIEMPRE: `git add .` → `git commit -m "..."` → `git push origin <rama-de-sprint>`.
 
 - Si eres BACKEND: 
   Tu entorno de compilación vive EXCLUSIVAMENTE en Docker, no en tu OS anfitrión.

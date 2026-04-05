@@ -29,7 +29,7 @@ Estas instrucciones rigen CADA INTERACCIÓN en este proyecto y deben ser respeta
 
 *** SI INCUMPLES ESTAS REGLAS SERÁS ABORTADO INMEDIATAMENTE ***
 
-## 5. Arquitectura Asíncrona Resiliente (SPOF Prevention)
+## 6. Arquitectura Asíncrona Resiliente (SPOF Prevention)
 - **Topología Obligatoria:** Todo sistema de enrutamiento y mensajería (Ej. RabbitMQ) DEBE ser configurado para soportar fallos destructivos del Broker. Queda estrictamente prohibido implementar topologías directas sin soporte DLQ.
 - **Circuit Breaker y Fallback:** Si un Broker como Redis o RabbitMQ se cae, el sistema principal (Ej. Tomcat) NO DEBE crashear. El Agente Backend está obligado a encapsular estas infraestructuras bajo patrones "Fallback" (usando memorias buffer, colas pasivas en BD o interceptores de Circuit Breaker tipo `RabbitHealthIndicator`).
 - **Idempotencia:** Todos los endpoints asíncronos y Webhooks están obligados por contrato a validar la llave `x-idempotency-key` cruzándose con bases de datos transaccionales, suprimiendo ataques de repetición o caídas por duplicidad transaccional de encolamiento.

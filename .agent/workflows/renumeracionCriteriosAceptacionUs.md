@@ -26,7 +26,7 @@ Eliminar todos los identificadores actuales de criterios de aceptación en la US
 1. Muestra en el chat un resumen rápido con el inicio y fin de la nueva numeración (Ej: "La US-005 pasará a tener numeración desde CA-40 al CA-67").
 2. Genera y entrega la propuesta final con la nueva lista de criterios correctamente numerada.
 3. Pregunta al usuario si autoriza la sobrescritura del documento SSOT. **Si el usuario te da autorización**, debes usar tus herramientas (`replace_file_content` o equivalentes) para editar físicamente y exclusivamente la porción de esa US dentro del archivo `docs/requirements/v1_user_stories.md`.
-4. Al terminar la edición, no hagas `git commit`. Tu salida será ejecutar en consola `git stash save "temp-renumber-[US_ID]"`.
+4. Al terminar la edición, asegúrate de estar en tu rama de sprint correspondiente. Ejecuta `git commit -m "chore(US-XXX): Renumeración secuencial de CAs"` seguido de `git push`.
 
 ## Entregables esperados
 - Lista actualizada de criterios de aceptación de la US solicitada con nueva numeración secuencial (Entregada en el chat).

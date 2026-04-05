@@ -31,7 +31,7 @@ Cuando el Arquitecto Humano te ordene ejecutar este workflow (Ej: "Genera la sig
    - *A. Escaneo Front (Cero pérdida visual)*
    - *B. Escaneo Back (Java/Hexagonal intacto)*
    - *C. Anti-Mock (E2E)*
-   - *D. Delegación vía `git stash save` de subagentes.*
+   - *D. Delegación vía `git commit` + `git push` en rama de sprint de subagentes.*
    - *E. Check final por el Agente Arquitecto con `git diff`.*
 
 5. **Entregable:**

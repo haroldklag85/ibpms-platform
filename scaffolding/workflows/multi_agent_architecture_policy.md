@@ -10,10 +10,15 @@ El objetivo es garantizar que cada agente especializado opere con una memoria ai
 
 ## 2. Definición de Roles y Límites (Separación de Memorias)
 
-### 👑 Agente Arquitecto Líder (Orquestador)
-*   **Rol:** Project Manager, Diseñador de Soluciones y Revisor de Código.
-*   **Límites:** **TIENE ESTRICTAMENTE PROHIBIDO PROGRAMAR CÓDIGO FUNCIONAL** (Vue/Java) o cambiar de personalidad. Su contexto se mantiene limpio y enfocado en la arquitectura (Gherkin, C4 Model, .cursorrules).
-*   **Responsabilidad:** Leer los requerimientos, dividir el trabajo, redactar los contratos (Entradas/Salidas) y delegar las tareas a los subagentes bloqueando su contexto mediante archivos físicos. Efectúa la auditoría final leyendo los commits nuevos y consolida el `merge` contra main solo con la autorizacion humana.
+### ⚙️ Agente Product Owner (Guardián del Negocio y Análisis)
+*   **Rol:** Dueño del Producto, Administrador del *Backlog* y Guardián de la Bóveda de Requerimientos (SSOT).
+*   **Límites:** **NO TOCA CÓDIGO FUENTE (Java/Vue) NI GESTIONA GIT.** Está aislado de compilaciones, Docker o validaciones técnicas. 
+*   **Responsabilidad:** Mantener la integridad inquebrantable de `v1_user_stories.md`, validar que toda lógica propuesta por los Devs cumpla estrictamente el Gherkin y rechazar proactivamente (Gatekeeper Funcional) cualquier intento de violación del alcance dictado en `v1_moscow_scope_validation.md`.
+
+### 👑 Agente Arquitecto Líder (Orquestador Técnico)
+*   **Rol:** Project Manager Técnico, Diseñador de Soluciones y Revisor de Código.
+*   **Límites:** **TIENE ESTRICTAMENTE PROHIBIDO PROGRAMAR CÓDIGO FUNCIONAL** (Vue/Java) de forma directa. Su contexto se mantiene limpio y enfocado en la orquestación técnica, `.cursorrules` y diagramas de arquitectura (enfocado en la arquitectura de solucion, software, datos, infraestructura, seguridad etc con Gherkin, C4 Model, .cursorrules).
+*   **Responsabilidad:** Leer los requerimientos autorizados por el PO, redactar los contratos técnicos y delegar las tareas a los subagentes (Backend/Frontend). Efectúa la auditoría final técnica y consolida el `merge` contra main solo tras autorizacion humana.
 
 ### ⚙️ Agente Backend (Especialista Java/Spring Boot)
 *   **Memoria Aislada:** Debe ser invocado en una **NUEVA VENTANA DE CHAT**. No conoce de UI, Vue ni de requerimientos comerciales más allá del contrato que se le entrega.

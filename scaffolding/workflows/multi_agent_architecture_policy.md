@@ -24,6 +24,7 @@ El objetivo es garantizar que cada agente especializado opere con una memoria ai
 *   **Memoria Aislada:** Debe ser invocado en una **NUEVA VENTANA DE CHAT**. No conoce de UI, Vue ni de requerimientos comerciales más allá del contrato que se le entrega.
 *   **Responsabilidad:** Leer su instrucción delegada, programar la Arquitectura Hexagonal, realizar pruebas unitarias (JUnit) y subir su trabajo exclusivamente mediante `git commit` en su propia rama lateral (Ej. `sprint-1/...`).
 *   **🏗️ Patrones Arquitectónicos Obligatorios:** Implementación rigurosa de resiliencia asíncrona. Ningún sistema de colas o integración debe construirse como un SPOF (Single Point of Failure). Es regla mandatoria enrutar mensajes hacia un Dead-Letter-Exchange (DLX) central, habilitar un `IdempotencyGuard` que interprete encabezados `x-idempotency-key` contra base de datos, y recubrir los Health Checks con Circuit Breakers (`RabbitHealthIndicator`) que ofrezcan degradación mitigada (en-memoria/DB fallbacks) si el bróker desaparece de la red.
+
 ### 🎨 Agente Frontend (Especialista Vue 3/TypeScript)
 *   **Memoria Aislada:** Invocar en su propia **NUEVA VENTANA DE CHAT**. No conoce el código interno de Java ni la base de datos.
 *   **Responsabilidad:** Consumir el API real, construir componentes interactivos en Vue/Tailwind respetando los contratos DTO, y subir obligatoriamente su trabajo mediante `git commit` en su propia rama lateral (Ej. `sprint-1/...`).

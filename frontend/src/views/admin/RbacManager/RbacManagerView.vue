@@ -11,6 +11,15 @@
         <p class="text-sm text-gray-500 mt-1">Configuración de Seguridad Dual: Roles manuales e infiriendo del BPMN.</p>
       </div>
       <div class="flex gap-3">
+        <button 
+          @click="generateIsoReport" 
+          :disabled="isGeneratingReport"
+          class="px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-md shadow-sm hover:bg-gray-50 text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+        >
+          <svg v-if="isGeneratingReport" class="animate-spin h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <svg v-else class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          {{ isGeneratingReport ? 'Generando...' : 'Reporte ISO 27001' }}
+        </button>
         <button class="px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-md shadow-sm hover:bg-gray-50 text-sm font-medium flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
           Sync AD / EntraID
@@ -30,15 +39,40 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import RbacTabs from './RbacTabs.vue'
 import SecurityAuditLog from './SecurityAuditLog.vue'
 import { useRbacStore } from '@/stores/rbacStore'
-import { onMounted } from 'vue'
+import apiClient from '@/services/apiClient'
 
 const store = useRbacStore()
+const isGeneratingReport = ref(false)
 
 onMounted(() => {
   store.fetchRoles()
 })
+
+const generateIsoReport = async () => {
+    isGeneratingReport.value = true
+    try {
+        const response = await apiClient.post('/admin/reports/iso27001/generate', {}, {
+            responseType: 'blob' // Force interpreted as binary
+        })
+        
+        // Trate the Blob and start download
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `ISO_27001_Audit_Report_${new Date().toISOString().split('T')[0]}.csv`)
+        document.body.appendChild(link)
+        link.click()
+        link.parentNode?.removeChild(link)
+    } catch (error) {
+        console.error('Error downloading ISO 27001 report', error)
+        alert('Se produjo un error al generar el reporte ISO 27001.')
+    } finally {
+        isGeneratingReport.value = false
+    }
+}
 </script>

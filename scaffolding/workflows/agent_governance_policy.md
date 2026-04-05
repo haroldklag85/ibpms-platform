@@ -11,7 +11,7 @@ Existe un equipo de agentes especializados conformado por los siguientes roles:
 - Backend
 - Frontend
 - QA/DevOps
-- Analista de Configuraciones
+
 
 Dentro de este modelo operativo, el usuario humano no debe participar como aprobador directo de ejecuciones técnicas intermedias. La responsabilidad de analizar técnicamente las soluciones propuestas y autorizar o rechazar su ejecución recae exclusivamente en el agente Arquitecto Líder de Software.
 

@@ -122,13 +122,28 @@
 ### Resumen US-028
 - **Total CAs con Handoff:** ~11 | **Delegados Back+Front:** ✅ | **QA:** ❌ Pendiente
 
+## US-036: RBAC, Zero-Trust y Gobernanza de Seguridad (ISO 27001)
+
+| CA | Título (corto) | Back | Front | QA | Sprint | Handoff / Notas |
+|----|----------------|------|-------|----|--------|-----------------|
+| CA-19 | Liquibase Schema Roles/Permisos | ✅ | ❌ | ❌ | S-3 | handoff_backend_DEF02_DEF03 / Backend OK |
+| CA-20 | RLS Interceptor AOP (assignee_id) | ✅ | ❌ | ❌ | S-3 | Backend OK |
+| CA-21 | Kill Session & Dummy JWT Blacklist | ✅ | ❌ | ❌ | S-3 | Backend OK |
+| CA-22 | Service Accounts API Keys (SHA-256) | ✅ | ❌ | ❌ | S-3 | Backend OK |
+| CA-23 | Lazy Evaluation Tareas Delegadas | ✅ | ❌ | ❌ | S-3 | Backend OK |
+| CA-24 | Reporte Generador ISO 27001 | ✅ | ❌ | ❌ | S-3 | Backend OK |
+| CA-25 | Trazabilidad Inmutable (Audit Trail) | ✅ | ❌ | ❌ | S-3 | Backend completado implícitamente mediante logs sudoers |
+
+### Resumen US-036
+- **Total CAs con Handoff Backend (Hoy):** 7 (CA-19 al CA-25) | **Delegado Back:** ✅ 100% | **Front/QA:** ❌ Pendiente
+
 ---
 
 ## Otras US con Handoffs
 
-| US | Handoffs | Back | Front | QA | Notas |
-|----|----------|------|-------|----|-------|
-| US-036 | 4 partes (p1-p4) | ✅ | ✅ | ❌ | Notificaciones |
+| US | Handoff / CAs | Back | Front | QA | Notas |
+|----|---------------|------|-------|----|-------|
+| US-034 | CA-4 a CA-10 | ✅ | ✅ | ✅ | Remediación Dashboard DLQ (CA-8 Frontend validado) |
 | US-038 | 3 partes (p1-p3) | ✅ | ✅ | ❌ | Dashboard/BAM |
 | US-039 | 2 partes (p1-p2) | ✅ | ✅ | ❌ | — |
 | US-043 | 1 handoff + CA6 deuda | ✅ | ✅ | ❌ | Deuda técnica pendiente |
@@ -143,7 +158,7 @@
 | Métrica | Valor |
 |---------|-------|
 | **US con desarrollo iniciado** | 9 (US-001, 003, 005, 017, 028, 036, 038, 039, 043, 048) |
-| **CAs con handoff Backend+Frontend** | ~180+ (estimado) |
+| **CAs con handoff Backend+Frontend** | ~187+ (estimado) |
 | **CAs validados por QA** | ~6 (solo US-001 parcial) |
 | **Principal Brecha** | 🔴 **QA es 0% en todas las US excepto US-001.** |
 | **US-017 (CQRS)** | 🔴 **0% implementado (16 CAs pendientes, 6 de remediación)** |

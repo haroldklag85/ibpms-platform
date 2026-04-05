@@ -49,7 +49,7 @@ public class BpmnProcessDesignEntity {
     @Column(name = "locked_at")
     private LocalDateTime lockedAt;
 
-    @Column(name = "xml_draft", columnDefinition = "LONGTEXT")
+    @Column(name = "xml_draft", columnDefinition = "TEXT")
     private String xmlDraft;
 
     @Column(name = "max_nodes", nullable = false)

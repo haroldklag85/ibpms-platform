@@ -25,3 +25,7 @@ databaseChangeLog:
       file: db/changelog/15-add-idempotency-key.xml
   - include:
       file: db/changelog/16-create-profile-tables.xml
+  - include:
+      file: db/changelog/17-cast-to-uuid.sql
+  - include:
+      file: db/changelog/18-create-form-definitions.sql

@@ -30,7 +30,7 @@ public class FormDesignAuditLogEntity {
     @Column(name = "user_id", nullable = false, length = 50)
     private String userId;
 
-    @Column(name = "dummy_payload", columnDefinition = "LONGTEXT")
+    @Column(name = "dummy_payload", columnDefinition = "TEXT")
     private String dummyPayload;
 
     @Column(name = "hash_value", length = 64)

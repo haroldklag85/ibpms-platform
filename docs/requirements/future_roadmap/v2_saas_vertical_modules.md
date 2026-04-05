@@ -10,18 +10,8 @@ Este documento define funcionalmente los 3 Módulos Verticales hiper-especializa
 
 ---
 
-## 1. Módulo Vertical LegalTech: Asistente Jurídico (RAG + LLM)
 
-**El Problema:** Los abogados gastan horas buscando jurisprudencia previa, cláusulas en contratos antiguos y redactando contestaciones repetitivas. El iBPMS V1 solo les permite aprobar tareas y generar PDFs fijos.
-**La Solución V2:** Un módulo "Copiloto" incrustado en la vista de la tarea (Pantalla 2) que ha "leído" toda la Bóveda Documental (SGDEA).
-
-### Funcionalidades Core:
-*   **Búsqueda Semántica (RAG - Retrieval-Augmented Generation):** Permite al abogado abrir un chat en la tarea y preguntar: *"¿Qué dijimos en el contrato de confidencialidad de Banco Alpha en 2024 respecto a multas?"*. El módulo busca en el Vector Database, recupera el párrafo exacto y genera una respuesta inteligible citando el PDF original.
-*   **Generador Dinámico de Cláusulas:** En lugar de plantillas estáticas (V1), el abogado pide: *"Redacta una cláusula de fuerza mayor adaptada para la pandemia"*. El Módulo LLM inyecta el texto generado en el Formulario JSON del caso.
-
----
-
-## 2. Módulo Vertical LegalTech: RPA Web Scraping Silencioso
+## 1. Módulo Vertical LegalTech: RPA Web Scraping Silencioso
 
 **El Problema:** La "Vigilancia Judicial". Para iniciar un proceso de cobranza o actualizar el estado de un caso, un paralegal debe entrar todos los días a las páginas web de la Rama Judicial del país, buscar un número de radicado y copiar los cambios a mano.
 **La Solución V2:** Agentes automatizados que navegan la web por el humano.
@@ -32,7 +22,7 @@ Este documento define funcionalmente los 3 Módulos Verticales hiper-especializa
 
 ---
 
-## 3. Módulo Vertical HospitalityTech: Captura Desatendida (OCR/ICR)
+## 2. Módulo Vertical HospitalityTech: Captura Desatendida (OCR/ICR)
 
 **El Problema:** En el Front-Desk de un hotel, los recepcionistas pierden demasiado tiempo digitando a mano los datos del Pasaporte, ID o Tarjeta del cliente en los Formularios Dinámicos. Esto rompe la experiencia de bienvenida.
 **La Solución V2:** Automatización de entrada de datos visual.

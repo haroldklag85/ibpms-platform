@@ -1598,7 +1598,9 @@ Scenario: Prohibición de Trabajo Síncrono en Camunda (External Task Pattern) (
     And el motor forzará estructuralmente el uso del patrón `External Task` (Trabajadores Externos).
     And Camunda simplemente publicará la intención de trabajo en un Topic (Ej: `topic="generar_pdf"`), liberando su memoria inmediatamente, a la espera de que los microservicios satélite (Workers) hagan el trabajo pesado y reporten el resultado asíncronamente.
 
----refinamiento---
+> [!CAUTION]
+> ** refinamiento**
+> [] check de completado desarrollo
 Scenario: Aislamiento Transaccional del Sandbox en Producción (Zero-Blast Radius) (CA-63)
     Given la ejecución de una simulación de proceso directamente en Producción (Modo Sandbox activado)
     When el token simulado alcanza una `ServiceTask` externa (Hub US-033) o una `SendTask` (Correos US-049)
@@ -1639,19 +1641,19 @@ Feature: Standalone Project Template Builder (WBS)
     Then el sistema NO muta los 50 proyectos vivos (se anclan al Snapshot originario inmutable V1.0)
     And emite la versión V2.0 exclusivamente disponible para nuevas aperturas de Proyectos, requiriendo en paralelo Aprobación Administrativa mediante un Botón Rojo Fuerte [Pushear Nueva Versión] para forzar validación por partida doble.
 
-  Scenario: Tipificación Estricta de Plantilla (Tradicional vs Ágil) (CA-11)
+  Scenario: Tipificación Estricta de Plantilla (Tradicional vs Ágil) (CA-3)
     Given que la PMO acciona la creación de una Nueva Plantilla en la Pantalla 8
     When el sistema levanta el Modal de Creación
     Then obliga explícitamente a clasificar la plantilla seleccionando un tipo rígido: `[Tradicional (Gantt)]` o `[Ágil (Sprints)]`
     And esta clasificación gobierna el comportamiento del lienzo: Si elije "Ágil", el botón de relacionar dependencias (Fin-a-Inicio) desaparece permanentemente del UI y se prohíbe crear conceptos estructurales como "Hitos".
 
-  Scenario: Transición Formulario a DONE en Ágil (CA-12)
+  Scenario: Transición Formulario a DONE en Ágil (CA-4)
     Given una tarea instanciada en el Tablero Kanban (Ágil) originada desde una Plantilla
     And esta tarea tiene el "Formulario_QA" asociado en su definición maestra
     When el desarrollador termina el trabajo y oprime enviar el formulario
     Then el sistema autoevalúa la completitud de la data y, en caso de éxito, arrastra logísticamente la tarjeta a la columna "DONE" del Sprint, aplicando un Definition of Done duro atado a data.
 
-  Scenario: Independencia Evolutiva Locativa (CA-13)
+  Scenario: Independencia Evolutiva Locativa (CA-5)
     Given un Scrum Master que instanció un Proyecto Ágil basado en la Plantilla V1.0
     When el Scrum Master elimina 5 de las tareas heredadas del Backlog local del proyecto porque no aplican a su Sprint
     Then el borrado es estrictamente Local (Muta solo el Proyecto Instanciado)
@@ -1906,44 +1908,44 @@ Feature: Kanban Board Task Management
     Then el motor restringe de raíz la operación, imponiendo una política estricta de 1:1 (Un Solo Dueño por Tarjeta)
     And garantizando así que no haya dilución de responsabilidad del SLA.
 
-  Scenario: [Arquitectura] Prohibición de Motor CMMN y Reglas de Instanciación Ágil
+  Scenario: [Arquitectura] Prohibición de Motor CMMN y Reglas de Instanciación Ágil (CA-5)
     Given un Scrum Master instanciando un Proyecto derivado de la Plantilla Tipificada "Agile Sprint" (US-006)
     When la plataforma de iBPMS inyecte las tarjetas de tareas ("To Do") en el Motor Transaccional
     Then el Backend prohíbe la creación de diagramas rígidos `.cmmn` 
     And persiste la anatomía transaccional de cada tarea "Ágil" como meros registros de Base de Datos Relacional (`Entities`) enlazados a su Proyecto instanciado, usando el poder crudo de Spring Data JPA.
 
-  Scenario: [Arquitectura] Máquina de Estados Pura (State Machine) frente al Salto Anárquico 
+  Scenario: [Arquitectura] Máquina de Estados Pura (State Machine) frente al Salto Anárquico  (CA-6)
     Given la volatilidad de un Tablero Kanban donde un desarrollador arrastra constantemente su tarjeta ("In Progress" -> "Blocked" -> "In Progress" -> "Done" -> "QA Rejected")
     Then garantizamos una experiencia de usuario sub-segundo sin overhead BPMN
     And el iBPMS procesa estas mutaciones de estado en la Entidad (JPA) a través de una API REST ultra veloz (Ej: `PATCH /api/v1/proyectos/{pid}/kanban/{tid}/state`) y registra todas las transiciones como eventos inmutables en la Tabla de Auditoría general de la plataforma transversal.
 
-  Scenario: [Arquitectura] Event-Driven hacia Modelos Estructurados (Salto Híbrido)
+  Scenario: [Arquitectura] Event-Driven hacia Modelos Estructurados (Salto Híbrido) (CA-7)
     Given una travesía asíncrona Ágil (La tarea Kanban está en estado "In Progress" o "QA Approval")
     When el negocio requiere para darla por `Done` ejecutar una Macro-Aprobación Estructurada, Secuencial y Gerencial
     Then la mutación del Estado Kanban invoca asíncronamente un "Process Instantiation" aislado del Workflow estructurado (BPMN normal)
     And cuando el flujo clásico de Camunda termine, este orquestador emitirá un evento publicándolo de regreso al componente Ágil marcando la casilla original del Tablero como Finalizada o Aprobada, conectando lo impredecible con lo burocrático de forma pura.
 
-  Scenario: Gobernanza de Estados y Columnas Dinámicas (Opción B)
+  Scenario: Gobernanza de Estados y Columnas Dinámicas (Opción B)  (CA-8)
     Given la necesidad operativa de adaptar el flujo Kanban añadiendo un nuevo estado al ciclo
     When el usuario presiona el botón "Añadir Columna" en la Pantalla 3
     Then el sistema valida que el usuario ostente exclusivamente el Roll de 'Scrum_Master' o 'Lider_Proyecto' en la tabla de miembros
     And el motor Backend efectúa una validación dura (Hard-Limit) rechazando transacciones que excedan un máximo de 7 columnas por tablero para la Versión 1, previniendo sobrecarga visual.
 
-  Scenario: [Arquitectura] Tabla Polimórfica Única para Consolidación de Esfuerzos (BAM)
+  Scenario: [Arquitectura] Tabla Polimórfica Única para Consolidación de Esfuerzos (BAM)  (CA-9)
     Given la necesidad corporativa de cruzar costos de horas-hombre transversales en la Pantalla 5
     When un empleado registre 2 horas en una "Tarea BPMN" y 3 horas en una "Tarjeta Kanban"
     Then el Backend prohibe guardar dichas horas en las tablas específicas de cada módulo
     And fuerza al sistema a canalizar el guardado hacia una única tabla polimórfica (`ibpms_time_logs`) 
     And distinguiéndolas únicamente por la columna `reference_type` (`TASK_BPMN`, `TASK_AGILE`, `TASK_GANTT`), simplificando matemáticamente la reportería financiera.
 
-  Scenario: [Arquitectura] Componente Frontend Agnóstico Universal (`<UniversalSlaTimer>`)
+  Scenario: [Arquitectura] Componente Frontend Agnóstico Universal (`<UniversalSlaTimer>`)  (CA-10)
     Given la disparidad visual entre la Bandeja Workdesk (Pantalla 1), el Tablero Ágil (Pantalla 3) y el Gantt Tradicional (Pantalla 10.B)
     When el desarrollador deba mostrar el reloj de SLA o el Timer de "Play/Stop"
     Then el framework del iBPMS le denegará desarrollar HTML/Vue personalizado en cada pantalla
     And lo obligará a instanciar y re-utilizar el micro-componente atómico transversal `<UniversalSlaTimer>`.
     And este componente será "Tonto" (Dumb Component), consumiendo APIs centrales de tiempo sin conocer la naturaleza funcional de la tarea que lo aloja.
 
-  Scenario: [Arquitectura] Inmutabilidad de Costos Incurridos (Anti-Manipulación)
+  Scenario: [Arquitectura] Inmutabilidad de Costos Incurridos (Anti-Manipulación)  (CA-11)
     Given que el empleado ha presionado "Stop" en su temporizador y la plataforma envía el LOG a la base de datos central
     When el usuario o su jefe intenten editar o borrar ese registro de tiempo (Ej: Modificar de 4 horas a 2 horas)
     Then la API de Time Tracking denegará el Método DELETE/PUT (Comportamiento *Append-Only*)
@@ -1962,7 +1964,7 @@ Feature: Kanban Board Task Management
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Agile Project Instantiation and Planning
-  Scenario: Instanciación sin Sprints en V1 (Postergación Táctica) (CA-14)
+  Scenario: Instanciación sin Sprints en V1 (Postergación Táctica) (CA-1)
     Given un proyecto instanciado bajo metodología Ágil en la Pantalla 9
     When el líder de proyecto abre el Agile Hub (Pantalla 10)
     Then el sistema NO utiliza iteraciones con fechas (Sprints) para la Versión 1 del producto
@@ -1980,41 +1982,41 @@ Feature: Agile Project Instantiation and Planning
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Traditional Project Planning and Baseline Execution
-  Scenario: Geometría Adaptativa por Colisión con Días Festivos (CA-3)
+  Scenario: Geometría Adaptativa por Colisión con Días Festivos (CA-1)
     Given la tarea X planificada para el lunes 12, con duración de 3 días laborables
     When el calendario maestro global marca repentinamente el lunes 12 como "Día Festivo Nacional"
     Then el motor de cálculos del Diagrama de Gantt estira automáticamente la caja visual de la tarea hacia la derecha compensando el día muerto (Fin: Jueves 15) sin requerir re-planificación humana obligatoria.
 
-  Scenario: Protección Estructural contra Deadlocks Circulares (CA-4)
+  Scenario: Protección Estructural contra Deadlocks Circulares (CA-2)
     Given que el PM crea dependencia "T1 -> T2" (Fin-Inicio) arrastrando flechas en el Lienzo 10.B
     When el PM arrastra erróneamente la dependencia contraria "T2 -> T1" creando un Ciclo Infinito
     Then el WebClient bloquea y aborta inmediatamente el cruce relacional (Error Geométrico visual) e impide guardarlo en la Base de Datos para garantizar un motor DAG limpio.
 
-  Scenario: Sobrecarga Permisible con Semáforo Sensorial (CA-5)
+  Scenario: Sobrecarga Permisible con Semáforo Sensorial (CA-3)
     Given la matriz de 40 horas laborables semanales para un humano
     When el PM planifica tareas apiladas sobre la empleada "María" superando el 150% de su capacidad en la misma semana cronológica
     Then el sistema "permite" teóricamente la mala práctica (dejando al PM violar la métrica)
     And como contramedida, enciende agresivas Balizas Visuales Rojas (Marcador de Recurso Sobrecargado) a un costado del nombre de la analista.
 
-  Scenario: Re-planificación Activa y Multi-Líneas Base (Baseline Rupture) (CA-6)
+  Scenario: Re-planificación Activa y Multi-Líneas Base (Baseline Rupture) (CA-4)
     Given un proyecto que lleva 2 meses en Ejecución Viva (Basado sobre Línea Base "V1")
     When el PM requiera estirar los tiempos un 30% a solicitud formal del cliente
     Then el sistema permite pausar y "Reprogramar" formalmente el nodo vivo en el lienzo visual de la Pantalla 10.B
     And fuerza al PM a guardar y pisar una nueva Línea Base Evolutiva (Ej: V2_Reprogramada), preservando en el log histórico la desviación financiera/temporal ocurrida frente al V1 primitivo para auditoría de Gerencia.
 
-  Scenario: Hot-Swaps en Cabina de Mando (Reasignación de Silla Ejecutiva) (CA-7)
+  Scenario: Hot-Swaps en Cabina de Mando (Reasignación de Silla Ejecutiva) (CA-5)
     Given una tarea vital (T4) de Línea Base activa rebotando infructuosamente en el Workdesk del analista 'Pedro' por su ausencia repentina
     When el Project Manager se adentra en la Pantalla 10.B (Cabina General Gantt Transaccional) e invoca la tarjeta temporal viva (T4)
     Then el sistema posibilita el borrado nominal en duro de 'Pedro' para inyectar sobre vuelo el usuario 'Luis'
     And el motor BPMN retira perentoriamente la carta de la delegación de Pedro, materializándola sincrónicamente en el Workdesk de su co-equipero para no frustrar la métrica de entrega del T4.
 
-  Scenario: Modos Flexibles de Reclamo (Pool vs Empleado Directo) (CA-8)
+  Scenario: Modos Flexibles de Reclamo (Pool vs Empleado Directo) (CA-6)
     Given la responsabilidad del PM de instanciar tareas en el motor Gantt
     Then el PMo goza del Switch parametrizable de Asignamiento en su UX
     And ostenta la facultad imperativa de designar nominalmente la Tarea Hacia un Usuario Exacto (`maria.lopez`)
     And o puede prescindir de asimetrías tácticas y tirarlo en bandeja común al Grupo Jerárquico General ("Equipo Legal"), forzando que ellos ejerzan Auto-Apropiación (US-002: Claim Task) por competencia.
     
-  # NOTA CONTEXTUAL PO: (CA-9 Camino Crítico PERT) y (CA-10: Avance Financiero EVM) diferidos expresamente a V2 del MVP.
+  # NOTA CONTEXTUAL PO: (CA-7 Camino Crítico PERT) y (CA-8: Avance Financiero EVM) diferidos expresamente a V2 del MVP.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 10.B (Planner Tradicional - Gantt) y Pantalla 1 (Workdesk).
 
@@ -2033,45 +2035,45 @@ Exposición de la salud de los procesos en vuelo para la toma de decisiones gere
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Process Health Analytics
-  Scenario: Renderizado exitoso del Dashboard de Grafana
+  Scenario: Renderizado exitoso del Dashboard de Grafana (CA-1)
     Given un usuario autenticado con Rol "Gerente_Operaciones"
     When la aplicación frontend solicita renderizar el iframe interactivo en la Pantalla 5
     Then el API Gateway debe emitir un JWT de corta duración (Grafana Auth Proxy) con rol de "Viewer"
     And el iframe debe renderizar correctamente el tablero pasándole variables de entorno `&var-TenantID=T123`
     And el dashboard debe mostrar obligatoriamente un panel de "Tareas Vencidas por SLA" consultando la vista materializada `vw_task_sla_breach`
 
-  Scenario: Aislamiento Estricto de Datos (Multi-Tenancy)
+  Scenario: Aislamiento Estricto de Datos (Multi-Tenancy) (CA-2)
     Given la arquitectura SaaS multi-cliente de la plataforma iBPMS
     When el JWT de Grafana es generado por el Backend para renderizar la Pantalla 5
     Then el token debe inyectar criptográficamente el `Tenant_ID` del usuario activo
     And la Base de Datos o la consulta subyacente de Grafana debe forzar obligatoriamente el filtrado por este Tenant (Ej. Row-Level Security) previniendo fugas de datos operativos hacia clientes vecinos.
 
-  Scenario: Capacidad de Perforación Interactiva (Drill-Down UI)
+  Scenario: Capacidad de Perforación Interactiva (Drill-Down UI) (CA-3)
     Given el Dashboard visual en la Pantalla 5 que muestra una alerta de "15 Tareas Bloqueadas"
     When el gerente hace clic sobre el segmento de la gráfica circular
     Then el sistema debe interceptar el evento de anclaje de Grafana
     And redireccionar la UI del iBPMS automáticamente a la Bandeja de Trabajo (Pantalla 1) o Hub Ágil (Pantalla 10)
     And pre-filtrar la vista exacta con las 15 tarjetas implicadas para tomar acción inmediata.
 
-  Scenario: Segregación de Roles para Monitoreo Activo (RBAC)
+  Scenario: Segregación de Roles para Monitoreo Activo (RBAC) (CA-4)
     Given un empleado raso con rol "Analista" o "Ejecutor" intentando acceder a URL de reportes macro
     When navegue hacia la Pantalla 5 (BAM)
     Then el Frontend interceptará la ruta y mostrará un mensaje de "Acceso Denegado"
     And el Backend rechazará la generación del Token de Grafana, reservando esta vista exclusivamente para jerarquías directivas (Ej. `Gerente_Operaciones`, `Scrum_Master`).
 
-  Scenario: Frecuencia de Refresco Asíncrona (Protección Transaccional)
+  Scenario: Frecuencia de Refresco Asíncrona (Protección Transaccional) (CA-5)
     Given el inmenso volumen de eventos emitidos en tiempo real por el motor Camunda
     When Grafana ejecute los queries analíticos pesados para renderizar la Pantalla 5
     Then NO atacará directamente la base de datos transaccional caliente (Master DB)
     And leerá de una Base de Datos Analítica o Réplica (Ej. Elasticsearch o DataWarehouse) alimentada por un CronJob/CDC que se actualiza estrictamente cada 10 minutos para proteger la estabilidad del servicio en vivo.
 
-  Scenario: Autoservicio de BI Analítico (Grafana Editor Nativo)
+  Scenario: Autoservicio de BI Analítico (Grafana Editor Nativo) (CA-6)
     Given que los tableros pre-cargados (Vencimientos, Costos, Ciclos) no cubren una métrica atípica solicitada por un cliente
     When el gerente seleccione la opción "BAM Avanzado" en la Pantalla 5
     Then el iBPMS cargará la Interfaz Nivel Editor Nativa de Grafana embebida
     And otorgará permisos formales de "Editor" al usuario, permitiéndole arrastrar bloques, cambiar colores de tortas y personalizar sus propias métricas ad-hoc limitadas a su Tenant_ID.
 
-  Scenario: Aplanamiento de Datos Transaccionales para Analítica Rápida (Data Flattening / CDC)
+  Scenario: Aplanamiento de Datos Transaccionales para Analítica Rápida (Data Flattening / CDC) (CA-7)
     Given que el motor de Dashboards (Grafana) necesita graficar variables de negocio almacenadas en los JSON de Camunda
     When una tarea se completa o una variable es inyectada en el motor
     Then la arquitectura TIENE PROHIBIDO permitir que Grafana haga queries complejos (Full Table Scans) sobre las tablas operativas Blob de Camunda (`ACT_RU_VARIABLE`).
@@ -2124,13 +2126,13 @@ Scenario: Ensamblar PDF usando plantilla del SGDEA y Variables de la Instancia (
     And registra el checksum SHA-256 en `ibpms_audit_log` para inmutabilidad legal
     And el sistema retorna HTTP STATUS 200 OK con un enlace temporal de SharePoint Graph API (Pre-Authenticated Link) expirable en 15 minutos para su visualización.
 
-  Scenario: Tolerancia a Fallos por Variables Ausentes (Missing Keys)
+  Scenario: Tolerancia a Fallos por Variables Ausentes (Missing Keys) (CA-2)
     Given una plantilla `.docx` que incluye la etiqueta `<<segundo_apellido>>` obligatoria en su sintaxis
     When el motor documental (FOP) sea invocado y la variable no exista o sea NULA en el payload enviado por Camunda
     Then el motor NO debe abortar la transacción (Evitando HTTP 400 y rotura de flujos de negocio)
     And debe sobrellevar la carencia inyectando automáticamente la frase "N/A" o un espacio en blanco seguro en el documento final.
 
-  Scenario: Expansión Dinámica de Tablas y Vectores (Bucles)
+  Scenario: Expansión Dinámica de Tablas y Vectores (Bucles) (CA-3)
     Given que el JSON de entrada contiene un Array de objetos (Ej: Lista de 5 productos comprados)
     When la plantilla documental contenga sentencias iterativas de tipo `#foreach` en filas de una tabla de Word
     Then el motor SGDEA clonará la fila tantas veces como elementos existan en el array inyectando sus respectivas propiedades, posibilitando documentos hiper-dinámicos de longitud variable en la V1.
@@ -2142,14 +2144,14 @@ Scenario: Gobernanza de Persistencia (SharePoint Vault vs Vuelo Efímero) (CA-4)
     And Si es `EPHEMERAL`: El documento se renderiza, se entrega el link de 15min y se destruye físicamente de RAM/Disco del servidor.
     And Si es `PERSISTENT`: El PDF se traslada e inyecta inmutablemente en Microsoft SharePoint (Única Bóveda Oficial SGDEA), amarrado a la sub-carpeta del UID del Expediente (Acorde a la US-035), garantizando registro perenne exigible por Ley, evadiendo cobros duplicados en S3/Azure.
 
-  Scenario: Acorazado Forense y Firma Digital del Documento Físico
+  Scenario: Acorazado Forense y Firma Digital del Documento Físico (CA-5)
     Given la configuración de una plantilla de Alto Riesgo Legal
     When el motor finaliza el ensamblado del PDF final
     Then NO se limitará a guardar el Hash SHA-256 en la base de datos (ibpms_audit_log)
     And incrustará en paralelo un "Certificado Criptográfico PKI" estructural dentro del mismo archivo PDF
     And y estampará visualmente en los márgenes de las páginas un Código QR (o Sello de Agua Legal) verificable externamente, asegurando la no-repulsa de autoría.
 
-  Scenario: Versión Retroactiva Activa en Auditorías Históricas
+  Scenario: Versión Retroactiva Activa en Auditorías Históricas (CA-6)
     Given un Cliente instanciado hace 2 años cuando regía el "Contrato Laboral V1"
     When un auditor re-visite en Pantalla 12 dicho caso y el sistema requiera re-descargar o consultar su contrato
     Then el motor SGDEA buscará y ensamblará el PDF contra la plantilla V1 almacenada en el repositorio histórico (Time-Travel Rendering)
@@ -2265,7 +2267,7 @@ Feature: SharePoint Vault and Single Source of Truth
 	
 	
 ```
-**Trazabilidad UX:** Wireframes Pantallas 12, 16 y 6.
+**Trazabilidad UX:** Wireframes Pantallas 12,16 y 6.
 
 ---
 
@@ -2283,7 +2285,7 @@ Feature: SharePoint Vault and Single Source of Truth
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Advanced Relational Inbox Filtering
-  Scenario: Filtrado compuesto determinista (Cliente + Proyecto)
+  Scenario: Filtrado compuesto determinista (Cliente + Proyecto)  (CA-1)
     Given el usuario autenticado está navegando la Bandeja Avanzada (Pantalla 1B)
     And hay 500 ítems en la bandeja, de los cuales 5 pertenecen al Cliente "Global Tech" y el Proyecto "Patente-XZ"
     When el usuario selecciona "Global Tech" en el selector 'Filtro Cliente'
@@ -2292,35 +2294,35 @@ Feature: Advanced Relational Inbox Filtering
     And el Frontend debe renderizar exclusivamente los 5 ítems exactos en menos de 1 segundo (Paginado)
     And la UI debe mostrar un estado "Empty State" si la combinación no retorna resultados
 
-  Scenario: Filtrado por Label Booleano generado por IA (Acuses)
+  Scenario: Filtrado por Label Booleano generado por IA (Acuses) (CA-2)
     Given la bandeja contiene ítems marcados por la IA con el boolean flag 'is_acknowledgment_sent: true'
     When el usuario marca el checkbox "Actividad: Acuse Enviado"
     Then el sistema debe ocultar todos los correos donde 'is_acknowledgment_sent: false' o nulo
 
-  Scenario: Triage por Sentimiento y Urgencia (Predicción IA)
+  Scenario: Triage por Sentimiento y Urgencia (Predicción IA) (CA-3)
     Given la metadata enriquecida del correo proveniente de la US-013 (Ej: `sentiment: URGENCE_HIGH`)
     When el analista de SAC filtra la bandeja usando el dropdown "Urgencia y Sentimiento"
     Then el sistema filtra reestructurando la grilla para mostrar primero los correos que contengan quejas operativas o riesgos legales altos
     And garantizando un enfoque de First-In/First-Out ajustado por criticidad (Weighted FIFO).
 
-  Scenario: Detección de Archivos y Tipificación Estructural
+  Scenario: Detección de Archivos y Tipificación Estructural (CA-4)
     Given que el correo contiene múltiples archivos adjuntos
     When el analista filtra por el concepto "Contiene: Contratos Firmados"
     Then el filtro de la Pantalla 1B obvia la extensión pura del archivo (.pdf)
     And cruza la búsqueda contra el tag de clasificación documental `doc_type` generado por la IA, retornando solo los correos cuyo contenido semántico coincida.
 
-  Scenario: Monitoreo Activo de Acuerdos de Nivel de Servicio (SLA)
+  Scenario: Monitoreo Activo de Acuerdos de Nivel de Servicio (SLA) (CA-5)
     Given los correos entrantes mapeados contra una política de respuesta máxima de 24 horas (SLA)
     When el analista de SAC aplica el filtro rápido de semáforo "Mostrar: SLA por Vencer (< 2 horas)"
     Then el sistema expone exclusivamente los correos que están a punto de romper el requerimiento legal de tiempo operativo, ocultando correos recientes de ingreso temprano.
 
-  Scenario: Búsqueda Semántica de Texto Completo (Full-Text Search)
+  Scenario: Búsqueda Semántica de Texto Completo (Full-Text Search) (6A-6)
     Given un analista buscando la aguja en el pajar con la palabra "Indemnización"
     When digite dicha palabra en la barra de búsqueda global de la Pantalla 1B
     Then el motor de Backend (Elasticsearch o similar) NO buscará solo en el Asunto
     And indexará la búsqueda contra el cuerpo del correo, y el texto interior de los anexos (OCR) entregando el correo exacto donde reside dicho patrón.
 
-  Scenario: Control de Concurrencia SAC y Bloqueo de Correos
+  Scenario: Control de Concurrencia SAC y Bloqueo de Correos  (CA-7)
     Given un buzón compartido accedido por 5 analistas de SAC simultáneamente
     When el Analista "A" da clic para leer un nuevo "Correo Huérfano"
     Then el sistema inscribe un Soft-Lock en la Base de Datos asociando ese correo al `User_ID` del Analista "A"
@@ -2387,9 +2389,9 @@ Feature: Generación de Borradores de Respuesta Interactivos
 
 ---
 
-### US-013: Identificación automática de cliente y enriquecimiento desde CRM (ONS)
+### US-013: Identificación automática de cliente y enriquecimiento desde posible conexion con CRM (ONS)
 **Como** gestor de un buzón corporativo
-**Quiero** que el asistente identifique el cliente por el dominio del remitente y consulte el CRM ONS
+**Quiero** que el asistente identifique el cliente por el dominio del remitente y/o consulte el CRM ONS
 **Para** contextualizar la respuesta y adaptar el tono.
 
 **Criterios de Aceptación (Gherkin):**
@@ -4527,91 +4529,155 @@ Scenario: Renderizado Progresivo Estricto y FOUC Controlado (LCP Optimization)
 
 ---
 
-## ÉPICA 10: Persistencia Hexagonal y Patrón CQRS
+## ÉPICA 16: Persistencia Hexagonal y Patrón CQRS
 Regula la inmutabilidad de los datos recolectados, previniendo la contaminación del Motor BPMN y aislando las lecturas masivas de las escrituras transaccionales.
 
-### US-029: Ejecución y Persistencia Inmutable de Formularios (CQRS & Event Sourcing)
+### US-017: Ejecución y Persistencia Inmutable de Formularios (CQRS & Event Sourcing)
 **Como** Analista / Motor Backend Hexagonal
 **Quiero** diligenciar la información de mi tarea, almacenando las subidas temporales (Drafts) y transacciones finales de forma inmutable
 **Para** garantizar cero bloqueos concurrentes, trazabilidad absoluta y finalizar exitosamente mi actividad sin contaminar el motor de Camunda (separando lectura de escritura).
 
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Hexagonal CQRS Persistence and Task Completion
+Feature: Hexagonal CQRS Persistence, Zero-Trust Validation and Task Completion
 
   # ==============================================================================
-  # A. INGESTA, CONTEXTO UI Y ARCHIVOS
+  # A. EJECUCIÓN BASE Y VALIDACIÓN DE DATOS (HAPPY & SAD PATHS)
   # ==============================================================================
-  Scenario: Inyección Megalítica de Contexto (Patrón BFF) (CA-1)
-    Given la entrada física a la vista de la tarea (Pantalla 2)
+  Scenario: Enviar datos válidos de formulario (CA-1)
+    Given la tarea "TK-100" asignada a "carlos.ruiz" requiere el formulario "Form_Aprobacion_V1"
+    And "Form_Aprobacion_V1" exige el campo obligatorio numérico "monto_aprobado"
+    When "carlos.ruiz" realiza un POST a "/api/v1/workbox/tasks/TK-100/complete"
+    And incluye en el body el JSON '{"variables": {"monto_aprobado": 1500, "comentarios": "Ok"}}'
+    Then el sistema debe retornar un HTTP STATUS 200 OK
+    And la tarea "TK-100" marca su estado interno como "COMPLETED"
+    And las variables del JSON se persisten inmutablemente asociadas a la instancia del proceso.
+
+  Scenario: Enviar datos inválidos (Violación del JSON Schema) (CA-2)
+    Given la tarea "TK-100" requiere el campo obligatorio "monto_aprobado" numérico
+    When "carlos.ruiz" realiza un POST a "/api/v1/workbox/tasks/TK-100/complete"
+    And incluye un JSON vacío '{"variables": {}}'
+    Then el sistema valida el payload contra el JSON Schema registrado para "Form_Aprobacion_V1"
+    And el sistema debe retornar un HTTP STATUS 400 Bad Request
+    And el error format JSON debe especificar de forma estructurada: `{"error": "ValidationFailed", "fields": [{"field": "monto_aprobado", "message": "Required"}]}`
+
+  # ==============================================================================
+  # B. INICIALIZACIÓN Y CONTEXTO UI (PATRÓN BFF Y LAZY PATCHING)
+  # ==============================================================================
+  Scenario: Inyección Megalítica de Contexto (Patrón BFF) (CA-3)
+    Given la entrada física a la vista de la tarea operativa (Pantalla 2)
     When el Frontend inicializa el componente Vue
-    Then despachará UNA (1) única petición consolidada GET `/api/v1/workbox/tasks/{id}/form-context`
-    And el Backend obrará como BFF inyectando en un Mega-DTO la triada: El Schema Zod, el Layout, y las Variables de Solo Lectura extraídas de Camunda.
+    Then despachará EXACTAMENTE UNA (1) única petición GET consolidada a `/api/v1/workbox/tasks/{id}/form-context`
+    And el Backend obrará como BFF (Backend for Frontend) inyectando en un Mega-DTO la triada: [Esquema Zod Vigoroso + Layout UI de Vue + Variables Históricas de Solo Lectura extraídas de Camunda (`prefillData`)]
+    And este DTO incluirá obligatoriamente la versión exacta del esquema (`schema_version`) para poblar inputs en un solo tick de renderizado y prevenir choques generacionales si el Arquitecto modifica el diseño mientras el caso está en vuelo.
 
-  Scenario: Hibridación de Datos Históricos vs Nuevos Contratos (Lazy Patching) (CA-2)
-    Given el BFF inyectando `prefillData` V1 hacia un Formulario Zod nuevo V2
-    When existan campos obligatorios nuevos en V2 que no venían en la data V1 (`null`)
-    Then el esquema Zod los evaluará como inválidos iluminando el input en ROJO
-    And bloqueará físicamente el botón [Enviar] obligando al analista a auditar el dato (Guillotina en Escritura).
-
-  Scenario: Desacoplamiento de Carga Binaria (Upload-First Pattern) (CA-3)
-    Given un formulario Zod `<InputFile>`
-    When el usuario final adjunta un PDF pesado
-    Then el Frontend ejecutará una carga asíncrona temprana (Pre-Submit) a la Bóveda obteniendo un Identificador (`UUID`).
-    And al hacer [Enviar], el POST enviará EXCLUSIVAMENTE el JSON referenciando el ID (`{"archivo": "UUID-123"}`), prohibiendo arquitectónicamente enviar payloads Multipart contra el motor.
+  Scenario: Hibridación de Datos Históricos vs Nuevos Contratos (Lazy Patching) (CA-4)
+    Given el BFF inyectando `prefillData` de una Instancia antigua (V1) hacia un Formulario Zod nuevo (V2)
+    When existan campos obligatorios nuevos en la V2 que no venían en la data histórica de Camunda (`null` o `undefined`)
+    Then el esquema Zod reactivo los evaluará inmediatamente como inválidos iluminando dichos inputs en ROJO
+    And el Frontend bloqueará físicamente el botón de [Enviar]
+    And obligará procedimentalmente al analista a auditar el dato, contactar al cliente y digitar la información faltante en la UI para poder avanzar el proceso (Amnistía en Lectura, Guillotina en Escritura).
 
   # ==============================================================================
-  # B. RESILIENCIA OFFLINE Y DRAFTS
+  # C. CARGA BINARIA Y SEGURIDAD PERIMETRAL DE ARCHIVOS
   # ==============================================================================
-  Scenario: Trazabilidad Volátil, Draft Sync y Garbage Collection (CA-4)
-    Given la digitación continua de un analista en un iForm masivo
-    Then el Frontend guardará el borrador (Draft) asíncronamente en el `LocalStorage` a cada tecla.
-    And disparará peticiones silenciosas de *Merge Commit* al Backend ÚNICAMENTE con un Debounce ininterrumpido de 10 segundos, salvando un Snapshot volátil sin validación Zod.
-    And cuando el POST a `/complete` finalice (HTTP 200), el Frontend ejecutará una purga síncrona de esa llave LocalStorage.
-    And un Cron Backend eliminará cualquier borrador con > 72 horas.
+  Scenario: Desacoplamiento de Carga Binaria (Upload-First) y Escudo Anti-IDOR (CA-5)
+    Given un formulario Zod que incluye un componente `<InputFile>`
+    When el usuario final adjunta un documento pesado (Ej: PDF de 10MB)
+    Then el Frontend ejecutará una carga asíncrona temprana (Pre-Submit) hacia la Bóveda SGDEA (`/api/v1/documents/upload-temp`) obteniendo un Identificador Único (`UUID`)
+    And al presionar [Enviar], el POST a `/complete` enviará EXCLUSIVAMENTE el JSON plano referenciando el ID (`{"cedula_pdf": "UUID-123"}`), teniendo PROHIBIDO arquitectónicamente enviar payloads Multipart o Base64 contra el motor de procesos Camunda
+    And la arquitectura TIENE ESTRICTAMENTE PROHIBIDO enlazar ciegamente ese archivo a la tarea
+    And el Backend validará en la tabla de adjuntos temporales que `UUID-123` pertenezca al `user_id` logueado Y haya sido subido en el contexto de esa misma `task_id` (Defensa Anti-IDOR)
+    And si detecta un UUID ajeno, abortará la transacción con `HTTP 403 Forbidden`
+    And un Cron Job nocturno destruirá físicamente de S3/SGDEA cualquier archivo temporal (TTL > 24h) sin confirmación transaccional para evitar facturas por almacenamiento basura.
 
   # ==============================================================================
-  # C. VALIDACIÓN SEVERA, MICRO-TOKENS Y LOCKING
+  # D. RESILIENCIA OFFLINE, UX EVENTUAL Y PROTECCIÓN DE ESTADO
   # ==============================================================================
-  Scenario: Choque Gnoseológico Zod (Validación Bilateral Severa) (CA-5)
-    Given esquemas Zod en el Frontend (US-003)
-    When un atacante intenta bypassear la UI enviando un POST de formulario adulterado por API REST
-    Then el API Gateway/BFF interceptará el Payload ejecutando OBLIGATORIAMENTE el mismo `schema.json` Zod generado en diseño.
-    And rechazará con `HTTP 400 Bad Request` cualquier asimetría de tipos (Isomorfismo).
+  Scenario: Trazabilidad Volátil, Draft Sync y Cifrado PII en LocalStorage (CA-6)
+    Given la digitación continua de un analista en un iForm masivo abierto en el Workdesk
+    Then el Frontend guardará el borrador (Draft) asíncronamente en el `LocalStorage` del navegador atado al `Task_ID` (mediante `@vueuse/core`) a cada tecla
+    But si el esquema Zod marca campos como `PII/Sensibles` (US-003), el Frontend DEBE aplicar cifrado simétrico (AES) usando una llave derivada de la sesión antes de escribir en LocalStorage
+    And disparará peticiones silenciosas de *Merge Commit* al Backend (Snapshot Volátil) SOLO bajo un Debounce ininterrumpido de 10s de inactividad, usando una validación Zod "Parcial" (permitiendo nulos pero castigando tipos inválidos)
+    And cuando el POST a `/complete` finalice exitosamente (HTTP 200 OK), el Frontend ejecutará una purga síncrona destruyendo inmediatamente la llave temporal de ese caso específico
+    And un Cron silencioso global eliminará cualquier borrador huérfano en la PC del usuario que supere las 72 horas de antigüedad, previniendo cuellos de memoria.
 
-  Scenario: Seguridad Asimétrica y Micro-Tokens Criptográficos (Zero-Trust) (CA-6)
-    Given una validación asíncrona (Ej: Validar NIT) gatillada `OnBlur`
-    When el Backend consulta la API externa exitosamente, retorna un "Micro-Token JWT" efímero.
-    Then al momento del Submit final (`/complete`), el Frontend adjuntará este Micro-Token.
-    And el Backend omitirá re-consultar la API pesada externa, limitándose a verificar matemáticamente la firma del Micro-Token autorizando el COMMIT en milisegundos.
+  Scenario: Consistencia Eventual UX y Read-Your-Own-Writes (RYOW) (CA-7)
+    Given que el POST a `/complete` finaliza exitosamente (HTTP 200 OK)
+    Then además de purgar el LocalStorage, el Frontend eliminará proactivamente esa tarea específica del Store en RAM (Pinia) del Workdesk ANTES de redirigir al usuario al Home (RYOW)
+    And esto garantizará que el usuario no vea su tarea "ya completada" flotando como un fantasma en su bandeja por culpa del micro-retraso asíncrono de la proyección de lectura del CQRS en la Base de Datos.
 
-  Scenario: Integridad de Asignación Concurrente (Implicit Locking) (CA-7)
-    Given que una tarea "TK-400" está explícitamente asignada a `maria.perez`
-    When `pedro.gomez` intercepta vulnerablemente la URL e intenta someter un POST a `/complete`
-    Then el Core iBPMS cruza el `{delegatedUserId}` contra la identidad central del JWT.
-    And aborta la colisión inyectando un lapidario `HTTP 403 Forbidden` o `409 Conflict`.
+  Scenario: Idempotencia y Protección Anti-Doble Clic (El Dedo Tembloroso) (CA-8)
+    Given el usuario pulsa [Enviar Formulario] múltiples veces por ansiedad o lag de red
+    When el Payload JSON impacta el endpoint POST `/complete`
+    Then el Frontend inyectará obligatoriamente un Header `Idempotency-Key` (UUID único por montaje de componente)
+    And el API Gateway/Backend procesará únicamente la primera transacción
+    And las peticiones subsecuentes idénticas retornarán un `HTTP 200 OK` silenciado desde la Caché, protegiendo a Camunda de excepciones `OptimisticLocking` o doble gasto en el Event Sourcing.
 
   # ==============================================================================
-  # D. PERSISTENCIA CQRS (El Envío Final)
+  # E. SEGURIDAD ZERO-TRUST, ISOMORFISMO Y PREVENCIÓN DE COLISIONES
   # ==============================================================================
-  Scenario: Separación de Responsabilidades y Event Sourcing (CQRS) (CA-8)
+  Scenario: Zod Isomórfico y Guillotina de Datos Fantasma (Choque Gnoseológico) (CA-9)
+    Given la existencia de esquemas Zod bidireccionales en el ecosistema
+    When un atacante bypassea la UI enviando un POST adulterado vía API REST (Ej: Editando un campo oculto o de 'Solo Lectura')
+    Then el API Gateway/BFF ejecutará OBLIGATORIAMENTE el mismo `schema.json` Zod utilizado en el diseño gráfico del Frontend (Validación Bilateral Severa)
+    And cruzará los permisos de escritura del Rol del usuario contra los campos recibidos; si inyectó datos no autorizados, aplicará un `.strip()` silencioso descartando el campo adulterado, o abortará con `HTTP 403 Forbidden`
+    And rechazará con `HTTP 400 Bad Request` cualquier asimetría de tipos de datos.
+
+  Scenario: Seguridad Asimétrica y Prevención Replay en Micro-Tokens (CA-10)
+    Given una validación asíncrona externa (Ej: Validar NIT) gatillada `OnBlur` en el Frontend
+    When el Backend consulta la API externa exitosamente y retorna al Frontend un "Micro-Token JWT" firmado criptográficamente de corta duración (Ej: TTL 15 min)
+    Then al momento del Submit final (`/complete`), el Frontend adjuntará este Micro-Token en el payload
+    And el Backend (Zero-Trust) omitirá realizar una segunda llamada de red externa bloqueante, limitándose a verificar matemáticamente la validez de su propia firma en el Micro-Token para autorizar la transacción ACID en milisegundos
+    And la arquitectura PROHÍBE el re-uso de tokens (Replay Attacks); el Token DEBE contener en sus Claims el `taskId` exacto y un `jti` que será invalidado en Redis un milisegundo después del Submit exitoso.
+
+  Scenario: Integridad de Asignación Concurrente (Implicit Locking) (CA-11)
+    Given que una tarea "TK-400" está explícitamente asignada al analista `maria.perez` en el motor
+    When el analista `pedro.gomez` intercepta vulnerablemente la URL o el JWT Payload e intenta someter un POST a `/tasks/TK-400/complete`
+    Then el Core iBPMS examina deductivamente el `{delegatedUserId}` transaccional y el `assignee` de Camunda contra la identidad central del Security Context (JWT)
+    And aborta transaccionalmente la colisión inyectando un lapidario `HTTP 403 Forbidden` o `409 Conflict`, extirpando la necesidad pesada de emitir *ETags* a través del flujo asíncrono.
+
+  # ==============================================================================
+  # F. ARQUITECTURA CQRS, EVENT SOURCING Y PROTECCIÓN DEL MOTOR
+  # ==============================================================================
+  Scenario: Separación de Responsabilidades y Event Sourcing (CQRS) (CA-12)
     Given un JSON perfectamente validado resultante del "iForm Maestro"
     When el analista pulsa [Enviar Final] realizando POST a `/api/v1/workbox/tasks/{id}/complete`
-    Then el Backend separará el flujo: inyectará el Comando (`Form_Submitted_Event`) en la tabla inmutable de Eventos garantizando historial.
-    And un Worker asíncrono proyectará (`Projection`) esos datos a la tabla relacional aplanada para lecturas hiperveloces.
-    
-  Scenario: Exclusión Topológica Estratégica de Camunda Engine (CA-9)
-    Given la inmutabilidad validada en Postgres Oauth
-    Then el Backend TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo de negocio hacia la tabla `ACT_RU_VARIABLE` del Engine de Camunda.
-    And a Camunda solo se le enviará un DTO minificado (Ej: `{ "aprobado": true, "form_storage_id": "ABC-123" }`) con variables mínimas lógicas para Gateways.
+    Then el Backend separará el flujo arquitectónico: inyectará el Comando (`Form_Submitted_Event`) en la tabla inmutable de Eventos garantizando el historial forense exacto
+    And un Worker asíncrono proyectará (`Projection`) esos datos a la tabla relacional aplanada para habilitar lecturas hiperveloces desde los Dashboards y Analítica.
 
-  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas) (CA-10)
-    Given el Payload aplanado y guardado en CQRS
-    When el orquestador (Camunda 7) sufre un Crash HTTP en su API REST interna y no avanza la tarea
-    Then el Backend iBPMS abortará inmediatamente la transacción base (Rollback Compensatorio de CQRS PostgreSQL).
-    And devolverá un error HTTP 500 Crudo ("Motor No Disponible") a la UI en Pantalla 2.
-    And se prohíbe generar falsos positivos HTTP 202 ("Guardado para después"), unificando el error visual vs Motor.
+  Scenario: Exclusión Topológica Estratégica de Camunda Engine (CA-13)
+    Given el cierre exitoso de la transacción CQRS (Guardado del Evento Inmutable validado en Postgres)
+    When el Backend notifica a Camunda 7 para avanzar el Token BPMN (`taskService.complete()`)
+    Then el Backend TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo de negocio (Textos largos, JSONs complejos) hacia la tabla `ACT_RU_VARIABLE` del Engine
+    And a Camunda solo se le enviará un DTO minificado (Ej: `{ "aprobado": true, "form_storage_id": "ABC-123" }`) con las variables lógicas estrictamente requeridas por los Gateways de enrutamiento.
+
+  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas) (CA-14)
+    Given el Payload aplanado y guardado exitosamente en CQRS
+    When el motor orquestador (Camunda 7) sufre un Crash o Timeout HTTP 5xx en su API REST interna al intentar avanzar la tarea
+    Then el Backend iBPMS abortará inmediatamente la transacción base ejecutando un Rollback Compensatorio (Patrón Saga inverso) sobre la persistencia en PostgreSQL
+    And devolverá un error HTTP 500 Crudo ("Motor No Disponible") a la UI en Pantalla 2
+    And se prohíbe a nivel arquitectónico generar falsos positivos HTTP 202 ("Guardado para después") para eludir el colapso del proceso judicial de fondo, unificando la verdad visual con el estado real del Motor.
+
+  # ==============================================================================
+  # G. REASIGNACIONES Y COLISIONES GROUP-LEVEL (GAPs RESUELTOS)
+  # ==============================================================================
+  Scenario: Auto-Claim Implícito sobre Tareas No Asignadas (Group-Level) (CA-15)
+    Given que una tarea "TK-500" está disponible en un grupo de trabajo (Ej: "Abogados") pero NO tiene un `assignee` directo asignado en Camunda
+    When un usuario legitimado bajo la taxonomía RBAC interviene el iFormulario y presiona [Enviar] (`/complete`)
+    Then el Backend (BFF) NO abortará la consulta por falla de exclusividad ("Implicit Locking" del CA-11)
+    And en su lugar, ejecutará transaccionalmente un comando `taskService.claim()` asignando silenciosamente el caso al operario una fracción de milisegundo antes de empujar el Event_Sourced_Command (CQRS) final.
+    And esto garantizará la fluidez de operación para Worklists comunitarias sin forzar un clic inútil en un botón "Reclamar".
+
+  Scenario: Trazabilidad Activa de Rechazos Históricos en BFF (De-duplicación) (CA-16)
+    Given una tarea devuelta a un especialista por un analista de control de calidad desde una fase superior (Rechazo Ope/BPMN)
+    When el especialista abre el iFormulario para enmendar su trabajo documentado
+    Then el Frontend (a través del llamado unificado `/form-context`) no solo recibirá el `prefillData` histórico
+    And también recibirá inyectado OBLIGATORIAMENTE un array (Ej: `rejectionLogs`) con el dictamen exacto, responsable y fecha del rechazo
+    And mostrando esta causal de devolución como un Alert inyectado en el Canvas central del formulario (Solo Lectura), previniendo que el usuario repita una reparación a ciegas guiado solo por la telepatía.
 ```
+
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Tarea) y BFF Invisible.
 
 ---
@@ -4730,149 +4796,3 @@ Scenario: Downgrade Automático por Falta de Fondos Premium (Fallback Cognitivo)
 ```
 ---
 
-
-# 🚀 ROADMAP VERSIÓN 2 (V2) - EN REFINAMIENTO
-*(Todas las funcionalidades, épicas e historias de usuario declaradas a partir de este punto pertenecen estructural y financieramente a la Fase 2 del Proyecto iBPMS. No forman parte del alcance del MVP V1).*
-
----
-
-## ÉPICA V2-01: Gobernanza Activa y Erradicación de Antipatrones (Opinionated OS)
-El iBPMS deja de ser un lienzo ciego y se convierte en un auditor inteligente del diseño de procesos. Interviene físicamente para evitar que las empresas democraticen la ineficiencia (como aprobadores redundantes que no mutan el modelo de datos).
-
-### US-V2-001: Bloqueo Arquitectónico de Burocracia Humana (Hard-Stop)
-**Como** Motor de Gobernanza (Opinionated OS)
-**Quiero** auditar el I/O Binding de las tareas humanas en el Pre-Flight Analyzer (US-005)
-**Para** bloquear físicamente el despliegue de procesos que modelen "sellos de goma" y firmas inútiles.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Forced DMN Adoption over Human Bureaucracy
-  Scenario: Detección Temprana en el Lienzo (Linting en Tiempo Real) (CA-1)
-    Given el Arquitecto diseñando un flujo en la Pantalla 6 (Canvas BPMN)
-    When conecta dos (2) o más `UserTasks` humanas de forma secuencial
-    And selecciona para la segunda tarea un Formulario que NO requiere inyección de campos nuevos (solo lectura de la tarea anterior)
-    Then el motor de UI del Modeler debe dibujar la flecha (SequenceFlow) de conexión en color ROJO intermitente
-    And proyectar un ícono de advertencia (⚠️) sobre la tarea redundante, alertando del antipatrón burocrático de forma inmediata antes del guardado.
-
-  Scenario: Bloqueo Estructural en el Pre-Flight (Hard-Stop) (CA-2)
-    Given las advertencias visuales del Canvas ignoradas
-    When el Arquitecto intenta presionar [🚀 DESPLEGAR]
-    And el motor Pre-Flight cruza el I/O Mapping contra el Esquema Zod confirmando la ausencia de mutación de datos
-    Then el sistema CANCELA el despliegue cambiando el estado a ❌ ERROR CRÍTICO
-    And el Copiloto IA arroja un modal bloqueante: "🛑 Antipatrón burocrático: La aprobación humana que no altera el contrato de datos no genera valor. Reemplace la tarea por una Regla DMN o condense la autoridad en un solo rol."
-
-  Scenario: Inmunidad por Decisión de Enrutamiento (Gateway Decision Validity) (CA-3)
-    Given la configuración de un "Sello de Goma" humano (Ej: Gerente que solo aprueba/rechaza)
-    When el motor detecta que el output (salida) de la tarea de ese Gerente está directamente conectado a un Gateway Exclusivo (XOR) para definir la ruta del proceso
-    Then el analizador interpreta la acción de "Toma de Decisión de Ruta" como una agregación de valor cognitivo ("Gateway Validity")
-    And perdona la configuración, absteniéndose de lanzar el bloqueo rojo, permitiendo el despliegue del proceso.
-
-  Scenario: Excepción por Responsabilidad Legal Expresa (Override Auditado) (CA-4)
-    Given el bloqueo Hard-Stop del Pre-Flight disparado por un antipatrón redundante
-    And que la empresa argumente fuerza mayor corporativa (Ej: ISO 9001 o mandato legal de doble firma)
-    Then el modal bloqueante cuenta con un botón en fuente pequeña `[Ignorar Advertencia y Asumir Riesgo]`
-    When el Arquitecto lo presiona
-    Then el sistema le solicita una justificación de texto obligatoria y su contraseña de confirmación
-    And permite el despliegue liberando el proceso, pero estampando el evento crudo en el Log de Auditoría bajo el tag `[BUREAUCRATIC_DEBT_ASSUMED]` responsabilizándolo permanentemente.
-```
-**Trazabilidad UX:** Pantalla 6 (BPMN Canvas) y Modal de Auditoría Pre-Flight.
-
----
-
-### US-V2-002: El Asesino del "Síndrome de la Sandía" (Friction Tax Calculator)
-**Como** CEO / Director de Transformación (BAM Dashboard)
-**Quiero** que el sistema calcule exactamente cuánto dinero me cuesta la fricción y el tiempo muerto en mis procesos
-**Para** tener argumentos financieros innegables que obliguen a los gerentes medios a automatizar sus feudos.
-
-*Nota Estratégica: El síndrome de la sandía ocurre cuando los KPIs están "verdes" por fuera (el empleado cumplió su SLA de 2 horas para firmar), pero "rojos" por dentro (el caso estuvo estacionado 15 días esperando en la bandeja).*
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Friction Tax Telemetry (Value-Driven BAM)
-  
-  Scenario: Personalización del Dolor Financiero (Multiplicador de Gravedad Nodal) (CA-1)
-    Given el Arquitecto diseñando la configuración financiera del proceso
-    Then el sistema le permite asociar a un Nodo Humano específico (UserTask) un `[Costo_Fijo_Retraso_Hora]`
-    And este valor desvincula la matemática del simple "salario del empleado"
-    And permite traducir el Riesgo de Negocio (Ej: Un SLA incumplido en 'Aprobación VIP' cuesta $500/hora en multas) directamente al lenguaje gerencial del Tablero BAM.
-
-  Scenario: El Reloj Justo (SLA-Aware Taxometer) (CA-2)
-    Given un reclamo que cae a la bandeja de un usuario a las 6:00 PM del Viernes y es atendido a las 8:00 AM del Lunes
-    When el motor analítico calcula el "Tiempo Muerto" (Wait Time) para monetizar la ineficiencia
-    Then el algoritmo cruza obligatoriamente los timestamps contra la Matriz SLA Corporativa (US-043, Días/Horas Hábiles)
-    And el Taxímetro se PAUSA automáticamente durante el fin de semana, cobrando $0 dólares por ese periodo
-    And evitando "Data Contaminada" y desmotivación en los empleados por penalizaciones injustas fuera de su turno legal.
-
-  Scenario: Telemetría de Sangría en Tiempo Real (Live Pain Counter) (CA-3)
-    Given el Director de Transformación observando el BAM Dashboard en medio de la operación diurna
-    Then el tablero expone un módulo gigante en ROJO denominado "Friction Tax: Dinero Quemado AHORA MISMO"
-    And este indicador totaliza y grafica en Tiempo Real (Live) el costo acumulado por segundo de todos los casos que están atascados en las bandejas vivas
-    And generando un sentido de urgencia psicológica para la intervención inmediata, en lugar de ser una simple autopsia post-mortem de fin de mes.
-```
-**Trazabilidad UX:** Dashboard Gerencial BAM (Grafana/Kibana) y Panel de Configuración Nodal.
-
----
-
-### US-V2-003: Penalización por Carga Cognitiva en Formularios (Data Diet)
-**Como** Motor UX del Sistema
-**Quiero** auditar el destino de cada campo de UI creado en el "iForm Maestro"
-**Para** impedir que la empresa capture datos "por si acaso" que nunca usa, saturando al usuario final.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Data Minimization and Form Strictness
-  Scenario: El Peaje Analítico (Opcionalidad Forzada) (CA-1)
-    Given un Diseñador intentando justificar un campo inútil para la operación alegando que su único fin es la exportación a PowerBI (Big Data ciego)
-    When el IDE marca el campo como ROJO (Campo Huérfano)
-    Then el Diseñador debe abrir obligatoriamente las propiedades del campo y seleccionar el [Destino Estratégico: Analítica Pasiva / Reportes]
-    And al seleccionarlo, el esquema Zod subyacente DESHABILITA y BLOQUEA físicamente el switch de "Requerido" u "Obligatorio" para ese input
-    And garantizando que la empresa pueda recolectar datos analíticos, pero prohibiendo estrictamente que se conviertan en una fricción bloqueante para el usuario final.
-
-  Scenario: La Ley del Lector Garantizado (Campos de Texto Libre) (CA-2)
-    Given la inserción por costumbre de un Área de Texto (Text-Area) para "Observaciones" que ninguna regla DMN puede evaluar matemáticamente
-    When el Pre-Flight Analyzer audita el futuro de dicha variable en el proceso
-    Then el motor le otorga el Indulto de Supervivencia ÚNICAMENTE si detecta uno de los tres "Lectores Garantizados" aguas abajo:
-    And 1. Una `UserTask` humana donde un Analista leerá la variable.
-    And 2. Una `GenerativeTask` (RAG / AI) que extraerá sentimiento o resumirá el texto.
-    And 3. Un mapeo explícito de inyección SGDEA (Ej: Imprimir el campo dentro del PDF legal final).
-    And bloqueándolo sin piedad si carece de estos 3 destinos.
-
-  Scenario: Libertad de Bosquejo vs Guillotina en Producción (CA-3)
-    Given el proceso creativo de un Arquitecto de Negocio
-    When se encuentra en la Pantalla 3 (Form Builder) creando los inputs
-    Then el sistema arroja un Soft-Lock visual (Iconos naranjas/rojos ⚠️) advirtiendo la falta de destino, pero permite guardar el trabajo tranquilamente en estado `DRAFT_INVALID` para no destruir la iteración.
-    When días después, el Arquitecto une el formulario al BPMN en la Pantalla 6 e intenta pulsar el botón [🚀 DESPLEGAR A PRODUCCIÓN]
-    Then el sistema arroja el Hard-Stop defintivo y ABORTA el Despliegue con un flag rojo ❌, obligándolo a higienizar (borrar o justificar) los campos huérfanos antes de impactar el Core productivo.
-```
-**Trazabilidad UX:** Pantalla 3 (Diseñador de Formularios - Form Builder).
-
----
-
-### US-V2-004: Auto-Destrucción de Nodos Zombie (The Darwinian Engine)
-**Como** Motor de Gobernanza MLOps (Agente Data Scientist de Turno Nocturno)
-**Quiero** auditar el comportamiento histórico de los operarios humanos
-**Para** sugerir la eliminación de reglas, tareas o firmas que la data empírica demuestre que son inútiles.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Continuous AI Pruning (Self-Healing Organization)
-  Scenario: Slider de Tolerancia y Frenos de Emergencia (Parametrización MLOps) (CA-1)
-    Given la configuración del Motor Darwiniano en la Pantalla 15.A (SysAdmin)
-    When el cliente ajusta el `[Umbral_Inercia_Zombie]` y la `[Ventana_Analisis_Meses]`
-    Then el sistema prohíbe estadísticamente bajar el umbral de inercia a menos del 85%
-    And garantizando que si un humano rechaza o altera el 15% o más de los casos, la IA asume que SÍ está utilizando criterio cognitivo, bloqueando la etiqueta de "Zombie" para proteger la evaluación de riesgo real (Ej: Prevención de Fraude).
-
-  Scenario: El Muro de Fuego Legal (Cero Skynet) (CA-2)
-    Given el Agente Data Scientist descubriendo una Tarea Humana 99% inútil en la madrugada
-    When consolida el hallazgo, calcula el ahorro en EBITDA y lo reporta a la Junta (Pantalla 5)
-    Then el sistema TIENE ESTRICTAMENTE PROHIBIDO auto-parchear Producción de forma autónoma
-    And exige que un rol fiduciario (PMO o Director) apruebe manualmente el hallazgo presionando `[Aceptar Hallazgo y Auto-Refactorizar]`, asumiendo la responsabilidad legal de la automatización por principio de Segregación de Funciones.
-
-  Scenario: Cirugía Asistida y Respeto al SDLC (Generación de Drafts) (CA-3)
-    Given la aprobación del Hallazgo Darwiniano por parte de la PMO
-    When el Agente IA recibe la orden de ejecución
-    Then el sistema NO altera la versión V1.0 que opera transaccionalmente en Producción
-    And en background, el Agente abre la Pantalla 6 (Modeler), clona el mapa, extirpa la caja humana, inyecta la regla matemática DMN, sella las conexiones BPMN y lo guarda silenciosamente como `V1.1-DRAFT`
-    And finalmente dispara un Ticket al Workdesk del Arquitecto IT diciendo: "Borrador de Optimización Generado. Revise las conexiones y presione Desplegar".
-```
-**Trazabilidad UX:** Pantalla 5 (AI Copilot / Evolution Findings) y Modeler (Auto-Refactor).

@@ -50,6 +50,16 @@ Desarrollar una plataforma integral de gestión de procesos y proyectos que perm
 *   **Analítica Operativa (BAM - V1):** Dashboards de "Process Health".
 *   **Consultor Digital AI & Mejora Continua (V2):** ML para diagnosticar fricciones.
 *   **Auditor Digital AI (ISO 9001 Compliance - V2):** Plug-in que audita automáticamente.
+##  Módulo Vertical LegalTech: Asistente Jurídico (RAG + LLM)
+
+**El Problema:** Los abogados gastan horas buscando jurisprudencia previa, cláusulas en contratos antiguos y redactando contestaciones repetitivas. El iBPMS V1 solo les permite aprobar tareas y generar PDFs fijos.
+**La Solución V1:** Un módulo "Copiloto" incrustado en la vista de la tarea (Pantalla 2) que ha "leído" toda la Bóveda Documental (SGDEA).
+
+### Funcionalidades Core:
+*   **Búsqueda Semántica (RAG - Retrieval-Augmented Generation):** Permite al abogado abrir un chat en la tarea y preguntar: *"¿Qué dijimos en el contrato de confidencialidad de Banco Alpha en 2024 respecto a multas?"*. El módulo busca en el Vector Database, recupera el párrafo exacto y genera una respuesta inteligible citando el PDF original.
+*   **Generador Dinámico de Cláusulas:** En lugar de plantillas estáticas (V1), el abogado pide: *"Redacta una cláusula de fuerza mayor adaptada para la pandemia"*. El Módulo LLM inyecta el texto generado en el Formulario JSON del caso.
+
+---
 
 ## 5. Backlog Management (Épicas V1)
 

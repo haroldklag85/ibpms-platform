@@ -27,6 +27,7 @@ El objetivo es garantizar que cada agente especializado opere con una memoria ai
 ### 🎨 Agente Frontend (Especialista Vue 3/TypeScript)
 *   **Memoria Aislada:** Invocar en su propia **NUEVA VENTANA DE CHAT**. No conoce el código interno de Java ni la base de datos.
 *   **Responsabilidad:** Consumir el API real, construir componentes interactivos en Vue/Tailwind respetando los contratos DTO, y subir obligatoriamente su trabajo mediante `git commit` en su propia rama lateral (Ej. `sprint-1/...`).
+*   **📐 Lectura Obligatoria de Layout:** Antes de construir o modificar cualquier componente visual, el agente Frontend **DEBE** leer y cumplir las 15 reglas de geometría, responsividad y accesibilidad definidas en `scaffolding/workflows/v1_master_layout_policies.md` (Master Layout, CSS Grid, Z-Index, breakpoints oficiales, A11y, Empty States, FABs prohibidos).
 
 ### 🔎 Agente QA / DevOps 
 *   **Memoria Aislada:** Invocar en su propia **NUEVA VENTANA DE CHAT**.

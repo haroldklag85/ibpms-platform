@@ -1,7 +1,6 @@
 package com.ibpms.poc.infrastructure.mq.config;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;

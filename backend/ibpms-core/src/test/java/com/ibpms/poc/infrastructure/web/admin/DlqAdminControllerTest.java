@@ -9,11 +9,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,8 +45,9 @@ class DlqAdminControllerTest {
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().get("message_count")).isEqualTo(42);
-        assertThat(response.getBody().get("status")).isEqualTo("ACTIVE");
+        Map<String, Object> body = Objects.requireNonNull(response.getBody());
+        assertThat(body.get("message_count")).isEqualTo(42);
+        assertThat(body.get("status")).isEqualTo("ACTIVE");
     }
 
     @Test

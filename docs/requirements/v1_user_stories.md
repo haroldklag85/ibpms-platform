@@ -274,6 +274,91 @@ Feature: Workdesk Loading and Real-Time Grid
     And 5. Si el Backend no puede calcular el avance (Ej: proceso BPMN sin User Tasks definidas o con estructura no lineal con Gateways paralelos), la columna mostrará `N/D` (No Disponible) en lugar de un porcentaje erróneo.
 
 
+  # ==============================================================================
+  # F. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: Cuestionario de 45 preguntas del workflow /refinamientoFuncionalUs.md
+  # Propósito: Cerrar huecos descubiertos durante el refinamiento de la US-001.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Umbrales Configurables del Semáforo SLA (CA-24)
+    # Origen: Pregunta #6 del Refinamiento Funcional
+    # Resuelve: No existían umbrales numéricos para los colores del semáforo SLA.
+    Given el Ticking Engine de semáforos SLA del CA-05 y CA-11
+    Then los umbrales de transición de color se definirán en porcentaje del tiempo restante respecto al total del SLA:
+    And 🟢 **Verde:** Más del 50% del tiempo total restante.
+    And 🟡 **Amarillo:** Entre el 50% y el 15% del tiempo total restante.
+    And 🔴 **Rojo:** Menos del 15% del tiempo total restante.
+    And ⚫ **Vencida (Negro/Gris):** 0% — la fecha límite ya pasó.
+    And estos porcentajes serán los valores POR DEFECTO del sistema, pero cada tenant podrá personalizarlos desde la configuración administrativa (US-036 / Pantalla 14) si sus operaciones requieren umbrales diferentes.
+    And el Frontend calculará el color localmente usando `sla_deadline` del DTO (CA-20) comparado contra `Date.now()`.
+
+  Scenario: [REFINAMIENTO] Recálculo de Semáforos al Volver de Pestaña Inactiva (CA-25)
+    # Origen: Pregunta #7 del Refinamiento Funcional
+    # Resuelve: requestAnimationFrame se pausa en pestañas inactivas del navegador.
+    Given el Global Heartbeat Store basado en requestAnimationFrame (CA-11)
+    When el navegador pausa el requestAnimationFrame porque el usuario minimizó la pestaña o cambió a otra
+    Then al detectar el evento `visibilitychange` del navegador (la pestaña vuelve a estar activa), el Heartbeat Store ejecutará un recálculo INMEDIATO de todos los semáforos SLA visibles usando `Date.now()` como referencia.
+    And si durante la inactividad alguna tarea cambió de color (Ej: pasó de Amarillo a Rojo), el cambio se reflejará instantáneamente sin esperar el próximo ciclo del requestAnimationFrame.
+    And si la inactividad superó los 5 minutos, se activará además el mecanismo de auto-refresco del CA-31.
+
+  Scenario: [REFINAMIENTO] Relleno Automático de Página tras Remoción por WebSocket (CA-26)
+    # Origen: Pregunta #9 del Refinamiento Funcional
+    # Resuelve: La página queda con 14 de 15 tarjetas al desaparecer una por WebSocket.
+    Given la desaparición animada de una tarea vía WebSocket (CA-06, CA-13) en una página de 15 tarjetas (CA-09)
+    Then el Frontend acumulará las remociones por WebSocket durante una ventana de 5 segundos (consistente con el throttling del CA-13).
+    And al finalizar la ventana, si la página tiene menos de 15 tarjetas, el Frontend emitirá UNA SOLA petición silenciosa al Backend solicitando las tarjetas faltantes para rellenar la página a su capacidad de 15.
+    And las tarjetas nuevas aparecerán con una animación sutil de fade-in para no confundir al usuario con apariciones repentinas.
+    And si la página completa queda vacía (todas las tareas fueron reclamadas), se aplicará la regla del CA-12: redirigir automáticamente a la Página 1.
+
+  Scenario: [REFINAMIENTO] Vocabulario Completo de Acciones WebSocket (CA-27)
+    # Origen: Pregunta #10 del Refinamiento Funcional
+    # Resuelve: Solo existía la acción REMOVE; faltaban acciones para otros eventos de la grilla.
+    Given la conexión WebSocket para sincronización en tiempo real del Workdesk (CA-06, CA-13)
+    Then el Backend emitirá mensajes atómicos (CA-13) con el siguiente vocabulario estandarizado de acciones:
+    And `REMOVE` — Una tarea fue reclamada por otro usuario o reasignada. El Frontend la desvanece (CA-13).
+    And `ADD` — Una nueva tarea fue asignada al usuario (por reclamo, por rotación de Skill-Based Routing, o por asignación forzosa de un supervisor). El Frontend la incorpora a la grilla respetando el ordenamiento SLA (CA-01).
+    And `UPDATE` — Un campo visible de una tarea existente cambió (Ej: el estado SLA pasó a OVERDUE, el Impacto Financiero cambió). El Frontend actualiza la celda afectada sin recargar la fila completa.
+    And `PRIORITY_CHANGE` — El orden global de priorización cambió (Ej: una tarea recibió el badge 🔥 Impacto). El Frontend reordena la grilla localmente.
+    And cada mensaje WebSocket seguirá la estructura: `{ action: 'REMOVE|ADD|UPDATE|PRIORITY_CHANGE', taskId: 'TK-123', payload?: {...} }`.
+    And para `ADD` y `UPDATE`, el `payload` contendrá ÚNICAMENTE los campos del DTO sanitizado del CA-20 que cambiaron.
+
+  Scenario: [REFINAMIENTO] Prevención de Condición de Carrera en "Atender Siguiente" (CA-28)
+    # Origen: Pregunta #16 del Refinamiento Funcional
+    # Resuelve: 200 operarios presionando "Atender Siguiente" simultáneamente podrían recibir la misma tarea.
+    Given la activación del modo "Atender Siguiente" (CA-08, CA-16) con múltiples operarios conectados simultáneamente
+    Then el Backend garantizará la asignación atómica de tareas utilizando bloqueo pesimista en la Base de Datos (SELECT ... FOR UPDATE SKIP LOCKED) para evitar que dos operarios reciban la misma tarea.
+    And si un operario solicita una tarea y esta ya fue asignada a otro en la misma fracción de segundo, el Backend seleccionará automáticamente la SIGUIENTE tarea disponible que coincida con los skills del operario (CA-21), retornando la tarea correcta sin error visible.
+    And el operario NUNCA recibirá un error "Tarea ya asignada" al presionar "Atender Siguiente" — el Backend resolverá la colisión internamente y le dará la siguiente tarea válida.
+    And este mecanismo es análogo al del US-002 CA-01 (Reclamo Simultáneo), pero aplicado al algoritmo de enrutamiento forzoso en lugar del reclamo manual.
+
+  Scenario: [REFINAMIENTO] Contadores en Filtros Facetados del Workdesk (CA-29)
+    # Origen: Pregunta #17 del Refinamiento Funcional
+    # Resuelve: Los filtros facetados (CA-22) no mostraban cuántas tareas existen en cada categoría.
+    Given la barra de filtros facetados del Workdesk (CA-22)
+    Then cada opción de filtro mostrará entre paréntesis el conteo total de tareas de esa categoría:
+    And Ejemplo de filtros con contadores: `[Todos (62)]` / `[⚡ BPMN (45)]` / `[📋 Kanban (12)]` / `[📅 Gantt (5)]` / `[🟢 Al día (40)]` / `[🟡 Por vencer (14)]` / `[🔴 Vencida (8)]`.
+    And el Backend retornará los contadores como parte del response de la grilla (CA-20), en un objeto adicional: `facets: { origin: { BPMN: 45, KANBAN: 12, GANTT: 5 }, status: { PENDING: 40, IN_PROGRESS: 14, OVERDUE: 8 } }`.
+    And los contadores se actualizarán con cada petición a la grilla, NO en tiempo real por WebSocket (para evitar ruido visual excesivo).
+
+  Scenario: [REFINAMIENTO] Rate Limiting para el Endpoint de la Grilla del Workdesk (CA-30)
+    # Origen: Pregunta #30 del Refinamiento Funcional
+    # Resuelve: No existía límite de cuántas veces un usuario puede solicitar la grilla.
+    Given el endpoint principal `GET /api/v1/workdesk/tasks` del CA-20
+    Then el API Gateway impondrá un Rate Limiting de máximo 60 peticiones por minuto por usuario autenticado.
+    And si se supera, retornará `HTTP 429 Too Many Requests` con el mensaje: "Has realizado demasiadas consultas. Espera unos segundos antes de intentarlo de nuevo."
+    And este límite protege contra scripts automatizados que hagan polling agresivo para monitorear cambios, ya que la sincronización en tiempo real se resuelve vía WebSocket (CA-06, CA-13, CA-27), NO por polling al endpoint REST.
+
+  Scenario: [REFINAMIENTO] Auto-Refresco Pasivo al Volver de Inactividad Prolongada (CA-31)
+    # Origen: Pregunta #31 del Refinamiento Funcional
+    # Resuelve: El KeepAlive (CA-12) podría mostrar datos obsoletos tras horas de inactividad.
+    Given la preservación del Workdesk en RAM mediante KeepAlive (CA-12)
+    When el usuario regresa al Workdesk después de haber estado en otra pestaña/vista por más de 5 minutos
+    Then el Frontend ejecutará un refresco silencioso en segundo plano: emitirá una petición al endpoint de la grilla (CA-20) y actualizará los datos de la tabla SIN destruir el componente KeepAlive ni resetear los filtros del usuario.
+    And durante el refresco (que típicamente dura <1 segundo), la grilla mostrará un indicador sutil de actualización (Ej: un shimmer sobre las filas existentes) para que el usuario sepa que los datos se están renovando.
+    And si la petición de refresco falla (error de red), la grilla mantendrá los datos del KeepAlive con un Toast discreto: "No se pudo actualizar. Mostrando datos de la última sincronización."
+    And el umbral de 5 minutos es consistente con el CA-25 (recálculo de semáforos al volver de inactividad).
+
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Workdesk - Escritorio de Tareas).
 
@@ -283,6 +368,13 @@ Feature: Workdesk Loading and Real-Time Grid
 **Como** Analista / Usuario de Negocio
 **Quiero** poder "reclamar" (asignarme) una tarea que actualmente pertenece a la cola de todo mi grupo
 **Para** evitar que otro compañero trabaje en el mismo caso de forma paralela y duplicar esfuerzos.
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-002:**
+> - **US-001 (Workdesk / Pantalla 1):** La grilla del Workdesk es donde el operario visualiza las tareas de la Cola de Grupo y donde aparece el botón [Reclamar]. Los WebSockets de desaparición instantánea (US-001 CA-06, CA-13, CA-27) dependen de que la US-002 EMITA el evento WebSocket al momento del Commit de reclamo/liberación/despojo. Sin este disparo, las tareas reclamadas permanecen como "fantasmas visibles" en las pantallas de todos los compañeros.
+> - **US-029 (Completar Tarea / Pantalla 2):** La ejecución del formulario y el patrón de borrador en LocalStorage están definidos en la US-029. La Amnesia Transaccional (CA-07) de la US-002 depende del esquema de persistencia temporal de la US-029 para saber exactamente qué purgar al liberar.
+> - **US-036 (RBAC / Pantalla 14):** La validación perimetral del Despojo Forzoso (CA-08, CA-13) consume la jerarquía organizacional y la relación `team_id` administrada en la Pantalla 14. Sin RBAC, un supervisor de cualquier departamento podría despojar tareas de departamentos que no le corresponden.
+> - **US-001 CA-28 (Prevención de Condición de Carrera):** El mecanismo de bloqueo atómico en base de datos para el modo "Atender Siguiente" (US-001 CA-28) es análogo al requerido por el CA-11 de US-002. Ambos necesitan `SELECT FOR UPDATE SKIP LOCKED` para garantizar exclusión mutua.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
@@ -342,6 +434,73 @@ Feature: Task Claiming and Reassignment
     When el analista oprime [Reclamar]
     Then el Frontend "miente" visualmente colocando la tarea en "Mi Bandeja" (Almacenamiento Local Temporal)
     And genera procesos automáticos de ruteo/re-intento sincrónico por detrás hasta que confirme físicamente en el Motor (Degradación controlada).
+	
+	
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us002_functional_analysis.md
+  # Tickets: REM-002-01 a REM-002-05
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md antes del inicio de desarrollo de US-002.
+  # Estado: US-002 NO ha sido desarrollada aún. Estos CAs se inyectan ANTES
+  #         de la construcción para blindar la implementación desde el origen.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Mecanismo Atómico de BD para Reclamo Simultáneo (CA-11)
+    # Origen: REM-002-01 — GAP-1 del us002_functional_analysis.md
+    # Resuelve: El CA-01 exige HTTP 409 pero no define el mecanismo que lo garantiza.
+    Given la concurrencia de múltiples analistas reclamando la misma tarea (CA-01)
+    Then el Backend OBLIGATORIAMENTE utilizará el comando nativo `TaskService.claim(taskId, userId)` de Camunda como primera opción, el cual internamente aplica exclusión atómica.
+    And si la tarea NO es una tarea Camunda (Ej: tarea Kanban o Gantt sin motor BPMN), el Backend aplicará un bloqueo pesimista en PostgreSQL (`SELECT ... FOR UPDATE SKIP LOCKED`) antes de escribir el campo `assignee`, garantizando que solo un Thread de Java gane la escritura.
+    And el Thread perdedor recibirá una excepción controlada que se traducirá en el `HTTP 409 Conflict` del CA-01 con el mensaje amable al Frontend.
+    And para el Reclamo Masivo (CA-02), cada tarea del lote se procesará con el mismo mecanismo atómico individual. Si 3 de 10 ya fueron tomadas en la fracción de segundo, el response del Batch retornará: `{ claimed: 7, conflicts: [{ taskId: 'TK-101', reason: 'Already claimed by María' }, ...] }`.
+    And este mecanismo es análogo al US-001 CA-28 (Prevención de Condición de Carrera en "Atender Siguiente") y DEBE reutilizar el mismo patrón de Repository.
+
+  Scenario: [REMEDIACIÓN] Emisión Obligatoria de Evento WebSocket Post-Commit (CA-12)
+    # Origen: REM-002-02 — GAP-2 del us002_functional_analysis.md
+    # Resuelve: Tras reclamo/liberación, los compañeros no son notificados y ven tareas "fantasma".
+    Given la transacción exitosa de Reclamo, Liberación, Auto-Unclaim o Despojo Forzoso en la Base de Datos
+    Then el Backend DEBE emitir, en el MISMO instante del Commit de la transacción, un evento WebSocket hacia el canal de broadcast del grupo/tenant afectado.
+    And el evento seguirá el vocabulario estandarizado del US-001 CA-27:
+    And   - Al RECLAMAR (individual o masivo): emitir `{ action: 'REMOVE', taskId: 'TK-123' }` hacia el canal grupal, para que todos los compañeros vean desaparecer la tarea de su cola.
+    And   - Al LIBERAR o AUTO-UNCLAIM: emitir `{ action: 'ADD', taskId: 'TK-123', payload: {...} }` hacia el canal grupal, para que todos los compañeros vean RE-APARECER la tarea en su cola.
+    And   - Al DESPOJAR FORZOSAMENTE (CA-08): emitir `REMOVE` hacia la bandeja personal del operario despojado Y `ADD` hacia el canal grupal simultáneamente.
+    And si el servidor WebSocket no está disponible al momento del Commit, el evento se encola en una Dead Letter Queue (RabbitMQ) para reintento automático, garantizando entrega eventual (At-Least-Once Delivery).
+    And esta emisión es la pieza que CONECTA la US-002 con el mecanismo de desaparición instantánea de la US-001 (CA-06, CA-13).
+
+  Scenario: [REMEDIACIÓN] Validación Perimetral Organizacional en Despojo Forzoso (CA-13)
+    # Origen: REM-002-03 — GAP-3 del us002_functional_analysis.md
+    # Resuelve: Un supervisor de un departamento puede despojar tareas de otro departamento.
+    Given la ejecución del Forced Unclaim por un Supervisor (CA-08)
+    Then el Backend OBLIGATORIAMENTE cruzará el `team_id` del Supervisor autenticado contra el `team_id` asignado a la Tarea (Silo Data Protection).
+    And si el Supervisor NO pertenece al mismo equipo/departamento que administra la tarea, el Backend retornará `HTTP 403 Forbidden` con el mensaje: "No tiene permisos para gestionar tareas de este equipo."
+    And solo el jefe directo dentro de la jerarquía organizacional del equipo podrá ejecutar el despojo, consumiendo la matriz de roles y jerarquía de la US-036 (Pantalla 14).
+    And cada intento de despojo (exitoso o rechazado) quedará registrado como asiento inmutable en el Audit Log con: `{ supervisorId, targetUserId, taskId, teamId, action: 'FORCE_UNCLAIM', result: 'SUCCESS|DENIED', timestamp }`.
+    And la Vista de Monitoreo del Supervisor (CA-08) solo mostrará las tareas de SU equipo, aplicando el filtro `team_id` desde la consulta SQL base (prevención IDOR nativa sin depender del Frontend).
+
+  Scenario: [REMEDIACIÓN] Contrato API Estandarizado para Operaciones de Reclamo (CA-14)
+    # Origen: REM-002-04 — GAP-4 del us002_functional_analysis.md
+    Given la necesidad de alinear Frontend y Backend en las operaciones de posesión de tareas
+    Then el Backend expondrá los siguientes endpoints documentados con OpenAPI/Swagger annotations:
+    And `POST /api/v1/tasks/{taskId}/claim` — Reclamo individual. Body: vacío (el userId se obtiene del JWT). Response 200: `{ taskId, assignee, claimedAt }`. Response 409: `{ conflictUser, message }`.
+    And `POST /api/v1/tasks/bulk-claim` — Reclamo masivo. Body: `{ taskIds: ['TK-1', 'TK-2', ...] }`. Response 200: `{ claimed: [...], conflicts: [...] }`. Límite máximo de 20 tareas por lote (Hard Limit).
+    And `POST /api/v1/tasks/{taskId}/release` — Liberación. Body: `{ message?: string }` (mensaje opcional del CA-04, máximo 500 caracteres). Response 200: `{ taskId, releasedAt }`.
+    And `POST /api/v1/tasks/{taskId}/force-unclaim` — Despojo forzoso (solo Supervisores). Body: `{ reason?: string }`. Response 200: `{ taskId, previousAssignee, forcedBy, timestamp }`. Response 403: si no pertenece al equipo (CA-13).
+    And `GET /api/v1/tasks/{taskId}/audit-trail` — Historial de trazabilidad (CA-09). Response 200: `{ entries: [{ action, userId, userName, timestamp, reason? }] }`.
+    And todos los endpoints aplicarán OBLIGATORIAMENTE el filtro `tenantId` del JWT y el bind ORM anti-SQLi (consistente con US-001 CA-14).
+
+  Scenario: [REMEDIACIÓN] Definición del Ghost Job Timeout y Pre-Aviso al Operario (CA-15)
+    # Origen: REM-002-05 — GAP-5 del us002_functional_analysis.md
+    # Resuelve: El CA-06 no define umbral, criterio de inactividad ni pre-aviso.
+    Given el Cron Job de detección de tareas abandonadas (CA-06)
+    Then el mecanismo de Auto-Unclaim seguirá las siguientes reglas:
+    And 1. **Definición de "inactividad":** Una tarea se considera inactiva si el operario asignado NO ha ejecutado NINGUNA acción registrable sobre ella (completar, guardar borrador, adjuntar archivo, o cambiar estado) durante el período configurado. El mero hecho de tener la tarea abierta en pantalla NO cuenta como actividad.
+    And 2. **Umbral por defecto:** 4 horas laborales de inactividad. Este umbral será configurable por tenant desde la configuración administrativa (US-036 / Pantalla 14), con un rango válido de 1 hora a 24 horas.
+    And 3. **Pre-aviso obligatorio:** Cuando la tarea alcance el 75% del umbral (Ej: a las 3 horas de un umbral de 4), el sistema enviará un Toast persistente al operario: "Tu tarea [TK-123] será devuelta a la cola grupal en 1 hora por inactividad. Realiza una acción para evitarlo."
+    And 4. **Ejecución del Auto-Unclaim:** Al cumplirse el 100% del umbral, el Cron Job ejecutará el unclaim automático, activará la Amnesia Transaccional del CA-07 (purga de datos parciales), y emitirá los eventos WebSocket del CA-12 (ADD hacia la cola grupal, REMOVE de la bandeja personal del operario).
+    And 5. **Registro de Auditoría:** Cada Auto-Unclaim quedará registrado en el historial de trazabilidad del CA-09 con el motivo: `{ action: 'AUTO_UNCLAIM', reason: 'Inactividad de X horas', previousAssignee, timestamp }`.
+    And 6. **Frecuencia del Cron Job:** Se ejecutará cada 15 minutos para detectar tareas que superen el umbral. No se ejecutará fuera del horario laboral configurado del tenant.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Botón: Asignarme Tarea / Claim).
 

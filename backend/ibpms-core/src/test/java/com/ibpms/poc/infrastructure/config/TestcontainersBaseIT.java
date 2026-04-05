@@ -44,6 +44,7 @@ public abstract class TestcontainersBaseIT {
      */
     @Container
     @ServiceConnection
+    @SuppressWarnings("resource") // Testcontainers gestiona el lifecycle via JUnit Jupiter
     static PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>("postgres:16-alpine")
                     .withDatabaseName("ibpms_test")

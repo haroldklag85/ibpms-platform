@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({"unchecked", "null"}) // Mockito stubs for generic RabbitTemplate.execute(ChannelCallback<T>)
 class RabbitHealthIndicatorTest {
 
     @Mock

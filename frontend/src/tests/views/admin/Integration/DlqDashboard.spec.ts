@@ -43,8 +43,10 @@ describe('Dead Letter Queue Dashboard (DLQ) CA-8', () => {
         await flushPromises();
 
         // Forzamos abrir el modal purgando summary local
-        wrapper.vm.summary.totalMessages = 5;
-        wrapper.vm.isPurgeModalOpen = true;
+        // Cast a `any` porque <script setup> no expone refs en el tipo público del wrapper
+        const vm = wrapper.vm as any;
+        vm.summary.totalMessages = 5;
+        vm.isPurgeModalOpen = true;
         await wrapper.vm.$nextTick();
 
         const purgeModalText = wrapper.text();
@@ -63,8 +65,9 @@ describe('Dead Letter Queue Dashboard (DLQ) CA-8', () => {
         const wrapper = mount(DlqDashboard);
         await flushPromises();
 
-        wrapper.vm.summary.totalMessages = 5;
-        wrapper.vm.isRetryModalOpen = true;
+        const vm = wrapper.vm as any;
+        vm.summary.totalMessages = 5;
+        vm.isRetryModalOpen = true;
         await wrapper.vm.$nextTick();
 
         const retryModalText = wrapper.text();

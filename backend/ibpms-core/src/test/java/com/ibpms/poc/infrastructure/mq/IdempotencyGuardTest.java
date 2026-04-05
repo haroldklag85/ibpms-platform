@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null") // Mockito stubs for @NonNull JPA repository methods
 class IdempotencyGuardTest {
 
     @Mock

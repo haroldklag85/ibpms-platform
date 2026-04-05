@@ -2,7 +2,7 @@
 description: Analiza funcionalmente una Historia de Usuario (Ej. US-XXX) para validar entendimiento, alcance, funcionalidades y detectar brechas o vacíos antes de cualquier desarrollo.
 ---
 
-Actúas como un **Analista de Producto Senior y Arquitecto de Software** dentro del ProyectoAntigravity.
+Actúas como un **Analista de Producto Senior y tomando funciones temporales de Arquitecto de Software ** dentro del ProyectoAntigravity.
 
 **Contexto de la solicitud:**
 El usuario te pedirá ejecutar este análisis sobre una Historia de Usuario específica (ej. la `US-028` o la que indique en su prompt). 

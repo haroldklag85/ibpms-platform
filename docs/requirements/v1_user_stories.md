@@ -1979,6 +1979,14 @@ Permite a los usuarios de negocio (no técnicos) generar reglas lógicas complej
 **Quiero** escribir políticas de negocio en lenguaje natural (ej. "Aprobar si monto < 1000")
 **Para** que el iBPMS las traduzca de forma segura, asíncrona y estructurada a una tabla matemática DMN (Hit Policy: FIRST), erradicando la ambigüedad humana sin exponer datos PII a modelos LLM externos y protegiendo el performance del servidor.
 
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-007:**
+> - **US-005 (Despliegue BPMN / Pantalla 6):** La Business Rule Task del BPMN consume la DMN vía `Decision_Ref` (CA-61 de US-005). El binding LATEST vs DEPLOYMENT (CA-12 de US-005) decide qué versión DMN aplica en runtime. El Pre-Flight Analyzer debe validar la compatibilidad del Catch-All (CA-14 de US-007) contra el diseño del Gateway posterior.
+> - **US-003 (IDE Formularios / Pantalla 7):** El Diccionario de variables Zod alimenta las columnas de entrada de la DMN. Si una variable Zod se renombra o elimina, la DMN se rompe silenciosamente. La invalidación de caché Redis (CA-16) depende de que US-003 publique el evento `FORM_SCHEMA_CHANGED`.
+> - **US-036 (RBAC / Pantalla 14):** El rol `ROLE_PROCESS_ARCHITECT` que protege la creación y publicación de DMNs (CA-06) se administra desde la Pantalla 14.
+> - **US-033 (Hub de Integraciones / Pantalla 11):** Si el output de una DMN gatilla una integración API (Ej: "Rechazar → Notificar CRM"), la Service Task posterior consume conectores del Hub.
+> - **US-034 (RabbitMQ):** El evento de invalidación de caché `FORM_SCHEMA_CHANGED` (CA-16) se transmite vía el broker de mensajería. La publicación de una DMN V2 podría necesitar invalidar caché de Workers que evaluaban la V1.
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: NLP to DMN Translation, SRE Architecture & AppSec Governance
@@ -2068,6 +2076,161 @@ Feature: NLP to DMN Translation, SRE Architecture & AppSec Governance
     Then el Frontend desplegará un Modal Inevitable exigiendo digitar `CONFIRMO_V2` para evitar clics accidentales.
     And existirá un botón de `[ ⏪ Revertir a V1 ]` explícito para rollback rápido.
     And el historial del Chat NLP persistirá visualmente atado a esa Versión, y los colores de la grilla cumplirán la norma WCAG AA para diferenciar celdas hechas por IA vs editadas a mano.
+
+
+  # ==============================================================================
+  # E. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us007_functional_analysis.md
+  # Tickets: REM-007-01 a REM-007-06
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Resolución de Persistencia Dual de Borradores DMN (CA-13)
+    # Origen: REM-007-01 — GAP-1 del us007_functional_analysis.md
+    # Corrige la contradicción del CA-03 que reclama LocalStorage Y PostgreSQL simultáneamente.
+    Given la necesidad de persistir borradores DMN durante la iteración del chat NLP (CA-03)
+    Then los borradores DMN seguirán la arquitectura de persistencia híbrida:
+    And 1. Los borradores se persistirán PRIMARIAMENTE en PostgreSQL vía `POST /api/v1/dmn/drafts` (tabla `ibpms_dmn_drafts`, columnas: `id`, `user_id`, `prompt_hash`, `xml_content`, `created_at`, `expires_at`).
+    And 2. El LocalStorage del Frontend actuará como CACHÉ DE SESIÓN ACTIVA para evitar peticiones redundantes al Backend mientras el usuario itera en la misma pestaña.
+    And 3. Un Job Scheduler del Backend purgará físicamente de PostgreSQL los borradores con `expires_at` superado (TTL: 24 horas), consistente con el CA-03 original.
+    And 4. Al sellar (aprobar) la versión final, el Backend eliminará todos los borradores asociados a ese `prompt_hash` y el Frontend destruirá su caché local.
+    And queda ELIMINADA la ambigüedad del CA-03: PostgreSQL es la fuente de verdad de los borradores, LocalStorage es solo caché efímero.
+
+  Scenario: [REMEDIACIÓN] Validación Pre-Flight del Catch-All DMN contra el BPMN (CA-14)
+    # Origen: REM-007-02 — GAP-2 del us007_functional_analysis.md
+    # Previene el "Silent Killer": aprobaciones automáticas por falta de Gateway post-DMN.
+    Given la obligatoriedad de la fila Catch-All con output "Revisión Humana" en toda tabla DMN (CA-07)
+    Then el Pre-Flight Analyzer de la US-005 (Pantalla 6) incluirá una regla de validación cruzada obligatoria:
+    And al evaluar una Business Rule Task que referencie una DMN con Catch-All activo, el Pre-Flight verificará que INMEDIATAMENTE DESPUÉS de esa tarea exista un Exclusive Gateway que evalúe la variable de output de la DMN.
+    And si el Gateway no contempla una rama que enrute el valor "Revisión Humana" (o su equivalente configurado) a una User Task, el Pre-Flight emitirá Error ❌ bloqueante: "La Business Rule Task '{taskName}' produce el output 'Revisión Humana' vía Catch-All, pero el Gateway posterior no tiene una rama que lo enrute a una tarea humana. El proceso desplegado ignoraría este caso silenciosamente."
+    And esta validación se ejecutará en tiempo de despliegue del BPMN (no en tiempo de publicación de la DMN), porque es responsabilidad del diseño del proceso, no de la tabla de decisión.
+    And si la Business Rule Task NO tiene un Gateway inmediatamente posterior (conecta directo a otra tarea), el Pre-Flight emitirá Advertencia ⚠️: "La Business Rule Task '{taskName}' no tiene Gateway posterior. Los outputs de la DMN serán ignorados."
+
+  Scenario: [REMEDIACIÓN] Endpoint Dedicado para el Simulador de Decisiones DMN (CA-15)
+    # Origen: REM-007-03 — GAP-3 del us007_functional_analysis.md
+    Given la funcionalidad del Simulador de Decisiones (CA-11) que permite probar la DMN con variables ficticias
+    Then la evaluación de prueba se ejecutará en el Backend, NO en el Frontend, para garantizar paridad con el motor FEEL de Camunda en producción.
+    And el Backend expondrá el endpoint `POST /api/v1/dmn/{id}/evaluate-test` que aceptará un JSON con las variables de prueba (Ej: `{"monto": 5000, "mora_dias": 45}`).
+    And el endpoint delegará la evaluación al motor DMN de Camunda en modo Sandbox (sin persistir resultados) y retornará: `{"matched_rule_index": 3, "output": {"decision": "Revisión Humana"}, "all_rules_evaluated": [...]}`.
+    And el Frontend iluminará visualmente en verde la fila `matched_rule_index` retornada, consistente con el CA-11.
+    And las variables de prueba NO se persisten como casos de test reutilizables en V1 (diferido a V2). Son efímeras y se pierden al cerrar la Pantalla 4.
+    And TIENE PROHIBIDO implementar un parser FEEL en JavaScript en el Frontend para evitar discrepancias de evaluación con el motor real.
+
+  Scenario: [REMEDIACIÓN] Invalidación de Caché Redis al Mutarse el Diccionario Zod (CA-16)
+    # Origen: REM-007-04 — GAP-4 del us007_functional_analysis.md
+    Given la caché Redis que usa el hash de (Prompt + Diccionario) como clave (CA-02)
+    Then cuando un Arquitecto modifique el diccionario Zod de un formulario en la Pantalla 7 (US-003) — ya sea agregando, eliminando o renombrando una variable —, el Backend de formularios DEBE publicar un evento de dominio `FORM_SCHEMA_CHANGED` (vía RabbitMQ o evento interno).
+    And el servicio DMN del Backend escuchará este evento y ejecutará una invalidación quirúrgica: purgará de Redis ÚNICAMENTE las entradas de caché cuyos hashes incluyan el `form_id` del formulario modificado.
+    And NO se invalida toda la caché Redis (eso sería un nuke innecesario), solo las entradas vinculadas al diccionario que cambió.
+    And al siguiente request del Arquitecto con el mismo Prompt, el sistema generará una DMN nueva con la IA usando el diccionario actualizado, y la cacheará con el nuevo hash.
+
+  Scenario: [REMEDIACIÓN] Catálogo y Explorador de Tablas DMN (DMN Library Dashboard) (CA-17)
+    # Origen: REM-007-05 — GAP-5 del us007_functional_analysis.md
+    # Cierra el déficit estructural de gobernanza de artefactos respecto a US-003 (CA-86) y US-005 (CA-23).
+    Given la necesidad del Arquitecto de buscar, re-editar o consultar versiones de tablas DMN existentes
+    When el usuario ingresa al módulo DMN (Pantalla 4 Principal)
+    Then EL SISTEMA NO CARGARÁ el chat NLP en blanco directamente, sino que presentará un "Catálogo o Grilla de Tablas DMN".
+    And esta Grilla incluirá un Buscador `Server-side` para buscar por Nombre de Negocio o Decision_Ref (ID Técnico).
+    And cada fila o tarjeta mostrará:
+    And - Nombre de la Tabla (Ej: "Matriz de Riesgo Crediticio")
+    And - Decision_Ref (Ej: `decision_risk_matrix`)
+    And - Versión Activa (Ej: `v3`)
+    And - Estado: "📝 BORRADOR" / "✅ ACTIVA" / "📦 ARCHIVADA"
+    And - Fecha de Última Modificación y Autor
+    And - Cantidad de filas de la tabla (Ej: "12 reglas")
+    And al hacer clic sobre una DMN, se abrirá en el Editor/Chat NLP para su edición o consulta.
+    And existirá un botón [📦 Archivar] que solo se habilitará si NO existen Business Rule Tasks activas en BPMN desplegados que referencien esa Decision_Ref.
+    And el Backend expondrá el endpoint `GET /api/v1/dmn?status=ACTIVE&search=riesgo&page=1&size=20` con paginación server-side.
+
+  Scenario: [REMEDIACIÓN] Contrato API Estandarizado para el Ciclo de Vida DMN (CA-18)
+    # Origen: REM-007-06 — GAP-6 del us007_functional_analysis.md
+    Given la necesidad de alinear Frontend y Backend en el contrato REST del módulo DMN
+    Then el Backend expondrá los siguientes endpoints documentados con OpenAPI/Swagger annotations:
+    And `POST /api/v1/dmn` — Crear nueva DMN (body: `{name, decision_ref, source: "NLP"|"XML_UPLOAD", prompt?}`) → Retorna `201 Created` con `{id, version, status: "DRAFT"}`.
+    And `GET /api/v1/dmn` — Listar DMNs con filtros (query params: `status`, `search`, `page`, `size`) → Retorna lista paginada para el Catálogo (CA-17).
+    And `GET /api/v1/dmn/{id}` — Obtener detalle completo de una DMN (XML, metadatos, historial de versiones).
+    And `PUT /api/v1/dmn/{id}` — Actualizar DMN → genera V2 obligatoriamente (consistente con CA-06). Retorna `201 Created` con nueva versión.
+    And `POST /api/v1/dmn/{id}/publish` — Publicar/Aprobar → commit al motor Camunda + warm-up cache (CA-03). Cambia status a "ACTIVE". Requiere confirmación `CONFIRMO_V{N}` (CA-12).
+    And `POST /api/v1/dmn/{id}/rollback` — Rollback: crea una nueva versión que es copia de la versión anterior (CA-12).
+    And `POST /api/v1/dmn/{id}/evaluate-test` — Simulador de decisiones (CA-15).
+    And `POST /api/v1/dmn/drafts` — Crear/actualizar borrador temporal (CA-13).
+    And `DELETE /api/v1/dmn/drafts/{id}` — Purgar borrador manualmente.
+    And `POST /api/v1/dmn/{id}/archive` — Archivar DMN sin referencias activas (CA-17).
+
+
+  # ==============================================================================
+  # F. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: Cuestionario de 45 preguntas del workflow /refinamientoFuncionalUs.md
+  # Propósito: Cerrar huecos descubiertos durante el refinamiento de la US-007.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Resiliencia SSE ante Desconexiones Parciales (CA-19)
+    # Origen: Pregunta #2 del Refinamiento Funcional
+    # Resuelve: ¿Qué pasa si la conexión se corta a mitad de la generación de la tabla?
+    Given que el canal SSE (CA-01) está emitiendo filas de la tabla DMN al Frontend en tiempo real
+    When la conexión SSE se interrumpe inesperadamente (pérdida de red, cierre de pestaña, timeout del proxy)
+    Then el Frontend preservará las filas parcialmente recibidas como un borrador incompleto visible en la grilla con un indicador visual "⚠️ Generación Interrumpida (12 de 30 filas recibidas)".
+    And mostrará un botón `[🔄 Reintentar Generación]` que re-enviará el mismo prompt al Backend.
+    And si el hash del prompt existe en caché Redis (CA-02), el Backend devolverá la tabla completa instantáneamente sin costo LLM adicional.
+    And si NO existe en caché, el Backend iniciará una nueva generación SSE completa (no parcial).
+    And las filas parciales anteriores se destruirán del DOM al recibir la primera fila de la nueva generación.
+
+  Scenario: [REFINAMIENTO] Normalización del Prompt para Caché Inteligente (CA-20)
+    # Origen: Pregunta #3 del Refinamiento Funcional
+    # Resuelve: Dos prompts idénticos con diferente capitalización que pagan doble a la IA.
+    Given el cálculo del hash de caché basado en (Prompt + Diccionario) del CA-02
+    Then el Backend NORMALIZARÁ el prompt antes de calcular el hash, aplicando las siguientes transformaciones:
+    And 1. Conversión a minúsculas (lowercase).
+    And 2. Eliminación de espacios duplicados y espacios al inicio/final (trim + collapse).
+    And 3. Eliminación de signos de puntuación irrelevantes (puntos finales, comas sueltas).
+    And como resultado, los prompts "Aprobar si MONTO < 1000" y "aprobar si monto < 1000" producirán el MISMO hash y servirán la MISMA tabla cacheada, evitando costos LLM duplicados.
+
+  Scenario: [REFINAMIENTO] Validación Post-Minificación del XML DMN (CA-21)
+    # Origen: Pregunta #5 del Refinamiento Funcional
+    # Resuelve: El riesgo de que la compresión XML (CA-03) corrompa el documento.
+    Given el proceso de XML Minification del CA-03 que elimina espacios en blanco inútiles antes del COMMIT
+    Then INMEDIATAMENTE DESPUÉS de la minificación, el Backend ejecutará un parse de validación del XML resultante contra el schema DMN de Camunda.
+    And si el parse falla (XML corrupto o estructura inválida), el Backend CANCELARÁ la minificación y persistirá el XML ORIGINAL sin comprimir, registrando un WARNING en los logs: "Minificación abortada por riesgo de corrupción. Guardando XML original."
+    And NUNCA se hará COMMIT de un XML minificado que no haya superado la validación de parseo.
+
+  Scenario: [REFINAMIENTO] Rechazo de XML Upload con Hit Policy No Autorizada (CA-22)
+    # Origen: Pregunta #7 del Refinamiento Funcional
+    # Resuelve: El Modo Desarrollador acepta XMLs con Hit Policy diferente a FIRST, causando errores en runtime.
+    Given la carga manual de un archivo XML DMN en Modo Desarrollador (CA-09)
+    When el Backend recibe el XML subido por el usuario
+    Then el Backend parseará el XML y verificará que el atributo `hitPolicy` de la etiqueta `<decisionTable>` sea estrictamente `FIRST`.
+    And si el XML contiene una Hit Policy diferente (UNIQUE, COLLECT, RULE ORDER, OUTPUT ORDER, ANY), el Backend rechazará la carga con HTTP `422 Unprocessable Entity` y el mensaje: "La tabla DMN que subió usa la política de evaluación '{hitPolicy}', pero el sistema solo permite la política FIRST en la Versión 1. Por favor modifique su archivo y vuelva a intentarlo."
+    And si el XML no contiene el atributo `hitPolicy`, el Backend lo inyectará automáticamente como `FIRST` antes de persistir.
+
+  Scenario: [REFINAMIENTO] Rate Limiting Independiente para el Simulador de Decisiones (CA-23)
+    # Origen: Pregunta #28 del Refinamiento Funcional
+    # Resuelve: El endpoint evaluate-test (CA-15) no tiene Rate Limiting propio, permitiendo abuso contra el motor Camunda.
+    Given el endpoint `POST /api/v1/dmn/{id}/evaluate-test` del Simulador de Decisiones (CA-15)
+    Then el API Gateway impondrá un Rate Limiting independiente al del CA-02 (generación IA):
+    And máximo 20 evaluaciones de prueba por minuto por usuario autenticado.
+    And si se excede, el Backend retornará HTTP `429 Too Many Requests` con un mensaje amigable: "Has realizado demasiadas pruebas seguidas. Espera {remainingSeconds} segundos antes de probar nuevamente."
+    And este límite es independiente del Rate Limiting de generación IA (CA-02) porque protege un recurso diferente (el motor Camunda de evaluación, no la API del LLM).
+
+  Scenario: [REFINAMIENTO] Buscador In-App para Grilla DMN con Virtual Scrolling (CA-24)
+    # Origen: Pregunta #34 del Refinamiento Funcional
+    # Resuelve: Ctrl+F del navegador no encuentra texto en filas fuera del viewport cuando se usa Virtual Scrolling (CA-10).
+    Given la grilla DMN con Virtual Scrolling activo (CA-10) donde solo las filas visibles están renderizadas en el DOM
+    Then la grilla incorporará un buscador integrado activable con el atajo `Ctrl+F` (interceptando el evento nativo del navegador) o mediante un ícono de búsqueda `[🔍]` visible en la barra de herramientas de la grilla.
+    And el buscador buscará en TODAS las filas de la tabla (incluyendo las no renderizadas en el viewport), resaltando en amarillo las coincidencias y navegando automáticamente (scroll) hasta la primera coincidencia.
+    And soportará navegación entre resultados con botones `[↑ Anterior]` y `[↓ Siguiente]`.
+
+  Scenario: [REFINAMIENTO] Timeout y SLA de Tiempo de Respuesta para Generación (CA-25)
+    # Origen: Pregunta #41 del Refinamiento Funcional
+    # Resuelve: No había un tiempo máximo definido para la generación SSE, dejando al usuario esperando indefinidamente.
+    Given el envío de un prompt de generación DMN al Backend vía SSE (CA-01)
+    Then el Frontend establecerá un timeout global de 30 segundos para la conexión SSE.
+    And si transcurren más de 30 segundos sin recibir NINGUNA fila (ni siquiera la primera), el Frontend cerrará la conexión SSE y mostrará: "La generación tardó más de lo esperado. Esto puede ocurrir con políticas muy complejas. Pulse [🔄 Reintentar] para intentarlo nuevamente."
+    And como referencia de rendimiento, el Time To First Row (tiempo desde el envío del prompt hasta la primera fila visible en la grilla) deberá ser inferior a 8 segundos bajo condiciones normales de red y carga.
+    And si la generación ya comenzó (al menos 1 fila recibida) pero deja de emitir filas por más de 15 segundos consecutivos (stall), el Frontend activará el mecanismo de resiliencia del CA-19 (borrador parcial + reintentar).
+
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 4 (Taller DMN) y su invocación desde Pantalla 6 (Diseñador BPMN).
 

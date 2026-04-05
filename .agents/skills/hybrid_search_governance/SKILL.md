@@ -1,7 +1,7 @@
 ---
 name: hybrid_search_governance
 description: >
-  Skill obligatoria para todos los agentes constructores (Arquitecto, Backend, Frontend).
+  Skill obligatoria para todos los agentes (Arquitecto, Backend, Frontend, QA).
   Operacionaliza la LEY GLOBAL 0 (RAG-First Deep Context) definiendo un estricto protocolo 
   de "Cuádruple Check" (Conocimiento, Semántica, Estructura, Gobernanza) para blindar la 
   ventana de contexto, prevenir alucinaciones arquitectónicas y anclar el código al SSOT.
@@ -14,11 +14,12 @@ applies_to:
   - Arquitecto Líder
   - Backend
   - Frontend
+  - QA / DevOps
 ---
 
 # PROTOCOLO DE GOBERNANZA: MOTOR DE BÚSQUEDA HÍBRIDA EXTREMA (RAG ESTRUCTURADO)
 
-> **Versión:** 2.0 (Extreme RAG) | **Última Actualización:** 2026-04-04
+> **Versión:** 2.1 (QA Integration) | **Última Actualización:** 2026-04-05
 > **Ley Padre:** LEY GLOBAL 0 — RAG-First Deep Context (`.cursorrules`)
 
 ## 0. AVISO DE SISTEMA (DEFENSA DE LA VENTANA DE CONTEXTO)

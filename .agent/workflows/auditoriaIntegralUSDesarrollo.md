@@ -2,6 +2,8 @@
 description: Realiza una auditoría integral, exhaustiva y por capas (Frontend y Backend) de una Historia de Usuario específica para validar su integración End-to-End (E2E) sin mocks.
 ---
 
+> **[METRA-PROMPT / RUTEO]:** Este es un workflow operativo final. Si no estás seguro de si esta es la técnica correcta para la US actual, detente e invoca primero `/router_certificacion_qa` para consultar el árbol de decisión oficial.
+
 Actúas como un Lead QA y Auditor Técnico dentro del ProyectoAntigravity (ibpms-platform).
 
 **Contexto de la solicitud:**

@@ -5601,123 +5601,36 @@ Regula la inmutabilidad de los datos recolectados, previniendo la contaminación
 **Quiero** diligenciar la información de mi tarea, almacenando las subidas temporales (Drafts) y transacciones finales de forma inmutable
 **Para** garantizar cero bloqueos concurrentes, trazabilidad absoluta y finalizar exitosamente mi actividad sin contaminar el motor de Camunda (separando lectura de escritura).
 
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-017:**
+> - **US-029 (Pantalla 2 / Frontend UX):** ⚠️ HISTORIA GEMELA. Comparten el endpoint `POST /api/v1/workbox/tasks/{id}/complete`. La US-029 gobierna la experiencia del Frontend (UI, validación Zod en navegador, Upload-First UX, LocalStorage, feedback visual, Wizard). La US-017 gobierna la persistencia del Backend (CQRS, Event Sourcing, protección de Camunda, Rollback Saga, validación Backend). La reconciliación se formaliza en el CA-19 de la US-029 (Política de Propiedad Exclusiva).
+> - **US-003 (Catálogo de Formularios / Pantalla 7):** 🔴 BLOQUEANTE. Los esquemas Zod que el Backend valida mediante `json-schema-validator` (transpilados en CI/CD) se generan en la US-003. Sin esquemas, la validación Backend es imposible.
+> - **US-002 (Reclamar Tarea / Pantalla 1):** 🔴 BLOQUEANTE. Sin reclamo, la tarea no tiene `assignee` y los CAs de Implicit Locking de la US-029 (CA-07/CA-18) rechazarán todo intento de completar con HTTP 403. El CA-04 de esta US-017 define una excepción controlada para tareas de grupo.
+> - **US-035 (SharePoint/SGDEA):** ⚠️ FUERTE. La bóveda documental temporal que almacena archivos pre-submit (Upload-First) es un servicio externo que la US-017 debe vincular transaccionalmente a los eventos CQRS.
+> - **US-036 (RBAC / Pantalla 14):** ⚠️ FUERTE. La validación Backend Zero-Trust necesita la matriz de roles para resolver el strip silencioso de campos no autorizados (delegado desde US-029 CA-15 Zod Isomórfico).
+> - **US-034 (RabbitMQ):** 🟡 DESEABLE. El Worker asíncrono de proyección del CA-01 puede utilizar colas de mensajería para procesar eventos de forma resiliente. Si RabbitMQ no está disponible, el Worker operará in-process como fallback.
+> - **US-009 (BAM Dashboard / Pantalla 5):** 🟡 CONSUMIDOR. Los dashboards de analítica consumen las tablas proyectadas por el Worker del CA-01. Sin la proyección, los dashboards no tienen datos actualizados.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Hexagonal CQRS Persistence, Zero-Trust Validation and Task Completion
 
   # ==============================================================================
-  # A. EJECUCIÓN BASE Y VALIDACIÓN DE DATOS (HAPPY & SAD PATHS)
+  # A. ARQUITECTURA CQRS, EVENT SOURCING Y PROTECCIÓN DEL MOTOR
   # ==============================================================================
-  Scenario: Enviar datos válidos de formulario (CA-1)
-    Given la tarea "TK-100" asignada a "carlos.ruiz" requiere el formulario "Form_Aprobacion_V1"
-    And "Form_Aprobacion_V1" exige el campo obligatorio numérico "monto_aprobado"
-    When "carlos.ruiz" realiza un POST a "/api/v1/workbox/tasks/TK-100/complete"
-    And incluye en el body el JSON '{"variables": {"monto_aprobado": 1500, "comentarios": "Ok"}}'
-    Then el sistema debe retornar un HTTP STATUS 200 OK
-    And la tarea "TK-100" marca su estado interno como "COMPLETED"
-    And las variables del JSON se persisten inmutablemente asociadas a la instancia del proceso.
-
-  Scenario: Enviar datos inválidos (Violación del JSON Schema) (CA-2)
-    Given la tarea "TK-100" requiere el campo obligatorio "monto_aprobado" numérico
-    When "carlos.ruiz" realiza un POST a "/api/v1/workbox/tasks/TK-100/complete"
-    And incluye un JSON vacío '{"variables": {}}'
-    Then el sistema valida el payload contra el JSON Schema registrado para "Form_Aprobacion_V1"
-    And el sistema debe retornar un HTTP STATUS 400 Bad Request
-    And el error format JSON debe especificar de forma estructurada: `{"error": "ValidationFailed", "fields": [{"field": "monto_aprobado", "message": "Required"}]}`
-
-  # ==============================================================================
-  # B. INICIALIZACIÓN Y CONTEXTO UI (PATRÓN BFF Y LAZY PATCHING)
-  # ==============================================================================
-  Scenario: Inyección Megalítica de Contexto (Patrón BFF) (CA-3)
-    Given la entrada física a la vista de la tarea operativa (Pantalla 2)
-    When el Frontend inicializa el componente Vue
-    Then despachará EXACTAMENTE UNA (1) única petición GET consolidada a `/api/v1/workbox/tasks/{id}/form-context`
-    And el Backend obrará como BFF (Backend for Frontend) inyectando en un Mega-DTO la triada: [Esquema Zod Vigoroso + Layout UI de Vue + Variables Históricas de Solo Lectura extraídas de Camunda (`prefillData`)]
-    And este DTO incluirá obligatoriamente la versión exacta del esquema (`schema_version`) para poblar inputs en un solo tick de renderizado y prevenir choques generacionales si el Arquitecto modifica el diseño mientras el caso está en vuelo.
-
-  Scenario: Hibridación de Datos Históricos vs Nuevos Contratos (Lazy Patching) (CA-4)
-    Given el BFF inyectando `prefillData` de una Instancia antigua (V1) hacia un Formulario Zod nuevo (V2)
-    When existan campos obligatorios nuevos en la V2 que no venían en la data histórica de Camunda (`null` o `undefined`)
-    Then el esquema Zod reactivo los evaluará inmediatamente como inválidos iluminando dichos inputs en ROJO
-    And el Frontend bloqueará físicamente el botón de [Enviar]
-    And obligará procedimentalmente al analista a auditar el dato, contactar al cliente y digitar la información faltante en la UI para poder avanzar el proceso (Amnistía en Lectura, Guillotina en Escritura).
-
-  # ==============================================================================
-  # C. CARGA BINARIA Y SEGURIDAD PERIMETRAL DE ARCHIVOS
-  # ==============================================================================
-  Scenario: Desacoplamiento de Carga Binaria (Upload-First) y Escudo Anti-IDOR (CA-5)
-    Given un formulario Zod que incluye un componente `<InputFile>`
-    When el usuario final adjunta un documento pesado (Ej: PDF de 10MB)
-    Then el Frontend ejecutará una carga asíncrona temprana (Pre-Submit) hacia la Bóveda SGDEA (`/api/v1/documents/upload-temp`) obteniendo un Identificador Único (`UUID`)
-    And al presionar [Enviar], el POST a `/complete` enviará EXCLUSIVAMENTE el JSON plano referenciando el ID (`{"cedula_pdf": "UUID-123"}`), teniendo PROHIBIDO arquitectónicamente enviar payloads Multipart o Base64 contra el motor de procesos Camunda
-    And la arquitectura TIENE ESTRICTAMENTE PROHIBIDO enlazar ciegamente ese archivo a la tarea
-    And el Backend validará en la tabla de adjuntos temporales que `UUID-123` pertenezca al `user_id` logueado Y haya sido subido en el contexto de esa misma `task_id` (Defensa Anti-IDOR)
-    And si detecta un UUID ajeno, abortará la transacción con `HTTP 403 Forbidden`
-    And un Cron Job nocturno destruirá físicamente de S3/SGDEA cualquier archivo temporal (TTL > 24h) sin confirmación transaccional para evitar facturas por almacenamiento basura.
-
-  # ==============================================================================
-  # D. RESILIENCIA OFFLINE, UX EVENTUAL Y PROTECCIÓN DE ESTADO
-  # ==============================================================================
-  Scenario: Trazabilidad Volátil, Draft Sync y Cifrado PII en LocalStorage (CA-6)
-    Given la digitación continua de un analista en un iForm masivo abierto en el Workdesk
-    Then el Frontend guardará el borrador (Draft) asíncronamente en el `LocalStorage` del navegador atado al `Task_ID` (mediante `@vueuse/core`) a cada tecla
-    But si el esquema Zod marca campos como `PII/Sensibles` (US-003), el Frontend DEBE aplicar cifrado simétrico (AES) usando una llave derivada de la sesión antes de escribir en LocalStorage
-    And disparará peticiones silenciosas de *Merge Commit* al Backend (Snapshot Volátil) SOLO bajo un Debounce ininterrumpido de 10s de inactividad, usando una validación Zod "Parcial" (permitiendo nulos pero castigando tipos inválidos)
-    And cuando el POST a `/complete` finalice exitosamente (HTTP 200 OK), el Frontend ejecutará una purga síncrona destruyendo inmediatamente la llave temporal de ese caso específico
-    And un Cron silencioso global eliminará cualquier borrador huérfano en la PC del usuario que supere las 72 horas de antigüedad, previniendo cuellos de memoria.
-
-  Scenario: Consistencia Eventual UX y Read-Your-Own-Writes (RYOW) (CA-7)
-    Given que el POST a `/complete` finaliza exitosamente (HTTP 200 OK)
-    Then además de purgar el LocalStorage, el Frontend eliminará proactivamente esa tarea específica del Store en RAM (Pinia) del Workdesk ANTES de redirigir al usuario al Home (RYOW)
-    And esto garantizará que el usuario no vea su tarea "ya completada" flotando como un fantasma en su bandeja por culpa del micro-retraso asíncrono de la proyección de lectura del CQRS en la Base de Datos.
-
-  Scenario: Idempotencia y Protección Anti-Doble Clic (El Dedo Tembloroso) (CA-8)
-    Given el usuario pulsa [Enviar Formulario] múltiples veces por ansiedad o lag de red
-    When el Payload JSON impacta el endpoint POST `/complete`
-    Then el Frontend inyectará obligatoriamente un Header `Idempotency-Key` (UUID único por montaje de componente)
-    And el API Gateway/Backend procesará únicamente la primera transacción
-    And las peticiones subsecuentes idénticas retornarán un `HTTP 200 OK` silenciado desde la Caché, protegiendo a Camunda de excepciones `OptimisticLocking` o doble gasto en el Event Sourcing.
-
-  # ==============================================================================
-  # E. SEGURIDAD ZERO-TRUST, ISOMORFISMO Y PREVENCIÓN DE COLISIONES
-  # ==============================================================================
-  Scenario: Zod Isomórfico y Guillotina de Datos Fantasma (Choque Gnoseológico) (CA-9)
-    Given la existencia de esquemas Zod bidireccionales en el ecosistema
-    When un atacante bypassea la UI enviando un POST adulterado vía API REST (Ej: Editando un campo oculto o de 'Solo Lectura')
-    Then los esquemas Zod de Frontend se transpilarán en CI/CD a estándar RFC JSONSchema, y el API Gateway/BFF en Java ejecutará la validación estrictamente mediante la librería genérica json-schema-validator, anulando el cuello de botella de emuladores JS.
-    And cruzará los permisos de escritura del Rol del usuario contra los campos recibidos; si inyectó datos no autorizados, aplicará un `.strip()` silencioso descartando el campo adulterado, o abortará con `HTTP 403 Forbidden`
-    And rechazará con `HTTP 400 Bad Request` cualquier asimetría de tipos de datos.
-
-  Scenario: Seguridad Asimétrica y Prevención Replay en Micro-Tokens (CA-10)
-    Given una validación asíncrona externa (Ej: Validar NIT) gatillada `OnBlur` en el Frontend
-    When el Backend consulta la API externa exitosamente y retorna al Frontend un "Micro-Token JWT" firmado criptográficamente de corta duración (Ej: TTL 15 min)
-    Then al momento del Submit final (`/complete`), el Frontend adjuntará este Micro-Token en el payload
-    And el Backend (Zero-Trust) omitirá realizar una segunda llamada de red externa bloqueante, limitándose a verificar matemáticamente la validez de su propia firma en el Micro-Token para autorizar la transacción ACID en milisegundos
-    And la arquitectura PROHÍBE el re-uso de tokens (Replay Attacks); el Token DEBE contener en sus Claims el `taskId` exacto y un `jti` que será invalidado en Redis un milisegundo después del Submit exitoso.
-
-  Scenario: Integridad de Asignación Concurrente (Implicit Locking) (CA-11)
-    Given que una tarea "TK-400" está explícitamente asignada al analista `maria.perez` en el motor
-    When el analista `pedro.gomez` intercepta vulnerablemente la URL o el JWT Payload e intenta someter un POST a `/tasks/TK-400/complete`
-    Then el Core iBPMS examina deductivamente el `{delegatedUserId}` transaccional y el `assignee` de Camunda contra la identidad central del Security Context (JWT)
-    And aborta transaccionalmente la colisión inyectando un lapidario `HTTP 403 Forbidden` o `409 Conflict`, extirpando la necesidad pesada de emitir *ETags* a través del flujo asíncrono.
-
-  # ==============================================================================
-  # F. ARQUITECTURA CQRS, EVENT SOURCING Y PROTECCIÓN DEL MOTOR
-  # ==============================================================================
-  Scenario: Separación de Responsabilidades y Event Sourcing (CQRS) (CA-12)
+  Scenario: Separación de Responsabilidades y Event Sourcing (CQRS) (CA-01)
     Given un JSON perfectamente validado resultante del "iForm Maestro"
     When el analista pulsa [Enviar Final] realizando POST a `/api/v1/workbox/tasks/{id}/complete`
     Then el Backend separará el flujo arquitectónico: inyectará el Comando (`Form_Submitted_Event`) en la tabla inmutable de Eventos garantizando el historial forense exacto
     And un Worker asíncrono proyectará (`Projection`) esos datos a la tabla relacional aplanada para habilitar lecturas hiperveloces desde los Dashboards y Analítica.
 
-  Scenario: Exclusión Topológica Estratégica de Camunda Engine (CA-13)
+  Scenario: Exclusión Topológica Estratégica de Camunda Engine (CA-02)
     Given el cierre exitoso de la transacción CQRS (Guardado del Evento Inmutable validado en Postgres)
     When el Backend notifica a Camunda 7 para avanzar el Token BPMN (`taskService.complete()`)
     Then el Backend TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo de negocio (Textos largos, JSONs complejos) hacia la tabla `ACT_RU_VARIABLE` del Engine
     And a Camunda solo se le enviará un DTO minificado (Ej: `{ "aprobado": true, "form_storage_id": "ABC-123" }`) con las variables lógicas estrictamente requeridas por los Gateways de enrutamiento.
 
-  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas) (CA-14)
+  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas) (CA-03)
     Given el Payload aplanado y guardado exitosamente en CQRS
     When el motor orquestador (Camunda 7) sufre un Crash o Timeout HTTP 5xx en su API REST interna al intentar avanzar la tarea
     Then el Backend iBPMS abortará inmediatamente la transacción base ejecutando un Rollback Compensatorio (Patrón Saga inverso) sobre la persistencia en PostgreSQL
@@ -5725,21 +5638,78 @@ Feature: Hexagonal CQRS Persistence, Zero-Trust Validation and Task Completion
     And se prohíbe a nivel arquitectónico generar falsos positivos HTTP 202 ("Guardado para después") para eludir el colapso del proceso judicial de fondo, unificando la verdad visual con el estado real del Motor.
 
   # ==============================================================================
-  # G. REASIGNACIONES Y COLISIONES GROUP-LEVEL (GAPs RESUELTOS)
+  # B. REASIGNACIONES, COLISIONES GROUP-LEVEL Y TRAZABILIDAD
   # ==============================================================================
-  Scenario: Auto-Claim Implícito sobre Tareas No Asignadas (Group-Level) (CA-15)
+  Scenario: Auto-Claim Controlado para Tareas de Grupo No Asignadas (CA-04)
+    # NOTA: Este CA resuelve el GAP-4 del us017_functional_analysis.md.
+    # El Auto-Claim aplica EXCLUSIVAMENTE a tareas de grupo sin assignee.
+    # Para tareas con assignee, rige el Implicit Locking de US-029 CA-07/CA-18.
     Given que una tarea "TK-500" está disponible en un grupo de trabajo (Ej: "Abogados") pero NO tiene un `assignee` directo asignado en Camunda
-    When un usuario legitimado bajo la taxonomía RBAC interviene el iFormulario y presiona [Enviar] (`/complete`)
-    Then el Backend (BFF) NO abortará la consulta por falla de exclusividad ("Implicit Locking" del CA-11)
-    And en su lugar, ejecutará transaccionalmente un comando `taskService.claim()` asignando silenciosamente el caso al operario una fracción de milisegundo antes de empujar el Event_Sourced_Command (CQRS) final.
-    And esto garantizará la fluidez de operación para Worklists comunitarias sin forzar un clic inútil en un botón "Reclamar".
+    When un usuario legitimado bajo la taxonomía RBAC del grupo abre la tarea e intenta presionar [Enviar] (`/complete`)
+    Then el Backend evaluará la siguiente lógica ANTES de procesar el POST:
+    And 1. **Si la tarea YA tiene `assignee`:** Se aplica el Implicit Locking normal (US-029 CA-07/CA-18). Solo el `assignee` registrado puede completar. Cualquier otro usuario recibe HTTP 403.
+    And 2. **Si la tarea NO tiene `assignee` (tarea de grupo):** El Backend ejecutará transaccionalmente un `taskService.claim(taskId, userId)` asignando silenciosamente la tarea al operario ANTES de empujar el `FORM_SUBMITTED_EVENT` al Event Store.
+    And 3. **El Auto-Claim genera un evento CQRS propio:** Se grabará un evento `TASK_AUTO_CLAIMED` en la tabla de eventos (CA-06) con el `userId`, `taskId` y `timestamp`, inmediatamente seguido del `FORM_SUBMITTED_EVENT`. La trazabilidad será completa.
+    And 4. **Protección contra Race Condition:** Si dos operarios intentan completar la misma tarea de grupo simultáneamente, el Backend usará un lock optimista en Camunda (`OptimisticLockingException`). El PRIMERO en llegar gana el Claim + Submit. El SEGUNDO recibirá HTTP 409 Conflict con mensaje: "Esta tarea ya fue reclamada y completada por otro operario."
+    And 5. **Consistencia con US-002:** El Auto-Claim de este CA NO reemplaza el flujo de Reclamar Tarea de la US-002. El operario PUEDE reclamar explícitamente desde el Tab "Disponibles" (US-002 CA-01) para reservar la tarea ANTES de abrirla. El Auto-Claim solo se activa si el operario abrió la tarea SIN reclamarla previamente y decide enviarla directamente.
 
-  Scenario: Trazabilidad Activa de Rechazos Históricos en BFF (De-duplicación) (CA-16)
+  Scenario: Trazabilidad Activa de Rechazos Históricos en BFF (CA-05)
     Given una tarea devuelta a un especialista por un analista de control de calidad desde una fase superior (Rechazo Ope/BPMN)
     When el especialista abre el iFormulario para enmendar su trabajo documentado
     Then el Frontend (a través del llamado unificado `/form-context`) no solo recibirá el `prefillData` histórico
     And también recibirá inyectado OBLIGATORIAMENTE un array (Ej: `rejectionLogs`) con el dictamen exacto, responsable y fecha del rechazo
     And mostrando esta causal de devolución como un Alert inyectado en el Canvas central del formulario (Solo Lectura), previniendo que el usuario repita una reparación a ciegas guiado solo por la telepatía.
+
+
+  # ==============================================================================
+  # C. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us017_functional_analysis.md
+  # Tickets: REM-017-01 a REM-017-03
+  # Propósito: Cerrar GAPs 1, 3 y 5 detectados por el workflow
+  #            /analisisEntendimientoUs.md antes del inicio de desarrollo.
+  # Estado: US-017 NO ha sido desarrollada aún.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Definición del Esquema del Event Store (CA-06)
+    # Origen: REM-017-01 — GAP-5 del us017_functional_analysis.md
+    # Resuelve: El CA-01 menciona "tabla inmutable de Eventos" pero no define nombre, columnas ni tipos de evento.
+    Given la necesidad de almacenar eventos inmutables con trazabilidad forense completa (CA-01)
+    Then el Event Store se implementará en la tabla `form_event_store` de PostgreSQL con el siguiente esquema mínimo obligatorio:
+    And 1. **`event_id`** (UUID, PK): Identificador único e inmutable del evento.
+    And 2. **`event_type`** (VARCHAR, NOT NULL): Tipo del evento. Valores admitidos en V1: `FORM_SUBMITTED`, `FORM_DRAFT_SAVED`, `TASK_AUTO_CLAIMED`, `FORM_REJECTED`.
+    And 3. **`task_id`** (VARCHAR, NOT NULL, INDEX): Identificador de la tarea de Camunda asociada.
+    And 4. **`process_instance_id`** (VARCHAR, NOT NULL, INDEX): Identificador de la instancia del proceso BPMN.
+    And 5. **`user_id`** (VARCHAR, NOT NULL): Identificador del operario que generó el evento (extraído del SecurityContext JWT).
+    And 6. **`payload_json`** (JSONB, NOT NULL): Contenido íntegro del formulario enviado, almacenado como JSON binario para consultas analíticas.
+    And 7. **`schema_version`** (VARCHAR, NOT NULL): Versión del esquema Zod/JSON Schema con la que se validó el payload (Ej: `V3`). Consistente con el `schema_version` del Mega-DTO BFF de la US-029.
+    And 8. **`created_at`** (TIMESTAMP WITH TIME ZONE, NOT NULL, DEFAULT NOW()): Momento exacto de grabación del evento. Usado para ordenamiento cronológico.
+    And 9. **`idempotency_key`** (UUID, UNIQUE): Llave de idempotencia recibida del Frontend (US-029 CA-12) para prevenir grabación duplicada de eventos.
+    And la tabla TIENE ESTRICTAMENTE PROHIBIDO ejecutar operaciones `UPDATE` o `DELETE`. Los registros son inmutables (append-only).
+    And el Worker de proyección asíncrona (CA-01) será un componente in-process (mismo JVM) que consumirá los eventos mediante un polling periódico (cada 500ms) o mediante un `@TransactionalEventListener` de Spring. Si US-034 (RabbitMQ) está disponible, el Worker podrá migrar a consumo por cola como mejora de rendimiento.
+    And las tablas de proyección analítica (Query Side) se definirán como vistas materializadas o tablas aplanadas según las necesidades específicas de US-009 (BAM Dashboard).
+
+  Scenario: [REMEDIACIÓN] Endpoint de Lectura y Limpieza de Borradores del Servidor (CA-07)
+    # Origen: REM-017-02 — GAP-3 del us017_functional_analysis.md
+    # Resuelve: El autoguardado al servidor (US-029 CA-24 PUT /draft) no tiene contrapartida GET para recuperar borradores.
+    Given la necesidad de que el Frontend pueda recuperar borradores almacenados en el servidor (US-029 CA-26 fallback)
+    Then la US-017, como fuente autoritativa de la persistencia, expondrá los siguientes endpoints de borradores:
+    And 1. **`GET /api/v1/workbox/tasks/{taskId}/draft`** — Recupera el borrador más reciente del servidor para la tarea indicada. Response: HTTP 200 con `{ currentStep?: number, partialData: {...}, schemaVersion: string, updatedAt: timestamp }`. Si no existe borrador, retorna HTTP 404.
+    And 2. **`PUT /api/v1/workbox/tasks/{taskId}/draft`** — Guarda o actualiza el borrador (ya definido en US-029 CA-24). Body: `{ currentStep?: number, partialData: {...}, schemaVersion: string }`. Response: HTTP 204 No Content.
+    And 3. **`DELETE /api/v1/workbox/tasks/{taskId}/draft`** — Elimina el borrador tras submit exitoso. Se invoca automáticamente como parte del flujo de `FORM_SUBMITTED_EVENT`. Response: HTTP 204.
+    And **Seguridad:** Los tres endpoints aplican Implicit Locking — solo el `assignee` actual (o un usuario con Auto-Claim válido del CA-04) puede operar sobre borradores de su tarea. Intentos con otro userId retornan HTTP 403.
+    And **Almacenamiento:** Los borradores se persisten en la tabla `task_drafts` (consistente con US-029 CA-24) con TTL de 72 horas. Un Cron Job diario eliminará borradores huérfanos con `updated_at` > 72h.
+    And **Diferencia con Event Store:** Los borradores NO son eventos inmutables. Son snapshots efímeros de trabajo en progreso que se sobrescriben en cada Merge Commit y se destruyen tras el submit. NO aparecen en la tabla `form_event_store` del CA-06.
+
+  Scenario: [REMEDIACIÓN] Referencia Cruzada con US-029 y Política de Propiedad (CA-08)
+    # Origen: REM-017-03 — GAP-1 del us017_functional_analysis.md
+    # Resuelve: Formaliza la reconciliación entre US-017 (Backend) y US-029 (Frontend) tras la eliminación de los 11 CAs duplicados.
+    Given la eliminación de los CAs duplicados (antiguos CA-01 a CA-11 originales) que se solapaban con la US-029
+    Then se establece la siguiente DIRECTIVA DE RECONCILIACIÓN entre las historias gemelas:
+    And 1. **US-017 es la FUENTE AUTORITATIVA** para: persistencia CQRS/Event Sourcing (CA-01), exclusión topológica de Camunda (CA-02), Rollback Saga (CA-03), Auto-Claim transaccional (CA-04), trazabilidad de rechazos (CA-05), esquema del Event Store (CA-06), y endpoints de borradores del servidor (CA-07).
+    And 2. **US-029 es la FUENTE AUTORITATIVA** para: experiencia de Frontend (Pantalla 2 UI), validación Zod en navegador, feedback visual (spinner/overlay/confirmación), autoguardado en LocalStorage, cifrado PII, Upload-First UX, Wizard, idempotencia en Frontend, pestañas duplicadas, campos condicionales, y campos de solo lectura.
+    And 3. **Aspectos compartidos delegados:** Cuando un CA de la US-017 necesite describir un comportamiento de Frontend (Ej: "el Frontend muestra un error"), REFERENCIARÁ el CA correspondiente de la US-029 (Ej: "consistente con US-029 CA-20") sin redefinirlo. Aplica recíprocamente desde la US-029 hacia la US-017 según el CA-19 de la US-029.
+    And 4. **Endpoint compartido:** `POST /api/v1/workbox/tasks/{id}/complete` es implementado UNA SOLA VEZ en el Backend. La US-017 define QUÉ hace el servidor al recibirlo. La US-029 define QUÉ envía el Frontend y QUÉ muestra antes/durante/después.
+    And 5. **Merge Commit Rule:** Si un desarrollador necesita modificar un CA que toca AMBAS historias, debe generar un PR que referencie AMBAS US (Ej: "Implements US-017 CA-01 + US-029 CA-01") para garantizar revisión cruzada.
 ```
 
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Tarea) y BFF Invisible.

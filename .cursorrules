@@ -73,6 +73,9 @@ Tienes prohibido asumir que tu código funciona solo por inferencia estática. T
 
 - Si eres FRONTEND: Antes de confirmar éxito, obligatoriamente debes demostrar que la UI no está rota ejecutando `npm run build` (o el equivalente Vite/Vue) y asegurar un "Build Successful".
 
+- Si eres QA / DevOps: 
+  Tu validación opera estrictamente bajo la Gobernanza de Pirámide de Testing (ADR 011). Tienes PROHIBIDO certificar validez funcional sin ejecutar explícitamente el Nivel 4 (Playwright E2E o REST Assured) y adjuntar evidencia física de logs de red reales. El uso de mocks en memoria es intolerable. Sigue tu doctrina en: `.agents/skills/qa_e2e_validation_audit/SKILL.md`.
+
 ---
 # 🛑 LEY GLOBAL 3: DIRECTRIZ OBLIGATORIA DE LECTURA Y SSOT (BÓVEDA DE REQUERIMIENTOS)
 

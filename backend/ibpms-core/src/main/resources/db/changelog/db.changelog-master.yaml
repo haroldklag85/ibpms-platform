@@ -31,3 +31,5 @@ databaseChangeLog:
       file: db/changelog/18-create-form-definitions.sql
   - include:
       file: db/changelog/19-create-rabbitmq-resilience-tables.sql
+  - include:
+      file: db/changelog/20-us036-rbac-schema.sql

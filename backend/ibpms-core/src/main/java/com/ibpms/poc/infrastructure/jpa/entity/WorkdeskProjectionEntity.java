@@ -4,6 +4,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,6 +17,8 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "ibpms_workdesk_projection")
+@FilterDef(name = "assigneeSecurityFilter", parameters = {@ParamDef(name = "currentUserId", type = String.class)})
+@Filter(name = "assigneeSecurityFilter", condition = "assignee = :currentUserId OR assignee IS NULL")
 @Getter
 @Setter
 public class WorkdeskProjectionEntity {

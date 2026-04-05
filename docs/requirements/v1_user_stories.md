@@ -274,6 +274,91 @@ Feature: Workdesk Loading and Real-Time Grid
     And 5. Si el Backend no puede calcular el avance (Ej: proceso BPMN sin User Tasks definidas o con estructura no lineal con Gateways paralelos), la columna mostrará `N/D` (No Disponible) en lugar de un porcentaje erróneo.
 
 
+  # ==============================================================================
+  # F. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: Cuestionario de 45 preguntas del workflow /refinamientoFuncionalUs.md
+  # Propósito: Cerrar huecos descubiertos durante el refinamiento de la US-001.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Umbrales Configurables del Semáforo SLA (CA-24)
+    # Origen: Pregunta #6 del Refinamiento Funcional
+    # Resuelve: No existían umbrales numéricos para los colores del semáforo SLA.
+    Given el Ticking Engine de semáforos SLA del CA-05 y CA-11
+    Then los umbrales de transición de color se definirán en porcentaje del tiempo restante respecto al total del SLA:
+    And 🟢 **Verde:** Más del 50% del tiempo total restante.
+    And 🟡 **Amarillo:** Entre el 50% y el 15% del tiempo total restante.
+    And 🔴 **Rojo:** Menos del 15% del tiempo total restante.
+    And ⚫ **Vencida (Negro/Gris):** 0% — la fecha límite ya pasó.
+    And estos porcentajes serán los valores POR DEFECTO del sistema, pero cada tenant podrá personalizarlos desde la configuración administrativa (US-036 / Pantalla 14) si sus operaciones requieren umbrales diferentes.
+    And el Frontend calculará el color localmente usando `sla_deadline` del DTO (CA-20) comparado contra `Date.now()`.
+
+  Scenario: [REFINAMIENTO] Recálculo de Semáforos al Volver de Pestaña Inactiva (CA-25)
+    # Origen: Pregunta #7 del Refinamiento Funcional
+    # Resuelve: requestAnimationFrame se pausa en pestañas inactivas del navegador.
+    Given el Global Heartbeat Store basado en requestAnimationFrame (CA-11)
+    When el navegador pausa el requestAnimationFrame porque el usuario minimizó la pestaña o cambió a otra
+    Then al detectar el evento `visibilitychange` del navegador (la pestaña vuelve a estar activa), el Heartbeat Store ejecutará un recálculo INMEDIATO de todos los semáforos SLA visibles usando `Date.now()` como referencia.
+    And si durante la inactividad alguna tarea cambió de color (Ej: pasó de Amarillo a Rojo), el cambio se reflejará instantáneamente sin esperar el próximo ciclo del requestAnimationFrame.
+    And si la inactividad superó los 5 minutos, se activará además el mecanismo de auto-refresco del CA-31.
+
+  Scenario: [REFINAMIENTO] Relleno Automático de Página tras Remoción por WebSocket (CA-26)
+    # Origen: Pregunta #9 del Refinamiento Funcional
+    # Resuelve: La página queda con 14 de 15 tarjetas al desaparecer una por WebSocket.
+    Given la desaparición animada de una tarea vía WebSocket (CA-06, CA-13) en una página de 15 tarjetas (CA-09)
+    Then el Frontend acumulará las remociones por WebSocket durante una ventana de 5 segundos (consistente con el throttling del CA-13).
+    And al finalizar la ventana, si la página tiene menos de 15 tarjetas, el Frontend emitirá UNA SOLA petición silenciosa al Backend solicitando las tarjetas faltantes para rellenar la página a su capacidad de 15.
+    And las tarjetas nuevas aparecerán con una animación sutil de fade-in para no confundir al usuario con apariciones repentinas.
+    And si la página completa queda vacía (todas las tareas fueron reclamadas), se aplicará la regla del CA-12: redirigir automáticamente a la Página 1.
+
+  Scenario: [REFINAMIENTO] Vocabulario Completo de Acciones WebSocket (CA-27)
+    # Origen: Pregunta #10 del Refinamiento Funcional
+    # Resuelve: Solo existía la acción REMOVE; faltaban acciones para otros eventos de la grilla.
+    Given la conexión WebSocket para sincronización en tiempo real del Workdesk (CA-06, CA-13)
+    Then el Backend emitirá mensajes atómicos (CA-13) con el siguiente vocabulario estandarizado de acciones:
+    And `REMOVE` — Una tarea fue reclamada por otro usuario o reasignada. El Frontend la desvanece (CA-13).
+    And `ADD` — Una nueva tarea fue asignada al usuario (por reclamo, por rotación de Skill-Based Routing, o por asignación forzosa de un supervisor). El Frontend la incorpora a la grilla respetando el ordenamiento SLA (CA-01).
+    And `UPDATE` — Un campo visible de una tarea existente cambió (Ej: el estado SLA pasó a OVERDUE, el Impacto Financiero cambió). El Frontend actualiza la celda afectada sin recargar la fila completa.
+    And `PRIORITY_CHANGE` — El orden global de priorización cambió (Ej: una tarea recibió el badge 🔥 Impacto). El Frontend reordena la grilla localmente.
+    And cada mensaje WebSocket seguirá la estructura: `{ action: 'REMOVE|ADD|UPDATE|PRIORITY_CHANGE', taskId: 'TK-123', payload?: {...} }`.
+    And para `ADD` y `UPDATE`, el `payload` contendrá ÚNICAMENTE los campos del DTO sanitizado del CA-20 que cambiaron.
+
+  Scenario: [REFINAMIENTO] Prevención de Condición de Carrera en "Atender Siguiente" (CA-28)
+    # Origen: Pregunta #16 del Refinamiento Funcional
+    # Resuelve: 200 operarios presionando "Atender Siguiente" simultáneamente podrían recibir la misma tarea.
+    Given la activación del modo "Atender Siguiente" (CA-08, CA-16) con múltiples operarios conectados simultáneamente
+    Then el Backend garantizará la asignación atómica de tareas utilizando bloqueo pesimista en la Base de Datos (SELECT ... FOR UPDATE SKIP LOCKED) para evitar que dos operarios reciban la misma tarea.
+    And si un operario solicita una tarea y esta ya fue asignada a otro en la misma fracción de segundo, el Backend seleccionará automáticamente la SIGUIENTE tarea disponible que coincida con los skills del operario (CA-21), retornando la tarea correcta sin error visible.
+    And el operario NUNCA recibirá un error "Tarea ya asignada" al presionar "Atender Siguiente" — el Backend resolverá la colisión internamente y le dará la siguiente tarea válida.
+    And este mecanismo es análogo al del US-002 CA-01 (Reclamo Simultáneo), pero aplicado al algoritmo de enrutamiento forzoso en lugar del reclamo manual.
+
+  Scenario: [REFINAMIENTO] Contadores en Filtros Facetados del Workdesk (CA-29)
+    # Origen: Pregunta #17 del Refinamiento Funcional
+    # Resuelve: Los filtros facetados (CA-22) no mostraban cuántas tareas existen en cada categoría.
+    Given la barra de filtros facetados del Workdesk (CA-22)
+    Then cada opción de filtro mostrará entre paréntesis el conteo total de tareas de esa categoría:
+    And Ejemplo de filtros con contadores: `[Todos (62)]` / `[⚡ BPMN (45)]` / `[📋 Kanban (12)]` / `[📅 Gantt (5)]` / `[🟢 Al día (40)]` / `[🟡 Por vencer (14)]` / `[🔴 Vencida (8)]`.
+    And el Backend retornará los contadores como parte del response de la grilla (CA-20), en un objeto adicional: `facets: { origin: { BPMN: 45, KANBAN: 12, GANTT: 5 }, status: { PENDING: 40, IN_PROGRESS: 14, OVERDUE: 8 } }`.
+    And los contadores se actualizarán con cada petición a la grilla, NO en tiempo real por WebSocket (para evitar ruido visual excesivo).
+
+  Scenario: [REFINAMIENTO] Rate Limiting para el Endpoint de la Grilla del Workdesk (CA-30)
+    # Origen: Pregunta #30 del Refinamiento Funcional
+    # Resuelve: No existía límite de cuántas veces un usuario puede solicitar la grilla.
+    Given el endpoint principal `GET /api/v1/workdesk/tasks` del CA-20
+    Then el API Gateway impondrá un Rate Limiting de máximo 60 peticiones por minuto por usuario autenticado.
+    And si se supera, retornará `HTTP 429 Too Many Requests` con el mensaje: "Has realizado demasiadas consultas. Espera unos segundos antes de intentarlo de nuevo."
+    And este límite protege contra scripts automatizados que hagan polling agresivo para monitorear cambios, ya que la sincronización en tiempo real se resuelve vía WebSocket (CA-06, CA-13, CA-27), NO por polling al endpoint REST.
+
+  Scenario: [REFINAMIENTO] Auto-Refresco Pasivo al Volver de Inactividad Prolongada (CA-31)
+    # Origen: Pregunta #31 del Refinamiento Funcional
+    # Resuelve: El KeepAlive (CA-12) podría mostrar datos obsoletos tras horas de inactividad.
+    Given la preservación del Workdesk en RAM mediante KeepAlive (CA-12)
+    When el usuario regresa al Workdesk después de haber estado en otra pestaña/vista por más de 5 minutos
+    Then el Frontend ejecutará un refresco silencioso en segundo plano: emitirá una petición al endpoint de la grilla (CA-20) y actualizará los datos de la tabla SIN destruir el componente KeepAlive ni resetear los filtros del usuario.
+    And durante el refresco (que típicamente dura <1 segundo), la grilla mostrará un indicador sutil de actualización (Ej: un shimmer sobre las filas existentes) para que el usuario sepa que los datos se están renovando.
+    And si la petición de refresco falla (error de red), la grilla mantendrá los datos del KeepAlive con un Toast discreto: "No se pudo actualizar. Mostrando datos de la última sincronización."
+    And el umbral de 5 minutos es consistente con el CA-25 (recálculo de semáforos al volver de inactividad).
+
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Workdesk - Escritorio de Tareas).
 
@@ -283,6 +368,13 @@ Feature: Workdesk Loading and Real-Time Grid
 **Como** Analista / Usuario de Negocio
 **Quiero** poder "reclamar" (asignarme) una tarea que actualmente pertenece a la cola de todo mi grupo
 **Para** evitar que otro compañero trabaje en el mismo caso de forma paralela y duplicar esfuerzos.
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-002:**
+> - **US-001 (Workdesk / Pantalla 1):** La grilla del Workdesk es donde el operario visualiza las tareas de la Cola de Grupo y donde aparece el botón [Reclamar]. Los WebSockets de desaparición instantánea (US-001 CA-06, CA-13, CA-27) dependen de que la US-002 EMITA el evento WebSocket al momento del Commit de reclamo/liberación/despojo. Sin este disparo, las tareas reclamadas permanecen como "fantasmas visibles" en las pantallas de todos los compañeros.
+> - **US-029 (Completar Tarea / Pantalla 2):** La ejecución del formulario y el patrón de borrador en LocalStorage están definidos en la US-029. La Amnesia Transaccional (CA-07) de la US-002 depende del esquema de persistencia temporal de la US-029 para saber exactamente qué purgar al liberar.
+> - **US-036 (RBAC / Pantalla 14):** La validación perimetral del Despojo Forzoso (CA-08, CA-13) consume la jerarquía organizacional y la relación `team_id` administrada en la Pantalla 14. Sin RBAC, un supervisor de cualquier departamento podría despojar tareas de departamentos que no le corresponden.
+> - **US-001 CA-28 (Prevención de Condición de Carrera):** El mecanismo de bloqueo atómico en base de datos para el modo "Atender Siguiente" (US-001 CA-28) es análogo al requerido por el CA-11 de US-002. Ambos necesitan `SELECT FOR UPDATE SKIP LOCKED` para garantizar exclusión mutua.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
@@ -500,6 +592,7 @@ Feature: Task Claiming and Reassignment
     And el Frontend de cada compañero conectado procesará el array y desvanecerá todas las tareas listadas con una animación escalonada (150ms de delay entre cada desvanecimiento) para evitar que 20 tarjetas desaparezcan simultáneamente de forma confusa.
     And para la operación inversa (si existiera una "liberación masiva" en V2), se usaría: `{ action: 'BULK_ADD', taskIds: [...], payload: [...] }`.
     And este patrón reduce el tráfico WebSocket de `N × Usuarios_Conectados` mensajes a `1 × Usuarios_Conectados`, logrando hasta un 95% de ahorro de red en operaciones de lote.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Botón: Asignarme Tarea / Claim).
 
@@ -5508,123 +5601,36 @@ Regula la inmutabilidad de los datos recolectados, previniendo la contaminación
 **Quiero** diligenciar la información de mi tarea, almacenando las subidas temporales (Drafts) y transacciones finales de forma inmutable
 **Para** garantizar cero bloqueos concurrentes, trazabilidad absoluta y finalizar exitosamente mi actividad sin contaminar el motor de Camunda (separando lectura de escritura).
 
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-017:**
+> - **US-029 (Pantalla 2 / Frontend UX):** ⚠️ HISTORIA GEMELA. Comparten el endpoint `POST /api/v1/workbox/tasks/{id}/complete`. La US-029 gobierna la experiencia del Frontend (UI, validación Zod en navegador, Upload-First UX, LocalStorage, feedback visual, Wizard). La US-017 gobierna la persistencia del Backend (CQRS, Event Sourcing, protección de Camunda, Rollback Saga, validación Backend). La reconciliación se formaliza en el CA-19 de la US-029 (Política de Propiedad Exclusiva).
+> - **US-003 (Catálogo de Formularios / Pantalla 7):** 🔴 BLOQUEANTE. Los esquemas Zod que el Backend valida mediante `json-schema-validator` (transpilados en CI/CD) se generan en la US-003. Sin esquemas, la validación Backend es imposible.
+> - **US-002 (Reclamar Tarea / Pantalla 1):** 🔴 BLOQUEANTE. Sin reclamo, la tarea no tiene `assignee` y los CAs de Implicit Locking de la US-029 (CA-07/CA-18) rechazarán todo intento de completar con HTTP 403. El CA-04 de esta US-017 define una excepción controlada para tareas de grupo.
+> - **US-035 (SharePoint/SGDEA):** ⚠️ FUERTE. La bóveda documental temporal que almacena archivos pre-submit (Upload-First) es un servicio externo que la US-017 debe vincular transaccionalmente a los eventos CQRS.
+> - **US-036 (RBAC / Pantalla 14):** ⚠️ FUERTE. La validación Backend Zero-Trust necesita la matriz de roles para resolver el strip silencioso de campos no autorizados (delegado desde US-029 CA-15 Zod Isomórfico).
+> - **US-034 (RabbitMQ):** 🟡 DESEABLE. El Worker asíncrono de proyección del CA-01 puede utilizar colas de mensajería para procesar eventos de forma resiliente. Si RabbitMQ no está disponible, el Worker operará in-process como fallback.
+> - **US-009 (BAM Dashboard / Pantalla 5):** 🟡 CONSUMIDOR. Los dashboards de analítica consumen las tablas proyectadas por el Worker del CA-01. Sin la proyección, los dashboards no tienen datos actualizados.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Hexagonal CQRS Persistence, Zero-Trust Validation and Task Completion
 
   # ==============================================================================
-  # A. EJECUCIÓN BASE Y VALIDACIÓN DE DATOS (HAPPY & SAD PATHS)
+  # A. ARQUITECTURA CQRS, EVENT SOURCING Y PROTECCIÓN DEL MOTOR
   # ==============================================================================
-  Scenario: Enviar datos válidos de formulario (CA-1)
-    Given la tarea "TK-100" asignada a "carlos.ruiz" requiere el formulario "Form_Aprobacion_V1"
-    And "Form_Aprobacion_V1" exige el campo obligatorio numérico "monto_aprobado"
-    When "carlos.ruiz" realiza un POST a "/api/v1/workbox/tasks/TK-100/complete"
-    And incluye en el body el JSON '{"variables": {"monto_aprobado": 1500, "comentarios": "Ok"}}'
-    Then el sistema debe retornar un HTTP STATUS 200 OK
-    And la tarea "TK-100" marca su estado interno como "COMPLETED"
-    And las variables del JSON se persisten inmutablemente asociadas a la instancia del proceso.
-
-  Scenario: Enviar datos inválidos (Violación del JSON Schema) (CA-2)
-    Given la tarea "TK-100" requiere el campo obligatorio "monto_aprobado" numérico
-    When "carlos.ruiz" realiza un POST a "/api/v1/workbox/tasks/TK-100/complete"
-    And incluye un JSON vacío '{"variables": {}}'
-    Then el sistema valida el payload contra el JSON Schema registrado para "Form_Aprobacion_V1"
-    And el sistema debe retornar un HTTP STATUS 400 Bad Request
-    And el error format JSON debe especificar de forma estructurada: `{"error": "ValidationFailed", "fields": [{"field": "monto_aprobado", "message": "Required"}]}`
-
-  # ==============================================================================
-  # B. INICIALIZACIÓN Y CONTEXTO UI (PATRÓN BFF Y LAZY PATCHING)
-  # ==============================================================================
-  Scenario: Inyección Megalítica de Contexto (Patrón BFF) (CA-3)
-    Given la entrada física a la vista de la tarea operativa (Pantalla 2)
-    When el Frontend inicializa el componente Vue
-    Then despachará EXACTAMENTE UNA (1) única petición GET consolidada a `/api/v1/workbox/tasks/{id}/form-context`
-    And el Backend obrará como BFF (Backend for Frontend) inyectando en un Mega-DTO la triada: [Esquema Zod Vigoroso + Layout UI de Vue + Variables Históricas de Solo Lectura extraídas de Camunda (`prefillData`)]
-    And este DTO incluirá obligatoriamente la versión exacta del esquema (`schema_version`) para poblar inputs en un solo tick de renderizado y prevenir choques generacionales si el Arquitecto modifica el diseño mientras el caso está en vuelo.
-
-  Scenario: Hibridación de Datos Históricos vs Nuevos Contratos (Lazy Patching) (CA-4)
-    Given el BFF inyectando `prefillData` de una Instancia antigua (V1) hacia un Formulario Zod nuevo (V2)
-    When existan campos obligatorios nuevos en la V2 que no venían en la data histórica de Camunda (`null` o `undefined`)
-    Then el esquema Zod reactivo los evaluará inmediatamente como inválidos iluminando dichos inputs en ROJO
-    And el Frontend bloqueará físicamente el botón de [Enviar]
-    And obligará procedimentalmente al analista a auditar el dato, contactar al cliente y digitar la información faltante en la UI para poder avanzar el proceso (Amnistía en Lectura, Guillotina en Escritura).
-
-  # ==============================================================================
-  # C. CARGA BINARIA Y SEGURIDAD PERIMETRAL DE ARCHIVOS
-  # ==============================================================================
-  Scenario: Desacoplamiento de Carga Binaria (Upload-First) y Escudo Anti-IDOR (CA-5)
-    Given un formulario Zod que incluye un componente `<InputFile>`
-    When el usuario final adjunta un documento pesado (Ej: PDF de 10MB)
-    Then el Frontend ejecutará una carga asíncrona temprana (Pre-Submit) hacia la Bóveda SGDEA (`/api/v1/documents/upload-temp`) obteniendo un Identificador Único (`UUID`)
-    And al presionar [Enviar], el POST a `/complete` enviará EXCLUSIVAMENTE el JSON plano referenciando el ID (`{"cedula_pdf": "UUID-123"}`), teniendo PROHIBIDO arquitectónicamente enviar payloads Multipart o Base64 contra el motor de procesos Camunda
-    And la arquitectura TIENE ESTRICTAMENTE PROHIBIDO enlazar ciegamente ese archivo a la tarea
-    And el Backend validará en la tabla de adjuntos temporales que `UUID-123` pertenezca al `user_id` logueado Y haya sido subido en el contexto de esa misma `task_id` (Defensa Anti-IDOR)
-    And si detecta un UUID ajeno, abortará la transacción con `HTTP 403 Forbidden`
-    And un Cron Job nocturno destruirá físicamente de S3/SGDEA cualquier archivo temporal (TTL > 24h) sin confirmación transaccional para evitar facturas por almacenamiento basura.
-
-  # ==============================================================================
-  # D. RESILIENCIA OFFLINE, UX EVENTUAL Y PROTECCIÓN DE ESTADO
-  # ==============================================================================
-  Scenario: Trazabilidad Volátil, Draft Sync y Cifrado PII en LocalStorage (CA-6)
-    Given la digitación continua de un analista en un iForm masivo abierto en el Workdesk
-    Then el Frontend guardará el borrador (Draft) asíncronamente en el `LocalStorage` del navegador atado al `Task_ID` (mediante `@vueuse/core`) a cada tecla
-    But si el esquema Zod marca campos como `PII/Sensibles` (US-003), el Frontend DEBE aplicar cifrado simétrico (AES) usando una llave derivada de la sesión antes de escribir en LocalStorage
-    And disparará peticiones silenciosas de *Merge Commit* al Backend (Snapshot Volátil) SOLO bajo un Debounce ininterrumpido de 10s de inactividad, usando una validación Zod "Parcial" (permitiendo nulos pero castigando tipos inválidos)
-    And cuando el POST a `/complete` finalice exitosamente (HTTP 200 OK), el Frontend ejecutará una purga síncrona destruyendo inmediatamente la llave temporal de ese caso específico
-    And un Cron silencioso global eliminará cualquier borrador huérfano en la PC del usuario que supere las 72 horas de antigüedad, previniendo cuellos de memoria.
-
-  Scenario: Consistencia Eventual UX y Read-Your-Own-Writes (RYOW) (CA-7)
-    Given que el POST a `/complete` finaliza exitosamente (HTTP 200 OK)
-    Then además de purgar el LocalStorage, el Frontend eliminará proactivamente esa tarea específica del Store en RAM (Pinia) del Workdesk ANTES de redirigir al usuario al Home (RYOW)
-    And esto garantizará que el usuario no vea su tarea "ya completada" flotando como un fantasma en su bandeja por culpa del micro-retraso asíncrono de la proyección de lectura del CQRS en la Base de Datos.
-
-  Scenario: Idempotencia y Protección Anti-Doble Clic (El Dedo Tembloroso) (CA-8)
-    Given el usuario pulsa [Enviar Formulario] múltiples veces por ansiedad o lag de red
-    When el Payload JSON impacta el endpoint POST `/complete`
-    Then el Frontend inyectará obligatoriamente un Header `Idempotency-Key` (UUID único por montaje de componente)
-    And el API Gateway/Backend procesará únicamente la primera transacción
-    And las peticiones subsecuentes idénticas retornarán un `HTTP 200 OK` silenciado desde la Caché, protegiendo a Camunda de excepciones `OptimisticLocking` o doble gasto en el Event Sourcing.
-
-  # ==============================================================================
-  # E. SEGURIDAD ZERO-TRUST, ISOMORFISMO Y PREVENCIÓN DE COLISIONES
-  # ==============================================================================
-  Scenario: Zod Isomórfico y Guillotina de Datos Fantasma (Choque Gnoseológico) (CA-9)
-    Given la existencia de esquemas Zod bidireccionales en el ecosistema
-    When un atacante bypassea la UI enviando un POST adulterado vía API REST (Ej: Editando un campo oculto o de 'Solo Lectura')
-    Then los esquemas Zod de Frontend se transpilarán en CI/CD a estándar RFC JSONSchema, y el API Gateway/BFF en Java ejecutará la validación estrictamente mediante la librería genérica json-schema-validator, anulando el cuello de botella de emuladores JS.
-    And cruzará los permisos de escritura del Rol del usuario contra los campos recibidos; si inyectó datos no autorizados, aplicará un `.strip()` silencioso descartando el campo adulterado, o abortará con `HTTP 403 Forbidden`
-    And rechazará con `HTTP 400 Bad Request` cualquier asimetría de tipos de datos.
-
-  Scenario: Seguridad Asimétrica y Prevención Replay en Micro-Tokens (CA-10)
-    Given una validación asíncrona externa (Ej: Validar NIT) gatillada `OnBlur` en el Frontend
-    When el Backend consulta la API externa exitosamente y retorna al Frontend un "Micro-Token JWT" firmado criptográficamente de corta duración (Ej: TTL 15 min)
-    Then al momento del Submit final (`/complete`), el Frontend adjuntará este Micro-Token en el payload
-    And el Backend (Zero-Trust) omitirá realizar una segunda llamada de red externa bloqueante, limitándose a verificar matemáticamente la validez de su propia firma en el Micro-Token para autorizar la transacción ACID en milisegundos
-    And la arquitectura PROHÍBE el re-uso de tokens (Replay Attacks); el Token DEBE contener en sus Claims el `taskId` exacto y un `jti` que será invalidado en Redis un milisegundo después del Submit exitoso.
-
-  Scenario: Integridad de Asignación Concurrente (Implicit Locking) (CA-11)
-    Given que una tarea "TK-400" está explícitamente asignada al analista `maria.perez` en el motor
-    When el analista `pedro.gomez` intercepta vulnerablemente la URL o el JWT Payload e intenta someter un POST a `/tasks/TK-400/complete`
-    Then el Core iBPMS examina deductivamente el `{delegatedUserId}` transaccional y el `assignee` de Camunda contra la identidad central del Security Context (JWT)
-    And aborta transaccionalmente la colisión inyectando un lapidario `HTTP 403 Forbidden` o `409 Conflict`, extirpando la necesidad pesada de emitir *ETags* a través del flujo asíncrono.
-
-  # ==============================================================================
-  # F. ARQUITECTURA CQRS, EVENT SOURCING Y PROTECCIÓN DEL MOTOR
-  # ==============================================================================
-  Scenario: Separación de Responsabilidades y Event Sourcing (CQRS) (CA-12)
+  Scenario: Separación de Responsabilidades y Event Sourcing (CQRS) (CA-01)
     Given un JSON perfectamente validado resultante del "iForm Maestro"
     When el analista pulsa [Enviar Final] realizando POST a `/api/v1/workbox/tasks/{id}/complete`
     Then el Backend separará el flujo arquitectónico: inyectará el Comando (`Form_Submitted_Event`) en la tabla inmutable de Eventos garantizando el historial forense exacto
     And un Worker asíncrono proyectará (`Projection`) esos datos a la tabla relacional aplanada para habilitar lecturas hiperveloces desde los Dashboards y Analítica.
 
-  Scenario: Exclusión Topológica Estratégica de Camunda Engine (CA-13)
+  Scenario: Exclusión Topológica Estratégica de Camunda Engine (CA-02)
     Given el cierre exitoso de la transacción CQRS (Guardado del Evento Inmutable validado en Postgres)
     When el Backend notifica a Camunda 7 para avanzar el Token BPMN (`taskService.complete()`)
     Then el Backend TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo de negocio (Textos largos, JSONs complejos) hacia la tabla `ACT_RU_VARIABLE` del Engine
     And a Camunda solo se le enviará un DTO minificado (Ej: `{ "aprobado": true, "form_storage_id": "ABC-123" }`) con las variables lógicas estrictamente requeridas por los Gateways de enrutamiento.
 
-  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas) (CA-14)
+  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas) (CA-03)
     Given el Payload aplanado y guardado exitosamente en CQRS
     When el motor orquestador (Camunda 7) sufre un Crash o Timeout HTTP 5xx en su API REST interna al intentar avanzar la tarea
     Then el Backend iBPMS abortará inmediatamente la transacción base ejecutando un Rollback Compensatorio (Patrón Saga inverso) sobre la persistencia en PostgreSQL
@@ -5632,21 +5638,183 @@ Feature: Hexagonal CQRS Persistence, Zero-Trust Validation and Task Completion
     And se prohíbe a nivel arquitectónico generar falsos positivos HTTP 202 ("Guardado para después") para eludir el colapso del proceso judicial de fondo, unificando la verdad visual con el estado real del Motor.
 
   # ==============================================================================
-  # G. REASIGNACIONES Y COLISIONES GROUP-LEVEL (GAPs RESUELTOS)
+  # B. REASIGNACIONES, COLISIONES GROUP-LEVEL Y TRAZABILIDAD
   # ==============================================================================
-  Scenario: Auto-Claim Implícito sobre Tareas No Asignadas (Group-Level) (CA-15)
+  Scenario: Auto-Claim Controlado para Tareas de Grupo No Asignadas (CA-04)
+    # NOTA: Este CA resuelve el GAP-4 del us017_functional_analysis.md.
+    # El Auto-Claim aplica EXCLUSIVAMENTE a tareas de grupo sin assignee.
+    # Para tareas con assignee, rige el Implicit Locking de US-029 CA-07/CA-18.
     Given que una tarea "TK-500" está disponible en un grupo de trabajo (Ej: "Abogados") pero NO tiene un `assignee` directo asignado en Camunda
-    When un usuario legitimado bajo la taxonomía RBAC interviene el iFormulario y presiona [Enviar] (`/complete`)
-    Then el Backend (BFF) NO abortará la consulta por falla de exclusividad ("Implicit Locking" del CA-11)
-    And en su lugar, ejecutará transaccionalmente un comando `taskService.claim()` asignando silenciosamente el caso al operario una fracción de milisegundo antes de empujar el Event_Sourced_Command (CQRS) final.
-    And esto garantizará la fluidez de operación para Worklists comunitarias sin forzar un clic inútil en un botón "Reclamar".
+    When un usuario legitimado bajo la taxonomía RBAC del grupo abre la tarea e intenta presionar [Enviar] (`/complete`)
+    Then el Backend evaluará la siguiente lógica ANTES de procesar el POST:
+    And 1. **Si la tarea YA tiene `assignee`:** Se aplica el Implicit Locking normal (US-029 CA-07/CA-18). Solo el `assignee` registrado puede completar. Cualquier otro usuario recibe HTTP 403.
+    And 2. **Si la tarea NO tiene `assignee` (tarea de grupo):** El Backend ejecutará transaccionalmente un `taskService.claim(taskId, userId)` asignando silenciosamente la tarea al operario ANTES de empujar el `FORM_SUBMITTED_EVENT` al Event Store.
+    And 3. **El Auto-Claim genera un evento CQRS propio:** Se grabará un evento `TASK_AUTO_CLAIMED` en la tabla de eventos (CA-06) con el `userId`, `taskId` y `timestamp`, inmediatamente seguido del `FORM_SUBMITTED_EVENT`. La trazabilidad será completa.
+    And 4. **Protección contra Race Condition:** Si dos operarios intentan completar la misma tarea de grupo simultáneamente, el Backend usará un lock optimista en Camunda (`OptimisticLockingException`). El PRIMERO en llegar gana el Claim + Submit. El SEGUNDO recibirá HTTP 409 Conflict con mensaje: "Esta tarea ya fue reclamada y completada por otro operario."
+    And 5. **Consistencia con US-002:** El Auto-Claim de este CA NO reemplaza el flujo de Reclamar Tarea de la US-002. El operario PUEDE reclamar explícitamente desde el Tab "Disponibles" (US-002 CA-01) para reservar la tarea ANTES de abrirla. El Auto-Claim solo se activa si el operario abrió la tarea SIN reclamarla previamente y decide enviarla directamente.
 
-  Scenario: Trazabilidad Activa de Rechazos Históricos en BFF (De-duplicación) (CA-16)
+  Scenario: Trazabilidad Activa de Rechazos Históricos en BFF (CA-05)
     Given una tarea devuelta a un especialista por un analista de control de calidad desde una fase superior (Rechazo Ope/BPMN)
     When el especialista abre el iFormulario para enmendar su trabajo documentado
     Then el Frontend (a través del llamado unificado `/form-context`) no solo recibirá el `prefillData` histórico
     And también recibirá inyectado OBLIGATORIAMENTE un array (Ej: `rejectionLogs`) con el dictamen exacto, responsable y fecha del rechazo
     And mostrando esta causal de devolución como un Alert inyectado en el Canvas central del formulario (Solo Lectura), previniendo que el usuario repita una reparación a ciegas guiado solo por la telepatía.
+
+
+  # ==============================================================================
+  # C. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us017_functional_analysis.md
+  # Tickets: REM-017-01 a REM-017-03
+  # Propósito: Cerrar GAPs 1, 3 y 5 detectados por el workflow
+  #            /analisisEntendimientoUs.md antes del inicio de desarrollo.
+  # Estado: US-017 NO ha sido desarrollada aún.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Definición del Esquema del Event Store (CA-06)
+    # Origen: REM-017-01 — GAP-5 del us017_functional_analysis.md
+    # Resuelve: El CA-01 menciona "tabla inmutable de Eventos" pero no define nombre, columnas ni tipos de evento.
+    Given la necesidad de almacenar eventos inmutables con trazabilidad forense completa (CA-01)
+    Then el Event Store se implementará en la tabla `form_event_store` de PostgreSQL con el siguiente esquema mínimo obligatorio:
+    And 1. **`event_id`** (UUID, PK): Identificador único e inmutable del evento.
+    And 2. **`event_type`** (VARCHAR, NOT NULL): Tipo del evento. Valores admitidos en V1: `FORM_SUBMITTED`, `FORM_DRAFT_SAVED`, `TASK_AUTO_CLAIMED`, `FORM_REJECTED`.
+    And 3. **`task_id`** (VARCHAR, NOT NULL, INDEX): Identificador de la tarea de Camunda asociada.
+    And 4. **`process_instance_id`** (VARCHAR, NOT NULL, INDEX): Identificador de la instancia del proceso BPMN.
+    And 5. **`user_id`** (VARCHAR, NOT NULL): Identificador del operario que generó el evento (extraído del SecurityContext JWT).
+    And 6. **`payload_json`** (JSONB, NOT NULL): Contenido íntegro del formulario enviado, almacenado como JSON binario para consultas analíticas.
+    And 7. **`schema_version`** (VARCHAR, NOT NULL): Versión del esquema Zod/JSON Schema con la que se validó el payload (Ej: `V3`). Consistente con el `schema_version` del Mega-DTO BFF de la US-029.
+    And 8. **`created_at`** (TIMESTAMP WITH TIME ZONE, NOT NULL, DEFAULT NOW()): Momento exacto de grabación del evento. Usado para ordenamiento cronológico.
+    And 9. **`idempotency_key`** (UUID, UNIQUE): Llave de idempotencia recibida del Frontend (US-029 CA-12) para prevenir grabación duplicada de eventos.
+    And la tabla TIENE ESTRICTAMENTE PROHIBIDO ejecutar operaciones `UPDATE` o `DELETE`. Los registros son inmutables (append-only).
+    And el Worker de proyección asíncrona (CA-01) será un componente in-process (mismo JVM) que consumirá los eventos mediante un polling periódico (cada 500ms) o mediante un `@TransactionalEventListener` de Spring. Si US-034 (RabbitMQ) está disponible, el Worker podrá migrar a consumo por cola como mejora de rendimiento.
+    And las tablas de proyección analítica (Query Side) se definirán como vistas materializadas o tablas aplanadas según las necesidades específicas de US-009 (BAM Dashboard).
+
+  Scenario: [REMEDIACIÓN] Endpoint de Lectura y Limpieza de Borradores del Servidor (CA-07)
+    # Origen: REM-017-02 — GAP-3 del us017_functional_analysis.md
+    # Resuelve: El autoguardado al servidor (US-029 CA-24 PUT /draft) no tiene contrapartida GET para recuperar borradores.
+    Given la necesidad de que el Frontend pueda recuperar borradores almacenados en el servidor (US-029 CA-26 fallback)
+    Then la US-017, como fuente autoritativa de la persistencia, expondrá los siguientes endpoints de borradores:
+    And 1. **`GET /api/v1/workbox/tasks/{taskId}/draft`** — Recupera el borrador más reciente del servidor para la tarea indicada. Response: HTTP 200 con `{ currentStep?: number, partialData: {...}, schemaVersion: string, updatedAt: timestamp }`. Si no existe borrador, retorna HTTP 404.
+    And 2. **`PUT /api/v1/workbox/tasks/{taskId}/draft`** — Guarda o actualiza el borrador (ya definido en US-029 CA-24). Body: `{ currentStep?: number, partialData: {...}, schemaVersion: string }`. Response: HTTP 204 No Content.
+    And 3. **`DELETE /api/v1/workbox/tasks/{taskId}/draft`** — Elimina el borrador tras submit exitoso. Se invoca automáticamente como parte del flujo de `FORM_SUBMITTED_EVENT`. Response: HTTP 204.
+    And **Seguridad:** Los tres endpoints aplican Implicit Locking — solo el `assignee` actual (o un usuario con Auto-Claim válido del CA-04) puede operar sobre borradores de su tarea. Intentos con otro userId retornan HTTP 403.
+    And **Almacenamiento:** Los borradores se persisten en la tabla `task_drafts` (consistente con US-029 CA-24) con TTL de 72 horas. Un Cron Job diario eliminará borradores huérfanos con `updated_at` > 72h.
+    And **Diferencia con Event Store:** Los borradores NO son eventos inmutables. Son snapshots efímeros de trabajo en progreso que se sobrescriben en cada Merge Commit y se destruyen tras el submit. NO aparecen en la tabla `form_event_store` del CA-06.
+
+  Scenario: [REMEDIACIÓN] Referencia Cruzada con US-029 y Política de Propiedad (CA-08)
+    # Origen: REM-017-03 — GAP-1 del us017_functional_analysis.md
+    # Resuelve: Formaliza la reconciliación entre US-017 (Backend) y US-029 (Frontend) tras la eliminación de los 11 CAs duplicados.
+    Given la eliminación de los CAs duplicados (antiguos CA-01 a CA-11 originales) que se solapaban con la US-029
+    Then se establece la siguiente DIRECTIVA DE RECONCILIACIÓN entre las historias gemelas:
+    And 1. **US-017 es la FUENTE AUTORITATIVA** para: persistencia CQRS/Event Sourcing (CA-01), exclusión topológica de Camunda (CA-02), Rollback Saga (CA-03), Auto-Claim transaccional (CA-04), trazabilidad de rechazos (CA-05), esquema del Event Store (CA-06), y endpoints de borradores del servidor (CA-07).
+    And 2. **US-029 es la FUENTE AUTORITATIVA** para: experiencia de Frontend (Pantalla 2 UI), validación Zod en navegador, feedback visual (spinner/overlay/confirmación), autoguardado en LocalStorage, cifrado PII, Upload-First UX, Wizard, idempotencia en Frontend, pestañas duplicadas, campos condicionales, y campos de solo lectura.
+    And 3. **Aspectos compartidos delegados:** Cuando un CA de la US-017 necesite describir un comportamiento de Frontend (Ej: "el Frontend muestra un error"), REFERENCIARÁ el CA correspondiente de la US-029 (Ej: "consistente con US-029 CA-20") sin redefinirlo. Aplica recíprocamente desde la US-029 hacia la US-017 según el CA-19 de la US-029.
+    And 4. **Endpoint compartido:** `POST /api/v1/workbox/tasks/{id}/complete` es implementado UNA SOLA VEZ en el Backend. La US-017 define QUÉ hace el servidor al recibirlo. La US-029 define QUÉ envía el Frontend y QUÉ muestra antes/durante/después.
+    And 5. **Merge Commit Rule:** Si un desarrollador necesita modificar un CA que toca AMBAS historias, debe generar un PR que referencie AMBAS US (Ej: "Implements US-017 CA-01 + US-029 CA-01") para garantizar revisión cruzada.
+
+
+  # ==============================================================================
+  # D. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: docs/requirements/us017_refinamiento_funcional.md (45 preguntas)
+  # Tickets: REF-017-01 a REF-017-10
+  # Propósito: Cerrar vacíos funcionales descubiertos durante el refinamiento
+  #            profundo de 45 preguntas estratificadas.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Exclusión de Borradores del Event Store (CA-09)
+    # Origen: REF-017-01 — Pregunta #2 del refinamiento funcional
+    # Resuelve: Evitar que el Event Store se sature con eventos triviales de autoguardado.
+    Given la existencia de 4 tipos de eventos definidos en el CA-06 del Event Store
+    Then el tipo de evento `FORM_DRAFT_SAVED` se ELIMINA de la lista de eventos admitidos en el Event Store (`form_event_store`)
+    And los borradores (Drafts) viven EXCLUSIVAMENTE en la tabla `task_drafts` (CA-07), que NO es inmutable y se sobrescribe con cada Merge Commit
+    And los tipos de eventos admitidos en V1 del Event Store quedan reducidos a 3: `FORM_SUBMITTED`, `TASK_AUTO_CLAIMED`, `FORM_REJECTED`
+    And esta separación garantiza que la bóveda de eventos solo contenga "actas notariales" (momentos trascendentes) y no "notas de borrador" (trabajo en progreso).
+
+  Scenario: [REFINAMIENTO] Rollback Compensatorio Inmutable con Retry y Timeout (CA-10)
+    # Origen: REF-017-02 — Preguntas #8, #9, #10 del refinamiento funcional
+    # Resuelve: Define que el Rollback NO borra el evento original sino que genera un evento de compensación, y establece timeout + retry.
+    Given que el CA-03 define un Rollback Compensatorio cuando Camunda falla
+    Then el Rollback TIENE ESTRICTAMENTE PROHIBIDO eliminar físicamente (`DELETE`) el evento `FORM_SUBMITTED` del Event Store (eso violaría la inmutabilidad del CA-06)
+    And en su lugar, el Rollback generará un evento compensatorio `FORM_SUBMIT_ROLLED_BACK` en la misma tabla `form_event_store` con una referencia (`original_event_id`) al evento original anulado
+    And el Worker de proyección del CA-01 DEBERÁ ser consciente de estos eventos compensatorios: al proyectar, si un `FORM_SUBMITTED` tiene un `FORM_SUBMIT_ROLLED_BACK` posterior, el evento original se excluye de la tabla analítica  
+    And **Timeout:** El Backend esperará un máximo de **10 segundos** la respuesta de Camunda antes de considerar que el motor está caído
+    And **Retry:** Antes de ejecutar el Rollback, el Backend reintentará la comunicación con Camunda **3 veces** con esperas crecientes (1s, 2s, 4s = 7 segundos de retry + 10s de timeout final = 17 segundos máximos de espera total en el peor caso)
+    And si los 3 reintentos fallan, ENTONCES se ejecuta el Rollback Compensatorio y se devuelve HTTP 500 al Frontend.
+
+  Scenario: [REFINAMIENTO] Estructura Obligatoria del Registro de Rechazo (CA-11)
+    # Origen: REF-017-03 — Preguntas #14, #15 del refinamiento funcional
+    # Resuelve: Define qué campos contiene el `rejectionLogs` del CA-05 y cómo se presenta el historial.
+    Given la inyección de `rejectionLogs` en el BFF `/form-context` definida en el CA-05
+    Then cada entrada del array `rejectionLogs` contendrá OBLIGATORIAMENTE los siguientes campos:
+    And 1. **`rejectedBy`** (string): Nombre completo del revisor que ejecutó el rechazo (no anonimizado — la trazabilidad prevalece en V1).
+    And 2. **`rejectedAt`** (timestamp ISO 8601): Fecha y hora exacta del rechazo.
+    And 3. **`reason`** (string, max 1000 caracteres): Dictamen textual explicando el motivo del rechazo, escrito por el revisor.
+    And 4. **`stageName`** (string): Nombre de la etapa BPMN donde ocurrió el rechazo (Ej: "Control de Calidad", "Aprobación Legal").
+    And 5. **`taskId`** (string): Identificador de la tarea que fue rechazada.
+    And **Presentación en UI (delegado a US-029):** El rechazo MÁS RECIENTE se muestra como Alert principal en la Pantalla 2. El historial completo (si hay más de 1 rechazo) se muestra como sección plegable debajo del Alert, ordenado del más reciente al más antiguo.
+
+  Scenario: [REFINAMIENTO] Cifrado At-Rest de Datos PII en el Event Store (CA-12)
+    # Origen: REF-017-04 — Pregunta #21 del refinamiento funcional
+    # Resuelve: Los datos personales en la bóveda de eventos deben estar protegidos igual que en el LocalStorage del navegador.
+    Given que la US-029 CA-11 exige cifrado PII en el LocalStorage del navegador
+    And que la columna `payload_json` del Event Store puede contener campos PII (Ej: cédula, teléfono, dirección)
+    Then la base de datos PostgreSQL DEBE tener habilitado cifrado at-rest (Transparent Data Encryption o equivalente en la infraestructura) para proteger los datos almacenados en disco
+    And adicionalmente, los campos marcados como `PII/Sensibles` en el esquema Zod (US-003) se cifrarán a nivel de aplicación (AES-256) ANTES de escribir el `payload_json` al Event Store
+    And la llave de cifrado se gestionará a través del servicio de secretos de la infraestructura (Azure Key Vault / AWS KMS), siendo DIFERENTE de la llave usada en el LocalStorage del CA-11 de US-029
+    And para consultas analíticas que requieran datos PII, el Worker de proyección descifrará los campos específicos al proyectar a las tablas analíticas, que a su vez estarán protegidas por permisos de rol `AUDITOR`/`ADMIN_IT`.
+
+  Scenario: [REFINAMIENTO] Validación de Pertenencia al Grupo en Auto-Claim (CA-13)
+    # Origen: REF-017-05 — Pregunta #28 del refinamiento funcional
+    # Resuelve: El Auto-Claim del CA-04 no verifica explícitamente que el usuario pertenezca al grupo de la tarea.
+    Given que el CA-04 define un Auto-Claim para tareas de grupo sin `assignee`
+    Then ANTES de ejecutar el `taskService.claim()`, el Backend DEBERÁ verificar OBLIGATORIAMENTE que el `userId` extraído del JWT sea miembro activo del `candidateGroup` configurado para esa tarea en Camunda
+    And esta verificación se realizará consultando `taskService.createTaskQuery().taskCandidateUser(userId)` o equivalente
+    And si el usuario NO pertenece al grupo, el Auto-Claim se ABORTA con HTTP 403 Forbidden y mensaje: "No tiene permisos para reclamar tareas de este grupo de trabajo"
+    And esta validación es complementaria al Implicit Locking de US-029 CA-07/CA-18, y NO lo reemplaza.
+
+  Scenario: [REFINAMIENTO] Rate-Limiting en Endpoints de Borradores (CA-14)
+    # Origen: REF-017-06 — Pregunta #29 del refinamiento funcional
+    # Resuelve: Protección contra saturación del servidor por exceso de guardados automáticos.
+    Given que el endpoint `PUT /draft` puede recibir peticiones frecuentes por el Debounce de 10s de US-029 CA-24
+    Then los endpoints de borradores (`PUT`, `GET`, `DELETE` del CA-07) tendrán un Rate-Limit de **6 peticiones por minuto por tarea** (consistente con el Debounce de 10 segundos)
+    And las peticiones que excedan este límite recibirán HTTP 429 Too Many Requests con header `Retry-After: 10`
+    And el Frontend (US-029) deberá atrapar este HTTP 429 silenciosamente (sin mostrar error al operario) y reintentar en el próximo ciclo de Debounce.
+
+  Scenario: [REFINAMIENTO] Referencia de Evento Visible para el Operario (CA-15)
+    # Origen: REF-017-07 — Pregunta #34 del refinamiento funcional
+    # Resuelve: El operario necesita un "número de comprobante" para poder citar a soporte ante cualquier incidencia.
+    Given el envío exitoso de un formulario (CA-01 `FORM_SUBMITTED`)
+    Then la respuesta HTTP 200 del endpoint `POST /complete` incluirá en el body un campo `eventReference` con un código legible de máximo 12 caracteres (Ej: `EVT-A3F8K9`)
+    And este código será una representación corta y legible del `event_id` UUID del evento grabado en el Event Store
+    And el Frontend (US-029 CA-21) mostrará esta referencia en la pantalla de confirmación: "Tarea completada exitosamente. Referencia: EVT-A3F8K9"
+    And el operario podrá citar esta referencia a Soporte Técnico para rastrear su envío específico en el Event Store.
+
+  Scenario: [REFINAMIENTO] Eliminación de Borrador como Parte del Flujo de Submit (CA-16)
+    # Origen: REF-017-08 — Pregunta #39 del refinamiento funcional
+    # Resuelve: Evita borradores fantasma eliminando el draft DURANTE el submit, no después.
+    Given que el endpoint `POST /complete` finaliza exitosamente (FORM_SUBMITTED + Camunda avanzado)
+    Then como ÚLTIMO paso del flujo transaccional (antes de retornar HTTP 200), el Backend ejecutará automáticamente la eliminación del borrador (`DELETE /draft`) asociado a esa `taskId` en la tabla `task_drafts`
+    And esta eliminación se ejecuta dentro de la MISMA transacción del `FORM_SUBMITTED` — si la eliminación del draft falla, NO se aborta el submit (el submit tiene prioridad)
+    And el Frontend (US-029) ejecutará la purga de LocalStorage DESPUÉS de recibir el HTTP 200, pero el servidor ya habrá limpiado su parte independientemente.
+
+  Scenario: [REFINAMIENTO] SLA de Latencia Máxima para el Endpoint /complete (CA-17)
+    # Origen: REF-017-09 — Pregunta #41 del refinamiento funcional
+    # Resuelve: Define el tiempo máximo aceptable que el operario espera tras presionar [Enviar].
+    Given que el operario ve el spinner de espera (US-029 CA-20) al presionar [Enviar]
+    Then el endpoint `POST /api/v1/workbox/tasks/{id}/complete` DEBERÁ completar su ciclo completo (validación Backend + grabación Event Store + notificación a Camunda + response) en un máximo de **5 segundos** en condiciones normales de operación
+    And en el peor caso (con los 3 reintentos del CA-10 por falla transitoria de Camunda), el tiempo máximo extendido será de **17 segundos** antes de devolver HTTP 500
+    And si el Backend detecta que el procesamiento superará los 5 segundos SIN error de Camunda (Ej: lentitud de PostgreSQL), registrará un log de alerta para monitoreo proactivo
+    And NO se emitirán respuestas HTTP 202 ("aceptado para después") — el resultado siempre será síncrono: HTTP 200 (éxito) o HTTP 5xx (error).
+
+  Scenario: [REFINAMIENTO] Política de Archivado Anual del Event Store (CA-18)
+    # Origen: REF-017-10 — Pregunta #44 del refinamiento funcional
+    # Resuelve: Previene degradación del rendimiento por acumulación masiva de eventos a lo largo de los años.
+    Given que la tabla `form_event_store` acumulará volúmenes crecientes de datos año tras año
+    Then se implementará una política de archivado automático con las siguientes reglas:
+    And 1. **Eventos con `created_at` mayor a 12 meses** se moverán automáticamente a una tabla de archivo (`form_event_store_archive`) mediante un Job programado mensual.
+    And 2. La tabla de archivo tiene IDÉNTICO esquema que la tabla principal pero reside en un tablespace optimizado para lecturas infrecuentes.
+    And 3. Las tablas de proyección analítica del CA-01 NO se archivan (se mantienen activas para dashboards).
+    And 4. Los eventos archivados siguen siendo INMUTABLES y consultables bajo demanda — el archivado NO es un borrado, es una reubicación.
+    And 5. Los usuarios con rol `AUDITOR` podrán consultar eventos archivados a través de una interfaz administrativa (diferido a V2).
 ```
 
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Tarea) y BFF Invisible.

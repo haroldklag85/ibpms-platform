@@ -129,13 +129,13 @@
 | CA-19 | Liquibase Schema Roles/Permisos | ✅ | ❌ | ❌ | S-3 | handoff_backend_DEF02_DEF03 / Backend OK |
 | CA-20 | RLS Interceptor AOP (assignee_id) | ✅ | ❌ | ❌ | S-3 | Backend OK |
 | CA-21 | Kill Session & Dummy JWT Blacklist | ✅ | ❌ | ❌ | S-3 | Backend OK |
-| CA-22 | Service Accounts API Keys (SHA-256) | ✅ | ❌ | ❌ | S-3 | Backend OK |
+| CA-22 | Service Accounts API Keys (SHA-256) | ✅ | ✅ | ❌ | S-3 | Backend OK / UI Modal Integrado |
 | CA-23 | Lazy Evaluation Tareas Delegadas | ✅ | ❌ | ❌ | S-3 | Backend OK |
-| CA-24 | Reporte Generador ISO 27001 | ✅ | ❌ | ❌ | S-3 | Backend OK |
+| CA-24 | Reporte Generador ISO 27001 | ✅ | ✅ | ❌ | S-3 | Backend OK / Botón Descarga CSV Integrado |
 | CA-25 | Trazabilidad Inmutable (Audit Trail) | ✅ | ❌ | ❌ | S-3 | Backend completado implícitamente mediante logs sudoers |
 
 ### Resumen US-036
-- **Total CAs con Handoff Backend (Hoy):** 7 (CA-19 al CA-25) | **Delegado Back:** ✅ 100% | **Front/QA:** ❌ Pendiente
+- **Total CAs con Handoff Backend:** 7 (CA-19 al CA-25) | **Delegado Back:** ✅ 100% | **Front:** ✅ Parcial (CA-22, CA-24) | **QA:** ❌ Pendiente
 
 ---
 

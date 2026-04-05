@@ -21,7 +21,17 @@ Estas instrucciones rigen CADA INTERACCIÓN en este proyecto y deben ser respeta
 - Cuando una IA de Diseño genere interfaces de forma estática, queda **ESTRICTAMENTE PROHIBIDO** hacer un reemplazo automático (fusión directa) contra los archivos `.vue` funcionales y lógicos de la aplicación.
 - Las clases CSS de Tailwind o colores sueltos deben inyectarse *pieza por pieza y a mano* en el código fuente base.
 
+## 5. Políticas Core de Frontend (Zero-Trust UI y Desacoplamiento)
+- **Cero-Mocks (Integración Estricta):** Al desarrollar componentes que dependan de flujos de valor, queda estrictamente prohibido simular estado con Mocks o arrays estáticos. Se debe requerir interconexión APIRest y manejar los `catch()` reales.
+- **UI/UX de Restricción Crítica:** Las alertas en interacciones destructivas, reintentos masivos o purgas NO PUEDEN USAR las interrupciones nativas del DOM (`alert()`, `confirm()`). Se exige construir Componentes Modales en Vue 3 y aplicar validaciones computadas estrictas localmente (ej. "botón disableado hasta 20 chars").
+- **Aislamiento por Barrel Exports:** Estrictamente prohibido crear dependencias Spaghettis (Ej. Módulos Operativos vs Modulos de Diseño). Todo acceso a composables/estados entre dominios debe realizarse mediante puntos de entrada limpios `index.ts` blindados con documentación `@TSDoc`.
+
 *** SI INCUMPLES ESTAS REGLAS SERÁS ABORTADO INMEDIATAMENTE ***
+
+## 5. Arquitectura Asíncrona Resiliente (SPOF Prevention)
+- **Topología Obligatoria:** Todo sistema de enrutamiento y mensajería (Ej. RabbitMQ) DEBE ser configurado para soportar fallos destructivos del Broker. Queda estrictamente prohibido implementar topologías directas sin soporte DLQ.
+- **Circuit Breaker y Fallback:** Si un Broker como Redis o RabbitMQ se cae, el sistema principal (Ej. Tomcat) NO DEBE crashear. El Agente Backend está obligado a encapsular estas infraestructuras bajo patrones "Fallback" (usando memorias buffer, colas pasivas en BD o interceptores de Circuit Breaker tipo `RabbitHealthIndicator`).
+- **Idempotencia:** Todos los endpoints asíncronos y Webhooks están obligados por contrato a validar la llave `x-idempotency-key` cruzándose con bases de datos transaccionales, suprimiendo ataques de repetición o caídas por duplicidad transaccional de encolamiento.
 
 ---
 # 🛑 LEY GLOBAL 0: RAG-FIRST DEEP CONTEXT (PREVENCIÓN DE ALUCINACIONES DESTRUCTIVAS)

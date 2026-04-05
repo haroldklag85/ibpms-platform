@@ -32,8 +32,6 @@ public class DlqAdminController {
             if (properties != null) {
                 summary.put("message_count", properties.get("QUEUE_MESSAGE_COUNT"));
                 summary.put("status", "ACTIVE");
-            } else {
-                summary.put("status", "NOT_FOUND");
             }
         } catch (Exception e) {
             summary.put("status", "ERROR");

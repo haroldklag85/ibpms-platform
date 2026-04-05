@@ -23,7 +23,7 @@ El objetivo es garantizar que cada agente especializado opere con una memoria ai
 ### ⚙️ Agente Backend (Especialista Java/Spring Boot)
 *   **Memoria Aislada:** Debe ser invocado en una **NUEVA VENTANA DE CHAT**. No conoce de UI, Vue ni de requerimientos comerciales más allá del contrato que se le entrega.
 *   **Responsabilidad:** Leer su instrucción delegada, programar la Arquitectura Hexagonal, realizar pruebas unitarias (JUnit) y subir su trabajo exclusivamente mediante `git commit` en su propia rama lateral (Ej. `sprint-1/...`).
-
+*   **🏗️ Patrones Arquitectónicos Obligatorios:** Implementación rigurosa de resiliencia asíncrona. Ningún sistema de colas o integración debe construirse como un SPOF (Single Point of Failure). Es regla mandatoria enrutar mensajes hacia un Dead-Letter-Exchange (DLX) central, habilitar un `IdempotencyGuard` que interprete encabezados `x-idempotency-key` contra base de datos, y recubrir los Health Checks con Circuit Breakers (`RabbitHealthIndicator`) que ofrezcan degradación mitigada (en-memoria/DB fallbacks) si el bróker desaparece de la red.
 ### 🎨 Agente Frontend (Especialista Vue 3/TypeScript)
 *   **Memoria Aislada:** Invocar en su propia **NUEVA VENTANA DE CHAT**. No conoce el código interno de Java ni la base de datos.
 *   **Responsabilidad:** Consumir el API real, construir componentes interactivos en Vue/Tailwind respetando los contratos DTO, y subir obligatoriamente su trabajo mediante `git commit` en su propia rama lateral (Ej. `sprint-1/...`).
@@ -39,7 +39,7 @@ Dado que los agentes operan en chats (memorias) separados, **se prohíbe la dele
 
 1.  **Orquestación Escrita:** El Arquitecto Líder analiza la tarea y crea **archivos Markdown de delegación** en la carpeta oculta `.agentic-sync/` (Ej. `.agentic-sync/handoff_frontend_US003.md`). Estos archivos contienen el contexto exacto y minucioso para ese rol específico.
 2.  **Invocación en Salas Limpias:** El usuario humano actúa como el canal de activación. Abre un nuevo chat y envía un "Puntero Corto" al agente especialista. Ej: *"Actúa como Agente Frontend y ejecuta estrictamente lo solicitado en el archivo `.agentic-sync/handoff_frontend_US003.md`"*.
-3.  **Ejecución y Empaquetado:** El especialista lee el archivo, programa sus capas, consolida los cambios mediante `git commit` y `git push` en su propia rama, y lo notifica en su propio chat.
-4.  **Auditoría y Cierre:** El humano regresa a la ventana del Arquitecto Líder e informa la finalización del especialista. El Arquitecto Líder comprueba el código basándose únicamente en el *diff* de la rama secundaria contra main (para mantener su memoria estable) y aprueba la fusión (Merge).
+3.  **Ejecución y Empaquetado en Stash Volátil:** El especialista lee el archivo, programa sus capas, valida la Regla Zero-Trust (`npm run build` o compilación Docker), y empaqueta su trabajo de forma que no ensucie la rama si el trabajo corre en paralelo. Lo encapsula emitiendo obligatoriamente un `git stash save "temp-[rol]-US[X]-[CA]"`.
+4.  **Auditoría y Ensamblaje E2E:** El humano regresa a la ventana del Arquitecto Líder comunicando el fin de la intervención. El Arquitecto o el **Agente QA/DevOps** extraerá la "cápsula" mediante `git stash pop` a la rama de destino de integración, ensamblando los aportes separados, y procediendo al testing Playwright/Vitest antes o durante del Pull Request definitivo.
 
 > **Resultado:** Este diseño erradica las alucinaciones por cruce de dominios, garantiza trazabilidad absoluta en el disco (`.agentic-sync/`) y mantiene a cada agente operando dentro de su zona de genio con máxima precisión.

@@ -291,6 +291,35 @@ Las APIs se basarán en JSON para enrutamiento por un "Facade" que oculte la fea
 1. `/api/v1/expedientes`: Trata el inicio formal del flujo.
 2. `/api/v1/tareas`: La API de bandejas (ABAC/RBAC).
 
+## Estrategia de Testing y Calidad (Pirámide iBPMS)
+
+Para garantizar la estabilidad en la evolución hacia la nube nativa y prevenir regresiones, la plataforma adopta una Gobernanza de Testing estricta estructurada en 4 niveles. Todo código promovido debe evidenciar cobertura en esta pirámide.
+
+### Principio Rector
+Se prohíbe la certificación exclusiva contra "Mocks In-Memory" (Ej: Bases de datos H2 o ActiveMQ incrustado) para la integración, dado que en el pasado estas prácticas ocultaron bugs de dialecto SQL (pgvector) y topologías de enrutamiento reales (RabbitMQ). Todo test de integración requerirá infraestructura efímera real.
+
+### Pirámide de 4 Niveles
+1. **Nivel 1 – Unitario (Lógica Aislada):**
+   - *Backend:* JUnit 5 + Mockito para Domain Services y POJOs.
+   - *Frontend:* Vitest para lógica TypeScript pura y utilities.
+2. **Nivel 2 – Componente (Contratos de Estado UI):**
+   - *Unitario UI:* `@vue/test-utils` + jsdom para árboles ligeros.
+   - *Renderizado Fiel:* Playwright Component Testing (`@playwright/experimental-ct-vue`) montado en Chromium real para diseño CSS/Layout.
+3. **Nivel 3 – Integración (Spring Context + DB + Brokers):**
+   - *Backend:* `@SpringBootTest` junto a **Testcontainers** (PostgreSQL 16 + RabbitMQ 3). Se habilita usando la abstracción nativa `@ServiceConnection` en `TestcontainersBaseIT.java`.
+4. **Nivel 4 – API/E2E (Contratos Perimetrales y Seguridad):**
+   - *Backend:* REST Assured (BDD) para certificar contratos HTTP y respuestas OIDC/RBAC reales.
+   - *Frontend/E2E:* (Roadmap) Playwright para flujos End-to-End *headless*.
+
+### Inventario de Dependencias Críticas
+*   **Gestión Centralizada Testcontainers:** `testcontainers-bom` (v1.20.4+).
+*   **Soporte Spring:** `spring-boot-testcontainers` (Spring Boot 3.2+).
+*   **Playwright CT:** `@playwright/experimental-ct-vue`.
+
+### Requisitos CI/CD Operativos
+Para que el pipeline de despliegue sea exitoso, el runner (GitHub Actions, Azure DevOps) debe proveer obligatoriamente un *Docker Daemon* operativo antes de la fase de testing, habilitando así el arranque efímero de las dependencias requeridas por Testcontainers.
+
 ## Verification Plan
 1. Validación arquitectónica integral (V1 táctica Azure -> V2 nube nativa Multitenant).
 2. Avanzar hacia la Pruebra de Concepto (PoC) en código validando el desacople de "Expediente" usando Hexagonal.
+3. Certificar el pipeline de CI/CD ejecutando exitosamente las suites de Testcontainers y Playwright CT.

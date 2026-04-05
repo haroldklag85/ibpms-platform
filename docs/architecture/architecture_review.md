@@ -62,6 +62,12 @@ A continuación, validamos de manera cruzada las 6 categorías estructurales det
 1.  **Circuit Breaker (Cortocircuitos) y Retry Policies en Outbound:** Se mencionó el patrón *Saga* para reversos lógicos, pero si el Core Bancario / ERP está intermitente de forma física repetida o si tarda 1 minuto en contestar (dejando al motor colgado), el microservicio de Java se va a colapsar (agotador de threads HTTP o JDBC).
     *   **Solución:** Incorporar patrón **Circuit Breaker** (Ej: *Resilience4j* en el adaptador Feign de Fallback) e implementar Patrón "Bulkhead" (Aislamiento de Hilos) aislando las llamadas a sistemas de muy alto riesgo/latencia de las rápidas (DMN interno).
 
+#### Brecha CERRADA (Iteración 70-DEV):
+2.  **Validación Empírica de Resiliencia (MQ y Storage):**
+    *   **Problema Histórico:** El uso de bases de datos *in-memory* (H2) y mocks simples no garantizaban la fiabilidad en escenarios de reintentos infinitos, políticas de reconexión a brokers o latencias.
+    *   **Solución Implementada:** Se estandarizó el uso de **Testcontainers (PostgreSQL + RabbitMQ)** para todas las suites de integración, levantando infraestructura subyacente de producción efímera durante los tests. Esto permite certificar topologías de Dead Letter Queues (DLQ), validación de transacciones reales limitando falsos positivos en resiliencia o desajustes de dialectos.
+    *   *Evidencia:* `TestcontainersBaseIT.java`, Módulos CT integrados con `RabbitMqTopologyConfig`.
+
 ### E. Patrones de Seguridad (Gaps)
 *   **Patrones presentes:** API Gateway, WAF Perimetral (App Gateway), OIDC/SAML, Red Cerrada Privada (VNet Segmentada), VPN P2S restrictiva.
 #### Brechas Identificadas:

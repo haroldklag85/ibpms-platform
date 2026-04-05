@@ -54,6 +54,17 @@ Esta épica aborda la capacidad fundamental del sistema: recibir un requerimient
 **Quiero** visualizar una lista consolidada de mis tareas pendientes (BPMN o Kanban) al ingresar a la plataforma (Workdesk)
 **Para** saber exactamente qué gestiones operativas debo priorizar y resolver hoy.
 
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-001:**
+> - **US-002 (Reclamar Tarea / Pantalla 1):** Los WebSockets de desaparición instantánea de tareas (CA-06, CA-13) dependen de que US-002 publique el evento de asignación al reclamar. Sin este evento, las tareas reclamadas por otros seguirán visibles fantasma en la grilla.
+> - **US-029 (Completar Tarea / Pantalla 2):** Toda ejecución de tarea (abrir formulario, enviar datos, completar) está FUERA de alcance de US-001. El Workdesk solo lista y prioriza; US-029 ejecuta.
+> - **US-036 (RBAC / Pantalla 14):** La delegación segura (CA-15) y el Skill-Based Routing (CA-16) consumen la matriz de roles, habilidades y jerarquía organizacional administrada en Pantalla 14. Sin RBAC, la delegación y el Anti Cherry-Picking no pueden funcionar.
+> - **US-005 (Despliegue BPMN / Pantalla 6):** La columna "Avance" (CA-17, CA-23) necesita conocer la estructura del proceso BPMN desplegado (total de User Tasks) para calcular el porcentaje de progreso.
+> - **US-008 (Kanban / Pantalla 3):** Las tareas Kanban consolidadas en la grilla (CA-03) provienen del módulo de Kanban. La degradación elegante (CA-07, CA-18) prioriza estas tareas cuando Camunda cae.
+> - **US-031 (Gantt / Pantalla 10.B):** Las tareas de proyectos tradicionales también se consolidan en la grilla unificada del Workdesk.
+
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Workdesk Loading and Real-Time Grid
@@ -194,6 +205,75 @@ Feature: Workdesk Loading and Real-Time Grid
     Then la interfaz aplicará Degradación Elegante, cargando exitosamente las tareas Kanban vivas de la Base Relacional sin emitir un 500 fatal screen.
     And proyectará un Toast advirtiendo: "Sincronización BPMN degradada".
     And si el operario hace Logout y entra en otra máquina, el Workdesk priorizará abrir su tablero general unificado en lugar de forzarlo a entrar a la tarea específica de ayer.
+
+
+  # ==============================================================================
+  # E. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us001_functional_analysis.md
+  # Tickets: REM-001-01 a REM-001-05
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Resolución de Contradicción de Paginación y Búsqueda (CA-19)
+    # Origen: REM-001-01 — GAP-1 del us001_functional_analysis.md
+    # Resuelve la contradicción entre CA-01 (50 tareas), CA-02 (búsqueda híbrida),
+    # CA-09 (15 tarjetas) y CA-10 (búsqueda server-side exclusiva).
+    Given la necesidad de unificar el modelo de paginación y búsqueda del Workdesk
+    Then queda DEFINIDO el modelo canónico de paginación como:
+    And 1. El Backend retornará bloques de 15 registros por página (CA-09 es el límite visual canónico). El "50" del CA-01 se interpreta como ejemplo ilustrativo, NO como contrato técnico.
+    And 2. La búsqueda es EXCLUSIVAMENTE Server-Side (CA-10 ANULA al CA-02). El Frontend NO filtrará en memoria local. Todo filtrado y búsqueda se ejecutará contra la Base de Datos con índices `pg_trgm` y Debounce de 300ms.
+    And 3. El Hard Limit de 100 registros del CA-10 es un candado de seguridad: si un request manipula el query param `size` a un valor mayor a 100, el Backend retornará `HTTP 400 Bad Request`.
+    And 4. Queda ANULADO el comportamiento híbrido del CA-02 (filtrado client-side + petición paralela al servidor). Toda búsqueda emite una única petición al Backend.
+
+  Scenario: [REMEDIACIÓN] Contrato API Estandarizado para la Grilla del Workdesk (CA-20)
+    # Origen: REM-001-02 — GAP-2 del us001_functional_analysis.md
+    Given la necesidad de alinear Frontend y Backend en el contrato REST de la Grilla Unificada
+    Then el Backend expondrá los siguientes endpoints documentados con OpenAPI/Swagger annotations:
+    And `GET /api/v1/workdesk/tasks` — Grilla Unificada con query params:
+    And   - `page` (int, default: 1) — Número de página.
+    And   - `size` (int, default: 15, max: 100) — Registros por página.
+    And   - `search` (string, opcional) — Texto libre para búsqueda server-side con `pg_trgm`.
+    And   - `origin` (enum: `ALL`, `BPMN`, `KANBAN`, `GANTT`, default: `ALL`) — Filtro por tipo de tarea.
+    And   - `status` (enum: `ALL`, `PENDING`, `IN_PROGRESS`, `OVERDUE`, default: `ALL`) — Filtro por estado.
+    And   - `sort` (string, default: `sla_asc`) — Ordenamiento por SLA ascendente forzoso (CA-01).
+    And El Response Structure del DTO sanitizado (CA-14) será:
+    And   `{ data: [{ id, name, type_badge, sla_deadline, sla_color, status, progress_percent, assignee_name, financial_impact }], pagination: { page, size, total_records, total_pages } }`
+    And `GET /api/v1/workdesk/tasks/{userId}` — Grilla delegada (CA-04, CA-15), con validación RBAC perimetral que verifica jerarquía.
+
+  Scenario: [REMEDIACIÓN] Definición del Skill-Based Routing y Skipeo Justificado (CA-21)
+    # Origen: REM-001-03 — GAP-3 del us001_functional_analysis.md
+    Given la activación del interruptor administrativo "Atender Siguiente" (CA-08, CA-16) con Skill-Based Routing
+    Then el modelo de habilidades del operario seguirá esta estructura:
+    And 1. Las habilidades (skills) se administran en la Pantalla 14 (US-036) como un array de etiquetas simples asociadas al usuario (Ej: `["creditos_hipotecarios", "seguros_vida", "reclamos"]`). V1 NO soporta niveles de experticia (diferido a V2).
+    And 2. El algoritmo de asignación cruzará la etiqueta de la categoría de la tarea más antigua/crítica contra el array de skills del operario. Si hay match, se asigna.
+    And 3. Si NINGUNA tarea del sistema coincide con los skills del operario, el Backend asignará la tarea más antigua/crítica independientemente del skill (Fallback Universal), y registrará un WARNING en el Audit Log: "Asignación sin match de skill para el usuario {userId}".
+    And 4. El "Skipeo Justificado" (CA-16) presentará un Dropdown con motivos predefinidos: "Cliente no responde", "Requiere documentación adicional", "Fuera de mi área de conocimiento", "Otro". Si selecciona "Otro", se habilita un campo de texto libre obligatorio (mínimo 10 caracteres).
+    And 5. Cada Skip queda registrado como asiento inmutable en el Audit Log con: `{userId, taskId, skip_reason, timestamp}`. Un operario que acumule más de 3 Skips consecutivos activará una alerta al Supervisor.
+
+  Scenario: [REMEDIACIÓN] Filtros Facetados para la Grilla del Workdesk (CA-22)
+    # Origen: REM-001-04 — GAP-4 del us001_functional_analysis.md
+    Given la grilla unificada del Workdesk con buscador de texto server-side (CA-10, CA-19)
+    Then la interfaz incorporará una barra de filtros facetados ADICIONAL al buscador de texto:
+    And - Filtro por Tipo de Tarea: `[Todos]` / `[⚡ Procesos BPMN]` / `[📅 Proyectos Gantt]` / `[📋 Kanban]` — mapea al query param `origin` del CA-20.
+    And - Filtro por Estado SLA: `[Todos]` / `[🟢 Al día]` / `[🟡 Por vencer]` / `[🔴 Vencida]` — mapea al query param `status` del CA-20.
+    And - Los filtros se aplicarán como query params adicionales en la petición server-side (CA-19), NO como filtrado local en el navegador.
+    And - Los filtros activos se mostrarán como "Chips" removibles sobre la grilla para dar feedback visual de los filtros aplicados.
+    And - Al activar un filtro, la paginación se reinicia a la página 1 automáticamente.
+    And - Los filtros seleccionados se preservarán en la sesión mediante `KeepAlive` (CA-12), de modo que al navegar y regresar al Workdesk, los filtros sigan activos.
+
+  Scenario: [REMEDIACIÓN] Fórmula Determinista para la Columna "Avance" (CA-23)
+    # Origen: REM-001-05 — GAP-5 del us001_functional_analysis.md
+    Given la 4ta columna "Avance" de la grilla unificada del Workdesk (CA-03, CA-17)
+    Then el cálculo del porcentaje de avance seguirá las siguientes fórmulas según el tipo de tarea:
+    And 1. **Tareas BPMN:** `Avance = (Índice ordinal de la UserTask actual) / (Total de UserTasks del proceso BPMN desplegado) × 100`. Ejemplo: si el proceso tiene 5 User Tasks y la actual es la 3ra, el avance es 60%.
+    And 2. **Tareas Kanban:** `Avance = (Índice ordinal de la columna actual) / (Total de columnas del tablero Kanban) × 100`. Ejemplo: si el tablero tiene 4 columnas (TODO, DOING, REVIEW, DONE) y la tarea está en REVIEW (3ra), el avance es 75%.
+    And 3. **Tareas Gantt:** `Avance = Porcentaje de completitud reportado manualmente por el asignado`. No se calcula automáticamente.
+    And 4. La representación visual será una **barra de progreso horizontal** (progress bar) con el porcentaje numérico superpuesto (Ej: `[████████░░] 75%`).
+    And 5. Si el Backend no puede calcular el avance (Ej: proceso BPMN sin User Tasks definidas o con estructura no lineal con Gateways paralelos), la columna mostrará `N/D` (No Disponible) en lugar de un porcentaje erróneo.
+
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Workdesk - Escritorio de Tareas).
 

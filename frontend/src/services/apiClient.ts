@@ -128,20 +128,29 @@ export const api = {
     getBpmnTemplates: () => apiClient.get(`/design/processes/templates`),
     archiveProcess: (id: string) => apiClient.post(`/design/processes/${id}/archive`), // CA-32
     
-    // Gobernanza CA-6 & CA-7 & Rollback CA-15:
+    // Gobernanza CA-6 & CA-7 & Rollback CA-15 & Heartbeat CA-66/64:
     getProcessVersions: (id: string) => apiClient.get(`/design/processes/${id}/versions`),
     restoreProcessVersion: (id: string, version: number) => apiClient.post(`/design/processes/${id}/rollback/${version}`),
     getProcessLock: (id: string) => apiClient.get(`/design/processes/${id}/lock`),
+    heartbeatProcessLock: (id: string) => apiClient.post(`/design/processes/${id}/lock/heartbeat`), // CA-66
+    forceUnlockProcess: (id: string) => apiClient.delete(`/design/processes/${id}/lock/force`), // CA-64
     getProcessAuditLogs: (id: string) => apiClient.get(`/design/processes/${id}/audit-logs`), // CA-42
 
     // 6. BPMN Sandbox (Pantalla 6 / CA-41)
     deployToSandbox: (id: string, payload: any) => apiClient.post(`/design/processes/${id}/sandbox`, payload),
     spawnSandbox: (payload: any) => apiClient.post(`/design/processes/sandbox-spawn`, payload), // CA-41
 
-    // Integraciones / Conectores (CA-45, CA-49)
+    // 6.5 Panel Solicitudes de Despliegue (CA-69)
+    getDeployRequests: (key: string) => apiClient.get(`/design/processes/${key}/deploy-requests`),
+    approveDeployRequest: (id: string, payload?: any) => apiClient.post(`/design/deploy-requests/${id}/approve`, payload),
+    rejectDeployRequest: (id: string, payload: any) => apiClient.post(`/design/deploy-requests/${id}/reject`, payload),
+
+    // Integraciones / Conectores (CA-45, CA-49, CA-68, CA-70)
     getIntegrationConnectors: () => apiClient.get(`/integrations/connectors`),
     getConnectorSchema: (id: string) => apiClient.get(`/integrations/connectors/${id}/schema`), // CA-49
     getProcessVariables: (id: string) => apiClient.get(`/design/processes/${id}/variables`), // CA-49
+    getExternalTaskTopics: () => apiClient.get(`/design/external-task-topics`), // CA-70
+    saveDataMappings: (key: string, taskId: string, payload: any) => apiClient.post(`/design/processes/${key}/tasks/${taskId}/mappings`, payload), // CA-68
 
     // 7. BAM Analytics - Process Health (Pantalla 5)
     getProcessHealth: () => apiClient.get('/analytics/process-health'),

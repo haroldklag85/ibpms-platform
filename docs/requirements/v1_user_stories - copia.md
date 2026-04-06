@@ -54,6 +54,17 @@ Esta épica aborda la capacidad fundamental del sistema: recibir un requerimient
 **Quiero** visualizar una lista consolidada de mis tareas pendientes (BPMN o Kanban) al ingresar a la plataforma (Workdesk)
 **Para** saber exactamente qué gestiones operativas debo priorizar y resolver hoy.
 
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-001:**
+> - **US-002 (Reclamar Tarea / Pantalla 1):** Los WebSockets de desaparición instantánea de tareas (CA-06, CA-13) dependen de que US-002 publique el evento de asignación al reclamar. Sin este evento, las tareas reclamadas por otros seguirán visibles fantasma en la grilla.
+> - **US-029 (Completar Tarea / Pantalla 2):** Toda ejecución de tarea (abrir formulario, enviar datos, completar) está FUERA de alcance de US-001. El Workdesk solo lista y prioriza; US-029 ejecuta.
+> - **US-036 (RBAC / Pantalla 14):** La delegación segura (CA-15) y el Skill-Based Routing (CA-16) consumen la matriz de roles, habilidades y jerarquía organizacional administrada en Pantalla 14. Sin RBAC, la delegación y el Anti Cherry-Picking no pueden funcionar.
+> - **US-005 (Despliegue BPMN / Pantalla 6):** La columna "Avance" (CA-17, CA-23) necesita conocer la estructura del proceso BPMN desplegado (total de User Tasks) para calcular el porcentaje de progreso.
+> - **US-008 (Kanban / Pantalla 3):** Las tareas Kanban consolidadas en la grilla (CA-03) provienen del módulo de Kanban. La degradación elegante (CA-07, CA-18) prioriza estas tareas cuando Camunda cae.
+> - **US-031 (Gantt / Pantalla 10.B):** Las tareas de proyectos tradicionales también se consolidan en la grilla unificada del Workdesk.
+
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Workdesk Loading and Real-Time Grid
@@ -194,6 +205,160 @@ Feature: Workdesk Loading and Real-Time Grid
     Then la interfaz aplicará Degradación Elegante, cargando exitosamente las tareas Kanban vivas de la Base Relacional sin emitir un 500 fatal screen.
     And proyectará un Toast advirtiendo: "Sincronización BPMN degradada".
     And si el operario hace Logout y entra en otra máquina, el Workdesk priorizará abrir su tablero general unificado en lugar de forzarlo a entrar a la tarea específica de ayer.
+
+
+  # ==============================================================================
+  # E. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us001_functional_analysis.md
+  # Tickets: REM-001-01 a REM-001-05
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Resolución de Contradicción de Paginación y Búsqueda (CA-19)
+    # Origen: REM-001-01 — GAP-1 del us001_functional_analysis.md
+    # Resuelve la contradicción entre CA-01 (50 tareas), CA-02 (búsqueda híbrida),
+    # CA-09 (15 tarjetas) y CA-10 (búsqueda server-side exclusiva).
+    Given la necesidad de unificar el modelo de paginación y búsqueda del Workdesk
+    Then queda DEFINIDO el modelo canónico de paginación como:
+    And 1. El Backend retornará bloques de 15 registros por página (CA-09 es el límite visual canónico). El "50" del CA-01 se interpreta como ejemplo ilustrativo, NO como contrato técnico.
+    And 2. La búsqueda es EXCLUSIVAMENTE Server-Side (CA-10 ANULA al CA-02). El Frontend NO filtrará en memoria local. Todo filtrado y búsqueda se ejecutará contra la Base de Datos con índices `pg_trgm` y Debounce de 300ms.
+    And 3. El Hard Limit de 100 registros del CA-10 es un candado de seguridad: si un request manipula el query param `size` a un valor mayor a 100, el Backend retornará `HTTP 400 Bad Request`.
+    And 4. Queda ANULADO el comportamiento híbrido del CA-02 (filtrado client-side + petición paralela al servidor). Toda búsqueda emite una única petición al Backend.
+
+  Scenario: [REMEDIACIÓN] Contrato API Estandarizado para la Grilla del Workdesk (CA-20)
+    # Origen: REM-001-02 — GAP-2 del us001_functional_analysis.md
+    Given la necesidad de alinear Frontend y Backend en el contrato REST de la Grilla Unificada
+    Then el Backend expondrá los siguientes endpoints documentados con OpenAPI/Swagger annotations:
+    And `GET /api/v1/workdesk/tasks` — Grilla Unificada con query params:
+    And   - `page` (int, default: 1) — Número de página.
+    And   - `size` (int, default: 15, max: 100) — Registros por página.
+    And   - `search` (string, opcional) — Texto libre para búsqueda server-side con `pg_trgm`.
+    And   - `origin` (enum: `ALL`, `BPMN`, `KANBAN`, `GANTT`, default: `ALL`) — Filtro por tipo de tarea.
+    And   - `status` (enum: `ALL`, `PENDING`, `IN_PROGRESS`, `OVERDUE`, default: `ALL`) — Filtro por estado.
+    And   - `sort` (string, default: `sla_asc`) — Ordenamiento por SLA ascendente forzoso (CA-01).
+    And El Response Structure del DTO sanitizado (CA-14) será:
+    And   `{ data: [{ id, name, type_badge, sla_deadline, sla_color, status, progress_percent, assignee_name, financial_impact }], pagination: { page, size, total_records, total_pages } }`
+    And `GET /api/v1/workdesk/tasks/{userId}` — Grilla delegada (CA-04, CA-15), con validación RBAC perimetral que verifica jerarquía.
+
+  Scenario: [REMEDIACIÓN] Definición del Skill-Based Routing y Skipeo Justificado (CA-21)
+    # Origen: REM-001-03 — GAP-3 del us001_functional_analysis.md
+    Given la activación del interruptor administrativo "Atender Siguiente" (CA-08, CA-16) con Skill-Based Routing
+    Then el modelo de habilidades del operario seguirá esta estructura:
+    And 1. Las habilidades (skills) se administran en la Pantalla 14 (US-036) como un array de etiquetas simples asociadas al usuario (Ej: `["creditos_hipotecarios", "seguros_vida", "reclamos"]`). V1 NO soporta niveles de experticia (diferido a V2).
+    And 2. El algoritmo de asignación cruzará la etiqueta de la categoría de la tarea más antigua/crítica contra el array de skills del operario. Si hay match, se asigna.
+    And 3. Si NINGUNA tarea del sistema coincide con los skills del operario, el Backend asignará la tarea más antigua/crítica independientemente del skill (Fallback Universal), y registrará un WARNING en el Audit Log: "Asignación sin match de skill para el usuario {userId}".
+    And 4. El "Skipeo Justificado" (CA-16) presentará un Dropdown con motivos predefinidos: "Cliente no responde", "Requiere documentación adicional", "Fuera de mi área de conocimiento", "Otro". Si selecciona "Otro", se habilita un campo de texto libre obligatorio (mínimo 10 caracteres).
+    And 5. Cada Skip queda registrado como asiento inmutable en el Audit Log con: `{userId, taskId, skip_reason, timestamp}`. Un operario que acumule más de 3 Skips consecutivos activará una alerta al Supervisor.
+
+  Scenario: [REMEDIACIÓN] Filtros Facetados para la Grilla del Workdesk (CA-22)
+    # Origen: REM-001-04 — GAP-4 del us001_functional_analysis.md
+    Given la grilla unificada del Workdesk con buscador de texto server-side (CA-10, CA-19)
+    Then la interfaz incorporará una barra de filtros facetados ADICIONAL al buscador de texto:
+    And - Filtro por Tipo de Tarea: `[Todos]` / `[⚡ Procesos BPMN]` / `[📅 Proyectos Gantt]` / `[📋 Kanban]` — mapea al query param `origin` del CA-20.
+    And - Filtro por Estado SLA: `[Todos]` / `[🟢 Al día]` / `[🟡 Por vencer]` / `[🔴 Vencida]` — mapea al query param `status` del CA-20.
+    And - Los filtros se aplicarán como query params adicionales en la petición server-side (CA-19), NO como filtrado local en el navegador.
+    And - Los filtros activos se mostrarán como "Chips" removibles sobre la grilla para dar feedback visual de los filtros aplicados.
+    And - Al activar un filtro, la paginación se reinicia a la página 1 automáticamente.
+    And - Los filtros seleccionados se preservarán en la sesión mediante `KeepAlive` (CA-12), de modo que al navegar y regresar al Workdesk, los filtros sigan activos.
+
+  Scenario: [REMEDIACIÓN] Fórmula Determinista para la Columna "Avance" (CA-23)
+    # Origen: REM-001-05 — GAP-5 del us001_functional_analysis.md
+    Given la 4ta columna "Avance" de la grilla unificada del Workdesk (CA-03, CA-17)
+    Then el cálculo del porcentaje de avance seguirá las siguientes fórmulas según el tipo de tarea:
+    And 1. **Tareas BPMN:** `Avance = (Índice ordinal de la UserTask actual) / (Total de UserTasks del proceso BPMN desplegado) × 100`. Ejemplo: si el proceso tiene 5 User Tasks y la actual es la 3ra, el avance es 60%.
+    And 2. **Tareas Kanban:** `Avance = (Índice ordinal de la columna actual) / (Total de columnas del tablero Kanban) × 100`. Ejemplo: si el tablero tiene 4 columnas (TODO, DOING, REVIEW, DONE) y la tarea está en REVIEW (3ra), el avance es 75%.
+    And 3. **Tareas Gantt:** `Avance = Porcentaje de completitud reportado manualmente por el asignado`. No se calcula automáticamente.
+    And 4. La representación visual será una **barra de progreso horizontal** (progress bar) con el porcentaje numérico superpuesto (Ej: `[████████░░] 75%`).
+    And 5. Si el Backend no puede calcular el avance (Ej: proceso BPMN sin User Tasks definidas o con estructura no lineal con Gateways paralelos), la columna mostrará `N/D` (No Disponible) en lugar de un porcentaje erróneo.
+
+
+  # ==============================================================================
+  # F. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: Cuestionario de 45 preguntas del workflow /refinamientoFuncionalUs.md
+  # Propósito: Cerrar huecos descubiertos durante el refinamiento de la US-001.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Umbrales Configurables del Semáforo SLA (CA-24)
+    # Origen: Pregunta #6 del Refinamiento Funcional
+    # Resuelve: No existían umbrales numéricos para los colores del semáforo SLA.
+    Given el Ticking Engine de semáforos SLA del CA-05 y CA-11
+    Then los umbrales de transición de color se definirán en porcentaje del tiempo restante respecto al total del SLA:
+    And 🟢 **Verde:** Más del 50% del tiempo total restante.
+    And 🟡 **Amarillo:** Entre el 50% y el 15% del tiempo total restante.
+    And 🔴 **Rojo:** Menos del 15% del tiempo total restante.
+    And ⚫ **Vencida (Negro/Gris):** 0% — la fecha límite ya pasó.
+    And estos porcentajes serán los valores POR DEFECTO del sistema, pero cada tenant podrá personalizarlos desde la configuración administrativa (US-036 / Pantalla 14) si sus operaciones requieren umbrales diferentes.
+    And el Frontend calculará el color localmente usando `sla_deadline` del DTO (CA-20) comparado contra `Date.now()`.
+
+  Scenario: [REFINAMIENTO] Recálculo de Semáforos al Volver de Pestaña Inactiva (CA-25)
+    # Origen: Pregunta #7 del Refinamiento Funcional
+    # Resuelve: requestAnimationFrame se pausa en pestañas inactivas del navegador.
+    Given el Global Heartbeat Store basado en requestAnimationFrame (CA-11)
+    When el navegador pausa el requestAnimationFrame porque el usuario minimizó la pestaña o cambió a otra
+    Then al detectar el evento `visibilitychange` del navegador (la pestaña vuelve a estar activa), el Heartbeat Store ejecutará un recálculo INMEDIATO de todos los semáforos SLA visibles usando `Date.now()` como referencia.
+    And si durante la inactividad alguna tarea cambió de color (Ej: pasó de Amarillo a Rojo), el cambio se reflejará instantáneamente sin esperar el próximo ciclo del requestAnimationFrame.
+    And si la inactividad superó los 5 minutos, se activará además el mecanismo de auto-refresco del CA-31.
+
+  Scenario: [REFINAMIENTO] Relleno Automático de Página tras Remoción por WebSocket (CA-26)
+    # Origen: Pregunta #9 del Refinamiento Funcional
+    # Resuelve: La página queda con 14 de 15 tarjetas al desaparecer una por WebSocket.
+    Given la desaparición animada de una tarea vía WebSocket (CA-06, CA-13) en una página de 15 tarjetas (CA-09)
+    Then el Frontend acumulará las remociones por WebSocket durante una ventana de 5 segundos (consistente con el throttling del CA-13).
+    And al finalizar la ventana, si la página tiene menos de 15 tarjetas, el Frontend emitirá UNA SOLA petición silenciosa al Backend solicitando las tarjetas faltantes para rellenar la página a su capacidad de 15.
+    And las tarjetas nuevas aparecerán con una animación sutil de fade-in para no confundir al usuario con apariciones repentinas.
+    And si la página completa queda vacía (todas las tareas fueron reclamadas), se aplicará la regla del CA-12: redirigir automáticamente a la Página 1.
+
+  Scenario: [REFINAMIENTO] Vocabulario Completo de Acciones WebSocket (CA-27)
+    # Origen: Pregunta #10 del Refinamiento Funcional
+    # Resuelve: Solo existía la acción REMOVE; faltaban acciones para otros eventos de la grilla.
+    Given la conexión WebSocket para sincronización en tiempo real del Workdesk (CA-06, CA-13)
+    Then el Backend emitirá mensajes atómicos (CA-13) con el siguiente vocabulario estandarizado de acciones:
+    And `REMOVE` — Una tarea fue reclamada por otro usuario o reasignada. El Frontend la desvanece (CA-13).
+    And `ADD` — Una nueva tarea fue asignada al usuario (por reclamo, por rotación de Skill-Based Routing, o por asignación forzosa de un supervisor). El Frontend la incorpora a la grilla respetando el ordenamiento SLA (CA-01).
+    And `UPDATE` — Un campo visible de una tarea existente cambió (Ej: el estado SLA pasó a OVERDUE, el Impacto Financiero cambió). El Frontend actualiza la celda afectada sin recargar la fila completa.
+    And `PRIORITY_CHANGE` — El orden global de priorización cambió (Ej: una tarea recibió el badge 🔥 Impacto). El Frontend reordena la grilla localmente.
+    And cada mensaje WebSocket seguirá la estructura: `{ action: 'REMOVE|ADD|UPDATE|PRIORITY_CHANGE', taskId: 'TK-123', payload?: {...} }`.
+    And para `ADD` y `UPDATE`, el `payload` contendrá ÚNICAMENTE los campos del DTO sanitizado del CA-20 que cambiaron.
+
+  Scenario: [REFINAMIENTO] Prevención de Condición de Carrera en "Atender Siguiente" (CA-28)
+    # Origen: Pregunta #16 del Refinamiento Funcional
+    # Resuelve: 200 operarios presionando "Atender Siguiente" simultáneamente podrían recibir la misma tarea.
+    Given la activación del modo "Atender Siguiente" (CA-08, CA-16) con múltiples operarios conectados simultáneamente
+    Then el Backend garantizará la asignación atómica de tareas utilizando bloqueo pesimista en la Base de Datos (SELECT ... FOR UPDATE SKIP LOCKED) para evitar que dos operarios reciban la misma tarea.
+    And si un operario solicita una tarea y esta ya fue asignada a otro en la misma fracción de segundo, el Backend seleccionará automáticamente la SIGUIENTE tarea disponible que coincida con los skills del operario (CA-21), retornando la tarea correcta sin error visible.
+    And el operario NUNCA recibirá un error "Tarea ya asignada" al presionar "Atender Siguiente" — el Backend resolverá la colisión internamente y le dará la siguiente tarea válida.
+    And este mecanismo es análogo al del US-002 CA-01 (Reclamo Simultáneo), pero aplicado al algoritmo de enrutamiento forzoso en lugar del reclamo manual.
+
+  Scenario: [REFINAMIENTO] Contadores en Filtros Facetados del Workdesk (CA-29)
+    # Origen: Pregunta #17 del Refinamiento Funcional
+    # Resuelve: Los filtros facetados (CA-22) no mostraban cuántas tareas existen en cada categoría.
+    Given la barra de filtros facetados del Workdesk (CA-22)
+    Then cada opción de filtro mostrará entre paréntesis el conteo total de tareas de esa categoría:
+    And Ejemplo de filtros con contadores: `[Todos (62)]` / `[⚡ BPMN (45)]` / `[📋 Kanban (12)]` / `[📅 Gantt (5)]` / `[🟢 Al día (40)]` / `[🟡 Por vencer (14)]` / `[🔴 Vencida (8)]`.
+    And el Backend retornará los contadores como parte del response de la grilla (CA-20), en un objeto adicional: `facets: { origin: { BPMN: 45, KANBAN: 12, GANTT: 5 }, status: { PENDING: 40, IN_PROGRESS: 14, OVERDUE: 8 } }`.
+    And los contadores se actualizarán con cada petición a la grilla, NO en tiempo real por WebSocket (para evitar ruido visual excesivo).
+
+  Scenario: [REFINAMIENTO] Rate Limiting para el Endpoint de la Grilla del Workdesk (CA-30)
+    # Origen: Pregunta #30 del Refinamiento Funcional
+    # Resuelve: No existía límite de cuántas veces un usuario puede solicitar la grilla.
+    Given el endpoint principal `GET /api/v1/workdesk/tasks` del CA-20
+    Then el API Gateway impondrá un Rate Limiting de máximo 60 peticiones por minuto por usuario autenticado.
+    And si se supera, retornará `HTTP 429 Too Many Requests` con el mensaje: "Has realizado demasiadas consultas. Espera unos segundos antes de intentarlo de nuevo."
+    And este límite protege contra scripts automatizados que hagan polling agresivo para monitorear cambios, ya que la sincronización en tiempo real se resuelve vía WebSocket (CA-06, CA-13, CA-27), NO por polling al endpoint REST.
+
+  Scenario: [REFINAMIENTO] Auto-Refresco Pasivo al Volver de Inactividad Prolongada (CA-31)
+    # Origen: Pregunta #31 del Refinamiento Funcional
+    # Resuelve: El KeepAlive (CA-12) podría mostrar datos obsoletos tras horas de inactividad.
+    Given la preservación del Workdesk en RAM mediante KeepAlive (CA-12)
+    When el usuario regresa al Workdesk después de haber estado en otra pestaña/vista por más de 5 minutos
+    Then el Frontend ejecutará un refresco silencioso en segundo plano: emitirá una petición al endpoint de la grilla (CA-20) y actualizará los datos de la tabla SIN destruir el componente KeepAlive ni resetear los filtros del usuario.
+    And durante el refresco (que típicamente dura <1 segundo), la grilla mostrará un indicador sutil de actualización (Ej: un shimmer sobre las filas existentes) para que el usuario sepa que los datos se están renovando.
+    And si la petición de refresco falla (error de red), la grilla mantendrá los datos del KeepAlive con un Toast discreto: "No se pudo actualizar. Mostrando datos de la última sincronización."
+    And el umbral de 5 minutos es consistente con el CA-25 (recálculo de semáforos al volver de inactividad).
+
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Workdesk - Escritorio de Tareas).
 
@@ -203,6 +368,13 @@ Feature: Workdesk Loading and Real-Time Grid
 **Como** Analista / Usuario de Negocio
 **Quiero** poder "reclamar" (asignarme) una tarea que actualmente pertenece a la cola de todo mi grupo
 **Para** evitar que otro compañero trabaje en el mismo caso de forma paralela y duplicar esfuerzos.
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-002:**
+> - **US-001 (Workdesk / Pantalla 1):** La grilla del Workdesk es donde el operario visualiza las tareas de la Cola de Grupo y donde aparece el botón [Reclamar]. Los WebSockets de desaparición instantánea (US-001 CA-06, CA-13, CA-27) dependen de que la US-002 EMITA el evento WebSocket al momento del Commit de reclamo/liberación/despojo. Sin este disparo, las tareas reclamadas permanecen como "fantasmas visibles" en las pantallas de todos los compañeros.
+> - **US-029 (Completar Tarea / Pantalla 2):** La ejecución del formulario y el patrón de borrador en LocalStorage están definidos en la US-029. La Amnesia Transaccional (CA-07) de la US-002 depende del esquema de persistencia temporal de la US-029 para saber exactamente qué purgar al liberar.
+> - **US-036 (RBAC / Pantalla 14):** La validación perimetral del Despojo Forzoso (CA-08, CA-13) consume la jerarquía organizacional y la relación `team_id` administrada en la Pantalla 14. Sin RBAC, un supervisor de cualquier departamento podría despojar tareas de departamentos que no le corresponden.
+> - **US-001 CA-28 (Prevención de Condición de Carrera):** El mecanismo de bloqueo atómico en base de datos para el modo "Atender Siguiente" (US-001 CA-28) es análogo al requerido por el CA-11 de US-002. Ambos necesitan `SELECT FOR UPDATE SKIP LOCKED` para garantizar exclusión mutua.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
@@ -262,6 +434,165 @@ Feature: Task Claiming and Reassignment
     When el analista oprime [Reclamar]
     Then el Frontend "miente" visualmente colocando la tarea en "Mi Bandeja" (Almacenamiento Local Temporal)
     And genera procesos automáticos de ruteo/re-intento sincrónico por detrás hasta que confirme físicamente en el Motor (Degradación controlada).
+	
+	
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us002_functional_analysis.md
+  # Tickets: REM-002-01 a REM-002-05
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md antes del inicio de desarrollo de US-002.
+  # Estado: US-002 NO ha sido desarrollada aún. Estos CAs se inyectan ANTES
+  #         de la construcción para blindar la implementación desde el origen.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Mecanismo Atómico de BD para Reclamo Simultáneo (CA-11)
+    # Origen: REM-002-01 — GAP-1 del us002_functional_analysis.md
+    # Resuelve: El CA-01 exige HTTP 409 pero no define el mecanismo que lo garantiza.
+    Given la concurrencia de múltiples analistas reclamando la misma tarea (CA-01)
+    Then el Backend OBLIGATORIAMENTE utilizará el comando nativo `TaskService.claim(taskId, userId)` de Camunda como primera opción, el cual internamente aplica exclusión atómica.
+    And si la tarea NO es una tarea Camunda (Ej: tarea Kanban o Gantt sin motor BPMN), el Backend aplicará un bloqueo pesimista en PostgreSQL (`SELECT ... FOR UPDATE SKIP LOCKED`) antes de escribir el campo `assignee`, garantizando que solo un Thread de Java gane la escritura.
+    And el Thread perdedor recibirá una excepción controlada que se traducirá en el `HTTP 409 Conflict` del CA-01 con el mensaje amable al Frontend.
+    And para el Reclamo Masivo (CA-02), cada tarea del lote se procesará con el mismo mecanismo atómico individual. Si 3 de 10 ya fueron tomadas en la fracción de segundo, el response del Batch retornará: `{ claimed: 7, conflicts: [{ taskId: 'TK-101', reason: 'Already claimed by María' }, ...] }`.
+    And este mecanismo es análogo al US-001 CA-28 (Prevención de Condición de Carrera en "Atender Siguiente") y DEBE reutilizar el mismo patrón de Repository.
+
+  Scenario: [REMEDIACIÓN] Emisión Obligatoria de Evento WebSocket Post-Commit (CA-12)
+    # Origen: REM-002-02 — GAP-2 del us002_functional_analysis.md
+    # Resuelve: Tras reclamo/liberación, los compañeros no son notificados y ven tareas "fantasma".
+    Given la transacción exitosa de Reclamo, Liberación, Auto-Unclaim o Despojo Forzoso en la Base de Datos
+    Then el Backend DEBE emitir, en el MISMO instante del Commit de la transacción, un evento WebSocket hacia el canal de broadcast del grupo/tenant afectado.
+    And el evento seguirá el vocabulario estandarizado del US-001 CA-27:
+    And   - Al RECLAMAR (individual o masivo): emitir `{ action: 'REMOVE', taskId: 'TK-123' }` hacia el canal grupal, para que todos los compañeros vean desaparecer la tarea de su cola.
+    And   - Al LIBERAR o AUTO-UNCLAIM: emitir `{ action: 'ADD', taskId: 'TK-123', payload: {...} }` hacia el canal grupal, para que todos los compañeros vean RE-APARECER la tarea en su cola.
+    And   - Al DESPOJAR FORZOSAMENTE (CA-08): emitir `REMOVE` hacia la bandeja personal del operario despojado Y `ADD` hacia el canal grupal simultáneamente.
+    And si el servidor WebSocket no está disponible al momento del Commit, el evento se encola en una Dead Letter Queue (RabbitMQ) para reintento automático, garantizando entrega eventual (At-Least-Once Delivery).
+    And esta emisión es la pieza que CONECTA la US-002 con el mecanismo de desaparición instantánea de la US-001 (CA-06, CA-13).
+
+  Scenario: [REMEDIACIÓN] Validación Perimetral Organizacional en Despojo Forzoso (CA-13)
+    # Origen: REM-002-03 — GAP-3 del us002_functional_analysis.md
+    # Resuelve: Un supervisor de un departamento puede despojar tareas de otro departamento.
+    Given la ejecución del Forced Unclaim por un Supervisor (CA-08)
+    Then el Backend OBLIGATORIAMENTE cruzará el `team_id` del Supervisor autenticado contra el `team_id` asignado a la Tarea (Silo Data Protection).
+    And si el Supervisor NO pertenece al mismo equipo/departamento que administra la tarea, el Backend retornará `HTTP 403 Forbidden` con el mensaje: "No tiene permisos para gestionar tareas de este equipo."
+    And solo el jefe directo dentro de la jerarquía organizacional del equipo podrá ejecutar el despojo, consumiendo la matriz de roles y jerarquía de la US-036 (Pantalla 14).
+    And cada intento de despojo (exitoso o rechazado) quedará registrado como asiento inmutable en el Audit Log con: `{ supervisorId, targetUserId, taskId, teamId, action: 'FORCE_UNCLAIM', result: 'SUCCESS|DENIED', timestamp }`.
+    And la Vista de Monitoreo del Supervisor (CA-08) solo mostrará las tareas de SU equipo, aplicando el filtro `team_id` desde la consulta SQL base (prevención IDOR nativa sin depender del Frontend).
+
+  Scenario: [REMEDIACIÓN] Contrato API Estandarizado para Operaciones de Reclamo (CA-14)
+    # Origen: REM-002-04 — GAP-4 del us002_functional_analysis.md
+    Given la necesidad de alinear Frontend y Backend en las operaciones de posesión de tareas
+    Then el Backend expondrá los siguientes endpoints documentados con OpenAPI/Swagger annotations:
+    And `POST /api/v1/tasks/{taskId}/claim` — Reclamo individual. Body: vacío (el userId se obtiene del JWT). Response 200: `{ taskId, assignee, claimedAt }`. Response 409: `{ conflictUser, message }`.
+    And `POST /api/v1/tasks/bulk-claim` — Reclamo masivo. Body: `{ taskIds: ['TK-1', 'TK-2', ...] }`. Response 200: `{ claimed: [...], conflicts: [...] }`. Límite máximo de 20 tareas por lote (Hard Limit).
+    And `POST /api/v1/tasks/{taskId}/release` — Liberación. Body: `{ message?: string }` (mensaje opcional del CA-04, máximo 500 caracteres). Response 200: `{ taskId, releasedAt }`.
+    And `POST /api/v1/tasks/{taskId}/force-unclaim` — Despojo forzoso (solo Supervisores). Body: `{ reason?: string }`. Response 200: `{ taskId, previousAssignee, forcedBy, timestamp }`. Response 403: si no pertenece al equipo (CA-13).
+    And `GET /api/v1/tasks/{taskId}/audit-trail` — Historial de trazabilidad (CA-09). Response 200: `{ entries: [{ action, userId, userName, timestamp, reason? }] }`.
+    And todos los endpoints aplicarán OBLIGATORIAMENTE el filtro `tenantId` del JWT y el bind ORM anti-SQLi (consistente con US-001 CA-14).
+
+  Scenario: [REMEDIACIÓN] Definición del Ghost Job Timeout y Pre-Aviso al Operario (CA-15)
+    # Origen: REM-002-05 — GAP-5 del us002_functional_analysis.md
+    # Resuelve: El CA-06 no define umbral, criterio de inactividad ni pre-aviso.
+    Given el Cron Job de detección de tareas abandonadas (CA-06)
+    Then el mecanismo de Auto-Unclaim seguirá las siguientes reglas:
+    And 1. **Definición de "inactividad":** Una tarea se considera inactiva si el operario asignado NO ha ejecutado NINGUNA acción registrable sobre ella (completar, guardar borrador, adjuntar archivo, o cambiar estado) durante el período configurado. El mero hecho de tener la tarea abierta en pantalla NO cuenta como actividad.
+    And 2. **Umbral por defecto:** 4 horas laborales de inactividad. Este umbral será configurable por tenant desde la configuración administrativa (US-036 / Pantalla 14), con un rango válido de 1 hora a 24 horas.
+    And 3. **Pre-aviso obligatorio:** Cuando la tarea alcance el 75% del umbral (Ej: a las 3 horas de un umbral de 4), el sistema enviará un Toast persistente al operario: "Tu tarea [TK-123] será devuelta a la cola grupal en 1 hora por inactividad. Realiza una acción para evitarlo."
+    And 4. **Ejecución del Auto-Unclaim:** Al cumplirse el 100% del umbral, el Cron Job ejecutará el unclaim automático, activará la Amnesia Transaccional del CA-07 (purga de datos parciales), y emitirá los eventos WebSocket del CA-12 (ADD hacia la cola grupal, REMOVE de la bandeja personal del operario).
+    And 5. **Registro de Auditoría:** Cada Auto-Unclaim quedará registrado en el historial de trazabilidad del CA-09 con el motivo: `{ action: 'AUTO_UNCLAIM', reason: 'Inactividad de X horas', previousAssignee, timestamp }`.
+    And 6. **Frecuencia del Cron Job:** Se ejecutará cada 15 minutos para detectar tareas que superen el umbral. No se ejecutará fuera del horario laboral configurado del tenant.
+
+
+  # ==============================================================================
+  # C. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: Cuestionario de 45 preguntas del workflow /refinamientoFuncionalUs.md
+  # Propósito: Cerrar huecos descubiertos durante el refinamiento de la US-002.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Superficie de Lectura del Mensaje Interno al Liberar (CA-16)
+    # Origen: Pregunta #7 del Refinamiento Funcional
+    # Resuelve: El CA-04 define que se puede escribir un mensaje al liberar, pero no dónde se lee.
+    Given la liberación de una tarea con Mensaje Interno adjunto (CA-04)
+    Then el mensaje se almacenará como una "Nota Interna" adherida a la tarea en la Base de Datos.
+    And cuando el siguiente operario abra la tarea (en Modo Solo Lectura CA-05 o tras Reclamar), verá un Banner informativo fijo en la parte superior del formulario: "📝 Nota del operario anterior: [contenido del mensaje] — [Nombre, hace X horas]".
+    And la nota permanecerá visible hasta que el nuevo reclamante ejecute su primera acción registrable sobre la tarea (Ej: guardar borrador, completar, o adjuntar archivo).
+    And si la tarea se libera y reclama múltiples veces, solo se mostrará la nota MÁS RECIENTE (no se acumulan).
+    And la nota NO es un sistema de mensajería. No existe un buzón de notificaciones internas. Es una etiqueta adherida a la tarea, como un "post-it" físico.
+
+  Scenario: [REFINAMIENTO] Limpieza de Archivos Adjuntos Transitorios al Liberar (CA-17)
+    # Origen: Pregunta #8 del Refinamiento Funcional
+    # Resuelve: Los archivos subidos al servidor antes de liberar quedan en un "limbo" sin dueño.
+    Given la Amnesia Transaccional del CA-07 activada al liberar una tarea
+    Then los archivos adjuntos subidos al almacenamiento del servidor durante la sesión del operario que libera serán marcados como "Adjuntos Transitorios" (estado `orphaned`).
+    And un proceso de limpieza (Scheduled Job) eliminará los archivos con estado `orphaned` después de 24 horas, permitiendo una ventana de recuperación en caso de error operativo.
+    And el siguiente operario que reclame la tarea NO verá los archivos transitorios del operario anterior. Solo verá los adjuntos que ya estaban confirmados en sesiones anteriores completadas (via US-029 "Completar Tarea").
+    And si la tarea nunca es reclamada por otro operario, los archivos transitorios se eliminan igualmente después de 24 horas.
+    And este mecanismo garantiza que la Amnesia Transaccional sea TOTAL: no solo se borran los datos del formulario (LocalStorage) sino también los archivos del servidor, evitando "basura digital" acumulada por sesiones fallidas.
+
+  Scenario: [REFINAMIENTO] Actualización del Modo Solo Lectura ante Reclamo Externo (CA-18)
+    # Origen: Pregunta #12 del Refinamiento Funcional
+    # Resuelve: El explorador en modo lectura no se entera si otro reclama la tarea.
+    Given un analista explorando una tarea en Modo Solo Lectura (CA-05) mientras otro compañero la reclama
+    When el Backend emite el evento WebSocket `REMOVE` (CA-12) tras el Commit del reclamo
+    Then el explorador recibirá el evento y el formulario mostrará un Banner de aviso superpuesto: "⚠️ Esta tarea fue reclamada por otro compañero y ya no está disponible."
+    And el botón [Reclamar] dentro del formulario se deshabilitará visualmente (gris + candado).
+    And el analista podrá continuar leyendo el formulario (no se cierra abruptamente) pero no podrá ejecutar ninguna acción sobre la tarea.
+    And al cerrar el formulario, la tarea ya no aparecerá en la Cola del Equipo de la grilla (consistente con CA-12/CA-13 de US-001).
+
+  Scenario: [REFINAMIENTO] Extensión de Tiempo ante Pre-Aviso de Auto-Unclaim (CA-19)
+    # Origen: Pregunta #14 del Refinamiento Funcional
+    # Resuelve: El timeout de inactividad castiga procesos complejos que requieren lectura prolongada.
+    Given el Pre-Aviso persistente del CA-15 punto 3 ("Tu tarea será devuelta en 1 hora por inactividad")
+    Then el Banner incluirá dos botones de acción:
+    And 1. **[Necesito más tiempo]:** Reinicia el contador de inactividad por un ciclo completo (4 horas más, o el umbral configurado del tenant). Cada extensión queda registrada en el historial de trazabilidad del CA-09 con motivo: `{ action: 'TIMEOUT_EXTENDED', userId, taskId, timestamp }`.
+    And 2. **[Guardar borrador]:** Ejecuta un guardado del borrador actual en LocalStorage (consistente con US-029), lo cual reinicia el contador automáticamente ya que constituye una acción registrable.
+    And se permite un máximo de 2 extensiones consecutivas por tarea. Tras la segunda extensión, si el operario sigue inactivo, el Auto-Unclaim se ejecutará sin opción de postergación adicional.
+    And el supervisor del equipo será notificado cuando un operario solicite extensiones, como señal de alerta temprana de posible atasco operativo.
+
+  Scenario: [REFINAMIENTO] Motivos Enriquecidos en la Trazabilidad Forense (CA-20)
+    # Origen: Pregunta #18 del Refinamiento Funcional
+    # Resuelve: El historial de trazabilidad (CA-09) solo mostraba rotación sin motivos.
+    Given el Pop-Up de Trazabilidad del CA-09
+    Then cada entrada del historial incluirá un campo `action_type` legible por humanos con los siguientes valores posibles:
+    And `CLAIMED` — "Reclamada voluntariamente" (CA-01/CA-02).
+    And `RELEASED` — "Liberada por el operario" + mensaje interno si existe (CA-04).
+    And `FORCE_UNCLAIMED` — "Despojada por supervisor: [Nombre del supervisor]" + motivo si existe (CA-08/CA-13).
+    And `AUTO_UNCLAIMED` — "Liberada automáticamente por inactividad de [X] horas" (CA-06/CA-15).
+    And `TIMEOUT_EXTENDED` — "Tiempo de inactividad extendido por el operario" (CA-19).
+    And `BULK_CLAIMED` — "Reclamada como parte de un lote de [N] tareas" (CA-02).
+    And el Pop-Up mostrará los eventos como un timeline vertical con íconos de color por tipo: 🟢 reclamos, 🔵 liberaciones, 🟠 despojos, 🔴 auto-unclaims, ⏰ extensiones.
+
+  Scenario: [REFINAMIENTO] Rollback del Optimistic UI tras Fallo Persistente de Red (CA-21)
+    # Origen: Pregunta #20 del Refinamiento Funcional
+    # Resuelve: Si la red nunca vuelve, la "mentira visual" del CA-10 nunca se deshace.
+    Given la activación del Optimistic UI durante un micro-corte de red (CA-10)
+    Then el Frontend ejecutará la siguiente estrategia de reintentos:
+    And 1. **Reintentos con backoff exponencial:** 3 intentos con intervalos de 2s, 4s, 8s (total: 14 segundos de espera máxima).
+    And 2. **Durante los reintentos:** La tarea aparece en "Mi Bandeja" con un indicador visual sutil (ícono de sincronización giratorio ⟳) que comunica: "Confirmando con el servidor..."
+    And 3. **Si los 3 reintentos fallan:** El Frontend ejecutará un rollback visual: retira la tarea de "Mi Bandeja", la devuelve a la "Cola del Equipo" en la grilla, y muestra un Modal informativo: "No pudimos confirmar tu reclamo porque la conexión con el servidor no se restableció. La tarea sigue disponible en la cola del equipo."
+    And 4. **El rollback NUNCA ocurrirá silenciosamente.** El operario siempre será informado explícitamente del fracaso para que no crea que tiene una tarea que no le pertenece.
+    And 5. Si la red se recupera DESPUÉS del rollback, el operario deberá reclamar la tarea manualmente de nuevo.
+
+  Scenario: [REFINAMIENTO] Separación Visual entre Cola de Grupo y Bandeja Personal (CA-22)
+    # Origen: Pregunta #39 del Refinamiento Funcional
+    # Resuelve: No existía distinción visual entre las tareas del grupo y las tareas propias.
+    Given la grilla unificada del Workdesk (US-001)
+    Then la pantalla principal mostrará dos pestañas/tabs en la parte superior de la grilla:
+    And **Tab 1: "Mi Bandeja ([N])"** — Muestra las tareas asignadas al operario autenticado. Los botones disponibles por fila: [Abrir], [Liberar]. El botón [Reclamar] NO aparece aquí.
+    And **Tab 2: "Cola del Equipo ([M])"** — Muestra las tareas sin asignar del grupo/equipo. Los botones disponibles por fila: [Explorar] (CA-05), [Reclamar] (CA-01). Los checkboxes para Bulk Claim (CA-02) solo aparecen en esta tab.
+    And los contadores ([N] y [M]) se actualizarán con cada petición a la grilla y con los eventos WebSocket (CA-12): un REMOVE en la Cola incrementa N y decrementa M; un ADD en la Cola decrementa N e incrementa M.
+    And la Tab activa se preservará en el KeepAlive (consistente con US-001 CA-12).
+    And el toggle de delegación del US-001 CA-04/CA-15 agrega una tercera tab temporal: "Bandeja de [Nombre del subalterno] ([P])".
+
+  Scenario: [REFINAMIENTO] Agregación de Eventos WebSocket para Operaciones Masivas (CA-23)
+    # Origen: Pregunta #45 del Refinamiento Funcional
+    # Resuelve: El Bulk Claim de 20 tareas generaría 20 eventos individuales en ráfaga.
+    Given la ejecución exitosa de un Bulk Claim (CA-02) de N tareas
+    Then el Backend NO emitirá N eventos WebSocket individuales.
+    And en su lugar, emitirá UN SOLO mensaje agregado con una acción de tipo batch del vocabulario WebSocket (US-001 CA-27): `{ action: 'BULK_REMOVE', taskIds: ['TK-1', 'TK-2', ..., 'TK-N'], claimedBy: 'userId' }`.
+    And el Frontend de cada compañero conectado procesará el array y desvanecerá todas las tareas listadas con una animación escalonada (150ms de delay entre cada desvanecimiento) para evitar que 20 tarjetas desaparezcan simultáneamente de forma confusa.
+    And para la operación inversa (si existiera una "liberación masiva" en V2), se usaría: `{ action: 'BULK_ADD', taskIds: [...], payload: [...] }`.
+    And este patrón reduce el tráfico WebSocket de `N × Usuarios_Conectados` mensajes a `1 × Usuarios_Conectados`, logrando hasta un 95% de ahorro de red en operaciones de lote.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 1 (Botón: Asignarme Tarea / Claim).
 
@@ -828,6 +1159,77 @@ Feature: Web IDE Form Code Generation
       - Fecha de Última Modificación y Autor
     And al hacer clic sobre un formulario, se abrirá en el Lienzo IDE. Si se desea ver el historial de diseño de ese formulario en particular, la grilla ofrecerá la opción de [Ver Historial de Versiones] para realizar Rollbacks.
 
+  # ==============================================================================
+  # G. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us003_gap_remediation_brief.md
+  # Tickets: REM-003-01 a REM-003-07
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Persistencia Versionada del Diseño JSON del Formulario (CA-87)
+    # Origen: REM-003-01 | Decisión PO: Opción A PostgreSQL JSONB
+    Given que el Arquitecto finaliza el diseño de un formulario en el Canvas (Pantalla 7) y presiona [Guardar]
+    When el IDE serializa el AST del esquema visual (JSON del Canvas + Esquema Zod + Metadatos)
+    Then el Backend persistirá el diseño completo en la tabla relacional `ibpms_form_definitions` utilizando una columna JSONB de PostgreSQL para el cuerpo del esquema.
+    And cada guardado generará una nueva fila inmutable con `version_id` autoincremental, `created_by`, `created_at` y un hash SHA-256 del contenido para detección de colisiones.
+    And el Backend expondrá los endpoints REST: `GET /api/v1/forms/{formId}/versions` (listar versiones) y `POST /api/v1/forms/{formId}` (crear nueva versión).
+    And TIENE PROHIBIDO utilizar Object Storage (S3/MinIO) como motor primario en V1; la columna JSONB de PostgreSQL es la fuente de verdad transaccional del diseño.
+
+  Scenario: [REMEDIACIÓN] Separación Arquitectónica de Contextos IDE vs Workdesk (CA-88)
+    # Origen: REM-003-02
+    Given la coexistencia de lógica de diseño (IDE, Pantalla 7) y lógica de operación (Workdesk, Pantalla 2) dentro de la US-003
+    Then el Frontend TIENE OBLIGACIÓN de mantener una separación física de módulos entre ambos contextos.
+    And los composables/hooks de validación Zod operativa (Workdesk) residirán en un directorio distinto (`composables/workdesk/`) a los composables del IDE (`composables/ide/`).
+    And los CAs de validación Lazy @blur (CA-22, CA-80) aplican EXCLUSIVAMENTE al contexto Workdesk.
+    And los CAs de errores de Mónaco (CA-84) y Language Servers (CA-17) aplican EXCLUSIVAMENTE al contexto IDE.
+    And ningún composable del IDE debe importar dependencias del Workdesk ni viceversa, para prevenir regresiones cruzadas.
+
+  Scenario: [REMEDIACIÓN] Directriz de Complementariedad QA Sandbox vs Auto-Vitest (CA-89)
+    # Origen: REM-003-03
+    Given la coexistencia de dos herramientas QA: Sandbox In-Browser (CA-83) y Auto-Vitest (CA-68)
+    Then la plataforma los tratará como herramientas COMPLEMENTARIAS con dominios distintos:
+    And el Sandbox In-Browser (CA-83) es la herramienta de quick-check en tiempo de diseño, utilizada por el Arquitecto de Formularios en la Pantalla 7 para validar contratos Zod instantáneamente sin salir del IDE. No genera archivos persistentes.
+    And el Auto-Vitest (CA-68) es la herramienta de regresión persistente, utilizada por el Ingeniero QA para generar archivos `.spec.ts` que se integran al pipeline CI/CD y aseguran cobertura de regresión a largo plazo.
+    And TIENE PROHIBIDO considerar ambas herramientas como redundantes o eliminar una en favor de la otra.
+
+  Scenario: [REMEDIACIÓN] Límites de Rendimiento y Lazy Mount para iForm Maestro (CA-90)
+    # Origen: REM-003-04
+    Given un Arquitecto diseñando un iForm Maestro de alta densidad en el Canvas
+    When la cantidad de componentes visuales supere el umbral configurable `MAX_FORM_FIELDS` (Valor por defecto: 200 campos)
+    Then el IDE emitirá una advertencia visual amigable (Banner amarillo, NO un bloqueo duro) indicando que el formulario supera el límite recomendado de campos y el rendimiento del navegador del operario podría degradarse.
+    And para formularios que superen el umbral, el Motor de Renderizado del Workdesk activará OBLIGATORIAMENTE un patrón de Lazy Mount donde solo la pestaña o acordeón activo monta su DOM, preservando el Main Thread de Vue.
+    And el equipo de QA deberá ejecutar un test de carga con un formulario de 250+ campos y 3 grillas anidadas, midiendo Time-to-Interactive (TTI) para certificar que no exceda 3 segundos en un navegador estándar.
+
+  Scenario: [REMEDIACIÓN] Validación de Contrato de Integración con US-029 (CA-91)
+    # Origen: REM-003-05
+    Given la dependencia crítica de la US-003 con la US-029 (Persistencia CQRS) para Auto-Guardado, Smart Buttons e I/O Mapping
+    Then el Arquitecto de Software TIENE OBLIGACIÓN de certificar la existencia de los siguientes contratos de la US-029 antes de considerar la US-003 como feature-complete:
+    And Endpoint de Auto-Guardado: `POST /api/v1/drafts/{taskId}` (Persistir borrador parcial).
+    And Endpoint de Recuperación: `GET /api/v1/drafts/{taskId}` (Reconstruir borrador al reabrir tarea).
+    And Endpoint de Completado: `POST /api/v1/tasks/{taskId}/complete` (Smart Button Completar con I/O Mapping).
+    And Endpoint de Limpieza: `DELETE /api/v1/drafts/{taskId}` (Purgar borrador post-submit).
+    And si alguno de estos contratos no existe al momento de la integración, se generará un ticket bloqueante contra la US-029 antes de pasar a QA.
+
+  Scenario: [REMEDIACIÓN] Política de Expiración y Limpieza de LocalStorage (CA-92)
+    # Origen: REM-003-06
+    Given la acumulación progresiva de datos en LocalStorage por los mecanismos de Auto-Guardado (CA-24, CA-85), Resiliencia Offline (CA-72) y Snapshots JSON (CA-71)
+    Then el Frontend implementará un servicio `LocalStorageGarbageCollector` que se ejecutará automáticamente al iniciar la SPA.
+    And aplicará una regla de expiración temporal: eliminará entradas con `timestamp` superior a 7 días naturales.
+    And aplicará una regla de cuota espacial: si el volumen total de entradas con prefijo `ibpms_draft_` o `ibpms_snapshot_` supera 50MB estimados, purgará las más antiguas primero (FIFO).
+    And registrará un log discreto en la consola del navegador: `[GC] Purged N stale drafts (X KB freed)`.
+    And TIENE PROHIBIDO tocar claves de LocalStorage que no pertenezcan al dominio de formularios del iBPMS.
+
+  Scenario: [REMEDIACIÓN] Componente Unificado de Vista Solo-Lectura (CA-93)
+    # Origen: REM-003-07
+    Given la coexistencia de dos modos de lectura: Visor Histórico para Auditoría (CA-37) y Vista Imprimible para Visualizadores (CA-56)
+    Then el Frontend implementará un único componente base `FormReadOnlyView` con una prop `mode` que acepta dos valores:
+    And `mode="audit"`: Renderiza el formulario con metadatos de auditoría visibles (quién modificó, cuándo, qué campo cambió) para consumo del Rol Auditor.
+    And `mode="print"`: Renderiza el formulario como un documento de texto limpio sin bordes de input ni metadatos técnicos, optimizado para impresión y lectura plana.
+    And ambos modos comparten el mismo motor de renderizado de campos (zero duplication), diferenciándose únicamente en la capa de presentación de metadatos.
+    And si técnicamente la unificación genera complejidad excesiva, el Arquitecto Frontend puede mantener dos componentes separados SIEMPRE Y CUANDO compartan un composable base común para evitar duplicación de lógica de lectura.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 7 (IDE Web Pro-Code para Formularios).
 
@@ -926,6 +1328,15 @@ Feature: Integrated BDD Zod Testing Sandbox
 **Como** Analista / Usuario de Negocio
 **Quiero** diligenciar la información de mi sección habilitada en la vista de la tarea (Pantalla 2) y presionar "Enviar"
 **Para** finalizar exitosamente mi actividad y que el motor continúe al siguiente paso del proceso.
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-029:**
+> - **US-003 (Catálogo de Formularios / Pantalla 7):** 🔴 BLOQUEANTE. Sin formularios diseñados (iForm Maestro o Simple), la US-029 no tiene NADA que ejecutar. La Pantalla 2 renderiza formularios creados en la US-003. Los esquemas Zod y el Layout de Vue que consume el BFF (CA-05/CA-10) se generan en la US-003.
+> - **US-002 (Reclamar Tarea / Pantalla 1):** 🔴 BLOQUEANTE. Sin reclamo, la tarea no tiene `assignee` y los CAs de Implicit Locking (CA-07/CA-18) rechazarán todo intento de completar con HTTP 403. El operario DEBE haber reclamado la tarea ANTES de poder abrirla para edición.
+> - **US-017 (CQRS & Event Sourcing):** ⚠️ HISTORIA GEMELA. Comparten el endpoint `/api/v1/workbox/tasks/{id}/complete`. La US-029 gobierna la experiencia del Frontend (Pantalla 2 UI + validación + archivos + borrador + UX). La US-017 gobierna la persistencia del Backend (CQRS + Event Sourcing + protección de Camunda + Rollback Saga). Los CAs duplicados entre ambas se reconcilian con la nota arquitectónica ADR de separación de responsabilidades.
+> - **US-001 (Workdesk / Pantalla 1):** La navegación desde la grilla del Workdesk hacia el detalle de la tarea (Pantalla 2) depende de la infraestructura de rutas y el Store de Pinia de la US-001. El RYOW del CA-17 necesita que el Store de Pinia exista.
+> - **US-036 (RBAC / Pantalla 14):** La validación de permisos per-campo del Zod Isomórfico (CA-15) consume la matriz de roles de la US-036 para determinar qué campos puede escribir cada rol.
+> - **US-035 (SharePoint/SGDEA):** El Upload-First (CA-09) necesita que la bóveda documental temporal exista para almacenar los archivos pre-submit.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
@@ -1067,6 +1478,193 @@ Feature: Task Completion with Form Data
     Then el Core iBPMS examina deductivamente el `assignee` de la tarea contra la identidad central del Security Context.
     And aborta transaccionalmente la colisión inyectando un lapidario `HTTP 403 Forbidden`.
 
+
+  # ==============================================================================
+  # E. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us029_functional_analysis.md
+  # Tickets: REM-029-01 a REM-029-06
+  # Propósito: Cerrar GAPs detectados por el workflow /analisisEntendimientoUs.md
+  #            antes del inicio de desarrollo de US-029.
+  # Estado: US-029 NO ha sido desarrollada aún.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Reconciliación Arquitectónica US-029 / US-017 (CA-19)
+    # Origen: REM-029-01 — GAP-1 del us029_functional_analysis.md
+    # Resuelve: 13 CAs duplicados entre US-029 y US-017 generan riesgo de implementación divergente.
+    Given la coexistencia de la US-029 (Frontend/UX) y la US-017 (Backend/CQRS) sobre el mismo endpoint `/complete` y la misma Pantalla 2
+    Then se establece la siguiente POLÍTICA DE PROPIEDAD EXCLUSIVA para evitar duplicación:
+    And **US-029 es la FUENTE AUTORITATIVA** para los siguientes aspectos: inicialización del formulario (BFF), autoguardado en LocalStorage, cifrado PII de borradores, feedback visual UX (spinner, confirmación, redirección), carga de archivos (Upload-First), idempotencia Anti-Doble Clic en Frontend, y validación Zod en el navegador.
+    And **US-017 es la FUENTE AUTORITATIVA** para los siguientes aspectos: persistencia CQRS/Event Sourcing, proyección a tablas analíticas, protección topológica de Camunda (exclusión de variables masivas), Rollback Compensatorio (Saga inversa), validación Zod en el Backend (json-schema-validator), y Micro-Tokens criptográficos anti-replay.
+    And cuando un CA de la US-029 mencione un comportamiento de Backend que esté definido en la US-017, la US-029 lo REFERENCIARÁ como dependencia (Ej: "consistente con US-017 CA-14") en lugar de redefinirlo.
+    And cuando un CA de la US-017 mencione un comportamiento de Frontend que esté definido en la US-029, la US-017 lo REFERENCIARÁ como dependencia (Ej: "consistente con US-029 CA-20") en lugar de redefinirlo.
+    And esta reconciliación garantiza que dos desarrolladores leyendo US diferentes NO produzcan implementaciones conflictivas del mismo endpoint.
+
+  Scenario: [REMEDIACIÓN] Feedback Visual Durante el Proceso de Envío (CA-20)
+    # Origen: REM-029-02 — GAP-2 del us029_functional_analysis.md
+    # Resuelve: No se define qué ve el operario entre que presiona [Enviar] y recibe respuesta (2-5 segundos).
+    Given la presión del botón [Enviar] en la Pantalla 2
+    Then el Frontend ejecutará la siguiente secuencia visual para comunicar progreso:
+    And 1. **Inmediatamente al hacer clic:** El botón [Enviar] se deshabilita, cambia su texto a "Enviando..." con un spinner integrado, y se aplica un overlay semitransparente sobre todo el formulario que bloquea cualquier interacción (previene edición accidental durante el proceso).
+    And 2. **Durante la validación local (Zod Frontend):** El overlay muestra un indicador de texto: "Validando datos..."
+    And 3. **Durante la llamada al Backend:** El texto cambia a: "Guardando en el servidor..."
+    And 4. **Si ocurre un error (HTTP 400/500):** El overlay se retira inmediatamente, el botón se reactiva, y se muestran los errores específicos según CA-02 (validación) o CA-04 (motor caído). El formulario regresa al estado editable con TODOS los datos intactos.
+    And el proceso completo NUNCA mostrará una pantalla en blanco ni dejará al operario sin información de lo que está pasando.
+
+  Scenario: [REMEDIACIÓN] Confirmación Visual Post-Submit y Redirección Controlada (CA-21)
+    # Origen: REM-029-03 — GAP-3 del us029_functional_analysis.md
+    # Resuelve: No se define qué ve el operario después del envío exitoso ni si puede deshacer.
+    Given la respuesta exitosa HTTP 200 del endpoint `/complete`
+    Then el Frontend reemplazará el overlay de progreso con una pantalla de confirmación que muestra:
+    And Un ícono de éxito animado (checkmark verde ✅) con el texto: "¡Tarea completada exitosamente!"
+    And El identificador de la tarea completada (Ej: "TK-100 - Aprobación de Crédito").
+    And Esta pantalla de confirmación se mostrará durante 3 segundos antes de redirigir automáticamente al Workdesk (Pantalla 1, Tab "Mi Bandeja" de US-002 CA-22).
+    And El operario también puede hacer clic en "Ir al Workdesk" para redirigir inmediatamente sin esperar.
+    And **NO existe funcionalidad de "deshacer" (Ctrl+Z) en V1.** Una tarea completada es irreversible. Si fue un error, el proceso BPMN tiene sus propios mecanismos de devolución/rechazo (US-017 CA-16 — rejectionLogs). Esta decisión es deliberada para proteger la integridad del Event Sourcing.
+    And durante los 3 segundos de confirmación, el RYOW del CA-17 se ejecuta en paralelo (purga de LocalStorage + eliminación de Pinia).
+
+  Scenario: [REMEDIACIÓN] Navegación de Formularios Multi-Etapa (Wizard Steps) (CA-22)
+    # Origen: REM-029-04 — GAP-4 del us029_functional_analysis.md
+    # Resuelve: Los formularios Maestro de múltiples pasos no tienen navegación definida.
+    Given un iForm Maestro de la US-003 compuesto por N pasos/etapas (Wizard)
+    Then la Pantalla 2 mostrará los siguientes elementos de navegación:
+    And 1. **Barra de Progreso por Pasos:** En la parte superior del formulario, un indicador horizontal con los nombres de cada etapa (Ej: "① Datos del Cliente → ② Verificación → ③ Aprobación"). El paso activo se resalta en color primario. Los pasos completados muestran un checkmark verde. Los pasos con errores de validación muestran un indicador rojo.
+    And 2. **Botones de Navegación:** En la parte inferior del formulario, botones [◀ Anterior] y [Siguiente ▶]. El botón [Siguiente] ejecuta la validación Zod del paso actual ANTES de permitir avanzar. Si hay errores, bloquea el avance y resalta los campos inválidos.
+    And 3. **Botón [Enviar]:** Solo aparece visible en el ÚLTIMO paso. Reemplaza al botón [Siguiente]. No se puede enviar la tarea desde un paso intermedio.
+    And 4. **Autoguardado per-Step:** El autoguardado del CA-11 guarda el borrador completo (todos los pasos) en cada Debounce, pero incluye un campo `currentStep: 3` en el JSON para que al reabrir el borrador, el formulario posicione al operario en el paso exacto donde dejó.
+    And 5. **Navegación libre hacia atrás:** El operario puede retroceder a cualquier paso ya completado para revisar o modificar datos. La validación de pasos anteriores NO se re-ejecuta al retroceder, solo al avanzar o al enviar.
+
+  Scenario: [REMEDIACIÓN] Gobernanza de Delegación para Completar Tareas (CA-23)
+    # Origen: REM-029-05 — GAP-5 del us029_functional_analysis.md
+    # Resuelve: No se define si un supervisor puede completar tareas de un subalterno.
+    Given el toggle de delegación del US-001 CA-04/CA-15 que permite a un supervisor gestionar la bandeja de un subalterno
+    Then se establece la siguiente política para la completación delegada:
+    And 1. **El supervisor SÍ puede completar la tarea de un subalterno**, pero EXCLUSIVAMENTE si previamente ejecutó un Forced Unclaim (US-002 CA-08/CA-13) y luego un Claim a su propio nombre. Es decir: primero la quita del subalterno, luego se la auto-asigna, y entonces puede completarla. No existe un "completar en nombre de otro".
+    And 2. **El CQRS Event Sourcing (US-017) registrará ambas acciones:** el evento `FORCE_UNCLAIMED` por el supervisor Y el evento `FORM_SUBMITTED` por el supervisor. La trazabilidad será completa.
+    And 3. **El CA-07/CA-18 (Implicit Locking) NO se bypassea.** El supervisor debe ser el `assignee` actual para poder enviar. Esto elimina el riesgo de escalación de privilegios lateral.
+    And 4. Esta decisión mantiene la integridad del principio "quien firma, es responsable" y evita ambigüedades legales en procesos regulados.
+
+  Scenario: [REMEDIACIÓN] Contrato API del Merge Commit (Borrador en Servidor) (CA-24)
+    # Origen: REM-029-06 — GAP-6 del us029_functional_analysis.md
+    # Resuelve: El autoguardado silencioso al servidor no tiene endpoint ni reglas definidas.
+    Given el Debounce de 10 segundos de inactividad del CA-11 que dispara un Merge Commit al Backend
+    Then el Frontend enviará el borrador al siguiente endpoint:
+    And `PUT /api/v1/workbox/tasks/{taskId}/draft` — Merge Commit de borrador parcial. Body: `{ currentStep?: number, partialData: {...}, schemaVersion: string }`.
+    And **Validación:** El Backend ejecutará una validación Zod "Parcial" (todos los campos son opcionales EXCEPTO el tipo de dato: si el campo es numérico, el valor debe ser numérico o null). Si un campo tiene tipo incorrecto (Ej: texto en campo numérico), el Merge Commit descarta silenciosamente ESE campo pero guarda los demás. NO retorna error al Frontend.
+    And **Response exitoso:** HTTP 204 No Content (silencioso, el operario no se entera).
+    And **Response fallido:** HTTP 500 o timeout de red. El Frontend NO notifica al operario porque el borrador local (LocalStorage) ya tiene los datos protegidos. Un contador interno registra los fallos consecutivos: si acumula 3 fallos seguidos, muestra un Toast discreto: "El guardado automático en el servidor no está disponible. Tu borrador está seguro en tu navegador."
+    And **Trazabilidad:** Los Merge Commits NO aparecen en el historial de trazabilidad del CA-09 de US-002. Son snapshots efímeros de trabajo en progreso, no eventos de negocio. Se almacenan en una tabla separada `task_drafts` con TTL de 72 horas (consistente con CA-03).
+    And **Seguridad:** El endpoint aplica Implicit Locking — solo el `assignee` actual puede guardar borradores de su propia tarea. Intentos con otro userId retornan HTTP 403.
+
+
+  # ==============================================================================
+  # F. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: Cuestionario de 45 preguntas del workflow /refinamientoFuncionalUs.md
+  # Propósito: Cerrar huecos descubiertos durante el refinamiento de la US-029.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Scroll Automático y Foco en el Primer Campo con Error (CA-25)
+    # Origen: Pregunta #2 del Refinamiento Funcional
+    # Resuelve: En formularios largos (50+ campos), el operario no encuentra el campo con error.
+    Given la respuesta HTTP 400 del CA-02 con un array de campos inválidos
+    Then el Frontend ejecutará automáticamente un scroll suave hacia el PRIMER campo con error de validación.
+    And le dará foco visual al campo (borde rojo pulsante + ícono de alerta) para que el operario vea EXACTAMENTE dónde está el problema.
+    And si el formulario es multi-step (CA-22 Wizard), el Frontend primero navegará al paso que contiene el campo con error ANTES de hacer scroll.
+    And el comportamiento aplica tanto para errores del Frontend (validación Zod local) como del Backend (HTTP 400), garantizando que el operario NUNCA tenga que buscar manualmente un error.
+
+  Scenario: [REFINAMIENTO] Pre-Aviso de Caducidad de Borrador (CA-26)
+    # Origen: Pregunta #3 del Refinamiento Funcional
+    # Resuelve: El operario pierde su borrador tras 72h sin aviso (Ej: vacaciones).
+    Given el proceso de limpieza de borradores huérfanos del CA-03 (TTL de 72 horas)
+    Then el Frontend mostrará un Banner de pre-aviso cuando el borrador local tenga más de 48 horas de antigüedad: "⚠️ Tu borrador de esta tarea se eliminará automáticamente en [X] horas. Guarda o envía tu trabajo pronto."
+    And el Banner aparecerá al abrir la tarea y permanecerá fijo en la parte superior del formulario (debajo de la Nota Interna del US-002 CA-16, si existe).
+    And el operario podrá hacer clic en [Guardar ahora en el servidor] para forzar un Merge Commit (CA-24) que reiniciará el TTL de 72 horas en la tabla `task_drafts`.
+    And si el borrador local ya expiró pero existe un Draft en el servidor (CA-24), el formulario recuperará el progreso del servidor como fallback, mostrando: "Recuperamos tu progreso guardado desde el servidor."
+    And si AMBOS borradores expiraron (local y servidor), el formulario abrirá vacío con un Toast informativo discreto: "No se encontró ningún borrador guardado para esta tarea."
+
+  Scenario: [REFINAMIENTO] Resiliencia ante Cambio de Versión de Esquema Mid-Flight (CA-27)
+    # Origen: Pregunta #4 del Refinamiento Funcional
+    # Resuelve: El operario trabaja 2 horas y al enviar, el servidor rechaza por versión obsoleta del formulario.
+    Given un operario que abrió el formulario con `schema_version: V3` (CA-10) y trabajó durante un período prolongado
+    When el Arquitecto despliega `schema_version: V4` mientras el operario está editando
+    Then al presionar [Enviar], el Backend comparará la versión del esquema enviada (`V3`) con la versión actual (`V4`):
+    And 1. **Si los cambios entre V3 y V4 son solo campos OPCIONALES nuevos:** El Backend ACEPTARÁ el envío con V3 y completará la tarea normalmente. Los campos opcionales nuevos se guardarán como `null`. El operario NO recibe ningún error.
+    And 2. **Si los cambios incluyen campos OBLIGATORIOS nuevos:** El Backend retornará un HTTP 409 Conflict (NO un 400 genérico) con un mensaje legible: `{ "error": "SchemaVersionConflict", "message": "El formulario fue actualizado mientras trabajabas. Se requieren [N] campos nuevos." }`.
+    And 3. **Ante un HTTP 409:** El Frontend mostrará un Modal informativo (NO destruirá el trabajo del operario): "El formulario fue actualizado con nuevos campos obligatorios. Tus datos están seguros. Al cerrar este aviso, el formulario se recargará con los campos nuevos y tus datos se mantendrán." Al aceptar, el Frontend recargará el Mega-DTO BFF con V4, aplicará los datos del operario como `prefillData`, y mostrará los campos nuevos en rojo (Lazy Patching CA-08).
+    And 4. **EN NINGÚN CASO se perderán los datos que el operario ya digitó.** Los datos viajan en el LocalStorage/Draft y se reinyectan automáticamente tras la recarga del esquema.
+
+  Scenario: [REFINAMIENTO] Aduana de Archivos: Tamaño Máximo, Tipos Permitidos y Defensa MIME (CA-28)
+    # Origen: Pregunta #6 del Refinamiento Funcional
+    # Resuelve: No existe límite de tamaño ni lista blanca de tipos de archivo.
+    Given el Upload-First del CA-09 que envía archivos a `/api/v1/documents/upload-temp`
+    Then el sistema aplicará las siguientes restricciones obligatorias:
+    And 1. **Tamaño máximo por archivo:** 25 MB. Archivos que excedan este límite serán rechazados en el Frontend ANTES de iniciar la carga, con el mensaje: "El archivo supera el tamaño máximo permitido de 25 MB."
+    And 2. **Tipo de archivos permitidos (Lista Blanca):** PDF (.pdf), Imágenes (.jpg, .jpeg, .png, .gif), Documentos Office (.docx, .xlsx, .pptx), Texto Plano (.txt, .csv). Cualquier otro tipo será rechazado con: "Tipo de archivo no permitido."
+    And 3. **Validación MIME en el servidor:** El Backend verificará el tipo REAL del archivo (Magic Bytes / encabezado binario) independientemente de la extensión. Si alguien renombra un .exe a .pdf, el servidor lo detectará y rechazará con HTTP 415 Unsupported Media Type.
+    And 4. **Cantidad máxima de archivos por formulario:** 10 archivos (total acumulado). Si el operario intenta adjuntar un undécimo, verá: "Has alcanzado el máximo de 10 archivos adjuntos por tarea."
+    And 5. Estas restricciones podrán ser configurables por tenant en versiones futuras (V2).
+
+  Scenario: [REFINAMIENTO] Feedback Visual Durante la Carga de Archivos (CA-29)
+    # Origen: Pregunta #7 del Refinamiento Funcional
+    # Resuelve: El operario no sabe qué pasa mientras sube un archivo de 10MB (15-30 segundos de espera).
+    Given el patrón Upload-First del CA-09 durante la carga asíncrona de un archivo
+    Then el componente de carga mostrará los siguientes elementos visuales:
+    And 1. **Barra de progreso horizontal:** Con porcentaje numérico (Ej: "Subiendo... 45%") y color verde progresivo. La barra se actualizará en tiempo real con cada fragmento recibido por el servidor.
+    And 2. **Nombre del archivo y tamaño:** Visible durante toda la carga (Ej: "📄 contrato_firmado.pdf — 8.2 MB").
+    And 3. **Botón [✕ Cancelar carga]:** Permite abortar la carga en cualquier momento. Al cancelar, el archivo parcial en el servidor será marcado como `orphaned` y eliminado por el Cron Job del CA-13.
+    And 4. **Al completar la carga:** La barra cambia a verde completo con checkmark (✅) y se muestra el archivo como un chip: "📄 contrato_firmado.pdf ✅ [🗑️ Eliminar]". El operario puede eliminar el archivo antes de enviar el formulario.
+    And 5. **Si la carga falla:** Se muestra un mensaje rojo: "No se pudo subir el archivo. ¿Reintentar?" con botón [Reintentar].
+
+  Scenario: [REFINAMIENTO] Detección de Sesión Duplicada en Múltiples Pestañas (CA-30)
+    # Origen: Pregunta #12 del Refinamiento Funcional
+    # Resuelve: Dos pestañas abiertas con la misma tarea sobrescriben sus borradores mutuamente.
+    Given un operario que abre la misma tarea (Ej: TK-100) en dos pestañas del navegador simultáneamente
+    Then el Frontend detectará la sesión duplicada utilizando un mecanismo de coordinación entre pestañas (BroadcastChannel API o SharedWorker).
+    And la SEGUNDA pestaña mostrará un Banner de advertencia persistente: "⚠️ Esta tarea ya está abierta en otra pestaña. Los cambios que hagas aquí podrían perderse. Te recomendamos trabajar en una sola pestaña."
+    And la segunda pestaña operará en modo de SOLO LECTURA: el operario podrá ver los datos pero los botones [Enviar], [Guardar borrador] y la edición de campos estarán deshabilitados.
+    And al cerrar la primera pestaña, la segunda detectará la liberación y se reactivará como pestaña principal con un Toast: "Ahora eres la pestaña activa. Puedes continuar editando."
+
+  Scenario: [REFINAMIENTO] Indicador de Estado de Sincronización del Borrador (CA-31)
+    # Origen: Pregunta #13 del Refinamiento Funcional
+    # Resuelve: El operario no sabe si su borrador está seguro en el servidor o solo en su PC.
+    Given la edición activa de un formulario con autoguardado (CA-11 y CA-24)
+    Then la barra superior de la Pantalla 2 mostrará un indicador de estado de sincronización con los siguientes estados posibles:
+    And 1. **"☁️ Sincronizado"** (color verde discreto): El borrador existe tanto en el navegador como en el servidor. Si el operario cambia de PC, su trabajo estará disponible.
+    And 2. **"💾 Solo en este navegador"** (color amarillo): El borrador existe solo en LocalStorage. El Merge Commit al servidor aún no se ha ejecutado (Ej: el Debounce de 10s no se ha disparado). Si el operario cambia de PC, no encontrará su progreso.
+    And 3. **"⟳ Sincronizando..."** (animación giratoria): El Merge Commit (CA-24) se está enviando al servidor en este momento.
+    And 4. **"⚠️ Sin conexión al servidor"** (color rojo): Los últimos 3 intentos de Merge Commit fallaron (consistente con CA-24). El borrador está seguro localmente pero no en el servidor.
+    And al hacer clic en el indicador, se muestra un tooltip con la última hora de sincronización exitosa: "Última sincronización: hace 2 minutos."
+
+  Scenario: [REFINAMIENTO] Diálogo Anti-Envío Accidental para Formularios Sin Obligatorios (CA-32)
+    # Origen: Pregunta #15 del Refinamiento Funcional
+    # Resuelve: Un formulario de solo confirmación (0 campos obligatorios) puede completarse con un solo clic accidental.
+    Given un formulario donde TODOS los campos son opcionales o donde no existen campos de ingreso (Ej: formulario de confirmación con solo texto informativo)
+    When el operario presiona el botón [Enviar]
+    Then el Frontend mostrará un Modal de confirmación obligatorio ANTES de ejecutar el POST: "¿Estás seguro de que deseas completar esta tarea? Esta acción no se puede deshacer."
+    And el Modal tendrá dos botones: [Cancelar] (cierra el modal, no envía nada) y [Sí, completar] (ejecuta el flujo normal del CA-01/CA-20).
+    And este Modal solo aparece cuando el formulario NO tiene campos obligatorios. Los formularios CON campos obligatorios ya tienen la protección natural de la validación (el operario DEBE llenar algo para poder enviar), por lo que NO mostrarán este diálogo adicional.
+
+  Scenario: [REFINAMIENTO] Distinción Visual de Campos de Solo Lectura (CA-33)
+    # Origen: Pregunta #17 del Refinamiento Funcional
+    # Resuelve: Los campos de solo lectura se confunden con los editables y el operario intenta escribir en ellos sin éxito.
+    Given la renderización de campos con atributo `readOnly` provenientes del `prefillData` del BFF (CA-05/CA-10)
+    Then los campos de solo lectura se renderizarán con los siguientes indicadores visuales obligatorios:
+    And 1. **Fondo gris claro** (#F5F5F5) diferenciado del fondo blanco de campos editables.
+    And 2. **Sin borde de edición** (borde sólido gris en vez del borde interactivo azul de los editables).
+    And 3. **Ícono de candado (🔒)** posicionado a la izquierda del label del campo.
+    And 4. **Cursor `not-allowed`** al pasar el mouse por encima, comunicando que no se puede interactuar.
+    And 5. **Tooltip al hacer clic:** "Este campo es de solo lectura y contiene información de pasos anteriores del proceso."
+    And estos estilos se aplicarán uniformemente a TODOS los tipos de campo (input, select, textarea, datepicker) para evitar inconsistencias visuales entre controles diferentes.
+
+  Scenario: [REFINAMIENTO] Validación Zod Consciente de Campos Condicionales (CA-34)
+    # Origen: Pregunta #18 del Refinamiento Funcional
+    # Resuelve: La validación exige campos que el operario nunca vio porque la condición de visibilidad no se cumplió.
+    Given un esquema Zod que define campos condicionales (Ej: "Si `decision === 'RECHAZADO'`, el campo `motivo_rechazo` es obligatorio")
+    Then la validación del Frontend (CA-15 Zod Isomórfico) evaluará los campos obligatorios SOLO en función del estado actual de las condiciones del formulario.
+    And si un campo condicional NO fue mostrado al operario (porque su condición de visibilidad no se cumplió), la validación lo IGNORARÁ completamente: no lo exigirá como obligatorio NI lo incluirá en el payload del POST `/complete`.
+    And el Backend ejecutará la MISMA lógica condicional al validar: recibirá en el payload un campo `_visibleFields: ['campo_A', 'campo_B', ...]` que indica qué campos estuvieron activos. El Backend cruzará esta lista contra las reglas de condición del esquema Zod para determinar qué campos son obligatorios en ESE contexto.
+    And si un atacante manipula `_visibleFields` para omitir un campo que SÍ debería ser obligatorio, el Backend recalculará las condiciones de forma independiente (usando los valores del payload) y detectará la inconsistencia, retornando HTTP 400.
+
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Detalle / Formulario Dinámico).
 
@@ -1076,6 +1674,19 @@ Feature: Task Completion with Form Data
 **Como** PMO / Owner del iBPMS
 **Quiero** disponer de un modelo de formulario genérico pre-asociado a tareas operativas simples
 **Para** no invertir tiempo dibujando decenas de formularios básicos en la Pantalla 7 cuando la actividad es netamente procedimental (captura de evidencia, observaciones y tracking de avance).
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-039:**
+> - **US-003 (Pantalla 7 / IDE):** El Pre-Flight Analyzer que decide si un formulario genérico es admisible reside en la lógica de despliegue compartida con el IDE de formularios.
+> - **US-005 (Despliegue BPMN):** El Pre-Flight Analyzer se ejecuta durante el pipeline de despliegue del BPMN (Pantalla 6). La whitelist configurable (CA-5) es una propiedad del Process Definition.
+> - **US-029 (Persistencia CQRS):** El auto-guardado de borradores (CA-7) consume los mismos endpoints de draft que los iForm Maestros.
+> - **US-036 (RBAC / Pantalla 14):** La lista de Roles VIP que bloquean el uso del formulario genérico (CA-6) se administra desde la columna `is_vip_restricted` en `ibpms_roles`.
+> - **US-034 (RabbitMQ):** Los Error Events disparados por los Botones de Pánico (CA-8) se enrutan a través del broker de mensajería para el procesamiento asíncrono.
+
+> [!CAUTION]
+> **HANDOFF TÉCNICO V1 (QA SRE CERTIFIED):**
+> 1. Eliminación y prohibición del uso de variables de tipo `Toggle` binario (ej. `requiere_evidencia`) como lógica de UI en este documento, usando en su lugar un enfoque semántico estructural sin ambigüedades.
+> 2. Prevención de colisiones de Namespace garantizada mediante inyección de `Whitelist Regex` en el BFF, evitando envenenamiento de los context variables del Engine.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
@@ -1101,15 +1712,67 @@ Feature: Auto-vinculación Camaleónica y Resiliencia de Pantalla 7.B
     When el operario deba escalar o devolver transversalmente el ticket (Ej: Evidencia Insuficiente)
     Then la interfaz exhibirá, además del recuadro principal, un bloque inferior de "Excepciones" o Botones de Pánico (Aprobado / Retorno al Generador / Cancelar).
     And al cliquear un botón de pánico, el Frontend forzará procesalmente la inyección de una observación justificativa mandatoria (Min: 20 caracteres) antes de consumar un Error Event o Escalamiento en el Motor de Camunda.
+
+
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us039_functional_analysis.md
+  # Tickets: REM-039-01 a REM-039-05
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Definición del Cuerpo Editable del Formulario Genérico (CA-4)
+    # Origen: REM-039-01 — GAP-1 del us039_functional_analysis.md
+    Given la necesidad de que el operario capture evidencia, observaciones y tracking de avance en la Pantalla 7.B
+    Then el cuerpo editable del Formulario Genérico Base contendrá OBLIGATORIAMENTE los siguientes campos pre-construidos:
+    And 1. `textarea` "Observaciones / Notas del Operario" (obligatorio, min 10 chars, max 2000 chars) como campo principal de captura de texto libre.
+    And 2. `dropzone` "Adjuntos de Evidencia" (opcional, max 5 archivos, max 10MB por archivo, tipos permitidos: PDF, JPG, PNG, DOCX, XLSX) para carga drag-and-drop de documentos de soporte.
+    And 3. `select` "Resultado de la Gestión" (obligatorio, opciones configurables por proceso: Ej: "Aprobado", "Rechazado", "Pendiente de Información", "Escalado") como clasificador estandarizado del outcome de la tarea.
+    And estos tres campos son el set mínimo fijo; TIENE PROHIBIDO agregar campos adicionales en runtime porque para formularios complejos se debe usar un iForm Maestro (US-003).
+    And la estructura visual será: [Cuadrícula Metadatos Solo-Lectura] arriba, [Cuerpo Editable: Observaciones + Adjuntos + Resultado] al centro, [Botones de Pánico] abajo.
+
+  Scenario: [REMEDIACIÓN] Configuración de Whitelist Regex por Proceso (CA-5)
+    # Origen: REM-039-02 — GAP-2 del us039_functional_analysis.md
+    Given la exigencia de filtrar variables técnicas de Camunda mediante Whitelist Regex (CA-2)
+    Then la Whitelist será configurable POR PROCESO, no global, para soportar que cada BPMN tenga variables de negocio distintas (Ej: Proceso A usa `Case_ID`, Proceso B usa `Folio_Number`).
+    And la configuración se realizará en la Pantalla 6 (Modeler BPMN) como una propiedad del Process Definition, en un panel "Variables Visibles en Formulario Genérico".
+    And el Arquitecto del BPMN podrá definir una lista de hasta 10 claves de variables permitidas (Ej: `Case_ID, Client_Name, Priority, SLA, Due_Date`).
+    And si NO se configura ninguna whitelist, el BFF aplicará un fallback seguro mostrando SOLO las 4 variables por defecto: `Case_ID`, `Instance_Name`, `Priority` y `Created_At`.
+    And TIENE PROHIBIDO mostrar variables con prefijo `_internal_`, `camunda_`, o `zeebe_` independientemente de la whitelist configurada.
+
+  Scenario: [REMEDIACIÓN] Catálogo Configurable de Roles VIP para Bloqueo Pre-Flight (CA-6)
+    # Origen: REM-039-03 — GAP-3 del us039_functional_analysis.md
+    Given la restricción de que tareas VIP no pueden usar el Formulario Genérico (CA-1)
+    Then la lista de Roles VIP que disparan el Hard-Stop del Pre-Flight Analyzer será configurable desde la Pantalla 14 (RBAC) y NO hardcodeada en el código.
+    And la tabla `ibpms_roles` incluirá una columna booleana `is_vip_restricted` (default: false) que el Super Admin activará para los roles que NO deben operar con formularios genéricos.
+    And los tres roles mencionados en el CA-1 ("Alta Dirección", "Aprobador Financiero", "Sello Legal") serán marcados como `is_vip_restricted = true` durante el seed de datos inicial del sistema.
+    And el Pre-Flight Analyzer consultará esta tabla en tiempo de despliegue del BPMN para evaluar si las UserTasks asignadas a esos carriles (Lanes) pueden usar `sys_generic_form`.
+
+  Scenario: [REMEDIACIÓN] Persistencia y Auto-Guardado del Formulario Genérico (CA-7)
+    # Origen: REM-039-04 — GAP-4 del us039_functional_analysis.md
+    Given que el operario puede redactar observaciones extensas en el formulario genérico
+    Then el Formulario Genérico consumirá los mismos endpoints de borrador definidos en la US-029 (Persistencia CQRS):
+    And `POST /api/v1/drafts/{taskId}` para auto-guardado cada 30 segundos o al detectar inactividad de teclado (debounce 10s).
+    And `GET /api/v1/drafts/{taskId}` para recuperar el borrador al reabrir la tarea.
+    And `DELETE /api/v1/drafts/{taskId}` para limpiar el borrador tras submit exitoso.
+    And si el operario cierra la pestaña accidentalmente, al reabrir la tarea encontrará un banner: "Se detectó un borrador no enviado. ¿Desea restaurarlo?" (mismo patrón del CA-85 de US-003).
+    And los datos finales de submit (observaciones + adjuntos + resultado) se persistirán como variables del proceso en Camunda mediante `runtimeService.setVariables()`.
+
+  Scenario: [REMEDIACIÓN] Mapeo Explícito de Botones de Pánico a Eventos BPMN (CA-8)
+    # Origen: REM-039-05 — GAP-5 del us039_functional_analysis.md
+    Given los tres Botones de Pánico del Formulario Genérico (CA-3)
+    Then cada botón tendrá un comportamiento BPMN estrictamente definido:
+    And Botón "Aprobado": Invoca `taskService.complete(taskId, variables)` inyectando `generic_form_result = "APPROVED"` como variable del proceso. El flujo continúa normalmente por el Sequence Flow default.
+    And Botón "Retorno al Generador": Invoca `taskService.complete(taskId, variables)` inyectando `generic_form_result = "RETURNED"`. El BPMN DEBE tener un Exclusive Gateway posterior que evalúe esta variable para redirigir el token a la tarea anterior del flujo. Si el Gateway no existe, la tarea se completa sin retorno (fail-safe).
+    And Botón "Cancelar": Invoca un BPMN Error Event con `errorCode = "TASK_CANCELLED_BY_OPERATOR"`. El BPMN DEBE tener un Error Boundary Event capturando este código. Si no existe el Boundary Event, Camunda propagará el error al proceso padre o a la morgue de incidentes (Incident).
+    And los tres botones comparten la precondición del CA-3: observación justificativa de min 20 caracteres obligatoria ANTES de ejecutar cualquier acción.
+
 ```
 
-> [!CAUTION]
-> **HANDOFF TÉCNICO V1 (QA SRE CERTIFIED):**
-> 1. Eliminación y prohibición del uso de variables de tipo `Toggle` binario (ej. `requiere_evidencia`) como lógica de UI en este documento, usando en su lugar un enfoque semántico estructural sin ambigüedades.
-> 2. Prevención de colisiones de Namespace garantizada mediante inyección de `Whitelist Regex` en el BFF, evitando envenenamiento de los context variables del Engine.
-
 **Trazabilidad UX:** Wireframes Pantalla 7.B (Formulario Genérico Base).
-
+---
 
 ## ÉPICA 3: Inicio y Recepción (Triggers)
 Capacidad de iniciar procesos operacionales tanto de forma manual (Pantalla 0) como reactiva (Webhook).
@@ -1185,6 +1848,18 @@ Esta épica aborda el rol del Arquitecto/Administrador para modelar cómo fluye 
 **Como** Arquitecto de Procesos
 **Quiero** importar un archivo `.bpmn` (BPMN 2.0 XML) generado en el Diseñador Web y desplegarlo en el motor
 **Para** que la plataforma sepa cómo enrutar las tareas secuenciales, paralelas y compuertas lógicas de mi proceso oficial.
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-005:**
+> - **US-003 (Pantalla 7 / IDE Formularios):** Los FormKeys del Dropdown (CA-39) consumen el catálogo de formularios. La consistencia Simple/Maestro (CA-40) es dictada por US-003. El Pre-Flight valida integridad del mapping contra variables Zod del formulario (CA-68).
+> - **US-007 (DMN / Pantalla 4):** El Dropdown de Business Rule Tasks (CA-61) consume tablas DMN creadas en US-007. El binding LATEST/DEPLOYMENT (CA-12) es co-responsabilidad.
+> - **US-033 (Hub de Integraciones / Pantalla 11):** El Dropdown de conectores API (CA-45) consume los conectores registrados en US-033. La inmutabilidad de Swagger (CA-52) es co-responsabilidad. El catálogo de Topics (CA-70) se administra desde Pantalla 11.
+> - **US-036 (RBAC / Pantalla 14):** Los roles Designer/Release Manager (CA-21) y los roles autogenerados desde Lanes (CA-6) se administran en Pantalla 14.
+> - **US-029 (Persistencia CQRS):** El auto-guardado de borradores (CA-19) consume los endpoints de draft. Las variables de formulario persistidas validan contra el mapping del BPMN.
+> - **US-034 (RabbitMQ):** El Retry Pattern (CA-58) de Service Tasks procesa vía colas. Los reintentos automáticos dependen de la taxonomía de prioridad (US-034 CA-6).
+> - **US-000 (Resiliencia Integrada):** La morgue de tokens / Centro de Incidentes (CA-13) reside en la capa de resiliencia. Las instancias Sandbox (CA-67) son visibles en Pantalla 15.A.
+> - **US-049 (Notificaciones):** Las notificaciones de aprobación/rechazo de despliegue (CA-69) se canalizan vía el sistema de notificaciones.
+> - **US-039 (Formulario Genérico):** El Pre-Flight Analyzer que bloquea el uso de `sys_generic_form` en tareas VIP (CA-1 de US-039) reside en el pipeline de despliegue de US-005.
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
@@ -1598,7 +2273,17 @@ Scenario: Prohibición de Trabajo Síncrono en Camunda (External Task Pattern) (
     And el motor forzará estructuralmente el uso del patrón `External Task` (Trabajadores Externos).
     And Camunda simplemente publicará la intención de trabajo en un Topic (Ej: `topic="generar_pdf"`), liberando su memoria inmediatamente, a la espera de que los microservicios satélite (Workers) hagan el trabajo pesado y reporten el resultado asíncronamente.
 
----refinamiento---
+
+
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us005_functional_analysis.md
+  # Tickets: REM-005-01 a REM-005-06
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
 Scenario: Aislamiento Transaccional del Sandbox en Producción (Zero-Blast Radius) (CA-63)
     Given la ejecución de una simulación de proceso directamente en Producción (Modo Sandbox activado)
     When el token simulado alcanza una `ServiceTask` externa (Hub US-033) o una `SendTask` (Correos US-049)
@@ -1613,6 +2298,63 @@ Scenario: Intervención de Emergencia sobre Bloqueo Pesimista (Break-Lock)  (CA-
     Then el sistema le habilitará un botón de emergencia rojo `[ 🔓 Romper Candado (Break-Lock) ]`.
     And al ejecutarlo, el Backend destruirá el lock en la Base de Datos, liberando el proceso para edición inmediata.
     And registrará inamoviblemente en el Audit Log quién y cuándo forzó la liberación del diseño corporativo retenido por otro empleado.
+
+  Scenario: [REMEDIACIÓN] Contrato API Explícito para el Endpoint de Despliegue (CA-65)
+    # Origen: REM-005-01 — GAP-1 del us005_functional_analysis.md
+    Given la necesidad de alinear Frontend y Backend en el contrato de despliegue BPMN (CA-1)
+    Then el endpoint `POST /api/v1/design/processes/deploy` aceptará un `multipart/form-data` con los siguientes campos:
+    And Campo obligatorio `file` (tipo: file, extensión: `.bpmn`, max: 5MB) — el diagrama BPMN 2.0 XML.
+    And Campo obligatorio `deploy_comment` (tipo: string, min: 10 chars) — justificación del despliegue para el audit log.
+    And Campo opcional `force_deploy` (tipo: boolean, default: false) — si `true`, salta las advertencias ⚠️ del Pre-Flight (pero NO los errores ❌).
+    And el Response Body del `201 Created` incluirá obligatoriamente: `deployment_id`, `process_definition_id`, `process_definition_key`, `version` (int), `deployed_at` (ISO 8601 UTC), `deployed_by` (user_id).
+    And existirá un endpoint separado de validación: `POST /api/v1/design/processes/validate` que ejecuta el Pre-Flight Analyzer sin desplegar, retornando la lista de errores y advertencias en formato JSON.
+    And el contrato se documentará con OpenAPI/Swagger annotations en el Controller.
+
+  Scenario: [REMEDIACIÓN] Persistencia del Lock Pesimista en Base de Datos (CA-66)
+    # Origen: REM-005-02 — GAP-2 del us005_functional_analysis.md
+    Given el mecanismo de Lock Pesimista para edición concurrente (CA-16, CA-43, CA-64)
+    Then el lock se persistirá en una tabla `ibpms_process_locks` con columnas: `process_definition_key` (PK), `locked_by` (FK user_id), `locked_at` (timestamp UTC), `browser_session_id` (para detectar tabs cerradas).
+    And el lock aplica por `process_definition_key` (todo el proceso, no por versión específica).
+    And el lock NO expiará automáticamente por tiempo (consistente con CA-43) pero SÍ se liberará automáticamente si el Backend detecta que la sesión WebSocket/SSE del navegador del Arquitecto se desconecta (heartbeat cada 30 segundos).
+    And si el heartbeat falla 3 veces consecutivas (90 segundos sin respuesta), el lock se libera automáticamente y se registra en `ibpms_audit_log`: "[AUTO-RELEASE] Lock del proceso X liberado por desconexión del usuario Y".
+    And el Break-Lock de emergencia (CA-64, rol Super Admin) actualizará la misma tabla y registrará quién forzó la liberación.
+    And al reiniciar el servidor de aplicación, los locks persistidos en BD sobreviven y siguen vigentes.
+
+  Scenario: [REMEDIACIÓN] Límites y Gobernanza del Sandbox en Producción (CA-67)
+    # Origen: REM-005-03 — GAP-3 del us005_functional_analysis.md
+    Given la ejecución de instancias Sandbox directamente en el motor de producción (CA-20, CA-41, CA-63)
+    Then el sistema impondrá un límite máximo de 3 instancias Sandbox concurrentes a nivel global del sistema.
+    And si un Arquitecto intenta iniciar una cuarta simulación, el sistema la rechazará con el mensaje: "Límite de Sandbox alcanzado (3/3). Espere a que finalice una simulación en curso."
+    And cada instancia Sandbox tendrá un timeout de auto-destrucción de 10 minutos. Si el token no ha completado su recorrido en ese tiempo, el motor la anulará automáticamente y registrará: "[SANDBOX-TIMEOUT] Instancia sandbox {id} destruida por timeout (10min)."
+    And las instancias Sandbox serán visibles en la Pantalla 15.A (Centro de Incidentes) con un badge visual "[🧪 SANDBOX]" para diferenciarlas de instancias reales, pero NO se mostrarán en los dashboards operativos del Workdesk.
+    And el contador de instancias Sandbox activas se almacenará en Redis (`ibpms:sandbox:count`) con TTL de 15 minutos como failsafe.
+
+  Scenario: [REMEDIACIÓN] Persistencia del Data Mapping como Extension Properties del BPMN XML (CA-68)
+    # Origen: REM-005-04 — GAP-4 del us005_functional_analysis.md
+    Given la configuración del DataMapperGrid (CA-49 a CA-57) donde el Arquitecto mapea variables visualmente
+    Then el mapping finalizado se persistirá como `camunda:inputOutput` extension properties dentro del nodo `ServiceTask` del XML BPMN, garantizando portabilidad del diagrama.
+    And adicionalmente, se almacenará una copia indexada del mapping en la tabla `ibpms_data_mappings` (columnas: `process_definition_key`, `task_id`, `connector_id`, `mapping_json`, `last_validated_at`) para consultas rápidas y validación cruzada.
+    And si el Arquitecto modifica el formulario en la Pantalla 7 (US-003) y elimina o renombra una variable Zod que está referenciada en un mapping existente, el Pre-Flight Analyzer lo detectará como Error ❌: "Variable '{varName}' referenciada en el mapping de la tarea '{taskName}' ya no existe en el formulario."
+    And el Pre-Flight Analyzer validará la integridad de TODOS los mappings del BPMN antes de permitir el despliegue.
+
+  Scenario: [REMEDIACIÓN] Flujo Completo de Solicitud de Despliegue con Rechazo y Notificación (CA-69)
+    # Origen: REM-005-05 — GAP-5 del us005_functional_analysis.md
+    Given el workflow de Solicitud de Despliegue del Designer al Release Manager (CA-34)
+    Then la solicitud se implementará como un registro en la tabla `ibpms_deploy_requests` (columnas: `id`, `process_definition_key`, `requested_by`, `requested_at`, `status` ENUM: PENDING/APPROVED/REJECTED, `reviewed_by`, `reviewed_at`, `review_comment`).
+    And al presionar [📩 Solicitar Despliegue], se creará una tarea visible en el Workdesk del Release Manager con los botones [🚀 Aprobar y Desplegar] y [❌ Rechazar].
+    And al Rechazar, el Release Manager TIENE OBLIGACIÓN de ingresar un comentario de rechazo (min 20 chars) explicando qué debe corregir el Designer.
+    And el Designer recibirá una notificación (bell icon + email vía US-049) informando si su solicitud fue aprobada o rechazada, junto con el comentario del Release Manager.
+    And existirá un historial visible en la Pantalla 6: "[📜 Historial de Solicitudes]" listando todas las solicitudes anteriores con su estado, revisor y comentario.
+
+  Scenario: [REMEDIACIÓN] Catálogo de External Task Topics con Validación Pre-Flight (CA-70)
+    # Origen: REM-005-06 — GAP-6 del us005_functional_analysis.md
+    Given la obligatoriedad de External Task Pattern (CA-62) donde cada Service Task se suscribe a un Topic
+    Then el sistema mantendrá un catálogo oficial de Topics en la tabla `ibpms_external_task_topics` (columnas: `topic_name`, `description`, `worker_class`, `is_active`, `registered_at`).
+    And el campo Topic en las propiedades de la Service Task (Pantalla 6) será un Dropdown que consume este catálogo, NO un campo de texto libre.
+    And los Topics pre-registrados obligatorios para V1 serán: `ibpms.send_email` (US-049), `ibpms.sync_erp` (NetSuite), `ibpms.sync_sharepoint`, `ibpms.generate_pdf`, `ibpms.ai_copilot` (US-017), `ibpms.webhook_outbound` (US-004).
+    And el Pre-Flight Analyzer validará que cada Service Task del BPMN tenga un Topic que exista en el catálogo. Si el Topic no existe, emitirá Error ❌: "La tarea '{taskName}' refiere al topic '{topicName}' que no está registrado en el catálogo de Workers."
+    And el Administrador IT podrá registrar nuevos Topics desde una sección administrable en la Pantalla 11 (Hub de Integraciones).
+
 
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).
@@ -1639,23 +2381,24 @@ Feature: Standalone Project Template Builder (WBS)
     Then el sistema NO muta los 50 proyectos vivos (se anclan al Snapshot originario inmutable V1.0)
     And emite la versión V2.0 exclusivamente disponible para nuevas aperturas de Proyectos, requiriendo en paralelo Aprobación Administrativa mediante un Botón Rojo Fuerte [Pushear Nueva Versión] para forzar validación por partida doble.
 
-  Scenario: Tipificación Estricta de Plantilla (Tradicional vs Ágil) (CA-11)
+  Scenario: Tipificación Estricta de Plantilla (Tradicional vs Ágil) (CA-3)
     Given que la PMO acciona la creación de una Nueva Plantilla en la Pantalla 8
     When el sistema levanta el Modal de Creación
     Then obliga explícitamente a clasificar la plantilla seleccionando un tipo rígido: `[Tradicional (Gantt)]` o `[Ágil (Sprints)]`
     And esta clasificación gobierna el comportamiento del lienzo: Si elije "Ágil", el botón de relacionar dependencias (Fin-a-Inicio) desaparece permanentemente del UI y se prohíbe crear conceptos estructurales como "Hitos".
 
-  Scenario: Transición Formulario a DONE en Ágil (CA-12)
+  Scenario: Transición Formulario a DONE en Ágil (CA-4)
     Given una tarea instanciada en el Tablero Kanban (Ágil) originada desde una Plantilla
     And esta tarea tiene el "Formulario_QA" asociado en su definición maestra
     When el desarrollador termina el trabajo y oprime enviar el formulario
     Then el sistema autoevalúa la completitud de la data y, en caso de éxito, arrastra logísticamente la tarjeta a la columna "DONE" del Sprint, aplicando un Definition of Done duro atado a data.
 
-  Scenario: Independencia Evolutiva Locativa (CA-13)
+  Scenario: Independencia Evolutiva Locativa (CA-5)
     Given un Scrum Master que instanció un Proyecto Ágil basado en la Plantilla V1.0
     When el Scrum Master elimina 5 de las tareas heredadas del Backlog local del proyecto porque no aplican a su Sprint
     Then el borrado es estrictamente Local (Muta solo el Proyecto Instanciado)
     And la Plantilla original inmutable "V1.0" no pierde las tareas orgánicamente y futuros proyectos las seguirán heredando intactas.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 8 (Project Template Builder).
 
@@ -1763,6 +2506,14 @@ Permite a los usuarios de negocio (no técnicos) generar reglas lógicas complej
 **Quiero** escribir políticas de negocio en lenguaje natural (ej. "Aprobar si monto < 1000")
 **Para** que el iBPMS las traduzca de forma segura, asíncrona y estructurada a una tabla matemática DMN (Hit Policy: FIRST), erradicando la ambigüedad humana sin exponer datos PII a modelos LLM externos y protegiendo el performance del servidor.
 
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-007:**
+> - **US-005 (Despliegue BPMN / Pantalla 6):** La Business Rule Task del BPMN consume la DMN vía `Decision_Ref` (CA-61 de US-005). El binding LATEST vs DEPLOYMENT (CA-12 de US-005) decide qué versión DMN aplica en runtime. El Pre-Flight Analyzer debe validar la compatibilidad del Catch-All (CA-14 de US-007) contra el diseño del Gateway posterior.
+> - **US-003 (IDE Formularios / Pantalla 7):** El Diccionario de variables Zod alimenta las columnas de entrada de la DMN. Si una variable Zod se renombra o elimina, la DMN se rompe silenciosamente. La invalidación de caché Redis (CA-16) depende de que US-003 publique el evento `FORM_SCHEMA_CHANGED`.
+> - **US-036 (RBAC / Pantalla 14):** El rol `ROLE_PROCESS_ARCHITECT` que protege la creación y publicación de DMNs (CA-06) se administra desde la Pantalla 14.
+> - **US-033 (Hub de Integraciones / Pantalla 11):** Si el output de una DMN gatilla una integración API (Ej: "Rechazar → Notificar CRM"), la Service Task posterior consume conectores del Hub.
+> - **US-034 (RabbitMQ):** El evento de invalidación de caché `FORM_SCHEMA_CHANGED` (CA-16) se transmite vía el broker de mensajería. La publicación de una DMN V2 podría necesitar invalidar caché de Workers que evaluaban la V1.
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: NLP to DMN Translation, SRE Architecture & AppSec Governance
@@ -1852,6 +2603,161 @@ Feature: NLP to DMN Translation, SRE Architecture & AppSec Governance
     Then el Frontend desplegará un Modal Inevitable exigiendo digitar `CONFIRMO_V2` para evitar clics accidentales.
     And existirá un botón de `[ ⏪ Revertir a V1 ]` explícito para rollback rápido.
     And el historial del Chat NLP persistirá visualmente atado a esa Versión, y los colores de la grilla cumplirán la norma WCAG AA para diferenciar celdas hechas por IA vs editadas a mano.
+
+
+  # ==============================================================================
+  # E. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us007_functional_analysis.md
+  # Tickets: REM-007-01 a REM-007-06
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Resolución de Persistencia Dual de Borradores DMN (CA-13)
+    # Origen: REM-007-01 — GAP-1 del us007_functional_analysis.md
+    # Corrige la contradicción del CA-03 que reclama LocalStorage Y PostgreSQL simultáneamente.
+    Given la necesidad de persistir borradores DMN durante la iteración del chat NLP (CA-03)
+    Then los borradores DMN seguirán la arquitectura de persistencia híbrida:
+    And 1. Los borradores se persistirán PRIMARIAMENTE en PostgreSQL vía `POST /api/v1/dmn/drafts` (tabla `ibpms_dmn_drafts`, columnas: `id`, `user_id`, `prompt_hash`, `xml_content`, `created_at`, `expires_at`).
+    And 2. El LocalStorage del Frontend actuará como CACHÉ DE SESIÓN ACTIVA para evitar peticiones redundantes al Backend mientras el usuario itera en la misma pestaña.
+    And 3. Un Job Scheduler del Backend purgará físicamente de PostgreSQL los borradores con `expires_at` superado (TTL: 24 horas), consistente con el CA-03 original.
+    And 4. Al sellar (aprobar) la versión final, el Backend eliminará todos los borradores asociados a ese `prompt_hash` y el Frontend destruirá su caché local.
+    And queda ELIMINADA la ambigüedad del CA-03: PostgreSQL es la fuente de verdad de los borradores, LocalStorage es solo caché efímero.
+
+  Scenario: [REMEDIACIÓN] Validación Pre-Flight del Catch-All DMN contra el BPMN (CA-14)
+    # Origen: REM-007-02 — GAP-2 del us007_functional_analysis.md
+    # Previene el "Silent Killer": aprobaciones automáticas por falta de Gateway post-DMN.
+    Given la obligatoriedad de la fila Catch-All con output "Revisión Humana" en toda tabla DMN (CA-07)
+    Then el Pre-Flight Analyzer de la US-005 (Pantalla 6) incluirá una regla de validación cruzada obligatoria:
+    And al evaluar una Business Rule Task que referencie una DMN con Catch-All activo, el Pre-Flight verificará que INMEDIATAMENTE DESPUÉS de esa tarea exista un Exclusive Gateway que evalúe la variable de output de la DMN.
+    And si el Gateway no contempla una rama que enrute el valor "Revisión Humana" (o su equivalente configurado) a una User Task, el Pre-Flight emitirá Error ❌ bloqueante: "La Business Rule Task '{taskName}' produce el output 'Revisión Humana' vía Catch-All, pero el Gateway posterior no tiene una rama que lo enrute a una tarea humana. El proceso desplegado ignoraría este caso silenciosamente."
+    And esta validación se ejecutará en tiempo de despliegue del BPMN (no en tiempo de publicación de la DMN), porque es responsabilidad del diseño del proceso, no de la tabla de decisión.
+    And si la Business Rule Task NO tiene un Gateway inmediatamente posterior (conecta directo a otra tarea), el Pre-Flight emitirá Advertencia ⚠️: "La Business Rule Task '{taskName}' no tiene Gateway posterior. Los outputs de la DMN serán ignorados."
+
+  Scenario: [REMEDIACIÓN] Endpoint Dedicado para el Simulador de Decisiones DMN (CA-15)
+    # Origen: REM-007-03 — GAP-3 del us007_functional_analysis.md
+    Given la funcionalidad del Simulador de Decisiones (CA-11) que permite probar la DMN con variables ficticias
+    Then la evaluación de prueba se ejecutará en el Backend, NO en el Frontend, para garantizar paridad con el motor FEEL de Camunda en producción.
+    And el Backend expondrá el endpoint `POST /api/v1/dmn/{id}/evaluate-test` que aceptará un JSON con las variables de prueba (Ej: `{"monto": 5000, "mora_dias": 45}`).
+    And el endpoint delegará la evaluación al motor DMN de Camunda en modo Sandbox (sin persistir resultados) y retornará: `{"matched_rule_index": 3, "output": {"decision": "Revisión Humana"}, "all_rules_evaluated": [...]}`.
+    And el Frontend iluminará visualmente en verde la fila `matched_rule_index` retornada, consistente con el CA-11.
+    And las variables de prueba NO se persisten como casos de test reutilizables en V1 (diferido a V2). Son efímeras y se pierden al cerrar la Pantalla 4.
+    And TIENE PROHIBIDO implementar un parser FEEL en JavaScript en el Frontend para evitar discrepancias de evaluación con el motor real.
+
+  Scenario: [REMEDIACIÓN] Invalidación de Caché Redis al Mutarse el Diccionario Zod (CA-16)
+    # Origen: REM-007-04 — GAP-4 del us007_functional_analysis.md
+    Given la caché Redis que usa el hash de (Prompt + Diccionario) como clave (CA-02)
+    Then cuando un Arquitecto modifique el diccionario Zod de un formulario en la Pantalla 7 (US-003) — ya sea agregando, eliminando o renombrando una variable —, el Backend de formularios DEBE publicar un evento de dominio `FORM_SCHEMA_CHANGED` (vía RabbitMQ o evento interno).
+    And el servicio DMN del Backend escuchará este evento y ejecutará una invalidación quirúrgica: purgará de Redis ÚNICAMENTE las entradas de caché cuyos hashes incluyan el `form_id` del formulario modificado.
+    And NO se invalida toda la caché Redis (eso sería un nuke innecesario), solo las entradas vinculadas al diccionario que cambió.
+    And al siguiente request del Arquitecto con el mismo Prompt, el sistema generará una DMN nueva con la IA usando el diccionario actualizado, y la cacheará con el nuevo hash.
+
+  Scenario: [REMEDIACIÓN] Catálogo y Explorador de Tablas DMN (DMN Library Dashboard) (CA-17)
+    # Origen: REM-007-05 — GAP-5 del us007_functional_analysis.md
+    # Cierra el déficit estructural de gobernanza de artefactos respecto a US-003 (CA-86) y US-005 (CA-23).
+    Given la necesidad del Arquitecto de buscar, re-editar o consultar versiones de tablas DMN existentes
+    When el usuario ingresa al módulo DMN (Pantalla 4 Principal)
+    Then EL SISTEMA NO CARGARÁ el chat NLP en blanco directamente, sino que presentará un "Catálogo o Grilla de Tablas DMN".
+    And esta Grilla incluirá un Buscador `Server-side` para buscar por Nombre de Negocio o Decision_Ref (ID Técnico).
+    And cada fila o tarjeta mostrará:
+    And - Nombre de la Tabla (Ej: "Matriz de Riesgo Crediticio")
+    And - Decision_Ref (Ej: `decision_risk_matrix`)
+    And - Versión Activa (Ej: `v3`)
+    And - Estado: "📝 BORRADOR" / "✅ ACTIVA" / "📦 ARCHIVADA"
+    And - Fecha de Última Modificación y Autor
+    And - Cantidad de filas de la tabla (Ej: "12 reglas")
+    And al hacer clic sobre una DMN, se abrirá en el Editor/Chat NLP para su edición o consulta.
+    And existirá un botón [📦 Archivar] que solo se habilitará si NO existen Business Rule Tasks activas en BPMN desplegados que referencien esa Decision_Ref.
+    And el Backend expondrá el endpoint `GET /api/v1/dmn?status=ACTIVE&search=riesgo&page=1&size=20` con paginación server-side.
+
+  Scenario: [REMEDIACIÓN] Contrato API Estandarizado para el Ciclo de Vida DMN (CA-18)
+    # Origen: REM-007-06 — GAP-6 del us007_functional_analysis.md
+    Given la necesidad de alinear Frontend y Backend en el contrato REST del módulo DMN
+    Then el Backend expondrá los siguientes endpoints documentados con OpenAPI/Swagger annotations:
+    And `POST /api/v1/dmn` — Crear nueva DMN (body: `{name, decision_ref, source: "NLP"|"XML_UPLOAD", prompt?}`) → Retorna `201 Created` con `{id, version, status: "DRAFT"}`.
+    And `GET /api/v1/dmn` — Listar DMNs con filtros (query params: `status`, `search`, `page`, `size`) → Retorna lista paginada para el Catálogo (CA-17).
+    And `GET /api/v1/dmn/{id}` — Obtener detalle completo de una DMN (XML, metadatos, historial de versiones).
+    And `PUT /api/v1/dmn/{id}` — Actualizar DMN → genera V2 obligatoriamente (consistente con CA-06). Retorna `201 Created` con nueva versión.
+    And `POST /api/v1/dmn/{id}/publish` — Publicar/Aprobar → commit al motor Camunda + warm-up cache (CA-03). Cambia status a "ACTIVE". Requiere confirmación `CONFIRMO_V{N}` (CA-12).
+    And `POST /api/v1/dmn/{id}/rollback` — Rollback: crea una nueva versión que es copia de la versión anterior (CA-12).
+    And `POST /api/v1/dmn/{id}/evaluate-test` — Simulador de decisiones (CA-15).
+    And `POST /api/v1/dmn/drafts` — Crear/actualizar borrador temporal (CA-13).
+    And `DELETE /api/v1/dmn/drafts/{id}` — Purgar borrador manualmente.
+    And `POST /api/v1/dmn/{id}/archive` — Archivar DMN sin referencias activas (CA-17).
+
+
+  # ==============================================================================
+  # F. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: Cuestionario de 45 preguntas del workflow /refinamientoFuncionalUs.md
+  # Propósito: Cerrar huecos descubiertos durante el refinamiento de la US-007.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Resiliencia SSE ante Desconexiones Parciales (CA-19)
+    # Origen: Pregunta #2 del Refinamiento Funcional
+    # Resuelve: ¿Qué pasa si la conexión se corta a mitad de la generación de la tabla?
+    Given que el canal SSE (CA-01) está emitiendo filas de la tabla DMN al Frontend en tiempo real
+    When la conexión SSE se interrumpe inesperadamente (pérdida de red, cierre de pestaña, timeout del proxy)
+    Then el Frontend preservará las filas parcialmente recibidas como un borrador incompleto visible en la grilla con un indicador visual "⚠️ Generación Interrumpida (12 de 30 filas recibidas)".
+    And mostrará un botón `[🔄 Reintentar Generación]` que re-enviará el mismo prompt al Backend.
+    And si el hash del prompt existe en caché Redis (CA-02), el Backend devolverá la tabla completa instantáneamente sin costo LLM adicional.
+    And si NO existe en caché, el Backend iniciará una nueva generación SSE completa (no parcial).
+    And las filas parciales anteriores se destruirán del DOM al recibir la primera fila de la nueva generación.
+
+  Scenario: [REFINAMIENTO] Normalización del Prompt para Caché Inteligente (CA-20)
+    # Origen: Pregunta #3 del Refinamiento Funcional
+    # Resuelve: Dos prompts idénticos con diferente capitalización que pagan doble a la IA.
+    Given el cálculo del hash de caché basado en (Prompt + Diccionario) del CA-02
+    Then el Backend NORMALIZARÁ el prompt antes de calcular el hash, aplicando las siguientes transformaciones:
+    And 1. Conversión a minúsculas (lowercase).
+    And 2. Eliminación de espacios duplicados y espacios al inicio/final (trim + collapse).
+    And 3. Eliminación de signos de puntuación irrelevantes (puntos finales, comas sueltas).
+    And como resultado, los prompts "Aprobar si MONTO < 1000" y "aprobar si monto < 1000" producirán el MISMO hash y servirán la MISMA tabla cacheada, evitando costos LLM duplicados.
+
+  Scenario: [REFINAMIENTO] Validación Post-Minificación del XML DMN (CA-21)
+    # Origen: Pregunta #5 del Refinamiento Funcional
+    # Resuelve: El riesgo de que la compresión XML (CA-03) corrompa el documento.
+    Given el proceso de XML Minification del CA-03 que elimina espacios en blanco inútiles antes del COMMIT
+    Then INMEDIATAMENTE DESPUÉS de la minificación, el Backend ejecutará un parse de validación del XML resultante contra el schema DMN de Camunda.
+    And si el parse falla (XML corrupto o estructura inválida), el Backend CANCELARÁ la minificación y persistirá el XML ORIGINAL sin comprimir, registrando un WARNING en los logs: "Minificación abortada por riesgo de corrupción. Guardando XML original."
+    And NUNCA se hará COMMIT de un XML minificado que no haya superado la validación de parseo.
+
+  Scenario: [REFINAMIENTO] Rechazo de XML Upload con Hit Policy No Autorizada (CA-22)
+    # Origen: Pregunta #7 del Refinamiento Funcional
+    # Resuelve: El Modo Desarrollador acepta XMLs con Hit Policy diferente a FIRST, causando errores en runtime.
+    Given la carga manual de un archivo XML DMN en Modo Desarrollador (CA-09)
+    When el Backend recibe el XML subido por el usuario
+    Then el Backend parseará el XML y verificará que el atributo `hitPolicy` de la etiqueta `<decisionTable>` sea estrictamente `FIRST`.
+    And si el XML contiene una Hit Policy diferente (UNIQUE, COLLECT, RULE ORDER, OUTPUT ORDER, ANY), el Backend rechazará la carga con HTTP `422 Unprocessable Entity` y el mensaje: "La tabla DMN que subió usa la política de evaluación '{hitPolicy}', pero el sistema solo permite la política FIRST en la Versión 1. Por favor modifique su archivo y vuelva a intentarlo."
+    And si el XML no contiene el atributo `hitPolicy`, el Backend lo inyectará automáticamente como `FIRST` antes de persistir.
+
+  Scenario: [REFINAMIENTO] Rate Limiting Independiente para el Simulador de Decisiones (CA-23)
+    # Origen: Pregunta #28 del Refinamiento Funcional
+    # Resuelve: El endpoint evaluate-test (CA-15) no tiene Rate Limiting propio, permitiendo abuso contra el motor Camunda.
+    Given el endpoint `POST /api/v1/dmn/{id}/evaluate-test` del Simulador de Decisiones (CA-15)
+    Then el API Gateway impondrá un Rate Limiting independiente al del CA-02 (generación IA):
+    And máximo 20 evaluaciones de prueba por minuto por usuario autenticado.
+    And si se excede, el Backend retornará HTTP `429 Too Many Requests` con un mensaje amigable: "Has realizado demasiadas pruebas seguidas. Espera {remainingSeconds} segundos antes de probar nuevamente."
+    And este límite es independiente del Rate Limiting de generación IA (CA-02) porque protege un recurso diferente (el motor Camunda de evaluación, no la API del LLM).
+
+  Scenario: [REFINAMIENTO] Buscador In-App para Grilla DMN con Virtual Scrolling (CA-24)
+    # Origen: Pregunta #34 del Refinamiento Funcional
+    # Resuelve: Ctrl+F del navegador no encuentra texto en filas fuera del viewport cuando se usa Virtual Scrolling (CA-10).
+    Given la grilla DMN con Virtual Scrolling activo (CA-10) donde solo las filas visibles están renderizadas en el DOM
+    Then la grilla incorporará un buscador integrado activable con el atajo `Ctrl+F` (interceptando el evento nativo del navegador) o mediante un ícono de búsqueda `[🔍]` visible en la barra de herramientas de la grilla.
+    And el buscador buscará en TODAS las filas de la tabla (incluyendo las no renderizadas en el viewport), resaltando en amarillo las coincidencias y navegando automáticamente (scroll) hasta la primera coincidencia.
+    And soportará navegación entre resultados con botones `[↑ Anterior]` y `[↓ Siguiente]`.
+
+  Scenario: [REFINAMIENTO] Timeout y SLA de Tiempo de Respuesta para Generación (CA-25)
+    # Origen: Pregunta #41 del Refinamiento Funcional
+    # Resuelve: No había un tiempo máximo definido para la generación SSE, dejando al usuario esperando indefinidamente.
+    Given el envío de un prompt de generación DMN al Backend vía SSE (CA-01)
+    Then el Frontend establecerá un timeout global de 30 segundos para la conexión SSE.
+    And si transcurren más de 30 segundos sin recibir NINGUNA fila (ni siquiera la primera), el Frontend cerrará la conexión SSE y mostrará: "La generación tardó más de lo esperado. Esto puede ocurrir con políticas muy complejas. Pulse [🔄 Reintentar] para intentarlo nuevamente."
+    And como referencia de rendimiento, el Time To First Row (tiempo desde el envío del prompt hasta la primera fila visible en la grilla) deberá ser inferior a 8 segundos bajo condiciones normales de red y carga.
+    And si la generación ya comenzó (al menos 1 fila recibida) pero deja de emitir filas por más de 15 segundos consecutivos (stall), el Frontend activará el mecanismo de resiliencia del CA-19 (borrador parcial + reintentar).
+
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 4 (Taller DMN) y su invocación desde Pantalla 6 (Diseñador BPMN).
 
@@ -1906,44 +2812,44 @@ Feature: Kanban Board Task Management
     Then el motor restringe de raíz la operación, imponiendo una política estricta de 1:1 (Un Solo Dueño por Tarjeta)
     And garantizando así que no haya dilución de responsabilidad del SLA.
 
-  Scenario: [Arquitectura] Prohibición de Motor CMMN y Reglas de Instanciación Ágil
+  Scenario: [Arquitectura] Prohibición de Motor CMMN y Reglas de Instanciación Ágil (CA-5)
     Given un Scrum Master instanciando un Proyecto derivado de la Plantilla Tipificada "Agile Sprint" (US-006)
     When la plataforma de iBPMS inyecte las tarjetas de tareas ("To Do") en el Motor Transaccional
     Then el Backend prohíbe la creación de diagramas rígidos `.cmmn` 
     And persiste la anatomía transaccional de cada tarea "Ágil" como meros registros de Base de Datos Relacional (`Entities`) enlazados a su Proyecto instanciado, usando el poder crudo de Spring Data JPA.
 
-  Scenario: [Arquitectura] Máquina de Estados Pura (State Machine) frente al Salto Anárquico 
+  Scenario: [Arquitectura] Máquina de Estados Pura (State Machine) frente al Salto Anárquico  (CA-6)
     Given la volatilidad de un Tablero Kanban donde un desarrollador arrastra constantemente su tarjeta ("In Progress" -> "Blocked" -> "In Progress" -> "Done" -> "QA Rejected")
     Then garantizamos una experiencia de usuario sub-segundo sin overhead BPMN
     And el iBPMS procesa estas mutaciones de estado en la Entidad (JPA) a través de una API REST ultra veloz (Ej: `PATCH /api/v1/proyectos/{pid}/kanban/{tid}/state`) y registra todas las transiciones como eventos inmutables en la Tabla de Auditoría general de la plataforma transversal.
 
-  Scenario: [Arquitectura] Event-Driven hacia Modelos Estructurados (Salto Híbrido)
+  Scenario: [Arquitectura] Event-Driven hacia Modelos Estructurados (Salto Híbrido) (CA-7)
     Given una travesía asíncrona Ágil (La tarea Kanban está en estado "In Progress" o "QA Approval")
     When el negocio requiere para darla por `Done` ejecutar una Macro-Aprobación Estructurada, Secuencial y Gerencial
     Then la mutación del Estado Kanban invoca asíncronamente un "Process Instantiation" aislado del Workflow estructurado (BPMN normal)
     And cuando el flujo clásico de Camunda termine, este orquestador emitirá un evento publicándolo de regreso al componente Ágil marcando la casilla original del Tablero como Finalizada o Aprobada, conectando lo impredecible con lo burocrático de forma pura.
 
-  Scenario: Gobernanza de Estados y Columnas Dinámicas (Opción B)
+  Scenario: Gobernanza de Estados y Columnas Dinámicas (Opción B)  (CA-8)
     Given la necesidad operativa de adaptar el flujo Kanban añadiendo un nuevo estado al ciclo
     When el usuario presiona el botón "Añadir Columna" en la Pantalla 3
     Then el sistema valida que el usuario ostente exclusivamente el Roll de 'Scrum_Master' o 'Lider_Proyecto' en la tabla de miembros
     And el motor Backend efectúa una validación dura (Hard-Limit) rechazando transacciones que excedan un máximo de 7 columnas por tablero para la Versión 1, previniendo sobrecarga visual.
 
-  Scenario: [Arquitectura] Tabla Polimórfica Única para Consolidación de Esfuerzos (BAM)
+  Scenario: [Arquitectura] Tabla Polimórfica Única para Consolidación de Esfuerzos (BAM)  (CA-9)
     Given la necesidad corporativa de cruzar costos de horas-hombre transversales en la Pantalla 5
     When un empleado registre 2 horas en una "Tarea BPMN" y 3 horas en una "Tarjeta Kanban"
     Then el Backend prohibe guardar dichas horas en las tablas específicas de cada módulo
     And fuerza al sistema a canalizar el guardado hacia una única tabla polimórfica (`ibpms_time_logs`) 
     And distinguiéndolas únicamente por la columna `reference_type` (`TASK_BPMN`, `TASK_AGILE`, `TASK_GANTT`), simplificando matemáticamente la reportería financiera.
 
-  Scenario: [Arquitectura] Componente Frontend Agnóstico Universal (`<UniversalSlaTimer>`)
+  Scenario: [Arquitectura] Componente Frontend Agnóstico Universal (`<UniversalSlaTimer>`)  (CA-10)
     Given la disparidad visual entre la Bandeja Workdesk (Pantalla 1), el Tablero Ágil (Pantalla 3) y el Gantt Tradicional (Pantalla 10.B)
     When el desarrollador deba mostrar el reloj de SLA o el Timer de "Play/Stop"
     Then el framework del iBPMS le denegará desarrollar HTML/Vue personalizado en cada pantalla
     And lo obligará a instanciar y re-utilizar el micro-componente atómico transversal `<UniversalSlaTimer>`.
     And este componente será "Tonto" (Dumb Component), consumiendo APIs centrales de tiempo sin conocer la naturaleza funcional de la tarea que lo aloja.
 
-  Scenario: [Arquitectura] Inmutabilidad de Costos Incurridos (Anti-Manipulación)
+  Scenario: [Arquitectura] Inmutabilidad de Costos Incurridos (Anti-Manipulación)  (CA-11)
     Given que el empleado ha presionado "Stop" en su temporizador y la plataforma envía el LOG a la base de datos central
     When el usuario o su jefe intenten editar o borrar ese registro de tiempo (Ej: Modificar de 4 horas a 2 horas)
     Then la API de Time Tracking denegará el Método DELETE/PUT (Comportamiento *Append-Only*)
@@ -1962,7 +2868,7 @@ Feature: Kanban Board Task Management
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Agile Project Instantiation and Planning
-  Scenario: Instanciación sin Sprints en V1 (Postergación Táctica) (CA-14)
+  Scenario: Instanciación sin Sprints en V1 (Postergación Táctica) (CA-1)
     Given un proyecto instanciado bajo metodología Ágil en la Pantalla 9
     When el líder de proyecto abre el Agile Hub (Pantalla 10)
     Then el sistema NO utiliza iteraciones con fechas (Sprints) para la Versión 1 del producto
@@ -1980,41 +2886,41 @@ Feature: Agile Project Instantiation and Planning
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Traditional Project Planning and Baseline Execution
-  Scenario: Geometría Adaptativa por Colisión con Días Festivos (CA-3)
+  Scenario: Geometría Adaptativa por Colisión con Días Festivos (CA-1)
     Given la tarea X planificada para el lunes 12, con duración de 3 días laborables
     When el calendario maestro global marca repentinamente el lunes 12 como "Día Festivo Nacional"
     Then el motor de cálculos del Diagrama de Gantt estira automáticamente la caja visual de la tarea hacia la derecha compensando el día muerto (Fin: Jueves 15) sin requerir re-planificación humana obligatoria.
 
-  Scenario: Protección Estructural contra Deadlocks Circulares (CA-4)
+  Scenario: Protección Estructural contra Deadlocks Circulares (CA-2)
     Given que el PM crea dependencia "T1 -> T2" (Fin-Inicio) arrastrando flechas en el Lienzo 10.B
     When el PM arrastra erróneamente la dependencia contraria "T2 -> T1" creando un Ciclo Infinito
     Then el WebClient bloquea y aborta inmediatamente el cruce relacional (Error Geométrico visual) e impide guardarlo en la Base de Datos para garantizar un motor DAG limpio.
 
-  Scenario: Sobrecarga Permisible con Semáforo Sensorial (CA-5)
+  Scenario: Sobrecarga Permisible con Semáforo Sensorial (CA-3)
     Given la matriz de 40 horas laborables semanales para un humano
     When el PM planifica tareas apiladas sobre la empleada "María" superando el 150% de su capacidad en la misma semana cronológica
     Then el sistema "permite" teóricamente la mala práctica (dejando al PM violar la métrica)
     And como contramedida, enciende agresivas Balizas Visuales Rojas (Marcador de Recurso Sobrecargado) a un costado del nombre de la analista.
 
-  Scenario: Re-planificación Activa y Multi-Líneas Base (Baseline Rupture) (CA-6)
+  Scenario: Re-planificación Activa y Multi-Líneas Base (Baseline Rupture) (CA-4)
     Given un proyecto que lleva 2 meses en Ejecución Viva (Basado sobre Línea Base "V1")
     When el PM requiera estirar los tiempos un 30% a solicitud formal del cliente
     Then el sistema permite pausar y "Reprogramar" formalmente el nodo vivo en el lienzo visual de la Pantalla 10.B
     And fuerza al PM a guardar y pisar una nueva Línea Base Evolutiva (Ej: V2_Reprogramada), preservando en el log histórico la desviación financiera/temporal ocurrida frente al V1 primitivo para auditoría de Gerencia.
 
-  Scenario: Hot-Swaps en Cabina de Mando (Reasignación de Silla Ejecutiva) (CA-7)
+  Scenario: Hot-Swaps en Cabina de Mando (Reasignación de Silla Ejecutiva) (CA-5)
     Given una tarea vital (T4) de Línea Base activa rebotando infructuosamente en el Workdesk del analista 'Pedro' por su ausencia repentina
     When el Project Manager se adentra en la Pantalla 10.B (Cabina General Gantt Transaccional) e invoca la tarjeta temporal viva (T4)
     Then el sistema posibilita el borrado nominal en duro de 'Pedro' para inyectar sobre vuelo el usuario 'Luis'
     And el motor BPMN retira perentoriamente la carta de la delegación de Pedro, materializándola sincrónicamente en el Workdesk de su co-equipero para no frustrar la métrica de entrega del T4.
 
-  Scenario: Modos Flexibles de Reclamo (Pool vs Empleado Directo) (CA-8)
+  Scenario: Modos Flexibles de Reclamo (Pool vs Empleado Directo) (CA-6)
     Given la responsabilidad del PM de instanciar tareas en el motor Gantt
     Then el PMo goza del Switch parametrizable de Asignamiento en su UX
     And ostenta la facultad imperativa de designar nominalmente la Tarea Hacia un Usuario Exacto (`maria.lopez`)
     And o puede prescindir de asimetrías tácticas y tirarlo en bandeja común al Grupo Jerárquico General ("Equipo Legal"), forzando que ellos ejerzan Auto-Apropiación (US-002: Claim Task) por competencia.
     
-  # NOTA CONTEXTUAL PO: (CA-9 Camino Crítico PERT) y (CA-10: Avance Financiero EVM) diferidos expresamente a V2 del MVP.
+  # NOTA CONTEXTUAL PO: (CA-7 Camino Crítico PERT) y (CA-8: Avance Financiero EVM) diferidos expresamente a V2 del MVP.
 ```
 **Trazabilidad UX:** Wireframes Pantalla 10.B (Planner Tradicional - Gantt) y Pantalla 1 (Workdesk).
 
@@ -2033,45 +2939,45 @@ Exposición de la salud de los procesos en vuelo para la toma de decisiones gere
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Process Health Analytics
-  Scenario: Renderizado exitoso del Dashboard de Grafana
+  Scenario: Renderizado exitoso del Dashboard de Grafana (CA-1)
     Given un usuario autenticado con Rol "Gerente_Operaciones"
     When la aplicación frontend solicita renderizar el iframe interactivo en la Pantalla 5
     Then el API Gateway debe emitir un JWT de corta duración (Grafana Auth Proxy) con rol de "Viewer"
     And el iframe debe renderizar correctamente el tablero pasándole variables de entorno `&var-TenantID=T123`
     And el dashboard debe mostrar obligatoriamente un panel de "Tareas Vencidas por SLA" consultando la vista materializada `vw_task_sla_breach`
 
-  Scenario: Aislamiento Estricto de Datos (Multi-Tenancy)
+  Scenario: Aislamiento Estricto de Datos (Multi-Tenancy) (CA-2)
     Given la arquitectura SaaS multi-cliente de la plataforma iBPMS
     When el JWT de Grafana es generado por el Backend para renderizar la Pantalla 5
     Then el token debe inyectar criptográficamente el `Tenant_ID` del usuario activo
     And la Base de Datos o la consulta subyacente de Grafana debe forzar obligatoriamente el filtrado por este Tenant (Ej. Row-Level Security) previniendo fugas de datos operativos hacia clientes vecinos.
 
-  Scenario: Capacidad de Perforación Interactiva (Drill-Down UI)
+  Scenario: Capacidad de Perforación Interactiva (Drill-Down UI) (CA-3)
     Given el Dashboard visual en la Pantalla 5 que muestra una alerta de "15 Tareas Bloqueadas"
     When el gerente hace clic sobre el segmento de la gráfica circular
     Then el sistema debe interceptar el evento de anclaje de Grafana
     And redireccionar la UI del iBPMS automáticamente a la Bandeja de Trabajo (Pantalla 1) o Hub Ágil (Pantalla 10)
     And pre-filtrar la vista exacta con las 15 tarjetas implicadas para tomar acción inmediata.
 
-  Scenario: Segregación de Roles para Monitoreo Activo (RBAC)
+  Scenario: Segregación de Roles para Monitoreo Activo (RBAC) (CA-4)
     Given un empleado raso con rol "Analista" o "Ejecutor" intentando acceder a URL de reportes macro
     When navegue hacia la Pantalla 5 (BAM)
     Then el Frontend interceptará la ruta y mostrará un mensaje de "Acceso Denegado"
     And el Backend rechazará la generación del Token de Grafana, reservando esta vista exclusivamente para jerarquías directivas (Ej. `Gerente_Operaciones`, `Scrum_Master`).
 
-  Scenario: Frecuencia de Refresco Asíncrona (Protección Transaccional)
+  Scenario: Frecuencia de Refresco Asíncrona (Protección Transaccional) (CA-5)
     Given el inmenso volumen de eventos emitidos en tiempo real por el motor Camunda
     When Grafana ejecute los queries analíticos pesados para renderizar la Pantalla 5
     Then NO atacará directamente la base de datos transaccional caliente (Master DB)
     And leerá de una Base de Datos Analítica o Réplica (Ej. Elasticsearch o DataWarehouse) alimentada por un CronJob/CDC que se actualiza estrictamente cada 10 minutos para proteger la estabilidad del servicio en vivo.
 
-  Scenario: Autoservicio de BI Analítico (Grafana Editor Nativo)
+  Scenario: Autoservicio de BI Analítico (Grafana Editor Nativo) (CA-6)
     Given que los tableros pre-cargados (Vencimientos, Costos, Ciclos) no cubren una métrica atípica solicitada por un cliente
     When el gerente seleccione la opción "BAM Avanzado" en la Pantalla 5
     Then el iBPMS cargará la Interfaz Nivel Editor Nativa de Grafana embebida
     And otorgará permisos formales de "Editor" al usuario, permitiéndole arrastrar bloques, cambiar colores de tortas y personalizar sus propias métricas ad-hoc limitadas a su Tenant_ID.
 
-  Scenario: Aplanamiento de Datos Transaccionales para Analítica Rápida (Data Flattening / CDC)
+  Scenario: Aplanamiento de Datos Transaccionales para Analítica Rápida (Data Flattening / CDC) (CA-7)
     Given que el motor de Dashboards (Grafana) necesita graficar variables de negocio almacenadas en los JSON de Camunda
     When una tarea se completa o una variable es inyectada en el motor
     Then la arquitectura TIENE PROHIBIDO permitir que Grafana haga queries complejos (Full Table Scans) sobre las tablas operativas Blob de Camunda (`ACT_RU_VARIABLE`).
@@ -2124,13 +3030,13 @@ Scenario: Ensamblar PDF usando plantilla del SGDEA y Variables de la Instancia (
     And registra el checksum SHA-256 en `ibpms_audit_log` para inmutabilidad legal
     And el sistema retorna HTTP STATUS 200 OK con un enlace temporal de SharePoint Graph API (Pre-Authenticated Link) expirable en 15 minutos para su visualización.
 
-  Scenario: Tolerancia a Fallos por Variables Ausentes (Missing Keys)
+  Scenario: Tolerancia a Fallos por Variables Ausentes (Missing Keys) (CA-2)
     Given una plantilla `.docx` que incluye la etiqueta `<<segundo_apellido>>` obligatoria en su sintaxis
     When el motor documental (FOP) sea invocado y la variable no exista o sea NULA en el payload enviado por Camunda
     Then el motor NO debe abortar la transacción (Evitando HTTP 400 y rotura de flujos de negocio)
     And debe sobrellevar la carencia inyectando automáticamente la frase "N/A" o un espacio en blanco seguro en el documento final.
 
-  Scenario: Expansión Dinámica de Tablas y Vectores (Bucles)
+  Scenario: Expansión Dinámica de Tablas y Vectores (Bucles) (CA-3)
     Given que el JSON de entrada contiene un Array de objetos (Ej: Lista de 5 productos comprados)
     When la plantilla documental contenga sentencias iterativas de tipo `#foreach` en filas de una tabla de Word
     Then el motor SGDEA clonará la fila tantas veces como elementos existan en el array inyectando sus respectivas propiedades, posibilitando documentos hiper-dinámicos de longitud variable en la V1.
@@ -2142,14 +3048,14 @@ Scenario: Gobernanza de Persistencia (SharePoint Vault vs Vuelo Efímero) (CA-4)
     And Si es `EPHEMERAL`: El documento se renderiza, se entrega el link de 15min y se destruye físicamente de RAM/Disco del servidor.
     And Si es `PERSISTENT`: El PDF se traslada e inyecta inmutablemente en Microsoft SharePoint (Única Bóveda Oficial SGDEA), amarrado a la sub-carpeta del UID del Expediente (Acorde a la US-035), garantizando registro perenne exigible por Ley, evadiendo cobros duplicados en S3/Azure.
 
-  Scenario: Acorazado Forense y Firma Digital del Documento Físico
+  Scenario: Acorazado Forense y Firma Digital del Documento Físico (CA-5)
     Given la configuración de una plantilla de Alto Riesgo Legal
     When el motor finaliza el ensamblado del PDF final
     Then NO se limitará a guardar el Hash SHA-256 en la base de datos (ibpms_audit_log)
     And incrustará en paralelo un "Certificado Criptográfico PKI" estructural dentro del mismo archivo PDF
     And y estampará visualmente en los márgenes de las páginas un Código QR (o Sello de Agua Legal) verificable externamente, asegurando la no-repulsa de autoría.
 
-  Scenario: Versión Retroactiva Activa en Auditorías Históricas
+  Scenario: Versión Retroactiva Activa en Auditorías Históricas (CA-6)
     Given un Cliente instanciado hace 2 años cuando regía el "Contrato Laboral V1"
     When un auditor re-visite en Pantalla 12 dicho caso y el sistema requiera re-descargar o consultar su contrato
     Then el motor SGDEA buscará y ensamblará el PDF contra la plantilla V1 almacenada en el repositorio histórico (Time-Travel Rendering)
@@ -2265,7 +3171,7 @@ Feature: SharePoint Vault and Single Source of Truth
 	
 	
 ```
-**Trazabilidad UX:** Wireframes Pantallas 12, 16 y 6.
+**Trazabilidad UX:** Wireframes Pantallas 12,16 y 6.
 
 ---
 
@@ -2283,7 +3189,7 @@ Feature: SharePoint Vault and Single Source of Truth
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Advanced Relational Inbox Filtering
-  Scenario: Filtrado compuesto determinista (Cliente + Proyecto)
+  Scenario: Filtrado compuesto determinista (Cliente + Proyecto)  (CA-1)
     Given el usuario autenticado está navegando la Bandeja Avanzada (Pantalla 1B)
     And hay 500 ítems en la bandeja, de los cuales 5 pertenecen al Cliente "Global Tech" y el Proyecto "Patente-XZ"
     When el usuario selecciona "Global Tech" en el selector 'Filtro Cliente'
@@ -2292,35 +3198,35 @@ Feature: Advanced Relational Inbox Filtering
     And el Frontend debe renderizar exclusivamente los 5 ítems exactos en menos de 1 segundo (Paginado)
     And la UI debe mostrar un estado "Empty State" si la combinación no retorna resultados
 
-  Scenario: Filtrado por Label Booleano generado por IA (Acuses)
+  Scenario: Filtrado por Label Booleano generado por IA (Acuses) (CA-2)
     Given la bandeja contiene ítems marcados por la IA con el boolean flag 'is_acknowledgment_sent: true'
     When el usuario marca el checkbox "Actividad: Acuse Enviado"
     Then el sistema debe ocultar todos los correos donde 'is_acknowledgment_sent: false' o nulo
 
-  Scenario: Triage por Sentimiento y Urgencia (Predicción IA)
+  Scenario: Triage por Sentimiento y Urgencia (Predicción IA) (CA-3)
     Given la metadata enriquecida del correo proveniente de la US-013 (Ej: `sentiment: URGENCE_HIGH`)
     When el analista de SAC filtra la bandeja usando el dropdown "Urgencia y Sentimiento"
     Then el sistema filtra reestructurando la grilla para mostrar primero los correos que contengan quejas operativas o riesgos legales altos
     And garantizando un enfoque de First-In/First-Out ajustado por criticidad (Weighted FIFO).
 
-  Scenario: Detección de Archivos y Tipificación Estructural
+  Scenario: Detección de Archivos y Tipificación Estructural (CA-4)
     Given que el correo contiene múltiples archivos adjuntos
     When el analista filtra por el concepto "Contiene: Contratos Firmados"
     Then el filtro de la Pantalla 1B obvia la extensión pura del archivo (.pdf)
     And cruza la búsqueda contra el tag de clasificación documental `doc_type` generado por la IA, retornando solo los correos cuyo contenido semántico coincida.
 
-  Scenario: Monitoreo Activo de Acuerdos de Nivel de Servicio (SLA)
+  Scenario: Monitoreo Activo de Acuerdos de Nivel de Servicio (SLA) (CA-5)
     Given los correos entrantes mapeados contra una política de respuesta máxima de 24 horas (SLA)
     When el analista de SAC aplica el filtro rápido de semáforo "Mostrar: SLA por Vencer (< 2 horas)"
     Then el sistema expone exclusivamente los correos que están a punto de romper el requerimiento legal de tiempo operativo, ocultando correos recientes de ingreso temprano.
 
-  Scenario: Búsqueda Semántica de Texto Completo (Full-Text Search)
+  Scenario: Búsqueda Semántica de Texto Completo (Full-Text Search) (6A-6)
     Given un analista buscando la aguja en el pajar con la palabra "Indemnización"
     When digite dicha palabra en la barra de búsqueda global de la Pantalla 1B
     Then el motor de Backend (Elasticsearch o similar) NO buscará solo en el Asunto
     And indexará la búsqueda contra el cuerpo del correo, y el texto interior de los anexos (OCR) entregando el correo exacto donde reside dicho patrón.
 
-  Scenario: Control de Concurrencia SAC y Bloqueo de Correos
+  Scenario: Control de Concurrencia SAC y Bloqueo de Correos  (CA-7)
     Given un buzón compartido accedido por 5 analistas de SAC simultáneamente
     When el Analista "A" da clic para leer un nuevo "Correo Huérfano"
     Then el sistema inscribe un Soft-Lock en la Base de Datos asociando ese correo al `User_ID` del Analista "A"
@@ -2387,9 +3293,9 @@ Feature: Generación de Borradores de Respuesta Interactivos
 
 ---
 
-### US-013: Identificación automática de cliente y enriquecimiento desde CRM (ONS)
+### US-013: Identificación automática de cliente y enriquecimiento desde posible conexion con CRM (ONS)
 **Como** gestor de un buzón corporativo
-**Quiero** que el asistente identifique el cliente por el dominio del remitente y consulte el CRM ONS
+**Quiero** que el asistente identifique el cliente por el dominio del remitente y/o consulte el CRM ONS
 **Para** contextualizar la respuesta y adaptar el tono.
 
 **Criterios de Aceptación (Gherkin):**
@@ -3347,37 +4253,6 @@ Feature: Consolidación Transversal de Requerimientos y Workflows
 
 ---
 
-### US-050: Identidad y Onboarding de Clientes Externos (CIAM / Zero-Public-Signup)
-**Como** Sistema Core (iBPMS)
-**Quiero** enviar una invitación segura (Magic Link) al correo de un cliente externo
-**Para** que pueda crear su contraseña y acceder al Portal B2C, garantizando que su usuario quede amarrado criptográficamente a su CRM_ID sin abrir formularios de registro público.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Secure Customer Onboarding and Identity (CIAM)
-
-  Scenario: Prohibición de Registro Público (Zero-Public-Signup)
-    Given la pantalla de Login del Portal Externo (portal.ibpms.com)
-    Then la interfaz NO DEBE tener ningún enlace, botón o formulario que diga "Registrarse" o "Crear Cuenta".
-    And la creación de identidades ciudadanas (External Users) solo puede nacer desde el interior del iBPMS (Vía API o evento interno), blindando el sistema contra bots y registros masivos fraudulentos.
-
-  Scenario: Disparo de Invitación (Magic Link) por Evento o Botón
-    Given un Cliente nuevo registrado en el CRM con el ID `CUST-999` y correo `juan@gmail.com`
-    When el proceso BPMN llega a una tarea de "Invitar a Portal" O un analista oprime el botón [Invitar] en la Vista 360 del cliente
-    Then el sistema generará un Token criptográfico de uso único (Magic Link).
-    And el Motor de Notificaciones (US-049) enviará un correo a `juan@gmail.com` con el botón "Crear mi Contraseña de Acceso".
-    And el Magic Link tendrá una caducidad (TTL) rígida paramétrica (Ej: 24 horas).
-
-  Scenario: Aterrizaje y Vinculación Criptográfica (Account Claiming)
-    Given el cliente Juan que hace clic en el Magic Link dentro de las 24 horas permitidas
-    When aterriza en la página de "Definir Contraseña" del Portal B2C
-    Then el sistema verifica que el Token no haya sido usado antes y bloquea la edición del campo de correo electrónico (Read-Only).
-    And Juan digita su contraseña (cumpliendo políticas de seguridad corporativa).
-    And el sistema inscribe la cuenta en el Identity Provider (Azure AD B2C o Cognito / Local).
-    And OBLIGATORIAMENTE graba el valor `CUST-999` como un atributo inmutable (Custom Claim) dentro del Token del usuario (El "Bolsillo Secreto" de la cuenta).
-    And garantizando que a partir de ese momento, cada vez que Juan inicie sesión, su Token JWT contenga su identificador, lo cual activará el escudo Anti-BOLA de la US-026 impidiendo que vea datos de otros clientes.
-```
-
 ## ÉPICA 11: Extensiones Cognitivas AI-Native - Cognitive BPMN (US-032)
 
 ### US-032: Orquestación de IA y Generative Task (RAG)
@@ -3722,6 +4597,19 @@ Feature: API Connector Configuration and Resiliency
 **Quiero** delegar el rate-limiting y el encolamiento asíncrono a un Message Broker de grado Enterprise (RabbitMQ)
 **Para** garantizar resiliencia extrema frente a picos transaccionales, evitando desbordamientos de memoria (OOM) y caídas de subsistemas.
 
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-034:**
+> - **US-004 (Webhook):** Los webhooks entrantes que exceden la capacidad del motor se encolan en RabbitMQ (CA-6 de US-004: Resiliencia Periférica con Colas).
+> - **US-000 (Resiliencia Integrada):** El health check del clúster RabbitMQ (CA-10) se integra como componente del circuito de salud compuesto de la plataforma.
+> - **US-049 (Notificaciones):** Todas las notificaciones por email se despachan como mensajes P2 vía las colas de RabbitMQ.
+> - **US-033 (Hub de Integraciones):** Los conectores a sistemas externos (MS Graph, ERP) producen mensajes en las colas de integración.
+> - **US-017 (IA Copilot):** Las generaciones de IA (RAG, DMN) son productores Nivel P3 (Batch) en el sistema de prioridades.
+> - **US-036 (RBAC):** El acceso al Dashboard DLQ (CA-8) está restringido al rol `ADMIN_IT` administrado en la Pantalla 14.
+> - **US-038 (JWT/Seguridad):** El botón de Purga de DLQ requiere autenticación Sudo-Mode definida en la infraestructura de seguridad de US-038.
+> - **US-039 (Formulario Genérico):** Los Error Events disparados por los Botones de Pánico se enrutan a través del broker como mensajes P1.
+
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Central Message Queue Orchestration
@@ -3741,6 +4629,87 @@ Feature: Central Message Queue Orchestration
     When ingresan simultáneamente eventos VIP (Ej: Notificaciones de aprobaciones financieras críticas) y eventos de latencia tolerable (Ej: Generación RAG de resúmenes)
     Then RabbitMQ clasifica el tráfico en "Priority Queues" pre-configuradas basándose en metadatos del evento
     And asegura que los procesos de Nivel 1 (Críticos) sean desencolados y procesados antes que las tareas de Nivel 3 (Batch), garantizando el SLA de negocio intacto a pesar del cuello de botella global.
+
+
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us034_functional_analysis.md
+  # Tickets: REM-034-01 a REM-034-07
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Catálogo Oficial de Exchanges, Queues y Routing Keys (CA-4)
+    # Origen: REM-034-01 — GAP-1 del us034_functional_analysis.md
+    Given la necesidad de prevenir la proliferación desordenada de colas y exchanges en el clúster RabbitMQ
+    Then el Arquitecto de Software TIENE OBLIGACIÓN de mantener un catálogo centralizado de la topología de mensajería en el repositorio bajo `docs/architecture/rabbitmq_topology.md` que incluya:
+    And 1. Exchange principal: `ibpms.exchange.topic` (tipo Topic) como punto de entrada único para todos los productores.
+    And 2. Colas nombradas con convención: `ibpms.{dominio}.{accion}` (Ej: `ibpms.notifications.email`, `ibpms.ai.generation`, `ibpms.integrations.webhook`, `ibpms.bpmn.events`).
+    And 3. Routing Keys con convención: `{dominio}.{prioridad}.{accion}` (Ej: `notifications.p1.send`, `ai.p3.generate`, `integrations.p2.sync`).
+    And 4. Dead Letter Exchange: `ibpms.exchange.dlx` que enruta a la cola `ibpms.dlq.global`.
+    And TIENE PROHIBIDO que cualquier developer cree exchanges o colas ad-hoc sin registrarlas previamente en el catálogo y obtener aprobación del Arquitecto.
+
+  Scenario: [REMEDIACIÓN] Idempotencia Obligatoria en Workers Consumidores (CA-5)
+    # Origen: REM-034-02 — GAP-2 del us034_functional_analysis.md
+    Given el riesgo de procesamiento duplicado por reintentos manuales desde la DLQ (CA-2) o reintentos automáticos
+    Then todo Worker consumidor del iBPMS TIENE OBLIGACIÓN de implementar un mecanismo de idempotencia basado en `message_id`:
+    And cada mensaje producido incluirá un header `x-idempotency-key` (UUID v4 generado por el productor).
+    And el Worker consultará una tabla `ibpms_processed_messages` (columnas: `idempotency_key`, `processed_at`, `queue_name`, TTL: 72 horas) antes de procesar.
+    And si el `idempotency_key` ya existe en la tabla, el Worker hará ACK silencioso del mensaje sin reprocesarlo.
+    And la tabla `ibpms_processed_messages` se purgará automáticamente vía un scheduled job cada 24 horas, eliminando registros con más de 72 horas de antigüedad.
+    And como alternativa de mayor rendimiento, el Arquitecto podrá reemplazar la tabla SQL por un SET de Redis con TTL de 72 horas (`SISMEMBER ibpms:idempotency {key}`).
+
+  Scenario: [REMEDIACIÓN] Taxonomía Formal de Niveles de Prioridad (CA-6)
+    # Origen: REM-034-03 — GAP-3 del us034_functional_analysis.md
+    Given la necesidad de jerarquizar el tráfico en Priority Queues (CA-3) con criterios claros
+    Then el sistema implementará exactamente 3 niveles de prioridad con la siguiente taxonomía fija:
+    And Nivel P1 (Crítico / SLA < 5min): Notificaciones de aprobaciones financieras, Kill-Session (US-036 CA-14), Error Events de Camunda, alertas de seguridad. Prefetch count: 1 (procesamiento atómico garantizado).
+    And Nivel P2 (Normal / SLA < 30min): Envío de emails transaccionales (US-049), sincronización EntraID (US-038), webhooks de integración (US-004). Prefetch count: 10.
+    And Nivel P3 (Batch / SLA < 4h): Generación RAG de resúmenes (US-017), reportes masivos (US-036 CA-16), limpieza de borradores (US-003 CA-92). Prefetch count: 50.
+    And la prioridad se asignará como header del mensaje (`x-priority: P1|P2|P3`) por el productor en el momento de publicar. Si no se especifica, el default es P2.
+    And TIENE PROHIBIDO que un productor asigne P1 a eventos que no cumplan con la definición anterior sin aprobación del Arquitecto.
+
+  Scenario: [REMEDIACIÓN] Estrategia de Retry Automático con Backoff Exponencial (CA-7)
+    # Origen: REM-034-04 — GAP-4 del us034_functional_analysis.md
+    Given la ausencia de reintentos automáticos antes de enviar un mensaje a la DLQ
+    Then el clúster RabbitMQ implementará una política de retry automático obligatoria antes de derivar a la Dead Letter Queue:
+    And Intento 1: Inmediato (0ms delay).
+    And Intento 2: Delay de 5 segundos (via `x-message-ttl` en cola de retry).
+    And Intento 3: Delay de 30 segundos.
+    And Intento 4 (final): Delay de 2 minutos. Si falla, el mensaje se enruta al DLX (`ibpms.exchange.dlx`) con header `x-delivery-count: 4`.
+    And el Worker diferenciará errores transitorios (IOException, TimeoutException → reintentar) de errores permanentes (ValidationException, IllegalArgumentException → DLQ directo sin reintentos).
+    And todo mensaje que llegue a la DLQ llevará los headers: `x-original-queue`, `x-first-death-reason`, `x-delivery-count`, `x-last-error-message` para diagnóstico.
+
+  Scenario: [REMEDIACIÓN] Implementación del Dashboard DLQ como Pantalla Custom del iBPMS (CA-8)
+    # Origen: REM-034-05 — GAP-5 del us034_functional_analysis.md
+    Given la necesidad de un Dashboard visual de DLQ accesible para el Administrador IT (CA-2)
+    Then el Dashboard será una pantalla custom del iBPMS (componente Vue) accesible desde la navegación principal, NO un enlace externo al Management UI de RabbitMQ.
+    And la pantalla consumirá un endpoint Backend `GET /api/v1/admin/queues/dlq/summary` que retornará: total de mensajes, agrupación por cola de origen (`x-original-queue`), y timestamp del mensaje más antiguo.
+    And el botón `[Reintentar Mensajes]` invocará `POST /api/v1/admin/queues/dlq/retry` y requerirá un modal de confirmación con la advertencia: "Se reintentarán N mensajes. Los Workers deben ser idempotentes (CA-5)."
+    And el botón `[Purgar Cola]` invocará `DELETE /api/v1/admin/queues/dlq/purge` y requerirá autenticación Sudo-Mode (US-038) con justificación obligatoria de 20+ caracteres.
+    And toda acción sobre la DLQ quedará registrada en `ibpms_audit_log` con: `user_id`, `action` (RETRY|PURGE), `message_count`, `timestamp_utc`.
+    And el acceso a esta pantalla estará restringido al rol `ADMIN_IT` configurado en la Pantalla 14 (US-036).
+
+  Scenario: [REMEDIACIÓN] Política de TTL y Purgado Automático de la Dead Letter Queue (CA-9)
+    # Origen: REM-034-06 — GAP-6 del us034_functional_analysis.md
+    Given el riesgo de crecimiento indefinido de la DLQ en producción
+    Then la cola `ibpms.dlq.global` implementará un TTL de 30 días naturales (`x-message-ttl: 2592000000ms`) para todos los mensajes.
+    And los mensajes que excedan 30 días serán purgados automáticamente por RabbitMQ sin intervención humana.
+    And ANTES de purgar, un scheduled job (`DlqArchiveJob`, ejecutado diariamente) copiará los mensajes próximos a expirar (TTL < 48h) a una tabla de archivo `ibpms_dlq_archive` (columnas: `message_id`, `original_queue`, `headers_json`, `body_summary` truncado a 1KB, `archived_at`) para auditoría forense.
+    And la tabla `ibpms_dlq_archive` tendrá su propia política de retención: 180 días, purgada por el `LocalStorageGarbageCollector` de infraestructura.
+
+  Scenario: [REMEDIACIÓN] Health Check del Clúster RabbitMQ Integrado al Circuito de Resiliencia (CA-10)
+    # Origen: REM-034-07 — GAP-7 del us034_functional_analysis.md
+    Given la criticidad del clúster RabbitMQ como infraestructura troncal de la plataforma
+    Then el Backend expondrá un endpoint de salud `GET /actuator/health/rabbitmq` que verifique la conectividad al clúster cada 15 segundos.
+    And si el health check falla 3 veces consecutivas (45 segundos sin respuesta), el sistema activará un Circuit Breaker (estado OPEN) en todos los productores de mensajes.
+    And durante el Circuit Breaker OPEN, los productores almacenarán temporalmente los mensajes en un buffer local en memoria (máximo 1000 mensajes, FIFO) por un máximo de 5 minutos.
+    And si RabbitMQ regresa dentro de los 5 minutos (Circuit Breaker HALF-OPEN → CLOSED), el buffer se drenará automáticamente reenviando los mensajes encolados.
+    And si RabbitMQ NO regresa en 5 minutos, los mensajes del buffer se persistirán en una tabla de emergencia `ibpms_queue_fallback` y se disparará una alerta crítica al SysAdmin: "RabbitMQ Offline — N mensajes en fallback SQL de emergencia."
+    And este endpoint de salud se integrará con la US-000 (Resiliencia Integrada) como parte del health check compuesto `/actuator/health`.
+
+
 ```
 **Trazabilidad UX:** Operación Backend e Infraestructura (Dead Letter Queue IT Dashboard).
 
@@ -3848,6 +4817,80 @@ Feature: Identity Governance & RBAC Architecture
     Given la ley del "Quien hace no aprueba"
     Then para el MVP V1, el motor iBPMS NO frena estructuralmente a un humano si el BPMN le enruta "Crear Cheque" y "Aprobar Cheque" al mismo tiempo
     And asume este riesgo operativo difiriendo los motores complejos de "Conflict of Interest Avoidance" a V2, confiando en que el diseño del proceso en Pantalla 6 asigne humanos distintos para el flujo iterativo.
+
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us036_functional_analysis.md
+  # Tickets: REM-036-01 a REM-036-07
+  # Propósito: Cerrar GAPs de implementación detectados por el workflow
+  #            /analisisEntendimientoUs.md tras finalizar las 17 iteraciones
+  #            de la Auditoría Integral del Backlog.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Modelo de Datos Relacional para la Matriz RBAC (CA-19)
+    # Origen: REM-036-01 — GAP-1 del us036_functional_analysis.md
+    Given la necesidad de persistir roles, permisos, asignaciones y herencia piramidal definidos en los CA-1 a CA-18
+    Then el Backend TIENE OBLIGACIÓN de implementar el siguiente esquema relacional mínimo en PostgreSQL:
+    And Tabla `ibpms_roles` con columnas: `id`, `name`, `description`, `parent_role_id` (FK auto-referencia para herencia CA-6), `is_template` (boolean para Rol Plantilla CA-3), `source` (ENUM: ENTRA_ID | LOCAL), `created_at`, `updated_at`.
+    And Tabla `ibpms_permissions` con columnas: `id`, `resource` (Ej: PROCESS, FORM, ADMIN_PANEL), `action` (ENUM: INITIATE, EXECUTE, READ, WRITE, DELETE), `process_definition_id` (FK nullable para permisos por proceso CA-4).
+    And Tabla pivote `ibpms_role_permissions` para la relación N:M entre roles y permisos.
+    And Tabla pivote `ibpms_user_roles` con columnas: `user_id`, `role_id`, `assigned_by`, `assigned_at`, soportando Mass Assignment (CA-3) mediante INSERT batch.
+    And la herencia piramidal (CA-6) se resolverá mediante una query recursiva CTE (`WITH RECURSIVE`) que recorra `parent_role_id` para computar los permisos efectivos de un rol en tiempo de consulta.
+    And el esquema se gestionará mediante scripts Liquibase versionados en `db/changelog/`.
+
+  Scenario: [REMEDIACIÓN] Estrategia de Row-Level Security para Privacidad de Colas (CA-20)
+    # Origen: REM-036-02 — GAP-2 del us036_functional_analysis.md
+    Given la exigencia de que cada operario visualice SOLO sus folios asignados en el Workdesk (CA-5)
+    Then la implementación V1 utilizará un interceptor centralizado a nivel de aplicación (Spring AOP `@Aspect` o un `Specification` base de JPA) que inyecte automáticamente el filtro `WHERE assignee_id = :currentUserId` en TODAS las queries del Workdesk.
+    And TIENE PROHIBIDO implementar el filtro como un WHERE manual en cada Repository method, ya que un endpoint olvidado filtraría datos ajenos.
+    And si en el futuro se migra a RLS nativo de PostgreSQL (`CREATE POLICY`), el interceptor de aplicación se desactivará sin afectar la lógica de negocio.
+    And para las Colas Compartidas Públicas, el interceptor reconocerá un flag `is_shared_queue = true` en la definición del proceso y omitirá el filtro de usuario, permitiendo visibilidad colectiva.
+
+  Scenario: [REMEDIACIÓN] Infraestructura de Blacklist JWT para Kill-Session (CA-21)
+    # Origen: REM-036-03 — GAP-3 del us036_functional_analysis.md
+    Given la funcionalidad de Kill-Session (CA-14) que exige destruir sesiones activas instantáneamente
+    Then la implementación del botón Kill-Session en Pantalla 14 invocará un endpoint `POST /api/v1/admin/users/{userId}/revoke-session`.
+    And este endpoint insertará el `jti` (JWT ID) del token activo del usuario en una blacklist de Redis con TTL igual al tiempo restante de vida del token (max 15 minutos según política de US-038 CA-01).
+    And el Spring Security Filter consultará esta blacklist en cada request entrante en menos de 5ms.
+    And esta implementación TIENE DEPENDENCIA DIRECTA con la US-038 CA-01 (Fail-Open Policy), la cual define el comportamiento cuando Redis no está disponible.
+    And el equipo que desarrolle la US-036 TIENE OBLIGACIÓN de coordinarse con el equipo de la US-038 para compartir el mismo servicio de blacklist Redis, prohibiendo crear implementaciones paralelas.
+
+  Scenario: [REMEDIACIÓN] Política de Seguridad para API Keys de Service Accounts (CA-22)
+    # Origen: REM-036-04 — GAP-4 del us036_functional_analysis.md
+    Given la funcionalidad de creación de Service Accounts M2M (CA-10) que genera API Keys sin política de ciclo de vida
+    Then toda API Key generada en Pantalla 14 TIENE OBLIGACIÓN de incluir una fecha de expiración configurable (por defecto: 365 días, máximo: 730 días).
+    And la API Key se almacenará hasheada con SHA-256 en la tabla `ibpms_service_accounts`; el valor en texto plano solo se mostrará UNA VEZ al momento de la creación (como GitHub Personal Access Tokens).
+    And la Pantalla 14 mostrará un indicador visual de API Keys próximas a expirar (menos de 30 días) con alerta amarilla, y expiradas con alerta roja.
+    And el Super Admin podrá regenerar (rotar) una API Key existente, deprecando la anterior inmediatamente e invalidando todas las sesiones activas del Service Account.
+    And todo uso de API Key se registrará en la tabla `ibpms_audit_log` con: `service_account_id`, `endpoint_invocado`, `timestamp_utc`, `ip_origen`.
+
+  Scenario: [REMEDIACIÓN] Comportamiento de Delegación sobre Tareas In-Flight (CA-23)
+    # Origen: REM-036-05 — GAP-5 del us036_functional_analysis.md
+    Given un Gerente que activa una delegación temporal a un suplente (CA-9)
+    When la delegación entra en vigencia según el rango de fechas configurado
+    Then el suplente heredará TANTO el rol delegado COMO las tareas ya asignadas al delegante en la bandeja del Workdesk (tareas in-flight).
+    And las tareas nuevas que lleguen durante el periodo de delegación también se enrutarán al suplente.
+    And al expirar la delegación, las tareas NO completadas por el suplente regresarán automáticamente a la bandeja del delegante original con un sello visual: "[Retornada post-delegación]".
+    And toda la operación de transferencia y retorno de tareas quedará registrada en `ibpms_audit_log` para trazabilidad CISO.
+
+  Scenario: [REMEDIACIÓN] Alcance Explícito del Reporte ISO 27001 en V1 (CA-24)
+    # Origen: REM-036-06 — GAP-6 del us036_functional_analysis.md
+    Given la funcionalidad de generación de reportes de Identity Governance (CA-16)
+    Then para V1 el reporte se generará exclusivamente bajo demanda (on-demand) mediante un botón en Pantalla 14, sin generación programada automática (cron).
+    And el reporte incluirá la fecha y hora UTC de generación, el usuario que lo solicitó, y un hash SHA-256 del contenido para certificar integridad.
+    And cada reporte generado se persistirá como registro histórico en la tabla `ibpms_audit_reports` para comparación entre periodos (Ej: "Estado de permisos en Enero vs Febrero").
+    And la generación programada (cron + envío por email al CISO) queda explícitamente DIFERIDA a V2.
+
+  Scenario: [REMEDIACIÓN] Directriz de Coordinación US-036 vs US-038 (CA-25)
+    # Origen: REM-036-07 — GAP-7 del us036_functional_analysis.md
+    Given el solapamiento funcional entre US-036 (UI y reglas de negocio RBAC) y US-038 (infraestructura JWT, Redis, Sync EntraID)
+    Then la directriz oficial de separación de responsabilidades es:
+    And US-036 es responsable de: la Pantalla 14 (UI completa), la lógica de negocio de roles/permisos, los CRUDs de usuario/rol/delegación, y la generación de reportes.
+    And US-038 es responsable de: la infraestructura de autenticación (JWT lifecycle, Redis blacklist, Fail-Open Policy), la sincronización periódica con EntraID, y el Sudo-Mode para operaciones destructivas.
+    And el servicio de blacklist Redis es un componente COMPARTIDO: ambas historias lo consumen pero su implementación canónica reside en US-038.
+    And TIENE PROHIBIDO que la US-036 implemente su propia lógica de invalidación de tokens separada de la US-038.
+    And ambas historias DEBEN ser asignadas al mismo Arquitecto de Software para garantizar coherencia en el diseño de seguridad.
+
 ```
 **Trazabilidad UX:** Wireframes Pantallas 14, 6, 7 y Workdesk (5).
 
@@ -3871,9 +4914,9 @@ Feature: Multitenant RBAC, EntraID Sync & Identity Governance (Microservices Rea
   Scenario: Tolerancia a Fallos del Kill-Switch (Redis Fail-Open Policy) (CA-01)
     Given la arquitectura de validación de Tokens (JWT) que consulta una Lista Negra en memoria (Redis) en <5ms para bloquear usuarios despedidos
     When el clúster de Redis sufre una caída temporal (Timeout) o partición de red (SPOF)
-    Then la arquitectura TIENE PROHIBIDO bloquear el acceso masivo a la plataforma asfixiando a la empresa (Fail-Closed).
-    And el Gateway DEBE adoptar una postura de resiliencia "Fail-Open Auditado" (Alta Disponibilidad).
-    And validará matemáticamente la firma criptográfica y la caducidad del Token JWT, y si es válido, PERMITIRÁ el paso.
+    Then la arquitectura exigirá un TTL máximo de 15 minutos al Token JWT base, y aplicará protección "Fail-Open Degradado".
+    And el Gateway validará matemáticamente el Token JWT y PERMITIRÁ peticiones de sólo lectura (GET) para mantener viva la vista 360.
+    And FORZARÁ "Fail-Closed" en toda mutación destructiva de estado (POST/PUT/DELETE) exigiendo escalamiento "Sudo-Mode", taponando vulnerabilidades de Separación de Funciones (SoD) si un usuario revocado aprovecha sus 15 minutos en la sombra.
     And paralelamente disparará una alerta técnica crítica al SysAdmin indicando: "Caché Offline - Operando en Degradación Segura sin Lista Negra".
 
   Scenario: Filtro de la Mochila Pesada (Anti-Token Bloat) (CA-02)
@@ -4056,7 +5099,7 @@ Feature: Business SLA Matrix Configuration and Multi-Zone Time-Warp Prevention
     Given que el administrador altera el rango de horas hábiles (Ej: de 17:00 a 16:30) y activa el Toggle de "Aplicar Retroactivamente a Tareas Vivas"
     When el PMO oprime `[Aplicar Matriz]`
     Then el Backend REST rechaza estructuralmente ejecutar el recálculo masivo de manera síncrona/inmediata en esa misma petición HTTP para prevenir Timeouts y Deadlocks de BD.
-    And el sistema encolará un Job Asíncrono de tipo Batch por detrás, el cual iterará la tabla `ACT_RU_JOB` actualizando los `DUEDATE_` en lotes paginados.
+    And el sistema encolará un Job Asíncrono de tipo Batch por detrás que consumirá exclusivamente gRPC o la API asíncrona de Zeebe 8, modificando los Timer Boundary Events de forma nativa sin interactuar jamás con bases relacionales SQL, preservando la arquitectura RocksDB Stateless.
     And el UI mostrará un Modal informativo: "Recálculo masivo en progreso. Los SLAs vivos se actualizarán gradualmente en los próximos minutos".
 
   Scenario: Husos Horarios Estrictos en Geografías Híbridas (Timezones) (CA-4)
@@ -4288,6 +5331,7 @@ Feature: Governing Agile Entropy and Storage Economics
     Then la tabla relacional `ibpms_kanban_tasks` DEBE contar con una columna especializada de tipo `JSONB` (o su equivalente estructurado).
     And el Backend serializará y guardará el Payload completo validado por Zod directamente dentro de esta columna de la entidad.
     And garantizando que la tarjeta Ágil soporte la captura de datos estructurados sin ensuciar la base de datos con tablas hijas.
+    And OBLIGATORIAMENTE este ID KanBan convivirá con el ecosistema de Zeebe en una capa de Proyección CQRS Central (Ej: ibpms_global_worklist_view), inyectando una "Vista 360" en ES/RDBMS que aborte el divorcio entre tareas CMMN y Tareas Ágiles.
 ```
 **Trazabilidad UX:** Nueva pestaña en Pantalla 15.A (Restricciones Arquitectónicas / PMO).
 
@@ -4374,23 +5418,14 @@ Feature: Central Outbound Notification Engine
     Then el Notification Engine aplicará una regla paramétrica de "Agrupación Temporal" (Throttling Window, Ej: 15 minutos) por destinatario.
     And en lugar de bombardear al Jefe con 150 correos individuales colapsando su bandeja, el motor consolidará los eventos en un único correo tipo "Digest": `[Alerta Masiva: 150 SLAs han sido vulnerados en los últimos 15 min. Vaya al Dashboard]`, protegiendo la reputación del dominio (Anti-Spam).
 
-    Scenario: Extracción e Inyección de Anexos Físicos (Outbound Attachments)
-    Given el Motor de Notificaciones procesando un correo en la cola de salida
-    When la tarea de Camunda incluya en su Payload un Array de identificadores de archivos (Ej: `attachments: ["UUID-A", "UUID-B"]`)
-    Then el Worker de Notificaciones hará una pausa antes de enviar el correo a Office 365 / SMTP.
-    And se conectará a la Bóveda SGDEA (SharePoint - US-035) utilizando esos UUIDs.
-    And descargará los binarios (Ej: El PDF del Contrato) temporalmente a la memoria RAM.
-    And empaquetará los binarios como archivos adjuntos reales (Attachments) en la trama del correo electrónico.
-    And destruirá los binarios de la RAM inmediatamente después de recibir el "200 OK" del servidor de correos para no saturar el servidor.
-
-  Scenario: Extracción e Inyección de Anexos Físicos (Outbound Attachments)
+  Scenario: Extracción e Inyección de Anexos Físicos con Streaming Activo (Outbound Zero-RAM)
     Given el Motor de Notificaciones procesando un correo en la cola de salida (RabbitMQ)
     When la tarea transaccional de Camunda incluya un Array de identificadores documentales (Ej: `attachments: ["UUID-A"]`)
     Then el Worker de Notificaciones hará una pausa antes de conectarse al servidor SMTP.
     And se autenticará contra la Bóveda SGDEA (SharePoint - US-035) utilizando esos UUIDs.
-    And descargará los binarios (Ej: El PDF del Contrato) temporalmente a la memoria RAM del Worker.
-    And empaquetará los binarios transmutándolos a formato adjunto (`Attachments`) en la trama del correo electrónico saliente.
-    And DESTRUIRÁ los binarios de la RAM inmediatamente después de recibir el "200 OK" de despacho para mantener el servidor web ligero.
+    And TIENE PROHIBIDO descargar binarios corporativos hacia la memoria RAM (Heap) del Servidor para evitar Out Of Memory (OOM).
+    And realizará Piping HTTP bidireccional (Streams directos) hacia MS Graph API, o en su defecto recaerá en staging OS de memoria Flash (`/tmp`).
+    And conectará en caliente el pipeline al formato adjunto (`Attachments`) en la trama del correo electrónico saliente, manteniendo el NodeWorker inmutable.
 
 Scenario: Infraestructura de Notificaciones In-App (WebSocket Campana)
     Given la necesidad de alertar a un usuario internamente (Ej: SLA a punto de vencer, Tarjeta IA asignada)
@@ -4527,91 +5562,230 @@ Scenario: Renderizado Progresivo Estricto y FOUC Controlado (LCP Optimization)
 
 ---
 
-## ÉPICA 10: Persistencia Hexagonal y Patrón CQRS
+## ÉPICA 16: Persistencia Hexagonal y Patrón CQRS
 Regula la inmutabilidad de los datos recolectados, previniendo la contaminación del Motor BPMN y aislando las lecturas masivas de las escrituras transaccionales.
 
-### US-029: Ejecución y Persistencia Inmutable de Formularios (CQRS & Event Sourcing)
+### US-017: Ejecución y Persistencia Inmutable de Formularios (CQRS & Event Sourcing)
 **Como** Analista / Motor Backend Hexagonal
 **Quiero** diligenciar la información de mi tarea, almacenando las subidas temporales (Drafts) y transacciones finales de forma inmutable
 **Para** garantizar cero bloqueos concurrentes, trazabilidad absoluta y finalizar exitosamente mi actividad sin contaminar el motor de Camunda (separando lectura de escritura).
 
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-017:**
+> - **US-029 (Pantalla 2 / Frontend UX):** ⚠️ HISTORIA GEMELA. Comparten el endpoint `POST /api/v1/workbox/tasks/{id}/complete`. La US-029 gobierna la experiencia del Frontend (UI, validación Zod en navegador, Upload-First UX, LocalStorage, feedback visual, Wizard). La US-017 gobierna la persistencia del Backend (CQRS, Event Sourcing, protección de Camunda, Rollback Saga, validación Backend). La reconciliación se formaliza en el CA-19 de la US-029 (Política de Propiedad Exclusiva).
+> - **US-003 (Catálogo de Formularios / Pantalla 7):** 🔴 BLOQUEANTE. Los esquemas Zod que el Backend valida mediante `json-schema-validator` (transpilados en CI/CD) se generan en la US-003. Sin esquemas, la validación Backend es imposible.
+> - **US-002 (Reclamar Tarea / Pantalla 1):** 🔴 BLOQUEANTE. Sin reclamo, la tarea no tiene `assignee` y los CAs de Implicit Locking de la US-029 (CA-07/CA-18) rechazarán todo intento de completar con HTTP 403. El CA-04 de esta US-017 define una excepción controlada para tareas de grupo.
+> - **US-035 (SharePoint/SGDEA):** ⚠️ FUERTE. La bóveda documental temporal que almacena archivos pre-submit (Upload-First) es un servicio externo que la US-017 debe vincular transaccionalmente a los eventos CQRS.
+> - **US-036 (RBAC / Pantalla 14):** ⚠️ FUERTE. La validación Backend Zero-Trust necesita la matriz de roles para resolver el strip silencioso de campos no autorizados (delegado desde US-029 CA-15 Zod Isomórfico).
+> - **US-034 (RabbitMQ):** 🟡 DESEABLE. El Worker asíncrono de proyección del CA-01 puede utilizar colas de mensajería para procesar eventos de forma resiliente. Si RabbitMQ no está disponible, el Worker operará in-process como fallback.
+> - **US-009 (BAM Dashboard / Pantalla 5):** 🟡 CONSUMIDOR. Los dashboards de analítica consumen las tablas proyectadas por el Worker del CA-01. Sin la proyección, los dashboards no tienen datos actualizados.
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Hexagonal CQRS Persistence and Task Completion
+Feature: Hexagonal CQRS Persistence, Zero-Trust Validation and Task Completion
 
   # ==============================================================================
-  # A. INGESTA, CONTEXTO UI Y ARCHIVOS
+  # A. ARQUITECTURA CQRS, EVENT SOURCING Y PROTECCIÓN DEL MOTOR
   # ==============================================================================
-  Scenario: Inyección Megalítica de Contexto (Patrón BFF) (CA-1)
-    Given la entrada física a la vista de la tarea (Pantalla 2)
-    When el Frontend inicializa el componente Vue
-    Then despachará UNA (1) única petición consolidada GET `/api/v1/workbox/tasks/{id}/form-context`
-    And el Backend obrará como BFF inyectando en un Mega-DTO la triada: El Schema Zod, el Layout, y las Variables de Solo Lectura extraídas de Camunda.
-
-  Scenario: Hibridación de Datos Históricos vs Nuevos Contratos (Lazy Patching) (CA-2)
-    Given el BFF inyectando `prefillData` V1 hacia un Formulario Zod nuevo V2
-    When existan campos obligatorios nuevos en V2 que no venían en la data V1 (`null`)
-    Then el esquema Zod los evaluará como inválidos iluminando el input en ROJO
-    And bloqueará físicamente el botón [Enviar] obligando al analista a auditar el dato (Guillotina en Escritura).
-
-  Scenario: Desacoplamiento de Carga Binaria (Upload-First Pattern) (CA-3)
-    Given un formulario Zod `<InputFile>`
-    When el usuario final adjunta un PDF pesado
-    Then el Frontend ejecutará una carga asíncrona temprana (Pre-Submit) a la Bóveda obteniendo un Identificador (`UUID`).
-    And al hacer [Enviar], el POST enviará EXCLUSIVAMENTE el JSON referenciando el ID (`{"archivo": "UUID-123"}`), prohibiendo arquitectónicamente enviar payloads Multipart contra el motor.
-
-  # ==============================================================================
-  # B. RESILIENCIA OFFLINE Y DRAFTS
-  # ==============================================================================
-  Scenario: Trazabilidad Volátil, Draft Sync y Garbage Collection (CA-4)
-    Given la digitación continua de un analista en un iForm masivo
-    Then el Frontend guardará el borrador (Draft) asíncronamente en el `LocalStorage` a cada tecla.
-    And disparará peticiones silenciosas de *Merge Commit* al Backend ÚNICAMENTE con un Debounce ininterrumpido de 10 segundos, salvando un Snapshot volátil sin validación Zod.
-    And cuando el POST a `/complete` finalice (HTTP 200), el Frontend ejecutará una purga síncrona de esa llave LocalStorage.
-    And un Cron Backend eliminará cualquier borrador con > 72 horas.
-
-  # ==============================================================================
-  # C. VALIDACIÓN SEVERA, MICRO-TOKENS Y LOCKING
-  # ==============================================================================
-  Scenario: Choque Gnoseológico Zod (Validación Bilateral Severa) (CA-5)
-    Given esquemas Zod en el Frontend (US-003)
-    When un atacante intenta bypassear la UI enviando un POST de formulario adulterado por API REST
-    Then el API Gateway/BFF interceptará el Payload ejecutando OBLIGATORIAMENTE el mismo `schema.json` Zod generado en diseño.
-    And rechazará con `HTTP 400 Bad Request` cualquier asimetría de tipos (Isomorfismo).
-
-  Scenario: Seguridad Asimétrica y Micro-Tokens Criptográficos (Zero-Trust) (CA-6)
-    Given una validación asíncrona (Ej: Validar NIT) gatillada `OnBlur`
-    When el Backend consulta la API externa exitosamente, retorna un "Micro-Token JWT" efímero.
-    Then al momento del Submit final (`/complete`), el Frontend adjuntará este Micro-Token.
-    And el Backend omitirá re-consultar la API pesada externa, limitándose a verificar matemáticamente la firma del Micro-Token autorizando el COMMIT en milisegundos.
-
-  Scenario: Integridad de Asignación Concurrente (Implicit Locking) (CA-7)
-    Given que una tarea "TK-400" está explícitamente asignada a `maria.perez`
-    When `pedro.gomez` intercepta vulnerablemente la URL e intenta someter un POST a `/complete`
-    Then el Core iBPMS cruza el `{delegatedUserId}` contra la identidad central del JWT.
-    And aborta la colisión inyectando un lapidario `HTTP 403 Forbidden` o `409 Conflict`.
-
-  # ==============================================================================
-  # D. PERSISTENCIA CQRS (El Envío Final)
-  # ==============================================================================
-  Scenario: Separación de Responsabilidades y Event Sourcing (CQRS) (CA-8)
+  Scenario: Separación de Responsabilidades y Event Sourcing (CQRS) (CA-01)
     Given un JSON perfectamente validado resultante del "iForm Maestro"
     When el analista pulsa [Enviar Final] realizando POST a `/api/v1/workbox/tasks/{id}/complete`
-    Then el Backend separará el flujo: inyectará el Comando (`Form_Submitted_Event`) en la tabla inmutable de Eventos garantizando historial.
-    And un Worker asíncrono proyectará (`Projection`) esos datos a la tabla relacional aplanada para lecturas hiperveloces.
-    
-  Scenario: Exclusión Topológica Estratégica de Camunda Engine (CA-9)
-    Given la inmutabilidad validada en Postgres Oauth
-    Then el Backend TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo de negocio hacia la tabla `ACT_RU_VARIABLE` del Engine de Camunda.
-    And a Camunda solo se le enviará un DTO minificado (Ej: `{ "aprobado": true, "form_storage_id": "ABC-123" }`) con variables mínimas lógicas para Gateways.
+    Then el Backend separará el flujo arquitectónico: inyectará el Comando (`Form_Submitted_Event`) en la tabla inmutable de Eventos garantizando el historial forense exacto
+    And un Worker asíncrono proyectará (`Projection`) esos datos a la tabla relacional aplanada para habilitar lecturas hiperveloces desde los Dashboards y Analítica.
 
-  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas) (CA-10)
-    Given el Payload aplanado y guardado en CQRS
-    When el orquestador (Camunda 7) sufre un Crash HTTP en su API REST interna y no avanza la tarea
-    Then el Backend iBPMS abortará inmediatamente la transacción base (Rollback Compensatorio de CQRS PostgreSQL).
-    And devolverá un error HTTP 500 Crudo ("Motor No Disponible") a la UI en Pantalla 2.
-    And se prohíbe generar falsos positivos HTTP 202 ("Guardado para después"), unificando el error visual vs Motor.
+  Scenario: Exclusión Topológica Estratégica de Camunda Engine (CA-02)
+    Given el cierre exitoso de la transacción CQRS (Guardado del Evento Inmutable validado en Postgres)
+    When el Backend notifica a Camunda 7 para avanzar el Token BPMN (`taskService.complete()`)
+    Then el Backend TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo de negocio (Textos largos, JSONs complejos) hacia la tabla `ACT_RU_VARIABLE` del Engine
+    And a Camunda solo se le enviará un DTO minificado (Ej: `{ "aprobado": true, "form_storage_id": "ABC-123" }`) con las variables lógicas estrictamente requeridas por los Gateways de enrutamiento.
+
+  Scenario: Consistencia Transaccional Cruda (ACID Fallback over Sagas) (CA-03)
+    Given el Payload aplanado y guardado exitosamente en CQRS
+    When el motor orquestador (Camunda 7) sufre un Crash o Timeout HTTP 5xx en su API REST interna al intentar avanzar la tarea
+    Then el Backend iBPMS abortará inmediatamente la transacción base ejecutando un Rollback Compensatorio (Patrón Saga inverso) sobre la persistencia en PostgreSQL
+    And devolverá un error HTTP 500 Crudo ("Motor No Disponible") a la UI en Pantalla 2
+    And se prohíbe a nivel arquitectónico generar falsos positivos HTTP 202 ("Guardado para después") para eludir el colapso del proceso judicial de fondo, unificando la verdad visual con el estado real del Motor.
+
+  # ==============================================================================
+  # B. REASIGNACIONES, COLISIONES GROUP-LEVEL Y TRAZABILIDAD
+  # ==============================================================================
+  Scenario: Auto-Claim Controlado para Tareas de Grupo No Asignadas (CA-04)
+    # NOTA: Este CA resuelve el GAP-4 del us017_functional_analysis.md.
+    # El Auto-Claim aplica EXCLUSIVAMENTE a tareas de grupo sin assignee.
+    # Para tareas con assignee, rige el Implicit Locking de US-029 CA-07/CA-18.
+    Given que una tarea "TK-500" está disponible en un grupo de trabajo (Ej: "Abogados") pero NO tiene un `assignee` directo asignado en Camunda
+    When un usuario legitimado bajo la taxonomía RBAC del grupo abre la tarea e intenta presionar [Enviar] (`/complete`)
+    Then el Backend evaluará la siguiente lógica ANTES de procesar el POST:
+    And 1. **Si la tarea YA tiene `assignee`:** Se aplica el Implicit Locking normal (US-029 CA-07/CA-18). Solo el `assignee` registrado puede completar. Cualquier otro usuario recibe HTTP 403.
+    And 2. **Si la tarea NO tiene `assignee` (tarea de grupo):** El Backend ejecutará transaccionalmente un `taskService.claim(taskId, userId)` asignando silenciosamente la tarea al operario ANTES de empujar el `FORM_SUBMITTED_EVENT` al Event Store.
+    And 3. **El Auto-Claim genera un evento CQRS propio:** Se grabará un evento `TASK_AUTO_CLAIMED` en la tabla de eventos (CA-06) con el `userId`, `taskId` y `timestamp`, inmediatamente seguido del `FORM_SUBMITTED_EVENT`. La trazabilidad será completa.
+    And 4. **Protección contra Race Condition:** Si dos operarios intentan completar la misma tarea de grupo simultáneamente, el Backend usará un lock optimista en Camunda (`OptimisticLockingException`). El PRIMERO en llegar gana el Claim + Submit. El SEGUNDO recibirá HTTP 409 Conflict con mensaje: "Esta tarea ya fue reclamada y completada por otro operario."
+    And 5. **Consistencia con US-002:** El Auto-Claim de este CA NO reemplaza el flujo de Reclamar Tarea de la US-002. El operario PUEDE reclamar explícitamente desde el Tab "Disponibles" (US-002 CA-01) para reservar la tarea ANTES de abrirla. El Auto-Claim solo se activa si el operario abrió la tarea SIN reclamarla previamente y decide enviarla directamente.
+
+  Scenario: Trazabilidad Activa de Rechazos Históricos en BFF (CA-05)
+    Given una tarea devuelta a un especialista por un analista de control de calidad desde una fase superior (Rechazo Ope/BPMN)
+    When el especialista abre el iFormulario para enmendar su trabajo documentado
+    Then el Frontend (a través del llamado unificado `/form-context`) no solo recibirá el `prefillData` histórico
+    And también recibirá inyectado OBLIGATORIAMENTE un array (Ej: `rejectionLogs`) con el dictamen exacto, responsable y fecha del rechazo
+    And mostrando esta causal de devolución como un Alert inyectado en el Canvas central del formulario (Solo Lectura), previniendo que el usuario repita una reparación a ciegas guiado solo por la telepatía.
+
+
+  # ==============================================================================
+  # C. REMEDIACIONES POST-AUDITORÍA (Sprint Remediation Brief 2026-04-05)
+  # Origen: docs/requirements/us017_functional_analysis.md
+  # Tickets: REM-017-01 a REM-017-03
+  # Propósito: Cerrar GAPs 1, 3 y 5 detectados por el workflow
+  #            /analisisEntendimientoUs.md antes del inicio de desarrollo.
+  # Estado: US-017 NO ha sido desarrollada aún.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Definición del Esquema del Event Store (CA-06)
+    # Origen: REM-017-01 — GAP-5 del us017_functional_analysis.md
+    # Resuelve: El CA-01 menciona "tabla inmutable de Eventos" pero no define nombre, columnas ni tipos de evento.
+    Given la necesidad de almacenar eventos inmutables con trazabilidad forense completa (CA-01)
+    Then el Event Store se implementará en la tabla `form_event_store` de PostgreSQL con el siguiente esquema mínimo obligatorio:
+    And 1. **`event_id`** (UUID, PK): Identificador único e inmutable del evento.
+    And 2. **`event_type`** (VARCHAR, NOT NULL): Tipo del evento. Valores admitidos en V1: `FORM_SUBMITTED`, `FORM_DRAFT_SAVED`, `TASK_AUTO_CLAIMED`, `FORM_REJECTED`.
+    And 3. **`task_id`** (VARCHAR, NOT NULL, INDEX): Identificador de la tarea de Camunda asociada.
+    And 4. **`process_instance_id`** (VARCHAR, NOT NULL, INDEX): Identificador de la instancia del proceso BPMN.
+    And 5. **`user_id`** (VARCHAR, NOT NULL): Identificador del operario que generó el evento (extraído del SecurityContext JWT).
+    And 6. **`payload_json`** (JSONB, NOT NULL): Contenido íntegro del formulario enviado, almacenado como JSON binario para consultas analíticas.
+    And 7. **`schema_version`** (VARCHAR, NOT NULL): Versión del esquema Zod/JSON Schema con la que se validó el payload (Ej: `V3`). Consistente con el `schema_version` del Mega-DTO BFF de la US-029.
+    And 8. **`created_at`** (TIMESTAMP WITH TIME ZONE, NOT NULL, DEFAULT NOW()): Momento exacto de grabación del evento. Usado para ordenamiento cronológico.
+    And 9. **`idempotency_key`** (UUID, UNIQUE): Llave de idempotencia recibida del Frontend (US-029 CA-12) para prevenir grabación duplicada de eventos.
+    And la tabla TIENE ESTRICTAMENTE PROHIBIDO ejecutar operaciones `UPDATE` o `DELETE`. Los registros son inmutables (append-only).
+    And el Worker de proyección asíncrona (CA-01) será un componente in-process (mismo JVM) que consumirá los eventos mediante un polling periódico (cada 500ms) o mediante un `@TransactionalEventListener` de Spring. Si US-034 (RabbitMQ) está disponible, el Worker podrá migrar a consumo por cola como mejora de rendimiento.
+    And las tablas de proyección analítica (Query Side) se definirán como vistas materializadas o tablas aplanadas según las necesidades específicas de US-009 (BAM Dashboard).
+
+  Scenario: [REMEDIACIÓN] Endpoint de Lectura y Limpieza de Borradores del Servidor (CA-07)
+    # Origen: REM-017-02 — GAP-3 del us017_functional_analysis.md
+    # Resuelve: El autoguardado al servidor (US-029 CA-24 PUT /draft) no tiene contrapartida GET para recuperar borradores.
+    Given la necesidad de que el Frontend pueda recuperar borradores almacenados en el servidor (US-029 CA-26 fallback)
+    Then la US-017, como fuente autoritativa de la persistencia, expondrá los siguientes endpoints de borradores:
+    And 1. **`GET /api/v1/workbox/tasks/{taskId}/draft`** — Recupera el borrador más reciente del servidor para la tarea indicada. Response: HTTP 200 con `{ currentStep?: number, partialData: {...}, schemaVersion: string, updatedAt: timestamp }`. Si no existe borrador, retorna HTTP 404.
+    And 2. **`PUT /api/v1/workbox/tasks/{taskId}/draft`** — Guarda o actualiza el borrador (ya definido en US-029 CA-24). Body: `{ currentStep?: number, partialData: {...}, schemaVersion: string }`. Response: HTTP 204 No Content.
+    And 3. **`DELETE /api/v1/workbox/tasks/{taskId}/draft`** — Elimina el borrador tras submit exitoso. Se invoca automáticamente como parte del flujo de `FORM_SUBMITTED_EVENT`. Response: HTTP 204.
+    And **Seguridad:** Los tres endpoints aplican Implicit Locking — solo el `assignee` actual (o un usuario con Auto-Claim válido del CA-04) puede operar sobre borradores de su tarea. Intentos con otro userId retornan HTTP 403.
+    And **Almacenamiento:** Los borradores se persisten en la tabla `task_drafts` (consistente con US-029 CA-24) con TTL de 72 horas. Un Cron Job diario eliminará borradores huérfanos con `updated_at` > 72h.
+    And **Diferencia con Event Store:** Los borradores NO son eventos inmutables. Son snapshots efímeros de trabajo en progreso que se sobrescriben en cada Merge Commit y se destruyen tras el submit. NO aparecen en la tabla `form_event_store` del CA-06.
+
+  Scenario: [REMEDIACIÓN] Referencia Cruzada con US-029 y Política de Propiedad (CA-08)
+    # Origen: REM-017-03 — GAP-1 del us017_functional_analysis.md
+    # Resuelve: Formaliza la reconciliación entre US-017 (Backend) y US-029 (Frontend) tras la eliminación de los 11 CAs duplicados.
+    Given la eliminación de los CAs duplicados (antiguos CA-01 a CA-11 originales) que se solapaban con la US-029
+    Then se establece la siguiente DIRECTIVA DE RECONCILIACIÓN entre las historias gemelas:
+    And 1. **US-017 es la FUENTE AUTORITATIVA** para: persistencia CQRS/Event Sourcing (CA-01), exclusión topológica de Camunda (CA-02), Rollback Saga (CA-03), Auto-Claim transaccional (CA-04), trazabilidad de rechazos (CA-05), esquema del Event Store (CA-06), y endpoints de borradores del servidor (CA-07).
+    And 2. **US-029 es la FUENTE AUTORITATIVA** para: experiencia de Frontend (Pantalla 2 UI), validación Zod en navegador, feedback visual (spinner/overlay/confirmación), autoguardado en LocalStorage, cifrado PII, Upload-First UX, Wizard, idempotencia en Frontend, pestañas duplicadas, campos condicionales, y campos de solo lectura.
+    And 3. **Aspectos compartidos delegados:** Cuando un CA de la US-017 necesite describir un comportamiento de Frontend (Ej: "el Frontend muestra un error"), REFERENCIARÁ el CA correspondiente de la US-029 (Ej: "consistente con US-029 CA-20") sin redefinirlo. Aplica recíprocamente desde la US-029 hacia la US-017 según el CA-19 de la US-029.
+    And 4. **Endpoint compartido:** `POST /api/v1/workbox/tasks/{id}/complete` es implementado UNA SOLA VEZ en el Backend. La US-017 define QUÉ hace el servidor al recibirlo. La US-029 define QUÉ envía el Frontend y QUÉ muestra antes/durante/después.
+    And 5. **Merge Commit Rule:** Si un desarrollador necesita modificar un CA que toca AMBAS historias, debe generar un PR que referencie AMBAS US (Ej: "Implements US-017 CA-01 + US-029 CA-01") para garantizar revisión cruzada.
+
+
+  # ==============================================================================
+  # D. REFINAMIENTO FUNCIONAL POST-CUESTIONARIO (2026-04-05)
+  # Origen: docs/requirements/us017_refinamiento_funcional.md (45 preguntas)
+  # Tickets: REF-017-01 a REF-017-10
+  # Propósito: Cerrar vacíos funcionales descubiertos durante el refinamiento
+  #            profundo de 45 preguntas estratificadas.
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO] Exclusión de Borradores del Event Store (CA-09)
+    # Origen: REF-017-01 — Pregunta #2 del refinamiento funcional
+    # Resuelve: Evitar que el Event Store se sature con eventos triviales de autoguardado.
+    Given la existencia de 4 tipos de eventos definidos en el CA-06 del Event Store
+    Then el tipo de evento `FORM_DRAFT_SAVED` se ELIMINA de la lista de eventos admitidos en el Event Store (`form_event_store`)
+    And los borradores (Drafts) viven EXCLUSIVAMENTE en la tabla `task_drafts` (CA-07), que NO es inmutable y se sobrescribe con cada Merge Commit
+    And los tipos de eventos admitidos en V1 del Event Store quedan reducidos a 3: `FORM_SUBMITTED`, `TASK_AUTO_CLAIMED`, `FORM_REJECTED`
+    And esta separación garantiza que la bóveda de eventos solo contenga "actas notariales" (momentos trascendentes) y no "notas de borrador" (trabajo en progreso).
+
+  Scenario: [REFINAMIENTO] Rollback Compensatorio Inmutable con Retry y Timeout (CA-10)
+    # Origen: REF-017-02 — Preguntas #8, #9, #10 del refinamiento funcional
+    # Resuelve: Define que el Rollback NO borra el evento original sino que genera un evento de compensación, y establece timeout + retry.
+    Given que el CA-03 define un Rollback Compensatorio cuando Camunda falla
+    Then el Rollback TIENE ESTRICTAMENTE PROHIBIDO eliminar físicamente (`DELETE`) el evento `FORM_SUBMITTED` del Event Store (eso violaría la inmutabilidad del CA-06)
+    And en su lugar, el Rollback generará un evento compensatorio `FORM_SUBMIT_ROLLED_BACK` en la misma tabla `form_event_store` con una referencia (`original_event_id`) al evento original anulado
+    And el Worker de proyección del CA-01 DEBERÁ ser consciente de estos eventos compensatorios: al proyectar, si un `FORM_SUBMITTED` tiene un `FORM_SUBMIT_ROLLED_BACK` posterior, el evento original se excluye de la tabla analítica  
+    And **Timeout:** El Backend esperará un máximo de **10 segundos** la respuesta de Camunda antes de considerar que el motor está caído
+    And **Retry:** Antes de ejecutar el Rollback, el Backend reintentará la comunicación con Camunda **3 veces** con esperas crecientes (1s, 2s, 4s = 7 segundos de retry + 10s de timeout final = 17 segundos máximos de espera total en el peor caso)
+    And si los 3 reintentos fallan, ENTONCES se ejecuta el Rollback Compensatorio y se devuelve HTTP 500 al Frontend.
+
+  Scenario: [REFINAMIENTO] Estructura Obligatoria del Registro de Rechazo (CA-11)
+    # Origen: REF-017-03 — Preguntas #14, #15 del refinamiento funcional
+    # Resuelve: Define qué campos contiene el `rejectionLogs` del CA-05 y cómo se presenta el historial.
+    Given la inyección de `rejectionLogs` en el BFF `/form-context` definida en el CA-05
+    Then cada entrada del array `rejectionLogs` contendrá OBLIGATORIAMENTE los siguientes campos:
+    And 1. **`rejectedBy`** (string): Nombre completo del revisor que ejecutó el rechazo (no anonimizado — la trazabilidad prevalece en V1).
+    And 2. **`rejectedAt`** (timestamp ISO 8601): Fecha y hora exacta del rechazo.
+    And 3. **`reason`** (string, max 1000 caracteres): Dictamen textual explicando el motivo del rechazo, escrito por el revisor.
+    And 4. **`stageName`** (string): Nombre de la etapa BPMN donde ocurrió el rechazo (Ej: "Control de Calidad", "Aprobación Legal").
+    And 5. **`taskId`** (string): Identificador de la tarea que fue rechazada.
+    And **Presentación en UI (delegado a US-029):** El rechazo MÁS RECIENTE se muestra como Alert principal en la Pantalla 2. El historial completo (si hay más de 1 rechazo) se muestra como sección plegable debajo del Alert, ordenado del más reciente al más antiguo.
+
+  Scenario: [REFINAMIENTO] Cifrado At-Rest de Datos PII en el Event Store (CA-12)
+    # Origen: REF-017-04 — Pregunta #21 del refinamiento funcional
+    # Resuelve: Los datos personales en la bóveda de eventos deben estar protegidos igual que en el LocalStorage del navegador.
+    Given que la US-029 CA-11 exige cifrado PII en el LocalStorage del navegador
+    And que la columna `payload_json` del Event Store puede contener campos PII (Ej: cédula, teléfono, dirección)
+    Then la base de datos PostgreSQL DEBE tener habilitado cifrado at-rest (Transparent Data Encryption o equivalente en la infraestructura) para proteger los datos almacenados en disco
+    And adicionalmente, los campos marcados como `PII/Sensibles` en el esquema Zod (US-003) se cifrarán a nivel de aplicación (AES-256) ANTES de escribir el `payload_json` al Event Store
+    And la llave de cifrado se gestionará a través del servicio de secretos de la infraestructura (Azure Key Vault / AWS KMS), siendo DIFERENTE de la llave usada en el LocalStorage del CA-11 de US-029
+    And para consultas analíticas que requieran datos PII, el Worker de proyección descifrará los campos específicos al proyectar a las tablas analíticas, que a su vez estarán protegidas por permisos de rol `AUDITOR`/`ADMIN_IT`.
+
+  Scenario: [REFINAMIENTO] Validación de Pertenencia al Grupo en Auto-Claim (CA-13)
+    # Origen: REF-017-05 — Pregunta #28 del refinamiento funcional
+    # Resuelve: El Auto-Claim del CA-04 no verifica explícitamente que el usuario pertenezca al grupo de la tarea.
+    Given que el CA-04 define un Auto-Claim para tareas de grupo sin `assignee`
+    Then ANTES de ejecutar el `taskService.claim()`, el Backend DEBERÁ verificar OBLIGATORIAMENTE que el `userId` extraído del JWT sea miembro activo del `candidateGroup` configurado para esa tarea en Camunda
+    And esta verificación se realizará consultando `taskService.createTaskQuery().taskCandidateUser(userId)` o equivalente
+    And si el usuario NO pertenece al grupo, el Auto-Claim se ABORTA con HTTP 403 Forbidden y mensaje: "No tiene permisos para reclamar tareas de este grupo de trabajo"
+    And esta validación es complementaria al Implicit Locking de US-029 CA-07/CA-18, y NO lo reemplaza.
+
+  Scenario: [REFINAMIENTO] Rate-Limiting en Endpoints de Borradores (CA-14)
+    # Origen: REF-017-06 — Pregunta #29 del refinamiento funcional
+    # Resuelve: Protección contra saturación del servidor por exceso de guardados automáticos.
+    Given que el endpoint `PUT /draft` puede recibir peticiones frecuentes por el Debounce de 10s de US-029 CA-24
+    Then los endpoints de borradores (`PUT`, `GET`, `DELETE` del CA-07) tendrán un Rate-Limit de **6 peticiones por minuto por tarea** (consistente con el Debounce de 10 segundos)
+    And las peticiones que excedan este límite recibirán HTTP 429 Too Many Requests con header `Retry-After: 10`
+    And el Frontend (US-029) deberá atrapar este HTTP 429 silenciosamente (sin mostrar error al operario) y reintentar en el próximo ciclo de Debounce.
+
+  Scenario: [REFINAMIENTO] Referencia de Evento Visible para el Operario (CA-15)
+    # Origen: REF-017-07 — Pregunta #34 del refinamiento funcional
+    # Resuelve: El operario necesita un "número de comprobante" para poder citar a soporte ante cualquier incidencia.
+    Given el envío exitoso de un formulario (CA-01 `FORM_SUBMITTED`)
+    Then la respuesta HTTP 200 del endpoint `POST /complete` incluirá en el body un campo `eventReference` con un código legible de máximo 12 caracteres (Ej: `EVT-A3F8K9`)
+    And este código será una representación corta y legible del `event_id` UUID del evento grabado en el Event Store
+    And el Frontend (US-029 CA-21) mostrará esta referencia en la pantalla de confirmación: "Tarea completada exitosamente. Referencia: EVT-A3F8K9"
+    And el operario podrá citar esta referencia a Soporte Técnico para rastrear su envío específico en el Event Store.
+
+  Scenario: [REFINAMIENTO] Eliminación de Borrador como Parte del Flujo de Submit (CA-16)
+    # Origen: REF-017-08 — Pregunta #39 del refinamiento funcional
+    # Resuelve: Evita borradores fantasma eliminando el draft DURANTE el submit, no después.
+    Given que el endpoint `POST /complete` finaliza exitosamente (FORM_SUBMITTED + Camunda avanzado)
+    Then como ÚLTIMO paso del flujo transaccional (antes de retornar HTTP 200), el Backend ejecutará automáticamente la eliminación del borrador (`DELETE /draft`) asociado a esa `taskId` en la tabla `task_drafts`
+    And esta eliminación se ejecuta dentro de la MISMA transacción del `FORM_SUBMITTED` — si la eliminación del draft falla, NO se aborta el submit (el submit tiene prioridad)
+    And el Frontend (US-029) ejecutará la purga de LocalStorage DESPUÉS de recibir el HTTP 200, pero el servidor ya habrá limpiado su parte independientemente.
+
+  Scenario: [REFINAMIENTO] SLA de Latencia Máxima para el Endpoint /complete (CA-17)
+    # Origen: REF-017-09 — Pregunta #41 del refinamiento funcional
+    # Resuelve: Define el tiempo máximo aceptable que el operario espera tras presionar [Enviar].
+    Given que el operario ve el spinner de espera (US-029 CA-20) al presionar [Enviar]
+    Then el endpoint `POST /api/v1/workbox/tasks/{id}/complete` DEBERÁ completar su ciclo completo (validación Backend + grabación Event Store + notificación a Camunda + response) en un máximo de **5 segundos** en condiciones normales de operación
+    And en el peor caso (con los 3 reintentos del CA-10 por falla transitoria de Camunda), el tiempo máximo extendido será de **17 segundos** antes de devolver HTTP 500
+    And si el Backend detecta que el procesamiento superará los 5 segundos SIN error de Camunda (Ej: lentitud de PostgreSQL), registrará un log de alerta para monitoreo proactivo
+    And NO se emitirán respuestas HTTP 202 ("aceptado para después") — el resultado siempre será síncrono: HTTP 200 (éxito) o HTTP 5xx (error).
+
+  Scenario: [REFINAMIENTO] Política de Archivado Anual del Event Store (CA-18)
+    # Origen: REF-017-10 — Pregunta #44 del refinamiento funcional
+    # Resuelve: Previene degradación del rendimiento por acumulación masiva de eventos a lo largo de los años.
+    Given que la tabla `form_event_store` acumulará volúmenes crecientes de datos año tras año
+    Then se implementará una política de archivado automático con las siguientes reglas:
+    And 1. **Eventos con `created_at` mayor a 12 meses** se moverán automáticamente a una tabla de archivo (`form_event_store_archive`) mediante un Job programado mensual.
+    And 2. La tabla de archivo tiene IDÉNTICO esquema que la tabla principal pero reside en un tablespace optimizado para lecturas infrecuentes.
+    And 3. Las tablas de proyección analítica del CA-01 NO se archivan (se mantienen activas para dashboards).
+    And 4. Los eventos archivados siguen siendo INMUTABLES y consultables bajo demanda — el archivado NO es un borrado, es una reubicación.
+    And 5. Los usuarios con rol `AUDITOR` podrán consultar eventos archivados a través de una interfaz administrativa (diferido a V2).
 ```
+
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Tarea) y BFF Invisible.
 
 ---
@@ -4730,149 +5904,3 @@ Scenario: Downgrade Automático por Falta de Fondos Premium (Fallback Cognitivo)
 ```
 ---
 
-
-# 🚀 ROADMAP VERSIÓN 2 (V2) - EN REFINAMIENTO
-*(Todas las funcionalidades, épicas e historias de usuario declaradas a partir de este punto pertenecen estructural y financieramente a la Fase 2 del Proyecto iBPMS. No forman parte del alcance del MVP V1).*
-
----
-
-## ÉPICA V2-01: Gobernanza Activa y Erradicación de Antipatrones (Opinionated OS)
-El iBPMS deja de ser un lienzo ciego y se convierte en un auditor inteligente del diseño de procesos. Interviene físicamente para evitar que las empresas democraticen la ineficiencia (como aprobadores redundantes que no mutan el modelo de datos).
-
-### US-V2-001: Bloqueo Arquitectónico de Burocracia Humana (Hard-Stop)
-**Como** Motor de Gobernanza (Opinionated OS)
-**Quiero** auditar el I/O Binding de las tareas humanas en el Pre-Flight Analyzer (US-005)
-**Para** bloquear físicamente el despliegue de procesos que modelen "sellos de goma" y firmas inútiles.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Forced DMN Adoption over Human Bureaucracy
-  Scenario: Detección Temprana en el Lienzo (Linting en Tiempo Real) (CA-1)
-    Given el Arquitecto diseñando un flujo en la Pantalla 6 (Canvas BPMN)
-    When conecta dos (2) o más `UserTasks` humanas de forma secuencial
-    And selecciona para la segunda tarea un Formulario que NO requiere inyección de campos nuevos (solo lectura de la tarea anterior)
-    Then el motor de UI del Modeler debe dibujar la flecha (SequenceFlow) de conexión en color ROJO intermitente
-    And proyectar un ícono de advertencia (⚠️) sobre la tarea redundante, alertando del antipatrón burocrático de forma inmediata antes del guardado.
-
-  Scenario: Bloqueo Estructural en el Pre-Flight (Hard-Stop) (CA-2)
-    Given las advertencias visuales del Canvas ignoradas
-    When el Arquitecto intenta presionar [🚀 DESPLEGAR]
-    And el motor Pre-Flight cruza el I/O Mapping contra el Esquema Zod confirmando la ausencia de mutación de datos
-    Then el sistema CANCELA el despliegue cambiando el estado a ❌ ERROR CRÍTICO
-    And el Copiloto IA arroja un modal bloqueante: "🛑 Antipatrón burocrático: La aprobación humana que no altera el contrato de datos no genera valor. Reemplace la tarea por una Regla DMN o condense la autoridad en un solo rol."
-
-  Scenario: Inmunidad por Decisión de Enrutamiento (Gateway Decision Validity) (CA-3)
-    Given la configuración de un "Sello de Goma" humano (Ej: Gerente que solo aprueba/rechaza)
-    When el motor detecta que el output (salida) de la tarea de ese Gerente está directamente conectado a un Gateway Exclusivo (XOR) para definir la ruta del proceso
-    Then el analizador interpreta la acción de "Toma de Decisión de Ruta" como una agregación de valor cognitivo ("Gateway Validity")
-    And perdona la configuración, absteniéndose de lanzar el bloqueo rojo, permitiendo el despliegue del proceso.
-
-  Scenario: Excepción por Responsabilidad Legal Expresa (Override Auditado) (CA-4)
-    Given el bloqueo Hard-Stop del Pre-Flight disparado por un antipatrón redundante
-    And que la empresa argumente fuerza mayor corporativa (Ej: ISO 9001 o mandato legal de doble firma)
-    Then el modal bloqueante cuenta con un botón en fuente pequeña `[Ignorar Advertencia y Asumir Riesgo]`
-    When el Arquitecto lo presiona
-    Then el sistema le solicita una justificación de texto obligatoria y su contraseña de confirmación
-    And permite el despliegue liberando el proceso, pero estampando el evento crudo en el Log de Auditoría bajo el tag `[BUREAUCRATIC_DEBT_ASSUMED]` responsabilizándolo permanentemente.
-```
-**Trazabilidad UX:** Pantalla 6 (BPMN Canvas) y Modal de Auditoría Pre-Flight.
-
----
-
-### US-V2-002: El Asesino del "Síndrome de la Sandía" (Friction Tax Calculator)
-**Como** CEO / Director de Transformación (BAM Dashboard)
-**Quiero** que el sistema calcule exactamente cuánto dinero me cuesta la fricción y el tiempo muerto en mis procesos
-**Para** tener argumentos financieros innegables que obliguen a los gerentes medios a automatizar sus feudos.
-
-*Nota Estratégica: El síndrome de la sandía ocurre cuando los KPIs están "verdes" por fuera (el empleado cumplió su SLA de 2 horas para firmar), pero "rojos" por dentro (el caso estuvo estacionado 15 días esperando en la bandeja).*
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Friction Tax Telemetry (Value-Driven BAM)
-  
-  Scenario: Personalización del Dolor Financiero (Multiplicador de Gravedad Nodal) (CA-1)
-    Given el Arquitecto diseñando la configuración financiera del proceso
-    Then el sistema le permite asociar a un Nodo Humano específico (UserTask) un `[Costo_Fijo_Retraso_Hora]`
-    And este valor desvincula la matemática del simple "salario del empleado"
-    And permite traducir el Riesgo de Negocio (Ej: Un SLA incumplido en 'Aprobación VIP' cuesta $500/hora en multas) directamente al lenguaje gerencial del Tablero BAM.
-
-  Scenario: El Reloj Justo (SLA-Aware Taxometer) (CA-2)
-    Given un reclamo que cae a la bandeja de un usuario a las 6:00 PM del Viernes y es atendido a las 8:00 AM del Lunes
-    When el motor analítico calcula el "Tiempo Muerto" (Wait Time) para monetizar la ineficiencia
-    Then el algoritmo cruza obligatoriamente los timestamps contra la Matriz SLA Corporativa (US-043, Días/Horas Hábiles)
-    And el Taxímetro se PAUSA automáticamente durante el fin de semana, cobrando $0 dólares por ese periodo
-    And evitando "Data Contaminada" y desmotivación en los empleados por penalizaciones injustas fuera de su turno legal.
-
-  Scenario: Telemetría de Sangría en Tiempo Real (Live Pain Counter) (CA-3)
-    Given el Director de Transformación observando el BAM Dashboard en medio de la operación diurna
-    Then el tablero expone un módulo gigante en ROJO denominado "Friction Tax: Dinero Quemado AHORA MISMO"
-    And este indicador totaliza y grafica en Tiempo Real (Live) el costo acumulado por segundo de todos los casos que están atascados en las bandejas vivas
-    And generando un sentido de urgencia psicológica para la intervención inmediata, en lugar de ser una simple autopsia post-mortem de fin de mes.
-```
-**Trazabilidad UX:** Dashboard Gerencial BAM (Grafana/Kibana) y Panel de Configuración Nodal.
-
----
-
-### US-V2-003: Penalización por Carga Cognitiva en Formularios (Data Diet)
-**Como** Motor UX del Sistema
-**Quiero** auditar el destino de cada campo de UI creado en el "iForm Maestro"
-**Para** impedir que la empresa capture datos "por si acaso" que nunca usa, saturando al usuario final.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Data Minimization and Form Strictness
-  Scenario: El Peaje Analítico (Opcionalidad Forzada) (CA-1)
-    Given un Diseñador intentando justificar un campo inútil para la operación alegando que su único fin es la exportación a PowerBI (Big Data ciego)
-    When el IDE marca el campo como ROJO (Campo Huérfano)
-    Then el Diseñador debe abrir obligatoriamente las propiedades del campo y seleccionar el [Destino Estratégico: Analítica Pasiva / Reportes]
-    And al seleccionarlo, el esquema Zod subyacente DESHABILITA y BLOQUEA físicamente el switch de "Requerido" u "Obligatorio" para ese input
-    And garantizando que la empresa pueda recolectar datos analíticos, pero prohibiendo estrictamente que se conviertan en una fricción bloqueante para el usuario final.
-
-  Scenario: La Ley del Lector Garantizado (Campos de Texto Libre) (CA-2)
-    Given la inserción por costumbre de un Área de Texto (Text-Area) para "Observaciones" que ninguna regla DMN puede evaluar matemáticamente
-    When el Pre-Flight Analyzer audita el futuro de dicha variable en el proceso
-    Then el motor le otorga el Indulto de Supervivencia ÚNICAMENTE si detecta uno de los tres "Lectores Garantizados" aguas abajo:
-    And 1. Una `UserTask` humana donde un Analista leerá la variable.
-    And 2. Una `GenerativeTask` (RAG / AI) que extraerá sentimiento o resumirá el texto.
-    And 3. Un mapeo explícito de inyección SGDEA (Ej: Imprimir el campo dentro del PDF legal final).
-    And bloqueándolo sin piedad si carece de estos 3 destinos.
-
-  Scenario: Libertad de Bosquejo vs Guillotina en Producción (CA-3)
-    Given el proceso creativo de un Arquitecto de Negocio
-    When se encuentra en la Pantalla 3 (Form Builder) creando los inputs
-    Then el sistema arroja un Soft-Lock visual (Iconos naranjas/rojos ⚠️) advirtiendo la falta de destino, pero permite guardar el trabajo tranquilamente en estado `DRAFT_INVALID` para no destruir la iteración.
-    When días después, el Arquitecto une el formulario al BPMN en la Pantalla 6 e intenta pulsar el botón [🚀 DESPLEGAR A PRODUCCIÓN]
-    Then el sistema arroja el Hard-Stop defintivo y ABORTA el Despliegue con un flag rojo ❌, obligándolo a higienizar (borrar o justificar) los campos huérfanos antes de impactar el Core productivo.
-```
-**Trazabilidad UX:** Pantalla 3 (Diseñador de Formularios - Form Builder).
-
----
-
-### US-V2-004: Auto-Destrucción de Nodos Zombie (The Darwinian Engine)
-**Como** Motor de Gobernanza MLOps (Agente Data Scientist de Turno Nocturno)
-**Quiero** auditar el comportamiento histórico de los operarios humanos
-**Para** sugerir la eliminación de reglas, tareas o firmas que la data empírica demuestre que son inútiles.
-
-**Criterios de Aceptación (Gherkin):**
-```gherkin
-Feature: Continuous AI Pruning (Self-Healing Organization)
-  Scenario: Slider de Tolerancia y Frenos de Emergencia (Parametrización MLOps) (CA-1)
-    Given la configuración del Motor Darwiniano en la Pantalla 15.A (SysAdmin)
-    When el cliente ajusta el `[Umbral_Inercia_Zombie]` y la `[Ventana_Analisis_Meses]`
-    Then el sistema prohíbe estadísticamente bajar el umbral de inercia a menos del 85%
-    And garantizando que si un humano rechaza o altera el 15% o más de los casos, la IA asume que SÍ está utilizando criterio cognitivo, bloqueando la etiqueta de "Zombie" para proteger la evaluación de riesgo real (Ej: Prevención de Fraude).
-
-  Scenario: El Muro de Fuego Legal (Cero Skynet) (CA-2)
-    Given el Agente Data Scientist descubriendo una Tarea Humana 99% inútil en la madrugada
-    When consolida el hallazgo, calcula el ahorro en EBITDA y lo reporta a la Junta (Pantalla 5)
-    Then el sistema TIENE ESTRICTAMENTE PROHIBIDO auto-parchear Producción de forma autónoma
-    And exige que un rol fiduciario (PMO o Director) apruebe manualmente el hallazgo presionando `[Aceptar Hallazgo y Auto-Refactorizar]`, asumiendo la responsabilidad legal de la automatización por principio de Segregación de Funciones.
-
-  Scenario: Cirugía Asistida y Respeto al SDLC (Generación de Drafts) (CA-3)
-    Given la aprobación del Hallazgo Darwiniano por parte de la PMO
-    When el Agente IA recibe la orden de ejecución
-    Then el sistema NO altera la versión V1.0 que opera transaccionalmente en Producción
-    And en background, el Agente abre la Pantalla 6 (Modeler), clona el mapa, extirpa la caja humana, inyecta la regla matemática DMN, sella las conexiones BPMN y lo guarda silenciosamente como `V1.1-DRAFT`
-    And finalmente dispara un Ticket al Workdesk del Arquitecto IT diciendo: "Borrador de Optimización Generado. Revise las conexiones y presione Desplegar".
-```
-**Trazabilidad UX:** Pantalla 5 (AI Copilot / Evolution Findings) y Modeler (Auto-Refactor).

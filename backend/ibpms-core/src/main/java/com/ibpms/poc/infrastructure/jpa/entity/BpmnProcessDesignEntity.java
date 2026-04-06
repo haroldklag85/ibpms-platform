@@ -52,6 +52,9 @@ public class BpmnProcessDesignEntity {
     @Column(name = "xml_draft", columnDefinition = "TEXT")
     private String xmlDraft;
 
+    @Column(name = "generic_form_whitelist", columnDefinition = "jsonb")
+    private String genericFormWhitelist;
+
     @Column(name = "max_nodes", nullable = false)
     private int maxNodes;
 
@@ -139,6 +142,14 @@ public class BpmnProcessDesignEntity {
 
     public void setXmlDraft(String xmlDraft) {
         this.xmlDraft = xmlDraft;
+    }
+
+    public String getGenericFormWhitelist() {
+        return genericFormWhitelist;
+    }
+
+    public void setGenericFormWhitelist(String genericFormWhitelist) {
+        this.genericFormWhitelist = genericFormWhitelist;
     }
 
     public int getMaxNodes() {

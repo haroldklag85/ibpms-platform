@@ -88,6 +88,21 @@ public class BpmnDesignService {
                 entity.getCurrentVersion(), null);
     }
 
+    // --- Configuración de Generic Form (CA-7) ---
+
+    public void updateGenericFormConfig(String processKey, String whitelistJson, String userId) {
+        BpmnProcessDesignEntity entity = designRepository.findByTechnicalId(processKey)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
+                        "Diseño BPMN no encontrado con technical_id: " + processKey));
+        
+        entity.setGenericFormWhitelist(whitelistJson);
+        entity.setUpdatedAt(LocalDateTime.now());
+        designRepository.save(entity);
+
+        audit(entity.getId(), BpmnDesignAuditLogEntity.Action.EDIT, userId,
+                entity.getCurrentVersion(), "{\"event\":\"UPDATE_GENERIC_FORM_WHITELIST\"}");
+    }
+
     // --- Lock Pesimista (CA-7 / CA-34) ---
 
     public void acquireLock(UUID id, String userId) {

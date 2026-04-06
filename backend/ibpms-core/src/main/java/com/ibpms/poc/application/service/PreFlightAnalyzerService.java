@@ -3,7 +3,9 @@ package com.ibpms.poc.application.service;
 import com.ibpms.poc.application.dto.PreFlightResultDTO;
 import com.ibpms.poc.infrastructure.jpa.entity.BpmnDesignAuditLogEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.BpmnProcessDesignEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.IbpmsRoleEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.BpmnDesignAuditLogRepository;
+import com.ibpms.poc.infrastructure.jpa.repository.IbpmsRoleRepository;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -12,6 +14,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.xml.sax.InputSource;
 
 import com.ibpms.poc.application.dto.DeploymentValidationResponse;
@@ -46,11 +50,14 @@ public class PreFlightAnalyzerService {
 
     private final BpmnDesignService designService;
     private final BpmnDesignAuditLogRepository auditRepository;
+    private final IbpmsRoleRepository roleRepository;
 
     public PreFlightAnalyzerService(BpmnDesignService designService,
-            BpmnDesignAuditLogRepository auditRepository) {
+            BpmnDesignAuditLogRepository auditRepository,
+            IbpmsRoleRepository roleRepository) {
         this.designService = designService;
         this.auditRepository = auditRepository;
+        this.roleRepository = roleRepository;
     }
 
     public PreFlightResultDTO analizar(java.util.UUID processDesignId, String userId) {
@@ -119,6 +126,10 @@ public class PreFlightAnalyzerService {
         try {
             BpmnModelInstance modelInstance = Bpmn.readModelFromStream(bpmnStream);
 
+            // CA-6 VIP Pre-allocation mapping
+            List<String> vipRoleNames = roleRepository.findByIsVipRestrictedTrue().stream()
+                .map(IbpmsRoleEntity::getName).map(String::toUpperCase).collect(Collectors.toList());
+
             // CA-2: Control de diagrama roto (Falta End Event)
             Collection<EndEvent> endEvents = modelInstance.getModelElementsByType(EndEvent.class);
             if (endEvents == null || endEvents.isEmpty()) {
@@ -138,11 +149,26 @@ public class PreFlightAnalyzerService {
                 }
             }
 
-            // CA-3.2: UserTask requiere formKey
+            // CA-3.2: UserTask requiere formKey y CA-6 verificación de form genérico en Lane VIP
             Collection<UserTask> userTasks = modelInstance.getModelElementsByType(UserTask.class);
+            Collection<Lane> lanes = modelInstance.getModelElementsByType(Lane.class);
             for (UserTask ut : userTasks) {
-                if (ut.getCamundaFormKey() == null || ut.getCamundaFormKey().isBlank()) {
+                String formKey = ut.getCamundaFormKey();
+                if (formKey == null || formKey.isBlank()) {
                     response.addError(ut.getId(), "UserTask carece de camunda:formKey obligatorio");
+                } else if ("sys_generic_form".equals(formKey)) {
+                    // Verificamos en qué Lane se encuentra
+                    for (Lane lane : lanes) {
+                        if (lane.getFlowNodeRefs().contains(ut)) {
+                            // Construir el rol derivado del lane mapping as per CA-6 (o simplemente verificar si el nombre del lane contiene un rol VIP)
+                            String laneNameUpper = lane.getName() != null ? lane.getName().toUpperCase() : "";
+                            boolean isVipLane = vipRoleNames.stream().anyMatch(vip -> laneNameUpper.contains(vip));
+                            if (isVipLane) {
+                                response.addError(ut.getId(), "Hard-Stop: UserTask (" + ut.getId() + ") utiliza Formulario Genérico (sys_generic_form) pero está categorizado bajo un perfil VIP restringido (" + laneNameUpper + "). Obligatorio diseñar un iForm Maestro.");
+                            }
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -250,7 +276,6 @@ public class PreFlightAnalyzerService {
 
             // CA-6: Autogeneración de Roles RBAC desde Lanes (Si el proceso aprueba o incluso si falla el log lo reporta al final)
             // Se calcula proyectivamente.
-            Collection<Lane> lanes = modelInstance.getModelElementsByType(Lane.class);
             for (Lane lane : lanes) {
                 String laneName = lane.getName() != null ? lane.getName() : lane.getId();
                 String roleName = "BPMN_" + firstProcessId + "_" + laneName.replaceAll("\\s+", "_");

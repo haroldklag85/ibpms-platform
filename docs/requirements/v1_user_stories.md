@@ -3,6 +3,141 @@
 Este documento contiene las Historias de Usuario formales para el MVP Táctico (V1). Todas las historias aquí redactadas se restringen **estrictamente** al bloque "MUST HAVE" y "SHOULD HAVE" definido en `v1_moscow_scope_validation.md`. 
 *Cualquier funcionalidad relacionada con IA Agentic o Módulos Verticales (RAG, Scraping, OCR) queda explícitamente fuera de esta versión.*
 
+> [!NOTE]
+> **Documentos complementarios:**
+> - Gobierno del alcance (MoSCoW + Estado): [`scope_master_v1.md`](./scope_master_v1.md)
+> - Requerimientos funcionales con IDs formales: [`functional_requirements.md`](./functional_requirements.md)
+> - Atributos de calidad (NFR): [`non_functional_requirements.md`](./non_functional_requirements.md)
+
+---
+
+## 📑 Índice de Navegación (53 Historias de Usuario)
+
+### ÉPICA 0 — Gobernanza de Errores y Seguridad Global
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-000 | [Resiliencia Integrada y Enmascaramiento PII Visual](#us-000-resiliencia-integrada-y-enmascaramiento-pii-visual) | ~52 |
+
+### ÉPICA 1 — Orquestación y Workbenches (El Motor Core)
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-001 | [Obtener Tareas Pendientes en el Workdesk](#us-001-obtener-tareas-pendientes-en-el-workdesk) | ~93 |
+| US-002 | [Reclamar una Tarea de Grupo (Claim Task)](#us-002-reclamar-una-tarea-de-grupo-claim-task) | ~408 |
+
+### ÉPICA 2 — IDE Web Pro-Code para Formularios (Vue 3, Zod & Dual-Pattern)
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-003 | [Instanciar y Generar un Formulario "iForm Maestro" vs "Simple"](#us-003-instanciar-y-generar-un-formulario-iform-maestro-vs-simple) | ~645 |
+| US-028 | [Simulador de Contratos Zod en Memoria (In-Browser QA Sandbox)](#us-028-simulador-de-contratos-zod-en-memoria-in-browser-qa-sandbox) | ~1279 |
+| US-029 | [Ejecución y Envío de Formulario (iForm Maestro o Simple)](#us-029-ejecución-y-envío-de-formulario-iform-maestro-o-simple) | ~1368 |
+| US-039 | [Formulario Genérico Base (Pantalla 7.B - El Camaleón Operativo)](#us-039-formulario-genérico-base-pantalla-7b---el-camaleón-operativo) | ~1714 |
+
+### ÉPICA 3 — Inicio y Recepción (Triggers)
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-004 | [Iniciar un Proceso mediante Webhook (Plugin O365 Listener)](#us-004-iniciar-un-proceso-mediante-webhook-plugin-o365-listener) | ~1821 |
+
+### ÉPICA 4 — Diseño de Procesos (BPMN) y Estructuración de Proyectos
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-005 | [Desplegar y Versionar un Modelo de Proceso (BPMN)](#us-005-desplegar-y-versionar-un-modelo-de-proceso-bpmn) | ~1888 |
+| US-006 | [Diseñar la Estructura Base (WBS) de una Plantilla de Proyecto](#us-006-diseñar-la-estructura-base-wbs-de-una-plantilla-de-proyecto) | ~2405 |
+| US-027 | [Copiloto IA (Auditoría ISO 9001 y Generador Consultivo BPMN)](#us-027-copiloto-ia-auditoría-iso-9001-y-generador-consultivo-bpmn) | ~2451 |
+
+### ÉPICA 5 — Modelado de Reglas de Negocio con IA (DMN)
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-007 | [Generador Cognitivo de DMN (NLP a Tablas de Decisión)](#us-007-generador-cognitivo-de-dmn-nlp-a-tablas-de-decisión) | ~2545 |
+
+### ÉPICA 6 — Gestión Ágil y Kanban
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-008 | [Mover Tarjeta en Tablero Kanban (Cambio de Estado)](#us-008-mover-tarjeta-en-tablero-kanban-cambio-de-estado) | ~2810 |
+| US-030 | [Instanciar y Planificar un Proyecto Ágil (Sprints/Kanban)](#us-030-instanciar-y-planificar-un-proyecto-ágil-sprintskanban) | ~2904 |
+| US-031 | [Planificación y Ejecución de Proyecto Tradicional (Gantt)](#us-031-planificación-y-ejecución-de-proyecto-tradicional-gantt) | ~2922 |
+
+### ÉPICA 7 — Dashboards y Reportería Operativa (BAM)
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-009 | [Visualizar Salud del Proceso (BAM Dashboard)](#us-009-visualizar-salud-del-proceso-bam-dashboard) | ~2975 |
+| US-018 | [Métricas de Desempeño y Calidad](#us-018-métricas-de-desempeño-y-calidad) | ~3035 |
+
+### ÉPICA 8 — Generador Documental Jurídico (SGDEA)
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-010 | [Generar y Descargar PDF a partir de datos del caso](#us-010-generar-y-descargar-pdf-a-partir-de-datos-del-caso) | ~3058 |
+| US-035 | [Integración SharePoint y Auditoría Documental](#us-035-integración-sharepoint-y-auditoría-documental) | ~3107 |
+
+### ÉPICA 9 — Inteligencia Artificial, MLOps y Buzones SAC
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-011 | [Filtrado Transversal en Bandeja Avanzada (Docketing)](#us-011-filtrado-transversal-en-bandeja-avanzada-docketing) | ~3225 |
+| US-012 | [Propuesta de Respuesta para Correo Entrante](#us-012-propuesta-de-respuesta-para-correo-entrante-con-revisión-humana) | ~3280 |
+| US-013 | [Identificación Automática de Cliente y Enriquecimiento CRM](#us-013-identificación-automática-de-cliente-y-enriquecimiento-desde-posible-conexion-con-crm-ons) | ~3337 |
+| US-014 | [Sugerencia de Acciones (Tareas) Operativas](#us-014-sugerencia-de-acciones-tareas-operativas) | ~3388 |
+| US-015 | [Feedback y Aprendizaje Supervisado (MLOps Batch)](#us-015-feedback-y-aprendizaje-supervisado-nightly-mlops-batch) | ~3435 |
+| US-016 | [Gestión Multi-Buzón con Políticas por Buzón](#us-016-gestión-multi-buzón-con-políticas-por-buzón) | ~3487 |
+| US-037 | [CRUD de Conexiones de Buzones (Intake API)](#us-037-crud-de-conexiones-de-buzones-intake-api) | ~3544 |
+
+### ÉPICA 10 — Service Delivery CRM, Intelligent Intake y Portal B2C
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-019 | [Conectividad Resiliente y Modo Degradado](#us-019-conectividad-resiliente-y-modo-degradado) | ~3613 |
+| US-020 | [Estrategias de Sincronización Flexible](#us-020-estrategias-de-sincronización-flexible) | ~3671 |
+| US-021 | [Mapeo de Variables y Tolerance (Fricción Cero)](#us-021-mapeo-de-variables-y-tolerance-fricción-cero) | ~3709 |
+| US-022 | [Disparo 'Confirm-to-Create' por Correo (Plan A)](#us-022-disparo-confirm-to-create-por-correo-plan-a) | ~3733 |
+| US-023 | [Correlación Continua del Hilo](#us-023-correlación-continua-del-hilo) | ~3753 |
+| US-024 | [Creación Global Restringida (Plan B)](#us-024-creación-global-restringida-plan-b) | ~3771 |
+| US-025 | [Experiencia de 'Cards' Dinámicas por Rol](#us-025-experiencia-de-cards-dinámicas-por-rol) | ~3875 |
+| US-026 | [Portal del Cliente Externo (Vistas Tácticas y Estratégicas)](#us-026-portal-del-cliente-externo-vistas-tácticas-y-estratégicas) | ~4080 |
+| US-040 | [Embudo Inteligente de Intake (Pre-Triaje y Descarte IA)](#us-040-embudo-inteligente-de-intake-pre-triaje-y-descarte-ia) | ~4131 |
+| US-041 | [Vista 360 del Cliente (Consolidación Global Externa)](#us-041-vista-360-del-cliente-consolidación-global-externa) | ~4268 |
+
+### ÉPICA 11 — Extensiones Cognitivas AI-Native (Cognitive BPMN)
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-032 | [Orquestación de IA y Generative Task (RAG)](#us-032-orquestación-de-ia-y-generative-task-rag) | ~4299 |
+
+### ÉPICA 12 — Hub Integraciones & Central Message Broker
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-033 | [Catálogo de API y Mapeo Visual](#us-033-catálogo-de-api-y-mapeo-visual) | ~4480 |
+| US-034 | [Orquestación a través de RabbitMQ](#us-034-orquestación-a-través-de-rabbitmq) | ~4636 |
+
+### ÉPICA 13 — Seguridad, RBAC e Identidad
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-036 | [Matriz de Control de Acceso Basado en Roles (RBAC)](#us-036-matriz-de-control-de-acceso-basado-en-roles-rbac) | ~4763 |
+| US-038 | [Asignación Multi-Rol y Sincronización EntraID](#us-038-asignación-multi-rol-y-sincronización-entraid) | ~4943 |
+| US-048 | [Módulo Gestor Propio de Identidades (Internal IdP)](#us-048-módulo-gestor-propio-de-identidades-internal-idp) | ~5063 |
+
+### ÉPICA 14 — Configuraciones Globales de Nivel de Servicio (SLA)
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-043 | [Configuración Global de Service Level Agreements (SLA)](#us-043-configuración-global-de-service-level-agreements-sla) | ~5117 |
+
+### ÉPICA 15 — Developer Portal, Settings y Límites del Sistema
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-042 | [DevPortal: Generación Segura de API Keys y Extensibilidad](#us-042-devportal-generación-segura-de-api-keys-y-extensibilidad) | ~5177 |
+| US-044 | [Gobernanza de Inteligencia Artificial (AI Limits & MLOps)](#us-044-gobernanza-de-inteligencia-artificial-ai-limits--mlops) | ~5259 |
+| US-045 | [Restricciones de Dominio Ágil y Documental (System Limits)](#us-045-restricciones-de-dominio-ágil-y-documental-system-limits) | ~5381 |
+| US-046 | [Gobernanza de Rendimiento e Integraciones (Data & Perf)](#us-046-gobernanza-de-rendimiento-e-integraciones-data--perf) | ~5381 |
+| US-049 | [Motor Central de Notificaciones y Plantillas (Outbound Engine)](#us-049-motor-central-de-notificaciones-y-plantillas-outbound-engine) | ~5421 |
+| US-050 | [Identidad y Onboarding de Clientes Externos (CIAM)](#us-050-identidad-y-onboarding-de-clientes-externos-ciam--zero-public-signup) | ~5480 |
+| US-051 | [Matriz de Gobernanza Visual y Enrutamiento RBAC (Frontend)](#us-051-matriz-de-gobernanza-visual-y-enrutamiento-rbac-frontend) | ~5512 |
+
+### ÉPICA 16 — Persistencia Hexagonal y Patrón CQRS
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-017 | [Ejecución y Persistencia Inmutable de Formularios (CQRS & Event Sourcing)](#us-017-ejecución-y-persistencia-inmutable-de-formularios-cqrs--event-sourcing) | ~5609 |
+
+### ÉPICA 17 — Fábrica de Agentes IA y Gobernanza FinOps
+| US | Nombre | Línea |
+|----|--------|-------|
+| US-052 | [Motor de Orquestación Multi-Agente IA](#us-052-motor-de-orquestación-multi-agente-ia-arquitectura-y-gobernanza-de-contextos) | ~5834 |
+| US-053 | [Antigravity Command Center (Fábrica de Agentes IA)](#us-053-antigravity-command-center-fábrica-de-agentes-ia-y-arbitraje-finops-b2b) | ~5866 |
+
 ---
 
 ## ÉPICA TRANSVERSAL 0: Gobernanza de Errores y Seguridad Global
@@ -4715,8 +4850,8 @@ Feature: Central Message Queue Orchestration
 
 ---
 
-## ÉPICA 13: Hub Integraciones & Central Message Broker (US-033, US-034)
-Cubre la brecha arquitectónica de la gestión de conexiones de los orígenes de datos (Correos Electrónicos). Permite al Súper Administrador registrar físicamente las cuentas de "Atención al Cliente" para que el iBPMS pueda succionar los reclamos y aplicar la IA.
+## ÉPICA 13: Seguridad, RBAC e Identidad (US-036, US-038, US-048)
+Cubre la gestión de accesos, roles, sincronización con proveedores de identidad (EntraID) y el módulo de identidades internas. Garantiza la segregación de funciones (SoD) y el cumplimiento ISO 27001.
 
 
 ### US-036: Matriz de Control de Acceso Basado en Roles (RBAC)

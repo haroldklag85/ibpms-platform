@@ -33,3 +33,5 @@ databaseChangeLog:
       file: db/changelog/19-create-rabbitmq-resilience-tables.sql
   - include:
       file: db/changelog/20-us036-rbac-schema.sql
+  - include:
+      file: db/changelog/21-us039-generic-form-schema.sql

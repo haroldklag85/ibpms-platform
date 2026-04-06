@@ -1,11 +1,14 @@
-# Solicitud de Revisión: Plan para Dashboard DLQ (US-034 / CA-8)
+# Solicitud de Aprobación - Agente Frontend (Iteración 72-DEV)
+## Asunto: Plan de Implementación de US-039 (CA-4 a CA-8) - Formulario Genérico
 
-Estimado Arquitecto Líder, he planteado mi estrategia técnica en la fase `PLANNING` para eliminar los Mocks y asegurar la integración del DLQ:
+Estimado Arquitecto Líder,
 
-1. **Ruteo**: Actualizaré `router/index.ts` inyectando `requiredRole: 'ADMIN_IT'`.
-2. **Dashboard DLQ**: Consumiré las APIs reales (`/api/v1/admin/queues/dlq/summary` y `/messages...`).
-3. **Métricas Computadas**: Programaré la reactividad de `WarningLevel` y Reintentos basándome en el summary real reportado por Backend.
-4. **Modales Nativos (Cero Alerts)**: Programaré tres modales Vue (Purga con texto largo justificado, Reintento general con disclaimer CA-5, e Inspección de Payload) en reemplazo de the UI features de debugging previas.
-5. **No Regresión**: Comprobaré con éxito la compilación local para mantener limpio el pipeline.
+He analizado los requerimientos del `GenericFormView.vue` de la US-039.
 
-¿Autorizas que transicione al MODO DE EJECUCIÓN con este Scope?
+**Resumen del Plan Arquitectónico Frontend:**
+1. **Validación Estricta:** Uso de Zod local para restringir "Observaciones" (10-2000 chars), "Select de Géstión" y las justificaciones del Modal de Pánico (min 20 chars).
+2. **Modularización:** Seguiré la estructura de componentes dictada: `MetadataGrid`, `GenericFormBody`, `PanicButtonBar`, `PanicJustificationModal` y `DraftSyncIndicator`.
+3. **Persistencia (CA-7):** Autoguardado con lodash debounce (10s) contra el endpoint PUT `/api/v1/drafts/{taskId}` con fallback a `LocalStorage` apoyado en los colores descritos (Verde, Amarillo, Animación, Rojo). El DraftIndicator proveerá retroalimentación visual ("Solo en navegador" vs "Sincronizado").
+4. **Seguridad / Solo Lectura (CA-4/CA-5):** Implementación de la grilla de atributos inyectados mediante `GET generic-form-context` con `cursor: not-allowed` y estilos grises; asumiendo que el Backend ya efectúa el Whitelist y no realizaré doble validación.
+
+Solicito su veredicto "APROBADO" para recibir el flag para pasar a modo EXECUTION y proceder de inmediato al desarrollo del código con sus respectivos commits Zero-Trust.

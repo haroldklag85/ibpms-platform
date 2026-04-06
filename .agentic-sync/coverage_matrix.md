@@ -126,16 +126,17 @@
 
 | CA | Título (corto) | Back | Front | QA | Sprint | Handoff / Notas |
 |----|----------------|------|-------|----|--------|-----------------|
-| CA-19 | Liquibase Schema Roles/Permisos | ✅ | ❌ | ❌ | S-3 | handoff_backend_DEF02_DEF03 / Backend OK |
-| CA-20 | RLS Interceptor AOP (assignee_id) | ✅ | ❌ | ❌ | S-3 | Backend OK |
-| CA-21 | Kill Session & Dummy JWT Blacklist | ✅ | ❌ | ❌ | S-3 | Backend OK |
-| CA-22 | Service Accounts API Keys (SHA-256) | ✅ | ✅ | ❌ | S-3 | Backend OK / UI Modal Integrado |
-| CA-23 | Lazy Evaluation Tareas Delegadas | ✅ | ❌ | ❌ | S-3 | Backend OK |
-| CA-24 | Reporte Generador ISO 27001 | ✅ | ✅ | ❌ | S-3 | Backend OK / Botón Descarga CSV Integrado |
-| CA-25 | Trazabilidad Inmutable (Audit Trail) | ✅ | ❌ | ❌ | S-3 | Backend completado implícitamente mediante logs sudoers |
+| CA-6 | Roles VIP Visuales (Pantalla 14) | ✅ | ✅ | ❌ | S-3 | Backend OK / Frontend UI Insignias Integrado |
+| CA-19 | Liquibase Schema Roles/Permisos | ✅ | ❌ | ✅ | S-3 | handoff_backend_DEF02_DEF03 / Backend OK |
+| CA-20 | RLS Interceptor AOP (assignee_id) | ✅ | ❌ | ✅ | S-3 | Backend OK |
+| CA-21 | Kill Session & Dummy JWT Blacklist | ✅ | ❌ | ✅ | S-3 | Backend OK |
+| CA-22 | Service Accounts API Keys (SHA-256) | ✅ | ✅ | ✅ | S-3 | Backend OK / UI Modal Integrado |
+| CA-23 | Lazy Evaluation Tareas Delegadas | ✅ | ❌ | ✅ | S-3 | Backend OK |
+| CA-24 | Reporte Generador ISO 27001 | ✅ | ✅ | ✅ | S-3 | Backend OK / Botón Descarga CSV Integrado |
+| CA-25 | Trazabilidad Inmutable (Audit Trail) | ✅ | ❌ | ✅ | S-3 | Backend completado implícitamente mediante logs sudoers |
 
 ### Resumen US-036
-- **Total CAs con Handoff Backend:** 7 (CA-19 al CA-25) | **Delegado Back:** ✅ 100% | **Front:** ✅ Parcial (CA-22, CA-24) | **QA:** ❌ Pendiente
+- **Total CAs con Handoff Backend:** 7 (CA-19 al CA-25) | **Delegado Back:** ✅ 100% | **Front:** ✅ Parcial (CA-22, CA-24) | **QA:** ✅ 100% Completado
 
 ---
 
@@ -145,7 +146,7 @@
 |----|---------------|------|-------|----|-------|
 | US-034 | CA-4 a CA-10 | ✅ | ✅ | ✅ | Remediación Dashboard DLQ (CA-8 Frontend validado) |
 | US-038 | 3 partes (p1-p3) | ✅ | ✅ | ❌ | Dashboard/BAM |
-| US-039 | 2 partes (p1-p2) | ✅ | ✅ | ❌ | — |
+| US-039 | CA-4 a CA-8 | ✅ | ✅ | ❌ | Formulario Genérico Base (Hardening OBS-1, OBS-2 Frontend OK) |
 | US-043 | 1 handoff + CA6 deuda | ✅ | ✅ | ❌ | Deuda técnica pendiente |
 | US-048 | 1 handoff | ✅ | ✅ | ❌ | — |
 
@@ -159,8 +160,8 @@
 |---------|-------|
 | **US con desarrollo iniciado** | 9 (US-001, 003, 005, 017, 028, 036, 038, 039, 043, 048) |
 | **CAs con handoff Backend+Frontend** | ~187+ (estimado) |
-| **CAs validados por QA** | ~6 (solo US-001 parcial) |
-| **Principal Brecha** | 🔴 **QA es 0% en todas las US excepto US-001.** |
+| **CAs validados por QA** | ~25 (US-001, US-034, US-036, US-039 parcial) |
+| **Principal Brecha** | 🔴 **QA es bajo en US tempranas (US-003, US-005, US-017).** |
 | **US-017 (CQRS)** | 🔴 **0% implementado (16 CAs pendientes, 6 de remediación)** |
 
 ---

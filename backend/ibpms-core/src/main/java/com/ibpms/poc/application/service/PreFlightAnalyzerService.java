@@ -51,13 +51,16 @@ public class PreFlightAnalyzerService {
     private final BpmnDesignService designService;
     private final BpmnDesignAuditLogRepository auditRepository;
     private final IbpmsRoleRepository roleRepository;
+    private final com.ibpms.poc.infrastructure.jpa.repository.ExternalTaskTopicRepository externalTaskTopicRepository;
 
     public PreFlightAnalyzerService(BpmnDesignService designService,
             BpmnDesignAuditLogRepository auditRepository,
-            IbpmsRoleRepository roleRepository) {
+            IbpmsRoleRepository roleRepository,
+            com.ibpms.poc.infrastructure.jpa.repository.ExternalTaskTopicRepository externalTaskTopicRepository) {
         this.designService = designService;
         this.auditRepository = auditRepository;
         this.roleRepository = roleRepository;
+        this.externalTaskTopicRepository = externalTaskTopicRepository;
     }
 
     public PreFlightResultDTO analizar(java.util.UUID processDesignId, String userId) {
@@ -136,7 +139,11 @@ public class PreFlightAnalyzerService {
                 response.addError("Diagram", "Falta End Event");
             }
 
-            // CA-3.1: ServiceTask requiere delegación
+            // CA-3.1 y CA-70: ServiceTask requiere delegación y topic válido
+            List<String> activeTopics = externalTaskTopicRepository.findByIsActiveTrue().stream()
+                .map(com.ibpms.poc.infrastructure.jpa.entity.ExternalTaskTopicEntity::getTopicName)
+                .collect(Collectors.toList());
+
             Collection<ServiceTask> serviceTasks = modelInstance.getModelElementsByType(ServiceTask.class);
             for (ServiceTask st : serviceTasks) {
                 String cmdDelExpr = st.getCamundaDelegateExpression();
@@ -146,6 +153,11 @@ public class PreFlightAnalyzerService {
                     (cmdClass == null || cmdClass.isBlank()) &&
                     (cmdTopic == null || cmdTopic.isBlank())) {
                     response.addError(st.getId(), "ServiceTask carece de propiedad de ejecución (delegateExpression, class o topic)");
+                } else if (cmdTopic != null && !cmdTopic.isBlank()) {
+                    // CA-70: Validar topic contra el catálogo
+                    if (!activeTopics.contains(cmdTopic)) {
+                        response.addError(st.getId(), "Topic '" + cmdTopic + "' no está registrado o inactivo en el catálogo de External Tasks.");
+                    }
                 }
             }
 

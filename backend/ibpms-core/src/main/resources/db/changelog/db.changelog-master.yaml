@@ -35,3 +35,5 @@ databaseChangeLog:
       file: db/changelog/20-us036-rbac-schema.sql
   - include:
       file: db/changelog/21-us039-generic-form-schema.sql
+  - include:
+      file: db/changelog/22-us005-bpmn-design-schema.sql

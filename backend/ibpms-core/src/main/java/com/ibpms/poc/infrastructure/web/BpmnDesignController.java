@@ -14,7 +14,9 @@ import com.ibpms.poc.application.service.ProcessMigrationService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import com.ibpms.poc.application.service.BpmnDesignService;
+import com.ibpms.poc.infrastructure.web.annotation.SandboxOperation;
+import com.ibpms.poc.infrastructure.jpa.repository.ExternalTaskTopicRepository;
 
 /**
  * REST Controller for BPMN Design operations (Integration Gaps Mock).
@@ -23,15 +25,22 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequestMapping("/api/v1/design/processes")
 public class BpmnDesignController {
 
-    private static final Map<String, String> pessimisticLocks = new ConcurrentHashMap<>();
-
     private final PreFlightAnalyzerService preFlightAnalyzerService;
     private final ProcessMigrationService processMigrationService;
+    private final BpmnDesignService bpmnDesignService;
+    private final ExternalTaskTopicRepository externalTaskTopicRepository;
+    private final com.ibpms.poc.infrastructure.jpa.repository.DataMappingRepository dataMappingRepository;
 
     public BpmnDesignController(PreFlightAnalyzerService preFlightAnalyzerService, 
-                                ProcessMigrationService processMigrationService) {
+                                ProcessMigrationService processMigrationService,
+                                BpmnDesignService bpmnDesignService,
+                                ExternalTaskTopicRepository externalTaskTopicRepository,
+                                com.ibpms.poc.infrastructure.jpa.repository.DataMappingRepository dataMappingRepository) {
         this.preFlightAnalyzerService = preFlightAnalyzerService;
         this.processMigrationService = processMigrationService;
+        this.bpmnDesignService = bpmnDesignService;
+        this.externalTaskTopicRepository = externalTaskTopicRepository;
+        this.dataMappingRepository = dataMappingRepository;
     }
 
     @PutMapping("/{id}/draft")
@@ -194,27 +203,53 @@ public class BpmnDesignController {
             Map.of("id", "template_1", "name", "Aprobación Simple", "xml", tmplAprobacion)
         ));
     }
-
     /**
-     * CA-16: Bloqueo Pesimista (Adquisición)
+     * CA-66: Bloqueo Pesimista (Adquisición) con DB y Heartbeat
      */
     @PostMapping("/{processDefinitionKey}/lock")
-    public ResponseEntity<?> acquireLock(@PathVariable("processDefinitionKey") String key) {
+    public ResponseEntity<?> acquireLock(@PathVariable("processDefinitionKey") String key, @RequestParam(value="sessionId", defaultValue="unknown") String sessionId) {
         String mockUser = "user-mock-123";
-        if (pessimisticLocks.containsKey(key) && !pessimisticLocks.get(key).equals(mockUser)) {
-            return ResponseEntity.status(423).body(Map.of("error", "El proceso ya se encuentra bloqueado por otro usuario."));
+        try {
+            bpmnDesignService.acquireLockTechnicalKey(key, mockUser, sessionId);
+            return ResponseEntity.ok(Map.of("status", "LOCKED", "owner", mockUser));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(423).body(Map.of("error", ex.getMessage()));
         }
-        pessimisticLocks.put(key, mockUser);
-        return ResponseEntity.ok(Map.of("status", "LOCKED", "owner", mockUser));
     }
 
     /**
-     * CA-16: Bloqueo Pesimista (Liberación)
+     * CA-66: Bloqueo Pesimista (Heartbeat)
+     */
+    @PostMapping("/{processDefinitionKey}/lock/heartbeat")
+    public ResponseEntity<?> heartbeatLock(@PathVariable("processDefinitionKey") String key) {
+        String mockUser = "user-mock-123";
+        try {
+            bpmnDesignService.heartbeatLock(key, mockUser);
+            return ResponseEntity.ok(Map.of("status", "HEARTBEAT_OK"));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(409).body(Map.of("error", ex.getMessage()));
+        }
+    }
+
+    /**
+     * CA-66: Bloqueo Pesimista (Liberación)
      */
     @DeleteMapping("/{processDefinitionKey}/lock")
     public ResponseEntity<?> releaseLock(@PathVariable("processDefinitionKey") String key) {
-        pessimisticLocks.remove(key);
+        String mockUser = "user-mock-123";
+        bpmnDesignService.releaseLockTechnicalKey(key, mockUser);
         return ResponseEntity.ok(Map.of("status", "UNLOCKED"));
+    }
+
+    /**
+     * CA-64: Break-lock de Emergencia
+     */
+    @DeleteMapping("/{processDefinitionKey}/lock/force")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> forceReleaseLock(@PathVariable("processDefinitionKey") String key) {
+        String adminUser = "admin-mock-123"; // TODO: Obtain from token context
+        bpmnDesignService.forceReleaseLock(key, adminUser);
+        return ResponseEntity.ok(Map.of("status", "FORCED_UNLOCKED"));
     }
 
     /**
@@ -228,6 +263,61 @@ public class BpmnDesignController {
     }
 
     /**
+     * CA-69: Request Deploy
+     */
+    @PostMapping("/deploy-requests")
+    public ResponseEntity<?> requestDeploy(@RequestBody Map<String, String> payload) {
+        String processKey = payload.get("processDefinitionKey");
+        String requestedBy = "user-mock-123"; // TODO: Token
+        return ResponseEntity.ok(bpmnDesignService.createDeployRequest(processKey, requestedBy));
+    }
+
+    /**
+     * CA-69: Approve Deploy Request
+     */
+    @PostMapping("/deploy-requests/{id}/approve")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> approveDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload) {
+        String adminUser = "admin-mock-123";
+        String comment = payload.get("comment");
+        return ResponseEntity.ok(bpmnDesignService.approveDeployRequest(id, adminUser, comment));
+    }
+
+    /**
+     * CA-69: Reject Deploy Request
+     */
+    @PostMapping("/deploy-requests/{id}/reject")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> rejectDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload) {
+        String adminUser = "admin-mock-123";
+        String comment = payload.get("comment");
+        return ResponseEntity.ok(bpmnDesignService.rejectDeployRequest(id, adminUser, comment));
+    }
+
+    /**
+     * CA-70: Catálogo de External Task Topics
+     */
+    @GetMapping("/external-task-topics")
+    public ResponseEntity<?> getExternalTaskTopics() {
+        return ResponseEntity.ok(externalTaskTopicRepository.findByIsActiveTrue());
+    }
+
+    /**
+     * CA-68: Data Mappings
+     */
+    @GetMapping("/{processDefinitionKey}/data-mappings")
+    public ResponseEntity<?> getDataMappings(@PathVariable("processDefinitionKey") String key) {
+        return ResponseEntity.ok(dataMappingRepository.findByProcessDefinitionKey(key));
+    }
+
+    @PostMapping("/{processDefinitionKey}/data-mappings")
+    public ResponseEntity<?> createDataMapping(@PathVariable("processDefinitionKey") String key,
+                                               @RequestBody com.ibpms.poc.infrastructure.jpa.entity.DataMappingEntity entity) {
+        entity.setProcessDefinitionKey(key);
+        return ResponseEntity.ok(dataMappingRepository.save(entity));
+    }
+
+    /**
      * CA-19: Autosave Borrador (POST explícito)
      */
     @PostMapping("/{processDefinitionKey}/draft")
@@ -238,6 +328,7 @@ public class BpmnDesignController {
     /**
      * CA-20: Sandbox Simulator (Extrae estáticamente 3 nodos a animar)
      */
+    @SandboxOperation
     @PostMapping("/sandbox-simulate")
     public ResponseEntity<?> sandboxSimulate(@RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(Map.of(
@@ -286,6 +377,7 @@ public class BpmnDesignController {
     /**
      * CA-41: Simulador Hardcore Camunda V1 (Instancia y Aborta)
      */
+    @SandboxOperation
     @PostMapping("/sandbox-spawn")
     public ResponseEntity<?> sandboxSpawnInstance(@RequestParam("processDefinitionKey") String key) {
         String instanceId = UUID.randomUUID().toString();

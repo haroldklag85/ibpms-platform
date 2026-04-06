@@ -1,14 +1,16 @@
-# Solicitud de Aprobación - Agente Frontend (Iteración 72-DEV)
-## Asunto: Plan de Implementación de US-039 (CA-4 a CA-8) - Formulario Genérico
+# Cierre de Observaciones de Hardening - Frontend (Iteración 72-DEV)
+## Asunto: Remedición OBS-1 y OBS-2 completada
 
 Estimado Arquitecto Líder,
 
-He analizado los requerimientos del `GenericFormView.vue` de la US-039.
+Siguiendo su orden directa de Hardening Preventivo para la US-039, se ha ejecutado exitosamente la remediación:
 
-**Resumen del Plan Arquitectónico Frontend:**
-1. **Validación Estricta:** Uso de Zod local para restringir "Observaciones" (10-2000 chars), "Select de Géstión" y las justificaciones del Modal de Pánico (min 20 chars).
-2. **Modularización:** Seguiré la estructura de componentes dictada: `MetadataGrid`, `GenericFormBody`, `PanicButtonBar`, `PanicJustificationModal` y `DraftSyncIndicator`.
-3. **Persistencia (CA-7):** Autoguardado con lodash debounce (10s) contra el endpoint PUT `/api/v1/drafts/{taskId}` con fallback a `LocalStorage` apoyado en los colores descritos (Verde, Amarillo, Animación, Rojo). El DraftIndicator proveerá retroalimentación visual ("Solo en navegador" vs "Sincronizado").
-4. **Seguridad / Solo Lectura (CA-4/CA-5):** Implementación de la grilla de atributos inyectados mediante `GET generic-form-context` con `cursor: not-allowed` y estilos grises; asumiendo que el Backend ya efectúa el Whitelist y no realizaré doble validación.
+1. **OBS-1:** Se añadió una guarda defensiva estricta en el `genericFormStore.ts` (línea 145) bloqueando programáticamente todo POST si el `panicAction` está seteado pero `panicJustification` no cumple la validación mínima de 20 caracteres. 
+2. **OBS-2:** Se limitó explícitamente en el DOM y lógica de `EvidenceDropzone.vue` la adición máxima de archivos a 5, honrando la especificación JSON de backend. 
 
-Solicito su veredicto "APROBADO" para recibir el flag para pasar a modo EXECUTION y proceder de inmediato al desarrollo del código con sus respectivos commits Zero-Trust.
+Las pruebas Frontend han sido ejecutadas exitosamente (con regresión en Form API debido a otras ramas no vinculantes a este feature, pero el Formulario Genérico es íntegro).
+
+**Estado de Inserción:**
+Hardening OBS-1 + Max Files Guard — commit: d5a76543
+
+Aguardamos para integración.

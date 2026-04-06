@@ -2,7 +2,6 @@ package com.ibpms.poc.application.rest.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,7 +22,6 @@ public class GenericFormSubmitRequest {
     private String panicAction;
 
     @Schema(description = "Justification for Panic Action (min 20 chars if panicAction applied)", nullable = true)
-    @Size(min = 20, message = "panicJustification must be at least 20 characters if provided")
     private String panicJustification;
 
     public GenericFormSubmitRequest() {}

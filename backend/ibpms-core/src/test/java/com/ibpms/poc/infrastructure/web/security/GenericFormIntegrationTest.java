@@ -99,7 +99,7 @@ public class GenericFormIntegrationTest {
         .when()
             .post("/generic-form-complete")
         .then()
-            .statusCode(200); 
+            .statusCode(204); 
     }
 
     // ==========================================
@@ -118,6 +118,25 @@ public class GenericFormIntegrationTest {
             // Even if the endpoint doesn't exist, we document the contract
             .statusCode(200)
             .body("prefillData._internal_var", nullValue());
+    }
+
+    @Test
+    @DisplayName("CA-5: PUT /generic-form-config con >10 claves en whitelist -> HTTP 400")
+    void testCa5_WhitelistExceeds10ShouldFail() {
+        List<String> tooManyKeys = java.util.stream.IntStream.range(0, 11)
+            .mapToObj(i -> "var_" + i)
+            .collect(java.util.stream.Collectors.toList());
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("whitelist", tooManyKeys);
+
+        given()
+            .contentType(ContentType.JSON)
+            .body(payload)
+        .when()
+            .put("/design/processes/test-process/generic-form-config")
+        .then()
+            .statusCode(400);
     }
 
     // ==========================================

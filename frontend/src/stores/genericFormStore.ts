@@ -142,6 +142,10 @@ export const useGenericFormStore = defineStore('genericForm', () => {
       formData.append('observations', observations.value)
       formData.append('result', result.value)
       if (panicAction.value) {
+        if (!panicJustification.value || panicJustification.value.length < 20) {
+          console.error('Panic justification must be >= 20 characters')
+          return false
+        }
         formData.append('panicAction', panicAction.value)
         formData.append('panicJustification', panicJustification.value)
       }

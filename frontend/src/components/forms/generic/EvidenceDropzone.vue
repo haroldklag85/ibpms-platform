@@ -66,8 +66,13 @@ const handleFileSelect = (e: Event) => {
   }
 }
 
+const MAX_FILES = 5
+
 const addFiles = (newFiles: File[]) => {
-  store.files = [...store.files, ...newFiles]
+  const remaining = MAX_FILES - store.files.length
+  if (remaining <= 0) return
+  const allowed = newFiles.slice(0, remaining)
+  store.files = [...store.files, ...allowed]
 }
 
 const removeFile = (index: number) => {

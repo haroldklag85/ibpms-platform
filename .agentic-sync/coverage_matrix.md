@@ -126,7 +126,7 @@
 
 | CA | Título (corto) | Back | Front | QA | Sprint | Handoff / Notas |
 |----|----------------|------|-------|----|--------|-----------------|
-| CA-6 | Roles VIP Visuales (Pantalla 14) | ✅ | ✅ | ❌ | S-3 | Backend OK / Frontend UI Insignias Integrado |
+| CA-6 | Roles VIP Visuales (Pantalla 14) | ✅ | ✅ | ✅ | S-3 | Backend OK / Frontend UI Insignias Integrado |
 | CA-19 | Liquibase Schema Roles/Permisos | ✅ | ❌ | ✅ | S-3 | handoff_backend_DEF02_DEF03 / Backend OK |
 | CA-20 | RLS Interceptor AOP (assignee_id) | ✅ | ❌ | ✅ | S-3 | Backend OK |
 | CA-21 | Kill Session & Dummy JWT Blacklist | ✅ | ❌ | ✅ | S-3 | Backend OK |
@@ -146,7 +146,7 @@
 |----|---------------|------|-------|----|-------|
 | US-034 | CA-4 a CA-10 | ✅ | ✅ | ✅ | Remediación Dashboard DLQ (CA-8 Frontend validado) |
 | US-038 | 3 partes (p1-p3) | ✅ | ✅ | ❌ | Dashboard/BAM |
-| US-039 | CA-4 a CA-8 | ✅ | ✅ | ❌ | Formulario Genérico Base (Hardening OBS-1, OBS-2 Frontend OK) |
+| US-039 | CA-4 a CA-8 | ✅ | ✅ | ✅ | Formulario Genérico Base (Hardening OBS-1, OBS-2 Frontend OK) / QA Gatekeeper Red Stage Activo |
 | US-043 | 1 handoff + CA6 deuda | ✅ | ✅ | ❌ | Deuda técnica pendiente |
 | US-048 | 1 handoff | ✅ | ✅ | ❌ | — |
 

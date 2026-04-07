@@ -59,6 +59,8 @@
         <select v-model="mockRole" title="Evaluar UI con diferentes perfiles CA-21" class="text-xs bg-indigo-50 dark:bg-gray-700 border-indigo-200 dark:border-gray-600 rounded px-2 py-1 focus:ring-indigo-500 text-indigo-800 dark:text-white font-bold ml-2">
            <option value="BPMN_Designer">👨‍💻 Diseñador</option>
            <option value="BPMN_Release_Manager">👑 Release Manager</option>
+           <!-- CA-66 -->
+           <option value="Super_Admin">🛡️ Super Admin</option>
         </select>
         <!-- Instance Manager CA-8 -->
         <button @click="showInstancesManager = true" class="bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold hover:bg-indigo-100 flex items-center gap-1 transition">
@@ -84,6 +86,8 @@
       <div class="flex items-center space-x-4">
         <span v-if="isLocked" class="flex items-center text-orange-700 font-bold bg-orange-100 px-3 py-1 rounded shadow-sm border border-orange-200">
           🔒 SOLO LECTURA: Bloqueado por {{ lockOwner }} ({{ lockSince }})
+          <!-- CA-66: Break Lock -->
+          <button v-if="mockRole === 'Super_Admin'" @click="breakLock" class="ml-3 bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded text-[10px] uppercase transition shadow-sm border border-red-800">🔓 Romper Candado</button>
         </span>
         <span v-else class="text-green-600 font-medium">🔓 Edición Exclusiva Adquirida</span>
       </div>
@@ -640,7 +644,7 @@ import DOMPurify from 'dompurify';
 const Vue3Lottie = defineAsyncComponent(() => import('vue3-lottie').then(m => m.Vue3Lottie));
 
 const corruptNodeId = ref<string | null>(null);
-const mockRole = ref<'BPMN_Designer' | 'BPMN_Release_Manager'>('BPMN_Release_Manager'); // CA-21
+const mockRole = ref<'BPMN_Designer' | 'BPMN_Release_Manager' | 'Super_Admin'>('BPMN_Release_Manager'); // CA-21, CA-66
 
 // ── Types ────────────────────────────────────────────────────
 interface BpmnElement {
@@ -825,6 +829,27 @@ const fetchLockState = async () => {
       lockOwner.value = null;
       lockSince.value = null;
     }
+  }
+};
+
+// CA-66: Heartbeat & Break-Lock
+let heartbeatInterval: any = null;
+const setupHeartbeat = () => {
+  if (heartbeatInterval) clearInterval(heartbeatInterval);
+  heartbeatInterval = setInterval(async () => {
+    if (processId.value && document.hasFocus() && !isLocked.value) {
+      try { await api.heartbeatProcessLock(processId.value); } catch (e) {}
+    }
+  }, 30000);
+};
+
+const breakLock = async () => {
+  try {
+    await api.forceUnlockProcess(processId.value);
+    showToast('🔓 Candado roto exitosamente por el Administrador', 'success');
+    await fetchLockState();
+  } catch (err: any) {
+    showToast(err.response?.data?.error || 'Falló al intentar romper candado', 'error');
   }
 };
 
@@ -1050,6 +1075,7 @@ const emptyBpmn = `<?xml version="1.0" encoding="UTF-8"?>
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
+  setupHeartbeat(); // CA-66
   try {
     const { default: BpmnModeler } = await import('bpmn-js/lib/Modeler');
     // @ts-ignore
@@ -1205,6 +1231,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  if (heartbeatInterval) clearInterval(heartbeatInterval); // CA-66
   // CA-04: Purga RAG al destruir el componente Vue nativo (Vue router leave)
   api.destroyCopilotSession();
   window.removeEventListener('beforeunload', api.destroyCopilotSession);

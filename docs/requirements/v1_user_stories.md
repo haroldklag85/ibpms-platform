@@ -1375,6 +1375,16 @@ Feature: Web IDE Form Code Generation
 **Quiero** un entorno de simulación (Sandbox) integrado directamente en el Diseñador Web (Pantalla 7) que inyecte Payloads extremos (Feliz y Triste) contra el esquema Zod en tiempo real
 **Para** garantizar que las reglas matemáticas, de obligatoriedad y formato (Regex) funcionen perfectamente antes de asociar el formulario a Camunda, sin generar código muerto ni depender de pipelines de CI/CD externos.
 
+
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-028:**
+> - **US-003 (iForm IDE / Pantalla 7):** 🔴 BLOQUEANTE. El Sandbox opera sobre esquemas Zod generados por el IDE de la US-003. Sin formularios con esquema Zod compilado, el Sandbox no tiene materia prima sobre la cual ejecutar `safeParse()`. Además, la US-003 CA-16 delega explícitamente la validación de coherencia BPMN↔Form al "ciclo de QA automatizado (US-028)", convirtiendo a la US-028 en dueña de esa responsabilidad (ver CA-17).
+> - **US-005 (Despliegue BPMN / Pantalla 6):** ⚠️ DOWNSTREAM. El CA-11 genera un guardrail (`is_qa_certified`) que la US-005 DEBE consumir para bloquear despliegues de procesos BPMN que incluyan formularios sin sello QA. Si US-005 se implementa sin conocimiento de este guardrail, los formularios irán a producción sin certificación formal. El CA-17 también requiere acceso al diccionario de variables BPMN desplegadas por la US-005 para la validación de coherencia.
+> - **US-029 (Ejecución de Formulario / Pantalla 2):** ℹ️ INFORMATIVA. La US-029 ejecuta en runtime los mismos esquemas Zod que la US-028 valida en design-time. La coherencia entre ambas validaciones (una en IDE, otra en ejecución) es el puente funcional que garantiza que un formulario certificado se comportará idénticamente en producción. No es dependencia directa de código, pero sí de contrato de datos.
+> - **US-036 (RBAC / Pantalla 14):** ℹ️ INFORMATIVA. El rol "Ingeniero de QA" o "Arquitecto BPM" que ejecuta la certificación (CA-11) debe tener permisos explícitos en la matriz RBAC para invocar `POST /api/v1/design/forms/{id}/certify`. En V1 se asume que el Arquitecto BPM y el Super Admin tienen este permiso por defecto.
+
+
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Integrated BDD Zod Testing Sandbox
@@ -1455,6 +1465,82 @@ Feature: Integrated BDD Zod Testing Sandbox
     And la Base de Datos plasma un sello: `ibpms_forms.is_qa_certified = true`
     And se registra inamoviblemente en el log histórico `ibpms_audit_log` el Test exacto: "El Tester Juan certificó la V2 del Formulario el DD/MM/AAAA. Payload utilizado: {JSON...}"
     And sirviendo esta bandera (is_qa_certified) de Guardrail para la Pantalla 6; que arrojará una Warning mandatoria de "Pre-Flight" bloqueando el botón `[🚀 DESPLEGAR Proceso]` si el BPMN intenta ir a Prod con un formulario sin sello QA.
+
+  # ==============================================================================
+  # D. REMEDIACIONES POST-ANÁLISIS FUNCIONAL (2026-04-06)
+  # Origen: docs/requirements/us028_functional_analysis.md — Sección 5 (GAPs)
+  # Propósito: Cerrar las 6 brechas detectadas durante el análisis de entendimiento
+  #            funcional de la US-028 previo al cierre de desarrollo iterativo.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Revocación Automática del Sello QA por Mutación del Esquema (CA-12)
+    # Origen: GAP-028-01 — ¿Quién revoca el sello de certificación?
+    # Resuelve: El CA-11 permite certificar, pero no define qué pasa si el Arquitecto
+    #           modifica el formulario después de la certificación.
+    Given un formulario con sello `is_qa_certified = true` y un hash SHA-256 del esquema Zod almacenado como `certified_schema_hash` en la tabla `ibpms_forms`
+    When el Arquitecto de Procesos modifica cualquier propiedad del esquema Zod del formulario (agregar campo, cambiar tipo, alterar regla de validación, eliminar campo) y guarda los cambios en la Pantalla 7
+    Then el Backend OBLIGATORIAMENTE recalculará el SHA-256 del esquema Zod resultante y lo comparará contra el `certified_schema_hash` almacenado.
+    And si los hashes difieren, el sistema revocará automáticamente el sello: `is_qa_certified = false`, `certified_schema_hash = null`.
+    And registrará en `ibpms_audit_log` un asiento inmutable: `{ action: 'QA_CERT_REVOKED', reason: 'Schema modified post-certification', previousHash, newHash, modifiedBy, timestamp }`.
+    And la Pantalla 7 mostrará un Badge visual de advertencia en la cabecera del formulario: `[⚠️ Certificación QA revocada — Modificación detectada]`.
+    And el Guardrail de la Pantalla 6 (US-005) impedirá desplegar el proceso BPMN hasta que el QA re-certifique la nueva versión del esquema.
+
+  Scenario: [REMEDIACIÓN] Versionado del Sello por Generación del Esquema (CA-13)
+    # Origen: GAP-028-02 — Granularidad del sello por versión del formulario
+    # Resuelve: El sello debe pertenecer a una versión específica del esquema, no al formulario genérico.
+    Given la tabla `ibpms_forms` que almacena el estado de certificación
+    Then el sello de certificación QA estará vinculado estrictamente a la combinación `{form_id, schema_version}` y NO al `form_id` aislado.
+    And cada vez que el Arquitecto publique una nueva versión del formulario (incremento de `schema_version`), la nueva versión nacerá mandatoriamente con `is_qa_certified = false`.
+    And el historial de certificaciones anteriores permanecerá inmutable en `ibpms_audit_log` para trazabilidad forense.
+    And la Consola del Sandbox (CA-1) mostrará en su cabecera el indicador: `[📋 Esquema V{N} — {Certificado ✅ | Sin certificar ⚠️}]` para que el QA sepa exactamente qué versión está simulando.
+
+  Scenario: [REMEDIACIÓN] Anotación Explícita de Limitación del Fuzzer en SuperRefine (CA-14)
+    # Origen: GAP-028-03 — Validaciones cruzadas entre campos (.superRefine)
+    # Resuelve: El fuzzer genera datos basura que violan TODAS las reglas superRefine,
+    #           haciendo que el Path Feliz nunca sea feliz en formularios complejos.
+    Given un esquema Zod que contiene reglas `.superRefine()` o `.refine()` con lógica de validación cruzada entre campos (Ej: `FechaInicio < FechaFin`, `MontoAprobado <= MontoSolicitado`)
+    When el Fuzzer automático genera el Path Feliz (CA-2)
+    Then el sistema detectará la presencia de refinamientos cruzados en el esquema Zod analizando el AST de la definición.
+    And para cada `.superRefine()` o `.refine()` detectado, el Sandbox pintará un indicador visual junto al Path Feliz: `[🔧 {N} validaciones cruzadas detectadas — Requieren corrección manual del QA]`.
+    And el Path Feliz autogenerado aceptará que los campos involucrados en refinamientos cruzados fallen la validación sin considerar esto un defecto del fuzzer, pintándolos en NARANJA (advertencia) en lugar de ROJO (error).
+    And la diferenciación visual entre NARANJA ("el fuzzer no puede resolver esto, es responsabilidad manual del QA") y ROJO ("el tipo base es incorrecto") permitirá al QA priorizar su intervención manual de forma eficiente.
+
+  Scenario: [REMEDIACIÓN] Truncamiento y Compresión del Payload en Audit Log (CA-15)
+    # Origen: GAP-028-04 — Límites del Payload en auditoría
+    # Resuelve: Un formulario Maestro complejo puede generar un JSON de 50KB+ en el audit log.
+    Given la ejecución del POST `/api/v1/design/forms/{id}/certify` (CA-11)
+    When el Backend registra el payload utilizado en `ibpms_audit_log`
+    Then el sistema aplicará un límite estricto de 32KB para el campo `payload_snapshot` del registro de auditoría.
+    And si el JSON del payload supera los 32KB, el Backend lo comprimirá usando GZIP y almacenará el resultado como `bytea` en PostgreSQL con un flag `is_compressed = true`.
+    And si después de la compresión el payload aún supera los 64KB (caso extremo), el Backend truncará el JSON almacenando solo los primeros 32KB y añadirá el campo `truncated = true` con el motivo: `"Payload exceeds 64KB compressed limit"`.
+    And el endpoint `GET /api/v1/design/forms/{id}/certifications` que consulte el historial detectará el flag y descomprimirá o indicará el truncamiento al consumidor.
+
+  Scenario: [REMEDIACIÓN] Control de Concurrencia en Certificación Simultánea (CA-16)
+    # Origen: GAP-028-05 — Concurrencia de certificación
+    # Resuelve: Dos QAs intentando certificar el mismo formulario simultáneamente.
+    Given dos tester (QA-A y QA-B) que abren el Sandbox del mismo formulario simultáneamente y ambos ven el Path Feliz en VERDE
+    When ambos presionan `[🏆 CERTIFICAR CONTRATO ZOD]` en el mismo instante
+    Then el Backend aplicará concurrencia optimista usando el campo `schema_version` como token de control.
+    And el primer POST exitoso grabará el sello `is_qa_certified = true` con el `certified_by = QA-A` y `certified_at = timestamp`.
+    And el segundo POST recibirá un `HTTP 409 Conflict` con el mensaje: `"Este esquema ya fue certificado por {QA-A} hace {N} segundos. Recargue para ver el estado actualizado."`.
+    And cada intento (exitoso o rechazado) quedará registrado en `ibpms_audit_log` para trazabilidad.
+
+  Scenario: [REMEDIACIÓN] Validación Cruzada de Coherencia BPMN↔Form en el Sandbox (CA-17)
+    # Origen: GAP-028-06 — US-003 CA-16 delega coherencia BPMN↔Form a US-028
+    # Resuelve: La US-003 delega la validación de coherencia entre las variables del BPMN
+    #           y los campos del esquema Zod a la US-028, pero ningún CA la incluía.
+    Given un formulario vinculado a un User Task de un proceso BPMN mediante `formKey` (definido en US-003/US-005)
+    And el diccionario de variables de entrada/salida declaradas en la definición del proceso BPMN para ese User Task
+    When el QA abre el Sandbox (CA-1) para un formulario que ya tiene un `formKey` asociado a un proceso desplegado
+    Then el Sandbox mostrará un panel adicional colapsable: `[🔗 Coherencia BPMN ↔ Zod]`.
+    And este panel listará las variables BPMN declaradas y las comparará contra los campos del esquema Zod:
+    And   - `✅ Variable BPMN 'monto_aprobado' → Campo Zod 'monto_aprobado' (z.number())` — Match encontrado.
+    And   - `⚠️ Variable BPMN 'fecha_limite' → No encontrada en esquema Zod` — El proceso espera un dato que el formulario no captura.
+    And   - `ℹ️ Campo Zod 'comentarios_internos' → No declarado en BPMN` — El formulario captura un dato que el proceso no consume (puede ser intencional para auditoría).
+    And esta validación es INFORMATIVA (no bloqueante): muestra las discrepancias pero NO impide la certificación (CA-11), ya que la coherencia puede ser intencional (campos de solo auditoría, campos computados).
+    And si el formulario NO tiene `formKey` asociado (Formulario Simple sin proceso), este panel se ocultará automáticamente mostrando: `[🔗 Sin proceso BPMN vinculado — Validación de coherencia no aplica]`.
+
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 7 (Panel QA).
 

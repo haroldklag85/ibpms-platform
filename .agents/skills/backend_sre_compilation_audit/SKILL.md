@@ -12,6 +12,18 @@ triggers:
 
 A partir de este momento, TIENES ESTRICTAMENTE PROHIBIDO asumir que tu código Java funciona solo por haberlo escrito. Tu flujo de trabajo (Workflow) cambia obligatoriamente a validación de compilación en caliente:
 
+## 0. PRE-VALIDACIÓN DE DOCKER DAEMON (Requisito Previo Obligatorio)
+Antes de ejecutar cualquier comando `docker compose`, DEBES verificar que el Docker Daemon esté activo:
+1. Ejecuta: `docker info > /dev/null 2>&1 || echo "DOCKER_OFFLINE"`
+2. Si el resultado es `DOCKER_OFFLINE`:
+   a. **En Windows:** Intenta iniciar Docker Desktop con: `Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"` y espera 30 segundos.
+   b. **En Linux/Mac:** Intenta levantar el servicio con: `sudo systemctl start docker` o `open -a Docker`.
+   c. Vuelve a ejecutar `docker info` para confirmar que el daemon responde.
+3. Si después de 2 intentos Docker sigue sin responder:
+   a. **NO hagas fallback silencioso a `mvn compile`.**
+   b. **DETENTE** y reporta el bloqueo al Humano con el mensaje: "BLOQUEADO: Docker Daemon no disponible. No puedo cumplir LEY GLOBAL 2. Se requiere intervención de infraestructura."
+   c. Documenta el bloqueo en `.agentic-sync/infra_blocker_[fecha].md`.
+
 ## 1. PROHIBIDO EL HANDOFF CIEGO
 Antes de enviar cualquier estado a QA, al Arquitecto, o notificar que has terminado, **DEBES** ejecutar la compilación y arranque mediante la topología de contenedores agnóstica de la plataforma. En la raíz del proyecto, ejecuta:
 ```bash

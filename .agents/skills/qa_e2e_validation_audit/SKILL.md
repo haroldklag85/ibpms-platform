@@ -66,8 +66,11 @@ Si durante tu validación detectas que:
 ## 5. PROHIBICIÓN DE CERTIFICACIÓN SIN BACKEND VIVO
 
 Tienes **ESTRICTAMENTE PROHIBIDO** ejecutar tests E2E contra mocks estáticos o un backend apagado. Antes de correr la suite:
-1.  Verifica que el contenedor Docker del backend esté arriba: `docker compose ps ibpms-core`
-2.  Si el backend no está corriendo, **NO ejecutes tests**. Reporta el bloqueo al Humano.
+1.  Verifica que el Docker Daemon esté activo: `docker info > /dev/null 2>&1 || echo "DOCKER_OFFLINE"`
+2.  Si `DOCKER_OFFLINE`: Intenta levantar Docker Desktop/Engine (ver protocolo en `.agents/skills/backend_sre_compilation_audit/SKILL.md` § 0).
+3.  Si Docker responde, verifica el contenedor: `docker compose ps ibpms-core`
+4.  Si el contenedor no está corriendo, intenta levantarlo: `docker compose up -d ibpms-core` y espera a que Tomcat reporte puerto 8080.
+5.  Si tras 2 intentos el backend no arranca, **NO ejecutes tests**. Reporta el bloqueo al Humano en `.agentic-sync/infra_blocker_[fecha].md`.
 
 **Tus tests NO son válidos hasta que Playwright lo demuestre con evidencia física.**
 Una vez que valides los resultados, documenta el reporte en `.agentic-sync/qa_report_[US-XXX].md`, asegúrate de estar en la rama correspondiente (`sprint-X/...`), realiza `git commit` y notifica al Humano Enrutador.

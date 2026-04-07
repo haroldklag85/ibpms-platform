@@ -67,7 +67,9 @@
 | CA-1 a CA-4 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA1_CA4 |
 | CA-5 a CA-6 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA5_CA6 |
 | CA-7 a CA-10 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA7_CA10 |
-| CA-11 a CA-15 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA11_CA15 |
+| CA-11 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA11_CA15 |
+| CA-12 | ✅ | ✅ | ✅🔧 | 74-DEV | handoff_*_US005_CA12 | ✅ Cerrado. DMN Binding LATEST/DEPLOYMENT. QA hotfix: imports corregidos por Arquitecto (OBS-QA-1) |
+| CA-13 a CA-15 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA11_CA15 |
 | CA-16 a CA-20 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA16_CA20 |
 | CA-21 a CA-25 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA21_CA25 |
 | CA-26 a CA-30 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA26_CA30 |
@@ -78,9 +80,19 @@
 | CA-51 a CA-55 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA51_CA55 |
 | CA-56 a CA-59 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA56_CA59 |
 | CA-60 a CA-62 | ✅ | ✅ | ❌ | S-3 | handoff_*_US005_CA60_CA62 |
+| CA-63 | ✅ | ✅ | ❌ | 73-DEV | handoff_*_US005_CA63 | SandboxInterceptor AOP |
+| CA-64 | ✅ | ✅ | ❌ | 73-DEV | handoff_*_US005_CA64 | Break-Lock @PreAuthorize |
+| CA-65 | 🟡 | ✅ | ⏳ | 73-DEV | handoff_*_US005_CA65 | OBS-2: Contrato API incompleto |
+| CA-66 | ✅ | ✅ | ⏳ | 73-DEV | handoff_*_US005_CA66 | JPA Lock + Heartbeat 30s |
+| CA-67 | ✅ | ✅ | ❌ | 73-DEV | handoff_*_US005_CA67 | Redis counter MAX=3 |
+| CA-68 | 🔴 | ✅ | ❌ | 73-DEV | handoff_*_US005_CA68 | OBS-1: Entity/DDL mismatch |
+| CA-69 | ✅ | ✅ | ❌ | 73-DEV | handoff_*_US005_CA69 | Deploy Request lifecycle |
+| CA-70 | ✅ | ✅ | ⏳ | 73-DEV | handoff_*_US005_CA70 | Topic catalog + Pre-Flight |
 
 ### Resumen US-005
-- **Total CAs con Handoff:** ~62 | **Delegados Back+Front:** ✅ | **QA:** ❌ Pendiente total
+- **Total CAs con Handoff:** 70 | **Back+Front ✅:** 70/70 (100%) | **QA:** CA-12 ✅🔧 (hotfix Arquitecto)
+- **Auditoría 73-DEV:** 🟡 APROBADO CON OBSERVACIONES (OBS-1 🔴, OBS-2 🟡, OBS-3 🟢)
+- **Auditoría 74-DEV:** ✅ CA-12 CERRADO — Back `91042c8c` + Front `af325161` + QA `a0d52a62`/`dc52a66c` + Hotfix `a81a181d`
 
 ---
 
@@ -97,8 +109,7 @@
 | CA-7 | RYOW Consistencia Eventual | ❌ | ❌ | ❌ | — | 🔄 Remediación |
 | CA-8 | Idempotencia Anti-Doble-Clic | ❌ | ❌ | ❌ | — | 🔄 Remediación |
 | CA-9 | Zod Isomórfico Guillotina | ❌ | ❌ | ❌ | — | Refactored de US-029 |
-| CA-10 | Micro-Tokens Anti-Replay | ❌ | ❌ | ❌ | — | 🔄 Remediación |
-| CA-11 | Implicit Locking Concurrencia | ❌ | ❌ | ❌ | — | Refactored de US-029 |
+| — | — | — | — | — | — | — | *(CA-63 a CA-70 reubicados a sección US-005 — Auditoría 73-DEV)* |
 | CA-12 | CQRS Event Sourcing | ❌ | ❌ | ❌ | — | Refactored de US-029 |
 | CA-13 | Exclusión Topológica Camunda | ❌ | ❌ | ❌ | — | Refactored de US-029 |
 | CA-14 | ACID Fallback Saga Inverso | ❌ | ❌ | ❌ | — | Refactored de US-029 |

@@ -97,4 +97,50 @@ public class FormDefinitionEntity {
     public void setHashSha256(String hashSha256) {
         this.hashSha256 = hashSha256;
     }
+
+    // --- CA-12 / CA-13: QA Certification fields ---
+
+    @Column(name = "is_qa_certified", nullable = false)
+    private Boolean isQaCertified = false;
+
+    @Column(name = "certified_schema_hash", length = 64)
+    private String certifiedSchemaHash;
+
+    @Column(name = "certified_by", length = 100)
+    private String certifiedBy;
+
+    @Column(name = "certified_at")
+    private LocalDateTime certifiedAt;
+
+    public Boolean getIsQaCertified() {
+        return isQaCertified;
+    }
+
+    public void setIsQaCertified(Boolean isQaCertified) {
+        this.isQaCertified = isQaCertified;
+    }
+
+    public String getCertifiedSchemaHash() {
+        return certifiedSchemaHash;
+    }
+
+    public void setCertifiedSchemaHash(String certifiedSchemaHash) {
+        this.certifiedSchemaHash = certifiedSchemaHash;
+    }
+
+    public String getCertifiedBy() {
+        return certifiedBy;
+    }
+
+    public void setCertifiedBy(String certifiedBy) {
+        this.certifiedBy = certifiedBy;
+    }
+
+    public LocalDateTime getCertifiedAt() {
+        return certifiedAt;
+    }
+
+    public void setCertifiedAt(LocalDateTime certifiedAt) {
+        this.certifiedAt = certifiedAt;
+    }
 }

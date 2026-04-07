@@ -231,6 +231,23 @@
             </select>
           </div>
 
+          <!-- Service Task Topics (CA-70) -->
+          <div v-if="selectedElement.type === 'bpmn:ServiceTask'" class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm mb-4">
+             <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+                <span>🏷️ External Topic (CA-70)</span>
+             </label>
+             <p class="text-[10px] text-gray-500 mb-2">Tópico al que se suscriben los External Task Workers.</p>
+             <div class="relative">
+                <select v-model="selectedElement.props.topic" @change="syncElementProperties('camunda:topic', selectedElement.props.topic)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" :disabled="loadingTopics">
+                   <option value="">-- Seleccionar Tópico --</option>
+                   <option v-for="t in externalTopics" :key="t" :value="t">{{ t }}</option>
+                </select>
+                <div v-if="loadingTopics" class="absolute top-0 right-3 h-full flex items-center">
+                   <span class="animate-spin text-indigo-500 font-bold text-sm">↻</span>
+                </div>
+             </div>
+          </div>
+
           <!-- Service Task Connector (CA-47, CA-49) -->
           <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
             <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
@@ -683,7 +700,8 @@ const selectedElement = ref<BpmnElement>({
     aiTokenLimit: 4000,
     aiTone: 'NEUTRAL',
     sla: '',
-    calledElement: ''
+    calledElement: '',
+    topic: ''
   }
 });
 
@@ -853,6 +871,23 @@ const breakLock = async () => {
     await fetchLockState();
   } catch (err: any) {
     showToast(err.response?.data?.error || 'Falló al intentar romper candado', 'error');
+  }
+};
+
+// CA-70: External Topics
+const externalTopics = ref<string[]>([]);
+const loadingTopics = ref(false);
+
+const fetchTopics = async () => {
+  if (externalTopics.value.length > 0) return;
+  loadingTopics.value = true;
+  try {
+     const { data } = await api.getExternalTaskTopics();
+     externalTopics.value = data || ['topic-legacy-default'];
+  } catch (err) {
+     externalTopics.value = ['topic-fallback'];
+  } finally {
+     loadingTopics.value = false;
   }
 };
 
@@ -1093,9 +1128,10 @@ onMounted(async () => {
     await modelerInstance.importXML(emptyBpmn);
     modelerInstance.get('canvas').zoom('fit-viewport');
 
-    // Initial Load CA-30 Forms & CA-45 Connectors
+    // Initial Load CA-30 Forms & CA-45 Connectors & CA-70 Topics
     fetchForms();
     fetchConnectors();
+    fetchTopics();
     try {
       const { data } = await api.getBpmnComplexityLimit();
       if (data && data.limit) bpmnComplexityLimit.value = data.limit;
@@ -1134,12 +1170,13 @@ onMounted(async () => {
             sla: bo.get('camunda:dueDate') || '',
             calledElement: bo.calledElement || '',
             formKey: bo.get('camunda:formKey') || '',
+            topic: bo.get('camunda:topic') || '',
             aiTokenLimit: 4000,
             aiTone: 'NEUTRAL'
           }
         };
       } else {
-        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '' } };
+        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '' } };
       }
     });
 

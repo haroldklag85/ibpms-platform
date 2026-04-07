@@ -57,6 +57,10 @@
         <button @click="showVersions = !showVersions" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
           📜 Versiones
         </button>
+        <!-- Deploy Requests CA-69 -->
+        <button v-show="mockRole === 'BPMN_Release_Manager'" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
+          📨 Solicitudes
+        </button>
         <!-- Mock Role CA-21 -->
         <select v-model="mockRole" title="Evaluar UI con diferentes perfiles CA-21" class="text-xs bg-indigo-50 dark:bg-gray-700 border-indigo-200 dark:border-gray-600 rounded px-2 py-1 focus:ring-indigo-500 text-indigo-800 dark:text-white font-bold ml-2">
            <option value="BPMN_Designer">👨‍💻 Diseñador</option>
@@ -639,6 +643,42 @@
       </div>
     </Transition>
 
+    <!-- ═══════ Drawer: Deploy Requests (CA-69) ═══════ -->
+    <Transition name="slide-left">
+      <div v-if="showDeployRequests" class="fixed inset-y-0 right-0 w-96 bg-white dark:bg-gray-800 shadow-2xl z-50 flex flex-col border-l border-gray-200 dark:border-gray-700">
+        <div class="px-5 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0">
+          <h3 class="text-sm font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-2">📨 Solicitudes de Despliegue</h3>
+          <button @click="showDeployRequests = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+        <div class="flex-1 overflow-y-auto relative p-4 bg-gray-50 dark:bg-gray-900">
+          <div v-if="loadingDeployRequests" class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 flex items-center justify-center z-10">
+            <span class="text-sm text-gray-500 font-bold animate-pulse">Cargando solicitudes...</span>
+          </div>
+          <div class="space-y-3">
+            <div v-for="req in deployRequests" :key="req.id" class="p-4 bg-white dark:bg-gray-800 border rounded-lg shadow-sm flex flex-col gap-2 border-indigo-200 dark:border-indigo-700 relative">
+              <span class="font-bold text-sm text-gray-900 dark:text-gray-100">{{ req.processName || processId }} (v{{ req.version }})</span>
+              <p class="text-xs text-gray-500 line-clamp-2 italic">"{{ req.comment }}"</p>
+              <div class="flex flex-col gap-1 mt-1">
+                <span class="text-[10px] text-gray-500 dark:text-gray-400">👤 Solicitado por: {{ req.requester }}</span>
+                <span class="text-[10px] text-gray-500 dark:text-gray-400">📅 {{ req.requestedAt }}</span>
+              </div>
+              <div class="mt-2 flex gap-2 w-full">
+                <button @click="handleDeployRequest(req.id, true)" class="flex-1 bg-green-100 hover:bg-green-200 text-green-800 py-1.5 rounded text-xs font-bold transition flex justify-center items-center gap-1 shadow-sm border border-green-300">
+                  ✅ Aprobar
+                </button>
+                <button @click="handleDeployRequest(req.id, false)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-800 py-1.5 rounded text-xs font-bold transition flex justify-center items-center gap-1 shadow-sm border border-red-300">
+                  ❌ Rechazar
+                </button>
+              </div>
+            </div>
+            <div v-if="deployRequests.length === 0 && !loadingDeployRequests" class="text-center text-xs text-gray-500 py-10 font-bold">
+              No hay solicitudes pendientes.
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
     <!-- ═══════ Gestor de Instancias (CA-8 a CA-10) ═══════ -->
     <InstancesManager 
       :show="showInstancesManager"
@@ -871,6 +911,40 @@ const breakLock = async () => {
     await fetchLockState();
   } catch (err: any) {
     showToast(err.response?.data?.error || 'Falló al intentar romper candado', 'error');
+  }
+};
+
+// CA-69: Deploy Requests Logic
+const showDeployRequests = ref(false);
+const loadingDeployRequests = ref(false);
+const deployRequests = ref<any[]>([]);
+
+const openDeployRequests = async () => {
+  showDeployRequests.value = true;
+  loadingDeployRequests.value = true;
+  try {
+     const { data } = await api.getDeployRequests(processId.value);
+     deployRequests.value = data || [];
+  } catch (err) {
+     showToast('Error obteniendo solicitudes', 'error');
+  } finally {
+     loadingDeployRequests.value = false;
+  }
+};
+
+const handleDeployRequest = async (id: string, approve: boolean) => {
+  try {
+     if (approve) {
+        await api.approveDeployRequest(id, {});
+        showToast('Solicitud Aprobada. Proceso desplegado.', 'success');
+     } else {
+        await api.rejectDeployRequest(id, { reason: 'Rechazado por UI' });
+        showToast('Solicitud Rechazada.', 'success');
+     }
+     await openDeployRequests();
+     if (deployRequests.value.length === 0) showDeployRequests.value = false;
+  } catch (err) {
+     showToast(`Error al procesar la solicitud`, 'error');
   }
 };
 

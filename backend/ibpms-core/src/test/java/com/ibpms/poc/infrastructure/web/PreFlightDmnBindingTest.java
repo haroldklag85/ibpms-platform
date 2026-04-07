@@ -1,7 +1,7 @@
 package com.ibpms.poc.infrastructure.web;
 
-import com.ibpms.poc.domain.model.bpmn.DeploymentValidationResponse;
-import com.ibpms.poc.domain.service.PreFlightAnalyzerService;
+import com.ibpms.poc.application.dto.DeploymentValidationResponse;
+import com.ibpms.poc.application.service.PreFlightAnalyzerService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -48,7 +48,9 @@ class PreFlightDmnBindingTest {
 
         // Debe contener al menos un warning referente a CA-12 / binding
         boolean hasBindingWarning = result.getWarnings().stream()
-            .anyMatch(w -> w.contains("decisionRefBinding") || w.contains("CA-12") || w.contains("derechos adquiridos"));
+            .anyMatch(w -> w.getMessage().contains("decisionRefBinding")
+                        || w.getMessage().contains("CA-12")
+                        || w.getMessage().contains("derechos adquiridos"));
         assertTrue(hasBindingWarning,
             "El Pre-Flight debe emitir warning cuando un BRT no tiene binding configurado (CA-12)");
     }
@@ -76,7 +78,7 @@ class PreFlightDmnBindingTest {
         DeploymentValidationResponse result = preFlightAnalyzerService.analizar(stream);
 
         boolean hasBindingWarning = result.getWarnings().stream()
-            .anyMatch(w -> w.contains("BRT_1"));
+            .anyMatch(w -> w.getMessage().contains("BRT_1"));
         assertFalse(hasBindingWarning,
             "El Pre-Flight NO debe emitir warning cuando BRT tiene binding='deployment' (CA-12)");
     }
@@ -105,7 +107,8 @@ class PreFlightDmnBindingTest {
 
         // Con el hardening Backend, "latest" ahora emite un warning informativo
         boolean hasLatestInfo = result.getWarnings().stream()
-            .anyMatch(w -> w.contains("Late Binding") || w.contains("LATEST"));
+            .anyMatch(w -> w.getMessage().contains("Late Binding")
+                        || w.getMessage().contains("LATEST"));
         assertTrue(hasLatestInfo,
             "El Pre-Flight debe emitir un warning informativo cuando BRT usa 'latest' (CA-12)");
     }

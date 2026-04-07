@@ -2,87 +2,60 @@ package com.ibpms.poc.infrastructure.jpa.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "ibpms_data_mappings")
 public class DataMappingEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(columnDefinition = "uuid")
+    private UUID id;
 
     @Column(name = "process_definition_key", nullable = false)
     private String processDefinitionKey;
 
-    @Column(name = "variable_name", nullable = false)
-    private String variableName;
+    @Column(name = "task_id", nullable = false)
+    private String taskId;
 
-    @Column(name = "variable_type", nullable = false)
-    private String variableType;
+    @Column(name = "connector_id")
+    private String connectorId;
 
-    @Column(name = "is_required", nullable = false)
-    private boolean isRequired;
+    @Column(name = "mapping_json", columnDefinition = "TEXT")
+    private String mappingJson;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "last_validated_at")
+    private LocalDateTime lastValidatedAt;
 
     public DataMappingEntity() {
-        this.createdAt = LocalDateTime.now();
+        this.id = UUID.randomUUID();
     }
 
-    public DataMappingEntity(String processDefinitionKey, String variableName, String variableType, boolean isRequired) {
+    public DataMappingEntity(String processDefinitionKey, String taskId, String connectorId, String mappingJson) {
         this();
         this.processDefinitionKey = processDefinitionKey;
-        this.variableName = variableName;
-        this.variableType = variableType;
-        this.isRequired = isRequired;
+        this.taskId = taskId;
+        this.connectorId = connectorId;
+        this.mappingJson = mappingJson;
+        this.lastValidatedAt = LocalDateTime.now();
     }
 
-    public Long getId() {
-        return id;
-    }
+    // --- Getters & Setters ---
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getProcessDefinitionKey() { return processDefinitionKey; }
+    public void setProcessDefinitionKey(String processDefinitionKey) { this.processDefinitionKey = processDefinitionKey; }
 
-    public String getProcessDefinitionKey() {
-        return processDefinitionKey;
-    }
+    public String getTaskId() { return taskId; }
+    public void setTaskId(String taskId) { this.taskId = taskId; }
 
-    public void setProcessDefinitionKey(String processDefinitionKey) {
-        this.processDefinitionKey = processDefinitionKey;
-    }
+    public String getConnectorId() { return connectorId; }
+    public void setConnectorId(String connectorId) { this.connectorId = connectorId; }
 
-    public String getVariableName() {
-        return variableName;
-    }
+    public String getMappingJson() { return mappingJson; }
+    public void setMappingJson(String mappingJson) { this.mappingJson = mappingJson; }
 
-    public void setVariableName(String variableName) {
-        this.variableName = variableName;
-    }
-
-    public String getVariableType() {
-        return variableType;
-    }
-
-    public void setVariableType(String variableType) {
-        this.variableType = variableType;
-    }
-
-    public boolean isRequired() {
-        return isRequired;
-    }
-
-    public void setRequired(boolean required) {
-        isRequired = required;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getLastValidatedAt() { return lastValidatedAt; }
+    public void setLastValidatedAt(LocalDateTime lastValidatedAt) { this.lastValidatedAt = lastValidatedAt; }
 }

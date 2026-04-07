@@ -192,6 +192,9 @@ public class BpmnDesignService {
 
     @Transactional
     public DeployRequestEntity rejectDeployRequest(UUID requestId, String reviewerId, String comment) {
+        if (comment == null || comment.trim().length() < 20) {
+            throw new IllegalArgumentException("El comentario de rechazo debe tener al menos 20 caracteres (CA-69).");
+        }
         DeployRequestEntity req = deployRequestRepository.findById(requestId)
             .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Request not found"));
         req.setStatus(DeployRequestEntity.Status.REJECTED);

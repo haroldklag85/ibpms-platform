@@ -252,6 +252,25 @@
              </div>
           </div>
 
+          <!-- CA-12: Business Rule Task — DMN Binding (Protección de Derechos Adquiridos) -->
+          <div v-if="selectedElement.type === 'bpmn:BusinessRuleTask'" class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded shadow-sm mb-4">
+             <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-2 flex items-center justify-between">
+                <span>📐 DMN Binding (CA-12)</span>
+                <AppTooltip content="Configura si las reglas DMN se evalúan con la versión vigente al desplegar (DEPLOYMENT) o con la última publicada (LATEST). Default: DEPLOYMENT para protección jurídica de derechos adquiridos." />
+             </label>
+             <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Estrategia de versionamiento de la tabla DMN vinculada a esta tarea.</p>
+             <select v-model="selectedElement.props.dmnBinding"
+                     @change="syncElementProperties('camunda:decisionRefBinding', selectedElement.props.dmnBinding)"
+                     class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
+                <option value="deployment">🔒 DEPLOYMENT (Default — Protección de Derechos Adquiridos)</option>
+                <option value="latest">⚡ LATEST (Late Binding — Siempre la regla más reciente)</option>
+             </select>
+             <p class="text-[10px] text-amber-600 dark:text-amber-500 mt-1 leading-tight">
+                <strong>DEPLOYMENT:</strong> Los casos en vuelo se evalúan con la DMN activa al nacer el caso.<br>
+                <strong>LATEST:</strong> Los casos en vuelo se evalúan con la DMN más reciente publicada.
+             </p>
+          </div>
+
           <!-- Service Task Connector (CA-47, CA-49) -->
           <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
             <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
@@ -1256,12 +1275,13 @@ onMounted(async () => {
             calledElement: bo.calledElement || '',
             formKey: bo.get('camunda:formKey') || '',
             topic: bo.get('camunda:topic') || '',
+            dmnBinding: bo.get('camunda:decisionRefBinding') || 'deployment', // CA-12: Default seguro
             aiTokenLimit: 4000,
             aiTone: 'NEUTRAL'
           }
         };
       } else {
-        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '' } };
+        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', dmnBinding: 'deployment' } };
       }
     });
 

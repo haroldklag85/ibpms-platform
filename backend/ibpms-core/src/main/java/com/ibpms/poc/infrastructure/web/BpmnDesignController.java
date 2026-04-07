@@ -65,12 +65,20 @@ public class BpmnDesignController {
     @PostMapping("/deploy")
     public ResponseEntity<?> deployBpmnProcess(
             @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "deploy_comment", required = true) String deployComment,
+            @RequestParam(value = "force_deploy", required = false, defaultValue = "false") boolean forceDeploy,
             @RequestHeader(value = "X-Mock-Role", required = false, defaultValue = "GUEST") String role) {
-        
+
         // CA-21: Escudo RBAC para el Despliegue
         if (!"BPMN_Release_Manager".equals(role)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager para comisionar modelos en Producción"));
+                    .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager."));
+        }
+
+        // CA-65: Validación deploy_comment (min 10 chars)
+        if (deployComment == null || deployComment.trim().length() < 10) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "deploy_comment es obligatorio y debe tener al menos 10 caracteres."));
         }
 
         String originalFilename = java.util.Objects.requireNonNullElse(file.getOriginalFilename(), "document");
@@ -80,18 +88,30 @@ public class BpmnDesignController {
 
         try {
             DeploymentValidationResponse validation = preFlightAnalyzerService.analizar(file.getInputStream());
-            
+
             if (!validation.isValid()) {
-                // CA-2: Arrojar HTTP 422 si hay errores de validación
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(validation);
             }
 
-            // Aquí se ejecutaría el despliegue al motor Camunda
-            // Por V1 (Mock): simulate deploy
+            // CA-65: Si hay warnings y no se fuerza el deploy, bloquear
+            if (!validation.getWarnings().isEmpty() && !forceDeploy) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                    "error", "El Pre-Flight tiene advertencias. Use force_deploy=true para omitirlas.",
+                    "warnings", validation.getWarnings()
+                ));
+            }
+
+            // CA-65: Response body alineado con SSOT
+            String mockUser = role; // TODO: Obtener desde token JWT
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "message", "Proceso desplegado exitosamente.",
+                "deployment_id", "dep-" + java.util.UUID.randomUUID().toString().substring(0, 8),
+                "process_definition_id", java.util.UUID.randomUUID().toString(),
+                "process_definition_key", originalFilename.replace(".bpmn", ""),
+                "version", 1,
+                "deployed_at", java.time.Instant.now().toString(),
+                "deployed_by", mockUser,
                 "warnings", validation.getWarnings(),
-                "generatedRoles", validation.getGeneratedRoles()
+                "generated_roles", validation.getGeneratedRoles()
             ));
 
         } catch (Exception e) {
@@ -312,9 +332,16 @@ public class BpmnDesignController {
 
     @PostMapping("/{processDefinitionKey}/data-mappings")
     public ResponseEntity<?> createDataMapping(@PathVariable("processDefinitionKey") String key,
-                                               @RequestBody com.ibpms.poc.infrastructure.jpa.entity.DataMappingEntity entity) {
-        entity.setProcessDefinitionKey(key);
-        return ResponseEntity.ok(dataMappingRepository.save(entity));
+                                               @RequestBody java.util.Map<String, String> payload) {
+        com.ibpms.poc.infrastructure.jpa.entity.DataMappingEntity entity =
+            new com.ibpms.poc.infrastructure.jpa.entity.DataMappingEntity(
+                key,
+                payload.get("taskId"),
+                payload.get("connectorId"),
+                payload.get("mappingJson")
+            );
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+            .body(dataMappingRepository.save(entity));
     }
 
     /**

@@ -23,6 +23,8 @@
                 'bg-green-100 text-green-800': processStatus === 'ACTIVO',
                 'bg-gray-100 text-gray-600': processStatus === 'ARCHIVADO'
               }">{{ processStatus }}</span>
+        <!-- CA-63: Indicador de Sandbox -->
+        <span v-if="processStatus === 'BORRADOR'" class="text-xs bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2">🧪 SANDBOX</span>
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
@@ -624,6 +626,7 @@
     <InstancesManager 
       :show="showInstancesManager"
       :processId="processId"
+      :isSandbox="processStatus === 'BORRADOR'"
       @close="showInstancesManager = false"
       @success="msg => showToast('✅ ' + msg, 'success')"
     />

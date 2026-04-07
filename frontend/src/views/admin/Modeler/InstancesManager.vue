@@ -7,6 +7,7 @@
         <div>
           <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             🧬 Gestor de Instancias Activas (Cirugía Quirúrgica)
+            <span v-if="isSandbox" class="text-xs bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2 whitespace-nowrap">🧪 MAX 5 INSTANCIAS SIMULTÁNEAS</span>
           </h3>
           <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-1">
             Migración de tokens de versiones obsoletas hacia la nueva topología. Regla Zero Data-Patching activa (CA-10).
@@ -90,7 +91,8 @@ import { ref, onMounted } from 'vue';
 
 const props = defineProps({
   show: { type: Boolean, default: false },
-  processId: { type: String, required: true }
+  processId: { type: String, required: true },
+  isSandbox: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['close', 'success']);
@@ -120,9 +122,14 @@ const executeMigration = async () => {
   
   try {
     // CA-10 Payload Strict Rule: Zero Data Patching. SOLO arreglo de IDs.
-    const payload = {
+    const payload: any = {
       instanceIds: selectedInstances.value
     };
+    if (props.isSandbox) {
+       payload.isSandbox = true;
+       // CA-67: Limitar envío a un máximo de 5. Array slice preventivo en frontend
+       payload.instanceIds = payload.instanceIds.slice(0, 5); 
+    }
     
     // Simulate API POST /api/v1/design/processes/migrate
     console.log('[InstancesManager] Executing Migration Payload:', payload);

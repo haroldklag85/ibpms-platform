@@ -20,6 +20,15 @@
             <span class="text-xs font-bold text-white px-2 py-0.5 rounded-full" :class="formPattern === 'IFORM_MAESTRO' ? 'bg-blue-600' : 'bg-green-600'">
               {{ formPattern === 'IFORM_MAESTRO' ? '🔵 iForm Maestro' : '🟢 Simple' }}
             </span>
+            <!-- CA-12: Badge de revocación QA -->
+            <span v-if="certificationState === 'revoked'"
+                  class="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2">
+              ⚠️ Certificación QA revocada — Modificación detectada
+            </span>
+            <span v-else-if="certificationState === 'certified'"
+                  class="text-xs bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2">
+              ✅ Certificado QA
+            </span>
             <!-- Zona 1: Visores -->
             <button @click="isFullScreen = !isFullScreen" class="text-gray-400 hover:text-indigo-600 transition ml-2 focus:outline-none" :title="isFullScreen ? 'Salir Inmersión' : 'Pantalla Completa (Inmersivo)'">
               🖵
@@ -772,7 +781,14 @@
       <div v-if="showFuzzerModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
          <div class="bg-gray-100 rounded-xl shadow-2xl p-6 md:p-8 max-w-4xl w-full flex flex-col h-[80vh]">
             <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
-               <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">⚡ QA Sandbox Fuzzer (RAM)</h2>
+               <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">⚡ QA Sandbox Fuzzer (RAM)
+                  <!-- CA-13: Indicador de versión en Sandbox -->
+                  <span class="text-xs bg-gray-100 text-gray-700 border border-gray-300 px-2 py-0.5 rounded font-mono ml-2">
+                    📋 Esquema V{{ currentSchemaVersion }} —
+                    <span v-if="certificationState === 'certified'" class="text-green-700">Certificado ✅</span>
+                    <span v-else class="text-amber-700">Sin certificar ⚠️</span>
+                  </span>
+               </h2>
                <button @click="showFuzzerModal = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
             </div>
             <div class="flex gap-4 flex-1 overflow-hidden">
@@ -789,11 +805,29 @@
                <div class="w-1/2 flex flex-col">
                   <button @click="runFuzzerZod" class="bg-indigo-600 text-white font-bold py-2 rounded shadow mb-4 hover:bg-indigo-700 transition">▶️ Ejecutar Zod in-memory</button>
                   <div class="flex-1 bg-black rounded p-4 overflow-y-auto">
+                     <!-- CA-14: Indicador de SuperRefine -->
+                     <div v-if="superRefineCount > 0" class="text-orange-400 font-mono text-xs mb-2 border-b border-orange-800 pb-1">
+                       🔧 {{ superRefineCount }} validaciones cruzadas detectadas — Requieren corrección manual del QA
+                     </div>
                      <div v-if="fuzzerErrors.length === 0" class="text-green-400 font-mono text-xs flex items-center gap-2">
                         <span>> Esperando ejecución o Validado exitosamente sin errores O-T-F.</span>
                      </div>
-                     <div v-else class="text-red-400 font-mono text-xs space-y-1">
-                        <div v-for="(err, i) in fuzzerErrors" :key="i">❌ {{ err }}</div>
+                     <div v-else class="font-mono text-xs space-y-1">
+                        <div v-for="(err, i) in fuzzerErrors" :key="i" :class="err.isSuperRefine ? 'text-orange-400' : 'text-red-400'">{{ err.isSuperRefine ? '🔧' : '❌' }} {{ err.text }}</div>
+                     </div>
+
+                     <!-- CA-17: Panel de Coherencia BPMN ↔ Zod -->
+                     <details v-if="formKey" class="mt-4 bg-gray-800 rounded p-3 border border-gray-700">
+                       <summary class="text-xs font-bold text-cyan-400 cursor-pointer">🔗 Coherencia BPMN ↔ Zod</summary>
+                       <div class="mt-2 space-y-1 text-xs font-mono">
+                         <div v-if="loadingCoherence" class="text-gray-400 animate-pulse">Cargando variables BPMN...</div>
+                         <div v-else v-for="item in bpmnCoherenceResults" :key="item.name" :class="item.cls">
+                           {{ item.icon }} {{ item.label }}
+                         </div>
+                       </div>
+                     </details>
+                     <div v-else class="mt-4 text-xs text-gray-500 italic">
+                       🔗 Sin proceso BPMN vinculado — Validación de coherencia no aplica
                      </div>
                   </div>
                </div>
@@ -811,7 +845,7 @@ import { useRoute } from 'vue-router';
 import VueDraggable from 'vuedraggable';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
-import apiClient from '@/services/apiClient';
+import apiClient, { api } from '@/services/apiClient';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 import FormRenderer from '@/components/forms/FormRenderer.vue';
 // @ts-ignore
@@ -1107,18 +1141,57 @@ const generateVitestSpec = () => {
 // CA-79: Consola QA Sandbox Fuzzer
 const showFuzzerModal = ref(false);
 const fuzzerPayload = ref('{\n  \n}');
-const fuzzerErrors = ref<string[]>([]);
+const fuzzerErrors = ref<{text: string, isSuperRefine: boolean}[]>([]);
 
-const openFuzzerSandbox = () => {
+// CA-12: Estado de certificación QA
+const certificationState = ref<'none' | 'certified' | 'revoked'>('none');
+// CA-13: Versión del esquema
+const currentSchemaVersion = ref(1);
+// CA-14: Contador de SuperRefine rules
+const superRefineCount = computed(() => visualRules.value.length);
+// CA-17: FormKey y coherencia BPMN
+const formKey = ref('');
+const bpmnCoherenceResults = ref<{name: string, icon: string, label: string, cls: string}[]>([]);
+const loadingCoherence = ref(false);
+
+const openFuzzerSandbox = async () => {
     fuzzerPayload.value = '{\n  \n}';
     fuzzerErrors.value = [];
     showFuzzerModal.value = true;
+    // CA-17: Si hay formKey, cargar coherencia BPMN↔Zod
+    if (formKey.value) {
+       loadingCoherence.value = true;
+       try {
+          const processKey = formKey.value.split(':')[0] || formKey.value;
+          const res = await api.getBpmnVariables(processKey);
+          const bpmnVars: string[] = res.data || [];
+          const zodFields = availableFieldsFlat.value.map((f: any) => f.camundaVariable || f.id);
+          const results: {name: string, icon: string, label: string, cls: string}[] = [];
+          // Match BPMN vars against Zod fields
+          for (const v of bpmnVars) {
+             const zodMatch = zodFields.find((z: string) => z === v);
+             if (zodMatch) {
+                results.push({ name: v, icon: '✅', label: `Variable BPMN '${v}' → Campo Zod '${v}'`, cls: 'text-green-400' });
+             } else {
+                results.push({ name: v, icon: '⚠️', label: `Variable BPMN '${v}' → No encontrada en esquema Zod`, cls: 'text-amber-400' });
+             }
+          }
+          // Zod fields not in BPMN
+          for (const z of zodFields) {
+             if (!bpmnVars.includes(z)) {
+                results.push({ name: z, icon: 'ℹ️', label: `Campo Zod '${z}' → No declarado en BPMN`, cls: 'text-cyan-400' });
+             }
+          }
+          bpmnCoherenceResults.value = results;
+       } catch { bpmnCoherenceResults.value = []; }
+       finally { loadingCoherence.value = false; }
+    }
 };
 
 const runFuzzerZod = () => {
     fuzzerErrors.value = [];
     if (fuzzerPayload.value.length > 50000) {
-        fuzzerErrors.value = ['[SECURITY BLOCK] - Límite de payload superado (Max 50KB). DDoS Prevention.'];
+        fuzzerErrors.value = [{text: '[SECURITY BLOCK] - Límite de payload superado (Max 50KB). DDoS Prevention.', isSuperRefine: false}];
         showToast('Payload abortado por políticas de firewall de capa 7.', 'error');
         return;
     }
@@ -1127,12 +1200,22 @@ const runFuzzerZod = () => {
         const schema = ZodBuilder.buildSchema(canvasFields.value, visualRules.value);
         const result = schema.safeParse(payload);
         if (!result.success) {
-            fuzzerErrors.value = result.error.issues.map(iss => `[${iss.path.join('.')}] - ${iss.message}`);
+            // CA-14: Collect superRefine field names for ORANGE differentiation
+            const superRefineFields = new Set<string>();
+            visualRules.value.forEach(r => {
+               if (r.fieldA) superRefineFields.add(r.fieldA);
+               if (r.fieldB) superRefineFields.add(r.fieldB);
+            });
+            fuzzerErrors.value = result.error.issues.map(iss => {
+               const pathStr = iss.path.join('.');
+               const isCrossField = superRefineFields.has(pathStr);
+               return { text: `[${pathStr}] - ${iss.message}`, isSuperRefine: isCrossField };
+            });
         } else {
             showToast('Payload Válido 🎉', 'success');
         }
     } catch(e: any) {
-        fuzzerErrors.value = [`[JSON Syntax Error] - ${e.message}`];
+        fuzzerErrors.value = [{text: `[JSON Syntax Error] - ${e.message}`, isSuperRefine: false}];
     }
 };
 

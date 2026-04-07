@@ -129,9 +129,15 @@
 | CA-4 a CA-6 | ✅ | ✅ | ❌ | S-4 | handoff_*_US028_CA4_CA6 |
 | CA-7 a CA-9 | ✅ | ✅ | ❌ | S-4 | handoff_*_US028_CA7_CA9 |
 | CA-10 a CA-11 | ✅ | ✅ | ❌ | S-4 | handoff_*_US028_CA10_CA11 |
+| CA-12 | Revocación Sello Mutación | ✅ | ✅ | ✅ | 74-DEV | handoff_74DEV_US028_CA12_CA17 |
+| CA-13 | Versionado Sello Schema | ✅ | ✅ | ✅ | 74-DEV | handoff_74DEV_US028_CA12_CA17 |
+| CA-14 | Anotación SuperRefine Fuzzer | N/A | ✅ | ✅ | 74-DEV | handoff_74DEV_US028_CA12_CA17 |
+| CA-15 | Truncamiento Payload Audit | ✅ | N/A | ✅ | 74-DEV | handoff_74DEV_US028_CA12_CA17 |
+| CA-16 | Concurrencia Certificación | ✅ | N/A | ✅ | 74-DEV | handoff_74DEV_US028_CA12_CA17 |
+| CA-17 | Coherencia BPMN↔Zod | ✅ | ✅ | ✅ | 74-DEV | handoff_74DEV_US028_CA12_CA17 |
 
 ### Resumen US-028
-- **Total CAs con Handoff:** ~11 | **Delegados Back+Front:** ✅ | **QA:** ❌ Pendiente
+- **Total CAs con Handoff:** 17 | **CA-1 a CA-11 Back+Front:** ✅ | **CA-12 a CA-17:** ✅ Completado (74-DEV) | **QA:** ✅ Completado
 
 ## US-036: RBAC, Zero-Trust y Gobernanza de Seguridad (ISO 27001)
 

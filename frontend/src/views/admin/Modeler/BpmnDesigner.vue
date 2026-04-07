@@ -1117,7 +1117,7 @@ const isTypeCompatible = (schemaType: string, varType: string) => {
   return true;
 };
 
-const saveConnectorMapping = () => {
+const saveConnectorMapping = async () => {
   mappingErrors.value = {};
   for (const schema of connectorSchema.value) {
     const assignedVarName = connectorMappings.value[schema.name];
@@ -1138,6 +1138,17 @@ const saveConnectorMapping = () => {
   if (element) {
      const modeling = modelerInstance.get('modeling');
      modeling.updateProperties(element, { "camunda:inputOutput": JSON.stringify(connectorMappings.value) });
+  }
+
+  // CA-68: Integración de Data Mapping a Backend
+  try {
+     await api.saveDataMappings(processId.value, selectedElement.value.id, {
+        connectorId: selectedConnector.value,
+        mappings: connectorMappings.value
+     });
+     showToast('Mapeos persistidos en Base de Datos Mappings', 'success');
+  } catch (err) {
+     showToast('Error persistiendo mappings estructurados (CA-68)', 'error');
   }
 };
 

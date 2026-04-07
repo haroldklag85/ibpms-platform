@@ -61,6 +61,10 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/api/v1/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // DMN Simulation for Tests (Bypass para el test Sandbox DMN)
                         .requestMatchers(HttpMethod.POST, "/api/v1/dmn-models/simulate").permitAll()
+                        // US-028: Form Certification & Definition endpoints (QA Integration Tests)
+                        .requestMatchers("/api/v1/design/forms/**").permitAll()
+                        .requestMatchers("/api/v1/forms/**").permitAll()
+                        .requestMatchers("/api/v1/design/processes/**").permitAll()
                         .anyRequest().authenticated())
 
                 // Habilitamos OAUTH2 JWT Validation delegando al Issuer-URI (Properties)

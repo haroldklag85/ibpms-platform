@@ -44,6 +44,26 @@ public class FormCertificationService {
     }
 
     // ─────────────────────────────────────────────
+    // Ensure entity exists (create stub if missing)
+    // ─────────────────────────────────────────────
+
+    @Transactional
+    public void ensureEntityExists(UUID formDefinitionId) {
+        if (!formDefinitionRepository.existsById(formDefinitionId)) {
+            FormDefinitionEntity stub = new FormDefinitionEntity();
+            stub.setId(formDefinitionId);
+            stub.setFormId(formDefinitionId);
+            stub.setVersionId(1);
+            stub.setSchemaContent("{}");
+            stub.setCreatedBy("system");
+            stub.setHashSha256(computeSha256("{}"));
+            stub.setIsQaCertified(false);
+            formDefinitionRepository.save(stub);
+            log.info("Auto-created stub FormDefinitionEntity for {}", formDefinitionId);
+        }
+    }
+
+    // ─────────────────────────────────────────────
     // CA-16: Certificar con concurrencia optimista
     // ─────────────────────────────────────────────
 

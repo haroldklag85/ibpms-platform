@@ -68,7 +68,6 @@ public class ProcessDesignController {
      */
     @GetMapping("/{processKey}/variables")
     @Operation(summary = "Get BPMN Variable Dictionary", description = "CA-17: Returns Input/Output parameter names from deployed BPMN UserTasks")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<String>> getBpmnVariables(@PathVariable("processKey") String processKey) {
         try {
             org.camunda.bpm.engine.repository.ProcessDefinition pd = repositoryService

@@ -205,18 +205,26 @@ public class PreFlightAnalyzerService {
                 response.addError("StartEvent", "El StartEvent carece de camunda:formKey obligatorio para iniciar instancia de forma manual");
             }
 
-            // CA-12: Late Binding DMN por Defecto en BusinessRuleTasks
+            // CA-12: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquiridos)
             Collection<BusinessRuleTask> brTasks = modelInstance.getModelElementsByType(BusinessRuleTask.class);
             for (BusinessRuleTask brt : brTasks) {
                 String decisionRef = brt.getCamundaDecisionRef();
-                String binding = brt.getCamundaDecisionRefBinding(); // e.g., "latest"
-                String version = brt.getCamundaDecisionRefVersion();
-                
+                String binding = brt.getCamundaDecisionRefBinding();
+
                 if (decisionRef != null && !decisionRef.isBlank()) {
-                    if ((binding == null || (!binding.equals("latest") && !binding.equals("deployment"))) && 
-                        (version == null || version.isBlank())) {
-                        response.addWarning(brt.getId(), "BusinessRuleTask enlaza a un DMN (" + decisionRef + ") pero carece de camunda:decisionRefBinding='latest' o version explícita. Puede generar inconsistencias de resolución.");
+                    if (binding == null || binding.isBlank()) {
+                        response.addWarning(brt.getId(),
+                            "⚠️ BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
+                            "' enlaza a DMN (" + decisionRef + ") sin camunda:decisionRefBinding configurado. " +
+                            "El motor asumirá 'latest' por defecto, lo cual puede violar la protección de derechos adquiridos (CA-12). " +
+                            "Recomendación: Configure 'deployment' en el Modeler para garantizar que los casos en vuelo se evalúen con la versión DMN vigente al nacer el caso.");
+                    } else if ("latest".equals(binding)) {
+                        response.addWarning(brt.getId(),
+                            "ℹ️ BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
+                            "' usa Late Binding (LATEST). Los casos en vuelo se evaluarán con la última versión DMN publicada. " +
+                            "Confirme que este comportamiento es intencional y no viola compromisos contractuales.");
                     }
+                    // binding="deployment" → OK silencioso (default seguro)
                 }
             }
 

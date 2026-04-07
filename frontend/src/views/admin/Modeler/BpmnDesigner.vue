@@ -376,8 +376,14 @@
           <div v-if="activeInstances > 0 && deployStrategy === 'migrate'" class="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs text-yellow-800">
             ⚠️ Se migrarán {{ activeInstances }} instancias en vuelo a la nueva versión. Esta acción es irreversible.
           </div>
-          <div v-if="activeInstances > 0 && deployStrategy === 'migrate'" class="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs text-yellow-800">
-            ⚠️ Se migrarán {{ activeInstances }} instancias en vuelo a la nueva versión. Esta acción es irreversible.
+          <!-- CA-65 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Justificación del Despliegue <span class="text-red-500">*</span></label>
+            <textarea v-model="deployComment" rows="3" minlength="10" placeholder="Justificación del despliegue..." class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2.5 border text-sm"></textarea>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="forceDeploy" v-model="forceDeploy" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
+            <label for="forceDeploy" class="text-sm font-medium text-gray-700 dark:text-gray-300">Omitir advertencias ⚠️ del Pre-Flight</label>
           </div>
           <div class="flex justify-end space-x-3 pt-2">
             <button @click="showDeployModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
@@ -730,6 +736,8 @@ const preFlightStatus = ref<'VALIDATED' | 'PENDING' | 'WARNING' | 'ERROR'>('PEND
 // ── Deploy ───────────────────────────────────────────────────
 const isDeploying = ref(false);
 const showDeployModal = ref(false);
+const deployComment = ref(''); // CA-65
+const forceDeploy = ref(false); // CA-65
 const deployStrategy = ref('coexist');
 const activeInstances = ref(12);
 const validationErrors = ref<string[]>([]);
@@ -1343,6 +1351,8 @@ const confirmDeploy = async () => {
       const formData = new FormData();
       formData.append('processId', processId.value);
       formData.append('strategy', deployStrategy.value);
+      formData.append('deploy_comment', deployComment.value); // CA-65
+      formData.append('force_deploy', forceDeploy.value.toString()); // CA-65
       const xmlBlob = new Blob([xml!], { type: 'application/xml' });
       formData.append('file', xmlBlob, `${processId.value}.bpmn`);
 
@@ -1354,7 +1364,13 @@ const confirmDeploy = async () => {
        alert(`Proceso desplegado con Éxito.\\n\\nSe han auto-generado los siguientes perfiles de seguridad:\\n➡ ${deployResponse.data.generatedRoles.join('\\n➡ ')}\\n\\nPuedes asignar estos roles en el CND.`);
     }
     
-    showToast(`✅ Proceso "${currentProcessName.value}" desplegado exitosamente`);
+    // CA-65: Reflejo en Toast
+    const v = deployResponse?.data?.version;
+    const did = deployResponse?.data?.deployment_id;
+    const dat = deployResponse?.data?.deployed_at;
+    const suffix = (v && did) ? ` [v${v} | ID: ${did} | ${dat}]` : '';
+    
+    showToast(`✅ Proceso "${currentProcessName.value}" desplegado exitosamente${suffix}`);
     processStatus.value = 'ACTIVO';
     showDeployModal.value = false;
   } catch (err: any) {

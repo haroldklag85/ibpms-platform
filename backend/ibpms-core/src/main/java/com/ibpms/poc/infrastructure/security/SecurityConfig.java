@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/dmn-models/simulate").permitAll()
                         // US-028: Form Certification & Definition endpoints (QA Integration Tests)
                         .requestMatchers("/api/v1/design/forms/**").permitAll()
+                        .requestMatchers("/api/v1/design/form-definitions/**").permitAll()
                         .requestMatchers("/api/v1/forms/**").permitAll()
                         .requestMatchers("/api/v1/design/processes/**").permitAll()
                         .anyRequest().authenticated())

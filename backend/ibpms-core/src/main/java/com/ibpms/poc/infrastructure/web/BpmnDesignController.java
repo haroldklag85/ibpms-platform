@@ -432,7 +432,9 @@ public class BpmnDesignController {
     }
 
     /**
-     * CA-50: Diccionario de Variables Zod MOCK
+     * CA-17 / CA-50: Diccionario de Variables BPMN.
+     * Intenta extraer Input/Output parameters de UserTasks del proceso desplegado.
+     * Si no existe proceso desplegado, retorna lista vacía (graceful fallback).
      */
     @GetMapping("/{processDefinitionKey}/variables")
     public ResponseEntity<List<Map<String, String>>> getProcessVariables(@PathVariable("processDefinitionKey") String key) {

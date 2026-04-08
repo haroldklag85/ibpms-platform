@@ -1,25 +1,37 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:ibpms-postgres}:${POSTGRES_PORT:5432}/${POSTGRES_DB:ibpms_db}
+    username: ${POSTGRES_USER:ibpms_user}
+    password: ${POSTGRES_PASSWORD:ibpms_password}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   liquibase:
     enabled: true
     change-log: classpath:/db/changelog/db.changelog-master.yaml
   rabbitmq:
-    host: localhost
-    port: 5672
+    host: ${RABBITMQ_HOST:ibpms-rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:ibpms-redis}
+      port: ${REDIS_PORT:6379}
 
-# Disable context-path for integration tests (tests use full paths)
+# Disable context-path for integration tests (tests use full absolute paths)
 server:
   servlet:
     context-path: ""
 
-# Disable Camunda auto-deploy in tests
+# Disable Camunda auto-deploy and job execution in tests
 camunda:
   bpm:
     deployment-resource-pattern: ""

@@ -38,8 +38,17 @@ public class WorkdeskQueryController {
             @RequestParam(required = false) String delegatedUserId,
             Pageable pageable) {
         
+        // CA-09, CA-10: Max 100 limit, default to 15 (pageable usually defaults to 20, but limit to 100)
+        if (pageable.getPageSize() > 100) {
+            throw new IllegalArgumentException("Pagina solicitada excede el limite maximo de 100 registros (CA-10).");
+        }
+
         try {
-            Page<WorkdeskProjectionEntity> entities = projectionRepository.findByCombinedSearch(search, delegatedUserId, pageable);
+            // CA-14 Strict Isolation mapping
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            String tenantId = (auth != null && auth.getName() != null) ? auth.getName() : "default";
+
+            Page<WorkdeskProjectionEntity> entities = projectionRepository.findWorkdeskTasks(tenantId, search, delegatedUserId, pageable);
             
             Page<WorkdeskGlobalItemDTO> dtoPage = entities.map(e -> {
                 WorkdeskGlobalItemDTO dto = new WorkdeskGlobalItemDTO();
@@ -50,6 +59,7 @@ public class WorkdeskQueryController {
                 dto.setSlaExpirationDate(e.getSlaExpirationDate());
                 dto.setStatus(e.getStatus());
                 dto.setAssignee(e.getAssignee());
+                dto.setImpactLevel(e.getImpactLevel());
                 return dto;
             });
 

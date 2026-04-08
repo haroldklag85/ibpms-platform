@@ -47,6 +47,13 @@ public class WorkdeskProjectionEntity {
     @Column(nullable = false)
     private String status;
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "payload_metadata", columnDefinition = "JSON")
     private String payloadMetadata; // Soporte JSON nativo
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
+
+    @Column(name = "impact_level", nullable = false)
+    private Integer impactLevel;
 }

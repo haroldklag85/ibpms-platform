@@ -166,7 +166,7 @@ public class FormCertificationService {
     // ───────────────────────────────────────────────────────────
 
     private void auditLog(String userId, String action, String detailsJson, String payloadJson) {
-        UUID id = UUID.randomUUID();
+        String id = UUID.randomUUID().toString();
         byte[] payloadBytes = null;
         boolean isCompressed = false;
         boolean truncated = false;
@@ -193,8 +193,9 @@ public class FormCertificationService {
         }
 
         jdbcTemplate.update(
-                "INSERT INTO ibpms_audit_log (id, user_id, action, timestamp_utc, payload_snapshot, is_compressed, truncated, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)",
-                id, userId, action, java.sql.Timestamp.valueOf(LocalDateTime.now()),
+                "INSERT INTO ibpms_audit_log (id, entity_type, entity_id, event_type, performed_by, created_at, payload_snapshot, is_compressed, truncated, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)",
+                id, "FORM_DEFINITION", id, action, userId,
+                java.sql.Timestamp.valueOf(LocalDateTime.now()),
                 payloadBytes, isCompressed, truncated, detailsJson
         );
     }

@@ -12,6 +12,7 @@ public class WorkdeskGlobalItemDTO {
     private LocalDateTime slaExpirationDate;
     private String status;
     private String assignee;
+    private Integer impactLevel;
     
     // El frontend espera este DTO unificado y paginado.
 }

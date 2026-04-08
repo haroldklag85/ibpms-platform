@@ -20,7 +20,7 @@ import java.util.UUID;
  * Integrado con FormCertificationService para CA-12 (revocación automática al mutar esquema).
  */
 @RestController
-@RequestMapping("/api/v1/forms")
+@RequestMapping("/api/v1/design/form-definitions")
 @Tag(name = "Form Definitions", description = "Endpoints para la gestión de versiones inmutables del esquema JSONB de formularios")
 public class FormDefinitionController {
 

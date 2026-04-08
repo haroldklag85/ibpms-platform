@@ -89,6 +89,17 @@
       <p class="text-red-700 font-medium text-sm">{{ store.errorMessage }}</p>
     </div>
 
+    <!-- CA-07/CA-18: Banner de Degradación BPMN -->
+    <Transition name="toast-slide">
+      <div v-if="store.isDegraded" class="bg-amber-50 border-b border-amber-300 p-3 shadow-sm flex items-center flex-shrink-0 gap-3">
+        <span class="material-symbols-outlined text-amber-600 text-xl animate-pulse shrink-0">warning</span>
+        <div>
+          <p class="text-amber-800 font-bold text-sm">Sincronización BPMN degradada temporalmente</p>
+          <p class="text-amber-600 text-xs">Las tareas de procesos automatizados podrían no estar actualizadas. Las tareas Kanban operan con normalidad.</p>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Main Content 75/25 Split -->
     <main class="flex-1 flex overflow-hidden flex-col md:flex-row">
       <!-- 75% Cards -->
@@ -132,78 +143,82 @@
 
         <div class="flex-1 overflow-y-auto p-card-p no-scrollbar relative min-h-0">
            
+           <!-- CA-12: Empty State Gamificado -->
            <div v-if="filteredItems.length === 0 && !store.isLoading" class="absolute inset-0 flex flex-col items-center justify-center">
-             <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 border border-indigo-100">
-               <span class="material-symbols-outlined text-indigo-500 text-3xl">task</span>
+             <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-green-50 border-2 border-emerald-200 shadow-lg">
+               <span class="material-symbols-outlined text-emerald-500 text-5xl">celebration</span>
              </div>
-             <p class="mt-4 text-gray-500 font-medium tracking-wide">Bandeja Vacía o sin resultados de filtro.</p>
+             <h3 class="mt-6 text-lg font-bold text-emerald-700">🎉 ¡Bandeja Vacía!</h3>
+             <p class="mt-2 text-gray-500 font-medium tracking-wide text-sm max-w-sm text-center">
+               Has resuelto todas tus tareas pendientes. Excelente desempeño operativo.
+             </p>
+             <p class="mt-1 text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Última sincronización: {{ new Date().toLocaleTimeString() }}</p>
            </div>
            
-           <!-- CSS Grid Cards Stitch (CA-3 Visual Remodel) -->
-           <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 items-stretch">
-             <div 
-               v-for="task in filteredItems" 
-               :key="task.unifiedId"
-               @click="mockOpenTask(task)"
-               class="rounded-xl shadow-sm border overflow-hidden flex flex-col transition-all group cursor-pointer min-h-[220px]"
-               :class="task.isSlaAtRisk ? 'bg-orange-50/50 border-orange-300 hover:border-orange-500 hover:bg-orange-50 hover:shadow-md' : 'bg-white border-gray-200 hover:border-indigo-400 hover:shadow-md'"
-             >
-               <!-- SLA Top Bar -->
-               <div class="h-1 w-full" :class="getSlaTopBarClass(task.slaExpirationDate)"></div>
-               
-               <div class="p-card-p flex flex-col gap-3">
-                 <div class="flex items-start justify-between mb-1">
-                   <div class="flex items-center gap-2">
-                     <span class="material-symbols-outlined text-xl" :class="task.sourceSystem === 'BPMN' ? 'text-indigo-600' : 'text-cyan-600'" :title="task.sourceSystem === 'BPMN' ? 'Camunda BPM' : 'Agile Kanban'">
-                       {{ task.sourceSystem === 'BPMN' ? 'bolt' : 'account_tree' }}
+           <!-- CA-03: Data Grid Universal 5 Columnas -->
+           <div v-else class="overflow-x-auto">
+             <table class="w-full text-sm text-left">
+               <thead class="text-[10px] uppercase tracking-wider text-gray-400 border-b border-gray-200 bg-gray-50/50">
+                 <tr>
+                   <th class="px-4 py-3 font-bold">Nombre</th>
+                   <th class="px-4 py-3 font-bold">SLA</th>
+                   <th class="px-4 py-3 font-bold">Estado</th>
+                   <th class="px-4 py-3 font-bold hidden md:table-cell">Avance</th>
+                   <th class="px-4 py-3 font-bold hidden md:table-cell">Recurso</th>
+                 </tr>
+               </thead>
+               <tbody>
+                 <tr 
+                   v-for="task in filteredItems" 
+                   :key="task.unifiedId"
+                   @click="mockOpenTask(task)"
+                   class="border-b border-gray-100 hover:bg-indigo-50/30 cursor-pointer transition-colors group"
+                 >
+                   <!-- Col 1: Nombre + Badge Tipo + Badge Impacto -->
+                   <td class="px-4 py-3">
+                     <div class="flex items-center gap-2">
+                       <span class="material-symbols-outlined text-lg" :class="task.sourceSystem === 'BPMN' ? 'text-indigo-600' : 'text-cyan-600'">
+                         {{ task.sourceSystem === 'BPMN' ? 'bolt' : 'account_tree' }}
+                       </span>
+                       <div class="flex flex-col min-w-0">
+                         <span class="font-semibold text-[#1e1b4b] truncate max-w-[280px] group-hover:text-indigo-600 transition-colors">{{ task.title }}</span>
+                         <span class="text-[10px] font-mono text-gray-400">{{ task.originalTaskId }}</span>
+                       </div>
+                       <span v-if="task.financialImpactHigh" class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[9px] font-black border border-red-200 shrink-0">🔥 Impacto</span>
+                     </div>
+                   </td>
+                   <!-- Col 2: SLA Semáforo Vivo -->
+                   <td class="px-4 py-3">
+                     <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border', getSlaPillClass(task.slaExpirationDate)]">
+                       {{ getSlaRelativeTime(task.slaExpirationDate) }}
                      </span>
-                     <span class="font-mono text-[11px] text-gray-400 font-semibold tracking-wider">{{ task.originalTaskId }}</span>
-                   </div>
-                   <span class="material-symbols-outlined text-gray-300 text-[18px] group-hover:text-indigo-600 transition-colors">more_vert</span>
-                 </div>
-                 
-                 <h3 class="text-sm font-bold text-[#1e1b4b] leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2">
-                   {{ task.title }}
-                 </h3>
-                 
-                 <div class="flex items-center gap-2 mt-2 flex-wrap">
-                   <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border', getSlaPillClass(task.slaExpirationDate)]">
-                     {{ getSlaRelativeTime(task.slaExpirationDate) }}
-                   </span>
-
-                   <!-- CA-10 Insignia Cognitiva Multi-Rol -->
-                   <span v-if="task.candidateGroup" class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-[10px] font-bold uppercase tracking-wider border border-blue-200 flex items-center gap-1 shadow-sm">
-                      <span class="material-symbols-outlined text-[12px]">badge</span> ROL: {{ task.candidateGroup.replace('ROLE_', '').replace(/_/g, ' ') }}
-                   </span>
-
-                   <!-- CA-6 Badge Early Warning -->
-                   <span v-if="task.isSlaAtRisk" class="px-2 py-1 bg-orange-100 text-orange-800 rounded text-[10px] font-bold uppercase tracking-wider border border-orange-300 animate-pulse flex items-center gap-1">
-                      ⚠️ SLA en Riesgo
-                   </span>
-                   
-                   <span class="px-2 py-1 bg-gray-100/80 text-gray-600 rounded text-[10px] font-bold uppercase tracking-wider border border-gray-200 border-dashed">
-                     {{ task.status }}
-                   </span>
-                 </div>
-                 
-                 <div class="pt-4 mt-auto border-t border-gray-100 flex items-center justify-between">
-                   <div class="flex items-center gap-3">
-                     <div v-if="task.assignee" class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs ring-2 ring-indigo-50 shadow-sm uppercase shrink-0">
-                       {{ task.assignee.substring(0,2) }}
+                   </td>
+                   <!-- Col 3: Estado -->
+                   <td class="px-4 py-3">
+                     <span class="px-2 py-1 bg-gray-100/80 text-gray-600 rounded text-[10px] font-bold uppercase border border-gray-200 border-dashed">{{ task.status }}</span>
+                   </td>
+                   <!-- Col 4: Avance (CA-23) - Oculta en móvil -->
+                   <td class="px-4 py-3 hidden md:table-cell">
+                     <div v-if="task.progressPercent != null" class="flex items-center gap-2">
+                       <div class="flex-1 bg-gray-200 rounded-full h-2 max-w-[120px]">
+                         <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" :style="{ width: task.progressPercent + '%' }"></div>
+                       </div>
+                       <span class="text-[10px] font-bold text-gray-500 w-8 text-right">{{ task.progressPercent }}%</span>
                      </div>
-                     <div v-else class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 shrink-0">
-                       <span class="material-symbols-outlined text-gray-400 text-sm">person_off</span>
+                     <span v-else class="text-[10px] text-gray-400 italic">N/D</span>
+                   </td>
+                   <!-- Col 5: Recurso Asignado - Oculta en móvil (CA-12 degradación responsive) -->
+                   <td class="px-4 py-3 hidden md:table-cell">
+                     <div class="flex items-center gap-2">
+                       <div v-if="task.assignee" class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[9px] ring-1 ring-indigo-100 uppercase shrink-0">
+                         {{ task.assignee.substring(0,2) }}
+                       </div>
+                       <span class="text-xs text-gray-600 truncate max-w-[100px]">{{ task.assignee || 'Sin Asignar' }}</span>
                      </div>
-                     <div class="flex flex-col min-w-0">
-                       <span class="text-[9px] text-gray-400 uppercase font-bold tracking-tight">Asignado</span>
-                       <span class="text-xs font-semibold text-gray-700 truncate max-w-[120px]" v-if="task.assignee">{{ task.assignee }}</span>
-                       <span class="text-xs font-semibold text-gray-400 italic truncate" v-else>Sin Asignar</span>
-                     </div>
-                   </div>
-                   <span class="material-symbols-outlined text-gray-300 text-lg group-hover:text-indigo-400 transition-colors shrink-0">arrow_forward</span>
-                 </div>
-               </div>
-             </div>
+                   </td>
+                 </tr>
+               </tbody>
+             </table>
            </div>
         </div>
 
@@ -294,12 +309,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, defineAsyncComponent, computed } from 'vue';
+defineOptions({ name: 'Workdesk' });
+
+import { ref, watch, onMounted, onUnmounted, defineAsyncComponent, computed } from 'vue';
 import { useWorkdeskStore } from '@/stores/useWorkdeskStore';
 import { useAuthStore } from '@/stores/authStore';
 
 const store = useWorkdeskStore();
 const toastSuccess = ref('');
+
+// CA-12: Anti Empty Last Page
+watch(() => store.items.length, (newLen) => {
+  if (newLen === 0 && store.pageInfo.pageNumber > 0) {
+    store.fetchGlobalInbox(0, store.pageInfo.pageSize, searchQuery.value, delegationFilter.value, typeFilter.value, slaFilter.value);
+  }
+});
 
 // ==========================================
 // Toggle del Panel Lateral Derecho
@@ -376,13 +400,6 @@ const getSlaStatus = (isoString?: string) => {
     if(diffHours < 0) return 'EXPIRED';
     if(diffHours <= 24) return 'WARNING';
     return 'OK';
-};
-
-const getSlaTopBarClass = (isoString?: string) => {
-    const st = getSlaStatus(isoString);
-    if(st === 'EXPIRED') return 'bg-red-500';
-    if(st === 'WARNING') return 'bg-yellow-400';
-    return 'bg-emerald-500';
 };
 
 const getSlaPillClass = (isoString?: string) => {

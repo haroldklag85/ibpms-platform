@@ -12,6 +12,12 @@ export interface WorkdeskGlobalItemDTO {
   assignee: string | null;
   isSlaAtRisk?: boolean; // CA-6 Semáforo Naranja Early Warning
   candidateGroup?: string; // CA-10 Visibilidad Multi-Rol
+  
+  // 77-DEV: Nuevos campos CA-01/CA-03/CA-23
+  progressPercent: number | null;    // CA-23: null = N/D
+  typeBadge: string;                 // CA-03: '⚡ Flujo' o '📅 Proyecto'
+  financialImpactHigh: boolean;      // CA-17: Badge 🔥
+  impactLevel?: number;
 }
 
 export interface PageableResponse {
@@ -24,6 +30,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
   state: () => ({
     items: [] as WorkdeskGlobalItemDTO[],
     pageInfo: { pageNumber: 0, pageSize: 50, totalElements: 0 } as PageableResponse,
+    isDegraded: false,
     isLoading: false,
     isError: false,
     errorMessage: '',
@@ -40,7 +47,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
       this.currentPage = page;
 
       try {
-        const response = await apiClient.get('/api/v1/workdesk/my-queues', {
+        const response = await apiClient.get('/workdesk/global-inbox', {
             params: { 
               page, 
               size, 
@@ -55,6 +62,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
         if (response.data && Array.isArray(response.data.content)) {
             this.items = response.data.content;
             this.pageInfo = response.data.pageable || { pageNumber: page, pageSize: size, totalElements: response.data.totalElements || this.items.length };
+            this.isDegraded = response.data?.degraded === true;
         } else {
              // Fallback defensive
              this.items = [];

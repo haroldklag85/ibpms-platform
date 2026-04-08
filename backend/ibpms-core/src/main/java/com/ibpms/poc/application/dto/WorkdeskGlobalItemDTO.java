@@ -14,5 +14,12 @@ public class WorkdeskGlobalItemDTO {
     private String assignee;
     private Integer impactLevel;
     
-    // El frontend espera este DTO unificado y paginado.
+    // CA-23: Porcentaje de avance determinista (null = N/D)
+    private Integer progressPercent;
+
+    // CA-03: Badge textual para la UI ('⚡ Flujo' o '📅 Proyecto')
+    private String typeBadge;
+
+    // CA-17: Flag de impacto financiero alto para badge visual
+    private boolean financialImpactHigh;
 }

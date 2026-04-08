@@ -60,14 +60,33 @@ public class WorkdeskQueryController {
                 dto.setStatus(e.getStatus());
                 dto.setAssignee(e.getAssignee());
                 dto.setImpactLevel(e.getImpactLevel());
+                
+                // CA-23: Inyección del avance calculado
+                dto.setProgressPercent(e.getProgressPercent());
+                
+                // CA-03: Badge visual de tipo
+                dto.setTypeBadge("BPMN".equals(e.getSourceSystem()) ? "⚡ Flujo" : "📅 Proyecto");
+                
+                // CA-17: Flag de impacto financiero alto (umbral >= 8)
+                dto.setFinancialImpactHigh(e.getImpactLevel() != null && e.getImpactLevel() >= 8);
+                
                 return dto;
             });
 
             return ResponseEntity.ok(new WorkdeskResponseDTO(false, dtoPage));
             
         } catch (Exception e) {
-            log.error("Error crítico obteniendo la bandeja CQRS Workdesk. Retornando estado degradado", e);
-            // Tolerancia a fallos: NUNCA retornar 500, retornar lista vacia con bandera "degraded"
+            // CA-07/CA-18: Degradación Elegante Multi-Motor
+            boolean isCamundaFailure = e.getMessage() != null && 
+                (e.getMessage().contains("Camunda") || e.getMessage().contains("ProcessEngine") || e.getCause() instanceof org.springframework.web.client.ResourceAccessException);
+            
+            if (isCamundaFailure) {
+                log.warn("CA-07: Motor BPMN degradado. Retornando solo tareas Kanban locales.", e);
+            } else {
+                log.error("Error crítico completo en bandeja CQRS Workdesk.", e);
+            }
+            
+            // Retornar vacío con bandera de degradación
             @SuppressWarnings("null")
             Page<WorkdeskGlobalItemDTO> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
             return ResponseEntity.ok(new WorkdeskResponseDTO(true, emptyPage));

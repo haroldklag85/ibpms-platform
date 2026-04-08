@@ -4057,6 +4057,15 @@ Scenario: Evento Compensatorio SGDEA por Aborto de Caso (Saga Pattern Documental
 **Quiero** segmentar las Tarjetas Kanban y Dashboards por el rol específico del que mira
 **Para** evitar ruido cognitivo y entregar exactamente lo que cada persona necesita (Visibilidad, Ejecución o Seguimiento).
 
+> [!IMPORTANT]
+> **Dependencias y Bloqueos Sistémicos (Análisis PO 2026-04-08):**
+> - **US-036 (RBAC & Seguridad Perimetral) [DEPENDENCIA ESTRUCTURAL]:** El Frontend de la US-025 es enteramente "ciego y obediente"; depende a nivel atómico del token JWT (RBAC) expuesto por el backend de la US-036. Sin esa matriz de roles empaquetada, las directivas de ocultamiento (CA-1 al CA-4) carecen de insumo de verdad.
+> - **US-001 (Workdesk) y US-002 (Reclamo de Tareas) [CONSUMIDORES]:** Son las pantallas operativas que implementarán directamente los mandatos UX dictaminados aquí (Soft-Undo de 5s, Skeleton Loaders y Websocket Push Alerts).
+> - **US-009 (Dashboard de Salud) [CONSUMIDOR LAZY-LOAD]:** Consumidor exclusivo de la directiva de Lazy Loading cruzado (IntersectionObserver) para gráficas pesadas (CA-28).
+> - **BLOQUEANTES DE DESARROLLO: NINGUNA.** El equipo FrontEnd cuenta con vía libre de desarrollo. Los arquitectos Vue pueden avanzar simulando un Store y Falseando Roles en Memoria (Pinia Mock) sin esperar un solo endpoint del Backend.
+> - **Clasificación MoSCoW Oficial:** **MUST** (App Shell crítico base para todo el ecosistema de cliente SPA).
+
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
  Feature: Arquitectura de Visibilidad Basada en Roles (UX RBAC)
@@ -4251,6 +4260,44 @@ Scenario: Evento Compensatorio SGDEA por Aborto de Caso (Saga Pattern Documental
     And el sistema debe respetar e inyectar estrictamente el componente Vue original diseñado para esa etapa específica
     And preservando intacto su CSS, UI Density, Columnas y Cuadrículas (Grids) originales configurados en el Form Designer
     And la interfaz debe estar coronada obligatoriamente por un componente "Stepper" en la parte superior para trazabilidad de las etapas.
+
+  # ==============================================================================
+  # E. REMEDIACIONES TÁCTICAS POST-ANÁLISIS DE ARQUITECTURA (2026-04-08)
+  # Origen: GAPs detectados en docs/requirements/us025_functional_analysis.md
+  # Propósito: Blindar la auditoría en "Ver Sistema Como", asegurar peticiones DELETE
+  #            en cierres súbitos, y eliminar asimetrías Server-Side Pagination vs Sockets.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN GAP-1] Trazabilidad Iso-Audit en Modo Impersonator (CA-31)
+    # Resuelve: Evitar que un Admin cometa un fraude indetectable operando bajo la UI mutada de un usuario base (CA-9).
+    Given el administrador operando el sistema en Modo Soporte ("Impersonate" activo bajo el token de Juan)
+    When el administrador ejecuta una operación de escritura o negocio simulando ser Juan (Ej: Aprobar Tarea)
+    Then el API Request Gateway garantizará que el JWT transmitido contenga un identificador híbrido obligando al motor de auditoría a registrar: `User: Juan | ImpersonatedBy: Admin_ID`.
+    And será materialmente imposible, a nivel Backend o Frontend BFF, que el sistema asuma ciegamente que "Juan" aprobó el trámite, protegiendo a la empresa ante forenses ISO 27001.
+
+  Scenario: [REMEDIACIÓN GAP-2] Beacon de Ejecución para Cierres Abruptos en Soft-Undo (CA-32)
+    # Resuelve: Qué pasa si un analista oprime [Archivar], pero cierra Chrome en 2s sin esperar la caducidad del Soft-Undo de 5s.
+    Given la ventana de gracia del CA-14 (el POST/DELETE se retrasa 5 segundos en VUE)
+    When el usuario instaura la orden destructiva en la UI, pero repentinamente cierra la pestaña completa de su navegador Chrome/Edge
+    Then el framework del FrontEnd reaccionará al evento `beforeunload` del ciclo de vida del DOM
+    And forzará el envío asíncrono e instantáneo de la mutación estancada en el stack utilizando OBLIGATORIAMENTE la API nativa de navegador `navigator.sendBeacon()` hacia la ruta del Backend.
+    And garantizando transaccionalmente que ninguna tarea "muerta" en la UI del Front siga viva en el Microservicio por culpa del cierre súbito.
+
+  Scenario: [REMEDIACIÓN GAP-3] Derogación de Listas Colosales en Favor de Paginación Server-Side (CA-33)
+    # Resuelve: El mandato "Virtual Scrolling de 5000 arrays" (CA-22) colisiona contra las barreras SRE de la US-001 (Paginación).
+    Given la necesidad de cargar grillas en Pantallas densas (Ej: Histórico de 5000 Casos en Pantalla 16)
+    When el Arquitecto UI diseñe el mecanismo de entrega visual
+    Then SE RECHAZA OFICIALMENTE forzar la petición y descarga al cliente de arreglos masivos (5000 rows JSON), dejando sin efecto primario el CA-22 en vistas maestras de negocio.
+    And primará ABSOLUTAMENTE el consumo de Paginación Sever-Side (`?page=1&size=20`), donde el "Virtual Scrolling" en Front operará iterativamente exigiendo la siguiente página (Infinite Scroll transparente via API), blindando tanto la Memoria RAM del navegador en CA-22 como CPU/DBA de Servidor.
+
+  Scenario: [REMEDIACIÓN GAP-4] Resincronización Silenciosa Híbrida de WebSockets (CA-34)
+    # Resuelve: Las inyecciones Sockets de Tareas (CA-25) desajustan matemáticamente las grillas "Server-Paginadas" del CA-33.
+    Given la vista activa de una Tabla de Workdesk paginada exactamente a 20 filas operando en pantalla
+    When una Alerta Silenciosa de Websockets (CA-25) reciba la inyección de una (1) tarea nueva en vivo proveniente de Camunda
+    Then el cliente SPA (Vue) incorporará visualmente el registro mágico brillándolo momentáneamente
+    And en background disparará una orden sorda de "Silent Page Invalidated" contra Pinia (Store) que obligará a re-solicitar silenciosamente bajo cuerdas al Backend el total Count (`totalElements`) para reajustar los números absolutos y relativos de todos los paginadores de la tabla (`Mostrando 21 de 1.831`), evitando descuadres lógicos del Framework UI.
+	
+	
 ```
 
 **Trazabilidad UX:** Layout Maestro (Sidebar Lateral, Header Superior) y Pantallas 0 (Dashboard) y 1 (Workdesk).

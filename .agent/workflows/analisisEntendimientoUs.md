@@ -42,7 +42,7 @@ Debes generar un reporte Markdown estructurado que contenga las siguientes secci
 - **Lista de funcionalidades incluidas**.
 - **Lista de brechas, gaps o ambigüedades** detectadas.
 - **Lista de exclusiones** o aspectos fuera de alcance.
-- **Observaciones de alineación o riesgos** para continuar.
+- **Observaciones de alineación o riesgos** definir: Clasificación MoSCoW, Resumen de Dependencias con otras User Stories, Dependencia Bloqueante.
 
 ## Criterios de Calidad Estrictos
 - La interpretación debe ser precisa, clara y fiel al contenido real de la historia.

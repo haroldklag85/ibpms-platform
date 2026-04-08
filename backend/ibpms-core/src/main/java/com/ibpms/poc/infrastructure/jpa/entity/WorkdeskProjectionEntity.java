@@ -56,4 +56,16 @@ public class WorkdeskProjectionEntity {
 
     @Column(name = "impact_level", nullable = false)
     private Integer impactLevel;
+
+    @Column(name = "progress_percent")
+    private Integer progressPercent;
+
+    @Column(name = "total_steps")
+    private Integer totalSteps;
+
+    @Column(name = "current_step")
+    private Integer currentStep;
+
+    @Column(name = "process_definition_key")
+    private String processDefinitionKey;
 }

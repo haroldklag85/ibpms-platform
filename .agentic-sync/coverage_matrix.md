@@ -23,9 +23,15 @@
 | CA-6 | Ghost Deletion STOMP WebSocket | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |
 | CA-7 | Tolerancia Fallas CQRS | ✅ | ⏳ | ❌ | S-1 | handoff_backend_us001 | Backend completado |
 | CA-8 | Anti-Cherry Picking Feature Flag | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |
+| CA-9 | Paginación Máxima Visual | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
+| CA-10 | Paginación Server-Side y pg_trgm | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
+| CA-14 | Sanitización DTO y Aislamiento RLS | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
+| CA-17 | Ordenamiento SLA y Priority Fallback | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
+| CA-19 | Búsqueda Exclusiva Server-Side | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
+| CA-20 | Estandarización Contrato API | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 
 ### Resumen US-001
-- **Total CAs:** 8 | **✅ Completos (3 capas):** 6 (75%) | **⏳ Parcial:** 1 (12.5%) | **❌ Pendiente:** 1 (12.5%)
+- **Total CAs:** 14 | **✅ Completos (3 capas):** 12 (85%) | **⏳ Parcial:** 1 (7.5%) | **❌ Pendiente:** 1 (7.5%)
 
 ---
 

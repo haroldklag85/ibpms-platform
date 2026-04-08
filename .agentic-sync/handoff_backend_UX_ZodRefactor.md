@@ -10,6 +10,6 @@ En esta ventana operativa, el esfuerzo principal se orienta a solucionar deficie
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a tu rama.
 Tampoco alteres los archivos `.java`.
 Si fuiste invocado por CLI, tan solo ejecuta el siguiente comando como acuse de recibo pasivo:
-`git stash save "temp-backend-US003-Zod-Standby"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente al Arquitecto Líder apenas termine el guardado.

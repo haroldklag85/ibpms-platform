@@ -5,7 +5,7 @@
 
 ## 🚨 Reglas de Oro (V1 Scope)
 1. **Nada de V2:** Mantener interfaces magras. Ninguna validación estadística ni MLOps.
-2. **Gatekeeper:** Cero commits directos. Usar `git stash` tras la ejecución.
+2. **Gatekeeper:** Consolidar cambios usando `git commit` y `git push` tras la ejecución.
 
 ---
 
@@ -43,4 +43,4 @@
 
 ### Misión Final (Gatekeeper)
 Al concluir los ajustes visuales, ejecutar:
-`git stash push -m "Iteracion 27: US-005 Frontend Handoff CA-56 a CA-59 (Retry Panel, Output Mapping)"` y notificar éxito al Comandante.
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD` y notificar éxito al Comandante.

@@ -24,6 +24,6 @@ El Frontend deshabilitará el botón, pero el Backend nunca confía en el client
 ## 🛑 MANDATO LOCAL GATEKEEPER
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a principal.
 Compila tus Controladores, enciende la protección 403 y envuelve todo en un stash:
-`git stash save "temp-backend-US005-ca21-ca25"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

@@ -19,6 +19,6 @@ Tu responsabilidad abarca las siguientes adiciones al `FormDesigner.vue` y su re
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer un `git commit` directamente. 
 Codifica el AST reactivo, y luego protege el avance almacenándolo aisladamente en stash:
-`git stash save "temp-frontend-US003-ca36-ca40"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Avisa únicamente cuando el comando Stash haya concluido exitosamente.

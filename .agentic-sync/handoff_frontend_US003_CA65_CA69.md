@@ -19,6 +19,6 @@ Al analizar los requerimientos, los CA-65, CA-66 y CA-67 originales están total
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` directamente a principal. 
 Implementa estas macros avanzadas del AST Generador Zod y, tras verificar que la descarga arroje un archivo de prueba funcional, guarda todo:
-`git stash save "temp-frontend-US003-ca65-ca69-QA"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Escribe textualmente la comprobación del comando en pantalla cuando finalices.

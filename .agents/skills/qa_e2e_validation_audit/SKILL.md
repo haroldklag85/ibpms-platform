@@ -1,10 +1,9 @@
 ---
 name: qa_e2e_validation_audit
 description: >
-  Skill obligatoria para el Agente QA/DevOps. Exige ejecución empírica de pruebas E2E 
-  con Playwright, adjunción de evidencia verificable (screenshots/video/logs) y prohibición 
-  absoluta de reportar "pass" sin pruebas físicas de supervivencia. Operacionaliza la 
-  LEY GLOBAL 2 (Zero-Trust) para el rol QA.
+  Skill obligatoria para el Agente QA/DevOps. Exige ejecución empírica de TODA LA PIRÁMIDE DE PRUEBAS 
+  (Unitarias, Integración, E2E) usando JUnit, Vitest y Playwright. Incluye la adjunción de evidencia 
+  verificable (screenshots/video/logs) y prohibición absoluta de reportar "pass" sin pruebas de supervivencia.
 triggers:
   - "Cuando el agente QA termine de ejecutar un lote de pruebas y se prepare para reportar resultados al Arquitecto o al Humano."
   - "Al recibir un handoff de Backend o Frontend solicitando validación E2E."
@@ -19,13 +18,13 @@ applies_to:
 
 A partir de este momento, TIENES ESTRICTAMENTE PROHIBIDO asumir que el código funciona solo porque "se ve bien" o porque el agente Backend/Frontend dijo que compiló. Tu flujo de trabajo cambia obligatoriamente a validación empírica verificable:
 
-## 1. PROHIBIDO EL REPORTE CIEGO
+## 1. PROHIBIDO EL REPORTE CIEGO (PIRÁMIDE DE TESTING COMPLETA)
 
-Antes de reportar cualquier resultado al Arquitecto, al Humano, o notificar que has terminado, **DEBES** ejecutar la suite de pruebas E2E completa. En la raíz del proyecto o la carpeta de tests correspondiente, ejecuta:
+Antes de reportar cualquier resultado al Arquitecto o al Humano, **DEBES** ejecutar la suite de pruebas correspondiente a tu auditoría, respetando el ADR 011:
 
-```bash
-npx playwright test --reporter=html
-```
+1. **Frontend Unit/Components (Vitest):** `cd frontend && npm run test:unit`
+2. **Backend Unit/Integration (JUnit/Mockito):** `cd backend/ibpms-core && mvn test`
+3. **Plataforma E2E (Playwright):** `npx playwright test --reporter=html`
 
 Este comando ejecutará los tests Playwright que verificarán:
 *   Flujos de usuario completos (login, navegación, CRUD, formularios).

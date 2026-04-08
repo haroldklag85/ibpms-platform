@@ -24,10 +24,13 @@ Antes de ejecutar cualquier comando `docker compose`, DEBES verificar que el Doc
    b. **DETENTE** y reporta el bloqueo al Humano con el mensaje: "BLOQUEADO: Docker Daemon no disponible. No puedo cumplir LEY GLOBAL 2. Se requiere intervención de infraestructura."
    c. Documenta el bloqueo en `.agentic-sync/infra_blocker_[fecha].md`.
 
+## 0.5 FALLBACK DE EMERGENCIA LOCAL (Solo con Autorización)
+Si Docker está inoperante **Y** el Arquitecto Líder autoriza explícitamente el desvío, el agente PUEDE usar el binario local `mvn test` o `mvn spring-boot:run` (ej. `.\maven_bin\apache-maven-3.9.6\bin\mvn.cmd test`) SOLO para ejecución de pruebas unitarias o de integración. La compilación final de producción SIGUE requiriendo Docker.
+
 ## 1. PROHIBIDO EL HANDOFF CIEGO
 Antes de enviar cualquier estado a QA, al Arquitecto, o notificar que has terminado, **DEBES** ejecutar la compilación y arranque mediante la topología de contenedores agnóstica de la plataforma. En la raíz del proyecto, ejecuta:
 ```bash
-docker compose up -d ibpms-core
+docker compose up -d --build ibpms-core
 ```
 Esto reconstruirá y ejecutará la aplicación (Hot-Reload) usando el contenedor Maven dedicado sin depender de binarios en tu máquina Host.
 

@@ -23,6 +23,6 @@ Para que el Frontend construya su Dropdown restrictivo en el Panel de Propiedade
 ## 🛑 MANDATO LOCAL GATEKEEPER
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a principal.
 Despliega el Endpoint de Servicio, lánzalo y encampsula tu código en Git:
-`git stash save "temp-backend-US005-ca36-ca40"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

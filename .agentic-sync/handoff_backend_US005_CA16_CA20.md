@@ -22,6 +22,6 @@ Construye o extiende el `BpmnDesignController.java` para soportar las siguientes
 ## 🛑 MANDATO LOCAL GATEKEEPER
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a principal.
 Desarrolla los puertos, endurece el servicio y encapsula en stash:
-`git stash save "temp-backend-US005-ca16-ca20"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

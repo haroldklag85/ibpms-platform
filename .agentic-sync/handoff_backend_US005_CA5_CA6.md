@@ -21,6 +21,6 @@ El Arquitecto Líder ha ordenado purgar el alcance V2 (Migraciones). Te enfocar�
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a principal.
 Congela tu Backend en un stash cuando superes la compilación local:
-`git stash save "temp-backend-US005-ca5-ca6"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

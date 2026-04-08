@@ -19,6 +19,6 @@ Esta iteración define controles estéticos y reglas condicionales puras sobre `
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer un `git commit` directamente. 
 Edita el FormDesigner.vue, ZodBuilder.ts y utilitarios. Luego encierra el trabajo en caja fuerte local:
-`git stash save "temp-frontend-US003-ca46-ca50"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Reporta con un mensaje de "Éxito Stash" exclusivo cuando finalices el comando.

@@ -20,6 +20,6 @@
 ## 🛑 MANDATO LOCAL GATEKEEPER
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a principal.
 Construye los puertos, lánzalos junto al BpmnDesignController y asegura en stash:
-`git stash save "temp-backend-US005-ca26-ca30"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

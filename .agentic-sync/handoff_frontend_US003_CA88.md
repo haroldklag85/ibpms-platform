@@ -102,4 +102,4 @@ npm run build
 ### Pasos Operativos para el Agente Frontend:
 - Crea/edita los archivos mencionados.
 - Valida la compilación (`npm run build` en `frontend`).
-- Redacta el `approval_request_frontend.md` y solicítale tu aprobación al Humano indicándole que se ejecute la validación final y luego procede a empaquetar con `git stash save "temp-frontend-US003-CA88"`.
+- Redacta el `approval_request_frontend.md` y solicítale tu aprobación al Humano indicándole que se ejecute la validación final y luego procede a empaquetar con `git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`.

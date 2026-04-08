@@ -16,6 +16,6 @@ En esta Iteración 12 la carga recae fuertemente en el modelado visual, pero com
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal.
 En cuanto blindes las validaciones DTO, congélalo:
-`git stash save "temp-backend-US003-ca55-ca59"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente al Arquitecto Líder apenas termine el empaquetado.

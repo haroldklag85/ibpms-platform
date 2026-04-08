@@ -25,6 +25,6 @@ Esta fase aborda la resiliencia y recuperación de desastres (DRP) en el gobiern
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` directamente a principal. 
 Construye las UIs solicitadas en Vue, conéctalas vía Axios (apiClient.ts) y congela todo:
-`git stash save "temp-frontend-US005-ca13-ca15"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

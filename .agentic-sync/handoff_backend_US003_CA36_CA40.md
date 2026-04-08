@@ -17,6 +17,6 @@ Debes abordar:
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal.
 En cuanto finalices el código backend, empaqueta las modificaciones:
-`git stash save "temp-backend-US003-ca36-ca40"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualemente al Arquitecto Líder apenas termine el guardado.

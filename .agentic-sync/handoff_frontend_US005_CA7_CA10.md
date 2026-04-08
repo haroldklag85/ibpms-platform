@@ -23,6 +23,6 @@ Al hundir el botón final `[Ejecutar Migración Seleccionada]`, tu payload JSON 
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` directamente a principal. 
 Construye la UI, mockea la tabla de variables y congela todo:
-`git stash save "temp-frontend-US005-ca7-ca10"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

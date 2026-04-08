@@ -19,6 +19,6 @@ Debes implementar las siguientes características en `FormDesigner.vue` excluyen
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** comitear el progreso nativo a `main`. 
 Cuando compruebes que el Canvas obedece las API del dispositivo (GPS), las zonas de arrastre son funcionales (Dropzone CSS), y los Zods se generan blindados, congela tu trabajo:
-`git stash save "temp-frontend-US003-ca60-ca64"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Escribe textualmente la comprobación de ese comando Git a este canal apenas termines de programarlo todo.

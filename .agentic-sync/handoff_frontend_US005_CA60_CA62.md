@@ -34,4 +34,4 @@ El Agente Vue/UI debe expandir u optimizar la lógica de `BpmnDesigner.vue` (o l
 El Agente Frontal debe:
 1. Asegurar en la UI que si el usuario pinta estos "Nodos Rebeldes", no pueda desplegarlos.
 2. Comprobar la inyección de la vista del Dropdown DMN.
-3. **Respetar Gatekeeper Stash:** Al concluir, usar `git stash push -m "Iteracion 30: US-005 Frontend Handoff CA-60 a CA-62 (Retrying)..."`.
+3. **Respetar Gatekeeper Stash:** Al concluir, usar `git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`.

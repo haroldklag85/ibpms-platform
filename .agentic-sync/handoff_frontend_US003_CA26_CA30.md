@@ -19,6 +19,6 @@ Debes abordar los siguientes Criterios (CA):
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** ejecutar un `git commit` permanentemente.
 Sigue el procedimiento de Zero-Trust Git guardando tus archivos modificados temporalmente en el caché para inspección superior:
-`git stash save "temp-frontend-US003-ca26-ca30"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Apenas termines y valides gráficamente, repórtate a la jefatura.

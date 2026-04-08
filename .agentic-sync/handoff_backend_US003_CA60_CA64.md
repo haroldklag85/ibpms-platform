@@ -17,6 +17,6 @@ En esta Iteración 13 la protagonista absoluta es la capa Frontend (Invocaciones
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal.
 En cuanto finalices la revisión y ajustes menores, empaqueta los cambios:
-`git stash save "temp-backend-US003-ca60-ca64"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente al Arquitecto Líder apenas termine el guardado.

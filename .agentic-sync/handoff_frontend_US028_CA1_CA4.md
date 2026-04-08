@@ -19,6 +19,6 @@ A continuación, los 4 escenarios de cumplimiento obligatorio sobre `FormDesigne
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` directamente a principal. 
 Implementa la lógica del Blob Auto-Generador. Una vez compruebes que al hacer clic se descarga tu primer script `.spec.ts` funcional, congela todo en un stash:
-`git stash save "temp-frontend-US028-ca1-ca4"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Escribe textualmente el comando de éxito cuando finalices.

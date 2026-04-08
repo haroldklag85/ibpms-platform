@@ -9,6 +9,7 @@ Estas instrucciones rigen CADA INTERACCIÓN en este proyecto y deben ser respeta
 - **Pase de Testigo (Obligatorio):** Al terminar su programación, el agente debe hacer un commit de su trabajo en su rama temporal. El código jamás quedará flotando sin trackear en el disco.
 - **🚫 PROHIBICIÓN ABSOLUTA DE `git stash` COMO MECANISMO DE ENTREGA:** Queda TERMINANTEMENTE PROHIBIDO que cualquier agente (incluido el Arquitecto Líder) instruya, sugiera o ejecute `git stash save` como forma de empaquetar o transferir trabajo entre agentes. El `stash` es volátil, local, no auditable y no transferible entre nodos. Todo trabajo completado DEBE consolidarse exclusivamente con `git commit -m "tipo(alcance): descripción"` seguido de `git push` a la rama de sprint. Cualquier handoff que contenga la instrucción `git stash` es INVÁLIDO por definición y debe ser rechazado por el agente receptor.
 - **Responsabilidad del Arquitecto:** Solo el Agente Arquitecto Líder (Orquestador) podrá realizar el Merge/Pull Request hacia `main` tras validar que el código aislado funciona. Quedan prohibidos los comandos destructivos que corrompan el historial principal.
+- **Prohibición de Ambigüedad en Handoffs:** El Agente Arquitecto Líder NO PUEDE relajar políticas en los documentos `.md` de Handoff ni dar directrices de compilación ("mvn compile") que contradigan la LEY GLOBAL 2. En la sección "Mensaje para el Humano", el Arquitecto debe referenciar explícitamente los archivos `SKILL.md` (Ej. `backend_sre_compilation_audit/SKILL.md`) en lugar de sugerir atajos o fallbacks locales.
 
 ## 2. Auditoría Limitada por Deltas (Mitigación Cognitiva)
 - Para la auditoría del código inyectado, el Agente Arquitecto está instruido a basarse estrictamente en los deltas ejecutando `git diff main...rama-del-agente`, evitando leer archivos de miles de líneas desde cero.
@@ -20,7 +21,7 @@ Estas instrucciones rigen CADA INTERACCIÓN en este proyecto y deben ser respeta
 
 ## 4. Integración Visual Conservadora (Regla Quirúrgica)
 - Cuando una IA de Diseño genere interfaces de forma estática, queda **ESTRICTAMENTE PROHIBIDO** hacer un reemplazo automático (fusión directa) contra los archivos `.vue` funcionales y lógicos de la aplicación.
-- Las clases CSS de Tailwind o colores sueltos deben inyectarse *pieza por pieza y a mano* en el código fuente base.
+- Las clases de PrimeVue, utilidades Tailwind o colores sueltos deben inyectarse *pieza por pieza y a mano* en el código fuente base.
 
 ## 5. Políticas Core de Frontend (Zero-Trust UI y Desacoplamiento)
 - **Cero-Mocks (Integración Estricta):** Al desarrollar componentes que dependan de flujos de valor, queda estrictamente prohibido simular estado con Mocks o arrays estáticos. Se debe requerir interconexión APIRest y manejar los `catch()` reales.
@@ -67,8 +68,8 @@ Tienes prohibido asumir que tu código funciona solo por inferencia estática. T
 
 - Si eres BACKEND: 
   Tu entorno de compilación vive EXCLUSIVAMENTE en Docker, no en tu OS anfitrión.
-  1. Ejecuta `docker-compose up -d --build ibpms-core` en la raíz.
-  2. Haz streaming de los logs para auditar el arranque: `docker-compose logs -f ibpms-core`.
+  1. Ejecuta `docker compose up -d --build ibpms-core` en la raíz.
+  2. Haz streaming de los logs para auditar el arranque: `docker compose logs -f ibpms-core`.
   Solo si la consola de Docker dice "Started on port 8080" puedes dar la tarea por completada. Si ves `Web server failed to start` o `Connection Refused`, estás en CÓDIGO ROJO. Revisa tus variables o asunciones, y sigue tu doctrina oficial al pie de la letra en: `.agents/skills/backend_sre_compilation_audit/SKILL.md`.
 
 - Si eres FRONTEND: Antes de confirmar éxito, obligatoriamente debes demostrar que la UI no está rota ejecutando `npm run build` (o el equivalente Vite/Vue) y asegurar un "Build Successful".

@@ -15,6 +15,6 @@ En esta Iteración 14, la carga técnica recae 100% en el Frontend (Generador de
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal.
 En cuanto finalices la revisión inaneórica, empaqueta los cambios:
-`git stash save "temp-backend-US003-ca65-ca69-QA"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente al Arquitecto Líder apenas termine el empaquetado.

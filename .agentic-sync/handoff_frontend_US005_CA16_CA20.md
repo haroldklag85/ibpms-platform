@@ -23,6 +23,6 @@ Crea el botón `[🧪 Probar en Sandbox]`. En un escenario real esto consumiría
 ## 🛑 MANDATO LOCAL GATEKEEPER
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` directamente a principal.
 Aplica estas funciones en el componente Vue y congela todo tu avance localmente:
-`git stash save "temp-frontend-US005-ca16-ca20"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

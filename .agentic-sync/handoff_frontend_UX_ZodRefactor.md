@@ -25,6 +25,6 @@ Debes condensar la cabecera actual, purgando redundancias y organizando estricta
 ## 🛑 MANDATO LOCAL GATEKEEPER
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` directamente. 
 Escribe y reorganiza el DOM Vue3, verifica la integridad iterativa y guarda:
-`git stash save "temp-frontend-US003-ZodRefactor"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa tu resultado apenas termines.

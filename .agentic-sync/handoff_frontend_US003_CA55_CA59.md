@@ -19,6 +19,6 @@ Debes implementar las siguientes características maestras sobre `FormDesigner.v
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** comitear el progreso a `main`. 
 Cuando compruebes que el View-Mode PDF (CA-56), las Grillas CSS y el Cronómetro en 2do Plano funcionan impecables en tu navegador, pon a salvo el trabajo mediante Stash:
-`git stash save "temp-frontend-US003-ca55-ca59"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Escribe textualmente la validación del Stash a este canal.

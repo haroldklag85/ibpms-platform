@@ -17,6 +17,6 @@ En esta Iteración 15 debemos reconstruir la integración de `bpmn-js` en el com
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` directamente a principal. 
 Levanta el Modeler, constata que puedes dibujar nodos y atrapar el XML. Luego congela todo:
-`git stash save "temp-frontend-US005-ca1-ca4"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Escribe textualmente la comprobación del STASH exitoso en este chat al terminar.

@@ -32,4 +32,4 @@
 El agente Java debe:
 1. Agregar Unit Tests inyectando XMLs mutilados probando que el Servicio repele el intento.
 2. Asegurarse de retornar un DTO de Errores Semánticos compatible con los estándares de la Iteración 28.
-3. **Respetar Gatekeeper Stash:** Al concluir, usar `git stash push -m "Iteracion 30: US-005 Backend Handoff CA-60 a CA-62 (Retrying)..."`.
+3. **Respetar Gatekeeper Stash:** Al concluir, usar `git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`.

@@ -19,6 +19,6 @@ Debes implementar las siguientes especificaciones sobre `FormDesigner.vue` exclu
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** comitear el avance a la rama principal (main).
 Cuando logres un visual funcional para Pastillas, Fechas y DataBinding, almacénalo usando:
-`git stash save "temp-frontend-US003-ca41-ca45"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa a tu oficial superior apenas el rescate en stash finalice.

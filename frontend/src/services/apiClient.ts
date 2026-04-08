@@ -107,6 +107,12 @@ export default apiClient;
 
 // ---------- Integration Gaps (08_integration_gaps_prompt.md) ----------
 export const api = {
+    // -------------------------------------------------------------
+    // US-001 (Iteración 76-DEV): Workdesk Global Inbox (CA-09, CA-10, CA-19, CA-20)
+    // -------------------------------------------------------------
+    getGlobalInbox: (params: { page?: number; size?: number; sort?: string; search?: string; delegatedUserId?: string }) => 
+        apiClient.get('/workdesk/global-inbox', { params }),
+
     // 1. AI Correct (Partial Regeneration CA-28)
     correctAiText: (payload: { text: string; delta: string }) => apiClient.post('/ai/correct', payload),
 
@@ -149,10 +155,10 @@ export const api = {
     getIntegrationConnectors: () => apiClient.get(`/integrations/connectors`),
     getConnectorSchema: (id: string) => apiClient.get(`/integrations/connectors/${id}/schema`), // CA-49
     getProcessVariables: (id: string) => apiClient.get(`/design/processes/${id}/variables`), // CA-49
+    // CA-17: Variables BPMN para coherencia
+    getBpmnVariables: (processKey: string) => apiClient.get(`/design/processes/${processKey}/variables`),
     getExternalTaskTopics: () => apiClient.get(`/design/external-task-topics`), // CA-70
     saveDataMappings: (key: string, taskId: string, payload: any) => apiClient.post(`/design/processes/${key}/tasks/${taskId}/mappings`, payload), // CA-68
-    // CA-17: Variables BPMN para coherencia Sandbox
-    getBpmnVariables: (processKey: string) => apiClient.get(`/design/processes/${processKey}/variables`),
 
     // 7. BAM Analytics - Process Health (Pantalla 5)
     getProcessHealth: () => apiClient.get('/analytics/process-health'),

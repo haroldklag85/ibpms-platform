@@ -2071,6 +2071,15 @@ const simulateMockSubmit = async () => {
     }
     showResultModal.value = true;
 };
+
+defineExpose({
+    certificationState,
+    showFuzzerModal,
+    currentSchemaVersion,
+    fuzzerErrors,
+    bpmnCoherenceResults,
+    formKey
+});
 </script>
 
 <style>

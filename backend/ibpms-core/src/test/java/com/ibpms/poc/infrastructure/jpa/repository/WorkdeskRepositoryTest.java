@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -23,6 +25,9 @@ public class WorkdeskRepositoryTest {
     @Autowired
     private WorkdeskProjectionRepository workdeskRepository;
 
+    // ============================================================
+    // TEST 1 (76-DEV / CA-14): Tenant Isolation + Impact Sorting
+    // ============================================================
     @Test
     void testFindWorkdeskTasks_TenantIsolationAndSorting() {
         // Arrange
@@ -59,8 +64,7 @@ public class WorkdeskRepositoryTest {
         workdeskRepository.save(task2);
         workdeskRepository.save(task3);
 
-        // Act
-        // CA-14: Isolation test for tenantA (should return 2, ignore task3)
+        // Act — CA-14: Isolation test for tenantA (should return 2, ignore task3)
         // CA-17: Sorting test (task1 should be first because impactLevel 10 > 5)
         Page<WorkdeskProjectionEntity> result = workdeskRepository.findWorkdeskTasks("tenantA", null, null, PageRequest.of(0, 10));
 
@@ -71,6 +75,50 @@ public class WorkdeskRepositoryTest {
         assertEquals("task2", result.getContent().get(1).getId());
     }
 
+    // ============================================================
+    // TEST 2 (77-DEV / CA-17): NULLS LAST SLA ordering
+    // ============================================================
+    @Test
+    void testFindWorkdeskTasks_SlaAscNullsLast() {
+        // Arrange — Two tasks with same impact; one with SLA, one without
+        WorkdeskProjectionEntity taskWithSla = new WorkdeskProjectionEntity();
+        taskWithSla.setId("sla_yes");
+        taskWithSla.setTenantId("tenantNL");
+        taskWithSla.setImpactLevel(5);
+        taskWithSla.setTitle("Task With SLA");
+        taskWithSla.setSourceSystem("BPMN");
+        taskWithSla.setOriginalTaskId("nl1");
+        taskWithSla.setStatus("ACTIVE");
+        taskWithSla.setSlaExpirationDate(LocalDateTime.now().plusDays(1));
+
+        WorkdeskProjectionEntity taskNoSla = new WorkdeskProjectionEntity();
+        taskNoSla.setId("sla_no");
+        taskNoSla.setTenantId("tenantNL");
+        taskNoSla.setImpactLevel(5); // Same impact → SLA sort decides
+        taskNoSla.setTitle("Task Without SLA");
+        taskNoSla.setSourceSystem("KANBAN");
+        taskNoSla.setOriginalTaskId("nl2");
+        taskNoSla.setStatus("ACTIVE");
+        taskNoSla.setSlaExpirationDate(null); // NULL SLA
+
+        workdeskRepository.save(taskWithSla);
+        workdeskRepository.save(taskNoSla);
+
+        // Act — CA-17: sla_expiration_date ASC NULLS LAST
+        Page<WorkdeskProjectionEntity> result = workdeskRepository.findWorkdeskTasks("tenantNL", null, null, PageRequest.of(0, 10));
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements());
+        // Task with SLA should come FIRST; null SLA goes LAST
+        assertEquals("sla_yes", result.getContent().get(0).getId());
+        assertEquals("sla_no", result.getContent().get(1).getId());
+        assertNull(result.getContent().get(1).getSlaExpirationDate());
+    }
+
+    // ============================================================
+    // TEST 3 (76-DEV / CA-19): ILIKE partial search
+    // ============================================================
     @Test
     void testFindWorkdeskTasks_FuzzySearchTrgm() {
         // Arrange
@@ -85,13 +133,74 @@ public class WorkdeskRepositoryTest {
 
         workdeskRepository.save(task1);
 
-        // Act
-        // CA-10 / CA-19: ILike partial search
+        // Act — CA-10 / CA-19: ILike partial search (case-insensitive)
         Page<WorkdeskProjectionEntity> result = workdeskRepository.findWorkdeskTasks("tenantA", "ApPrOvAl", null, PageRequest.of(0, 10));
 
         // Assert
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         assertEquals("task_search", result.getContent().get(0).getId());
+    }
+
+    // ============================================================
+    // TEST 4 (77-DEV / CA-23): progressPercent present
+    // ============================================================
+    @Test
+    void testFindWorkdeskTasks_ProgressPercentPresent() {
+        // Arrange — entity with progressPercent = 60
+        WorkdeskProjectionEntity task = new WorkdeskProjectionEntity();
+        task.setId("progress_yes");
+        task.setTenantId("tenantProg");
+        task.setImpactLevel(3);
+        task.setTitle("Task With Progress");
+        task.setSourceSystem("BPMN");
+        task.setOriginalTaskId("pg1");
+        task.setStatus("ACTIVE");
+        task.setProgressPercent(60);
+        task.setTotalSteps(5);
+        task.setCurrentStep(3);
+
+        workdeskRepository.save(task);
+
+        // Act
+        Page<WorkdeskProjectionEntity> result = workdeskRepository.findWorkdeskTasks("tenantProg", null, null, PageRequest.of(0, 10));
+
+        // Assert — CA-23: progressPercent should be 60
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        WorkdeskProjectionEntity loaded = result.getContent().get(0);
+        assertEquals(60, loaded.getProgressPercent());
+        assertEquals(5, loaded.getTotalSteps());
+        assertEquals(3, loaded.getCurrentStep());
+    }
+
+    // ============================================================
+    // TEST 5 (77-DEV / CA-23): progressPercent null (N/D fallback)
+    // ============================================================
+    @Test
+    void testFindWorkdeskTasks_ProgressPercentNull() {
+        // Arrange — entity with progressPercent = null (non-linear BPMN / unknown)
+        WorkdeskProjectionEntity task = new WorkdeskProjectionEntity();
+        task.setId("progress_nd");
+        task.setTenantId("tenantProgNull");
+        task.setImpactLevel(2);
+        task.setTitle("Task Without Progress");
+        task.setSourceSystem("KANBAN");
+        task.setOriginalTaskId("pg2");
+        task.setStatus("ACTIVE");
+        // progressPercent deliberately NOT set → defaults to null
+
+        workdeskRepository.save(task);
+
+        // Act
+        Page<WorkdeskProjectionEntity> result = workdeskRepository.findWorkdeskTasks("tenantProgNull", null, null, PageRequest.of(0, 10));
+
+        // Assert — CA-23: progressPercent should be null → Frontend renders "N/D"
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        WorkdeskProjectionEntity loaded = result.getContent().get(0);
+        assertNull(loaded.getProgressPercent());
+        assertNull(loaded.getTotalSteps());
+        assertNull(loaded.getCurrentStep());
     }
 }

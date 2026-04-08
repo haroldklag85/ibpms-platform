@@ -15,23 +15,26 @@
 
 | CA | Título (corto) | Back | Front | QA | Sprint | Handoff | Notas |
 |----|----------------|------|-------|----|--------|---------|-------|
-| CA-1 | Vista 360 Grid paginada | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Validado en epic1_qa_remediation_report |
+| CA-1 | Vista 360 Grid paginada | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001_CA01_CA03_CA23_CA12_CA07_CA18 | Auditado en 77-DEV |
 | CA-2 | Búsqueda Híbrida Reactiva | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |
-| CA-3 | Data Grid tabular 5 cols | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |
+| CA-3 | Data Grid tabular 5 cols | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001_CA01_CA03_CA23_CA12_CA07_CA18 | Auditado en 77-DEV |
 | CA-4 | Toggle Delegación Mis Tareas/Equipo | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |
 | CA-5 | SLA Ticking Engine Vivo | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |
 | CA-6 | Ghost Deletion STOMP WebSocket | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |
-| CA-7 | Tolerancia Fallas CQRS | ✅ | ⏳ | ❌ | S-1 | handoff_backend_us001 | Backend completado |
+| CA-7 | Tolerancia Fallas CQRS | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001_CA01_CA03_CA23_CA12_CA07_CA18 | Auditado en 77-DEV |
 | CA-8 | Anti-Cherry Picking Feature Flag | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |
 | CA-9 | Paginación Máxima Visual | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-10 | Paginación Server-Side y pg_trgm | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
+| CA-12 | Ergonomía KeepAlive Empty State | N/A | ✅ | ✅ | 77-DEV | handoff_77DEV_US001_CA01_CA03_CA23_CA12_CA07_CA18 | Frontend only |
 | CA-14 | Sanitización DTO y Aislamiento RLS | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-17 | Ordenamiento SLA y Priority Fallback | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
+| CA-18 | Degradación Multi-Motor | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001_CA01_CA03_CA23_CA12_CA07_CA18 | Auditado en 77-DEV |
 | CA-19 | Búsqueda Exclusiva Server-Side | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-20 | Estandarización Contrato API | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
+| CA-23 | Fórmula Avance Determinista | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001_CA01_CA03_CA23_CA12_CA07_CA18 | Auditado en 77-DEV |
 
 ### Resumen US-001
-- **Total CAs:** 14 | **✅ Completos (3 capas):** 12 (85%) | **⏳ Parcial:** 1 (7.5%) | **❌ Pendiente:** 1 (7.5%)
+- **Total CAs:** 17 | **✅ Completos (3 capas):** 17 (100%) | **⏳ Parcial:** 0 | **❌ Pendiente:** 0
 
 ---
 

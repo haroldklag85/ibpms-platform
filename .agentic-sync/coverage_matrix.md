@@ -16,7 +16,7 @@
 | CA | Título (corto) | Back | Front | QA | Sprint | Handoff | Notas |
 |----|----------------|------|-------|----|--------|---------|-------|
 | CA-1 | Vista 360 Grid paginada | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001_CA01_CA03_CA23_CA12_CA07_CA18 | Auditado en 77-DEV |
-| CA-2 | Búsqueda Híbrida Reactiva | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |
+| CA-2 | Búsqueda Híbrida Reactiva | 🚫 | 🚫 | 🚫 | — | Anulado por CA-19 | Reemplazado por búsqueda 100% Server-Side |
 | CA-3 | Data Grid tabular 5 cols | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001_CA01_CA03_CA23_CA12_CA07_CA18 | Auditado en 77-DEV |
 | CA-4 | Toggle Delegación Mis Tareas/Equipo | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |
 | CA-5 | SLA Ticking Engine Vivo | ✅ | ✅ | ✅ | S-1 | handoff_*_us001 | Remediación aplicada |

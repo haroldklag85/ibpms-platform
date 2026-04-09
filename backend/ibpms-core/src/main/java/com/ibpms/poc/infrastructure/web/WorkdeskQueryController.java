@@ -16,6 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Refill;
+import org.springframework.http.HttpStatus;
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/v1/workdesk")
@@ -24,9 +29,13 @@ public class WorkdeskQueryController {
     private static final Logger log = LoggerFactory.getLogger(WorkdeskQueryController.class);
 
     private final WorkdeskProjectionRepository projectionRepository;
+    private final Bucket bucket;
 
     public WorkdeskQueryController(WorkdeskProjectionRepository projectionRepository) {
         this.projectionRepository = projectionRepository;
+        // CA-30: Rate Limiting
+        Bandwidth limit = Bandwidth.builder().capacity(60).refillGreedy(60, Duration.ofMinutes(1)).build();
+        this.bucket = Bucket.builder().addLimit(limit).build();
     }
 
     /**
@@ -38,6 +47,11 @@ public class WorkdeskQueryController {
             @RequestParam(required = false) String delegatedUserId,
             Pageable pageable) {
         
+        // CA-30: Aplicar Rate Limiting (60 rev/min)
+        if (!bucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
+
         // CA-09, CA-10: Max 100 limit, default to 15 (pageable usually defaults to 20, but limit to 100)
         if (pageable.getPageSize() > 100) {
             throw new IllegalArgumentException("Pagina solicitada excede el limite maximo de 100 registros (CA-10).");
@@ -90,6 +104,25 @@ public class WorkdeskQueryController {
             @SuppressWarnings("null")
             Page<WorkdeskGlobalItemDTO> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
             return ResponseEntity.ok(new WorkdeskResponseDTO(true, emptyPage));
+        }
+    }
+
+    // CA-22, CA-29: Faceted Filters & Counters
+    @GetMapping("/global-inbox/facets")
+    public ResponseEntity<?> getFacets() {
+        if (!bucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
+        
+        try {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            String tenantId = (auth != null && auth.getName() != null) ? auth.getName() : "default";
+
+            java.util.List<com.ibpms.poc.application.dto.FacetCountDto> facets = projectionRepository.countByStatusPerTenant(tenantId);
+            return ResponseEntity.ok(facets);
+        } catch (Exception e) {
+            log.error("Error obteniendo facetas (CA-22, CA-29)", e);
+            return ResponseEntity.ok(Collections.emptyList()); // Fallback degradación
         }
     }
 }

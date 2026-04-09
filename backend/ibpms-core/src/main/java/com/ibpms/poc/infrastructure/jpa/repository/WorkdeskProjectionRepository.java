@@ -24,4 +24,9 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
            @Param("search") String search, 
            @Param("assignee") String assignee, 
            Pageable pageable);
+
+    // CA-22, CA-29: Faceted Filters & Counters
+    @Query("SELECT new com.ibpms.poc.application.dto.FacetCountDto(w.status, COUNT(w)) " +
+           "FROM WorkdeskProjectionEntity w WHERE w.tenantId = :tenantId GROUP BY w.status")
+    java.util.List<com.ibpms.poc.application.dto.FacetCountDto> countByStatusPerTenant(@Param("tenantId") String tenantId);
 }

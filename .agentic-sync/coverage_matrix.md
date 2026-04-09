@@ -31,10 +31,13 @@
 | CA-18 | Degradación Multi-Motor | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001_CA01_CA03_CA23_CA12_CA07_CA18 | Auditado en 77-DEV |
 | CA-19 | Búsqueda Exclusiva Server-Side | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-20 | Estandarización Contrato API | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
+| CA-22 | Filtros Facetados por Status | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001_CA22_CA29_CA30 | Auditado en 78-DEV |
 | CA-23 | Fórmula Avance Determinista | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001_CA01_CA03_CA23_CA12_CA07_CA18 | Auditado en 77-DEV |
+| CA-29 | Contadores en Filtros por Tenant | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001_CA22_CA29_CA30 | Auditado en 78-DEV |
+| CA-30 | Rate Limiting API 429 | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001_CA22_CA29_CA30 | Auditado en 78-DEV |
 
 ### Resumen US-001
-- **Total CAs:** 17 | **✅ Completos (3 capas):** 17 (100%) | **⏳ Parcial:** 0 | **❌ Pendiente:** 0
+- **Total CAs:** 20 | **✅ Completos (3 capas):** 20 (100%) | **⏳ Parcial:** 0 | **❌ Pendiente:** 0
 
 ---
 

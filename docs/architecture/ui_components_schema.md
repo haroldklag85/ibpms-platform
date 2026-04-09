@@ -4,7 +4,7 @@
 **Alineación:** Este documento cumple el "Must Have #4 (Formularios Dinámicos Nativos)" y rige la comunicación entre Spring Boot (Camunda) y Vue 3.
 
 ## 1. Patrón Arquitectónico (Server-Driven UI)
-Para evitar recompilar y redesplegar el frontend de React/Vue cada vez que el negocio agrega un nuevo campo a un formulario de Expediente (Ej: "¿Tiene antecedente penal?"), la plataforma iBPMS utiliza el patrón **Server-Driven UI**. 
+Para evitar recompilar y redesplegar el frontend de Vue 3 cada vez que el negocio agrega un nuevo campo a un formulario de Expediente (Ej: "¿Tiene antecedente penal?"), la plataforma iBPMS utiliza el patrón **Server-Driven UI**. 
 
 El Backend **NO** expone HTML. El backend expone un JSON puramente semántico que describe "Qué pedir", y el Frontend de Vue 3 tiene una librería de Micro-componentes (`<FormRenderer />`) que sabe cómo convertir cada nodo de ese JSON en un `<input>`, un `<select>` o un botón de Tailwind.
 

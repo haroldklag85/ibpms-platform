@@ -1,4 +1,4 @@
-# ADR-008: Gestión de Casos CMMN vs Transaccionalidad Pura (Kanban Ágil)
+# ADR-007: Gestión de Casos CMMN vs Transaccionalidad Pura (Kanban Ágil)
 
 **Status:** Aprobado
 **Date:** 2026-03-07

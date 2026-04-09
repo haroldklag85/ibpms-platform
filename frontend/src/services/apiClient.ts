@@ -56,6 +56,24 @@ apiClient.interceptors.response.use(
             // Ya no redirigimos ni hacemos logout destructivo
         }
         
+        // CA-30: Rate Limiting Preventivo (429)
+        if (error.response && error.response.status === 429) {
+            console.warn('CA-30: Rate Limiting detectado. Frenando requests.');
+            const body = document.querySelector('body');
+            if (body && !document.getElementById('rate-limit-toast')) {
+                const toast = document.createElement('div');
+                toast.id = 'rate-limit-toast';
+                toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
+                toast.innerHTML = '🕒 Te has excedido del límite de peticiones. Por favor, espera un minuto.';
+                body.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }
+            return Promise.reject(error);
+        }
+        
         // CA-05: Expulsión por Manipulación Cognitiva (Prompt Injection / Abuso)
         if (error.response && error.response.status === 403) {
             // Evaluamos si trae bandera de Seguridad

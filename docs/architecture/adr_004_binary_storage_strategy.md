@@ -1,4 +1,4 @@
-# ADR-005: Estrategia de Almacenamiento de Archivos Binarios (Attachments)
+# ADR-004: Estrategia de Almacenamiento de Archivos Binarios (Attachments)
 
 **Status:** Aprobado
 **Date:** 2026-03-07

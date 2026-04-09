@@ -20,6 +20,12 @@ export interface WorkdeskGlobalItemDTO {
   impactLevel?: number;
 }
 
+export interface FacetCountDTO {
+  status: string;
+  statusName?: string;
+  count: number;
+}
+
 export interface PageableResponse {
   pageNumber: number;
   pageSize: number;
@@ -29,6 +35,7 @@ export interface PageableResponse {
 export const useWorkdeskStore = defineStore('workdesk', {
   state: () => ({
     items: [] as WorkdeskGlobalItemDTO[],
+    facets: [] as FacetCountDTO[],
     pageInfo: { pageNumber: 0, pageSize: 50, totalElements: 0 } as PageableResponse,
     isDegraded: false,
     isLoading: false,
@@ -40,7 +47,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
   }),
 
   actions: {
-    async fetchGlobalInbox(page: number = 0, size: number = 50, search?: string, delegatedToId?: string, typeFilter?: string, slaFilter?: string) {
+    async fetchGlobalInbox(page: number = 0, size: number = 50, search?: string, delegatedToId?: string, typeFilter?: string, slaFilter?: string, statusFilter?: string) {
       this.isLoading = true;
       this.isError = false;
       this.errorMessage = '';
@@ -55,7 +62,8 @@ export const useWorkdeskStore = defineStore('workdesk', {
               ...(search && search.trim() !== '' ? { search: search.trim() } : {}),
               ...(delegatedToId ? { delegatedToId } : {}),
               ...(typeFilter ? { type: typeFilter } : {}),
-              ...(slaFilter ? { slaLevel: slaFilter } : {})
+              ...(slaFilter ? { slaLevel: slaFilter } : {}),
+              ...(statusFilter ? { status: statusFilter } : {})
             }
         });
         
@@ -63,11 +71,16 @@ export const useWorkdeskStore = defineStore('workdesk', {
             this.items = response.data.content;
             this.pageInfo = response.data.pageable || { pageNumber: page, pageSize: size, totalElements: response.data.totalElements || this.items.length };
             this.isDegraded = response.data?.degraded === true;
+            this.facets = response.data.facets || [];
         } else {
              // Fallback defensive
              this.items = [];
         }
       } catch (error: any) {
+        if (error.response && error.response.status === 429) {
+             console.warn("CA-30: Ignorando error 429 para mantener listado UI intacto");
+             return;
+        }
         console.error("Failed to fetch secure workdesk queues", error);
         this.isError = true;
         this.errorMessage = error.response?.data?.message || "Ocurrió un error al cargar la bandeja segura CA-5.";

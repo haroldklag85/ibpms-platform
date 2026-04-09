@@ -126,6 +126,38 @@
            </div>
         </div>
 
+        <!-- CA-22/CA-29: Filtros Facetados (Chips) -->
+        <div v-if="store.facets && store.facets.length > 0" class="flex flex-wrap items-center gap-2 px-6 py-3 bg-white border-b border-gray-200 shadow-sm z-10 shrink-0">
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-2 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">category</span> Facetas
+          </span>
+          <button 
+            v-for="facet in store.facets" 
+            :key="facet.status"
+            @click="applyFacetFilter(facet.status)"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded border text-[11px] font-bold uppercase transition-all duration-200"
+            :class="statusFilter === facet.status 
+              ? 'bg-indigo-600 border-indigo-700 text-white shadow-md' 
+              : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400'"
+          >
+            {{ facet.statusName || facet.status }}
+            <span 
+              class="px-1.5 py-0.5 rounded-sm text-[10px]"
+              :class="statusFilter === facet.status ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'"
+            >
+              {{ facet.count }}
+            </span>
+          </button>
+          
+          <button 
+            v-if="statusFilter" 
+            @click="applyFacetFilter('')"
+            class="ml-2 text-[10px] text-gray-400 hover:text-indigo-600 hover:underline font-semibold flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-[14px]">close</span> Limpiar
+          </button>
+        </div>
+
         <div class="h-12 bg-white border-b border-gray-200 px-6 flex items-center justify-between flex-shrink-0 shadow-sm z-20">
           <div class="flex items-center gap-4">
              <button @click="isMetricsPanelOpen = !isMetricsPanelOpen" class="p-1 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition -ml-2" :title="isMetricsPanelOpen ? 'Ocultar Resumen Panel Derecho' : 'Mostrar Resumen'">
@@ -228,7 +260,7 @@
           <div class="flex items-center gap-2">
             <button 
                :disabled="store.pageInfo.pageNumber === 0" 
-               @click="store.fetchGlobalInbox(store.pageInfo.pageNumber - 1, store.pageInfo.pageSize, searchQuery, delegationFilter)"
+               @click="store.fetchGlobalInbox(store.pageInfo.pageNumber - 1, store.pageInfo.pageSize, searchQuery, delegationFilter, typeFilter, slaFilter, statusFilter)"
                class="p-1 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400 transition"
             >
               <span class="material-symbols-outlined">chevron_left</span>
@@ -240,7 +272,7 @@
             </div>
             <button 
                :disabled="(store.pageInfo.pageNumber + 1) * store.pageInfo.pageSize >= store.pageInfo.totalElements" 
-               @click="store.fetchGlobalInbox(store.pageInfo.pageNumber + 1, store.pageInfo.pageSize, searchQuery, delegationFilter)"
+               @click="store.fetchGlobalInbox(store.pageInfo.pageNumber + 1, store.pageInfo.pageSize, searchQuery, delegationFilter, typeFilter, slaFilter, statusFilter)"
                class="p-1 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400 transition"
             >
               <span class="material-symbols-outlined">chevron_right</span>
@@ -321,7 +353,7 @@ const toastSuccess = ref('');
 // CA-12: Anti Empty Last Page
 watch(() => store.items.length, (newLen) => {
   if (newLen === 0 && store.pageInfo.pageNumber > 0) {
-    store.fetchGlobalInbox(0, store.pageInfo.pageSize, searchQuery.value, delegationFilter.value, typeFilter.value, slaFilter.value);
+    store.fetchGlobalInbox(0, store.pageInfo.pageSize, searchQuery.value, delegationFilter.value, typeFilter.value, slaFilter.value, statusFilter.value);
   }
 });
 
@@ -354,6 +386,7 @@ const searchQuery = ref('');
 const delegationFilter = ref('');
 const typeFilter = ref('');
 const slaFilter = ref('');
+const statusFilter = ref('');
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -373,8 +406,13 @@ const attendNextTask = () => {
    alert("Asignación ciega forzada.");
 }
 
+const applyFacetFilter = (status: string) => {
+    statusFilter.value = status;
+    loadData();
+};
+
 const loadData = async () => {
-    await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 50, searchQuery.value, delegationFilter.value, typeFilter.value, slaFilter.value);
+    await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 50, searchQuery.value, delegationFilter.value, typeFilter.value, slaFilter.value, statusFilter.value);
 };
 
 const mockOpenTask = (task: any) => {

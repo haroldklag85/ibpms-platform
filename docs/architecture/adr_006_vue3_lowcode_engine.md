@@ -1,4 +1,4 @@
-# ADR-007: Motor de Renderizado Vue 3 para Low-Code iForms (US-003)
+# ADR-006: Motor de Renderizado Vue 3 para Low-Code iForms (US-003)
 
 **Status:** Aprobado
 **Date:** 2026-03-07

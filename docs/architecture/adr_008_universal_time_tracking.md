@@ -1,4 +1,4 @@
-# ADR-009: Arquitectura Transversal del Módulo SLA y Time-Tracking
+# ADR-007: Arquitectura Transversal del Módulo SLA y Time-Tracking
 
 **Status:** Aprobado
 **Date:** 2026-03-07
@@ -8,7 +8,7 @@
 ## 1. Contexto y Problema
 El Product Owner ha levantado una alerta estratégica fundamental: El iBPMS posee 3 motores de ejecución de trabajo distintos:
 1.  **Camunda BPMN:** Tareas estructuradas.
-2.  **Kanban Ágil:** Tarjetas volátiles (ADR-008).
+2.  **Kanban Ágil:** Tarjetas volátiles (ADR-007).
 3.  **Planner Gantt:** Nodos de WBS con precedencias.
 
 Si cada módulo construye su propia tabla de base de datos para registrar las horas trabajadas (`billable hours`) o su propio reloj de SLA, el sistema de Inteligencia de Negocios (BAM) será incapaz de consolidar el costo real de un empleado a fin de mes. Se requiere un diseño que cumpla el principio DRY (Don't Repeat Yourself) llevado a nivel de micro-arquitectura.

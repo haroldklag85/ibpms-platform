@@ -9,11 +9,11 @@ La plataforma no debe verse como una herramienta cerrada, sino como un Sistema O
 *   **SDK Platform / Core:** El equipo no iniciará desarrollos verticales desde cero; consumirá el motor para la lógica de estados, DMN para decisiones y el SGDEA para guardar documentos. Esto acorta el *Time-to-Market* de nuevas aplicaciones.
 *   **Módulos Verticales Comerciales (Super Apps V2):** Extendiendo la arquitectura Event-Driven y las APIs nativas, la plataforma está diseñada para hospedar productos pre-empacados monetizables por industria. El Roadmap Oficial de Plataforma ya contempla arquitectónicamente:
     *   **LegalTech - RAG + LLM Drafting:** App conectada al SGDEA (Histórico), Inputs UI (Caso), DB Externa Vectorial (Jurisprudencia) y FOP (Plantillas), para que la IA ensamble contestaciones a tutelas/demandas automatizadas de inicio a fin.
-    *   **LegalTech - Silenced RPA Scraping:** Bots trabajadores sin UI que inyectan eventos vía `Inbound Listener / Kafka` recolectando data oficial de las cortes para mutar automáticamente los expedientes en el Backend Core.
+    *   **LegalTech - Silenced RPA Scraping:** Bots trabajadores sin UI que inyectan eventos vía `Inbound Listener / RabbitMQ (V1) → Kafka (V2)` recolectando data oficial de las cortes para mutar automáticamente los expedientes en el Backend Core.
     *   **LegalTech - Módulo de Docketing:** "Super App" sobre el módulo base de Kanban (Case Management). Fusiona un calendario maestro de plazos perentorios y alertas de O365, con un árbol riguroso de trazabilidad vinculando notificaciones del juzgado hacia la Tarea de un abogado en tiempo real.
     *   **Hotelero - OCR / ICR Input Engine:** Receptor cognitivo desacoplado en el APIM que extrae texto de facturas o listados (polizas, consumos) pasándolo a un JSON Schema pre-validado para despertar Sagas y flujos masivos de conciliación hotelera.
 El diseño garantiza una altísima adaptabilidad ante disrupciones del mercado mediante:
-1.  **Arquitectura de Eventos Desacoplada:** (Broker / Kafka en V2). Al conectarlo todo por eventos en lugar de código "Hardcoded", si la empresa compra otra compañía y necesita cambiar su ERP, el motor de procesos ni se entera. Simplemente el Outbound Connector se actualiza para enviar el mismo evento hacia el nuevo ERP.
+1.  **Arquitectura de Eventos Desacoplada:** (RabbitMQ en V1 / Kafka en V2). Al conectarlo todo por eventos en lugar de código "Hardcoded", si la empresa compra otra compañía y necesita cambiar su ERP, el motor de procesos ni se entera. Simplemente el Outbound Connector se actualiza para enviar el mismo evento hacia el nuevo ERP.
 2.  **API Gateway + Patrón Strangler:** El APIM permite derivar un 10%, 50% o el 100% del tráfico paulatinamente desde modelos de negocio viejos hacia sistemas modernizados.
 3.  **Composición Funcional ("Lego"):** Si el mercado lanza nuevas normativas urgentes (ej. leyes de privacidad), el negocio ajusta y añade "Bloques de Reglas DMN" independientemente del código compilado de la aplicación de RR.HH., inyectando políticas instantáneas a la producción sin "refactorizaciones" dolorosas.
 
@@ -127,7 +127,7 @@ graph TD
 ## Componentes Arquitectónicos
 
 ### 1. Capa de Experiencia y Portales ("Workbenches")
-*   **Micro-Frontends de Formularios:** Motores de renderizado (React/Angular/Vue) que interpretan JSON Schemas estandarizados. Agnósticos al proceso.
+*   **Micro-Frontends de Formularios:** Motores de renderizado (Vue 3 — ADR-002) que interpretan JSON Schemas estandarizados. Agnósticos al proceso.
 *   **Bandejas Unificadas (Tasklists):** Comunicación vía API (GraphQL/REST) para hacer "Pull" de las tareas basadas en el rol (Soporta ABAC/RBAC).
 *   **Workspace "Agile" (Case Management):** Vistas tipo expediente/Kanban donde el usuario interactúa con hitos y tareas ad-hoc de un caso.
 
@@ -149,12 +149,12 @@ La integración opera bajo un modelo *Event-Driven* y Push (Webhook) sin polling
 2. **Petición Segura:** APIM pasa el aviso al Inbound Connector.
 3. **Extracción:** MS Graph API extrae el cuerpo y adjuntos.
 4. **Almacenamiento (SGDEA):** Los binarios se van vivos al SGDEA. Jamás ensucian la Base de Datos transaccional del motor.
-5. **Generación del Evento:** Se publica evento en Kafka (con URIs de los archivos).
+5. **Generación del Evento:** Se publica evento en RabbitMQ (V1) / Kafka (V2) (con URIs de los archivos).
 6. **Ejecución del Motor:** Motor responde al *Message Start Event*.
 
 *   **Inbound Listeners:** MS Graph. Redirección de mensajes inprocesables a **Dead Letter Queues (DLQ)**.
 *   **Outbound Connectors:** Sagas y eventos compensatorios al ERP, blindados con **Circuit Breaker** (Ej. Resilience4J) y Bulkheads frente a latencias del núcleo bancario externo.
-*   **Event Broker Central:** Kafka/RabbitMQ como corazón asíncrono. Sincronía segura lograda mediante un **Patrón Transactional Outbox** en base de datos.
+*   **Event Broker Central:** RabbitMQ (V1) / Kafka (V2) como corazón asíncrono. Sincronía segura prevista mediante un **Patrón Transactional Outbox** en base de datos (Roadmap — no implementado en V1 por consistencia transaccional local con Camunda 7 Embebido, ver ADR-003).
 
 ### 5. Capa de Contenido / SGDEA (Generación y Resguardo)
 *   **Generador Documental Jurídico:** Motor de *Template Rendering*. En la V1 operará como **Librería Embebida (.jar como Apache FOP/PDFBox)** dentro del Backend. En V2 evolucionará a un **Microservicio Dedicado Elástico** para soportar concurrencia masiva.
@@ -235,9 +235,9 @@ C4Container
     Rel(backend, llm_local, "Traduce NLP a DMN Json", "REST Interno")
     
     Rel(o365_graph, apim, "Push Webhook Nuevo Correo", "HTTPS")
-    Rel(engine, db, "Escribe Estado (JDBC)", "TCP/3306")
-    Rel(grafana, db, "Consulta Panel Analítico", "TCP/3306")
-    Rel(backend, db, "Escribe Datos Negocio", "TCP/3306")
+    Rel(engine, db, "Escribe Estado (JDBC)", "TCP/5432 (TLS)")
+    Rel(grafana, db, "Consulta Panel Analítico", "TCP/5432")
+    Rel(backend, db, "Escribe Datos Negocio", "TCP/5432 (TLS)")
 ```
 
 ### Nivel 3: Diagrama de Componentes Lógicos (Software Design View)

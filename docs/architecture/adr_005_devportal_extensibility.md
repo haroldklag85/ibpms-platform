@@ -1,6 +1,6 @@
-# ADR-006: Arquitectura de Extensibilidad Interna y Súper Módulos (DevPortal)
+# ADR-005: Arquitectura de Extensibilidad Interna y Súper Módulos (DevPortal)
 
-**Status:** Propuesto (Para Agentes FullStack)
+**Status:** Aceptado (Validado en Auditoría Arquitectónica 2026-04-09)
 **Date:** 2026-03-07
 **Context:** US-042 (DevPortal - Extensibilidad Interna)
 **Autor:** Lead Software Architect

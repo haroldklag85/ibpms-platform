@@ -203,4 +203,65 @@ public class WorkdeskRepositoryTest {
         assertNull(loaded.getTotalSteps());
         assertNull(loaded.getCurrentStep());
     }
+
+    // ============================================================
+    // TEST 6 (Fase 2 - CA-22/CA-29): Faceted Filters and Tenant Isolation
+    // ============================================================
+    @Test
+    void testCountByStatusPerTenant() {
+        // Arrange
+        WorkdeskProjectionEntity task1 = new WorkdeskProjectionEntity();
+        task1.setId("f1");
+        task1.setTitle("T1");
+        task1.setTenantId("tenantF");
+        task1.setImpactLevel(1);
+        task1.setStatus("ACTIVE");
+        task1.setSourceSystem("BPMN");
+        task1.setOriginalTaskId("t1");
+
+        WorkdeskProjectionEntity task2 = new WorkdeskProjectionEntity();
+        task2.setId("f2");
+        task2.setTitle("T2");
+        task2.setTenantId("tenantF");
+        task2.setImpactLevel(2);
+        task2.setStatus("ACTIVE");
+        task2.setSourceSystem("BPMN");
+        task2.setOriginalTaskId("t2");
+
+        WorkdeskProjectionEntity task3 = new WorkdeskProjectionEntity();
+        task3.setId("f3");
+        task3.setTitle("T3");
+        task3.setTenantId("tenantF");
+        task3.setImpactLevel(3);
+        task3.setStatus("COMPLETED");
+        task3.setSourceSystem("BPMN");
+        task3.setOriginalTaskId("t3");
+
+        WorkdeskProjectionEntity task4 = new WorkdeskProjectionEntity();
+        task4.setId("f4");
+        task4.setTitle("T4");
+        task4.setTenantId("tenantOther");
+        task4.setImpactLevel(4);
+        task4.setStatus("DRAFT");
+        task4.setSourceSystem("BPMN");
+        task4.setOriginalTaskId("t4");
+
+        workdeskRepository.save(task1);
+        workdeskRepository.save(task2);
+        workdeskRepository.save(task3);
+        workdeskRepository.save(task4);
+
+        // Act
+        java.util.List<com.ibpms.poc.application.dto.FacetCountDto> facets = workdeskRepository.countByStatusPerTenant("tenantF");
+
+        // Assert
+        assertNotNull(facets);
+        assertEquals(2, facets.size()); // Should only have ACTIVE and COMPLETED for tenantF
+        
+        long activeCount = facets.stream().filter(f -> "ACTIVE".equals(f.getStatus())).findFirst().get().getCount();
+        long completedCount = facets.stream().filter(f -> "COMPLETED".equals(f.getStatus())).findFirst().get().getCount();
+        
+        assertEquals(2L, activeCount);
+        assertEquals(1L, completedCount);
+    }
 }

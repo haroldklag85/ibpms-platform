@@ -60,10 +60,23 @@ public class KanbanTaskSyncListener {
             projectionRepository.save(projection);
             log.debug("Kanban CQRS Sync exitoso para tarea {}", task.getId());
             
-            // CA-6: Broadcastear TASK_CLAIMED para Ghost Deletion en Front
-            if (task.getAssignee() != null && messagingTemplate != null) {
-                String payload = "{\"event\": \"TASK_CLAIMED\", \"taskId\": \"KANBAN-" + task.getId() + "\"}";
-                messagingTemplate.convertAndSend("/topic/workdesk.updates", payload);
+            if (messagingTemplate != null) {
+                String tenantId = "default";
+                
+                com.ibpms.poc.application.dto.WsWorkdeskEventDTO wsEvent = new com.ibpms.poc.application.dto.WsWorkdeskEventDTO();
+                wsEvent.setTaskId("KANBAN-" + task.getId());
+                wsEvent.setTenantId(tenantId);
+                
+                if (task.getAssignee() != null) {
+                    wsEvent.setAction(com.ibpms.poc.application.dto.WsWorkdeskEventDTO.Action.REMOVE); // CA-06: Ghost deletion
+                    messagingTemplate.convertAndSend("/topic/workdesk/" + tenantId, wsEvent);
+                } else if ("PENDING".equals(task.getStatus())) {
+                    wsEvent.setAction(com.ibpms.poc.application.dto.WsWorkdeskEventDTO.Action.ADD);
+                    messagingTemplate.convertAndSend("/topic/workdesk/" + tenantId, wsEvent);
+                } else {
+                    wsEvent.setAction(com.ibpms.poc.application.dto.WsWorkdeskEventDTO.Action.UPDATE);
+                    messagingTemplate.convertAndSend("/topic/workdesk/" + tenantId, wsEvent);
+                }
             }
             
         } catch (Exception e) {

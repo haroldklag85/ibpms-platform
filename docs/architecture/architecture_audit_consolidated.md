@@ -18,7 +18,7 @@
 
 ### Command Query Responsibility Segregation (CQRS)
 *   **Definición:** Separación del modelo de escritura (Comandos) del modelo de lectura (Consultas).
-*   **Estado V1:** CQRS local — misma base PostgreSQL con proyecciones ligeras en la capa de servicio. No hay Read Model separado.
+*   **Estado V1:** CQRS local (ADR-011) — misma base PostgreSQL con proyecciones ligeras en la capa de servicio. No hay Read Model separado.
 *   **Estado V2 (Roadmap):** CQRS distribuido con ElasticSearch como Read Model dedicado.
 
 ### Micro-Frontends (MFE)
@@ -47,7 +47,7 @@
 | # | Brecha | Estado | Solución / Comentario |
 |---|--------|--------|----------------------|
 | C-1 | **Data Archiving (TTL)** | ✅ CERRADO | Documentado en `implementation_plan.md` L91 y L94. Table Partitioning por rango de fechas en PostgreSQL. Cold Storage +90 días. |
-| C-2 | **Transactional Outbox** | ⏳ DIFERIDO | No implementado en V1 — la consistencia transaccional se asegura por Camunda 7 Embebido compartiendo el mismo `DataSource` y `PlatformTransactionManager` (ADR-003). Evaluación para V2 con Kafka. |
+| C-2 | **Transactional Outbox** | ✅ CERRADO | Implementado en V1 nativamente mediante el **Event Publication Registry de Spring Modulith**, garantizando envíos a RabbitMQ sin Debezium ni overhead externo. |
 
 ### D. Patrones de Resiliencia
 
@@ -147,6 +147,18 @@
 
 La arquitectura iBPMS V1 **es robusta y escalable**. El Patrón Strangler facilita la transición a SaaS Multitenant. La combinación DDD + Hexagonal sobre Spring Boot blinda contra vendor lock-in.
 
-**Brechas cerradas (8/12):** Idempotencia, DLQ, Data Archiving, Testcontainers, Key Vault, IaC, VMSS, RBAC/ABAC.
+**Brechas cerradas (9/12):** Idempotencia, DLQ, Data Archiving, Testcontainers, Key Vault, IaC, VMSS, RBAC/ABAC, Transactional Outbox.
 **Brechas diferidas a V2 (2/12):** mTLS, CQRS distribuido.
-**Brechas pendientes de documentación (2/12):** Circuit Breaker (ADR faltante), Transactional Outbox (decisión diferida).
+**Brechas pendientes de documentación (1/12):** Circuit Breaker (ADR faltante).
+
+---
+
+## 7. Registro de Decisiones Pendientes Resueltas (Sesión 2026-04-08)
+
+| # | Pregunta Abierta | Decisión | Artefacto Impactado |
+|---|-----------------|----------|---------------------|
+| P1 | ADR-004 faltante (salto en secuencia 003→005) | **Renumeración completa:** ADR-005→ADR-004, ADR-006→ADR-005, ..., ADR-011→ADR-010. Trazabilidad preservada. | Todos los archivos `adr_00X_*.md` renombrados + contenido interno actualizado. |
+| P2 | CQRS Local vs Distribuido | **Local CQRS para V1** formalizado. Proyecciones/DTOs sobre PostgreSQL único. ElasticSearch diferido a V2. | Nuevo `adr_011_local_cqrs_v1.md` |
+| P3 | Transactional Outbox: implementar en V1 o diferir a V2 | **Implementar en V1** mediante **Spring Modulith Event Publication Registry**. Sin Debezium ni overhead externo. | `implementation_plan.md` L157, esta auditoría C-2. |
+| P4 | Pureza Hexagonal del Kanban (ADR-007) | **POJOs puros obligatorios** en la capa de Dominio. Entidades JPA restringidas a la capa de Infraestructura/Persistencia. MapStruct para conversión bidireccional. | `adr_007_cmmn_vs_kanban.md` Sección 4, punto 2. |
+| P5 | Purgar Kafka de V1 | **Verificado: 0 menciones erróneas.** Todas las referencias a Kafka están correctamente acotadas como "V2 / futuro" o como ejemplo de prohibición (ADR-001). | `implementation_plan.md`, `c4-model.md` (limpios). |

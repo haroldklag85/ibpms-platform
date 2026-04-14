@@ -154,7 +154,7 @@ La integración opera bajo un modelo *Event-Driven* y Push (Webhook) sin polling
 
 *   **Inbound Listeners:** MS Graph. Redirección de mensajes inprocesables a **Dead Letter Queues (DLQ)**.
 *   **Outbound Connectors:** Sagas y eventos compensatorios al ERP, blindados con **Circuit Breaker** (Ej. Resilience4J) y Bulkheads frente a latencias del núcleo bancario externo.
-*   **Event Broker Central:** RabbitMQ (V1) / Kafka (V2) como corazón asíncrono. Sincronía segura prevista mediante un **Patrón Transactional Outbox** en base de datos (Roadmap — no implementado en V1 por consistencia transaccional local con Camunda 7 Embebido, ver ADR-003).
+*   **Event Broker Central:** RabbitMQ (V1) / Kafka (V2) como corazón asíncrono. Sincronía segura lograda mediante el **Patrón Transactional Outbox**. Para V1, esto se implementará nativamente con el **Event Publication Registry de Spring Modulith**, acoplándose al comportamiento transaccional local sin necesidad de infraestructura separada estilo Debezium.
 
 ### 5. Capa de Contenido / SGDEA (Generación y Resguardo)
 *   **Generador Documental Jurídico:** Motor de *Template Rendering*. En la V1 operará como **Librería Embebida (.jar como Apache FOP/PDFBox)** dentro del Backend. En V2 evolucionará a un **Microservicio Dedicado Elástico** para soportar concurrencia masiva.

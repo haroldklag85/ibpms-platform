@@ -23,6 +23,6 @@ Los tableros ágiles se construirán mediante **Máquinas de Estado Relacionales
 ## 4. Solución Tecnológica Mandataria para Proyectos Ágiles
 El Sprint Backlog y el Kanban operarán así:
 1.  **Pantalla 8 (Template Builder):** Crea esqueletos y *Milestones* guardados puramente en tablas relacionales.
-2.  **Pantalla Kanban:** Las Tareas Ágiles son entidades JPA que transicionan sus columnas de estado. El Backend expondrá una API REST plana en el Application Service (`patchTaskStatus(taskId, newState)`).
+2.  **Pantalla Kanban y Entidades Puras (POJOs):** Para respetar la Arquitectura Hexagonal (ADR-001), la lógica comercial de las tareas ágiles se manipulará mediante Clases Puras (POJOs) sin dependencias de base de datos. Las Entidades JPA quedarán restringidas estricta y únicamente a la capa de adaptadores (Infraestructura), utilizando MapStruct para la conversión bidireccional entre las filas de PostgreSQL y el modelo rico de negocio. El Application Service expondrá `patchTaskStatus(taskId, newState)`.
 3.  **Integración Híbrida (Opción BPMN):** Si de una tarjeta Ágil se requiere disparar un flujo gigantesco estructurado (Ej. Aprobación de Presupuesto), la transición de JPA disparará un sub-proceso BPMN síncrono. Cuando el BPMN acabe, avisará a la entidad para saltar a *Done* de vuelta en el Kanban (Arquitectura de Eventos).
 4.  La Auditoría transversal para métricas sigue viva porque el módulo transaccional escribirá en el mismo *Audit Ledger Inmutable* de todo el sistema.

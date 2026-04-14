@@ -57,7 +57,7 @@
 | CA-5 | SLA Ticking Engine Vivo | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 | CA-6 | Ghost Deletion STOMP WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-7 | Tolerancia Fallas CQRS | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
-| CA-8 | Anti-Cherry Picking Feature Flag | ✅ | ❌ | ❌ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Backend endpoint list |
+| CA-8 | Anti-Cherry Picking Feature Flag | ✅ | ✅ | ✅ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Auditado en 82-DEV |
 | CA-9 | Paginación Máxima Visual | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-10 | Paginación Server-Side y pg_trgm | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-11 | Heartbeat Store rAF | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
@@ -65,27 +65,27 @@
 | CA-13 | Minificación WebSocket Throttling | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-14 | Sanitización DTO y Aislamiento RLS | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-15 | Delegación Segura Anti-IDOR | ✅ | ✅ | ✅ | 81-DEV | handoff_81DEV_US001_CA04_CA15 | Auditado en 81-DEV |
-| CA-16 | Skill-Based Routing | ✅ | ❌ | ❌ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Backend validado |
+| CA-16 | Skill-Based Routing | ✅ | ✅ | ✅ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Auditado en 82-DEV |
 | CA-17 | Ordenamiento SLA y Priority Fallback | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-18 | Degradación Multi-Motor | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-19 | Búsqueda Exclusiva Server-Side | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-20 | Estandarización Contrato API | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
-| CA-21 | Skill-Based Skipeo Justificado | ✅ | ❌ | ❌ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Backend validado |
+| CA-21 | Skill-Based Skipeo Justificado | ✅ | ✅ | ✅ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Auditado en 82-DEV |
 | CA-22 | Filtros Facetados por Status | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |
 | CA-23 | Fórmula Avance Determinista | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-24 | Umbrales Semáforo SLA Configurables | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 | CA-25 | Recálculo Semáforos Tab Inactiva | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 | CA-26 | Relleno Automático Post-WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-27 | Vocabulario Completo WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
-| CA-28 | Prevención Race Condition Atender | ✅ | ❌ | ❌ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Backend validado |
+| CA-28 | Prevención Race Condition Atender | ✅ | ✅ | ✅ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Auditado en 82-DEV |
 | CA-29 | Contadores en Filtros por Tenant | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |
 | CA-30 | Rate Limiting API 429 | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |
 | CA-31 | Auto-Refresco Pasivo Inactividad | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 
 ### Resumen US-001
 - **Total CAs:** 31 (1 anulado = 30 activos)
-- **✅ Construidos:** 26/30 (86%)
-- **❌ Pendientes:** 4/30 (14%)
+- **✅ Construidos:** 30/30 (100%)
+- **❌ Pendientes:** 0/30 (0%)
 - **⚠️ Falsos Positivos Corregidos:** 1 (CA-8) — CA-4 fue implementado en 81-DEV
 - **QA validado:** 26/26 construidos (100% de lo construido)
 - **Última auditoría:** 81-DEV (2026-04-13) — CA-04, CA-15 ✅
@@ -315,7 +315,7 @@
 |---------|-------|
 | **Total US en V1** | 53+ |
 | **US Completadas (Back+Front)** | 10 (US-000, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción** | 1 (US-001 — 26/30 CAs activos, 86%) |
+| **US En Construcción** | 1 (US-001 — 30/30 CAs activos, 100%) |
 | **US Pendientes** | 42+ |
 | **CAs Implementados (estimado)** | ~198+ |
 | **CAs Validados QA** | ~38 (~19%) |

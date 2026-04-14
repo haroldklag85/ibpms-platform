@@ -21,10 +21,10 @@
 |---------|-------|
 | **Total US en V1** | 53+ |
 | **US Completadas** | 10 (US-000, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción** | 1 (US-001 — 15/31 CAs) |
+| **US En Construcción** | 1 (US-001 — 19/30 CAs activos, 63.3%) |
 | **US Pendientes** | 42+ |
-| **CAs Implementados (estimado)** | ~187+ |
-| **CAs Validados QA** | ~25 (~13%) |
+| **CAs Implementados (estimado)** | ~191+ |
+| **CAs Validados QA** | ~29 (~15%) |
 | **Principal Brecha** | 🔴 **QA < 15% en la mayoría de US completadas** |
 
 ---
@@ -46,7 +46,7 @@
 ---
 
 ## US-001: Bandeja de Entrada Unificada (Hybrid Workdesk)
-**Épica:** 1 — Orquestación | **Estado:** 🔨 EN CONSTRUCCIÓN (15/31 CAs)
+**Épica:** 1 — Orquestación | **Estado:** 🔨 EN CONSTRUCCIÓN (19/30 CAs activos — 63.3%)
 
 | CA | Título (corto) | Back | Front | QA | Sprint | Handoff | Notas |
 |----|----------------|------|-------|----|--------|---------|-------|
@@ -54,7 +54,7 @@
 | CA-2 | Búsqueda Híbrida Reactiva | 🚫 | 🚫 | 🚫 | — | Anulado por CA-19 | Reemplazado por búsqueda 100% Server-Side |
 | CA-3 | Data Grid tabular 5 cols | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-4 | Toggle Delegación Mis Tareas/Equipo | ❌ | ❌ | ❌ | — | — | ⚠️ Corregido: era falso positivo |
-| CA-5 | SLA Ticking Engine Vivo | ❌ | ❌ | ❌ | — | — | ⚠️ Corregido: era falso positivo |
+| CA-5 | SLA Ticking Engine Vivo | ✅ | ❌ | ❌ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Backend: campo verificado en DTO+Entity |
 | CA-6 | Ghost Deletion STOMP WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-7 | Tolerancia Fallas CQRS | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-8 | Anti-Cherry Picking Feature Flag | ❌ | ❌ | ❌ | — | — | ⚠️ Corregido: era falso positivo |
@@ -84,15 +84,15 @@
 
 ### Resumen US-001
 - **Total CAs:** 31 (1 anulado = 30 activos)
-- **✅ Construidos:** 15/30 (50%)
-- **❌ Pendientes:** 15/30 (50%)
-- **⚠️ Falsos Positivos Corregidos:** 4 (CA-4, CA-5, CA-6, CA-8)
-- **QA validado:** 15/15 construidos (100% de lo construido)
+- **✅ Construidos:** 19/30 (63.3%)
+- **❌ Pendientes:** 11/30 (36.7%)
+- **⚠️ Falsos Positivos Corregidos:** 3 (CA-4, CA-5, CA-8) — CA-6 fue implementado en 79-DEV
+- **QA validado:** 19/19 construidos (100% de lo construido)
+- **Última auditoría:** 79-DEV (2026-04-13) — CA-06, CA-13, CA-26, CA-27 ✅
 
 #### CAs Pendientes Agrupados por Dominio Funcional
 | Grupo | CAs | Descripción |
 |-------|-----|-------------|
-| **WebSocket / Tiempo Real** | CA-6, CA-13, CA-26, CA-27 | Ghost deletion, throttling, relleno, vocabulario |
 | **SLA / Semáforos** | CA-5, CA-11, CA-24, CA-25, CA-31 | Ticking engine, heartbeat, umbrales, recálculo, auto-refresco |
 | **Delegación / RBAC** | CA-4, CA-15 | Toggle delegación, anti-IDOR |
 | **Routing / Anti-Abuse** | CA-8, CA-16, CA-21, CA-28 | Anti-cherry-picking, skill-based routing, skipeo, race condition |
@@ -314,11 +314,11 @@
 |---------|-------|
 | **Total US en V1** | 53+ |
 | **US Completadas (Back+Front)** | 10 (US-000, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción** | 1 (US-001 — 15/30 CAs activos, 50%) |
+| **US En Construcción** | 1 (US-001 — 19/30 CAs activos, 63.3%) |
 | **US Pendientes** | 42+ |
-| **CAs Implementados (estimado)** | ~187+ |
-| **CAs Validados QA** | ~25 (~13%) |
-| **Falsos Positivos Corregidos** | 4 (US-001: CA-4, CA-5, CA-6, CA-8) |
+| **CAs Implementados (estimado)** | ~191+ |
+| **CAs Validados QA** | ~29 (~15%) |
+| **Falsos Positivos Corregidos** | 3 (US-001: CA-4, CA-5, CA-8) — CA-6 rehabilitado en 79-DEV |
 | **Principal Brecha** | 🔴 **QA < 15% global. US-003, US-005, US-038, US-043, US-048 sin QA.** |
 
 ### Brechas Prioritarias

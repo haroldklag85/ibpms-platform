@@ -204,7 +204,7 @@
                    v-for="task in filteredItems" 
                    :key="task.unifiedId"
                    @click="mockOpenTask(task)"
-                   class="border-b border-gray-100 hover:bg-indigo-50/30 cursor-pointer transition-colors group"
+                   :class="[{ 'is-ghost': (task as any)._isGhost, 'is-new': (task as any)._isNew }, 'workdesk-row border-b border-gray-100 hover:bg-indigo-50/30 cursor-pointer transition-colors group']"
                  >
                    <!-- Col 1: Nombre + Badge Tipo + Badge Impacto -->
                    <td class="px-4 py-3">
@@ -535,5 +535,23 @@ onUnmounted(() => {
 .toast-slide-leave-to {
   opacity: 0;
   transform: translateY(-20px);
+}
+
+/* CA-13: Transición Ghost Deletion */
+.workdesk-row {
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.workdesk-row.is-ghost {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
+}
+/* CA-26: Fade-in para tarjetas nuevas */
+.workdesk-row.is-new {
+    animation: fadeIn 0.5s ease-in;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>

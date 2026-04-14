@@ -357,4 +357,61 @@ public class WorkdeskRepositoryTest {
         // Assert - A nivel de persistencia de datos aislada el perímetro no cruza inquilinos
         verifyNoInteractions(simpMessagingTemplate);
     }
+
+    // ============================================================
+    // TEST 10 (80-DEV / CA-05/CA-24): slaExpirationDate present in query
+    // ============================================================
+    @Test
+    void testSlaExpirationDate_PresentInQuery() {
+        // Arrange — Tarea con SLA futuro explícito
+        WorkdeskProjectionEntity task = new WorkdeskProjectionEntity();
+        task.setId("sla_present");
+        task.setTenantId("tenantSla");
+        task.setImpactLevel(3);
+        task.setTitle("Task With Future SLA");
+        task.setSourceSystem("BPMN");
+        task.setOriginalTaskId("sla_p1");
+        task.setStatus("ACTIVE");
+        task.setSlaExpirationDate(LocalDateTime.now().plusHours(36));
+
+        workdeskRepository.save(task);
+
+        // Act
+        Page<WorkdeskProjectionEntity> result = workdeskRepository.findWorkdeskTasks("tenantSla", null, null, PageRequest.of(0, 10));
+
+        // Assert — CA-05: El campo slaExpirationDate NO es null en el resultado
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        WorkdeskProjectionEntity loaded = result.getContent().get(0);
+        assertNotNull(loaded.getSlaExpirationDate(), "slaExpirationDate debe estar presente cuando fue asignado");
+        assertTrue(loaded.getSlaExpirationDate().isAfter(LocalDateTime.now()), "SLA debe ser futuro");
+    }
+
+    // ============================================================
+    // TEST 11 (80-DEV / CA-05): slaExpirationDate null handling
+    // ============================================================
+    @Test
+    void testSlaExpirationDate_NullHandling() {
+        // Arrange — Tarea SIN SLA asignado
+        WorkdeskProjectionEntity task = new WorkdeskProjectionEntity();
+        task.setId("sla_null");
+        task.setTenantId("tenantSlaNull");
+        task.setImpactLevel(1);
+        task.setTitle("Task Without SLA");
+        task.setSourceSystem("KANBAN");
+        task.setOriginalTaskId("sla_n1");
+        task.setStatus("ACTIVE");
+        // slaExpirationDate deliberately NOT set → null
+
+        workdeskRepository.save(task);
+
+        // Act
+        Page<WorkdeskProjectionEntity> result = workdeskRepository.findWorkdeskTasks("tenantSlaNull", null, null, PageRequest.of(0, 10));
+
+        // Assert — CA-05/CA-24: El campo debe ser null, NO un valor por defecto
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        WorkdeskProjectionEntity loaded = result.getContent().get(0);
+        assertNull(loaded.getSlaExpirationDate(), "slaExpirationDate debe ser null cuando no fue asignado — Frontend renderiza 'Sin SLA'");
+    }
 }

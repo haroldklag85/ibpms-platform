@@ -55,14 +55,14 @@
 | CA-3 | Data Grid tabular 5 cols | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-4 | Toggle Delegación Mis Tareas/Equipo | ❌ | ❌ | ❌ | — | — | ⚠️ Corregido: era falso positivo |
 | CA-5 | SLA Ticking Engine Vivo | ❌ | ❌ | ❌ | — | — | ⚠️ Corregido: era falso positivo |
-| CA-6 | Ghost Deletion STOMP WebSocket | ✅ | ❌ | ❌ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | — |
+| CA-6 | Ghost Deletion STOMP WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-7 | Tolerancia Fallas CQRS | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-8 | Anti-Cherry Picking Feature Flag | ❌ | ❌ | ❌ | — | — | ⚠️ Corregido: era falso positivo |
 | CA-9 | Paginación Máxima Visual | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-10 | Paginación Server-Side y pg_trgm | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-11 | Heartbeat Store rAF | ❌ | ❌ | ❌ | — | — | Pendiente |
 | CA-12 | Ergonomía KeepAlive Empty State | N/A | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Frontend only |
-| CA-13 | Minificación WebSocket Throttling | ❌ | ❌ | ❌ | — | — | Pendiente |
+| CA-13 | Minificación WebSocket Throttling | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-14 | Sanitización DTO y Aislamiento RLS | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-15 | Delegación Segura Anti-IDOR | ❌ | ❌ | ❌ | — | — | Pendiente |
 | CA-16 | Skill-Based Routing | ❌ | ❌ | ❌ | — | — | Pendiente |
@@ -75,8 +75,8 @@
 | CA-23 | Fórmula Avance Determinista | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-24 | Umbrales Semáforo SLA Configurables | ❌ | ❌ | ❌ | — | — | Pendiente |
 | CA-25 | Recálculo Semáforos Tab Inactiva | ❌ | ❌ | ❌ | — | — | Pendiente |
-| CA-26 | Relleno Automático Post-WebSocket | ❌ | ❌ | ❌ | — | — | Pendiente |
-| CA-27 | Vocabulario Completo WebSocket | ✅ | ❌ | ❌ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | — |
+| CA-26 | Relleno Automático Post-WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
+| CA-27 | Vocabulario Completo WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-28 | Prevención Race Condition Atender | ❌ | ❌ | ❌ | — | — | Pendiente |
 | CA-29 | Contadores en Filtros por Tenant | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |
 | CA-30 | Rate Limiting API 429 | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |

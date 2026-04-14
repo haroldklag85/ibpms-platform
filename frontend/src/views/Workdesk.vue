@@ -219,9 +219,10 @@
                        <span v-if="task.financialImpactHigh" class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[9px] font-black border border-red-200 shrink-0">🔥 Impacto</span>
                      </div>
                    </td>
-                   <!-- Col 2: SLA Semáforo Vivo -->
+                   <!-- Col 2: SLA Semáforo Vivo con Iconografía Accesible (CA-11) -->
                    <td class="px-4 py-3">
-                     <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border', getSlaPillClass(task.slaExpirationDate)]">
+                     <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 w-fit', getSlaPillClass(task.slaExpirationDate)]">
+                       <span class="text-xs">{{ getSlaIcon(task.slaExpirationDate) }}</span>
                        {{ getSlaRelativeTime(task.slaExpirationDate) }}
                      </span>
                    </td>
@@ -346,8 +347,10 @@ defineOptions({ name: 'Workdesk' });
 import { ref, watch, onMounted, onUnmounted, defineAsyncComponent, computed } from 'vue';
 import { useWorkdeskStore } from '@/stores/useWorkdeskStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useTimeStore } from '@/stores/timeStore';
 
 const store = useWorkdeskStore();
+const timeStore = useTimeStore();
 const toastSuccess = ref('');
 
 // CA-12: Anti Empty Last Page
@@ -425,34 +428,56 @@ const clearToasts = () => {
 }
 
 // ==========================================
-// SLA Ticking Engine (Gap CA-5 Vivo)
+// CA-24: Umbrales deterministas basados en % del tiempo restante
 // ==========================================
-const currentTick = ref(Date.now());
-let timerId: ReturnType<typeof setInterval> | null = null;
+const SLA_THRESHOLDS = {
+    GREEN_ABOVE: 0.50,   // > 50% restante → Verde
+    YELLOW_ABOVE: 0.15,  // > 15% restante → Amarillo
+    // < 15% → Rojo
+    // 0% → Vencida
+};
 
-const getSlaStatus = (isoString?: string) => {
-    if(!isoString) return 'OK';
-    const flag = new Date(isoString).getTime();
-    const diffHours = (flag - currentTick.value) / (1000 * 60 * 60);
+const getSlaStatus = (isoString?: string): 'OK' | 'WARNING' | 'EXPIRED' | 'CRITICAL' => {
+    if (!isoString) return 'OK'; // Sin SLA = no hay presión
 
-    if(diffHours < 0) return 'EXPIRED';
-    if(diffHours <= 24) return 'WARNING';
-    return 'OK';
+    const deadline = new Date(isoString).getTime();
+    const now = timeStore.currentTick; // CA-05/CA-11: Reactivo vía Heartbeat Store
+    const diff = deadline - now;
+
+    if (diff <= 0) return 'EXPIRED'; // ⚫ Vencida (0%)
+
+    // CA-24: Necesitamos el "total del SLA" para calcular el porcentaje.
+    const totalSlaWindow = 48 * 60 * 60 * 1000; // 48h ventana base V1
+    const percentRemaining = Math.min(diff / totalSlaWindow, 1.0);
+
+    if (percentRemaining > SLA_THRESHOLDS.GREEN_ABOVE) return 'OK';        // 🟢
+    if (percentRemaining > SLA_THRESHOLDS.YELLOW_ABOVE) return 'WARNING';  // 🟡
+    return 'CRITICAL'; // 🔴
 };
 
 const getSlaPillClass = (isoString?: string) => {
     const st = getSlaStatus(isoString);
-    if(st === 'EXPIRED') return 'bg-red-50 text-red-700 border-red-200/60';
-    if(st === 'WARNING') return 'bg-yellow-50 text-yellow-700 border-yellow-200/60';
-    return 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
+    if (st === 'EXPIRED') return 'bg-gray-200 text-gray-700 border-gray-300';         // ⚫
+    if (st === 'CRITICAL') return 'bg-red-50 text-red-700 border-red-200/60';         // 🔴
+    if (st === 'WARNING') return 'bg-yellow-50 text-yellow-700 border-yellow-200/60'; // 🟡
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200/60';                    // 🟢
+};
+
+// CA-11: Iconografía accesible para daltónicos (SVG inline / Emojis)
+const getSlaIcon = (isoString?: string): string => {
+    const st = getSlaStatus(isoString);
+    if (st === 'EXPIRED') return '⚫';  // Vencida
+    if (st === 'CRITICAL') return '⚡'; // Rojo (Urgente)
+    if (st === 'WARNING') return '⏳';  // Amarillo (Por vencer)
+    return '✔️';                         // Verde (Al día)
 };
 
 const getSlaRelativeTime = (isoString?: string) => {
     if(!isoString) return 'Sin SLA Expiración';
     
-    // Reactivamente depende de currentTick.value
+    // Reactivamente depende de timeStore.currentTick
     const flag = new Date(isoString).getTime();
-    const diffHours = (flag - currentTick.value) / (1000 * 60 * 60);
+    const diffHours = (flag - timeStore.currentTick) / (1000 * 60 * 60);
     const diffDays = diffHours / 24;
 
     if (diffHours < 0) return `Vencido hace ${Math.abs(Math.round(diffHours))} hrs`;
@@ -470,24 +495,41 @@ const countWarningSLA = () => {
     return store.items.filter(i => getSlaStatus(i.slaExpirationDate) === 'WARNING').length;
 };
 
-onMounted(() => {
-   loadData();
-   // Gap CA-5: Montar Engine con 60s
-   timerId = setInterval(() => {
-       currentTick.value = Date.now();
-   }, 60000);
+// CA-31: Umbral de inactividad para auto-refresco (5 minutos)
+const INACTIVITY_THRESHOLD_MS = 5 * 60 * 1000;
+let visibilityCleanup: (() => void) | null = null;
 
-   // Gap CA-6: Iniciar conexión WebSocket (Ghost Deletion)
-   // NOTA: Store maneja el fallback WS local.
-   store.initWebSocket();
+onMounted(() => {
+    loadData();
+
+    // CA-05/CA-11: Arrancar Heartbeat Store en vez de setInterval
+    timeStore.startEngine();
+
+    // CA-31: Listener de visibilitychange para auto-refresco pasivo
+    const onVisibilityReturn = async () => {
+        if (document.visibilityState === 'visible') {
+            // CA-25: El timeStore ya recalcula `currentTick` inmediatamente
+            // CA-31: Si inactividad > 5 min → refresco silencioso de datos
+            if (timeStore.getInactivityMs() > INACTIVITY_THRESHOLD_MS) {
+                await loadData();
+            }
+        }
+    };
+    document.addEventListener('visibilitychange', onVisibilityReturn);
+    visibilityCleanup = () => document.removeEventListener('visibilitychange', onVisibilityReturn);
+
+    // CA-6: Iniciar conexión WebSocket (Ghost Deletion)
+    store.initWebSocket();
 });
 
 onUnmounted(() => {
-    // Purgar para prevenir leaks
-    if(timerId) clearInterval(timerId);
-    if(searchTimeout) clearTimeout(searchTimeout);
+    // CA-11: Detener Heartbeat Engine
+    timeStore.stopEngine();
 
-    // Gap CA-6: Desconectar WebSocket
+    // CA-31: Limpiar listener
+    if (visibilityCleanup) visibilityCleanup();
+
+    if(searchTimeout) clearTimeout(searchTimeout);
     store.disconnectWebSocket();
 });
 

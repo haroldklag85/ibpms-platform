@@ -2,6 +2,8 @@ package com.ibpms.poc.infrastructure.web;
 
 import com.ibpms.poc.application.dto.WorkdeskGlobalItemDTO;
 import com.ibpms.poc.application.dto.WorkdeskResponseDTO;
+import com.ibpms.poc.application.dto.DelegationContextDTO;
+import com.ibpms.poc.application.service.TaskDelegationService;
 import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository;
 import org.slf4j.Logger;
@@ -29,10 +31,12 @@ public class WorkdeskQueryController {
     private static final Logger log = LoggerFactory.getLogger(WorkdeskQueryController.class);
 
     private final WorkdeskProjectionRepository projectionRepository;
+    private final TaskDelegationService taskDelegationService;
     private final Bucket bucket;
 
-    public WorkdeskQueryController(WorkdeskProjectionRepository projectionRepository) {
+    public WorkdeskQueryController(WorkdeskProjectionRepository projectionRepository, TaskDelegationService taskDelegationService) {
         this.projectionRepository = projectionRepository;
+        this.taskDelegationService = taskDelegationService;
         // CA-30: Rate Limiting
         Bandwidth limit = Bandwidth.builder().capacity(60).refillGreedy(60, Duration.ofMinutes(1)).build();
         this.bucket = Bucket.builder().addLimit(limit).build();
@@ -60,9 +64,22 @@ public class WorkdeskQueryController {
         try {
             // CA-14 Strict Isolation mapping
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            String tenantId = (auth != null && auth.getName() != null) ? auth.getName() : "default";
+            String currentUserId = (auth != null && auth.getName() != null) ? auth.getName() : "default";
+            String tenantId = currentUserId; // Mapeo simple de POC
 
-            Page<WorkdeskProjectionEntity> entities = projectionRepository.findWorkdeskTasks(tenantId, search, delegatedUserId, pageable);
+            DelegationContextDTO delegationContext = null;
+            String effectiveAssignee = currentUserId; 
+
+            if (delegatedUserId != null && !delegatedUserId.isBlank()) {
+                // CA-15: Validar jerarquía ANTES de ejecutar cualquier query
+                String assistantDisplayName = taskDelegationService
+                    .validateDelegationHierarchy(currentUserId, delegatedUserId, tenantId);
+
+                effectiveAssignee = delegatedUserId; 
+                delegationContext = new DelegationContextDTO(delegatedUserId, assistantDisplayName, true);
+            }
+
+            Page<WorkdeskProjectionEntity> entities = projectionRepository.findWorkdeskTasks(tenantId, search, effectiveAssignee, pageable);
             
             Page<WorkdeskGlobalItemDTO> dtoPage = entities.map(e -> {
                 WorkdeskGlobalItemDTO dto = new WorkdeskGlobalItemDTO();
@@ -87,8 +104,15 @@ public class WorkdeskQueryController {
                 return dto;
             });
 
-            return ResponseEntity.ok(new WorkdeskResponseDTO(false, dtoPage));
+            WorkdeskResponseDTO response = new WorkdeskResponseDTO(false, dtoPage);
+            if (delegationContext != null) {
+                response.setDelegationContext(delegationContext);
+            }
+            return ResponseEntity.ok(response);
             
+        } catch (org.springframework.web.server.ResponseStatusException rse) {
+            // Rethrow 403 para que llegue al cliente
+            throw rse;
         } catch (Exception e) {
             // CA-07/CA-18: Degradación Elegante Multi-Motor
             boolean isCamundaFailure = e.getMessage() != null && 

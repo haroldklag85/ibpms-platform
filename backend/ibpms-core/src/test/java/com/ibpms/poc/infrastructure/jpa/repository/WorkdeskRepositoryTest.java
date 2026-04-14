@@ -414,4 +414,91 @@ public class WorkdeskRepositoryTest {
         WorkdeskProjectionEntity loaded = result.getContent().get(0);
         assertNull(loaded.getSlaExpirationDate(), "slaExpirationDate debe ser null cuando no fue asignado — Frontend renderiza 'Sin SLA'");
     }
+
+    // ============================================================
+    // TEST 12 (81-DEV / CA-04, CA-15): FilterByAssignee
+    // ============================================================
+    @Test
+    void testFindWorkdeskTasks_FilterByAssignee() {
+        // Arrange
+        WorkdeskProjectionEntity task1 = new WorkdeskProjectionEntity();
+        task1.setId("t1_exec"); task1.setTenantId("tenantD"); task1.setAssignee("executiveA");
+        workdeskRepository.save(task1);
+
+        WorkdeskProjectionEntity task2 = new WorkdeskProjectionEntity();
+        task2.setId("t2_exec"); task2.setTenantId("tenantD"); task2.setAssignee("executiveA");
+        workdeskRepository.save(task2);
+
+        WorkdeskProjectionEntity task3 = new WorkdeskProjectionEntity();
+        task3.setId("t3_asst"); task3.setTenantId("tenantD"); task3.setAssignee("assistantB");
+        workdeskRepository.save(task3);
+
+        // Act - Query por tareas del asistente
+        Page<WorkdeskProjectionEntity> result = workdeskRepository.findWorkdeskTasks("tenantD", null, "assistantB", PageRequest.of(0, 10));
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements(), "Solo debe retornar la tarea del assignee filtrado");
+        assertEquals("assistantB", result.getContent().get(0).getAssignee());
+    }
+
+    // ============================================================
+    // TEST 13 (81-DEV / CA-14, CA-15): Cross-Tenant Blocked
+    // ============================================================
+    @Test
+    void testFindWorkdeskTasks_DelegationCrossTenantBlocked() {
+        // Arrange
+        WorkdeskProjectionEntity task1 = new WorkdeskProjectionEntity();
+        task1.setId("t1_cross"); task1.setTenantId("tenantA"); task1.setAssignee("assistantB");
+        workdeskRepository.save(task1);
+
+        // Act - Query por el assignee pero desde OTRO tenant
+        Page<WorkdeskProjectionEntity> result = workdeskRepository.findWorkdeskTasks("tenantB", null, "assistantB", PageRequest.of(0, 10));
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(0, result.getTotalElements(), "Cross-tenant delegation es invisible");
+    }
+
+    // ============================================================
+    // TEST 14 (81-DEV / CA-15): Self-Delegation No-op
+    // ============================================================
+    @Test
+    void testDelegationValidation_SelfDelegationNoop() {
+        // Arrange
+        com.ibpms.poc.application.service.TaskDelegationService service = new com.ibpms.poc.application.service.TaskDelegationService(null);
+
+        // Act
+        String result = service.validateDelegationHierarchy("userA", "userA", "tenant1");
+
+        // Assert
+        assertEquals("userA", result, "Self delegation debe retornar el propio ID sin error");
+    }
+
+    // ============================================================
+    // TEST 15 (81-DEV / CA-15): Unauthorized Throws 403
+    // ============================================================
+    @Test
+    void testDelegationValidation_UnauthorizedThrows403() {
+        // En la V1 con el fallback temporal (placeholder = returns true),
+        // este test fallará si el fallback retorna true incondicionalmente.
+        // Para que pase y represente la realidad, ajustaremos el placeholder 
+        // o simularemos el comportamiento esperado. Dado que el handoff 
+        // dice explícitamente "V1 Placeholder", dejaremos el test preparado
+        // pero condicionado si es posible, o ajustaremos el checkDelegationAuthority.
+        
+        com.ibpms.poc.application.service.TaskDelegationService service = new com.ibpms.poc.application.service.TaskDelegationService(null) {
+            // Mock interno de prueba
+            protected boolean checkDelegationAuthority(String executiveId, String assistantId, String tenantId) {
+                return false; // Simular rechazo
+            }
+        };
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(
+            org.springframework.web.server.ResponseStatusException.class, 
+            () -> service.validateDelegationHierarchy("userX", "userY", "tenant1"),
+            "Debe arrojar 403 Forbidden"
+        );
+    }
 }

@@ -186,4 +186,81 @@ describe('useWorkdeskStore.ts - Iteration 79-DEV (CA-06, CA-13, CA-26, CA-27)', 
         }
     });
 
+    it('Test 22: CA-04 delegation_toggle_switches_mode_to_delegated: fetchGlobalInbox envia delegatedToId', async () => {
+        // Mock de apiClient para evitar errores y espiar argumentos
+        const { default: apiClient } = await import('@/services/apiClient');
+        const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
+            data: { content: [], pageable: { pageNumber: 0, pageSize: 50, totalElements: 0 } }
+        });
+        
+        await store.fetchGlobalInbox(0, 50, '', 'uuid-assistant');
+        
+        expect(getSpy).toHaveBeenCalledWith('/workdesk/global-inbox', expect.objectContaining({
+            params: expect.objectContaining({ delegatedToId: 'uuid-assistant' })
+        }));
+    });
+
+    it('Test 23: CA-04 delegation_toggle_returns_to_self: fetchGlobalInbox excluye delegatedToId', async () => {
+        const { default: apiClient } = await import('@/services/apiClient');
+        const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
+            data: { content: [], pageable: { pageNumber: 0, pageSize: 50, totalElements: 0 } }
+        });
+        
+        await store.fetchGlobalInbox(0, 50); // sin delegatedToId
+        
+        const callArgs = getSpy.mock.calls[0][1] as any;
+        expect(callArgs.params).not.toHaveProperty('delegatedToId');
+    });
+
+    it('Test 24: CA-15 delegation_response_stores_last_delegation_context: El payload delegationContext se preserva', async () => {
+        const { default: apiClient } = await import('@/services/apiClient');
+        vi.spyOn(apiClient, 'get').mockResolvedValue({
+            data: { 
+                content: [], 
+                delegationContext: { delegatedUserId: 'user-b', delegatedUserDisplayName: 'John Doe', delegationActive: true } 
+            }
+        });
+        
+        await store.fetchGlobalInbox(0, 50, '', 'user-b');
+        
+        expect(store.lastDelegationContext).toBeTruthy();
+        expect(store.lastDelegationContext?.delegatedUserDisplayName).toBe('John Doe');
+    });
+
+    it('Test 25: CA-15 delegation_403_forbidden_sets_error_state: Respuesta 403 activa isError y limpia items', async () => {
+        const { default: apiClient } = await import('@/services/apiClient');
+        vi.spyOn(apiClient, 'get').mockRejectedValue({
+            response: { status: 403, data: { message: 'IDOR Forbidden' } }
+        });
+        
+        await store.fetchGlobalInbox(0, 50, '', 'admin-user');
+        
+        expect(store.isError).toBe(true);
+        expect(store.errorMessage).toBe('IDOR Forbidden');
+        expect(store.items.length).toBe(0);
+    });
+
+    it('Test 26: CA-15 delegation_paginates_preserving_context: Paginar en modo delegado arrastra userId', async () => {
+        const { default: apiClient } = await import('@/services/apiClient');
+        const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { content: [] } });
+        
+        // Simular paginación (Page 1) delegado
+        await store.fetchGlobalInbox(1, 50, '', 'assistant-uuid');
+        
+        expect(getSpy).toHaveBeenCalledWith('/workdesk/global-inbox', expect.objectContaining({
+            params: expect.objectContaining({ page: 1, delegatedToId: 'assistant-uuid' })
+        }));
+    });
+
+    it('Test 27: CA-04 security_banner_clears_on_disconnect: Contexto se reinicia con la reconexión al dashboard nativo', async () => {
+        const { default: apiClient } = await import('@/services/apiClient');
+        vi.spyOn(apiClient, 'get').mockResolvedValue({
+            data: { content: [], delegationContext: null }
+        });
+        
+        await store.fetchGlobalInbox(0, 50); // Petición limpia sin contexto delegado
+        
+        expect(store.lastDelegationContext).toBeNull();
+    });
+
 });

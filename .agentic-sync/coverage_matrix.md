@@ -53,7 +53,7 @@
 | CA-1 | Vista 360 Grid paginada | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-2 | Búsqueda Híbrida Reactiva | 🚫 | 🚫 | 🚫 | — | Anulado por CA-19 | Reemplazado por búsqueda 100% Server-Side |
 | CA-3 | Data Grid tabular 5 cols | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
-| CA-4 | Toggle Delegación Mis Tareas/Equipo | ✅ | ❌ | ❌ | 81-DEV | handoff_81DEV_US001_CA04_CA15 | Backend endpoint list |
+| CA-4 | Toggle Delegación Mis Tareas/Equipo | ✅ | ✅ | ✅ | 81-DEV | handoff_81DEV_US001_CA04_CA15 | Auditado en 81-DEV |
 | CA-5 | SLA Ticking Engine Vivo | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 | CA-6 | Ghost Deletion STOMP WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-7 | Tolerancia Fallas CQRS | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
@@ -64,7 +64,7 @@
 | CA-12 | Ergonomía KeepAlive Empty State | N/A | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Frontend only |
 | CA-13 | Minificación WebSocket Throttling | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-14 | Sanitización DTO y Aislamiento RLS | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
-| CA-15 | Delegación Segura Anti-IDOR | ✅ | ❌ | ❌ | 81-DEV | handoff_81DEV_US001_CA04_CA15 | Backend validado |
+| CA-15 | Delegación Segura Anti-IDOR | ✅ | ✅ | ✅ | 81-DEV | handoff_81DEV_US001_CA04_CA15 | Auditado en 81-DEV |
 | CA-16 | Skill-Based Routing | ❌ | ❌ | ❌ | — | — | Pendiente |
 | CA-17 | Ordenamiento SLA y Priority Fallback | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-18 | Degradación Multi-Motor | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
@@ -84,11 +84,11 @@
 
 ### Resumen US-001
 - **Total CAs:** 31 (1 anulado = 30 activos)
-- **✅ Construidos:** 24/30 (80%)
-- **❌ Pendientes:** 6/30 (20%)
-- **⚠️ Falsos Positivos Corregidos:** 3 (CA-4, CA-8) — CA-5 fue implementado en 80-DEV y CA-6 en 79-DEV
-- **QA validado:** 24/24 construidos (100% de lo construido)
-- **Última auditoría:** 80-DEV (2026-04-13) — CA-05, CA-11, CA-24, CA-25, CA-31 ✅
+- **✅ Construidos:** 26/30 (86%)
+- **❌ Pendientes:** 4/30 (14%)
+- **⚠️ Falsos Positivos Corregidos:** 1 (CA-8) — CA-4 fue implementado en 81-DEV
+- **QA validado:** 26/26 construidos (100% de lo construido)
+- **Última auditoría:** 81-DEV (2026-04-13) — CA-04, CA-15 ✅
 
 #### CAs Pendientes Agrupados por Dominio Funcional
 | Grupo | CAs | Descripción |

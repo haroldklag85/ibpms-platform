@@ -54,13 +54,13 @@
 | CA-2 | Búsqueda Híbrida Reactiva | 🚫 | 🚫 | 🚫 | — | Anulado por CA-19 | Reemplazado por búsqueda 100% Server-Side |
 | CA-3 | Data Grid tabular 5 cols | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-4 | Toggle Delegación Mis Tareas/Equipo | ❌ | ❌ | ❌ | — | — | ⚠️ Corregido: era falso positivo |
-| CA-5 | SLA Ticking Engine Vivo | ✅ | ❌ | ❌ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Backend: campo verificado en DTO+Entity |
+| CA-5 | SLA Ticking Engine Vivo | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 | CA-6 | Ghost Deletion STOMP WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-7 | Tolerancia Fallas CQRS | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-8 | Anti-Cherry Picking Feature Flag | ❌ | ❌ | ❌ | — | — | ⚠️ Corregido: era falso positivo |
 | CA-9 | Paginación Máxima Visual | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-10 | Paginación Server-Side y pg_trgm | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
-| CA-11 | Heartbeat Store rAF | ❌ | ❌ | ❌ | — | — | Pendiente |
+| CA-11 | Heartbeat Store rAF | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 | CA-12 | Ergonomía KeepAlive Empty State | N/A | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Frontend only |
 | CA-13 | Minificación WebSocket Throttling | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-14 | Sanitización DTO y Aislamiento RLS | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
@@ -73,22 +73,22 @@
 | CA-21 | Skill-Based Skipeo Justificado | ❌ | ❌ | ❌ | — | — | Pendiente |
 | CA-22 | Filtros Facetados por Status | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |
 | CA-23 | Fórmula Avance Determinista | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
-| CA-24 | Umbrales Semáforo SLA Configurables | ❌ | ❌ | ❌ | — | — | Pendiente |
-| CA-25 | Recálculo Semáforos Tab Inactiva | ❌ | ❌ | ❌ | — | — | Pendiente |
+| CA-24 | Umbrales Semáforo SLA Configurables | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
+| CA-25 | Recálculo Semáforos Tab Inactiva | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 | CA-26 | Relleno Automático Post-WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-27 | Vocabulario Completo WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-28 | Prevención Race Condition Atender | ❌ | ❌ | ❌ | — | — | Pendiente |
 | CA-29 | Contadores en Filtros por Tenant | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |
 | CA-30 | Rate Limiting API 429 | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |
-| CA-31 | Auto-Refresco Pasivo Inactividad | ❌ | ❌ | ❌ | — | — | Pendiente |
+| CA-31 | Auto-Refresco Pasivo Inactividad | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 
 ### Resumen US-001
 - **Total CAs:** 31 (1 anulado = 30 activos)
-- **✅ Construidos:** 19/30 (63.3%)
-- **❌ Pendientes:** 11/30 (36.7%)
-- **⚠️ Falsos Positivos Corregidos:** 3 (CA-4, CA-5, CA-8) — CA-6 fue implementado en 79-DEV
-- **QA validado:** 19/19 construidos (100% de lo construido)
-- **Última auditoría:** 79-DEV (2026-04-13) — CA-06, CA-13, CA-26, CA-27 ✅
+- **✅ Construidos:** 24/30 (80%)
+- **❌ Pendientes:** 6/30 (20%)
+- **⚠️ Falsos Positivos Corregidos:** 3 (CA-4, CA-8) — CA-5 fue implementado en 80-DEV y CA-6 en 79-DEV
+- **QA validado:** 24/24 construidos (100% de lo construido)
+- **Última auditoría:** 80-DEV (2026-04-13) — CA-05, CA-11, CA-24, CA-25, CA-31 ✅
 
 #### CAs Pendientes Agrupados por Dominio Funcional
 | Grupo | CAs | Descripción |

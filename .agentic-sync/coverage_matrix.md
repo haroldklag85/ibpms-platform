@@ -21,10 +21,10 @@
 |---------|-------|
 | **Total US en V1** | 53+ |
 | **US Completadas** | 10 (US-000, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción** | 1 (US-001 — 24/30 CAs activos, 80%) |
+| **US En Construcción** | 1 (US-001 — 26/30 CAs activos, 86%) |
 | **US Pendientes** | 42+ |
-| **CAs Implementados (estimado)** | ~196+ |
-| **CAs Validados QA** | ~36 (~18%) |
+| **CAs Implementados (estimado)** | ~198+ |
+| **CAs Validados QA** | ~38 (~19%) |
 | **Principal Brecha** | 🔴 **QA < 15% en la mayoría de US completadas** |
 
 ---
@@ -46,7 +46,7 @@
 ---
 
 ## US-001: Bandeja de Entrada Unificada (Hybrid Workdesk)
-**Épica:** 1 — Orquestación | **Estado:** 🔨 EN CONSTRUCCIÓN (24/30 CAs activos — 80%)
+**Épica:** 1 — Orquestación | **Estado:** 🔨 EN CONSTRUCCIÓN (26/30 CAs activos — 86%)
 
 | CA | Título (corto) | Back | Front | QA | Sprint | Handoff | Notas |
 |----|----------------|------|-------|----|--------|---------|-------|
@@ -57,7 +57,7 @@
 | CA-5 | SLA Ticking Engine Vivo | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 | CA-6 | Ghost Deletion STOMP WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-7 | Tolerancia Fallas CQRS | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
-| CA-8 | Anti-Cherry Picking Feature Flag | ❌ | ❌ | ❌ | — | — | ⚠️ Corregido: era falso positivo |
+| CA-8 | Anti-Cherry Picking Feature Flag | ✅ | ❌ | ❌ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Backend endpoint list |
 | CA-9 | Paginación Máxima Visual | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-10 | Paginación Server-Side y pg_trgm | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-11 | Heartbeat Store rAF | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
@@ -65,19 +65,19 @@
 | CA-13 | Minificación WebSocket Throttling | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-14 | Sanitización DTO y Aislamiento RLS | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-15 | Delegación Segura Anti-IDOR | ✅ | ✅ | ✅ | 81-DEV | handoff_81DEV_US001_CA04_CA15 | Auditado en 81-DEV |
-| CA-16 | Skill-Based Routing | ❌ | ❌ | ❌ | — | — | Pendiente |
+| CA-16 | Skill-Based Routing | ✅ | ❌ | ❌ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Backend validado |
 | CA-17 | Ordenamiento SLA y Priority Fallback | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-18 | Degradación Multi-Motor | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-19 | Búsqueda Exclusiva Server-Side | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
 | CA-20 | Estandarización Contrato API | ✅ | ✅ | ✅ | 76-DEV | handoff_76DEV_us001 | Auditado en 76-DEV |
-| CA-21 | Skill-Based Skipeo Justificado | ❌ | ❌ | ❌ | — | — | Pendiente |
+| CA-21 | Skill-Based Skipeo Justificado | ✅ | ❌ | ❌ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Backend validado |
 | CA-22 | Filtros Facetados por Status | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |
 | CA-23 | Fórmula Avance Determinista | ✅ | ✅ | ✅ | 77-DEV | handoff_77DEV_US001 | Auditado en 77-DEV |
 | CA-24 | Umbrales Semáforo SLA Configurables | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 | CA-25 | Recálculo Semáforos Tab Inactiva | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
 | CA-26 | Relleno Automático Post-WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
 | CA-27 | Vocabulario Completo WebSocket | ✅ | ✅ | ✅ | 79-DEV | handoff_79DEV_US001_CA06_CA13_CA26_CA27 | Auditado en 79-DEV |
-| CA-28 | Prevención Race Condition Atender | ❌ | ❌ | ❌ | — | — | Pendiente |
+| CA-28 | Prevención Race Condition Atender | ✅ | ❌ | ❌ | 82-DEV | handoff_82DEV_US001_CA08_CA16_CA21_CA28 | Backend validado |
 | CA-29 | Contadores en Filtros por Tenant | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |
 | CA-30 | Rate Limiting API 429 | ✅ | ✅ | ✅ | 78-DEV | handoff_78DEV_US001 | Auditado en 78-DEV |
 | CA-31 | Auto-Refresco Pasivo Inactividad | ✅ | ✅ | ✅ | 80-DEV | handoff_80DEV_US001_CA05_CA11_CA24_CA25_CA31 | Auditado en 80-DEV |
@@ -315,11 +315,11 @@
 |---------|-------|
 | **Total US en V1** | 53+ |
 | **US Completadas (Back+Front)** | 10 (US-000, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción** | 1 (US-001 — 24/30 CAs activos, 80%) |
+| **US En Construcción** | 1 (US-001 — 26/30 CAs activos, 86%) |
 | **US Pendientes** | 42+ |
-| **CAs Implementados (estimado)** | ~196+ |
-| **CAs Validados QA** | ~36 (~18%) |
-| **Falsos Positivos Corregidos** | 2 (US-001: CA-4, CA-8) — CA-5 implementado en 80-DEV, CA-6 rehabilitado en 79-DEV |
+| **CAs Implementados (estimado)** | ~198+ |
+| **CAs Validados QA** | ~38 (~19%) |
+| **Falsos Positivos Corregidos** | 1 (US-001: CA-8) — CA-4 implementado en 81-DEV, CA-5 en 80-DEV, CA-6 en 79-DEV |
 | **Principal Brecha** | 🔴 **QA < 18% global. US-003, US-005, US-038, US-043, US-048 sin QA.** |
 
 ### Brechas Prioritarias

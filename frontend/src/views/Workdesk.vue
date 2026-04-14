@@ -24,15 +24,31 @@
         
         <!-- Contenedor general de Filtros -->
         <div class="flex items-center gap-2">
-           <!-- Delegación de Bandejas (Gap CA-4) -->
-           <select 
-              v-model="delegationFilter" 
-              @change="loadData"
-              class="bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 font-semibold hover:bg-indigo-100 cursor-pointer outline-none"
-           >
-             <option value="">Mis Tareas</option>
-             <option value="TEAM">Tareas del Equipo</option>
-           </select>
+           <!-- CA-04: Toggle de Delegación con contextos separados -->
+           <div class="inline-flex rounded-lg border border-gray-200/80 bg-white/50 backdrop-blur-sm p-0.5 shadow-sm">
+             <button
+               :class="[
+                 'px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200',
+                 delegationMode === 'SELF'
+                   ? 'bg-indigo-600 text-white shadow-sm'
+                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+               ]"
+               @click="switchDelegationMode('SELF')"
+             >
+               📋 Mis Tareas
+             </button>
+             <button
+               :class="[
+                 'px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200',
+                 delegationMode === 'DELEGATED'
+                   ? 'bg-amber-500 text-white shadow-sm'
+                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+               ]"
+               @click="switchDelegationMode('DELEGATED')"
+             >
+               👤 Tareas de mi Asistente
+             </button>
+           </div>
 
            <!-- Filtro Tipo (Procesos vs Proyectos) -->
            <select 
@@ -88,6 +104,27 @@
       <span class="material-symbols-outlined text-red-500 mt-0.5 mr-3 shrink-0">error</span>
       <p class="text-red-700 font-medium text-sm">{{ store.errorMessage }}</p>
     </div>
+
+    <!-- CA-15: Banner de Delegación Activa (solo visible en modo DELEGATED) -->
+    <Transition name="slide-down">
+      <div
+        v-if="delegationMode === 'DELEGATED' && delegatedUserName"
+        class="w-full px-6 py-2.5 flex items-center gap-3 border-b border-amber-200/60 bg-amber-50 shadow-sm shrink-0"
+        role="alert"
+        aria-live="polite"
+      >
+        <span class="text-amber-600 text-xl">⚠️</span>
+        <span class="text-sm font-medium text-amber-800">
+          Estás viendo el escritorio de <strong>{{ delegatedUserName }}</strong>
+        </span>
+        <button
+          class="ml-auto text-xs font-semibold text-amber-600 hover:text-amber-800 hover:underline flex items-center gap-1"
+          @click="switchDelegationMode('SELF')"
+        >
+          <span class="material-symbols-outlined text-sm">exit_to_app</span> Volver a mis tareas
+        </button>
+      </div>
+    </Transition>
 
     <!-- CA-07/CA-18: Banner de Degradación BPMN -->
     <Transition name="toast-slide">
@@ -261,7 +298,7 @@
           <div class="flex items-center gap-2">
             <button 
                :disabled="store.pageInfo.pageNumber === 0" 
-               @click="store.fetchGlobalInbox(store.pageInfo.pageNumber - 1, store.pageInfo.pageSize, searchQuery, delegationFilter, typeFilter, slaFilter, statusFilter)"
+               @click="store.fetchGlobalInbox(store.pageInfo.pageNumber - 1, store.pageInfo.pageSize, searchQuery, delegationMode === 'DELEGATED' ? (delegatedUserId || undefined) : undefined, typeFilter, slaFilter, statusFilter)"
                class="p-1 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400 transition"
             >
               <span class="material-symbols-outlined">chevron_left</span>
@@ -273,7 +310,7 @@
             </div>
             <button 
                :disabled="(store.pageInfo.pageNumber + 1) * store.pageInfo.pageSize >= store.pageInfo.totalElements" 
-               @click="store.fetchGlobalInbox(store.pageInfo.pageNumber + 1, store.pageInfo.pageSize, searchQuery, delegationFilter, typeFilter, slaFilter, statusFilter)"
+               @click="store.fetchGlobalInbox(store.pageInfo.pageNumber + 1, store.pageInfo.pageSize, searchQuery, delegationMode === 'DELEGATED' ? (delegatedUserId || undefined) : undefined, typeFilter, slaFilter, statusFilter)"
                class="p-1 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400 transition"
             >
               <span class="material-symbols-outlined">chevron_right</span>
@@ -356,7 +393,8 @@ const toastSuccess = ref('');
 // CA-12: Anti Empty Last Page
 watch(() => store.items.length, (newLen) => {
   if (newLen === 0 && store.pageInfo.pageNumber > 0) {
-    store.fetchGlobalInbox(0, store.pageInfo.pageSize, searchQuery.value, delegationFilter.value, typeFilter.value, slaFilter.value, statusFilter.value);
+    const delegatedId = delegationMode.value === 'DELEGATED' ? delegatedUserId.value : undefined;
+    store.fetchGlobalInbox(0, store.pageInfo.pageSize, searchQuery.value, delegatedId || undefined, typeFilter.value, slaFilter.value, statusFilter.value);
   }
 });
 
@@ -386,12 +424,61 @@ const dynamicComponents = computed(() => {
 // Búsqueda & Delegación & Filtros Dinámicos (Gaps CA-2, CA-4)
 // ==========================================
 const searchQuery = ref('');
-const delegationFilter = ref('');
+// CA-04: Estado del modo de delegación
+const delegationMode = ref<'SELF' | 'DELEGATED'>('SELF');
+const delegatedUserId = ref<string | null>(null);
+const delegatedUserName = ref<string | null>(null);
+
 const typeFilter = ref('');
 const slaFilter = ref('');
 const statusFilter = ref('');
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// CA-04/CA-15: Cambiar modo de delegación
+const switchDelegationMode = async (mode: 'SELF' | 'DELEGATED') => {
+  if (mode === delegationMode.value) return;
+
+  delegationMode.value = mode;
+
+  if (mode === 'DELEGATED') {
+    // CA-15: Enviar request con el assistantId del usuario configurado
+    // V1: El assistantId se obtiene del perfil del ejecutivo logueado
+    // Nota: El authStore base tiene properties o any prop.
+    const auth = authStore;
+    const assistantId = (auth as any).delegatedAssistantId || '101edfe'; // UUID placeholder si no existe
+
+    if (!assistantId) {
+      console.warn('CA-04: No se encontró asistente configurado para delegación');
+      delegationMode.value = 'SELF';
+      return;
+    }
+
+    delegatedUserId.value = assistantId;
+
+    try {
+      // CA-15: El Backend valida la jerarquía y retorna 403 si es IDOR
+      await store.fetchGlobalInbox(0, 50, searchQuery.value, assistantId, typeFilter.value, slaFilter.value, statusFilter.value);
+
+      // Si la respuesta incluye delegationContext, extraer nombre
+      delegatedUserName.value = store.lastDelegationContext?.delegatedUserDisplayName || assistantId;
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        // CA-15: Bloqueo IDOR — revertir al modo propio
+        console.error('CA-15: Delegación denegada por el servidor (403 Forbidden)');
+        delegationMode.value = 'SELF';
+        delegatedUserId.value = null;
+        delegatedUserName.value = null;
+        alert('No tiene permisos para ver el escritorio de este usuario.');
+      }
+    }
+  } else {
+    // Volver a "Mis Tareas"
+    delegatedUserId.value = null;
+    delegatedUserName.value = null;
+    await loadData(); // Recargar con el contexto propio
+  }
+};
 
 // Reactivity CA-5 Zero Frontend Filtering logic - Direct pass-through
 const filteredItems = computed(() => {
@@ -415,7 +502,8 @@ const applyFacetFilter = (status: string) => {
 };
 
 const loadData = async () => {
-    await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 50, searchQuery.value, delegationFilter.value, typeFilter.value, slaFilter.value, statusFilter.value);
+    const delegatedId = delegationMode.value === 'DELEGATED' ? delegatedUserId.value : undefined;
+    await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 50, searchQuery.value, delegatedId || undefined, typeFilter.value, slaFilter.value, statusFilter.value);
 };
 
 const mockOpenTask = (task: any) => {
@@ -577,6 +665,17 @@ onUnmounted(() => {
 .toast-slide-leave-to {
   opacity: 0;
   transform: translateY(-20px);
+}
+
+/* CA-15: Animación suave del Banner de delegación */
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.3s ease;
+}
+.slide-down-enter-from,
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 /* CA-13: Transición Ghost Deletion */

@@ -68,4 +68,7 @@ public class WorkdeskProjectionEntity {
 
     @Column(name = "process_definition_key")
     private String processDefinitionKey;
+
+    @Column(name = "category_tag")
+    private String categoryTag;
 }

@@ -29,4 +29,19 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
     @Query("SELECT new com.ibpms.poc.application.dto.FacetCountDto(w.status, COUNT(w)) " +
            "FROM WorkdeskProjectionEntity w WHERE w.tenantId = :tenantId GROUP BY w.status")
     java.util.List<com.ibpms.poc.application.dto.FacetCountDto> countByStatusPerTenant(@Param("tenantId") String tenantId);
+
+    // CA-28, CA-16, CA-21: For Update Skip Locked and Skill Matching
+    @Query(value = """
+        SELECT * FROM ibpms_workdesk_projection w
+        WHERE w.tenant_id = :tenantId
+          AND w.assignee IS NULL
+          AND (:skills IS NULL OR w.category_tag = ANY(CAST(:skills AS VARCHAR[])))
+        ORDER BY w.impact_level DESC, w.sla_expiration_date ASC NULLS LAST
+        LIMIT 1
+        FOR UPDATE SKIP LOCKED
+        """, nativeQuery = true)
+    java.util.Optional<WorkdeskProjectionEntity> findNextAvailableTask(
+        @Param("tenantId") String tenantId,
+        @Param("skills") String[] skills
+    );
 }

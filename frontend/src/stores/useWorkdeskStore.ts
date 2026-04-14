@@ -47,7 +47,9 @@ export const useWorkdeskStore = defineStore('workdesk', {
     stompConnected: false,
     _pendingRemovals: [] as string[],
     _removalTimer: null as ReturnType<typeof setTimeout> | null,
-    _refillDebounce: null as ReturnType<typeof setTimeout> | null
+    _refillDebounce: null as ReturnType<typeof setTimeout> | null,
+    // CA-15: Contexto de delegación de la última respuesta
+    lastDelegationContext: null as { delegatedUserId: string; delegatedUserDisplayName: string; delegationActive: boolean } | null
   }),
 
   actions: {
@@ -76,6 +78,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
             this.pageInfo = response.data.pageable || { pageNumber: page, pageSize: size, totalElements: response.data.totalElements || this.items.length };
             this.isDegraded = response.data?.degraded === true;
             this.facets = response.data.facets || [];
+            this.lastDelegationContext = response.data.delegationContext || null;
         } else {
              // Fallback defensive
              this.items = [];

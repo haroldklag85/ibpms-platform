@@ -40,6 +40,20 @@ cmd.exe /c "findstr /s /m /i "TerminoDeBusqueda" C:\Ruta\Especifica\*.java"
 Select-String -Path "C:\Ruta\Especifica\*.ts" -Pattern "TerminoDeBusqueda" -Recurse -List | Select-Object Path
 ```
 
+### 4️⃣ ÚLTIMO RECURSO: Navegación Directa por Árbol (`list_dir` + `view_file`)
+Si tanto `grep_search` como los shell fallbacks (Regla 3) siguen fallando por timeouts recurrentes debido a la profundidad extrema del árbol de directorios, el Agente DEBE abandonar toda estrategia de búsqueda masiva y pasar a **navegación manual por taxonomía**:
+
+1. Usa `list_dir` para descender nivel por nivel desde el módulo sospechoso (ej. `backend/ibpms-core/src/main/java/com/ibpms/poc/domain/`).
+2. Identifica visualmente el archivo candidato por su nombre semántico.
+3. Usa `view_file` para leer su contenido y confirmar la presencia del término buscado.
+
+**¿Cuándo preferir esta regla sobre la Regla 3?**
+* Cuando el agente necesita **contexto estructural** (entender la forma del árbol, no solo encontrar un string).
+* Cuando los comandos shell también arrojan errores de codificación o permisos en carpetas profundas.
+* Como **protocolo de último recurso absoluto**: esta vía SIEMPRE funciona porque no depende de indexación ni de procesos de I/O masivo.
+
+> ⚠️ **Advertencia:** Esta estrategia es más lenta (requiere múltiples pasos secuenciales). Úsala solo cuando las Reglas 1-3 hayan sido agotadas.
+
 ---
 
 ## 🎯 Gatillo de Evaluación y Autocorrección

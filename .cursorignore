@@ -1,19 +1,12 @@
-node_modules/
-target/
-dist/
-build/
-.git/
-.idea/
-logs/
-*.log
-.DS_Store
+# Heredar todas las reglas de gitignore
+.gitignore
+
+# ==============================================================================
+# GESTIÓN COGNITIVA: PROTECCIÓN DE RAG Y SCOPE CREEP
+# ==============================================================================
 
 # Bloqueo estricto de Scope Creep (Blindaje Cognitivo MVP V1)
 docs/requirements/future_roadmap/
-
-# Reportes pesados de QA/Playwright (blindaje de rendimiento RAG)
-playwright-report/
-test-results/
 
 # Archivos pesados en la raíz (liberación de capacidad RAG ~4MB)
 doc.json
@@ -22,3 +15,34 @@ us*.txt
 
 # Monolito deprecado de User Stories (reemplazado por epics/)
 docs/requirements/v1_user_stories.md
+
+# ==============================================================================
+# IGNORAR PARA LA IA (Pero SÍ se suben a GitHub)
+# ==============================================================================
+
+# 1. Lockfiles (Miles de líneas autogeneradas, consumen demasiados tokens inútilmente)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+pom.xml.versionsBackup
+
+# 2. Archivos multimedia y vectoriales (La IA no los procesa como código fuente)
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.pdf
+
+# 3. Handoffs Perecederos (Generan ruido en el contexto)
+# NOTA: NO se ignoran .agent/ ni .agents/ ya que contienen la inteligencia y skills estructurados.
+.agentic-sync/
+
+# 4. JSONs y colecciones estáticas masivas sin lógica de programación
+docs/requirements/v1_user_stories_registry.json
+infra/tests/ibpms_core_postman_collection.json
+
+# 5. Resultados de pruebas en texto
+test_output*.txt
+tmp_err.txt

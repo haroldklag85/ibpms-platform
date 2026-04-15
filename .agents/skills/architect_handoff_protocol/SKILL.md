@@ -25,7 +25,7 @@ Todo Handoff DEBE generarse en la carpeta `.agentic-sync/` con un nombre de arch
 ### 1. Metadatos y SSOT (Single Source of Truth)
 - Iteración/Sprint y Rama de trabajo (`sprint-3/...`).
 - User Story y Criterios de Aceptación (CAs) exactos a desarrollar.
-- URL o path local de la fuente de verdad histórica (ej. `v1_user_stories.md`).
+- Path del SSOT: `docs/requirements/v1_user_stories_index.md` → archivo de Épica correspondiente en `docs/requirements/epics/epic_X_*.md`. **PROHIBIDO** referenciar `v1_user_stories.md` (monolito deprecado).
 - Flujo de Trabajo (Orden secuencial requerido, e.g. Back -> Front -> QA).
 
 ### 2. Alineación Arquitectónica y ADRs (Architecture Decision Records)

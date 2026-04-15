@@ -9,7 +9,26 @@ version: 1.0.0
 ## 📌 Contexto del Problema
 Cuando los agentes intentan buscar variables, clases o textos a través del código usando la herramienta nativa `grep_search`, si se ejecuta sobre directorios demasiado amplios o sin filtros, el servidor de I/O sobrecarga la memoria y el hilo principal, resultando en un error **`context canceled`** (Timeout). Esto paraliza el análisis.
 
-Para garantizar la fluidez cognitiva, **TODOS LOS AGENTES** (Backend, Frontend, QA, Arquitecto) están obligados a seguir estas 3 directrices al realizar búsquedas en el sistema de archivos:
+Para garantizar la fluidez cognitiva, **TODOS LOS AGENTES** (Backend, Frontend, QA, Arquitecto) están obligados a seguir estas directrices al realizar búsquedas en el sistema de archivos:
+
+---
+
+### 0️⃣ REGLA DE DOCUMENTACIÓN: `grep_search` DEPRECADO para archivos `.md` de Requerimientos
+
+> [!CAUTION]
+> **El motor `grep_search` falla sistémicamente sobre archivos `.md` en `docs/requirements/`** (incluso en archivos de 7 KB). La causa raíz es incompatibilidad del motor ripgrep interno con encoding CRLF + UTF-8 extendido (tildes, ñ, emojis). Este fallo fue verificado empíricamente el 2026-04-14.
+
+**Protocolo obligatorio para consultar User Stories y Criterios de Aceptación:**
+
+1. **Leer el índice:** `docs/requirements/v1_user_stories_index.md` → identificar el archivo de Épica.
+2. **Leer el archivo de Épica:** `docs/requirements/epics/epic_X_*.md` con `view_file` (paginado si > 800 líneas).
+3. **Búsqueda puntual (si es necesario):** Usar **PowerShell como PRIMERA opción** (no como fallback):
+   ```powershell
+   Select-String -Path "docs\requirements\epics\epic_A_motor_core.md" -Pattern "CA-28" | Select-Object LineNumber, Line
+   ```
+4. **Lookup programático (opcional):** Leer `docs/requirements/v1_user_stories_registry.json` para obtener el campo `file` de la US objetivo.
+
+**PROHIBIDO:** Usar `grep_search` sobre archivos en `docs/requirements/`. **PROHIBIDO:** Leer `docs/requirements/v1_user_stories.md` (monolito deprecado, excluido del RAG).
 
 ---
 
@@ -40,12 +59,18 @@ cmd.exe /c "findstr /s /m /i "TerminoDeBusqueda" C:\Ruta\Especifica\*.java"
 Select-String -Path "C:\Ruta\Especifica\*.ts" -Pattern "TerminoDeBusqueda" -Recurse -List | Select-Object Path
 ```
 
-### 4️⃣ ÚLTIMO RECURSO: Navegación Directa por Árbol (`list_dir` + `view_file`)
-Si tanto `grep_search` como los shell fallbacks (Regla 3) siguen fallando por timeouts recurrentes debido a la profundidad extrema del árbol de directorios, el Agente DEBE abandonar toda estrategia de búsqueda masiva y pasar a **navegación manual por taxonomía**:
+### 4️⃣ NAVEGACIÓN POR TAXONOMÍA: Árbol de Directorios (`list_dir` + `view_file`)
+Si tanto `grep_search` como los shell fallbacks (Regla 3) siguen fallando, el Agente DEBE abandonar toda estrategia de búsqueda masiva y pasar a **navegación manual por taxonomía**:
 
+**Para archivos de código (Java/Vue/TS):**
 1. Usa `list_dir` para descender nivel por nivel desde el módulo sospechoso (ej. `backend/ibpms-core/src/main/java/com/ibpms/poc/domain/`).
 2. Identifica visualmente el archivo candidato por su nombre semántico.
 3. Usa `view_file` para leer su contenido y confirmar la presencia del término buscado.
+
+**Para archivos de requerimientos (`.md` en `docs/requirements/`):**
+1. Lee `docs/requirements/v1_user_stories_index.md` → identifica la Épica.
+2. Lee `docs/requirements/epics/epic_X_*.md` con `view_file` paginado.
+3. Este es el protocolo **PRIMARIO** para documentación (no un último recurso). Ver Regla 0.
 
 **¿Cuándo preferir esta regla sobre la Regla 3?**
 * Cuando el agente necesita **contexto estructural** (entender la forma del árbol, no solo encontrar un string).

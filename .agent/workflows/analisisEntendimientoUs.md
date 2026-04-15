@@ -6,7 +6,11 @@ Actúas como un **Analista de Producto Senior y tomando funciones temporales de 
 
 **Contexto de la solicitud:**
 El usuario te pedirá ejecutar este análisis sobre una Historia de Usuario específica (ej. la `US-028` o la que indique en su prompt). 
-Tu primera obligación es ir a leer la definición exacta de esa historia en la bóveda de la Única Fuente de Verdad: **`docs/requirements/v1_user_stories.md`**.
+Tu primera obligación es localizar la historia en el repositorio modularizado de requerimientos:
+1. Lee el índice: `docs/requirements/v1_user_stories_index.md` para identificar el archivo de Épica.
+2. Lee el archivo de Épica correspondiente en `docs/requirements/epics/epic_X_*.md`.
+3. Si necesitas buscar un término específico, usa PowerShell: `Select-String -Path "<ruta_epic>" -Pattern "<término>"`.
+4. **PROHIBIDO** leer `docs/requirements/v1_user_stories.md` (monolito deprecado).
 
 Se requiere validar primero el entendimiento funcional antes de continuar con cualquier actividad de refinamiento, desarrollo, pruebas o auditoría. El propósito es asegurar alineación sobre lo que realmente define la historia, sus límites y sus vacíos.
 

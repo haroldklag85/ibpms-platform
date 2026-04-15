@@ -97,10 +97,18 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 - **Cuándo leerlo:** Antes de iniciar cualquier macro-tarea (Épica).
 - **Para qué sirve:** Define el Product Requirements Document (PRD). Le explicará el contexto de negocio, el problema que resolvemos y agrupa las características principales (Formularios Dinámicos, Bandeja Compartida, Copiloto IA M365, Tableros Kanban).
 
-### Nivel 2: `docs/requirements/v1_user_stories.md` (El "Cómo" Técnico - Gherkin)
+### Nivel 2: Repositorio Modularizado de User Stories (El "Cómo" Técnico - Gherkin)
+- **Punto de entrada:** `docs/requirements/v1_user_stories_index.md` (índice de navegación por Épica).
+- **Archivos de contenido:** `docs/requirements/epics/epic_X_*.md` (un archivo por Épica, contiene las US y CAs en Gherkin).
+- **Lookup programático:** `docs/requirements/v1_user_stories_registry.json` (mapeo US→archivo para agentes).
 - **Cuándo leerlo:** Al momento de programar o diseñar un Controlador REST, Servicio Java o Componente Vue.
 - **Para qué sirve:** **ESTE ES SU CONTRATO PRINCIPAL.** Contiene las Historias de Usuario hiper-detalladas usando el estándar BDD (Behavior-Driven Development) en sintaxis Gherkin (Given-When-Then).
-- **Regla:** Si usted como Agente asume un comportamiento que *no está explícitamente detallado en el Gherkin*, su asunción es inválida. Ajústese a los Criterios de Aceptación literales del documento.
+- **Protocolo de acceso obligatorio:**
+  1. Leer `v1_user_stories_index.md` → identificar el archivo de Épica correspondiente.
+  2. Leer el archivo `epics/epic_X_*.md` con `view_file` (paginado si > 800 líneas).
+  3. Para búsqueda puntual de un término: usar PowerShell `Select-String -Path "<ruta_epic>" -Pattern "<término>"`.
+- **PROHIBIDO:** Leer directamente `docs/requirements/v1_user_stories.md` (monolito deprecado, excluido del RAG vía `.cursorignore`).
+- **Regla:** Si usted como Agente asume un comportamiento que *no está explícitamente detallado en el Gherkin*, su asunción es inválida. Ajústese a los Criterios de Aceptación literales del archivo de Épica.
 
 ### Nivel 3: `docs/requirements/v1_moscow_scope_validation.md` (El "Cuándo")
 - **Cuándo leerlo:** Cuando esté tentado a construir componentes "Nice to Have" excesivamente complejos (Ej. Módulos de Machine Learning Predictivo, OCR Hotelero).
@@ -118,8 +126,8 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 
 ## 3. Resolución de Discrepancias
 
-1. **Gherkin vs PRD:** Si hay una contradicción funcional entre la descripción macro del `functional_requirements.md` y un escenario Gherkin de `v1_user_stories.md`, **SIEMPRE PREVALECE EL GHERKIN** como detalle técnico final.
+1. **Gherkin vs PRD:** Si hay una contradicción funcional entre la descripción macro del `functional_requirements.md` y un escenario Gherkin del archivo de Épica correspondiente (`docs/requirements/epics/epic_X_*.md`), **SIEMPRE PREVALECE EL GHERKIN** como detalle técnico final.
 2. **Wireframes vs Requirements:** Si un Wireframe (ubicado en `docs/architecture/v1_wireframes.md`) exige un botón que **no existe** en las Historias de Usuario, usted debe consultar al Usuario, *no reinventar una Historia fantasma*.
-3. **Trazabilidad Inversa (Anti-Amnesia Institucional):** Todo hallazgo de auditoría que haya sido RESUELTO y viva en un artefacto satélite (`us{X}_functional_analysis.md`, `us{X}_gap_remediation_brief.md`, `audit_*_report.md`) **DEBE** graduarse como un Criterio de Aceptación formal dentro de la User Story correspondiente en `v1_user_stories.md`. Si un hallazgo resuelto no existe en el SSOT, la próxima auditoría lo redescubrirá como nuevo. Ver workflow: `.agent/workflows/graduacionAuditoriaAlSsot.md`.
+3. **Trazabilidad Inversa (Anti-Amnesia Institucional):** Todo hallazgo de auditoría que haya sido RESUELTO y viva en un artefacto satélite (`us{X}_functional_analysis.md`, `us{X}_gap_remediation_brief.md`, `audit_*_report.md`) **DEBE** graduarse como un Criterio de Aceptación formal dentro de la User Story correspondiente en su archivo de Épica (`docs/requirements/epics/epic_X_*.md`). Si un hallazgo resuelto no existe en el SSOT, la próxima auditoría lo redescubrirá como nuevo. Ver workflow: `.agent/workflows/graduacionAuditoriaAlSsot.md`.
 
 > **Objetivo Final:** Su obligación como Agente es apegarse 100% al alcance pre-verificado (SSOT). **Si no está escrito en estos 4 archivos base (+ los condicionales de su rol), no es un requerimiento de la V1.** Construya lo que se pide; nada más, nada menos.

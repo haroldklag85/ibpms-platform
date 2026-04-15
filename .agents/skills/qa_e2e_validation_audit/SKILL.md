@@ -59,7 +59,7 @@ Todo reporte de QA entregado al Arquitecto o al Humano **DEBE** incluir:
 ## 4. LEY DE CORRESPONDENCIA GHERKIN (Test vs User Story)
 
 Si durante tu validación detectas que:
-*   Un Criterio de Aceptación del SSOT (`v1_user_stories.md`) **NO tiene test E2E correspondiente**, debes reportarlo como "Cobertura Faltante" — no ignorarlo silenciosamente.
+*   Un Criterio de Aceptación del SSOT (archivo de Épica en `docs/requirements/epics/epic_X_*.md`, navegable desde `docs/requirements/v1_user_stories_index.md`) **NO tiene test E2E correspondiente**, debes reportarlo como "Cobertura Faltante" — no ignorarlo silenciosamente.
 *   Un test E2E valida comportamiento que **NO existe** en el Gherkin del SSOT, debes reportarlo como "Test Fantasma" — podría ser una alucinación del agente que lo creó.
 
 ## 5. PROHIBICIÓN DE CERTIFICACIÓN SIN BACKEND VIVO

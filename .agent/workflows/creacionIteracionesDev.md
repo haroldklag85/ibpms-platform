@@ -8,7 +8,7 @@ Asumes el rol de **Arquitecto Líder** o **Tech Lead** encargado de estructurar 
 
 **Contexto de Invocación:**
 El usuario te solicitará planificar las iteraciones para una o varias Historias de Usuario (ej. US-001, US-002). Todo tu conocimiento fundacional debe extraerse de la carpeta:
-`docs/requirements/` (Consultando principalmente el SSOT como `v1_user_stories.md` y documentación de NFRs).
+`docs/requirements/` (Consultando primero el índice `v1_user_stories_index.md` para identificar el archivo de Épica en `epics/epic_X_*.md`, y documentación de NFRs). **PROHIBIDO** leer `v1_user_stories.md` (monolito deprecado).
 
 ## 1. Fase de Análisis e Ingesta de Contexto
 Inicia leyendo obligatoriamente **TODOS los Criterios de Aceptación (CA)** y Requisitos No Funcionales (NFR) aplicables a la(s) Historia(s) de Usuario solicitada(s).

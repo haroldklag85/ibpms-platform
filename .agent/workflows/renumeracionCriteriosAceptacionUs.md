@@ -6,7 +6,7 @@ Actúas como un **Analista de Requerimientos y Documentador Técnico** dentro de
 
 **Contexto de la solicitud:**
 El usuario te pedirá ejecutar este análisis sobre una Historia de Usuario específica (ej. la `US-005` o la que indique explícitamente en el comando). 
-Tu obligación es ir a leer la definición de esa historia en la bóveda de la Única Fuente de Verdad: **`docs/requirements/v1_user_stories.md`**.
+Tu obligación es localizar la historia en el repositorio modularizado: lee primero `docs/requirements/v1_user_stories_index.md` para identificar el archivo de Épica, luego lee `docs/requirements/epics/epic_X_*.md`. **PROHIBIDO** leer `docs/requirements/v1_user_stories.md` (monolito deprecado).
 
 La historia de usuario solicitada contiene criterios de aceptación identificados con el formato `CA-X`. Actualmente se requiere realizar una limpieza de estos identificadores para corregir posibles desórdenes, inconsistencias o numeraciones no secuenciales introducidas por revisiones históricas.
 
@@ -14,7 +14,7 @@ La historia de usuario solicitada contiene criterios de aceptación identificado
 Eliminar todos los identificadores actuales de criterios de aceptación en la US solicitada y regenerarlos en una secuencia ascendente ordenada y limpia, manteniendo absoluta consistencia en la estructura del documento original.
 
 ## Instrucciones de Análisis y Edición (Reglas de Ejecución)
-1. Revisa de inmediato el contenido completo de la historia de usuario solicitada dentro de `v1_user_stories.md`.
+1. Revisa de inmediato el contenido completo de la historia de usuario solicitada dentro del archivo de Épica correspondiente (`docs/requirements/epics/epic_X_*.md`, localizable desde `docs/requirements/v1_user_stories_index.md`).
 2. Identifica todos los criterios de aceptación que pertenezcan a dicha historia y que tengan un identificador con formato `CA-X`, `CA-`, `C.A.` o similar.
 3. Elimina visualmente los identificadores existentes sin alterar ni una sola palabra del contenido sustancial funcional de cada criterio.
 4. Vuelve a asignar los identificadores desde `CA-01` (o desde el número de continuación si la US hereda una subsecuencia clara), usando una numeración estrictamente ascendente y continua.
@@ -25,7 +25,7 @@ Eliminar todos los identificadores actuales de criterios de aceptación en la US
 ## Instrucciones Operativas (Aplicación de Cambios)
 1. Muestra en el chat un resumen rápido con el inicio y fin de la nueva numeración (Ej: "La US-005 pasará a tener numeración desde CA-40 al CA-67").
 2. Genera y entrega la propuesta final con la nueva lista de criterios correctamente numerada.
-3. Pregunta al usuario si autoriza la sobrescritura del documento SSOT. **Si el usuario te da autorización**, debes usar tus herramientas (`replace_file_content` o equivalentes) para editar físicamente y exclusivamente la porción de esa US dentro del archivo `docs/requirements/v1_user_stories.md`.
+3. Pregunta al usuario si autoriza la sobrescritura del documento SSOT. **Si el usuario te da autorización**, debes usar tus herramientas (`replace_file_content` o equivalentes) para editar físicamente y exclusivamente la porción de esa US dentro del archivo de Épica correspondiente en `docs/requirements/epics/epic_X_*.md`.
 4. Al terminar la edición, asegúrate de estar en tu rama de sprint correspondiente. Ejecuta `git commit -m "chore(US-XXX): Renumeración secuencial de CAs"` seguido de `git push`.
 
 ## Entregables esperados
@@ -36,7 +36,7 @@ Eliminar todos los identificadores actuales de criterios de aceptación en la US
 ## Criterios de calidad
 - La numeración debe ser ascendente, continua y sin duplicados.
 - El contenido original de los criterios de aceptación no debe modificarse.
-- La estructura Markdown de `v1_user_stories.md` debe quedar limpia, ordenada y fácil de rastrear. El formateo de negritas, viñetas y checkboxes debe quedar inmaculado.
+- La estructura Markdown del archivo de Épica debe quedar limpia, ordenada y fácil de rastrear. El formateo de negritas, viñetas y checkboxes debe quedar inmaculado.
 
 ## Restricciones o consideraciones
 - No alterar la redacción ni el sentido de los criterios de aceptación.

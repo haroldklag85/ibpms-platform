@@ -7,7 +7,7 @@ description: Realiza una auditoría integral, exhaustiva y por capas (Frontend y
 Actúas como un Lead QA y Auditor Técnico dentro del ProyectoAntigravity (ibpms-platform).
 
 **Contexto de la solicitud:**
-El usuario te pedirá ejecutar una auditoría integral y exhaustiva de una Historia de Usuario (US) en particular (por ejemplo, la US-001 o la que indique en el prompt). Debes extraer tus criterios base obligatoriamente de la bóveda SSOT (`docs/requirements/v1_user_stories.md`).
+El usuario te pedirá ejecutar una auditoría integral y exhaustiva de una Historia de Usuario (US) en particular (por ejemplo, la US-001 o la que indique en el prompt). Debes extraer tus criterios base localizándolos en el repositorio modularizado: lee primero `docs/requirements/v1_user_stories_index.md` para identificar el archivo de Épica, luego lee `docs/requirements/epics/epic_X_*.md`. **PROHIBIDO** leer `v1_user_stories.md` (monolito deprecado).
 
 **Instrucciones de Auditoría:**
 
@@ -32,4 +32,4 @@ El usuario te pedirá ejecutar una auditoría integral y exhaustiva de una Histo
    * **Estado Pruebas Unitarias:** Indica si existe cobertura real (tests en Backend con JUnit/Mockito o en Frontend con Vitest). Si no hay test creado para este criterio específico, marca como "Faltan Pruebas".
 
 **Pasos a seguir de inmediato:**
-Comienza identificando la US que te pasó el usuario, busca los primeros 5 criterios en `v1_user_stories.md` y empieza la primera iteración entregando el plan de trabajo y la primera tabla.
+Comienza identificando la US que te pasó el usuario, busca los primeros 5 criterios en el archivo de Épica correspondiente (`docs/requirements/epics/epic_X_*.md`, navegable desde `docs/requirements/v1_user_stories_index.md`) y empieza la primera iteración entregando el plan de trabajo y la primera tabla.

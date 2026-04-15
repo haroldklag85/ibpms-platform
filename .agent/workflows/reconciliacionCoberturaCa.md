@@ -6,7 +6,7 @@ description: Workflow para reconciliar la Matriz de Cobertura de implementación
 
 > **Versión:** 1.0 | **Última Actualización:** 2026-04-05
 > **Responsable:** Agente Arquitecto Líder
-> **Dependencias:** `.agentic-sync/coverage_matrix.md`, `v1_user_stories.md`, `.agentic-sync/handoff_*.md`
+> **Dependencias:** `.agentic-sync/coverage_matrix.md`, `docs/requirements/v1_user_stories_index.md` + `docs/requirements/epics/epic_X_*.md`, `.agentic-sync/handoff_*.md`
 
 ## Contexto
 
@@ -22,7 +22,11 @@ La Matriz de Cobertura (`.agentic-sync/coverage_matrix.md`) es mantenida por los
 
 ### FASE 1: Inventario del Universo de CAs (Fuente: SSOT)
 
-1. Usa `grep_search` con `Query: "Scenario:"` e `Includes: ["v1_user_stories.md"]` para obtener la lista completa de CAs definidos para la US objetivo.
+1. Localiza la US objetivo en el repositorio modularizado: lee `docs/requirements/v1_user_stories_index.md` para identificar el archivo de Épica, luego usa PowerShell para obtener la lista de CAs:
+   ```powershell
+   Select-String -Path "docs\requirements\epics\epic_X_*.md" -Pattern "Scenario:" | Select-Object LineNumber, Line
+   ```
+   **PROHIBIDO** usar `grep_search` sobre archivos `.md` en `docs/requirements/`.
 2. Cuenta el total de CAs. Este es el "universo" (100%).
 3. Identifica cuáles tienen el marcador `[REMEDIACIÓN]` (son CAs nacidos de auditorías).
 

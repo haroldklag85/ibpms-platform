@@ -59,13 +59,21 @@ Para cada ticket de Sprint, ejecuta estas cuatro fases **en orden estricto** ant
 | **Componente Vue (Stores)**| `"use.*Store"` | `frontend/src/` |
 
 ### FASE 3: Auditoría de Gobernanza SSOT (El "QUIÉN" y "POR QUÉ")
-- **Herramienta:** `grep_search` + `view_file` CON LIMITADORES.
+- **Herramienta:** `view_file` + PowerShell `Select-String` (para documentación `.md`). `grep_search` solo para código fuente.
 - **Objetivo:** Verificar que el Gherkin respalda la existencia de este código.
 
-**REGLA DE VIDA O MUERTE (StartLine/EndLine):**
-El archivo `v1_user_stories.md` (o cualquier PRD) es gigante. Tienes **ESTRICTAMENTE PROHIBIDO** invocar `view_file` sobre estos archivos sin pasar los parámetros `StartLine` y `EndLine`.
-1.  Usa `grep_search` con `MatchPerLine: true` (o el equivalente para capturar el número de línea) para buscar la clave de la US (ej. `"US-023"`).
-2.  Usa `view_file` enviando StartLine = [Línea donde inicia la US] y EndLine = [Línea + 150].
+**PROTOCOLO DE ACCESO AL SSOT DE REQUERIMIENTOS (Obligatorio):**
+
+> [!CAUTION]
+> `grep_search` está **DEPRECADO** para archivos `.md` en `docs/requirements/` (ver `.agents/skills/grep_search_governance/SKILL.md` Regla 0). Usar PowerShell como primera opción.
+
+1. **Navegar por Taxonomía:** Lee `docs/requirements/v1_user_stories_index.md` para identificar el archivo de Épica que contiene tu US.
+2. **Leer la Épica:** Usa `view_file` sobre `docs/requirements/epics/epic_X_*.md` con `StartLine` y `EndLine` (máximo 150 líneas por bloque) si el archivo supera las 800 líneas.
+3. **Búsqueda puntual (si es necesario):** Usa PowerShell:
+   ```powershell
+   Select-String -Path "docs\requirements\epics\epic_A_motor_core.md" -Pattern "US-001" | Select-Object LineNumber, Line
+   ```
+4. **PROHIBIDO:** Leer `docs/requirements/v1_user_stories.md` (monolito deprecado, excluido del RAG vía `.cursorignore`).
 
 Si el código *contradice* el SSOT paginado, te detienes y lanzas alerta de LEY GLOBAL 0 explícita hacia el Humano.
 

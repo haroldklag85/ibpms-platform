@@ -19,3 +19,6 @@ test-results/
 doc.json
 temp_tree.txt
 us*.txt
+
+# Monolito deprecado de User Stories (reemplazado por epics/)
+docs/requirements/v1_user_stories.md

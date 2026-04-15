@@ -79,6 +79,11 @@ Antes de cualquier análisis, confirma que el usuario proporcionó los siguiente
      - La estrategia NFR/QA parametrizada (si fue proporcionada).
      - Referencia obligatoria: *"Aplica el skill `.agents/skills/qa_e2e_validation_audit/SKILL.md` para garantizar la Ley de Correspondencia Gherkin (Test vs User Story). Todo CA sin test correspondiente debe reportarse como Cobertura Faltante."*
 
+**Skills Transversales Obligatorios en TODOS los Handoffs:**
+TODO Handoff de Backend y Frontend DEBE incluir estas 2 directivas:
+- *"Aplica el skill `.agents/skills/tdd_first/SKILL.md` — Obligatorio escribir el test que falla ANTES del código de implementación (Red → Green → Refactor). Incluir tabla de cobertura TDD por CA en el `approval_request`."*
+- *"Aplica el skill `.agents/skills/clean_code_standards/SKILL.md` — Convenciones de naming, estructura de métodos (≤30 líneas, ≤3 params, early return), error handling y checklist pre-commit obligatorio."*
+
 **Regla Mandatoria para los Handoffs:**
 Al final de TODO archivo `handoff` que crees, DEBES INCLUIR obligatoriamente el siguiente párrafo de instrucciones operativas para el subagente:
 
@@ -96,6 +101,21 @@ Al generar Handoffs, tienes **ESTRICTAMENTE PROHIBIDO** resumir, simplificar o s
 
 **Estrategia NFR/QA (si fue parametrizada):**
 Si el usuario especificó una estrategia NFR/QA en los parámetros de entrada, DEBES incluirla textualmente en los Handoffs correspondientes como sección separada: **"NFR/QA Strategy"**. Ejemplo: *"NFR/QA Strategy: Ejecución de pruebas unitarias al Repository Data Layer, asegurando perimetraje en consultas SQL."*
+
+### Fase 1.5: Interface Freeze (Gate Pre-Implementación)
+
+> ⚠️ **REGLA INNEGOCIABLE:** Antes de que un agente escriba lógica de negocio, DEBE definir y enviar las interfaces/DTOs para aprobación del Arquitecto.
+
+En los Handoffs de Backend, DEBES incluir esta instrucción:
+
+> **INTERFACE FREEZE PROTOCOL:**
+> 1. ANTES de escribir lógica en servicios o repositorios, define TODOS los DTOs, interfaces de puertos (Ports) y contratos de API (request/response) en archivos separados.
+> 2. Incluye estos contratos en tu `approval_request_backend.md` bajo la sección "Interface Freeze" con:
+>    - Nombre del DTO/Port/Interface
+>    - Campos con tipos y nullable/non-nullable
+>    - Endpoint path + HTTP method + códigos de respuesta
+> 3. **NO ESCRIBAS implementación** hasta que el Arquitecto apruebe los contratos.
+> 4. Si el Arquitecto modifica un contrato, actualiza los tests TDD que ya escribiste para reflejar el cambio.
 
 ### Fase 2: Instrucciones para el Delegado Humano
 Una vez asegurada la creación de los Handoffs en `.agentic-sync/`, envíale este mensaje al usuario:
@@ -159,13 +179,23 @@ Si el humano regresa a este chat y te dice *"El agente [ROL] pide revisión de s
 4. Verificar que no se introdujeron dependencias o tecnologías fuera del stack aprobado.
 5. Si el código viola un ADR, **BLOQUEAR el merge** y documentar la violación en `.agentic-sync/architecture_violation_[US-XXX].md`.
 
+**4.2.1 Validación Determinista de Seguridad:**
+Además de la auditoría AI, ejecutar validación determinista con herramientas reales:
+- **Backend:** `mvn dependency-check:check -DfailBuildOnCVSS=7` (si OWASP Dependency Check está configurado) o al menos `mvn verify` con todos los tests de seguridad.
+- **Frontend:** `npm audit --audit-level=high` para detectar dependencias con CVEs conocidos.
+- Si alguna herramienta reporta vulnerabilidades HIGH o CRITICAL, **BLOQUEAR el merge** y documentar en `.agentic-sync/security_vulnerabilities_[US-XXX].md`.
+
+> ⚠️ La validación determinista NO sustituye la auditoría AI — se complementan. Ambas deben pasar.
+
 **4.3 Política de Reintentos (Máximo 2 rechazos por agente):**
+
+> 📚 **SKILL OBLIGATORIO en rechazos:** Cuando el Arquitecto rechaza código, el agente que reciba el rechazo DEBE aplicar `.agents/skills/systematic_debugging/SKILL.md` (Protocolo RIDC-V: Reproducir → Aislar → Diagnosticar → Corregir → Verificar). Queda PROHIBIDO proponer correcciones sin completar el diagnóstico.
 
 | Intento | Acción del Arquitecto |
 |:-------:|----------------------|
-| 1° rechazo | Documentar las violaciones específicas con archivo+línea. Enviar al agente vía el Humano con instrucciones de corrección precisas. |
-| 2° rechazo | Repetir con tono de urgencia y advertencia de escalamiento. |
-| 3° rechazo | **ESCALAR AL HUMANO.** Generar `.agentic-sync/escalation_[ROL]_[US-XXX].md` con: violaciones persistentes, historial de rechazos, y recomendación (reemplazar agente / intervención manual). Detener el flujo hasta decisión humana. |
+| 1° rechazo | Documentar las violaciones específicas con archivo+línea. Enviar al agente vía el Humano con instrucciones de corrección precisas + directiva de usar `systematic_debugging/SKILL.md`. |
+| 2° rechazo | Repetir con tono de urgencia y advertencia de escalamiento. Exigir Debugging Report (plantilla del skill). |
+| 3° rechazo | **ESCALAR AL HUMANO.** Generar `.agentic-sync/escalation_[ROL]_[US-XXX].md` con: violaciones persistentes, historial de rechazos, Debugging Reports fallidos, y recomendación (reemplazar agente / intervención manual). Detener el flujo hasta decisión humana. |
 
 **4.4 Aprobación y Merge:**
 6. Si el código pasa AMBAS auditorías (código + arquitectura), aprueba y ejecuta el Merge final hacia `main`.
@@ -226,10 +256,13 @@ Este artefacto es el **acta de cierre** de la iteración y queda como evidencia 
 | Skill | Fase donde se usa | Propósito |
 |-------|:-----------------:|----------|
 | `architect_handoff_protocol/SKILL.md` | Fase 1 | Estructura formal de 6 secciones para Handoffs |
+| `tdd_first/SKILL.md` | Fase 1 (Handoff Backend+Frontend) | Ciclo Red→Green→Refactor obligatorio por CA |
+| `clean_code_standards/SKILL.md` | Fase 1 (Handoff Backend+Frontend) | Naming, estructura ≤30 líneas, error handling, pre-commit checklist |
 | `backend_sre_compilation_audit/SKILL.md` | Fase 1 (Handoff Backend) | Protocolo Zero-Trust de compilación Backend |
 | `frontend_build_audit/SKILL.md` | Fase 1 (Handoff Frontend) | Protocolo Zero-Trust de build Frontend |
 | `qa_e2e_validation_audit/SKILL.md` | Fase 1 (Handoff QA) | Ley de Correspondencia Gherkin (Test vs CA) |
 | `code_vs_architecture_compliance/SKILL.md` | Fase 4.2 | Auditoría de 15 reglas (R1-R8 + F1-F7) vs ADRs |
+| `systematic_debugging/SKILL.md` | Fase 4.3 (on rejection) | Protocolo RIDC-V: Reproducir→Aislar→Diagnosticar→Corregir→Verificar |
 | `grep_search_governance/SKILL.md` | Transversal | Reglas de búsqueda (Regla 0: no grep_search en docs) |
 | `hybrid_search_governance/SKILL.md` | Transversal | Protocolo de navegación por taxonomía |
 | `po_ssot_gatekeeper/SKILL.md` | Fase 3 (si CA fue modificado) | Verificar que modificaciones al SSOT fueron autorizadas por PO |

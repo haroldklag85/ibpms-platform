@@ -304,28 +304,28 @@ Crear `docs/sprints/e2e_test_plan.md` que mapee cada test Playwright a un gate d
 
 | # | Criterio | Evidencia | Estado |
 |---|----------|-----------|--------|
-| 1 | ACP Protocol documentado | `sprint_plan_s0.md` + handoff templates en `.agentic-sync/` | ⬜ |
-| 2 | Handoff contracts definidos | Templates Backend/Frontend/QA/PO listos | ⬜ |
-| 3 | Sprint plan template funcional | `sprint_plan_template.json` validado | ⬜ |
-| 4 | Docker stack healthy | 4/4 servicios levantados | ⬜ |
-| 5 | Playwright instalado | `npx playwright test --reporter=list` ejecuta | ⬜ |
-| 6 | Smoke test verde | `app-loads.spec.ts` pasa | ⬜ |
+| 1 | ACP Protocol documentado | `sprint_plan_s0.md` + handoff templates en `.agentic-sync/` | ✅ |
+| 2 | Handoff contracts definidos | Templates Backend/Frontend/QA/PO listos | ✅ |
+| 3 | Sprint plan template funcional | `sprint_plan_template.json` validado | ✅ |
+| 4 | Docker stack healthy | 4/4 servicios levantados | ✅ |
+| 5 | Playwright instalado | `npx playwright test --reporter=list` ejecuta | ✅ |
+| 6 | Smoke test verde | `app-loads.spec.ts` pasa | ✅ |
 
 ### 📋 Agente PO — Gate Funcional
 
 | # | Criterio | Evidencia | Estado |
 |---|----------|-----------|--------|
-| 1 | UAT J-04 documentado | `casos_uso_uat_j04.md` con ≥10 escenarios | ⬜ |
-| 2 | UAT J-02 documentado | `casos_uso_uat_j02.md` con ≥10 escenarios | ⬜ |
-| 3 | CAs Gherkin completos para Sprint 1 | US-001, US-002, US-029 sin gaps | ⬜ |
+| 1 | UAT J-04 documentado | `casos_uso_uat_j04.md` con ≥10 escenarios | ✅ |
+| 2 | UAT J-02 documentado | `casos_uso_uat_j02.md` con ≥10 escenarios | ✅ |
+| 3 | CAs Gherkin completos para Sprint 1 | US-001, US-002, US-029 sin gaps | ✅ |
 
 ### 👤 Jefe de Equipo — Gate Final
 
 | # | Criterio | Evidencia | Estado |
 |---|----------|-----------|--------|
-| 1 | UAT cases cubren flujo real | Revisión de `casos_uso_uat_j04.md` | ⬜ |
-| 2 | Prioridad de US confirmada | Lista ordenada para Sprint 1 | ⬜ |
-| 3 | Equipo listo para Sprint 1 | Roles asignados, handoffs claros | ⬜ |
+| 1 | UAT cases cubren flujo real | Revisión de `casos_uso_uat_j04.md` | ✅ |
+| 2 | Prioridad de US confirmada | Lista ordenada para Sprint 1 | ✅ |
+| 3 | Equipo listo para Sprint 1 | Roles asignados, handoffs claros | ✅ |
 
 ---
 

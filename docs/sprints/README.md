@@ -7,36 +7,26 @@
 
 ---
 
-## Visión General
+## Visión General (CODE FREEZE ACTIVO)
 
 ```
-S0 (Foundation) → S1 (J-04 Core) → S2 (J-02 CQRS) → S3 (Consolidation)
-                                                            │
-                                                            ▼
-                                            S4 (J-01 Intake IA) → S5 (Portal B2C)
-                                                                        │
-                                                                        ▼
-                                                            S6 (IA/Gantt/DMN) → S7 (Docs)
-                                                                                    │
-                                                                                    ▼
-                                                                            S8 (V1 RC)
+S0 (Foundation) → Sprint PUENTE (Deuda US-001/002) → S1 (Hardening Unitario/API) → S2 (Playwright UAT)
+                                                                                          │
+                                                                                          ▼
+                                                                        S3 (Bugs & Coverage Expansión)
 ```
 
 ---
 
-## Sprint Index
+## Sprint Index (Estrategia O-A: UAT Driven)
 
-| Sprint | Título | Journey Target | US Scope | Estado | Plan |
-|:------:|--------|:--------------:|:--------:|:------:|------|
-| **S0** | Infraestructura Agéntica + E2E | — | 0 (setup) | ⬜ Pendiente | [sprint_plan_s0.md](./sprint_plan_s0.md) |
-| **S1** | Core Thread (J-04) + Validación | J-04 | US-001r, US-002, US-029 | ⬜ Pendiente | [sprint_plan_s1.md](./sprint_plan_s1.md) |
-| **S2** | CQRS/DMN (J-02) + Validación | J-02 | US-017, US-007 | ⬜ Pendiente | [sprint_plan_s2.md](./sprint_plan_s2.md) |
-| **S3** | Consolidación + Expansión | J-03, J-06, J-07 | US-004, US-008, US-030 | ⬜ Pendiente | [sprint_plan_s3.md](./sprint_plan_s3.md) |
-| **S4** | Intake IA (J-01 pasos 1-6) | J-01 parcial, J-08 | US-037, US-016, US-012..014, US-040, US-022, US-023 | ⬜ Pendiente | [sprint_plan_s4_plus.md](./sprint_plan_s4_plus.md) |
-| **S5** | Portal B2C + DevPortal | J-01 completo, J-05, J-09 | US-049, US-050, US-026, US-042, US-033, US-046 | ⬜ Pendiente | [sprint_plan_s4_plus.md](./sprint_plan_s4_plus.md) |
-| **S6** | Agentes IA + Gantt + DMN | J-10, J-11, J-12 | US-052, US-053, US-032, US-044, US-031, US-006, US-007, US-027 | ⬜ Pendiente | [sprint_plan_s4_plus.md](./sprint_plan_s4_plus.md) |
-| **S7** | Cierre Funciones + Docs | J-13, extensiones | US-010, US-035, US-011, US-025, US-041, US-045, US-021 | ⬜ Pendiente | [sprint_plan_s4_plus.md](./sprint_plan_s4_plus.md) |
-| **S8** | Hardening + V1 RC | Regresión 13/13 | Deuda técnica + NFR | ⬜ Pendiente | [sprint_plan_s4_plus.md](./sprint_plan_s4_plus.md) |
+| Sprint | Título | Objetivo | US Scope Funcional | Estado | Plan |
+|:------:|--------|:--------------|:--------|:------:|------|
+| **S0** | Infraestructura Funcional | Gate E2E Base | N/A | ✅ Completado | [sprint_plan_s0.md](./sprint_plan_s0.md) |
+| **P-0**| **Sprint Puente** | Llenar Código Faltante | US-001, US-002 | 🔨 Construcción | [sprint_plan_puente.md](./sprint_plan_puente.md) |
+| **S1** | Test Pyramid (Alt. B) | Aislar y testear APIs | 11 US Completadas | ⬜ Pendiente | [sprint_plan_s1.md](./sprint_plan_s1.md) |
+| **S2** | Playwright UAT | Guiado por Modelos UAT | 11 US Completadas | ⬜ Pendiente | [sprint_plan_s2.md](./sprint_plan_s2.md) |
+| **S3** | Expansión + Features | Retornar al Desarrollo | TBD | ⬜ Pendiente | [sprint_plan_s3.md](./sprint_plan_s3.md) |
 
 ---
 

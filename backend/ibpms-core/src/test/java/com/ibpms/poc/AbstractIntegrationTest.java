@@ -5,6 +5,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -27,9 +28,14 @@ public abstract class AbstractIntegrationTest {
             .withUsername("test_user")
             .withPassword("test_pass");
 
+    @SuppressWarnings("resource")
+    protected static final GenericContainer<?> REDIS_CONTAINER = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
+            .withExposedPorts(6379);
+
     // Iniciado en bloque estático (Singleton: El TestJVM nunca lo detiene hasta finalizar suite)
     static {
         POSTGRES_CONTAINER.start();
+        REDIS_CONTAINER.start();
     }
 
     @DynamicPropertySource
@@ -38,6 +44,9 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.username", POSTGRES_CONTAINER::getUsername);
         registry.add("spring.datasource.password", POSTGRES_CONTAINER::getPassword);
         registry.add("spring.datasource.driver-class-name", POSTGRES_CONTAINER::getDriverClassName);
+
+        registry.add("spring.data.redis.host", REDIS_CONTAINER::getHost);
+        registry.add("spring.data.redis.port", REDIS_CONTAINER::getFirstMappedPort);
 
         // Cumplimiento Zero-Trust: Liquibase controla la DB, Hibernate en modo validación pura.
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");

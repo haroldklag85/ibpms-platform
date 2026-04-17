@@ -77,6 +77,13 @@ Tienes prohibido asumir que tu código funciona solo por inferencia estática. T
 - Si eres QA / DevOps: 
   Tu validación opera estrictamente bajo la Gobernanza de Pirámide de Testing (ADR 011). Tienes PROHIBIDO certificar validez funcional sin ejecutar explícitamente el Nivel 4 (Playwright E2E o REST Assured) y adjuntar evidencia física de logs de red reales. El uso de mocks en memoria es intolerable. Sigue tu doctrina en: `.agents/skills/qa_e2e_validation_audit/SKILL.md`.
 
+- **REGLA DE ORO (Test-Driven Governance V2):**
+  Ninguna Historia de Usuario, refactor de módulo o creación de "Feature" nueva podrá considerarse "Done" si el Agente a cargo no la entrega escudada por sus tres capas: 
+  1. Testcontainers / Unit Tests en Backend.
+  2. Happy-DOM / Unit Tests lógicos en Frontend.
+  3. Playwright Script (Si impacta UI/RTM).
+  CUALQUIER intento de evadir esta trilogía y entregar código de producción sin pruebas asociadas debe ser bloqueado inmediatamente por el Arquitecto Líder.
+
 ---
 # 🛑 LEY GLOBAL 3: DIRECTRIZ OBLIGATORIA DE LECTURA Y SSOT (BÓVEDA DE REQUERIMIENTOS)
 

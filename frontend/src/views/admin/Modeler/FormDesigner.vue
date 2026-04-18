@@ -20,6 +20,15 @@
             <span class="text-xs font-bold text-white px-2 py-0.5 rounded-full" :class="formPattern === 'IFORM_MAESTRO' ? 'bg-blue-600' : 'bg-green-600'">
               {{ formPattern === 'IFORM_MAESTRO' ? '🔵 iForm Maestro' : '🟢 Simple' }}
             </span>
+            <!-- CA-12: Badge de revocación QA -->
+            <span v-if="certificationState === 'revoked'"
+                  class="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2">
+              ⚠️ Certificación QA revocada — Modificación detectada
+            </span>
+            <span v-else-if="certificationState === 'certified'"
+                  class="text-xs bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2">
+              ✅ Certificado QA
+            </span>
             <!-- Zona 1: Visores -->
             <button @click="isFullScreen = !isFullScreen" class="text-gray-400 hover:text-indigo-600 transition ml-2 focus:outline-none" :title="isFullScreen ? 'Salir Inmersión' : 'Pantalla Completa (Inmersivo)'">
               🖵
@@ -143,6 +152,14 @@
           <!-- CA-6 Shadow DOM (Isolation css context class) -->
           <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative" style="all: revert; box-sizing: border-box;">
             <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans">{{ formTitle }}</h2>
+
+            <div v-if="isHighDensityForm" class="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 shadow-sm rounded flex items-center gap-3">
+               <span class="text-2xl">⚠️</span>
+               <div>
+                  <h4 class="text-sm font-bold">Modo de Alta Densidad Activado (CA-90)</h4>
+                  <p class="text-xs mt-0.5">La profundidad del esquema supera los 200 campos. El Workdesk usará Lazy Mount para no bloquear el hilo principal.</p>
+               </div>
+            </div>
             
             <VueDraggable
               v-model="canvasFields"
@@ -764,7 +781,15 @@
       <div v-if="showFuzzerModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
          <div class="bg-gray-100 rounded-xl shadow-2xl p-6 md:p-8 max-w-4xl w-full flex flex-col h-[80vh]">
             <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
-               <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">⚡ QA Sandbox Fuzzer (RAM)</h2>
+               <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  ⚡ QA Sandbox Fuzzer (RAM)
+                  <!-- CA-13: Indicador de versión en Sandbox -->
+                  <span class="text-xs bg-gray-100 text-gray-700 border border-gray-300 px-2 py-0.5 rounded font-mono ml-2">
+                    📋 Esquema V{{ currentSchemaVersion }} — 
+                    <span v-if="certificationState === 'certified'" class="text-green-700">Certificado ✅</span>
+                    <span v-else class="text-amber-700">Sin certificar ⚠️</span>
+                  </span>
+               </h2>
                <button @click="showFuzzerModal = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
             </div>
             <div class="flex gap-4 flex-1 overflow-hidden">
@@ -781,12 +806,30 @@
                <div class="w-1/2 flex flex-col">
                   <button @click="runFuzzerZod" class="bg-indigo-600 text-white font-bold py-2 rounded shadow mb-4 hover:bg-indigo-700 transition">▶️ Ejecutar Zod in-memory</button>
                   <div class="flex-1 bg-black rounded p-4 overflow-y-auto">
+                     <!-- CA-14: Indicador de SuperRefine -->
+                     <div v-if="superRefineCount > 0" class="text-orange-400 font-mono text-xs mb-2 border-b border-orange-800 pb-1">
+                       🔧 {{ superRefineCount }} validaciones cruzadas detectadas — Requieren corrección manual del QA
+                     </div>
                      <div v-if="fuzzerErrors.length === 0" class="text-green-400 font-mono text-xs flex items-center gap-2">
                         <span>> Esperando ejecución o Validado exitosamente sin errores O-T-F.</span>
                      </div>
-                     <div v-else class="text-red-400 font-mono text-xs space-y-1">
-                        <div v-for="(err, i) in fuzzerErrors" :key="i">❌ {{ err }}</div>
+                     <div v-else class="text-gray-400 font-mono text-xs space-y-1">
+                        <div v-for="(err, i) in fuzzerErrors" :key="i" :class="err.isRefine ? 'text-orange-400' : 'text-red-400'">
+                           <span v-if="err.isRefine">⚠️</span><span v-else>❌</span> {{ err.msg }}
+                        </div>
                      </div>
+                  </div>
+                  <!-- CA-17: Panel de Coherencia BPMN ↔ Zod -->
+                  <details v-if="formKey" class="mt-4 bg-gray-800 rounded p-3 border border-gray-700">
+                    <summary class="text-xs font-bold text-cyan-400 cursor-pointer">🔗 Coherencia BPMN ↔ Zod</summary>
+                    <div class="mt-2 space-y-1 text-xs font-mono">
+                      <div v-for="item in bpmnCoherenceResults" :key="item.name" :class="item.class">
+                        {{ item.icon }} {{ item.label }}
+                      </div>
+                    </div>
+                  </details>
+                  <div v-else class="mt-4 text-xs text-gray-500 italic">
+                    🔗 Sin proceso BPMN vinculado — Validación de coherencia no aplica
                   </div>
                </div>
             </div>
@@ -842,6 +885,10 @@ const isFullScreen = ref(false); // Estado para CA-9/CA-10
 // CA-15.1: Formularios Públicos
 const isPublic = ref(false);
 const processKeyMock = formTitle.value.toUpperCase().replace(/\s+/g, '_').substring(0, 15);
+const formKey = ref((route.query.processKey || route.query.formKey || '') as string); // CA-17
+const certificationState = ref<'none' | 'certified' | 'revoked'>('none');
+const currentSchemaVersion = ref(1);
+const bpmnCoherenceResults = ref<any[]>([]);
 const publicUrl = computed(() => `${window.location.origin}/public/start/${processKeyMock}`);
 
 const copyPublicUrl = () => {
@@ -850,6 +897,7 @@ const copyPublicUrl = () => {
 };
 
 const visualRules = ref<{fieldA: string, operator: string, fieldB: string, errorMessage: string}[]>([]); // CA-32
+const superRefineCount = computed(() => visualRules.value.length);
 const showGlobalRulesModal = ref(false); // CA-32
 const availableFieldsFlat = computed(() => {
     const flat = (arr: any[]): any[] => {
@@ -914,6 +962,12 @@ onMounted(async () => {
                 
                 formTitle.value = response.data.title || response.data.name || formTitle.value;
                 formPattern.value = response.data.pattern || null;
+                
+                // Hydration for CA-12 y CA-13
+                if (response.data.isQaCertified) certificationState.value = 'certified';
+                else if (response.data.certifiedSchemaHash) certificationState.value = 'revoked';
+                currentSchemaVersion.value = response.data.versionId || 1;
+
                 showToast(`Formulario ${formId} cargado desde API`, 'success');
             }
         } catch(e) {
@@ -1099,27 +1153,66 @@ const generateVitestSpec = () => {
 // CA-79: Consola QA Sandbox Fuzzer
 const showFuzzerModal = ref(false);
 const fuzzerPayload = ref('{\n  \n}');
-const fuzzerErrors = ref<string[]>([]);
+const fuzzerErrors = ref<{msg: string, isRefine: boolean}[]>([]);
 
-const openFuzzerSandbox = () => {
+const openFuzzerSandbox = async () => {
     fuzzerPayload.value = '{\n  \n}';
     fuzzerErrors.value = [];
     showFuzzerModal.value = true;
+
+    // CA-17: Coherencia
+    if (formKey.value) {
+        try {
+            const res = await apiClient.getBpmnVariables(formKey.value);
+            const bpmnVars = res.data as string[];
+            const zodFields = availableFieldsFlat.value.map(f => f.camundaVariable || f.id);
+            
+            bpmnCoherenceResults.value = [];
+            
+            bpmnVars.forEach(v => {
+                if (zodFields.includes(v)) {
+                   bpmnCoherenceResults.value.push({ name: v, icon: '✅', label: `Variable BPMN '${v}' → Campo Zod '${v}'`, class: 'text-green-400' });
+                } else {
+                   bpmnCoherenceResults.value.push({ name: v, icon: '⚠️', label: `Variable BPMN '${v}' → No encontrada en esquema Zod`, class: 'text-yellow-400' });
+                }
+            });
+            
+            zodFields.forEach(v => {
+                if (!bpmnVars.includes(v)) {
+                   bpmnCoherenceResults.value.push({ name: v, icon: 'ℹ️', label: `Campo Zod '${v}' → No declarado en BPMN`, class: 'text-blue-400' });
+                }
+            });
+            
+        } catch (e) {
+            console.error("Error CA-17", e);
+        }
+    }
 };
 
 const runFuzzerZod = () => {
     fuzzerErrors.value = [];
+    if (fuzzerPayload.value.length > 50000) {
+        fuzzerErrors.value = [{ msg: '[SECURITY BLOCK] - Límite de payload superado (Max 50KB). DDoS Prevention.', isRefine: false }];
+        showToast('Payload abortado por políticas de firewall de capa 7.', 'error');
+        return;
+    }
     try {
         const payload = JSON.parse(fuzzerPayload.value);
         const schema = ZodBuilder.buildSchema(canvasFields.value, visualRules.value);
         const result = schema.safeParse(payload);
         if (!result.success) {
-            fuzzerErrors.value = result.error.issues.map(iss => `[${iss.path.join('.')}] - ${iss.message}`);
+            fuzzerErrors.value = result.error.issues.map(iss => {
+                const isCrossField = visualRules.value.some(r => iss.path.includes(r.fieldA) || iss.path.includes(r.fieldB));
+                return {
+                    msg: `[${iss.path.join('.')}] - ${iss.message}`,
+                    isRefine: isCrossField
+                };
+            });
         } else {
             showToast('Payload Válido 🎉', 'success');
         }
     } catch(e: any) {
-        fuzzerErrors.value = [`[JSON Syntax Error] - ${e.message}`];
+        fuzzerErrors.value = [{ msg: `[JSON Syntax Error] - ${e.message}`, isRefine: false }];
     }
 };
 
@@ -1359,6 +1452,9 @@ const flatFields = (fields: any[]): any[] => {
   }
   return res;
 };
+
+// CA-90: High density form state calculated with performance considerations
+const isHighDensityForm = computed(() => flatFields(canvasFields.value).length > 200);
 
 // HTML generator recursivo para Template (AST to Vue)
 const generateFieldHTML = (field: any, indent: string = '      ', parentBinding: string = 'formData'): string => {
@@ -1975,6 +2071,15 @@ const simulateMockSubmit = async () => {
     }
     showResultModal.value = true;
 };
+
+defineExpose({
+    certificationState,
+    showFuzzerModal,
+    currentSchemaVersion,
+    fuzzerErrors,
+    bpmnCoherenceResults,
+    formKey
+});
 </script>
 
 <style>

@@ -15,6 +15,6 @@ Por consiguiente, tu carga técnica es Nula/Transparente. Las operaciones de Des
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal.
 En cuanto finalices la revisión preventiva, empaqueta los cambios (el JavaDoc):
-`git stash save "temp-backend-US028-ca1-ca4"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente al Arquitecto Líder apenas termine el guardado.

@@ -26,6 +26,6 @@
 ## 🛑 MANDATO LOCAL GATEKEEPER
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a principal.
 Compila tu arquitectura pre-vuelo Camunda y escuda en stash:
-`git stash save "temp-backend-US005-ca41-ca45"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

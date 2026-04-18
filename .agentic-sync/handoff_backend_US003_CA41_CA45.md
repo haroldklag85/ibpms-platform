@@ -17,6 +17,6 @@ Tu enfoque exclusivo de Backend es:
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal.
 En cuanto finalices la integración en el endpoint y verifiques unitariamente, congela los cambios localmente:
-`git stash save "temp-backend-US003-ca41-ca45"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 No cierres el chat ni asumas roles de orquestación. Solo notifica: "Stash Backend Terminado".

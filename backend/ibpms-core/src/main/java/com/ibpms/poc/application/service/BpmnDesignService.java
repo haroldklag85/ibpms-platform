@@ -7,6 +7,10 @@ import com.ibpms.poc.infrastructure.jpa.entity.BpmnDesignAuditLogEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.BpmnProcessDesignEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.BpmnDesignAuditLogRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.BpmnProcessDesignRepository;
+import com.ibpms.poc.infrastructure.jpa.entity.ProcessLockEntity;
+import com.ibpms.poc.infrastructure.jpa.repository.ProcessLockRepository;
+import com.ibpms.poc.infrastructure.jpa.entity.DeployRequestEntity;
+import com.ibpms.poc.infrastructure.jpa.repository.DeployRequestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,11 +30,17 @@ public class BpmnDesignService {
 
     private final BpmnProcessDesignRepository designRepository;
     private final BpmnDesignAuditLogRepository auditRepository;
+    private final ProcessLockRepository processLockRepository;
+    private final DeployRequestRepository deployRequestRepository;
 
     public BpmnDesignService(BpmnProcessDesignRepository designRepository,
-            BpmnDesignAuditLogRepository auditRepository) {
+            BpmnDesignAuditLogRepository auditRepository,
+            ProcessLockRepository processLockRepository,
+            DeployRequestRepository deployRequestRepository) {
         this.designRepository = designRepository;
         this.auditRepository = auditRepository;
+        this.processLockRepository = processLockRepository;
+        this.deployRequestRepository = deployRequestRepository;
     }
 
     // --- CRUD ---
@@ -53,7 +63,6 @@ public class BpmnDesignService {
     @Transactional(readOnly = true)
     public BpmnProcessDesignDTO obtener(UUID id) {
         BpmnProcessDesignEntity entity = findOrFail(id);
-        autoReleaseLockIfExpired(entity);
         return toDto(entity);
     }
 
@@ -88,52 +97,111 @@ public class BpmnDesignService {
                 entity.getCurrentVersion(), null);
     }
 
-    // --- Lock Pesimista (CA-7 / CA-34) ---
+    // --- Configuración de Generic Form (CA-7) ---
 
-    public void acquireLock(UUID id, String userId) {
-        BpmnProcessDesignEntity entity = findOrFail(id);
-        autoReleaseLockIfExpired(entity);
-
-        if (entity.getLockedBy() != null && !entity.getLockedBy().equals(userId)) {
-            throw new com.ibpms.poc.domain.exception.ProcessDesignLockedException(
-                    "El proceso está bloqueado por " + entity.getLockedBy());
-        }
-        entity.setLockedBy(userId);
-        entity.setLockedAt(LocalDateTime.now());
-        designRepository.save(entity);
-
-        audit(id, BpmnDesignAuditLogEntity.Action.LOCK, userId,
-                entity.getCurrentVersion(), null);
-    }
-
-    public void releaseLock(UUID id, String userId) {
-        BpmnProcessDesignEntity entity = findOrFail(id);
-        if (entity.getLockedBy() != null && !entity.getLockedBy().equals(userId)) {
-            throw new com.ibpms.poc.domain.exception.ProcessDesignLockedException(
-                    "Solo " + entity.getLockedBy() + " puede liberar el bloqueo.");
-        }
-        entity.setLockedBy(null);
-        entity.setLockedAt(null);
-        designRepository.save(entity);
-
-        audit(id, BpmnDesignAuditLogEntity.Action.UNLOCK, userId,
-                entity.getCurrentVersion(), null);
-    }
-
-    // --- Request Deploy (CA-25) ---
-
-    public void requestDeploy(UUID id, String userId) {
-        BpmnProcessDesignEntity entity = findOrFail(id);
-        if (entity.getStatus() != BpmnProcessDesignEntity.Status.DRAFT
-                && entity.getStatus() != BpmnProcessDesignEntity.Status.ACTIVE) {
-            throw new IllegalStateException("Solo procesos en DRAFT o ACTIVE pueden solicitar despliegue.");
-        }
-        entity.setStatus(BpmnProcessDesignEntity.Status.PENDING_DEPLOY);
+    public void updateGenericFormConfig(String processKey, String whitelistJson, String userId) {
+        BpmnProcessDesignEntity entity = designRepository.findByTechnicalId(processKey)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
+                        "Diseño BPMN no encontrado con technical_id: " + processKey));
+        
+        entity.setGenericFormWhitelist(whitelistJson);
         entity.setUpdatedAt(LocalDateTime.now());
         designRepository.save(entity);
 
-        audit(id, BpmnDesignAuditLogEntity.Action.REQUEST_DEPLOY, userId,
-                entity.getCurrentVersion(), null);
+        audit(entity.getId(), BpmnDesignAuditLogEntity.Action.EDIT, userId,
+                entity.getCurrentVersion(), "{\"event\":\"UPDATE_GENERIC_FORM_WHITELIST\"}");
+    }
+
+    // --- Lock Pesimista Separado (CA-66, CA-64) ---
+
+    @Transactional
+    public void acquireLockTechnicalKey(String processKey, String userId, String browserSessionId) {
+        cleanStaleLock(processKey);
+        processLockRepository.findById(processKey).ifPresent(lock -> {
+            if (!lock.getLockedBy().equals(userId)) {
+                throw new IllegalStateException("El proceso ya se encuentra bloqueado por otro usuario: " + lock.getLockedBy());
+            }
+        });
+        processLockRepository.save(new ProcessLockEntity(processKey, userId, LocalDateTime.now(), browserSessionId));
+        auditByTechnicalId(processKey, BpmnDesignAuditLogEntity.Action.LOCK, userId, "{\"session\": \"" + browserSessionId + "\"}");
+    }
+
+    @Transactional
+    public void heartbeatLock(String processKey, String userId) {
+        cleanStaleLock(processKey);
+        ProcessLockEntity lock = processLockRepository.findById(processKey)
+                .orElseThrow(() -> new IllegalStateException("No tienes un bloqueo activo sobre este proceso."));
+        if (!lock.getLockedBy().equals(userId)) {
+            throw new IllegalStateException("Este proceso está bloqueado por otro usuario.");
+        }
+        lock.setLockedAt(LocalDateTime.now());
+        processLockRepository.save(lock);
+    }
+
+    @Transactional
+    public void releaseLockTechnicalKey(String processKey, String userId) {
+        processLockRepository.findById(processKey).ifPresent(lock -> {
+            if (lock.getLockedBy().equals(userId)) {
+                processLockRepository.delete(lock);
+                auditByTechnicalId(processKey, BpmnDesignAuditLogEntity.Action.UNLOCK, userId, "{\"type\": \"normal\"}");
+            }
+        });
+    }
+
+    @Transactional
+    public void forceReleaseLock(String processKey, String adminUserId) {
+        processLockRepository.findById(processKey).ifPresent(lock -> {
+            processLockRepository.delete(lock);
+            auditByTechnicalId(processKey, BpmnDesignAuditLogEntity.Action.UNLOCK, adminUserId, "{\"type\": \"forced\", \"previousOwner\": \"" + lock.getLockedBy() + "\"}");
+        });
+    }
+
+    private void cleanStaleLock(String processKey) {
+        processLockRepository.findById(processKey).ifPresent(lock -> {
+            if (lock.getLockedAt().isBefore(LocalDateTime.now().minusSeconds(90))) {
+                processLockRepository.delete(lock);
+                auditByTechnicalId(processKey, BpmnDesignAuditLogEntity.Action.UNLOCK, "SYSTEM", "{\"type\": \"stale_timeout\", \"previousOwner\": \"" + lock.getLockedBy() + "\"}");
+            }
+        });
+    }
+
+    private void auditByTechnicalId(String processKey, BpmnDesignAuditLogEntity.Action action, String userId, String details) {
+        designRepository.findByTechnicalId(processKey).ifPresent(entity -> {
+            audit(entity.getId(), action, userId, entity.getCurrentVersion(), details);
+        });
+    }
+
+    // --- Request Deploy (CA-69) ---
+
+    @Transactional
+    public DeployRequestEntity createDeployRequest(String processKey, String requestedBy) {
+        DeployRequestEntity req = new DeployRequestEntity(processKey, requestedBy);
+        return deployRequestRepository.save(req);
+    }
+
+    @Transactional
+    public DeployRequestEntity approveDeployRequest(UUID requestId, String reviewerId, String comment) {
+        DeployRequestEntity req = deployRequestRepository.findById(requestId)
+            .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Request not found"));
+        req.setStatus(DeployRequestEntity.Status.APPROVED);
+        req.setReviewedBy(reviewerId);
+        req.setReviewedAt(LocalDateTime.now());
+        req.setReviewComment(comment);
+        return deployRequestRepository.save(req);
+    }
+
+    @Transactional
+    public DeployRequestEntity rejectDeployRequest(UUID requestId, String reviewerId, String comment) {
+        if (comment == null || comment.trim().length() < 20) {
+            throw new IllegalArgumentException("El comentario de rechazo debe tener al menos 20 caracteres (CA-69).");
+        }
+        DeployRequestEntity req = deployRequestRepository.findById(requestId)
+            .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Request not found"));
+        req.setStatus(DeployRequestEntity.Status.REJECTED);
+        req.setReviewedBy(reviewerId);
+        req.setReviewedAt(LocalDateTime.now());
+        req.setReviewComment(comment);
+        return deployRequestRepository.save(req);
     }
 
     // --- Helpers ---
@@ -144,14 +212,6 @@ public class BpmnDesignService {
                         "Diseño BPMN no encontrado: " + id));
     }
 
-    private void autoReleaseLockIfExpired(BpmnProcessDesignEntity entity) {
-        if (entity.getLockedAt() != null
-                && entity.getLockedAt().plusMinutes(30).isBefore(LocalDateTime.now())) {
-            entity.setLockedBy(null);
-            entity.setLockedAt(null);
-            designRepository.save(entity);
-        }
-    }
 
     private void audit(UUID designId, BpmnDesignAuditLogEntity.Action action,
             String userId, int version, String details) {

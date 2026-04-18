@@ -47,7 +47,9 @@ Asegurar que cualquier solicitud de permiso, validación o autorización para ej
 - No reemplazar al Arquitecto Líder de Software como aprobador por otro agente.
 - No asumir aprobación implícita si el Arquitecto Líder de Software no se ha pronunciado.
 - No desordenar la jerarquía de validación entre agentes.
-- **(Excepción UAT):** El Agente QA tiene autorización especial para coordinar directamente con el Usuario Humano la marcha de los lotes de prueba (avanzar, detenerse, repetir). Esta excepción no aplica para decisiones arquitectónicas ni de diseño, solo para el flujo operativo de ejecución de pruebas.
+- **(Excepción UAT):** El Agente QA tiene autorización especial para coordinar directamente con el Usuario Humano la marcha de los lotes de prueba. 
+  - **Permitido (Flujo operativo):** Avanzar pruebas, detener ejecución en caso de bucles, repetir lotes, aprobar screenshots o solicitar test data local.
+  - **Estrictamente Prohibido (Decisión arquitectónica):** Modificar contratos API, alterar configuración de seguridad o reescribir flujos de negocio transversales de pruebas sin autorización del Arquitecto Líder.
 
 ## Supuestos detectados
 - Se asume que el Arquitecto Líder de Software tiene autoridad técnica para aprobar o rechazar soluciones.

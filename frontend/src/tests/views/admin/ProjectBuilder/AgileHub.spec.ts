@@ -3,6 +3,7 @@ import { mount, config } from '@vue/test-utils';
 import AgileHub from '@/views/admin/ProjectBuilder/AgileHub.vue';
 import { api } from '@/services/apiClient';
 import apiClient from '@/services/apiClient';
+import { createPinia, setActivePinia } from 'pinia';
 
 // Mock Frappe Gantt which depends on DOM SVG creation not present in JSDOM
 vi.mock('frappe-gantt', () => {
@@ -15,10 +16,17 @@ vi.mock('frappe-gantt', () => {
     };
 });
 
+vi.mock('vue-router', () => ({
+    useRoute: vi.fn(() => ({ params: {}, path: '/fake-path' })),
+    useRouter: vi.fn(() => ({ push: vi.fn() }))
+}));
+
 describe('Epic 10.B Gantt Wrapper (QA)', () => {
     let wrapper: any;
 
     beforeEach(async () => {
+        setActivePinia(createPinia());
+
         // Mock API response with 1 task that has NO assignee
         vi.spyOn(apiClient, 'get').mockResolvedValue({
             data: [

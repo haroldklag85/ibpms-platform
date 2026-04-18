@@ -39,13 +39,13 @@ public class FormDesignEntity {
     @Column(name = "version", nullable = false)
     private Integer version;
 
-    @Column(name = "vue_template", columnDefinition = "LONGTEXT")
+    @Column(name = "vue_template", columnDefinition = "TEXT")
     private String vueTemplate;
 
-    @Column(name = "zod_schema", columnDefinition = "LONGTEXT")
+    @Column(name = "zod_schema", columnDefinition = "TEXT")
     private String zodSchema;
 
-    @Column(name = "form_fields", columnDefinition = "LONGTEXT")
+    @Column(name = "form_fields", columnDefinition = "TEXT")
     private String formFields;
 
     @Column(name = "created_at", nullable = false, updatable = false)

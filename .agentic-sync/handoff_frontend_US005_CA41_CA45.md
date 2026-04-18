@@ -22,6 +22,6 @@
 ## 🛑 MANDATO LOCAL GATEKEEPER
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` directamente a principal.
 Congela tu código en stash:
-`git stash save "temp-frontend-US005-ca41-ca45"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

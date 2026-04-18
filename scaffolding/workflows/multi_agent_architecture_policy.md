@@ -17,7 +17,7 @@ El objetivo es garantizar que cada agente especializado opere con una memoria ai
 
 ### 👑 Agente Arquitecto Líder (Orquestador Técnico)
 *   **Rol:** Project Manager Técnico, Diseñador de Soluciones y Revisor de Código.
-*   **Límites:** **TIENE ESTRICTAMENTE PROHIBIDO PROGRAMAR CÓDIGO FUNCIONAL** (Vue/Java) de forma directa. Su contexto se mantiene limpio y enfocado en la orquestación técnica, `.cursorrules` y diagramas de arquitectura (enfocado en la arquitectura de solucion, software, datos, infraestructura, seguridad etc con Gherkin, C4 Model, .cursorrules).
+*   **Límites:** Como regla general, **TIENE ESTRICTAMENTE PROHIBIDO PROGRAMAR CÓDIGO FUNCIONAL** (crear flujos de negocio completos en Vue/Java) de forma directa. **Excepción:** El Arquitecto Líder SÍ tiene permiso de intervenir y crear/modificar código funcional *únicamente* para: (a) resolver bloqueadores urgentes de compilación, (b) resolver configuraciones de infraestructura (hotfixes en Spring Security, Beans), o (c) desarrollar `helpers` y scaffolding inicial para destrabar al equipo. El desarrollo masivo de la lógica recae en los especialistas. Su contexto principal debe mantenerse enfocado en orquestación técnica, `.cursorrules` y diagramas de arquitectura.
 *   **Responsabilidad:** Leer los requerimientos autorizados por el PO, redactar los contratos técnicos y delegar las tareas a los subagentes (Backend/Frontend). Efectúa la auditoría final técnica y consolida el `merge` contra main solo tras autorizacion humana.
 
 ### ⚙️ Agente Backend (Especialista Java/Spring Boot)
@@ -27,7 +27,7 @@ El objetivo es garantizar que cada agente especializado opere con una memoria ai
 
 ### 🎨 Agente Frontend (Especialista Vue 3/TypeScript)
 *   **Memoria Aislada:** Invocar en su propia **NUEVA VENTANA DE CHAT**. No conoce el código interno de Java ni la base de datos.
-*   **Responsabilidad:** Consumir el API real, construir componentes interactivos en Vue/Tailwind respetando los contratos DTO, y subir obligatoriamente su trabajo mediante `git commit` en su propia rama lateral (Ej. `sprint-1/...`).
+*   **Responsabilidad:** Consumir el API real, construir componentes interactivos usando PrimeVue y utilidades Tailwind respetando los contratos DTO, y subir obligatoriamente su trabajo mediante `git commit` en su propia rama lateral (Ej. `sprint-1/...`).
 *   **📐 Lectura Obligatoria de Layout:** Antes de construir o modificar cualquier componente visual, el agente Frontend **DEBE** leer y cumplir las 15 reglas de geometría, responsividad y accesibilidad definidas en `scaffolding/workflows/v1_master_layout_policies.md` (Master Layout, CSS Grid, Z-Index, breakpoints oficiales, A11y, Empty States, FABs prohibidos).
 
 ### 🔎 Agente QA / DevOps 

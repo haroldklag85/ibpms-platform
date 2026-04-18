@@ -26,7 +26,7 @@ erDiagram
     %% Definición de Entidades
 
     ibpms_case {
-        char(36) id PK "UUID"
+        uuid id PK "UUID nativo PostgreSQL"
         varchar(100) definition_key "Ej: prestamo_hipotecario"
         varchar(100) business_key "ID visible por el usuario. Ej: RQ-2026-001"
         varchar(50) status "ACTIVE, COMPLETED, SUSPENDED, CANCELLED"
@@ -38,12 +38,12 @@ erDiagram
     }
 
     ibpms_task {
-        char(36) id PK "UUID"
-        char(36) case_id FK "Agrupador al Expediente"
+        uuid id PK "UUID nativo PostgreSQL"
+        uuid case_id FK "Agrupador al Expediente"
         varchar(255) name "Nombre legible. Ej: Validar Identidad"
         varchar(100) definition_key "ID técnico en el BPMN. Ej: task_validar_id"
         varchar(100) assignee "UUID del usuario asignado"
-        char(36) parent_task_id FK "Si es Sub-Tarea Ad-hoc (Intake Kanban)"
+        uuid parent_task_id FK "Si es Sub-Tarea Ad-hoc (Intake Kanban)"
         json candidate_groups "Array JSON de Roles ABAC/RBAC. Ej: ['Jefe_Ventas']"
         varchar(50) status "PENDING, CLAIMED, COMPLETED"
         int priority "1 al 100"
@@ -54,7 +54,7 @@ erDiagram
     }
 
     ibpms_ui_template {
-        char(36) id PK "UUID"
+        uuid id PK "UUID nativo PostgreSQL"
         varchar(100) name "Ej: iform_maestro_compras"
         varchar(50) type "VUE_COMPONENT, ZOD_SCHEMA, JSON"
         text raw_code "El código Vue3 / Typings bruto"
@@ -74,7 +74,7 @@ erDiagram
     }
 
     sys_role {
-        char(36) id PK "UUID"
+        uuid id PK "UUID nativo PostgreSQL"
         varchar(100) name "Nombre del Rol. Ej: BPMN_Credito_Analista"
         varchar(50) type "GLOBAL o PROCESS_GENERATED (Por Hook)"
         varchar(100) process_definition_id "NULL para globales"
@@ -82,7 +82,7 @@ erDiagram
     }
 
     ibpms_audit_log {
-        char(36) id PK "UUID"
+        uuid id PK "UUID nativo PostgreSQL"
         varchar(50) entity_type "CASE o TASK"
         char(36) entity_id "ID de la Entidad afectada"
         varchar(100) event_type "Ej: STATUS_CHANGED, VARIABLE_UPDATED"
@@ -111,8 +111,8 @@ erDiagram
     1.  Ocultar la estructura dinámica (Formularios "Lego") directamente en una sola fila.
     2.  Permitir indexación secundaria: PostgreSQL permite generar Índices GIN sobre los campos del JSONB si necesitamos buscar, por ejemplo, todos los casos donde `payload->>'monto_aprobado' > 1000`.
 
-### B. Llaves Primarias como UUID v4 (`char(36)`)
-*   **Justificación:** Se prohíbe el uso de `BIGINT AUTO_INCREMENT` para los IDs primarios obligando el uso de `UUID`. Esta es una decisión anticipada al ecosistema Cloud-Native (V2) para evitar colisiones en la creación asíncrona de expedientes y prevenir ataques de enumeración (Insecure Direct Object Reference).
+### B. Llaves Primarias como UUID v4 (`UUID`)
+*   **Justificación:** Se prohíbe el uso de `BIGINT AUTO_INCREMENT` para los IDs primarios. Se utiliza el **tipo nativo `UUID` de PostgreSQL** (16 bytes en disco vs 36 bytes de CHAR(36)), habilitando `gen_random_uuid()` como default y previniendo colisiones asincrónicas y ataques de enumeración (IDOR). Esta decisión también anticipa el ecosistema Cloud-Native (V2).
 
 ### C. La Conexión con Camunda (Acoplamiento Suave)
 *   Las columnas `ibpms_case.process_instance_id` y `ibpms_task.camunda_task_id` son las **únicas anclas** que amarran nuestro Dominio Hexagonal con el Motor BPM empotrado.
@@ -150,7 +150,7 @@ A continuación se detalla la estructura física de las tablas del esquema princ
 **Tabla:** `ibpms_case`
 | Columna | Tipo de Dato | Llave | Nulable | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
-| `id` | `CHAR(36)` | PK | NO | UUID v4 genérico del expediente. |
+| `id` | `UUID` | PK | NO | UUID nativo PostgreSQL del expediente (`gen_random_uuid()`). |
 | `type` | `VARCHAR(50)` | | NO | Clasificador de orquestación (`BPMN`, `KANBAN`, `CASE_MGMT`). |
 | `definition_key` | `VARCHAR(100)` | | NO | Identificador estático de la definición del proceso de negocio. |
 | `business_key` | `VARCHAR(100)` | | NO | Radicado o Código de negocio visible corporativo (Ej. `RQ-2026-001`). Indexado. |
@@ -163,8 +163,8 @@ A continuación se detalla la estructura física de las tablas del esquema princ
 **Tabla:** `ibpms_task`
 | Columna | Tipo de Dato | Llave | Nulable | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
-| `id` | `CHAR(36)` | PK | NO | UUID v4 de la Tarea Unificada. |
-| `case_id` | `CHAR(36)` | FK | NO | Enlace irrompible al flujo padre (`ibpms_case.id`). Indexado. |
+| `id` | `UUID` | PK | NO | UUID nativo PostgreSQL de la Tarea Unificada. |
+| `case_id` | `UUID` | FK | NO | Enlace irrompible al flujo padre (`ibpms_case.id`). Indexado. |
 | `name` | `VARCHAR(255)` | | NO | Actividad legible pintada gráficamente en la Bandeja Unificada. |
 | `source_type` | `VARCHAR(50)` | | NO | Conector de API subyacente de origen (`BPMN` o `KANBAN`). |
 | `ref_id` | `VARCHAR(100)` | | NO | ID real en la capa oscura de Camunda o la tarjeta ágil. |

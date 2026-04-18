@@ -20,6 +20,8 @@
 11. **Service Delivery Intelligent Intake (Plan A/B - MUST):** Envío de confirmaciones por correo que generan *"Tareas de Creación de Servicio"* sin detonar procesos huérfanos. Creación manual global protegida por rol de Administrador. Vistas segregadas: Admin (Totales), Op (Mis Tareas), y Cliente (Citas/SD).
 12. **Portal de Cliente Externo (Customer Portal - MUST):** Autorreporte y visibilidad B2B/B2C. Acceso web autenticado para que los clientes externos observen el estado en tiempo real (Paso a paso) de sus Service Deliveries (Vista Táctica) y métricas acumuladas históricas con descarga de documentos finales (Vista Estratégica).
 13. **Copiloto AI Diseñador (ISO 9001 & BPMN - MUST):** Agente experto conversacional empotrado exclusivamente en el Canvas de Diseño (Pantalla 6). Actúa como profesor y auditor de arquitectura, sugiriendo mejores prácticas, reportando antipatrones de diseño y evaluando cumplimiento normativo (ISO 9001) en tiempo real mediante integraciones con el LLM.
+14. **Motor de Orquestación Multi-Agente IA (US-052 - MUST):** Infraestructura de 4 agentes especializados (Orquestador, Backend, Frontend, QA) con inyección de contexto dinámica, separación estricta de memorias y reglas CORE universales. *(Promovido de SHOULD a MUST por decisión PO 2026-04-05)*.
+15. **Antigravity Command Center — Fábrica de Agentes y FinOps B2B (US-053 - MUST):** Panel para crear agentes IA, gestionar consumo con modelo híbrido (Suscripción + Billetera Prepaga), alertas de umbral, downgrade automático por falta de fondos, y resiliencia del motor BPMN ante cortes de presupuesto IA. *(Promovido de SHOULD a MUST por decisión PO 2026-04-05)*.
 
 ---
 
@@ -31,7 +33,7 @@
 3.  **Catálogo Federado (Reglas de Negocio - SHOULD):** Soporte multi-idioma nativo para los catálogos traídos del CRM, *Overrides Operativos* locales en iBPMS por sobre los campos del CRM, y exposición API Multi-tenant para portales de clientes.
 4.  **Consultor Digital AI (Machine Learning):** Nada de análisis predictivo ni rediseño autónomo de procesos en V1. Todo se abordará en V1.2.
 5.  **Auditor Digital AI (Organizacional Autónomo):** La auditoría activa y transversal de toda la operación queda para V1.2. (*Excepción: Se promovió a V1 el "Copiloto AI Diseñador" limitado estrictamente a enseñar y auditar diagramas dentro de la Pantalla 6*).
-6.  **IA Natural Flow (Core Agentic):** El motor no será agentic en la V1; la IA se usará mediante modelo conversacional API-first solo para facilitar configuraciones (como el DMN).
+6.  ~~**IA Natural Flow (Core Agentic):**~~ *(PROMOVIDO A MUST HAVE el 2026-04-05 — ver items 14 y 15 del bloque MUST).* La V1 SÍ incluye orquestación multi-agente IA (US-052) y la Fábrica de Agentes con arbitraje FinOps (US-053). La IA conversacional API-first (DMN) se mantiene complementaria.
 7.  **Zero-UI / Headless Completo:** El usuario deberá entrar a la interfaz (Workbench) al menos en el 50% de las operativas; no operaremos *solo* por WhatsApp/Chatbots aún.
 8.  **Módulos Verticales Restantes (Roadmap SaaS V1.2):** Componentes hiper-especializados como el *RAG Documental (Legal)*, *Web Scraping Silencioso (RPA Legal)*, y el *Escaneo Integrado OCR/ICR (Hotelero)*. Estos justifican la venta de la V2. El módulo de Copiloto M365 fue promovido a V1.
 9. **Validación de Criterios (Pivot Estratégico V1.2):**

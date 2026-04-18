@@ -9,6 +9,7 @@ Estas instrucciones rigen CADA INTERACCIÓN en este proyecto y deben ser respeta
 - **Pase de Testigo (Obligatorio):** Al terminar su programación, el agente debe hacer un commit de su trabajo en su rama temporal. El código jamás quedará flotando sin trackear en el disco.
 - **🚫 PROHIBICIÓN ABSOLUTA DE `git stash` COMO MECANISMO DE ENTREGA:** Queda TERMINANTEMENTE PROHIBIDO que cualquier agente (incluido el Arquitecto Líder) instruya, sugiera o ejecute `git stash save` como forma de empaquetar o transferir trabajo entre agentes. El `stash` es volátil, local, no auditable y no transferible entre nodos. Todo trabajo completado DEBE consolidarse exclusivamente con `git commit -m "tipo(alcance): descripción"` seguido de `git push` a la rama de sprint. Cualquier handoff que contenga la instrucción `git stash` es INVÁLIDO por definición y debe ser rechazado por el agente receptor.
 - **Responsabilidad del Arquitecto:** Solo el Agente Arquitecto Líder (Orquestador) podrá realizar el Merge/Pull Request hacia `main` tras validar que el código aislado funciona. Quedan prohibidos los comandos destructivos que corrompan el historial principal.
+- **Prohibición de Ambigüedad en Handoffs:** El Agente Arquitecto Líder NO PUEDE relajar políticas en los documentos `.md` de Handoff ni dar directrices de compilación ("mvn compile") que contradigan la LEY GLOBAL 2. En la sección "Mensaje para el Humano", el Arquitecto debe referenciar explícitamente los archivos `SKILL.md` (Ej. `backend_sre_compilation_audit/SKILL.md`) en lugar de sugerir atajos o fallbacks locales.
 
 ## 2. Auditoría Limitada por Deltas (Mitigación Cognitiva)
 - Para la auditoría del código inyectado, el Agente Arquitecto está instruido a basarse estrictamente en los deltas ejecutando `git diff main...rama-del-agente`, evitando leer archivos de miles de líneas desde cero.
@@ -20,7 +21,12 @@ Estas instrucciones rigen CADA INTERACCIÓN en este proyecto y deben ser respeta
 
 ## 4. Integración Visual Conservadora (Regla Quirúrgica)
 - Cuando una IA de Diseño genere interfaces de forma estática, queda **ESTRICTAMENTE PROHIBIDO** hacer un reemplazo automático (fusión directa) contra los archivos `.vue` funcionales y lógicos de la aplicación.
-- Las clases CSS de Tailwind o colores sueltos deben inyectarse *pieza por pieza y a mano* en el código fuente base.
+- Las clases de PrimeVue, utilidades Tailwind o colores sueltos deben inyectarse *pieza por pieza y a mano* en el código fuente base.
+
+## 5. Políticas Core de Frontend (Zero-Trust UI y Desacoplamiento)
+- **Cero-Mocks (Integración Estricta):** Al desarrollar componentes que dependan de flujos de valor, queda estrictamente prohibido simular estado con Mocks o arrays estáticos. Se debe requerir interconexión APIRest y manejar los `catch()` reales.
+- **UI/UX de Restricción Crítica:** Las alertas en interacciones destructivas, reintentos masivos o purgas NO PUEDEN USAR las interrupciones nativas del DOM (`alert()`, `confirm()`). Se exige construir Componentes Modales en Vue 3 y aplicar validaciones computadas estrictas localmente (ej. "botón disableado hasta 20 chars").
+- **Aislamiento por Barrel Exports:** Estrictamente prohibido crear dependencias Spaghettis (Ej. Módulos Operativos vs Modulos de Diseño). Todo acceso a composables/estados entre dominios debe realizarse mediante puntos de entrada limpios `index.ts` blindados con documentación `@TSDoc`.
 
 *** SI INCUMPLES ESTAS REGLAS SERÁS ABORTADO INMEDIATAMENTE ***
 
@@ -28,6 +34,7 @@ Estas instrucciones rigen CADA INTERACCIÓN en este proyecto y deben ser respeta
 - **Topología Obligatoria:** Todo sistema de enrutamiento y mensajería (Ej. RabbitMQ) DEBE ser configurado para soportar fallos destructivos del Broker. Queda estrictamente prohibido implementar topologías directas sin soporte DLQ.
 - **Circuit Breaker y Fallback:** Si un Broker como Redis o RabbitMQ se cae, el sistema principal (Ej. Tomcat) NO DEBE crashear. El Agente Backend está obligado a encapsular estas infraestructuras bajo patrones "Fallback" (usando memorias buffer, colas pasivas en BD o interceptores de Circuit Breaker tipo `RabbitHealthIndicator`).
 - **Idempotencia:** Todos los endpoints asíncronos y Webhooks están obligados por contrato a validar la llave `x-idempotency-key` cruzándose con bases de datos transaccionales, suprimiendo ataques de repetición o caídas por duplicidad transaccional de encolamiento.
+
 ---
 # 🛑 LEY GLOBAL 0: RAG-FIRST DEEP CONTEXT (PREVENCIÓN DE ALUCINACIONES DESTRUCTIVAS)
 
@@ -61,11 +68,21 @@ Tienes prohibido asumir que tu código funciona solo por inferencia estática. T
 
 - Si eres BACKEND: 
   Tu entorno de compilación vive EXCLUSIVAMENTE en Docker, no en tu OS anfitrión.
-  1. Ejecuta `docker-compose up -d --build ibpms-core` en la raíz.
-  2. Haz streaming de los logs para auditar el arranque: `docker-compose logs -f ibpms-core`.
+  1. Ejecuta `docker compose up -d --build ibpms-core` en la raíz.
+  2. Haz streaming de los logs para auditar el arranque: `docker compose logs -f ibpms-core`.
   Solo si la consola de Docker dice "Started on port 8080" puedes dar la tarea por completada. Si ves `Web server failed to start` o `Connection Refused`, estás en CÓDIGO ROJO. Revisa tus variables o asunciones, y sigue tu doctrina oficial al pie de la letra en: `.agents/skills/backend_sre_compilation_audit/SKILL.md`.
 
 - Si eres FRONTEND: Antes de confirmar éxito, obligatoriamente debes demostrar que la UI no está rota ejecutando `npm run build` (o el equivalente Vite/Vue) y asegurar un "Build Successful".
+
+- Si eres QA / DevOps: 
+  Tu validación opera estrictamente bajo la Gobernanza de Pirámide de Testing (ADR 011). Tienes PROHIBIDO certificar validez funcional sin ejecutar explícitamente el Nivel 4 (Playwright E2E o REST Assured) y adjuntar evidencia física de logs de red reales. El uso de mocks en memoria es intolerable. Sigue tu doctrina en: `.agents/skills/qa_e2e_validation_audit/SKILL.md`.
+
+- **REGLA DE ORO (Test-Driven Governance V2):**
+  Ninguna Historia de Usuario, refactor de módulo o creación de "Feature" nueva podrá considerarse "Done" si el Agente a cargo no la entrega escudada por sus tres capas: 
+  1. Testcontainers / Unit Tests en Backend.
+  2. Happy-DOM / Unit Tests lógicos en Frontend.
+  3. Playwright Script (Si impacta UI/RTM).
+  CUALQUIER intento de evadir esta trilogía y entregar código de producción sin pruebas asociadas debe ser bloqueado inmediatamente por el Arquitecto Líder.
 
 ---
 # 🛑 LEY GLOBAL 3: DIRECTRIZ OBLIGATORIA DE LECTURA Y SSOT (BÓVEDA DE REQUERIMIENTOS)
@@ -87,10 +104,18 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 - **Cuándo leerlo:** Antes de iniciar cualquier macro-tarea (Épica).
 - **Para qué sirve:** Define el Product Requirements Document (PRD). Le explicará el contexto de negocio, el problema que resolvemos y agrupa las características principales (Formularios Dinámicos, Bandeja Compartida, Copiloto IA M365, Tableros Kanban).
 
-### Nivel 2: `docs/requirements/v1_user_stories.md` (El "Cómo" Técnico - Gherkin)
+### Nivel 2: Repositorio Modularizado de User Stories (El "Cómo" Técnico - Gherkin)
+- **Punto de entrada:** `docs/requirements/v1_user_stories_index.md` (índice de navegación por Épica).
+- **Archivos de contenido:** `docs/requirements/epics/epic_X_*.md` (un archivo por Épica, contiene las US y CAs en Gherkin).
+- **Lookup programático:** `docs/requirements/v1_user_stories_registry.json` (mapeo US→archivo para agentes).
 - **Cuándo leerlo:** Al momento de programar o diseñar un Controlador REST, Servicio Java o Componente Vue.
 - **Para qué sirve:** **ESTE ES SU CONTRATO PRINCIPAL.** Contiene las Historias de Usuario hiper-detalladas usando el estándar BDD (Behavior-Driven Development) en sintaxis Gherkin (Given-When-Then).
-- **Regla:** Si usted como Agente asume un comportamiento que *no está explícitamente detallado en el Gherkin*, su asunción es inválida. Ajústese a los Criterios de Aceptación literales del documento.
+- **Protocolo de acceso obligatorio:**
+  1. Leer `v1_user_stories_index.md` → identificar el archivo de Épica correspondiente.
+  2. Leer el archivo `epics/epic_X_*.md` con `view_file` (paginado si > 800 líneas).
+  3. Para búsqueda puntual de un término: usar PowerShell `Select-String -Path "<ruta_epic>" -Pattern "<término>"`.
+- **PROHIBIDO:** Leer directamente `docs/requirements/v1_user_stories.md` (monolito deprecado, excluido del RAG vía `.cursorignore`).
+- **Regla:** Si usted como Agente asume un comportamiento que *no está explícitamente detallado en el Gherkin*, su asunción es inválida. Ajústese a los Criterios de Aceptación literales del archivo de Épica.
 
 ### Nivel 3: `docs/requirements/v1_moscow_scope_validation.md` (El "Cuándo")
 - **Cuándo leerlo:** Cuando esté tentado a construir componentes "Nice to Have" excesivamente complejos (Ej. Módulos de Machine Learning Predictivo, OCR Hotelero).
@@ -108,8 +133,8 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 
 ## 3. Resolución de Discrepancias
 
-1. **Gherkin vs PRD:** Si hay una contradicción funcional entre la descripción macro del `functional_requirements.md` y un escenario Gherkin de `v1_user_stories.md`, **SIEMPRE PREVALECE EL GHERKIN** como detalle técnico final.
+1. **Gherkin vs PRD:** Si hay una contradicción funcional entre la descripción macro del `functional_requirements.md` y un escenario Gherkin del archivo de Épica correspondiente (`docs/requirements/epics/epic_X_*.md`), **SIEMPRE PREVALECE EL GHERKIN** como detalle técnico final.
 2. **Wireframes vs Requirements:** Si un Wireframe (ubicado en `docs/architecture/v1_wireframes.md`) exige un botón que **no existe** en las Historias de Usuario, usted debe consultar al Usuario, *no reinventar una Historia fantasma*.
-3. **Trazabilidad Inversa (Anti-Amnesia Institucional):** Todo hallazgo de auditoría que haya sido RESUELTO y viva en un artefacto satélite (`us{X}_functional_analysis.md`, `us{X}_gap_remediation_brief.md`, `audit_*_report.md`) **DEBE** graduarse como un Criterio de Aceptación formal dentro de la User Story correspondiente en `v1_user_stories.md`. Si un hallazgo resuelto no existe en el SSOT, la próxima auditoría lo redescubrirá como nuevo. Ver workflow: `.agent/workflows/graduacionAuditoriaAlSsot.md`.
+3. **Trazabilidad Inversa (Anti-Amnesia Institucional):** Todo hallazgo de auditoría que haya sido RESUELTO y viva en un artefacto satélite (`us{X}_functional_analysis.md`, `us{X}_gap_remediation_brief.md`, `audit_*_report.md`) **DEBE** graduarse como un Criterio de Aceptación formal dentro de la User Story correspondiente en su archivo de Épica (`docs/requirements/epics/epic_X_*.md`). Si un hallazgo resuelto no existe en el SSOT, la próxima auditoría lo redescubrirá como nuevo. Ver workflow: `.agent/workflows/graduacionAuditoriaAlSsot.md`.
 
 > **Objetivo Final:** Su obligación como Agente es apegarse 100% al alcance pre-verificado (SSOT). **Si no está escrito en estos 4 archivos base (+ los condicionales de su rol), no es un requerimiento de la V1.** Construya lo que se pide; nada más, nada menos.

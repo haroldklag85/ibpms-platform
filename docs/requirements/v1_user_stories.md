@@ -1,3 +1,10 @@
+> [!CAUTION]
+> **⛔ ARCHIVO DEPRECADO (2026-04-10).** Este monolito ha sido modularizado en `docs/requirements/epics/`. 
+> Los agentes DEBEN leer los archivos de épica individuales. NO leer este archivo completo.
+> Referencia: `v1_user_stories_index.md`
+
+
+
 # Historias de Usuario (BDD / Gherkin) - iBPMS V1
 
 Este documento contiene las Historias de Usuario formales para el MVP Táctico (V1). Todas las historias aquí redactadas se restringen **estrictamente** al bloque "MUST HAVE" y "SHOULD HAVE" definido en `v1_moscow_scope_validation.md`. 
@@ -3284,6 +3291,8 @@ Scenario: Gobernanza de Persistencia (SharePoint Vault vs Vuelo Efímero) (CA-4)
 ```
 **Trazabilidad UX:** Wireframes Pantalla 12 (Bóveda Documental y Generación).
 
+---
+
 ### US-035: Integración SharePoint y Auditoría Documental
 **Como** Analista / Auditor de Cumplimiento
 **Quiero** que el iBPMS gestione los expedientes en SharePoint manteniendo trazabilidad matemática estricta
@@ -4057,6 +4066,15 @@ Scenario: Evento Compensatorio SGDEA por Aborto de Caso (Saga Pattern Documental
 **Quiero** segmentar las Tarjetas Kanban y Dashboards por el rol específico del que mira
 **Para** evitar ruido cognitivo y entregar exactamente lo que cada persona necesita (Visibilidad, Ejecución o Seguimiento).
 
+> [!IMPORTANT]
+> **Dependencias y Bloqueos Sistémicos (Análisis PO 2026-04-08):**
+> - **US-036 (RBAC & Seguridad Perimetral) [DEPENDENCIA ESTRUCTURAL]:** El Frontend de la US-025 es enteramente "ciego y obediente"; depende a nivel atómico del token JWT (RBAC) expuesto por el backend de la US-036. Sin esa matriz de roles empaquetada, las directivas de ocultamiento (CA-1 al CA-4) carecen de insumo de verdad.
+> - **US-001 (Workdesk) y US-002 (Reclamo de Tareas) [CONSUMIDORES]:** Son las pantallas operativas que implementarán directamente los mandatos UX dictaminados aquí (Soft-Undo de 5s, Skeleton Loaders y Websocket Push Alerts).
+> - **US-009 (Dashboard de Salud) [CONSUMIDOR LAZY-LOAD]:** Consumidor exclusivo de la directiva de Lazy Loading cruzado (IntersectionObserver) para gráficas pesadas (CA-28).
+> - **BLOQUEANTES DE DESARROLLO: NINGUNA.** El equipo FrontEnd cuenta con vía libre de desarrollo. Los arquitectos Vue pueden avanzar simulando un Store y Falseando Roles en Memoria (Pinia Mock) sin esperar un solo endpoint del Backend.
+> - **Clasificación MoSCoW Oficial:** **MUST** (App Shell crítico base para todo el ecosistema de cliente SPA).
+
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
  Feature: Arquitectura de Visibilidad Basada en Roles (UX RBAC)
@@ -4251,6 +4269,44 @@ Scenario: Evento Compensatorio SGDEA por Aborto de Caso (Saga Pattern Documental
     And el sistema debe respetar e inyectar estrictamente el componente Vue original diseñado para esa etapa específica
     And preservando intacto su CSS, UI Density, Columnas y Cuadrículas (Grids) originales configurados en el Form Designer
     And la interfaz debe estar coronada obligatoriamente por un componente "Stepper" en la parte superior para trazabilidad de las etapas.
+
+  # ==============================================================================
+  # E. REMEDIACIONES TÁCTICAS POST-ANÁLISIS DE ARQUITECTURA (2026-04-08)
+  # Origen: GAPs detectados en docs/requirements/us025_functional_analysis.md
+  # Propósito: Blindar la auditoría en "Ver Sistema Como", asegurar peticiones DELETE
+  #            en cierres súbitos, y eliminar asimetrías Server-Side Pagination vs Sockets.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN GAP-1] Trazabilidad Iso-Audit en Modo Impersonator (CA-31)
+    # Resuelve: Evitar que un Admin cometa un fraude indetectable operando bajo la UI mutada de un usuario base (CA-9).
+    Given el administrador operando el sistema en Modo Soporte ("Impersonate" activo bajo el token de Juan)
+    When el administrador ejecuta una operación de escritura o negocio simulando ser Juan (Ej: Aprobar Tarea)
+    Then el API Request Gateway garantizará que el JWT transmitido contenga un identificador híbrido obligando al motor de auditoría a registrar: `User: Juan | ImpersonatedBy: Admin_ID`.
+    And será materialmente imposible, a nivel Backend o Frontend BFF, que el sistema asuma ciegamente que "Juan" aprobó el trámite, protegiendo a la empresa ante forenses ISO 27001.
+
+  Scenario: [REMEDIACIÓN GAP-2] Beacon de Ejecución para Cierres Abruptos en Soft-Undo (CA-32)
+    # Resuelve: Qué pasa si un analista oprime [Archivar], pero cierra Chrome en 2s sin esperar la caducidad del Soft-Undo de 5s.
+    Given la ventana de gracia del CA-14 (el POST/DELETE se retrasa 5 segundos en VUE)
+    When el usuario instaura la orden destructiva en la UI, pero repentinamente cierra la pestaña completa de su navegador Chrome/Edge
+    Then el framework del FrontEnd reaccionará al evento `beforeunload` del ciclo de vida del DOM
+    And forzará el envío asíncrono e instantáneo de la mutación estancada en el stack utilizando OBLIGATORIAMENTE la API nativa de navegador `navigator.sendBeacon()` hacia la ruta del Backend.
+    And garantizando transaccionalmente que ninguna tarea "muerta" en la UI del Front siga viva en el Microservicio por culpa del cierre súbito.
+
+  Scenario: [REMEDIACIÓN GAP-3] Derogación de Listas Colosales en Favor de Paginación Server-Side (CA-33)
+    # Resuelve: El mandato "Virtual Scrolling de 5000 arrays" (CA-22) colisiona contra las barreras SRE de la US-001 (Paginación).
+    Given la necesidad de cargar grillas en Pantallas densas (Ej: Histórico de 5000 Casos en Pantalla 16)
+    When el Arquitecto UI diseñe el mecanismo de entrega visual
+    Then SE RECHAZA OFICIALMENTE forzar la petición y descarga al cliente de arreglos masivos (5000 rows JSON), dejando sin efecto primario el CA-22 en vistas maestras de negocio.
+    And primará ABSOLUTAMENTE el consumo de Paginación Sever-Side (`?page=1&size=20`), donde el "Virtual Scrolling" en Front operará iterativamente exigiendo la siguiente página (Infinite Scroll transparente via API), blindando tanto la Memoria RAM del navegador en CA-22 como CPU/DBA de Servidor.
+
+  Scenario: [REMEDIACIÓN GAP-4] Resincronización Silenciosa Híbrida de WebSockets (CA-34)
+    # Resuelve: Las inyecciones Sockets de Tareas (CA-25) desajustan matemáticamente las grillas "Server-Paginadas" del CA-33.
+    Given la vista activa de una Tabla de Workdesk paginada exactamente a 20 filas operando en pantalla
+    When una Alerta Silenciosa de Websockets (CA-25) reciba la inyección de una (1) tarea nueva en vivo proveniente de Camunda
+    Then el cliente SPA (Vue) incorporará visualmente el registro mágico brillándolo momentáneamente
+    And en background disparará una orden sorda de "Silent Page Invalidated" contra Pinia (Store) que obligará a re-solicitar silenciosamente bajo cuerdas al Backend el total Count (`totalElements`) para reajustar los números absolutos y relativos de todos los paginadores de la tabla (`Mostrando 21 de 1.831`), evitando descuadres lógicos del Framework UI.
+	
+	
 ```
 
 **Trazabilidad UX:** Layout Maestro (Sidebar Lateral, Header Superior) y Pantallas 0 (Dashboard) y 1 (Workdesk).
@@ -5657,6 +5713,9 @@ Scenario: Infraestructura de Notificaciones In-App (WebSocket Campana)
     And la UI proveerá un endpoint ligero `PATCH /read` que se disparará al abrir el panel, atenuando el contador.
 
 ```
+
+---
+
 ### US-050: Identidad y Onboarding de Clientes Externos (CIAM / Zero-Public-Signup)
 **Como** Sistema Core (iBPMS)
 **Quiero** enviar una invitación segura (Magic Link) al correo de un cliente externo
@@ -5689,6 +5748,7 @@ Feature: Secure Customer Onboarding and Identity (CIAM)
 ```
 
 ---
+
 ### US-051: Matriz de Gobernanza Visual y Enrutamiento RBAC (Frontend)
 **Como** Administrador de Seguridad (CISO) / Arquitecto Frontend
 **Quiero** que el motor de Vue.js gestione la visibilidad del DOM, la navegación de rutas y el estado reactivo con seguridad militar
@@ -6125,3 +6185,749 @@ Scenario: Downgrade Automático por Falta de Fondos Premium (Fallback Cognitivo)
 ```
 ---
 
+### US-054: Integración Agnóstica de Modelos Fundacionales (LLM Plugin Engine)
+**Como** Arquitecto de IA / Motor de Procesamiento (Backend)
+**Quiero** invocar a diferentes proveedores de Inteligencia Artificial (Ej: Gemini, OpenAI, Claude) de forma estandarizada y agnóstica utilizando un sistema de Plugins y "Raw Ports"
+**Para** proteger a la plataforma ibpms-core del vendor lock-in corporativo, evitar incorporar librerías gigantescas asfixiantes (como LangChain), aislar los Secretos de autenticación (Zero-Trust) y permitir la transición fluida (Fallback) en caso de que uno de los proveedores sufra una caída regional.
+
+> [!IMPORTANT]
+> **Directiva de Implementación: Refactorización desde OpenClaw (Código Fuente de Referencia)**
+> Esta historia de usuario DEBE implementarse tomando como base de referencia arquitectónica y funcional el código fuente original del proyecto OpenClaw, ubicado en el workspace local:
+> `C:\Users\HaroltAndrésGómezAgu\.gemini\antigravity\scratch\openclaw_workspace`
+>
+> Los módulos de referencia principales son:
+> - `src/plugin-sdk/provider-entry.ts` — Fábrica de registro de Proveedores LLM (defineSingleProviderPluginEntry, ProviderPlugin)
+> - `src/plugin-sdk/provider-stream.ts` — Composición de wrappers de streaming por familia (ProviderStreamFamily, composeProviderStreamWrappers)
+> - `src/plugin-sdk/provider-stream-shared.ts` — Helpers compartidos de streaming y decodificación de tool calls
+> - `src/plugin-sdk/provider-auth.ts` — Gestión de autenticación multi-perfil (AuthProfileStore, OAuthCredential, PKCE)
+> - `src/plugin-sdk/provider-auth-runtime.ts` — Runtime de resolución de API Keys y auth por modelo (resolveApiKeyForProvider, getRuntimeAuthForModel)
+> - `src/plugin-sdk/provider-tools.ts` — Normalización de Tool Schemas por proveedor (Gemini, xAI compat)
+> - `src/plugin-sdk/provider-model-shared.ts` — Catálogo de modelos, replay policies y compatibilidad (ReplayFamily, ModelCompat)
+> - `src/plugin-sdk/provider-onboard.ts` — Onboarding y preset de proveedores (applyProviderConfigWithDefaultModels)
+> - `src/plugin-sdk/provider-catalog-shared.ts` — Catálogo compartido de modelos configurados por proveedor
+> - `src/plugin-sdk/provider-http.ts` — Transporte HTTP nativo (fetchWithTimeout, postJsonRequest, assertOkOrThrowHttpError)
+> - `src/plugin-sdk/retry-runtime.ts` — Política de reintentos y rate limiting (RetryConfig, createRateLimitRetryRunner)
+> - `src/plugin-sdk/provider-enable-config.ts` — Habilitación condicional de proveedores por configuración
+>
+> **Ejercicio de Refactorización Obligatorio:** El código de OpenClaw está escrito en TypeScript (Node.js). El equipo de desarrollo DEBE ejecutar un ejercicio formal de refactorización (Porting) para transcribir los contratos, interfaces y algoritmos centrales hacia Java 21 / Spring Boot 3, respetando la Arquitectura Hexagonal (ADR-001) y el patrón de Puertos y Adaptadores del iBPMS. Se prohíbe la copia literal sin adaptación; se exige la comprensión profunda de cada componente antes de su transposición.
+
+**Dependencias Críticas:**
+- **US-053 (Antigravity Command Center):** ⚠️ FUERTE. Las cuotas FinOps de Model Credits del Tenant gobiernan el presupuesto de tokens disponible para cada adaptador LLM.
+- **US-056 (Memory Core Engine / RAG):** ⚠️ FUERTE. El `LlmChatPort` definido en CA-01 es la interfaz que US-056 consume para generar embeddings y ejecutar las fases de Dreaming.
+- **ADR-012 (Integración Agnóstica LLM):** 🔴 BLOQUEANTE. Los adaptadores DEBEN seguir el patrón Zero-Dep de `RestClient` nativo.
+- **ADR (Azure Key Vault):** 🔴 BLOQUEANTE. La bóveda de secretos debe estar operativa para la inyección de API Keys.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Architectural LLM Decoupling and Native Connectivity (ADR-012)
+
+  # ==============================================================================
+  # A. CONTRATOS HEXAGONALES DEL MOTOR LLM
+  # Ref. OpenClaw: src/plugin-sdk/provider-entry.ts (ProviderPlugin, definePluginEntry)
+  # Ref. OpenClaw: src/plugin-sdk/provider-model-shared.ts (ModelApi, ModelProviderConfig)
+  # ==============================================================================
+  Scenario: Invocación Agnóstica de Tareas Funcionales (Domain Port Isolation) (CA-01)
+    # Ref. OpenClaw: provider-entry.ts — ProviderPlugin interface con id, label, auth[], catalog
+    # Ref. OpenClaw: provider-model-shared.ts — ModelDefinitionConfig (id, contextWindow, reasoning, input)
+    Given una tarea requerida de procesamiento LLM (Ej. Resumir Bandeja de Entrada o Evaluar Formulario) instanciada por Orquestador BPMN
+    When el Caso de Uso (Application Service) invoque una solicitud cognitiva
+    Then el servicio TIENE PROHIBIDO acoplarse y llamar directamente a Azure OpenAI o Google Vertex.
+    And delegará su firma obligatoria hacia un puerto neutral `LlmChatPort(LlmContext, BusinessPrompt)`.
+    And el Contexto transferido contendrá las fronteras máximas parametrizadas en la fábrica (Tokens máximos, temperatura) desde el Dominio al Adaptador, aislando las lógicas puramente transaccionales del formato de API.
+    And OpenClaw implementa este patrón exacto con su `ProviderPlugin` interface que define: `id`, `label`, `docsPath`, `aliases`, `envVars`, `auth[]`, `catalog` y hooks opcionales (`wrapStreamFn`, `buildReplayPolicy`, `normalizeToolSchemas`) — el equipo debe estudiar este contrato como referencia directa del `LlmChatPort`.
+
+  # ==============================================================================
+  # B. TRANSPORTE HTTP NATIVO (ZERO-DEP)
+  # Ref. OpenClaw: src/plugin-sdk/provider-http.ts (fetchWithTimeout, postJsonRequest)
+  # Ref. OpenClaw: src/plugin-sdk/provider-stream-shared.ts (composeProviderStreamWrappers)
+  # ==============================================================================
+  Scenario: Zero-Dep Abstraction via RestClient (Evitación de Bloatware) (CA-02)
+    # Ref. OpenClaw: provider-http.ts — fetchWithTimeout(), postJsonRequest(), assertOkOrThrowHttpError()
+    # Ref. OpenClaw: provider-stream-shared.ts — StreamFn wrapper composition, HTML entity decoding
+    Given la implementación del Adapter (`AzureOpenAiAdapter` / `GoogleGeminiAdapter`) subyacente al Port
+    Then el Backend REST iBPMS TIENE RESTRICCIÓN TOTAL para importar librerías tipo `spring-ai` o `langchain4j`.
+    And el adaptador implementará la conexión de red (HTTP Request/Streaming Websockets) EXCLUSIVAMENTE a través de construcciones NATIVAS standard (Ej: `RestClient` o `WebClient` fluido de Spring Boot 3).
+    And minimizando radicalmente la superficie de ataque del código (Cero vulnerabilidades CVE importadas por terceros) y controlando la serialización de JSON con Jackson puro.
+    And OpenClaw demuestra este paradigma Zero-Dep en `provider-http.ts` donde TODO el transporte HTTP se resuelve con `fetch()` nativo de Node + helpers `fetchWithTimeout()` y `postJsonRequest()` — SIN importar axios, got ni SDKs de proveedor.
+
+  # ==============================================================================
+  # C. GESTIÓN ZERO-TRUST DE SECRETOS
+  # Ref. OpenClaw: src/plugin-sdk/provider-auth.ts (AuthProfileStore, OAuthCredential, PKCE)
+  # Ref. OpenClaw: src/plugin-sdk/provider-auth-runtime.ts (resolveApiKeyForProvider)
+  # ==============================================================================
+  Scenario: Inyección Zero-Trust de Secret Level Tokens (Key Vault) (CA-03)
+    # Ref. OpenClaw: provider-auth.ts — ensureAuthProfileStore(), listProfilesForProvider(), upsertAuthProfile()
+    # Ref. OpenClaw: provider-auth.ts — generatePkceVerifierChallenge(), buildOauthProviderAuthResult()
+    # Ref. OpenClaw: provider-auth-runtime.ts — resolveApiKeyForProvider(), getRuntimeAuthForModel()
+    Given la inicialización del Adapter dentro de la capa `infrastructure` en el microservicio
+    When el conector requiera la API Key de Anthropic o Bearer Auth de Microsoft Graph
+    Then se prohíbe que cualquier variable queme su ruta en código (`hardcoding`) o baje su token hacia el Frontend VUE SPA.
+    And las credenciales fluirán vía inyección efímera inyectada (`Azure Key Vault` Secret ref en runtime) hacia los Headers HTTP autorizados que parten desde el servidor back-end ibpms a la DMZ pública de internet.
+    And OpenClaw implementa este patrón con un `AuthProfileStore` persistente que resuelve credenciales por `providerId` + `profileId`, soporta `OAuthCredential` con PKCE y almacena tokens en un filesystem encriptado — iBPMS transpondrá este contrato hacia Azure Key Vault como backend de almacenamiento seguro.
+
+  # ==============================================================================
+  # D. ESTABILIDAD DE CACHÉ DE PROMPTS (FINOPS)
+  # Ref. OpenClaw: src/plugin-sdk/provider-stream.ts (ProviderStreamFamily, stream wrappers)
+  # Ref. OpenClaw: src/plugin-sdk/provider-model-shared.ts (ReplayPolicy, sanitizeReplayHistory)
+  # ==============================================================================
+  Scenario: Estabilidad FinOps del Caché de Prompts (Prompt Cache Stability) (CA-04)
+    # Ref. OpenClaw: provider-stream.ts — buildProviderStreamFamilyHooks() con familias: google-thinking, openai-responses-defaults, etc.
+    # Ref. OpenClaw: provider-model-shared.ts — buildReplayPolicy() para cada familia (OpenAI, Anthropic, Google Gemini)
+    # Ref. OpenClaw: provider-stream-shared.ts líneas 154 — applyAnthropicEphemeralCacheControlMarkers (inserción de control de caché por bloque)
+    Given un flujo conversacional o historial cognitivo que deba ser enviado al Adaptador LLM
+    When el motor estructural ensamble el `Payload` (JSON) para la inferencia con el proveedor
+    Then el Backend tiene PROHIBIDO alterar, truncar o reescribir tokens en la cabecera estática (`System Prompt` o bloque de instrucciones maestras).
+    And rotará y apilará obligatoriamente los nuevos contextos (variables BPMN o mensajes nuevos) EXCLUSIVAMENTE en la cola ("Tail") del array.
+    And esto garantizará un hit casi absoluto en el "Context Caching" de los LLMs (ej: OpenAI/Anthropic), preservando agresivamente los "Model Credits" (FinOps B2B).
+    And OpenClaw implementa esta disciplina con sus `ReplayPolicy` builders que generan payloads compatibles con cada proveedor y sus `EphemeralCacheControlMarkers` (Anthropic) que marcan bloques inmutables para prompt caching.
+
+  # ==============================================================================
+  # E. RESILIENCIA Y FALLBACK COGNITIVO
+  # Ref. OpenClaw: src/plugin-sdk/retry-runtime.ts (RetryConfig, createRateLimitRetryRunner)
+  # Ref. OpenClaw: src/plugin-sdk/provider-onboard.ts (cascada de modelos fallback)
+  # ==============================================================================
+  Scenario: Resiliencia Dinámica y Fallback Cognitivo Automático (CA-05)
+    # Ref. OpenClaw: retry-runtime.ts — resolveRetryConfig(), retryAsync(), createRateLimitRetryRunner()
+    # Ref. OpenClaw: provider-onboard.ts — extractAgentDefaultModelFallbacks() para cascada de modelos
+    # Ref. OpenClaw: provider-http.ts — assertOkOrThrowHttpError() y fetchWithTimeoutGuarded()
+    Given un corte, timeout, asfixia (Rate Limit HTTP 429) o error de servidor (HTTP 500) devolviendo un fallo por parte del modelo IA primario (Ej: Azure OpenAI GPT-4o)
+    When el Adaptador actual falle su promesa de resolver el prompt
+    Then se PROHÍBE retornar inmediatamente una excepción técnica letal que aborte la tarea del orquestador Camunda.
+    And iniciará un "Fallback Pasivo" transparente derivando el mismo contexto hacia el Adaptador Secundario Autorizado (Ej: Gemini 1.5 Flash).
+    And únicamente si todos los modelos de la cascada de Fallback fracasan estrepitosamente, la plataforma recién detendrá el hilo, emitiendo el incidente `ERROR_COGNITIVO_BPMN`.
+    And OpenClaw implementa esta resiliencia con `createRateLimitRetryRunner()` (reintentos con backoff para 429s), `fetchWithTimeoutGuarded()` (timeout configurable) y `extractAgentDefaultModelFallbacks()` (cascada de modelos).
+
+  # ==============================================================================
+  # F. AUTENTICACIÓN MULTI-TENANT Y DELEGACIÓN OAUTH
+  # Ref. OpenClaw: src/plugin-sdk/provider-auth.ts (AuthProfileStore, OAuth, PKCE)
+  # Ref. OpenClaw: src/plugin-sdk/provider-auth-runtime.ts (ProviderPreparedRuntimeAuth)
+  # ==============================================================================
+  Scenario: Perfiles de Autenticación Dinámicos Multi-Tenant (Auth Profiles) (CA-06)
+    # Ref. OpenClaw: provider-auth.ts — ensureAuthProfileStore(), OAuthCredential, generatePkceVerifierChallenge()
+    # Ref. OpenClaw: provider-auth.ts — upsertAuthProfileWithLock() (concurrencia segura), writeOAuthCredentials()
+    # Ref. OpenClaw: provider-auth-runtime.ts — ResolvedProviderRuntimeAuth, ProviderPreparedRuntimeAuth
+    Given un entorno multi-tenant o de ejecución paralela con distintos clientes (Tenants)
+    When el sistema de adaptación HTTP solicite la conexión hacia un proveedor (OpenAI/Anthropic)
+    Then la plataforma TIENE PROHIBIDO usar una sola Key global incrustada o forzada en el backend.
+    And el motor delegará un `ProviderAuthRuntime` que consultará un "Perfil de Autenticación de Bóveda" (Ej: Perfil A para Depto Legal, Perfil B para Finanzas).
+    And esto habilitará soportar esquemas de delegación OAuth (como plugins interactivos) y rotación de tokens por Tenant, asegurando segregación financiera.
+    And OpenClaw implementa este patrón con un `AuthProfileStore` por agente que almacena credenciales por `providerId`/`profileId`, soporta flujos OAuth con PKCE, y resuelve auth en runtime via `getRuntimeAuthForModel()`.
+    
+    # -------------------------------------------------------------------------
+    # Contexto Funcional y Visión UX (Delegación OAuth para Proveedores IA)
+    # -------------------------------------------------------------------------
+    # • La Experiencia (UX): En lugar de tener que ir a Google AI Studio o Azure, generar una "API Key" alfanumérica larguísima y pegarla cruda en la plataforma, iBPMS lanzará un flujo interactivo en formato de ventana flotante tipo "Login with Google Workspace / Gemini". El usuario ingresa a su cuenta personal, autoriza los permisos (Delegación OAuth), y pasa a operar el LLM bajo su propia suscripción y cuota.
+    # • Lo que pasa "Bajo el Capó" (Backend): Técnicamente el sistema SÍ usa un token (un puente conversacional Access/Refresh Token), pero este es gestionado enteramente de forma silenciosa por el ProviderAuthRuntime. iBPMS tramita la rotación criptográfica automáticamente y el token se resguarda de forma encriptada en la Bóveda (Azure Key Vault), atado exclusivamente al perfil multi-tenant.
+    # • El Escenario Paralelo (Multi-Cuenta): Con esta misma lógica, un usuario podría tener abierta una pestaña en iBPMS donde un proceso corporativo usa el "Azure OpenAI" (pagado por la compañía), y otra pestaña o perfil de agente donde configura el uso de "Su Gemini Personal" conectado a sus cuotas, sin que exista cruce o choque de seguridad entre ambas credenciales en el código.
+
+  # ==============================================================================
+  # G. NORMALIZACIÓN DE TOOL SCHEMAS POR PROVEEDOR
+  # Ref. OpenClaw: src/plugin-sdk/provider-tools.ts (normalizeGeminiToolSchemas, stripUnsupportedSchemaKeywords)
+  # ==============================================================================
+  Scenario: Normalización Agnóstica de Tool Schemas para Function Calling (CA-07)
+    # Ref. OpenClaw: provider-tools.ts — normalizeGeminiToolSchemas(), cleanSchemaForGemini(), stripXaiUnsupportedKeywords()
+    # Ref. OpenClaw: provider-tools.ts — buildProviderToolCompatFamilyHooks() para compatibilidad cross-provider
+    Given que los procesos BPMN expondrán herramientas (tools/functions) al LLM para ejecutar acciones en el sistema
+    When el adaptador LLM necesite enviar los schemas de las herramientas disponibles al proveedor
+    Then el sistema implementará un `ToolSchemaNormalizerService` que adapte automáticamente los schemas JSON-Schema de las herramientas según las restricciones del proveedor activo.
+    And para Google Gemini: eliminará keywords no soportadas como `format`, `patternProperties`, `$ref` (replicando `cleanSchemaForGemini()` de OpenClaw).
+    And para xAI: eliminará `minLength`, `maxLength`, `minItems`, `maxItems` (replicando `stripXaiUnsupportedKeywords()` de OpenClaw).
+    And para OpenAI: aplicará compatibilidad directa sin transformación (schema pass-through).
+    And el sistema PROHIBIRÁ la exposición de schemas internos o sensibles hacia el proveedor externo (Zero-Trust Schema Sanitization).
+
+  # ==============================================================================
+  # H. CATÁLOGO DINÁMICO DE MODELOS
+  # Ref. OpenClaw: src/plugin-sdk/provider-catalog-shared.ts (ConfiguredProviderCatalogEntry)
+  # Ref. OpenClaw: src/plugin-sdk/provider-onboard.ts (applyProviderConfigWithDefaultModels)
+  # ==============================================================================
+  Scenario: Catálogo Dinámico de Modelos por Proveedor (CA-08)
+    # Ref. OpenClaw: provider-catalog-shared.ts — readConfiguredProviderCatalogEntries(), supportsNativeStreamingUsageCompat()
+    # Ref. OpenClaw: provider-onboard.ts — applyProviderConfigWithDefaultModels(), applyProviderConfigWithModelCatalog()
+    Given la necesidad de gestionar múltiples modelos por proveedor con distintas capacidades (reasoning, vision, context window)
+    Then el sistema mantendrá un `ModelCatalogRegistry` que permita:
+    And 1. **Registro Declarativo:** Cada adaptador de proveedor declarará sus modelos disponibles con metadata: `id`, `name`, `contextWindow`, `reasoning` (boolean), `input` (text/image/document).
+    And 2. **Merge Inteligente:** Los modelos declarados por configuración YAML del administrador se fusionarán con los defaults del proveedor sin sobrescribirlos (patrón `mode: merge` de OpenClaw).
+    And 3. **Streaming Usage Compat:** Modelos que soporten usage reporting en streaming serán marcados automáticamente para optimizar el tracking FinOps (replicando `applyProviderNativeStreamingUsageCompat()` de OpenClaw).
+    And 4. **Resolución por Alias:** Los modelos podrán tener aliases (e.g., `gpt-4o` → `azure/gpt-4o-2024-08-06`) para simplificar la referencia desde los procesos BPMN.
+
+  # ==============================================================================
+  # I. AISLAMIENTO DE HISTORIAL COGNITIVO (RAG MEMORY SLOT)
+  # Ref. OpenClaw: src/memory-host-sdk/ (ver US-056 para detalle completo)
+  # ==============================================================================
+  Scenario: Aislamiento del Historial Cognitivo a través de Vector Database (RAG Memory Slot) (CA-09)
+    # Ref. OpenClaw: src/memory-host-sdk/dreaming.ts — Pipeline de consolidación cognitiva
+    # Ref. OpenClaw: src/context-engine/types.ts — ContextEngine.assemble() para ensamblaje bajo presupuesto de tokens
+    # Ref. Cruzada: US-056 (Memory Core Engine) — Esta historia define la implementación completa del RAG
+    Given un largo ciclo de vida de un proceso (BPMN extendido por meses o agentes interactuando constantemente)
+    When la ventana de contexto literal del LLM (Ej. 128k tokens) amenace con desbordarse o elevar drásticamente los costos
+    Then el Plugin de Integración tiene RESTRICCIÓN TOTAL para simplemente enviar todos los historiales pasados en texto crudo (Raw Transcripts).
+    And empleará un "Memory Core Engine" (una ranura formal de Memoria de Contexto, definida exhaustivamente en US-056).
+    And automáticamente promoverá el historial transaccional antiguo hacia *Embeddings* guardados en una base Vectorial (Ej: `pgvector` de la DB del ADR correspondiente).
+    And cuando el LLM necesite contexto pasado, el adaptador inyectará únicamente los "Chunks" semánticamente relevantes al prompt actual, creando un RAG pasivo.
+
+  # ==============================================================================
+  # J. DIRECTIVAS DE REFACTORIZACIÓN Y TRAZABILIDAD AL CÓDIGO FUENTE
+  # ==============================================================================
+  Scenario: Mapa de Transposición OpenClaw → iBPMS para LLM Plugin Engine (Refactoring Ledger) (CA-10)
+    Given la directiva de implementación basada en el código fuente de OpenClaw
+    Then el equipo de desarrollo DEBE mantener un documento de trazabilidad (`docs/architecture/llm-plugin-engine-refactoring-ledger.md`) que mapee:
+    And 1. Cada archivo TypeScript de OpenClaw → su clase/interfaz Java equivalente en iBPMS.
+    And 2. Decisiones de diseño donde se divergió del patrón original y la justificación técnica.
+    And 3. Funciones de OpenClaw descartadas y la razón.
+    And el mapa mínimo obligatorio de transposición es:
+    And | OpenClaw (TypeScript) | iBPMS (Java) |
+    And | `ProviderPlugin` interface (provider-entry.ts) | `LlmChatPort` (domain port) |
+    And | `defineSingleProviderPluginEntry()` (provider-entry.ts) | `LlmProviderRegistryService` (Spring Bean) |
+    And | `ProviderStreamFamily` + `composeProviderStreamWrappers()` (provider-stream.ts) | `StreamingResponseComposer` (infra service) |
+    And | `AuthProfileStore` + `OAuthCredential` (provider-auth.ts) | `ProviderAuthProfileAdapter` (infra adapter → Key Vault) |
+    And | `resolveApiKeyForProvider()` (provider-auth-runtime.ts) | `SecretResolutionService` (infra service) |
+    And | `normalizeGeminiToolSchemas()` (provider-tools.ts) | `ToolSchemaNormalizerService` (infra service) |
+    And | `ModelDefinitionConfig` (provider-model-shared.ts) | `LlmModelDefinition` (domain model) |
+    And | `RetryConfig` + `createRateLimitRetryRunner()` (retry-runtime.ts) | `LlmRetryPolicy` (infra component) |
+    And | `readConfiguredProviderCatalogEntries()` (provider-catalog-shared.ts) | `ModelCatalogRegistry` (Spring Bean) |
+    And | `fetchWithTimeout()` + `postJsonRequest()` (provider-http.ts) | `RestClient` / `WebClient` nativo (Spring Boot 3) |
+```
+
+**Notas de Implementación (Non-Functional Requirements):**
+- **Aislamiento Multi-Tenant:** Cada invocación LLM DEBE identificar el `tenant_id` del solicitante para resolver el perfil de autenticación y aplicar cuotas FinOps correctas.
+- **FinOps:** Cada solicitud al proveedor generará un registro de consumo de tokens (input/output/cache_read/cache_write) vinculado al `billing_source` de US-053.
+- **Resiliencia:** La cascada de Fallback aplicará backoff exponencial configurable (base 1s, max 30s, jitter random) antes de escalar al proveedor secundario.
+- **Testing (Dry-Run):** Siguiendo la técnica descubierta en OpenClaw, los tests unitarios del LLM Plugin Engine usarán interceptores de respuesta HTTP mock para simular respuestas LLM sin llamar a APIs reales ($0 USD de costo). Los `ReplayPolicy` builders de OpenClaw (`provider-model-shared.ts`) proporcionan el patrón exacto de cómo construir respuestas de replay para testing.
+- **Observabilidad:** Cada invocación LLM emitirá métricas Micrometer (latencia p50/p95/p99, tokens consumidos, cache hit ratio, fallback activations) para el dashboard de gobernanza IA (US-044).
+
+**Trazabilidad UX:** Invisible (Operatividad Backend Server-Side) y ligada al ADR-012.
+
+---
+
+### US-056: Motor Central de Memoria Cognitiva y Fundaciones RAG (Memory Core Engine)
+**Como** Arquitecto de IA / Motor de Procesamiento (Backend)
+**Quiero** construir un motor de memoria cognitiva persistente que convierta automáticamente las transcripciones efímeras de las sesiones conversacionales con el LLM en *embeddings* vectoriales almacenados en una base de datos vectorial (`pgvector`)
+**Para** permitir que los procesos BPMN de larga duración (semanas o meses) mantengan un contexto semántico acumulativo sin desbordar la ventana de tokens del LLM, habilitando la recuperación inteligente de información pasada (RAG — Retrieval-Augmented Generation) a costos operativos controlados.
+
+> [!IMPORTANT]
+> **Directiva de Implementación: Refactorización desde OpenClaw (Código Fuente de Referencia)**
+> Esta historia de usuario DEBE implementarse tomando como base de referencia arquitectónica y funcional el código fuente original del proyecto OpenClaw, ubicado en el workspace local:
+> `C:\Users\HaroltAndrésGómezAgu\.gemini\antigravity\scratch\openclaw_workspace`
+>
+> Los módulos de referencia principales son:
+> - `src/memory-host-sdk/` — SDK del Host de Memoria (dreaming, embeddings, storage, events, runtime)
+> - `src/context-engine/` — Motor de Contexto (types, registry, delegate)
+> - `src/plugin-sdk/memory-core*.ts` — Fachada del Plugin de Memoria (MemoryIndexManager, MemorySearchManager)
+> - `src/plugin-sdk/memory-lancedb.ts` — Integración con base vectorial LanceDB
+> - `src/plugin-sdk/memory-host-search.ts` — Búsqueda semántica en memoria
+>
+> **Ejercicio de Refactorización Obligatorio:** El código de OpenClaw está escrito en TypeScript (Node.js). El equipo de desarrollo DEBE ejecutar un ejercicio formal de refactorización (Porting) para transcribir los contratos, interfaces y algoritmos centrales hacia Java 21 / Spring Boot 3, respetando la Arquitectura Hexagonal (ADR-001) y el patrón de Puertos y Adaptadores del iBPMS. Se prohíbe la copia literal sin adaptación; se exige la comprensión profunda de cada componente antes de su transposición.
+
+**Dependencias Críticas:**
+- **US-054 (LLM Plugin Engine):** 🔴 BLOQUEANTE. El `LlmChatPort` del CA-01 de US-054 es el canal por donde el Memory Core Engine invocará al LLM para generar embeddings y ejecutar las fases de consolidación cognitiva (Dreaming).
+- **US-053 (Antigravity Command Center):** ⚠️ FUERTE. El consumo de tokens para generar embeddings y ejecutar las fases de Dreaming impactará las cuotas FinOps del Tenant (Model Quota / Model Credits).
+- **ADR-012 (Integración Agnóstica LLM):** ⚠️ FUERTE. Los adaptadores de Embedding deben seguir el mismo patrón Zero-Dep de `RestClient` nativo.
+- **ADR (pgvector):** 🔴 BLOQUEANTE. La extensión `pgvector` de PostgreSQL debe estar habilitada en la infraestructura antes de la implementación.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Cognitive Memory Core Engine, Dreaming Pipeline & RAG Foundations
+
+  # ==============================================================================
+  # A. ARQUITECTURA DEL MOTOR DE MEMORIA (CONTRATOS HEXAGONALES)
+  # Ref. OpenClaw: src/context-engine/types.ts (ContextEngine interface)
+  # Ref. OpenClaw: src/context-engine/registry.ts (ContextEngineFactory, resolveContextEngine)
+  # ==============================================================================
+  Scenario: Definición del Puerto Hexagonal de Memoria Cognitiva (MemoryPort) (CA-01)
+    Given la necesidad de un motor de memoria desacoplado del proveedor de embeddings y del motor de almacenamiento vectorial
+    Then el dominio del iBPMS definirá un Puerto (Interface Java) llamado `CognitiveMemoryPort` dentro de la capa `domain/port/outbound/`
+    And este puerto expondrá las siguientes operaciones del ciclo de vida de memoria (inspiradas en el contrato `ContextEngine` de OpenClaw):
+    And 1. **`ingest(MemoryIngestCommand)`** — Ingestar un mensaje conversacional nuevo (usuario o IA) en el almacén de memoria efímera de la sesión. Equivalente al método `ingest()` de OpenClaw.
+    And 2. **`assemble(MemoryAssembleQuery)`** — Ensamblar el contexto relevante bajo un presupuesto de tokens para inyectarlo en el próximo prompt del LLM. Equivalente al método `assemble()` de OpenClaw.
+    And 3. **`compact(MemoryCompactCommand)`** — Compactar el contexto cuando amenace con desbordar la ventana de tokens, generando resúmenes y podando turnos antiguos. Equivalente al método `compact()` de OpenClaw.
+    And 4. **`recall(MemoryRecallQuery)`** — Buscar y recuperar chunks semánticamente relevantes desde la base vectorial persistente, dado un query textual del usuario o del proceso BPMN. (Operación RAG pura).
+    And 5. **`promote(MemoryPromoteCommand)`** — Promover explícitamente transcripciones efímeras a embeddings persistentes en la base vectorial (triggerable manualmente o por el pipeline de Dreaming).
+    And 6. **`dispose(String sessionId)`** — Liberar recursos de sesión al finalizar un proceso BPMN.
+    And la implementación concreta (Adaptador) será inyectada por Spring IoC, permitiendo intercambiar el backend vectorial (pgvector, LanceDB, Pinecone) sin tocar el dominio.
+
+  Scenario: Registro Dinámico de Motores de Contexto (Engine Registry) (CA-02)
+    # Ref. OpenClaw: src/context-engine/registry.ts — registerContextEngine(), resolveContextEngine()
+    Given que iBPMS podría soportar múltiples estrategias de gestión de contexto (legacy linear, RAG-first, hybrid)
+    Then el sistema implementará un `MemoryEngineRegistry` (Singleton Spring Bean) que permita registrar implementaciones de `CognitiveMemoryPort` por identificador.
+    And la resolución del motor activo se realizará mediante configuración (`application.yml`) con la propiedad `ibpms.memory.engine` (valores: `legacy`, `rag-core`, custom plugin IDs).
+    And si el motor configurado no tiene una implementación registrada, el sistema fallará en el arranque (Fail-Fast) con un mensaje descriptivo listando los motores disponibles.
+    And OpenClaw implementa este patrón exacto en su función `resolveContextEngine()` con un `ContextEngineRegistryState` global — el equipo debe estudiar este registry como referencia de diseño.
+
+  # ==============================================================================
+  # B. PIPELINE DE CONSOLIDACIÓN COGNITIVA ("DREAMING")
+  # Ref. OpenClaw: src/memory-host-sdk/dreaming.ts (MemoryDreamingConfig, 3 fases)
+  # ==============================================================================
+  Scenario: Motor de Dreaming Trifásico (Light / Deep / REM) (CA-03)
+    # Ref. OpenClaw: dreaming.ts líneas 73-132 (MemoryLightDreamingConfig, MemoryDeepDreamingConfig, MemoryRemDreamingConfig)
+    Given la necesidad de consolidar la memoria efímera de las sesiones conversacionales en conocimiento persistente de largo plazo
+    Then el iBPMS implementará un pipeline de consolidación cognitiva ("Dreaming") compuesto por 3 fases inspiradas en la neurociencia del sueño humano, replicando el modelo de OpenClaw:
+    And 1. **Fase Light (Sueño Ligero):** Ejecutada cada 6 horas (Cron: `0 */6 * * *`). Lookback de 2 días. Procesa hasta 100 transcripciones recientes. Deduplica por similitud coseno (umbral 0.9). Velocidad: `fast`. Presupuesto: `cheap`. Fuentes: sesiones diarias, transcripciones activas, recall logs.
+    And 2. **Fase Deep (Sueño Profundo):** Ejecutada diariamente (Cron: `0 3 * * *`). Procesa hasta 10 candidatos de alta relevancia (min score 0.8, mínimo 3 recalls, mínimo 3 queries únicos). Recency half-life: 14 días. Max age: 30 días. Incluye motor de Recovery automático que se activa cuando la salud de memoria cae por debajo del 35%. Velocidad: `balanced`. Presupuesto: `medium`.
+    And 3. **Fase REM (Consolidación Profunda):** Ejecutada semanalmente (Cron: `0 5 * * 0`). Lookback de 7 días. Procesa hasta 10 patrones de alta fuerza (min pattern strength 0.75). Cruza memorias con resúmenes diarios y hallazgos deep para descubrir conexiones latentes. Velocidad: `slow`. Presupuesto: `expensive`.
+    And cada fase es habitable/deshabitable de forma independiente mediante configuración YAML del administrador.
+    And los valores por defecto DEBEN replicar exactamente los defaults de OpenClaw documentados en `dreaming.ts` (líneas 12-47) como punto de partida óptimo.
+
+  Scenario: Parametrización Administrativa del Dreaming (CA-04)
+    # Ref. OpenClaw: dreaming.ts líneas 58-66 (MemoryDreamingExecutionConfig) y 348-503 (resolveMemoryDreamingConfig)
+    Given la necesidad del administrador de gobernar el costo y la agresividad de la consolidación cognitiva
+    Then cada fase de Dreaming expondrá un `ExecutionConfig` con los siguientes controles:
+    And 1. **`speed`**: `fast` | `balanced` | `slow` — Controla la profundidad del análisis LLM.
+    And 2. **`thinking`**: `low` | `medium` | `high` — Controla el nivel de razonamiento del LLM.
+    And 3. **`budget`**: `cheap` | `medium` | `expensive` — Controla el gasto de tokens por fase. Mapea internamente a model tiers (Ej: `cheap` → Gemini Flash, `expensive` → Gemini Pro/Ultra).
+    And 4. **`model`** (opcional): Override explícito del modelo LLM a usar en la fase.
+    And 5. **`maxOutputTokens`** (opcional): Límite de tokens de salida para el resumen generado.
+    And 6. **`temperature`** (opcional, 0-2): Creatividad del modelo durante la consolidación.
+    And 7. **`timeoutMs`** (opcional): Timeout máximo por invocación de fase.
+    And la configuración seguirá el patrón de herencia de OpenClaw: valores defaults globales → overrides por fase → overrides por tenant.
+
+  # ==============================================================================
+  # C. CAPA DE EMBEDDINGS MULTI-PROVEEDOR
+  # Ref. OpenClaw: src/memory-host-sdk/engine-embeddings.ts (proveedores)
+  # Ref. OpenClaw: src/memory-host-sdk/host/embeddings*.ts (implementaciones)
+  # ==============================================================================
+  Scenario: Abstracción Agnóstica de Proveedores de Embedding (CA-05)
+    # Ref. OpenClaw: engine-embeddings.ts — exports de Gemini, OpenAI, Voyage, Ollama, Mistral, Local
+    Given que la generación de embeddings vectoriales es el corazón del RAG
+    Then el iBPMS definirá una interfaz `EmbeddingProviderPort` (Puerto Hexagonal) con el contrato:
+    And 1. **`generateEmbedding(String text): float[]`** — Genera un vector de embedding para un texto individual.
+    And 2. **`generateBatchEmbeddings(List<String> texts): List<float[]>`** — Genera embeddings en lote optimizado.
+    And 3. **`getModelId(): String`** — Retorna el identificador del modelo de embedding activo.
+    And 4. **`getDimensions(): int`** — Retorna la dimensionalidad del vector (Ej: 768, 1536, 3072).
+    And el sistema implementará adaptadores para al menos 2 proveedores en V1:
+    And a) `GeminiEmbeddingAdapter` — Usando `text-embedding-004` (DEFAULT_GEMINI_EMBEDDING_MODEL de OpenClaw).
+    And b) `OpenAiEmbeddingAdapter` — Usando `text-embedding-3-small` (DEFAULT_OPENAI_EMBEDDING_MODEL de OpenClaw).
+    And la selección del proveedor activo la gobernará `ibpms.memory.embedding.provider` en `application.yml`.
+    And PROHIBIDO importar SDKs pesados de estos proveedores. Se usará `RestClient` nativo de Spring Boot (consistente con US-054 CA-02).
+
+  Scenario: Chunking Inteligente y Límites de Input (CA-06)
+    # Ref. OpenClaw: src/memory-host-sdk/host/embedding-chunk-limits.ts (enforceEmbeddingMaxInputTokens)
+    # Ref. OpenClaw: src/memory-host-sdk/host/internal.ts (chunkMarkdown, MemoryChunk)
+    Given que los textos conversacionales pueden exceder los límites de input de los modelos de embedding
+    Then el sistema implementará un `TextChunkingService` responsable de:
+    And 1. **Segmentación Markdown-Aware:** Dividir textos largos en chunks respetando fronteras de párrafos, encabezados y bloques de código (replicando `chunkMarkdown` de OpenClaw).
+    And 2. **Estimación de Bytes/Tokens:** Calcular el peso del chunk antes de enviarlo al proveedor, truncando preventivamente si excede el límite del modelo.
+    And 3. **Metadata por Chunk:** Cada `MemoryChunk` resultante portará: `chunkId` (hash del contenido), `sourcePath` (origen), `startLine`, `endLine`, `score` (relevancia), `embedding` (vector).
+    And 4. **Deduplicación por Similitud Coseno:** Antes de indexar, el sistema comparará el nuevo chunk contra los N más recientes usando `cosineSimilarity()` (exportado por OpenClaw en `engine-storage.ts`). Si la similitud supera el umbral configurable (default: 0.9 — `DEFAULT_MEMORY_LIGHT_DREAMING_DEDUPE_SIMILARITY`), el chunk se descarta como duplicado.
+
+  # ==============================================================================
+  # D. ALMACENAMIENTO VECTORIAL Y BÚSQUEDA SEMÁNTICA (RAG RETRIEVAL)
+  # Ref. OpenClaw: src/memory-host-sdk/engine-storage.ts (MemorySearchManager, MemorySearchResult)
+  # Ref. OpenClaw: src/memory-host-sdk/host/memory-schema.ts (ensureMemoryIndexSchema)
+  # ==============================================================================
+  Scenario: Esquema de Índice Vectorial en pgvector (CA-07)
+    # Ref. OpenClaw: host/memory-schema.ts — ensureMemoryIndexSchema()
+    Given la extensión `pgvector` habilitada en la instancia PostgreSQL del iBPMS
+    Then el sistema creará la tabla `ibpms_memory_vectors` con el siguiente esquema:
+    And 1. **`chunk_id`** (UUID, PK): Identificador único del chunk vectorizado.
+    And 2. **`tenant_id`** (VARCHAR, NOT NULL, INDEX): Aislamiento multi-tenant estricto.
+    And 3. **`session_id`** (VARCHAR, NOT NULL, INDEX): Sesión conversacional de origen.
+    And 4. **`process_instance_id`** (VARCHAR, INDEX): Instancia BPMN asociada (nullable para contextos no-BPMN).
+    And 5. **`agent_id`** (VARCHAR, INDEX): Identificador del agente IA que generó la interacción.
+    And 6. **`source_type`** (VARCHAR, NOT NULL): Tipo de fuente (`CONVERSATION`, `DOCUMENT`, `FORM_EVENT`, `BPMN_VARIABLE`).
+    And 7. **`content_text`** (TEXT, NOT NULL): Texto original del chunk (para display y auditoría).
+    And 8. **`embedding`** (VECTOR(1536), NOT NULL): Vector de embedding generado por el proveedor. La dimensión será configurable según el modelo.
+    And 9. **`metadata_json`** (JSONB): Metadatos adicionales (startLine, endLine, sourcePath, dreaming phase, etc.).
+    And 10. **`dream_phase`** (VARCHAR): Fase de Dreaming que promovió este chunk (`LIGHT`, `DEEP`, `REM`, `MANUAL`).
+    And 11. **`recall_count`** (INT, DEFAULT 0): Contador de veces que este chunk ha sido recuperado por queries RAG (usado por Deep Dreaming para scoring de relevancia).
+    And 12. **`created_at`** (TIMESTAMP WITH TIME ZONE, NOT NULL, DEFAULT NOW()).
+    And 13. **`expires_at`** (TIMESTAMP WITH TIME ZONE): Fecha de expiración configurable para garbage collection.
+    And se creará un índice IVFFlat o HNSW sobre la columna `embedding` para búsquedas ANN (Approximate Nearest Neighbor) eficientes.
+    And la tabla aplicará Row-Level Security (RLS) por `tenant_id` para garantizar aislamiento absoluto en entornos multi-tenant.
+
+  Scenario: Búsqueda Semántica con Presupuesto de Tokens (Memory Recall) (CA-08)
+    # Ref. OpenClaw: src/plugin-sdk/memory-host-search.ts — getActiveMemorySearchManager()
+    # Ref. OpenClaw: src/memory-host-sdk/host/query-expansion.ts — expansión de queries
+    Given una consulta del LLM o del proceso BPMN que necesite contexto histórico
+    When el sistema invoque `recall(MemoryRecallQuery)` del `CognitiveMemoryPort`
+    Then el adaptador ejecutará la siguiente secuencia:
+    And 1. **Expansión de Query:** El texto de búsqueda será expandido semánticamente (replicando `query-expansion.ts` de OpenClaw) para maximizar la cobertura de resultados relevantes.
+    And 2. **Vectorización del Query:** Se generará el embedding del query expandido usando el `EmbeddingProviderPort` activo.
+    And 3. **Búsqueda ANN:** Se ejecutará una consulta `pgvector` con operador `<=>` (distancia coseno) contra `ibpms_memory_vectors`, filtrada por `tenant_id`, `process_instance_id` (si aplica) y `agent_id` (si aplica).
+    And 4. **Scoring y Ranking:** Los resultados se ordenarán por proximidad coseno descendente. Se aplicará un umbral mínimo de score configurable (default: 0.7).
+    And 5. **Presupuesto de Tokens:** El ensamblador cortará la lista de resultados cuando la suma acumulada de tokens de los chunks exceda el `tokenBudget` configurado, garantizando que la inyección al prompt nunca desborde la ventana del LLM.
+    And 6. **Actualización de recall_count:** Los chunks devueltos incrementarán su `recall_count` en +1 (para alimentar el scoring de la fase Deep Dreaming).
+    And la respuesta será un `MemoryRecallResult` con la lista de `MemoryChunk` ordenados, el total de tokens estimados y el score promedio.
+
+  # ==============================================================================
+  # E. SISTEMA DE EVENTOS DE MEMORIA Y OBSERVABILIDAD
+  # Ref. OpenClaw: src/memory-host-sdk/events.ts (MemoryHostEvent, appendMemoryHostEvent)
+  # ==============================================================================
+  Scenario: Bitácora Inmutable de Eventos de Memoria (Memory Event Log) (CA-09)
+    # Ref. OpenClaw: events.ts — MemoryHostRecallRecordedEvent, MemoryHostPromotionAppliedEvent, MemoryHostDreamCompletedEvent
+    Given la necesidad de auditar todas las operaciones del motor de memoria
+    Then el sistema registrará eventos tipados en la tabla `ibpms_memory_event_log` (append-only):
+    And 1. **`memory.recall.recorded`**: Cada vez que un RAG recall se ejecuta. Registra: query, resultCount, lista de resultados (path, startLine, endLine, score).
+    And 2. **`memory.promotion.applied`**: Cada vez que chunks efímeros son promovidos a embeddings persistentes. Registra: memoryPath, applied count, lista de candidatos (key, path, score, recallCount).
+    And 3. **`memory.dream.completed`**: Cada vez que una fase de Dreaming finaliza. Registra: phase (light/deep/rem), lineCount generado, storageMode.
+    And los eventos se persistirán como JSONL (JSON Lines) para compatibilidad con el formato de OpenClaw.
+    And esta bitácora alimentará el dashboard de observabilidad IA (consumido por US-044) para que el Súper Administrador monitorice la salud cognitiva del sistema.
+
+  Scenario: Métricas de Salud de Memoria y Auto-Recuperación (CA-10)
+    # Ref. OpenClaw: dreaming.ts líneas 83-90 (MemoryDeepDreamingRecoveryConfig)
+    Given que la calidad de la memoria vectorial puede degradarse por chunks obsoletos, duplicados o irrelevantes
+    Then el sistema calculará un **Health Score** de memoria (0.0 a 1.0) basado en:
+    And 1. Ratio de chunks con `recall_count > 0` vs total de chunks (Utilización).
+    And 2. Edad promedio de los chunks activos vs `recencyHalfLifeDays` (Frescura).
+    And 3. Distribución de similaridad inter-chunk (Diversidad — un valor demasiado alto indica saturación de duplicados).
+    And si el Health Score cae por debajo de `0.35` (umbral configurable, replicando `DEFAULT_MEMORY_DEEP_DREAMING_RECOVERY_TRIGGER_BELOW_HEALTH` de OpenClaw), el sistema activará un ciclo de **Auto-Recovery** que:
+    And a) Retroalimentará las últimas 30 días de transcripciones (lookback recovery).
+    And b) Re-generará embeddings para hasta 20 candidatos de alta confianza.
+    And c) Solo auto-escribirá chunks con confianza >= 0.97 (`autoWriteMinConfidence`).
+    And d) Emitirá una alerta al Administrador si la recuperación no logra subir el health score por encima de 0.5.
+
+  # ==============================================================================
+  # F. ENSAMBLAJE DE CONTEXTO PARA EL PROMPT (ASSEMBLY)
+  # Ref. OpenClaw: src/context-engine/types.ts — assemble() method, AssembleResult
+  # Ref. OpenClaw: src/context-engine/delegate.ts — buildMemorySystemPromptAddition()
+  # ==============================================================================
+  Scenario: Ensamblaje Presupuestario de Contexto para el LLM (CA-11)
+    # Ref. OpenClaw: types.ts líneas 6-13 (AssembleResult), líneas 224-238 (assemble params)
+    Given que cada llamada al LLM tiene un presupuesto finito de tokens (ventana de contexto)
+    When el `CognitiveMemoryPort.assemble()` sea invocado antes de una inferencia LLM
+    Then el ensamblador construirá el contexto siguiendo esta jerarquía de prioridad:
+    And 1. **System Prompt** (inmutable, head position — consistente con US-054 CA-04 Prompt Cache Stability).
+    And 2. **Memoria Activa Reciente** (últimos N turnos de la sesión actual, sin vectorizar).
+    And 3. **Chunks RAG Recuperados** (resultados del `recall()` ordenados por score, tail position).
+    And 4. **System Prompt Addition** (inyección opcional del context engine, replicando `systemPromptAddition` de OpenClaw).
+    And el resultado `MemoryAssembleResult` contendrá: `assembledMessages` (lista ordenada), `estimatedTokens` (total estimado), y `systemPromptAddition` (instrucciones complementarias).
+    And si `estimatedTokens` excede el 80% del `tokenBudget`, el ensamblador ejecutará auto-compactación sobre los turnos más antiguos ANTES de inyectar los chunks RAG.
+    And PROHIBIDO alterar la cabecera inmutable (System Prompt) — el tail-appending se aplica exclusivamente al historial y los chunks RAG.
+
+  Scenario: Compactación Automática de Contexto (CA-12)
+    # Ref. OpenClaw: src/context-engine/types.ts — compact() method, CompactResult
+    # Ref. OpenClaw: src/context-engine/delegate.ts — delegateCompactionToRuntime()
+    Given que una sesión conversacional acumula más turnos de los que caben en la ventana del LLM
+    When el sistema detecte que el contexto supera el 85% del presupuesto de tokens
+    Then ejecutará una compactación automática que:
+    And 1. Invocará al LLM con un prompt de resumen para condensar los turnos más antiguos en un párrafo compacto.
+    And 2. Reemplazará los turnos originales por el resumen generado en la memoria efímera de sesión.
+    And 3. Registrará el resultado de la compactación: `tokensBefore`, `tokensAfter`, `summary` generado, `firstKeptEntryId`.
+    And 4. Promoverá automáticamente los turnos eliminados al pipeline de Dreaming (fase Light) para su vectorización futura.
+    And la compactación NUNCA eliminará turnos sin antes haberlos respaldado en el pipeline de promoción a embeddings.
+
+  # ==============================================================================
+  # G. GARBAGE COLLECTION Y CICLO DE VIDA
+  # ==============================================================================
+  Scenario: Expiración y Limpieza de Embeddings Obsoletos (CA-13)
+    Given el crecimiento continuo de la tabla `ibpms_memory_vectors` a lo largo de meses de operación
+    Then un Scheduled Job (Spring `@Scheduled`, protegido por ShedLock contra solapamiento) ejecutará semanalmente:
+    And 1. **Purga por Expiración:** Eliminar chunks con `expires_at < NOW()`.
+    And 2. **Purga por Irrelevancia:** Eliminar chunks con `recall_count = 0` y `created_at` mayor a 90 días (nunca fueron útiles).
+    And 3. **Consolidación de Duplicados:** Fusionar chunks con similitud coseno > 0.95 conservando el de mayor `recall_count`.
+    And 4. **Reindexación IVFFlat:** Tras la purga, ejecutar `REINDEX` sobre el índice vectorial para optimizar las búsquedas ANN.
+    And PROHIBIDO ejecutar estas operaciones durante horas pico operativas. El Cron default será `0 4 * * 0` (Domingos 4:00 AM).
+
+  # ==============================================================================
+  # H. DIRECTIVAS DE REFACTORIZACIÓN Y TRAZABILIDAD AL CÓDIGO FUENTE
+  # ==============================================================================
+  Scenario: Mapa de Transposición OpenClaw → iBPMS (Refactoring Ledger) (CA-14)
+    Given la directiva de implementación basada en el código fuente de OpenClaw
+    Then el equipo de desarrollo DEBE mantener un documento de trazabilidad (`docs/architecture/memory-core-refactoring-ledger.md`) que mapee:
+    And 1. Cada archivo TypeScript de OpenClaw → su clase/interfaz Java equivalente en iBPMS.
+    And 2. Decisiones de diseño donde se divergió del patrón original y la justificación técnica.
+    And 3. Funciones de OpenClaw descartadas y la razón (Ej: `loadSqliteVecExtension` → N/A, usamos pgvector nativo).
+    And el mapa mínimo obligatorio de transposición es:
+    And | OpenClaw (TypeScript) | iBPMS (Java) |
+    And | `ContextEngine` interface (types.ts) | `CognitiveMemoryPort` (domain port) |
+    And | `ContextEngineFactory` (registry.ts) | `MemoryEngineRegistry` (Spring Bean) |
+    And | `MemoryDreamingConfig` (dreaming.ts) | `DreamingConfigProperties` (@ConfigurationProperties) |
+    And | `MemoryEmbeddingProvider` (engine-embeddings.ts) | `EmbeddingProviderPort` (domain port) |
+    And | `MemoryChunk` / `MemoryFileEntry` (internal.ts) | `MemoryChunk` / `MemoryFileEntry` (domain model) |
+    And | `MemorySearchManager` (engine-storage.ts) | `VectorSearchAdapter` (infra adapter) |
+    And | `MemoryHostEvent` (events.ts) | `MemoryAuditEvent` (domain event) |
+    And | `ensureMemoryIndexSchema` (memory-schema.ts) | Flyway migration `V{N}__create_memory_vectors.sql` |
+    And | `cosineSimilarity` (internal.ts) | `CosineSimilarityUtil` (shared utility) |
+    And | LanceDB adapter (memory-lancedb.ts) | `PgVectorAdapter` (infra adapter) |
+```
+
+**Notas de Implementación (Non-Functional Requirements):**
+- **Aislamiento Multi-Tenant:** Todas las operaciones de memoria DEBEN filtrar por `tenant_id`. Un Tenant NUNCA puede acceder a embeddings de otro Tenant.
+- **FinOps:** Cada operación de embedding generará un registro de consumo de tokens vinculado al `billing_source` de US-053 para auditoría de costos.
+- **Resiliencia:** Si el proveedor de embeddings falla (HTTP 429/500), se aplicará el mismo Fallback Cognitivo de US-054 CA-05, intentando con el proveedor secundario antes de abortar.
+- **Testing (Dry-Run):** Siguiendo la técnica descubierta en OpenClaw (Roadmap Quick Win #1), los tests unitarios del Memory Core Engine usarán interceptores de respuesta HTTP mock para simular embeddings sin llamar a APIs reales ($0 USD de costo).
+
+**Trazabilidad UX:** Invisible (Operatividad Backend Server-Side). Dashboard de observabilidad en Pantalla 15.A (Gobernanza IA — US-044).
+
+---
+
+### US-057: Base de Conocimiento Inteligente y RAG Documental/Multimodal (Knowledge Base Engine)
+**Como** Administrador de la Plataforma / Arquitecto de IA (Backend)
+**Quiero** construir un motor de base de conocimiento que permita cargar, indexar y recuperar documentos empresariales (PDF, DOCX, Markdown, imágenes, hojas de cálculo) como *embeddings* vectoriales organizados en **Espacios de Conocimiento** (`KnowledgeSpaces`)
+**Para** que cada agente de IA especializado del iBPMS (US-052) pueda acceder a contexto documental relevante a su rol o especialidad — normativa legal, manuales técnicos, políticas institucionales, artefactos de proceso — habilitando decisiones fundamentadas en conocimiento propio del dominio, no solo en el historial conversacional.
+
+> [!IMPORTANT]
+> **Directiva Arquitectónica: Relación con US-056 y ADR-013 (Estrategia RAG Dual)**
+> Esta historia de usuario implementa el **segundo pilar** de la Estrategia RAG Dual definida en el ADR-013 (`docs/architecture/adr_013_dual_rag_strategy.md`):
+>
+> | Pilar | US | Puerto Hexagonal | Scope | Ciclo de Vida |
+> |-------|-----|------------------|-------|---------------|
+> | **RAG Conversacional** | US-056 | `CognitiveMemoryPort` | `session_id` / `process_instance_id` | Efímero → Dreaming → Expiración |
+> | **RAG Documental** | **US-057** | `KnowledgeBasePort` | `knowledge_space_id` / `agent_id` / `role_id` | Persistente → Sincronización incremental |
+>
+> Ambos pilares comparten la **infraestructura de embeddings** (`EmbeddingProviderPort` de US-054) y la **base vectorial** (`pgvector` de ADR-009), pero operan sobre tablas, puertos y políticas de gobernanza **independientes**.
+>
+> **Diferencia esencial:**
+> - US-056 responde: *"¿Qué se dijo en conversaciones anteriores?"* (memoria del proceso)
+> - US-057 responde: *"¿Qué dice la normativa/manual/política relevante?"* (conocimiento del dominio)
+
+> [!IMPORTANT]
+> **Directiva de Implementación: Refactorización desde OpenClaw (Código Fuente de Referencia)**
+> Esta historia de usuario DEBE implementarse extendiendo los patrones arquitectónicos del proyecto OpenClaw, ubicado en el workspace local:
+> `C:\Users\HaroltAndrésGómezAgu\.gemini\antigravity\scratch\openclaw_workspace`
+>
+> Los módulos de referencia principales son:
+> - `src/memory-host-sdk/host/internal.ts` — `listMemoryFiles()`, `buildFileEntry()`, `chunkMarkdown()` (indexación de archivos Markdown y multimodal)
+> - `src/memory-host-sdk/host/multimodal.ts` — `classifyMemoryMultimodalPath()`, `MemoryMultimodalSettings` (soporte de imágenes y audio)
+> - `src/memory-host-sdk/engine-embeddings.ts` — Proveedores de embedding multi-vendor (Gemini, OpenAI, Voyage, Ollama)
+> - `src/memory-host-sdk/host/memory-schema.ts` — `ensureMemoryIndexSchema()` (esquema de índice con FTS5 + vectores)
+> - `src/memory-host-sdk/host/query-expansion.ts` — `extractKeywords()` (expansión de queries para búsqueda semántica)
+> - `src/memory-host-sdk/events.ts` — `MemoryHostEvent`, `appendMemoryHostEvent()` (bitácora de eventos)
+>
+> **Ejercicio de Refactorización Obligatorio:** El código de OpenClaw está escrito en TypeScript (Node.js). El equipo de desarrollo DEBE transponer los contratos y algoritmos hacia Java 21 / Spring Boot 3, respetando la Arquitectura Hexagonal (ADR-001). Se prohíbe la copia literal sin adaptación.
+
+**Dependencias Críticas:**
+- **US-056 (Memory Core Engine):** ⚠️ FUERTE. Ambas historias comparten `EmbeddingProviderPort`, `TextChunkingService` y la instancia `pgvector`. US-057 NO modifica la tabla `ibpms_memory_vectors` de US-056; opera sobre su propia tabla `ibpms_knowledge_vectors`.
+- **US-054 (LLM Plugin Engine):** 🔴 BLOQUEANTE. El `EmbeddingProviderPort` del CA-05 de US-054 es el canal para generar embeddings de documentos.
+- **US-053 (Antigravity Command Center):** ⚠️ FUERTE. La generación de embeddings para documentos cargados impactará las cuotas FinOps del Tenant.
+- **US-052 (Multi-Agent Engine):** ⚠️ FUERTE. Los Knowledge Spaces se asignan a los Agentes Especializados definidos en US-052.
+- **US-036 (RBAC):** ⚠️ FUERTE. El acceso a los Knowledge Spaces está gobernado por la matriz de roles y permisos de la taxonomía RBAC.
+- **US-035 (SharePoint/SGDEA):** 🟡 DESEABLE (V2). Sincronización automática de documentos desde la bóveda documental externa.
+- **ADR-013 (Dual RAG Strategy):** 🔴 BLOQUEANTE. Define la separación arquitectónica entre RAG conversacional y RAG documental.
+- **ADR-009 (pgvector):** 🔴 BLOQUEANTE. La extensión `pgvector` debe estar habilitada en PostgreSQL.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Knowledge Base Engine, Document RAG & Multimodal Indexing
+
+  # ==============================================================================
+  # A. CONTRATOS HEXAGONALES DE LA BASE DE CONOCIMIENTO
+  # Ref. OpenClaw: src/memory-host-sdk/host/internal.ts (listMemoryFiles, buildFileEntry)
+  # Ref. ADR-013: Sección 3.1 — KnowledgeBasePort
+  # ==============================================================================
+  Scenario: Definición del Puerto Hexagonal de Base de Conocimiento (KnowledgeBasePort) (CA-01)
+    Given la necesidad de un motor de conocimiento documental desacoplado del proveedor de embeddings y del formato de documento
+    Then el dominio del iBPMS definirá un Puerto (Interface Java) llamado `KnowledgeBasePort` dentro de la capa `domain/port/outbound/`
+    And este puerto expondrá las siguientes operaciones:
+    And 1. **`indexDocument(DocumentIndexCommand)`** — Procesa un documento individual: parsea → chunkea → genera embeddings → almacena en pgvector. Retorna `DocumentIndexResult` con conteo de chunks generados.
+    And 2. **`indexBatch(BatchDocumentIndexCommand)`** — Procesa múltiples documentos en lote con concurrencia controlada.
+    And 3. **`recall(KnowledgeRecallQuery)`** — Búsqueda RAG: dado un query textual, recupera los chunks más relevantes del Knowledge Space indicado, filtrado por `agent_id` o `role_id`.
+    And 4. **`syncKnowledgeSpace(KnowledgeSyncCommand)`** — Sincronización incremental: detecta documentos nuevos/modificados/eliminados y actualiza el índice vectorial.
+    And 5. **`removeDocument(String knowledgeSpaceId, String documentId)`** — Elimina un documento y todos sus chunks del índice.
+    And 6. **`status(String knowledgeSpaceId)`** — Retorna métricas del Knowledge Space: documentos indexados, chunks totales, proveedor de embedding activo, última sincronización.
+    And la implementación concreta (Adaptador) será inyectada por Spring IoC, usando la misma instancia `pgvector` que US-056 pero operando sobre la tabla `ibpms_knowledge_vectors`.
+
+  # ==============================================================================
+  # B. CONCEPTO DE ESPACIOS DE CONOCIMIENTO (KNOWLEDGE SPACES)
+  # ==============================================================================
+  Scenario: Definición y Gobierno de Knowledge Spaces (CA-02)
+    Given la necesidad de organizar documentos por dominio funcional y asignarlos a agentes o roles específicos
+    Then el sistema implementará una entidad `KnowledgeSpace` persistida en PostgreSQL con el siguiente esquema:
+    And 1. **`knowledge_space_id`** (UUID, PK): Identificador único del espacio.
+    And 2. **`tenant_id`** (VARCHAR, NOT NULL): Aislamiento multi-tenant estricto.
+    And 3. **`name`** (VARCHAR, NOT NULL): Nombre legible (Ej: "Normativa Legal", "Manuales Técnicos", "Políticas RRHH").
+    And 4. **`description`** (TEXT): Descripción del alcance del espacio.
+    And 5. **`assigned_agent_ids`** (JSONB): Lista de identificadores de agentes IA autorizados a consultar este espacio.
+    And 6. **`assigned_role_ids`** (JSONB): Lista de roles funcionales (RBAC) cuyos agentes heredan acceso al espacio.
+    And 7. **`embedding_model`** (VARCHAR): Modelo de embedding usado para este espacio (debe ser consistente para todos los chunks).
+    And 8. **`created_at`** / **`updated_at`** (TIMESTAMPTZ).
+    And un agente IA SOLO podrá consultar Knowledge Spaces asignados explícitamente (por `agent_id`) o heredados (por `role_id`). Consultas a espacios no autorizados retornarán resultado vacío (fail-silent, no error).
+    And un Knowledge Space puede ser consultado por múltiples agentes simultáneamente (lectura compartida, escritura exclusiva del Administrador).
+
+  # ==============================================================================
+  # C. INGESTA Y PARSING DOCUMENTAL
+  # Ref. OpenClaw: src/memory-host-sdk/host/internal.ts (chunkMarkdown, buildFileEntry)
+  # Ref. OpenClaw: src/memory-host-sdk/host/multimodal.ts (classifyMemoryMultimodalPath)
+  # ==============================================================================
+  Scenario: Pipeline de Ingesta Documental Multi-Formato (CA-03)
+    Given que los documentos empresariales se presentan en formatos heterogéneos
+    Then el sistema implementará un `DocumentParserService` con parsers registrables por MIME type:
+    And 1. **Markdown (.md):** Parser nativo reutilizando `chunkMarkdown()` de OpenClaw (transpuesto a Java). Zero dependencias externas.
+    And 2. **Texto plano (.txt):** Parser trivial con chunking por tamaño de tokens.
+    And 3. **PDF (.pdf):** Parser usando Apache PDFBox (licencia Apache 2.0, zero-dep compatible). Extracción de texto por página con metadata de número de página.
+    And 4. **DOCX (.docx):** Parser usando Apache POI (licencia Apache 2.0). Extracción de texto con preservación de estructura de encabezados.
+    And 5. **Imágenes (.png, .jpg, .webp):** Indexación multimodal siguiendo el patrón `buildMultimodalChunkForIndexing()` de OpenClaw. Genera un label descriptivo y un embedding multimodal si el proveedor lo soporta. Si no, usa OCR (Tesseract) como fallback para extraer texto.
+    And 6. **Hojas de cálculo (.xlsx, .csv):** Parser usando Apache POI (XLSX) o parser nativo (CSV). Cada hoja/tabla se convierte en chunks tabulares con metadata de fila/columna.
+    And cada parser deberá:
+    And a) Extraer texto puro preservando estructura semántica (encabezados, párrafos, listas).
+    And b) Generar metadata de localización (página, sección, fila) para citaciones.
+    And c) Respetar un límite máximo de tamaño por documento configurable (default: 50 MB).
+    And d) Emitir un evento `knowledge.document.parsed` con estadísticas (páginas, chars, chunks estimados).
+    And el `DocumentParserService` será extensible mediante un patrón Strategy: nuevos parsers pueden registrarse sin modificar código existente.
+
+  Scenario: Chunking Especializado para Documentos (CA-04)
+    # Ref. OpenClaw: internal.ts — chunkMarkdown() con estimación CJK y soporte UTF-16
+    Given que los documentos tienen estructuras más ricas que las transcripciones conversacionales
+    Then el `TextChunkingService` (compartido con US-056) se extenderá con las siguientes capacidades:
+    And 1. **Header-Aware Chunking:** Los encabezados Markdown (`# ## ###`) se usan como fronteras de chunk preferentes. Un chunk nunca corta un encabezado a la mitad.
+    And 2. **Page-Aware Chunking (PDF):** Los saltos de página actúan como fronteras naturales de chunk. Metadata `page_number` se preserva en cada chunk.
+    And 3. **Table-Aware Chunking:** Las tablas Markdown o tabulares (CSV/XLSX) se indexan como unidades completas si caben en el presupuesto de tokens del chunk, o se segmentan por bloques de filas preservando el header de columnas en cada chunk.
+    And 4. **Overlap Configurable:** Cada chunk incluirá un overlap configurable (default: 50 tokens de OpenClaw) con el chunk anterior para preservar continuidad semántica.
+    And 5. **Deduplicación por Hash:** Chunks con hash SHA-256 idéntico a uno existente en el índice se descartan (replicando `hashText()` de OpenClaw).
+    And los parámetros de chunking (`maxTokensPerChunk`, `overlapTokens`, `minChunkTokens`) serán configurables por Knowledge Space en `application.yml`.
+
+  # ==============================================================================
+  # D. ALMACENAMIENTO VECTORIAL DOCUMENTAL
+  # Ref. OpenClaw: src/memory-host-sdk/host/memory-schema.ts (ensureMemoryIndexSchema)
+  # Ref. ADR-013: Sección 3.2 — Modelo de Datos Segregado
+  # ==============================================================================
+  Scenario: Esquema de Índice Vectorial para Base de Conocimiento (CA-05)
+    Given la extensión `pgvector` habilitada en la instancia PostgreSQL del iBPMS (ADR-009)
+    Then el sistema creará la tabla `ibpms_knowledge_vectors` (SEGREGADA de `ibpms_memory_vectors` de US-056) con el siguiente esquema:
+    And 1. **`chunk_id`** (UUID, PK): Identificador único del chunk documental.
+    And 2. **`tenant_id`** (VARCHAR, NOT NULL, INDEX): Aislamiento multi-tenant estricto.
+    And 3. **`knowledge_space_id`** (VARCHAR, NOT NULL, INDEX): Espacio de conocimiento al que pertenece el chunk.
+    And 4. **`document_id`** (UUID, NOT NULL, INDEX): Documento fuente del chunk.
+    And 5. **`agent_id`** (VARCHAR, INDEX): Agente IA al que se asigna (nullable si la asignación es por Knowledge Space).
+    And 6. **`role_id`** (VARCHAR, INDEX): Rol funcional al que se asigna (alternativa a agente).
+    And 7. **`source_type`** (VARCHAR, NOT NULL): Tipo de fuente: `DOCUMENT`, `IMAGE`, `SPREADSHEET`, `POLICY`, `BPMN_ARTIFACT`.
+    And 8. **`content_text`** (TEXT, NOT NULL): Texto extraído del chunk (para display, citaciones y auditoría).
+    And 9. **`embedding`** (VECTOR, NOT NULL): Vector de embedding. La dimensionalidad se hereda del `EmbeddingProviderPort` activo de US-054.
+    And 10. **`metadata_json`** (JSONB, NOT NULL): Metadatos del chunk: `{filename, page, section, mime_type, version, parser_used, start_line, end_line}`.
+    And 11. **`document_version`** (INT, DEFAULT 1): Versión del documento que generó este chunk. Permite re-indexación incremental.
+    And 12. **`recall_count`** (INT, DEFAULT 0): Veces que este chunk fue recuperado por queries RAG (para métricas de utilización).
+    And 13. **`created_at`** / **`updated_at`** (TIMESTAMPTZ).
+    And 14. **`expires_at`** (TIMESTAMPTZ, NULLABLE): `NULL` para documentos permanentes. Solo se usa si el Administrador configura TTL explícito.
+    And se creará un índice HNSW sobre la columna `embedding` para búsquedas ANN eficientes.
+    And la tabla aplicará Row-Level Security (RLS) por `tenant_id`.
+    And PROHIBIDO almacenar chunks documentales en `ibpms_memory_vectors` (tabla de US-056). La segregación es arquitectónica (ADR-013).
+
+  Scenario: Tabla de Registro de Documentos Indexados (CA-06)
+    Given la necesidad de trackear qué documentos están indexados en cada Knowledge Space
+    Then el sistema mantendrá una tabla de registro `ibpms_knowledge_documents`:
+    And 1. **`document_id`** (UUID, PK).
+    And 2. **`tenant_id`** (VARCHAR, NOT NULL).
+    And 3. **`knowledge_space_id`** (VARCHAR, NOT NULL).
+    And 4. **`filename`** (VARCHAR, NOT NULL): Nombre original del archivo.
+    And 5. **`mime_type`** (VARCHAR, NOT NULL).
+    And 6. **`size_bytes`** (BIGINT, NOT NULL).
+    And 7. **`content_hash`** (VARCHAR, NOT NULL): SHA-256 del contenido original para detección de cambios.
+    And 8. **`chunk_count`** (INT, NOT NULL): Cantidad de chunks generados.
+    And 9. **`embedding_model`** (VARCHAR, NOT NULL): Modelo usado para generar embeddings.
+    And 10. **`status`** (VARCHAR, NOT NULL): `PENDING`, `INDEXING`, `INDEXED`, `FAILED`, `STALE`.
+    And 11. **`version`** (INT, DEFAULT 1): Versión del documento (incrementa con cada re-indexación).
+    And 12. **`indexed_at`** / **`created_at`** / **`updated_at`** (TIMESTAMPTZ).
+    And 13. **`error_message`** (TEXT, NULLABLE): Detalles del error si `status = FAILED`.
+
+  # ==============================================================================
+  # E. BÚSQUEDA RAG DOCUMENTAL
+  # Ref. OpenClaw: src/memory-host-sdk/host/query-expansion.ts (extractKeywords)
+  # Ref. OpenClaw: src/memory-host-sdk/host/types.ts (MemorySearchManager.search)
+  # ==============================================================================
+  Scenario: Búsqueda Semántica con Filtrado por Knowledge Space y Rol (CA-07)
+    Given una consulta de un agente IA o un Service Task BPMN que necesite conocimiento especializado
+    When el sistema invoque `recall(KnowledgeRecallQuery)` del `KnowledgeBasePort`
+    Then el adaptador ejecutará la siguiente secuencia:
+    And 1. **Validación de Acceso:** Verificar que el `agent_id` o `role_id` del solicitante tiene acceso al `knowledge_space_id` indicado. Si no, retornar resultado vacío.
+    And 2. **Expansión de Query:** El texto de búsqueda será expandido semánticamente (replicando `extractKeywords()` de OpenClaw) para maximizar cobertura.
+    And 3. **Vectorización del Query:** Generar embedding del query usando el `EmbeddingProviderPort` activo de US-054.
+    And 4. **Búsqueda ANN:** Ejecutar consulta `pgvector` con operador `<=>` (distancia coseno) contra `ibpms_knowledge_vectors`, filtrada por: `tenant_id` AND `knowledge_space_id` AND (`agent_id` = solicitante OR `role_id` IN roles-del-solicitante).
+    And 5. **Scoring y Ranking:** Resultados ordenados por proximidad coseno descendente. Umbral mínimo configurable (default: 0.65).
+    And 6. **Presupuesto de Tokens:** La lista de resultados se trunca cuando la suma acumulada de tokens exceda el `tokenBudget`, garantizando que la inyección al prompt nunca desborde la ventana del LLM.
+    And 7. **Citaciones:** Cada chunk devuelto incluirá su metadata de localización (`filename`, `page`, `section`) para que el LLM pueda citar fuentes en su respuesta.
+    And 8. **Actualización de recall_count:** Los chunks devueltos incrementarán su `recall_count` en +1 para métricas de utilización.
+
+  Scenario: Ensamblaje Dual — Combinación de RAG Conversacional y Documental (CA-08)
+    # Ref. ADR-013: Sección 3.4 — Flujo de Ensamblaje Dual
+    Given que un agente IA puede necesitar tanto contexto conversacional (US-056) como conocimiento documental (US-057)
+    When el `AssemblerService` prepare el prompt para una inferencia LLM
+    Then el sistema permitirá combinar resultados de AMBOS RAGs siguiendo esta jerarquía:
+    And 1. **System Prompt** (inmutable, head position — US-054 CA-04).
+    And 2. **Knowledge Space Chunks** (resultados de `KnowledgeBasePort.recall()`, ordenados por score).
+    And 3. **Conversational Memory Chunks** (resultados de `CognitiveMemoryPort.recall()`, ordenados por score).
+    And 4. **Memoria Activa Reciente** (últimos N turnos de la sesión actual).
+    And los dos conjuntos de chunks se fusionarán con un **ranking unificado por score coseno**, respetando el `tokenBudget` global.
+    And el LLM verá una sección claramente delimitada: `[CONTEXTO DOCUMENTAL]` seguida de `[CONTEXTO CONVERSACIONAL]` para que pueda distinguir fuentes.
+    And si el `tokenBudget` no alcanza para ambos, el conocimiento documental tiene PRIORIDAD sobre el historial conversacional (el LLM necesita "saber" antes de "recordar").
+
+  # ==============================================================================
+  # F. ENDPOINTS REST / API DE GESTIÓN
+  # ==============================================================================
+  Scenario: API REST de Gestión de Knowledge Spaces (CA-09)
+    Given la necesidad del Administrador de gestionar los espacios de conocimiento desde el panel de control
+    Then el Backend expondrá los siguientes endpoints protegidos por RBAC (rol `ADMIN_AI` o `SUPER_ADMIN`):
+    And 1. **`POST /api/v1/knowledge-spaces`** — Crear un nuevo Knowledge Space. Body: `{name, description, assignedAgentIds[], assignedRoleIds[]}`. Response: HTTP 201 con `knowledgeSpaceId`.
+    And 2. **`GET /api/v1/knowledge-spaces`** — Listar Knowledge Spaces del Tenant. Response: HTTP 200 con array de espacios + métricas resumidas.
+    And 3. **`GET /api/v1/knowledge-spaces/{id}`** — Detalle de un Knowledge Space con estadísticas de documentos y chunks.
+    And 4. **`PUT /api/v1/knowledge-spaces/{id}`** — Actualizar nombre, descripción o asignaciones de agentes/roles.
+    And 5. **`DELETE /api/v1/knowledge-spaces/{id}`** — Eliminar un Knowledge Space y TODOS sus documentos y chunks asociados. Requiere confirmación doble (header `X-Confirm-Delete: true`).
+
+  Scenario: API REST de Gestión de Documentos (CA-10)
+    Given la necesidad de cargar y administrar documentos dentro de un Knowledge Space
+    Then el Backend expondrá:
+    And 1. **`POST /api/v1/knowledge-spaces/{ksId}/documents`** — Upload de documento. Content-Type: `multipart/form-data`. Límite: 50 MB. Formatos aceptados: PDF, DOCX, MD, TXT, PNG, JPG, XLSX, CSV. Response: HTTP 202 Accepted con `documentId` y `status: PENDING` (la indexación es asíncrona).
+    And 2. **`GET /api/v1/knowledge-spaces/{ksId}/documents`** — Listar documentos del espacio con status de indexación. Filtrable por `status` (INDEXED, PENDING, FAILED).
+    And 3. **`GET /api/v1/knowledge-spaces/{ksId}/documents/{docId}`** — Detalle de un documento: chunks generados, tamaño, fecha de indexación, errores si los hubo.
+    And 4. **`PUT /api/v1/knowledge-spaces/{ksId}/documents/{docId}`** — Re-subir una versión actualizada. Incrementa `version`, re-indexa eliminando chunks de la versión anterior.
+    And 5. **`DELETE /api/v1/knowledge-spaces/{ksId}/documents/{docId}`** — Eliminar documento y todos sus chunks del índice vectorial.
+    And 6. **`POST /api/v1/knowledge-spaces/{ksId}/sync`** — Trigger manual de sincronización incremental (detecta documentos modificados y re-indexa).
+
+  # ==============================================================================
+  # G. SINCRONIZACIÓN Y CICLO DE VIDA
+  # ==============================================================================
+  Scenario: Sincronización Incremental y Detección de Cambios (CA-11)
+    Given que los documentos pueden actualizarse con nuevas versiones a lo largo del tiempo
+    Then el `KnowledgeBasePort.syncKnowledgeSpace()` ejecutará:
+    And 1. **Detección de cambios:** Compara el `content_hash` (SHA-256) actual del documento con el almacenado. Si difiere, marca como `STALE`.
+    And 2. **Re-indexación selectiva:** Solo los documentos `STALE` se re-procesan (parsear → chunkear → embeddings). Los chunks de la versión anterior se eliminan DESPUÉS de que la nueva versión esté completamente indexada (atomic swap).
+    And 3. **Detección de eliminaciones:** Documentos presentes en el registro pero ausentes del storage se marcan como `DELETED` y sus chunks se purgan.
+    And 4. **Progress Reporting:** La sincronización emite eventos de progreso `knowledge.sync.progress` con `{completed, total, label}` (replicando `MemorySyncProgressUpdate` de OpenClaw).
+    And la sincronización puede ser: a) **Manual** (vía endpoint `POST /sync`), b) **Programada** (Cron configurable, default: `0 2 * * *` = 2:00 AM diario), c) **Event-Driven** (post-upload automático).
+
+  Scenario: Garbage Collection de Chunks Huérfanos (CA-12)
+    Given el crecimiento de la tabla `ibpms_knowledge_vectors` a lo largo de meses de operación
+    Then un Scheduled Job (Spring `@Scheduled`, protegido por ShedLock) ejecutará semanalmente:
+    And 1. **Purga de chunks huérfanos:** Eliminar chunks cuyo `document_id` no exista en `ibpms_knowledge_documents` (huérfanos por eliminación incompleta).
+    And 2. **Purga por expiración:** Eliminar chunks con `expires_at < NOW()` (si el Administrador configuró TTL).
+    And 3. **Consolidación de versiones:** Eliminar chunks de versiones anteriores a la activa (`document_version < current_version`).
+    And 4. **Reindexación HNSW:** Ejecutar `REINDEX` sobre el índice vectorial tras la purga para optimizar búsquedas ANN.
+    And PROHIBIDO ejecutar durante horas pico. Cron default: `0 4 * * 0` (Domingos 4:00 AM).
+
+  # ==============================================================================
+  # H. OBSERVABILIDAD Y AUDITORÍA
+  # ==============================================================================
+  Scenario: Bitácora de Eventos de la Base de Conocimiento (CA-13)
+    Given la necesidad de auditar todas las operaciones sobre la base de conocimiento
+    Then el sistema registrará eventos tipados en la tabla `ibpms_knowledge_event_log` (append-only):
+    And 1. **`knowledge.document.indexed`**: Documento indexado exitosamente. Registra: documentId, filename, chunkCount, embeddingModel, durationMs.
+    And 2. **`knowledge.document.failed`**: Fallo de indexación. Registra: documentId, filename, errorMessage, parserUsed.
+    And 3. **`knowledge.recall.recorded`**: Cada búsqueda RAG ejecutada. Registra: query, knowledgeSpaceId, agentId, resultCount, topScore, durationMs.
+    And 4. **`knowledge.sync.completed`**: Sincronización finalizada. Registra: knowledgeSpaceId, docsUpdated, docsAdded, docsRemoved, durationMs.
+    And 5. **`knowledge.space.modified`**: Cambios en la configuración del Knowledge Space (asignaciones de agentes/roles).
+    And estos eventos alimentarán el dashboard de observabilidad IA (US-044).
+
+  # ==============================================================================
+  # I. DIRECTIVAS DE REFACTORIZACIÓN Y TRAZABILIDAD
+  # ==============================================================================
+  Scenario: Mapa de Transposición OpenClaw → iBPMS para Knowledge Base Engine (Refactoring Ledger) (CA-14)
+    Given la directiva de implementación basada en el código fuente de OpenClaw
+    Then el equipo de desarrollo DEBE mantener un documento de trazabilidad (`docs/architecture/knowledge-base-refactoring-ledger.md`) que mapee:
+    And 1. Cada archivo TypeScript de OpenClaw → su clase/interfaz Java equivalente en iBPMS.
+    And 2. Decisiones de diseño donde se divergió del patrón original y la justificación técnica.
+    And 3. Funciones de OpenClaw reutilizadas vs. creadas desde cero para US-057.
+    And el mapa mínimo obligatorio de transposición es:
+    And | OpenClaw (TypeScript) | iBPMS (Java) |
+    And | `listMemoryFiles()` + `buildFileEntry()` (internal.ts) | `DocumentDiscoveryService` (infra service) |
+    And | `chunkMarkdown()` (internal.ts) | `TextChunkingService` (compartido con US-056) |
+    And | `classifyMemoryMultimodalPath()` (multimodal.ts) | `MultimodalClassifierService` (infra service) |
+    And | `buildMultimodalChunkForIndexing()` (internal.ts) | `MultimodalChunkBuilder` (infra component) |
+    And | `MemorySearchManager` (types.ts) | `KnowledgeSearchAdapter` (infra adapter → pgvector) |
+    And | `MemoryFileEntry` (internal.ts) | `IndexedDocument` (domain model) |
+    And | `MemoryChunk` (internal.ts) | `DocumentChunk` (domain model, extends `MemoryChunk` de US-056) |
+    And | `ensureMemoryIndexSchema()` (memory-schema.ts) | Flyway migration `V{N}__create_knowledge_vectors.sql` |
+    And | `extractKeywords()` (query-expansion.ts) | `QueryExpansionService` (compartido con US-056) |
+    And | `MemoryHostEvent` (events.ts) | `KnowledgeAuditEvent` (domain event) |
+    And | N/A (nuevo) | `DocumentParserService` (Strategy pattern, extensible) |
+    And | N/A (nuevo) | `KnowledgeSpaceEntity` (domain aggregate) |
+```
+
+**Notas de Implementación (Non-Functional Requirements):**
+- **Aislamiento Multi-Tenant:** Todas las operaciones de conocimiento DEBEN filtrar por `tenant_id`. Un Tenant NUNCA puede acceder a documentos o chunks de otro Tenant. Row-Level Security (RLS) habilitado en `ibpms_knowledge_vectors`.
+- **FinOps:** Cada operación de embedding documental generará un registro de consumo de tokens con `billing_source = KNOWLEDGE_INDEXING` (distinto de `CONVERSATION_MEMORY` de US-056), vinculado al `billing_source` de US-053.
+- **Resiliencia:** Si el proveedor de embeddings falla durante la indexación, el documento queda en `status = FAILED` con `error_message` detallado. El Administrador puede reintentar vía `POST /sync` o re-upload.
+- **Testing (Dry-Run):** Los tests unitarios usarán embeddings mock de dimensión fija (Ej: vector de 10 dimensiones con valores aleatorios reproducibles) para validar el pipeline sin llamar a APIs reales ($0 USD de costo).
+- **Límites Operativos:** Default: máximo 500 documentos por Knowledge Space, máximo 50,000 chunks por Tenant. Configurables en `application.yml`.
+- **Consistencia de Embeddings:** Todos los documentos de un Knowledge Space DEBEN usar el MISMO modelo de embedding. Cambiar el modelo requiere re-indexación completa del espacio.
+
+**Trazabilidad UX:** Panel de gestión de Knowledge Spaces en Pantalla 15.B (Gobernanza IA — US-044). Endpoints REST consumidos por el panel administrativo del Antigravity Command Center (US-053).
+
+---

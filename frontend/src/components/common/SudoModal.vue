@@ -55,7 +55,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
-import { useSudo } from '@/composables/useSudo';
+import { useSudo } from '@/composables/workdesk/useSudo';
 
 const { isSudoVisible, currentRequest, confirmSudo, cancelSudo } = useSudo();
 const password = ref('');

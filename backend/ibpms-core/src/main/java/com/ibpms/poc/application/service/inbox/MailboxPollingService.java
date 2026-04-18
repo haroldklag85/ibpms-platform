@@ -1,6 +1,6 @@
 package com.ibpms.poc.application.service.inbox;
 
-import com.ibpms.poc.domain.model.SacMailbox;
+import com.ibpms.core.sac.domain.SacMailbox;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -8,10 +8,12 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 
 /**
- * Engine responsable de extraer (Pull) correos usando Microsoft Graph y
- * enviarlos a Camunda.
+ * FENCED — Sprint 4 Profilaxis (US-011 Docketing SAC).
+ * Duplicado funcional de MailboxPollingCron (com.ibpms.core.sac.worker).
+ * Desactivado como @Service para evitar cruce de fronteras de paquete.
+ * Se reactivará cuando US-011 entre en construcción funcional.
  */
-@Service
+// @Service — FENCED: S4 Profilaxis
 @Slf4j
 @RequiredArgsConstructor
 public class MailboxPollingService {

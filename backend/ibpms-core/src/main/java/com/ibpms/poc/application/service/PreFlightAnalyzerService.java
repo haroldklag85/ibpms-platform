@@ -3,7 +3,9 @@ package com.ibpms.poc.application.service;
 import com.ibpms.poc.application.dto.PreFlightResultDTO;
 import com.ibpms.poc.infrastructure.jpa.entity.BpmnDesignAuditLogEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.BpmnProcessDesignEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.IbpmsRoleEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.BpmnDesignAuditLogRepository;
+import com.ibpms.poc.infrastructure.jpa.repository.IbpmsRoleRepository;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -12,6 +14,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.xml.sax.InputSource;
 
 import com.ibpms.poc.application.dto.DeploymentValidationResponse;
@@ -46,11 +50,17 @@ public class PreFlightAnalyzerService {
 
     private final BpmnDesignService designService;
     private final BpmnDesignAuditLogRepository auditRepository;
+    private final IbpmsRoleRepository roleRepository;
+    private final com.ibpms.poc.infrastructure.jpa.repository.ExternalTaskTopicRepository externalTaskTopicRepository;
 
     public PreFlightAnalyzerService(BpmnDesignService designService,
-            BpmnDesignAuditLogRepository auditRepository) {
+            BpmnDesignAuditLogRepository auditRepository,
+            IbpmsRoleRepository roleRepository,
+            com.ibpms.poc.infrastructure.jpa.repository.ExternalTaskTopicRepository externalTaskTopicRepository) {
         this.designService = designService;
         this.auditRepository = auditRepository;
+        this.roleRepository = roleRepository;
+        this.externalTaskTopicRepository = externalTaskTopicRepository;
     }
 
     public PreFlightResultDTO analizar(java.util.UUID processDesignId, String userId) {
@@ -119,13 +129,21 @@ public class PreFlightAnalyzerService {
         try {
             BpmnModelInstance modelInstance = Bpmn.readModelFromStream(bpmnStream);
 
+            // CA-6 VIP Pre-allocation mapping
+            List<String> vipRoleNames = roleRepository.findByIsVipRestrictedTrue().stream()
+                .map(IbpmsRoleEntity::getName).map(String::toUpperCase).collect(Collectors.toList());
+
             // CA-2: Control de diagrama roto (Falta End Event)
             Collection<EndEvent> endEvents = modelInstance.getModelElementsByType(EndEvent.class);
             if (endEvents == null || endEvents.isEmpty()) {
                 response.addError("Diagram", "Falta End Event");
             }
 
-            // CA-3.1: ServiceTask requiere delegación
+            // CA-3.1 y CA-70: ServiceTask requiere delegación y topic válido
+            List<String> activeTopics = externalTaskTopicRepository.findByIsActiveTrue().stream()
+                .map(com.ibpms.poc.infrastructure.jpa.entity.ExternalTaskTopicEntity::getTopicName)
+                .collect(Collectors.toList());
+
             Collection<ServiceTask> serviceTasks = modelInstance.getModelElementsByType(ServiceTask.class);
             for (ServiceTask st : serviceTasks) {
                 String cmdDelExpr = st.getCamundaDelegateExpression();
@@ -135,14 +153,34 @@ public class PreFlightAnalyzerService {
                     (cmdClass == null || cmdClass.isBlank()) &&
                     (cmdTopic == null || cmdTopic.isBlank())) {
                     response.addError(st.getId(), "ServiceTask carece de propiedad de ejecución (delegateExpression, class o topic)");
+                } else if (cmdTopic != null && !cmdTopic.isBlank()) {
+                    // CA-70: Validar topic contra el catálogo
+                    if (!activeTopics.contains(cmdTopic)) {
+                        response.addError(st.getId(), "Topic '" + cmdTopic + "' no está registrado o inactivo en el catálogo de External Tasks.");
+                    }
                 }
             }
 
-            // CA-3.2: UserTask requiere formKey
+            // CA-3.2: UserTask requiere formKey y CA-6 verificación de form genérico en Lane VIP
             Collection<UserTask> userTasks = modelInstance.getModelElementsByType(UserTask.class);
+            Collection<Lane> lanes = modelInstance.getModelElementsByType(Lane.class);
             for (UserTask ut : userTasks) {
-                if (ut.getCamundaFormKey() == null || ut.getCamundaFormKey().isBlank()) {
+                String formKey = ut.getCamundaFormKey();
+                if (formKey == null || formKey.isBlank()) {
                     response.addError(ut.getId(), "UserTask carece de camunda:formKey obligatorio");
+                } else if ("sys_generic_form".equals(formKey)) {
+                    // Verificamos en qué Lane se encuentra
+                    for (Lane lane : lanes) {
+                        if (lane.getFlowNodeRefs().contains(ut)) {
+                            // Construir el rol derivado del lane mapping as per CA-6 (o simplemente verificar si el nombre del lane contiene un rol VIP)
+                            String laneNameUpper = lane.getName() != null ? lane.getName().toUpperCase() : "";
+                            boolean isVipLane = vipRoleNames.stream().anyMatch(vip -> laneNameUpper.contains(vip));
+                            if (isVipLane) {
+                                response.addError(ut.getId(), "Hard-Stop: UserTask (" + ut.getId() + ") utiliza Formulario Genérico (sys_generic_form) pero está categorizado bajo un perfil VIP restringido (" + laneNameUpper + "). Obligatorio diseñar un iForm Maestro.");
+                            }
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -167,18 +205,26 @@ public class PreFlightAnalyzerService {
                 response.addError("StartEvent", "El StartEvent carece de camunda:formKey obligatorio para iniciar instancia de forma manual");
             }
 
-            // CA-12: Late Binding DMN por Defecto en BusinessRuleTasks
+            // CA-12: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquiridos)
             Collection<BusinessRuleTask> brTasks = modelInstance.getModelElementsByType(BusinessRuleTask.class);
             for (BusinessRuleTask brt : brTasks) {
                 String decisionRef = brt.getCamundaDecisionRef();
-                String binding = brt.getCamundaDecisionRefBinding(); // e.g., "latest"
-                String version = brt.getCamundaDecisionRefVersion();
-                
+                String binding = brt.getCamundaDecisionRefBinding();
+
                 if (decisionRef != null && !decisionRef.isBlank()) {
-                    if ((binding == null || (!binding.equals("latest") && !binding.equals("deployment"))) && 
-                        (version == null || version.isBlank())) {
-                        response.addWarning(brt.getId(), "BusinessRuleTask enlaza a un DMN (" + decisionRef + ") pero carece de camunda:decisionRefBinding='latest' o version explícita. Puede generar inconsistencias de resolución.");
+                    if (binding == null || binding.isBlank()) {
+                        response.addWarning(brt.getId(),
+                            "⚠️ BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
+                            "' enlaza a DMN (" + decisionRef + ") sin camunda:decisionRefBinding configurado. " +
+                            "El motor asumirá 'latest' por defecto, lo cual puede violar la protección de derechos adquiridos (CA-12). " +
+                            "Recomendación: Configure 'deployment' en el Modeler para garantizar que los casos en vuelo se evalúen con la versión DMN vigente al nacer el caso.");
+                    } else if ("latest".equals(binding)) {
+                        response.addWarning(brt.getId(),
+                            "ℹ️ BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
+                            "' usa Late Binding (LATEST). Los casos en vuelo se evaluarán con la última versión DMN publicada. " +
+                            "Confirme que este comportamiento es intencional y no viola compromisos contractuales.");
                     }
+                    // binding="deployment" → OK silencioso (default seguro)
                 }
             }
 
@@ -250,7 +296,6 @@ public class PreFlightAnalyzerService {
 
             // CA-6: Autogeneración de Roles RBAC desde Lanes (Si el proceso aprueba o incluso si falla el log lo reporta al final)
             // Se calcula proyectivamente.
-            Collection<Lane> lanes = modelInstance.getModelElementsByType(Lane.class);
             for (Lane lane : lanes) {
                 String laneName = lane.getName() != null ? lane.getName() : lane.getId();
                 String roleName = "BPMN_" + firstProcessId + "_" + laneName.replaceAll("\\s+", "_");

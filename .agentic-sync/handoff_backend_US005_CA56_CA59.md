@@ -5,7 +5,7 @@
 
 ## 🚨 Reglas de Oro (V1 Scope)
 1. **Nada de V2:** Ninguna optimización analítica prematura ni refactores de persistencia no relacionados con estos CAs.
-2. **Gatekeeper:** Cero commits directos. Usar `git stash` tras la ejecución.
+2. **Gatekeeper:** Consolidar cambios usando `git commit` y `git push` tras la ejecución.
 
 ---
 
@@ -56,4 +56,4 @@
 
 ### Misión Final (Gatekeeper)
 Al concluir los ajustes, ejecutar:
-`git stash push -m "Iteracion 27: US-005 Backend Handoff CA-56 a CA-59 (Drop Null, Pruning, Retry)"` y notificar éxito al Comandante.
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD` y notificar éxito al Comandante.

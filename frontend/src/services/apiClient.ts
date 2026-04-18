@@ -38,15 +38,32 @@ apiClient.interceptors.response.use(
         // CA-19: Detección Offline Instintiva
         if (!error.response || error.code === 'ERR_NETWORK') {
             console.error('Modo Desconectado. La aplicación se ha congelado por falta de Red.');
-            alert('Modo Desconectado. Revisa tu conexión de red.');
+            const event = new CustomEvent('global-error-dispatch', { detail: { 
+                code: 'NETWORK_ERR',
+                message: `Modo Desconectado. Revisa tu conexión de red.`
+            }});
+            window.dispatchEvent(event);
             return Promise.reject(error); // Silently stops component logic without crash
         }
         
-        // CA-21: Alertas Rojas Imborrables (Fatal Level 0)
+        // CA-21 & CA-1: Alertas Rojas Imborrables a través de Vue Store Custom Events
         if (error.response && [500, 502, 503, 504].includes(error.response.status)) {
             console.error('Fatal Level 0 Dispatching');
-            alert(`Colapso del Servidor (Code ${error.response.status}). Reinicie aplicación o contacte IT de inmediato.`);
+            const event = new CustomEvent('global-error-dispatch', { detail: { 
+                code: error.response.status,
+                message: `Colapso del Servidor / Integración Cíclica`
+            }});
+            window.dispatchEvent(event);
             return Promise.reject(error);
+        }
+
+        // Interceptar CA-3: Bloqueo de Concurrencia Optimista
+        if (error.response && error.response.status === 409) {
+            if(error.response.data?.type?.includes("optimistic-lock")) {
+                console.warn('Bloqueo de Concurrencia UI Disparado');
+                const event = new CustomEvent('optimistic-lock-dispatch');
+                window.dispatchEvent(event);
+            }
         }
 
         if (error.response && error.response.status === 401) {
@@ -54,6 +71,24 @@ apiClient.interceptors.response.use(
             console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
             authStore.logout();
             // Ya no redirigimos ni hacemos logout destructivo
+        }
+        
+        // CA-30: Rate Limiting Preventivo (429)
+        if (error.response && error.response.status === 429) {
+            console.warn('CA-30: Rate Limiting detectado. Frenando requests.');
+            const body = document.querySelector('body');
+            if (body && !document.getElementById('rate-limit-toast')) {
+                const toast = document.createElement('div');
+                toast.id = 'rate-limit-toast';
+                toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
+                toast.innerHTML = '🕒 Te has excedido del límite de peticiones. Por favor, espera un minuto.';
+                body.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }
+            return Promise.reject(error);
         }
         
         // CA-05: Expulsión por Manipulación Cognitiva (Prompt Injection / Abuso)
@@ -107,6 +142,12 @@ export default apiClient;
 
 // ---------- Integration Gaps (08_integration_gaps_prompt.md) ----------
 export const api = {
+    // -------------------------------------------------------------
+    // US-001 (Iteración 76-DEV): Workdesk Global Inbox (CA-09, CA-10, CA-19, CA-20)
+    // -------------------------------------------------------------
+    getGlobalInbox: (params: { page?: number; size?: number; sort?: string; search?: string; delegatedUserId?: string }) => 
+        apiClient.get('/workdesk/global-inbox', { params }),
+
     // 1. AI Correct (Partial Regeneration CA-28)
     correctAiText: (payload: { text: string; delta: string }) => apiClient.post('/ai/correct', payload),
 
@@ -128,20 +169,31 @@ export const api = {
     getBpmnTemplates: () => apiClient.get(`/design/processes/templates`),
     archiveProcess: (id: string) => apiClient.post(`/design/processes/${id}/archive`), // CA-32
     
-    // Gobernanza CA-6 & CA-7 & Rollback CA-15:
+    // Gobernanza CA-6 & CA-7 & Rollback CA-15 & Heartbeat CA-66/64:
     getProcessVersions: (id: string) => apiClient.get(`/design/processes/${id}/versions`),
     restoreProcessVersion: (id: string, version: number) => apiClient.post(`/design/processes/${id}/rollback/${version}`),
     getProcessLock: (id: string) => apiClient.get(`/design/processes/${id}/lock`),
+    heartbeatProcessLock: (id: string) => apiClient.post(`/design/processes/${id}/lock/heartbeat`), // CA-66
+    forceUnlockProcess: (id: string) => apiClient.delete(`/design/processes/${id}/lock/force`), // CA-64
     getProcessAuditLogs: (id: string) => apiClient.get(`/design/processes/${id}/audit-logs`), // CA-42
 
     // 6. BPMN Sandbox (Pantalla 6 / CA-41)
     deployToSandbox: (id: string, payload: any) => apiClient.post(`/design/processes/${id}/sandbox`, payload),
     spawnSandbox: (payload: any) => apiClient.post(`/design/processes/sandbox-spawn`, payload), // CA-41
 
-    // Integraciones / Conectores (CA-45, CA-49)
+    // 6.5 Panel Solicitudes de Despliegue (CA-69)
+    getDeployRequests: (key: string) => apiClient.get(`/design/processes/${key}/deploy-requests`),
+    approveDeployRequest: (id: string, payload?: any) => apiClient.post(`/design/deploy-requests/${id}/approve`, payload),
+    rejectDeployRequest: (id: string, payload: any) => apiClient.post(`/design/deploy-requests/${id}/reject`, payload),
+
+    // Integraciones / Conectores (CA-45, CA-49, CA-68, CA-70)
     getIntegrationConnectors: () => apiClient.get(`/integrations/connectors`),
     getConnectorSchema: (id: string) => apiClient.get(`/integrations/connectors/${id}/schema`), // CA-49
     getProcessVariables: (id: string) => apiClient.get(`/design/processes/${id}/variables`), // CA-49
+    // CA-17: Variables BPMN para coherencia
+    getBpmnVariables: (processKey: string) => apiClient.get(`/design/processes/${processKey}/variables`),
+    getExternalTaskTopics: () => apiClient.get(`/design/external-task-topics`), // CA-70
+    saveDataMappings: (key: string, taskId: string, payload: any) => apiClient.post(`/design/processes/${key}/tasks/${taskId}/mappings`, payload), // CA-68
 
     // 7. BAM Analytics - Process Health (Pantalla 5)
     getProcessHealth: () => apiClient.get('/analytics/process-health'),
@@ -151,6 +203,8 @@ export const api = {
 
     // 9. Formularios (Pantalla 7 / CA-30)
     getForms: () => apiClient.get('/forms'),
+    getFormVersions: (id: string) => apiClient.get(`/forms/${id}/versions`),
+    saveFormVersion: (id: string, payload: any) => apiClient.post(`/forms/${id}`, payload),
 
     // 10. Kanban Status Update (Pantalla 3)
     updateKanbanStatus: (id: string, status: string) => apiClient.patch(`/kanban/items/${id}/status`, { status }),

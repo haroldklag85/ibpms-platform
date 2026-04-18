@@ -1,6 +1,5 @@
 package com.ibpms.poc.infrastructure.web.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleAuditLogEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.security.RoleAuditLogRepository;
 import org.junit.jupiter.api.DisplayName;

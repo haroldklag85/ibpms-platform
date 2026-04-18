@@ -24,8 +24,7 @@ public class S3DocumentController {
     public ResponseEntity<?> uploadTempDocument() {
         String uuid = s3Service.uploadTemporaryDocument();
         return ResponseEntity.ok(Map.of(
-            "message", "Upload MOCK exitoso hacia Bóveda SGDEA",
-            "temp_id", uuid
-        ));
+                "message", "Upload MOCK exitoso hacia Bóveda SGDEA",
+                "temp_id", uuid));
     }
 }

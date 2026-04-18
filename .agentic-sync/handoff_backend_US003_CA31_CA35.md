@@ -17,6 +17,6 @@ Debes abordar proactivamente la capacidad del puerto de entrada:
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal.
 En cuanto realices los ajustes y valides que el servidor Spring Boot arranca sin romper, empaqueta el contenido:
-`git stash save "temp-backend-US003-ca31-ca35"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Notifica al rol humano "Arquitecto Líder" una vez finalizado el guardado.

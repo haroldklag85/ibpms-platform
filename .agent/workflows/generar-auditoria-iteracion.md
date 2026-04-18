@@ -10,7 +10,7 @@ Este flujo de trabajo garantiza que el Agente Arquitecto Líder (Antigravity) ex
 Cuando el Arquitecto Humano te ordene ejecutar este workflow (Ej: "Genera la siguiente iteración de auditoría"), DEBES ejecutar rigurosamente estos pasos:
 
 1. **Leer Documentos Core:**
-   - Lee el documento de Historias de Usuario completo: `ibpms-platform/docs/requirements/v1_user_stories.md`.
+   - Lee el índice de Historias de Usuario: `docs/requirements/v1_user_stories_index.md`, identifica el archivo de Épica y lee `docs/requirements/epics/epic_X_*.md`. **PROHIBIDO** leer `v1_user_stories.md` (monolito deprecado).
    - Lee el progreso actual en `technical_audit_roadmap.md` (o archivo centralizado que estés usando) para saber en qué Iteración numérica nos quedamos.
 
 2. **Identificar el Sub-Dominio Desbloqueado (Fail-Fast Rule):**

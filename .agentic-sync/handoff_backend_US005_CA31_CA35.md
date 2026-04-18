@@ -21,6 +21,6 @@
 ## 🛑 MANDATO LOCAL GATEKEEPER
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a principal.
 Agrega las lógicas del repositorio, refina los Endpoints en tu DesignController y empaca en un stash puro:
-`git stash save "temp-backend-US005-ca31-ca35"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

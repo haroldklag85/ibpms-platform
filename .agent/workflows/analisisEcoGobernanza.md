@@ -13,6 +13,7 @@ Las rutas a considerar para este análisis son:
 - `platform\scaffolding\workflows\`
 - `ibpms-platform\.agents\skills\`
 - `ibpms-platform\.cursorignore`
+- `ibpms-platform\.agent\workflows`
 
 La salida debe ser resumida, pero suficientemente clara para identificar propósito, alcance, cobertura, agentes impactados, exclusiones, oportunidades de mejora y posibles contradicciones o reglas rotas dentro del ecosistema.
 

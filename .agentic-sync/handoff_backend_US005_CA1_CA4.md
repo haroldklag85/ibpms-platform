@@ -21,6 +21,6 @@ En esta Iteración 15 saltamos al corazón orquestador de la plataforma: El dise
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a principal.
 Congela tu Motor Semántico Pre-flight en un stash cuando superes la compilación local:
-`git stash save "temp-backend-US005-ca1-ca4"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

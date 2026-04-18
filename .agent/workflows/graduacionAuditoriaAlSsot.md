@@ -1,16 +1,16 @@
 ---
-description: Protocolo obligatorio para graduar hallazgos de auditoría resueltos al SSOT (v1_user_stories.md), eliminando la Amnesia Institucional y cerrando el ciclo de trazabilidad inversa.
+description: Protocolo obligatorio para graduar hallazgos de auditoría resueltos al SSOT (archivos de Épica en docs/requirements/epics/), eliminando la Amnesia Institucional y cerrando el ciclo de trazabilidad inversa.
 ---
 
 # Protocolo de Graduación de Hallazgos al SSOT (Anti-Amnesia Institucional)
 
 > **Versión:** 1.0 | **Última Actualización:** 2026-04-05
 > **Ley Padre:** LEY GLOBAL 3 — Directriz SSOT (`.cursorrules`)
-> **Principio:** Si no existe en `v1_user_stories.md`, no existe para ningún agente ni auditor.
+> **Principio:** Si no existe en el archivo de Épica correspondiente (`docs/requirements/epics/epic_X_*.md`), no existe para ningún agente ni auditor.
 
 ## Contexto
 
-Cuando una auditoría detecta un GAP y se crea un artefacto satélite de remediación (Ej: `us003_gap_remediation_brief.md`), los hallazgos resueltos quedan atrapados fuera del SSOT. La próxima auditoría redescubre los mismos GAPs porque `v1_user_stories.md` nunca fue actualizado. Este workflow rompe ese ciclo infinito.
+Cuando una auditoría detecta un GAP y se crea un artefacto satélite de remediación (Ej: `us003_gap_remediation_brief.md`), los hallazgos resueltos quedan atrapados fuera del SSOT. La próxima auditoría redescubre los mismos GAPs porque el archivo de Épica correspondiente nunca fue actualizado. Este workflow rompe ese ciclo infinito.
 
 ## Triggers (Cuándo ejecutar)
 
@@ -72,15 +72,19 @@ Scenario: [Descripción clara de la decisión técnica tomada] (CA-[N]) [REMEDIA
 
 ### FASE 3: Inyección Paginada en el SSOT
 
-**Objetivo:** Insertar los CAs nuevos en `v1_user_stories.md` sin leer el archivo entero.
+**Objetivo:** Insertar los CAs nuevos en el archivo de Épica correspondiente (`docs/requirements/epics/epic_X_*.md`).
 
-**REGLA DE VIDA O MUERTE:** El archivo `v1_user_stories.md` es gigante. Tienes **PROHIBIDO** abrirlo sin paginación.
-
-1. Usa `grep_search` con `MatchPerLine: true` y `Query: "US-{XXX}"` para localizar la línea exacta donde empieza la User Story destino.
-2. Usa `grep_search` con `Query: "Trazabilidad UX"` para encontrar el cierre del bloque Gherkin más cercano.
+**PROTOCOLO DE LOCALIZACIÓN:**
+1. Lee `docs/requirements/v1_user_stories_index.md` para identificar el archivo de Épica que contiene la US destino.
+2. Usa PowerShell para localizar la línea exacta donde empieza la US:
+   ```powershell
+   Select-String -Path "docs\requirements\epics\epic_X_*.md" -Pattern "US-{XXX}" | Select-Object LineNumber, Line
+   ```
 3. Usa `view_file` con `StartLine` y `EndLine` (máximo 150 líneas) para ver el bloque completo.
 4. Inyecta los nuevos CAs **antes del cierre** del bloque ` ``` ` del Feature Gherkin, después de la última sección existente.
 5. Usa `replace_file_content` para hacer la inyección quirúrgica.
+
+**PROHIBIDO:** Leer o modificar `docs/requirements/v1_user_stories.md` (monolito deprecado).
 
 ### FASE 4: Renumeración Secuencial de CAs
 
@@ -93,7 +97,7 @@ Ejecuta el workflow `/renumeracionCriteriosAceptacionUs.md` sobre la US que fue 
 **Objetivo:** Cerrar el ciclo documental del artefacto usado como fuente.
 
 Presenta al Humano dos opciones:
-- **Opción A (Stub de Redirección):** Reemplazar el contenido del satélite con un stub indicando: `> HALLAZGOS GRADUADOS AL SSOT: Los GAPs de este documento fueron inyectados como CAs formales en v1_user_stories.md (US-XXX, CA-N a CA-M). Este archivo es histórico y de solo lectura.`
+- **Opción A (Stub de Redirección):** Reemplazar el contenido del satélite con un stub indicando: `> HALLAZGOS GRADUADOS AL SSOT: Los GAPs de este documento fueron inyectados como CAs formales en el archivo de Épica correspondiente (docs/requirements/epics/epic_X_*.md, US-XXX, CA-N a CA-M). Este archivo es histórico y de solo lectura.`
 - **Opción B (Archivo Histórico):** Mantener el satélite intacto pero moverlo a una subcarpeta `docs/requirements/archive/` para sacarlo del scope activo del RAG.
 
 Esperar la decisión del Humano antes de aplicar.
@@ -104,7 +108,7 @@ Esperar la decisión del Humano antes de aplicar.
 
 Antes de dar el workflow por completado, verifica mentalmente:
 
-- [ ] Cada GAP resuelto tiene un CA formal en `v1_user_stories.md`.
+- [ ] Cada GAP resuelto tiene un CA formal en el archivo de Épica correspondiente (`docs/requirements/epics/epic_X_*.md`).
 - [ ] Los CAs nuevos están en formato Gherkin estándar (Given/When/Then).
 - [ ] Los CAs nuevos tienen el marcador `[REMEDIACIÓN]` y referencia al ticket de origen.
 - [ ] La numeración secuencial es correcta (sin huecos ni duplicados).

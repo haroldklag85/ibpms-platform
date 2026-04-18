@@ -18,6 +18,6 @@ Debes abordar:
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal. 
 Una vez que hayas codificado los controladores, servicios y DTOs, asegúrate de que el código compile y guarda inmediatamente todo tu trabajo ejecutando en la consola de tu editor:
-`git stash save "temp-backend-US003-ca21-ca25"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Notifica al Arquitecto Humano una vez terminado, pero no empujes nada.

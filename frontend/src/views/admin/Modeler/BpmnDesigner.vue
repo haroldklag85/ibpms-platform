@@ -23,6 +23,8 @@
                 'bg-green-100 text-green-800': processStatus === 'ACTIVO',
                 'bg-gray-100 text-gray-600': processStatus === 'ARCHIVADO'
               }">{{ processStatus }}</span>
+        <!-- CA-63: Indicador de Sandbox -->
+        <span v-if="processStatus === 'BORRADOR'" class="text-xs bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2">🧪 SANDBOX</span>
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
@@ -55,10 +57,16 @@
         <button @click="showVersions = !showVersions" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
           📜 Versiones
         </button>
+        <!-- Deploy Requests CA-69 -->
+        <button v-show="mockRole === 'BPMN_Release_Manager'" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
+          📨 Solicitudes
+        </button>
         <!-- Mock Role CA-21 -->
         <select v-model="mockRole" title="Evaluar UI con diferentes perfiles CA-21" class="text-xs bg-indigo-50 dark:bg-gray-700 border-indigo-200 dark:border-gray-600 rounded px-2 py-1 focus:ring-indigo-500 text-indigo-800 dark:text-white font-bold ml-2">
            <option value="BPMN_Designer">👨‍💻 Diseñador</option>
            <option value="BPMN_Release_Manager">👑 Release Manager</option>
+           <!-- CA-66 -->
+           <option value="Super_Admin">🛡️ Super Admin</option>
         </select>
         <!-- Instance Manager CA-8 -->
         <button @click="showInstancesManager = true" class="bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold hover:bg-indigo-100 flex items-center gap-1 transition">
@@ -84,6 +92,8 @@
       <div class="flex items-center space-x-4">
         <span v-if="isLocked" class="flex items-center text-orange-700 font-bold bg-orange-100 px-3 py-1 rounded shadow-sm border border-orange-200">
           🔒 SOLO LECTURA: Bloqueado por {{ lockOwner }} ({{ lockSince }})
+          <!-- CA-66: Break Lock -->
+          <button v-if="mockRole === 'Super_Admin'" @click="breakLock" class="ml-3 bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded text-[10px] uppercase transition shadow-sm border border-red-800">🔓 Romper Candado</button>
         </span>
         <span v-else class="text-green-600 font-medium">🔓 Edición Exclusiva Adquirida</span>
       </div>
@@ -223,6 +233,42 @@
                 {{ form.type === 'MAESTRO' ? '🔵' : '🟢' }} {{ form.name }} ({{ form.key }})
               </option>
             </select>
+          </div>
+
+          <!-- Service Task Topics (CA-70) -->
+          <div v-if="selectedElement.type === 'bpmn:ServiceTask'" class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm mb-4">
+             <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+                <span>🏷️ External Topic (CA-70)</span>
+             </label>
+             <p class="text-[10px] text-gray-500 mb-2">Tópico al que se suscriben los External Task Workers.</p>
+             <div class="relative">
+                <select v-model="selectedElement.props.topic" @change="syncElementProperties('camunda:topic', selectedElement.props.topic)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" :disabled="loadingTopics">
+                   <option value="">-- Seleccionar Tópico --</option>
+                   <option v-for="t in externalTopics" :key="t" :value="t">{{ t }}</option>
+                </select>
+                <div v-if="loadingTopics" class="absolute top-0 right-3 h-full flex items-center">
+                   <span class="animate-spin text-indigo-500 font-bold text-sm">↻</span>
+                </div>
+             </div>
+          </div>
+
+          <!-- CA-12: Business Rule Task — DMN Binding (Protección de Derechos Adquiridos) -->
+          <div v-if="selectedElement.type === 'bpmn:BusinessRuleTask'" class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded shadow-sm mb-4">
+             <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-2 flex items-center justify-between">
+                <span>📐 DMN Binding (CA-12)</span>
+                <AppTooltip content="Configura si las reglas DMN se evalúan con la versión vigente al desplegar (DEPLOYMENT) o con la última publicada (LATEST). Default: DEPLOYMENT para protección jurídica de derechos adquiridos." />
+             </label>
+             <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Estrategia de versionamiento de la tabla DMN vinculada a esta tarea.</p>
+             <select v-model="selectedElement.props.dmnBinding"
+                     @change="syncElementProperties('camunda:decisionRefBinding', selectedElement.props.dmnBinding)"
+                     class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
+                <option value="deployment">🔒 DEPLOYMENT (Default — Protección de Derechos Adquiridos)</option>
+                <option value="latest">⚡ LATEST (Late Binding — Siempre la regla más reciente)</option>
+             </select>
+             <p class="text-[10px] text-amber-600 dark:text-amber-500 mt-1 leading-tight">
+                <strong>DEPLOYMENT:</strong> Los casos en vuelo se evalúan con la DMN activa al nacer el caso.<br>
+                <strong>LATEST:</strong> Los casos en vuelo se evalúan con la DMN más reciente publicada.
+             </p>
           </div>
 
           <!-- Service Task Connector (CA-47, CA-49) -->
@@ -376,8 +422,14 @@
           <div v-if="activeInstances > 0 && deployStrategy === 'migrate'" class="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs text-yellow-800">
             ⚠️ Se migrarán {{ activeInstances }} instancias en vuelo a la nueva versión. Esta acción es irreversible.
           </div>
-          <div v-if="activeInstances > 0 && deployStrategy === 'migrate'" class="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs text-yellow-800">
-            ⚠️ Se migrarán {{ activeInstances }} instancias en vuelo a la nueva versión. Esta acción es irreversible.
+          <!-- CA-65 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Justificación del Despliegue <span class="text-red-500">*</span></label>
+            <textarea v-model="deployComment" rows="3" minlength="10" placeholder="Justificación del despliegue..." class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2.5 border text-sm"></textarea>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="forceDeploy" v-model="forceDeploy" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
+            <label for="forceDeploy" class="text-sm font-medium text-gray-700 dark:text-gray-300">Omitir advertencias ⚠️ del Pre-Flight</label>
           </div>
           <div class="flex justify-end space-x-3 pt-2">
             <button @click="showDeployModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
@@ -610,10 +662,47 @@
       </div>
     </Transition>
 
+    <!-- ═══════ Drawer: Deploy Requests (CA-69) ═══════ -->
+    <Transition name="slide-left">
+      <div v-if="showDeployRequests" class="fixed inset-y-0 right-0 w-96 bg-white dark:bg-gray-800 shadow-2xl z-50 flex flex-col border-l border-gray-200 dark:border-gray-700">
+        <div class="px-5 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0">
+          <h3 class="text-sm font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-2">📨 Solicitudes de Despliegue</h3>
+          <button @click="showDeployRequests = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+        <div class="flex-1 overflow-y-auto relative p-4 bg-gray-50 dark:bg-gray-900">
+          <div v-if="loadingDeployRequests" class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 flex items-center justify-center z-10">
+            <span class="text-sm text-gray-500 font-bold animate-pulse">Cargando solicitudes...</span>
+          </div>
+          <div class="space-y-3">
+            <div v-for="req in deployRequests" :key="req.id" class="p-4 bg-white dark:bg-gray-800 border rounded-lg shadow-sm flex flex-col gap-2 border-indigo-200 dark:border-indigo-700 relative">
+              <span class="font-bold text-sm text-gray-900 dark:text-gray-100">{{ req.processName || processId }} (v{{ req.version }})</span>
+              <p class="text-xs text-gray-500 line-clamp-2 italic">"{{ req.comment }}"</p>
+              <div class="flex flex-col gap-1 mt-1">
+                <span class="text-[10px] text-gray-500 dark:text-gray-400">👤 Solicitado por: {{ req.requester }}</span>
+                <span class="text-[10px] text-gray-500 dark:text-gray-400">📅 {{ req.requestedAt }}</span>
+              </div>
+              <div class="mt-2 flex gap-2 w-full">
+                <button @click="handleDeployRequest(req.id, true)" class="flex-1 bg-green-100 hover:bg-green-200 text-green-800 py-1.5 rounded text-xs font-bold transition flex justify-center items-center gap-1 shadow-sm border border-green-300">
+                  ✅ Aprobar
+                </button>
+                <button @click="handleDeployRequest(req.id, false)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-800 py-1.5 rounded text-xs font-bold transition flex justify-center items-center gap-1 shadow-sm border border-red-300">
+                  ❌ Rechazar
+                </button>
+              </div>
+            </div>
+            <div v-if="deployRequests.length === 0 && !loadingDeployRequests" class="text-center text-xs text-gray-500 py-10 font-bold">
+              No hay solicitudes pendientes.
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
     <!-- ═══════ Gestor de Instancias (CA-8 a CA-10) ═══════ -->
     <InstancesManager 
       :show="showInstancesManager"
       :processId="processId"
+      :isSandbox="processStatus === 'BORRADOR'"
       @close="showInstancesManager = false"
       @success="msg => showToast('✅ ' + msg, 'success')"
     />
@@ -634,7 +723,7 @@ import DOMPurify from 'dompurify';
 const Vue3Lottie = defineAsyncComponent(() => import('vue3-lottie').then(m => m.Vue3Lottie));
 
 const corruptNodeId = ref<string | null>(null);
-const mockRole = ref<'BPMN_Designer' | 'BPMN_Release_Manager'>('BPMN_Release_Manager'); // CA-21
+const mockRole = ref<'BPMN_Designer' | 'BPMN_Release_Manager' | 'Super_Admin'>('BPMN_Release_Manager'); // CA-21, CA-66
 
 // ── Types ────────────────────────────────────────────────────
 interface BpmnElement {
@@ -670,7 +759,8 @@ const selectedElement = ref<BpmnElement>({
     aiTokenLimit: 4000,
     aiTone: 'NEUTRAL',
     sla: '',
-    calledElement: ''
+    calledElement: '',
+    topic: ''
   }
 });
 
@@ -730,6 +820,8 @@ const preFlightStatus = ref<'VALIDATED' | 'PENDING' | 'WARNING' | 'ERROR'>('PEND
 // ── Deploy ───────────────────────────────────────────────────
 const isDeploying = ref(false);
 const showDeployModal = ref(false);
+const deployComment = ref(''); // CA-65
+const forceDeploy = ref(false); // CA-65
 const deployStrategy = ref('coexist');
 const activeInstances = ref(12);
 const validationErrors = ref<string[]>([]);
@@ -817,6 +909,78 @@ const fetchLockState = async () => {
       lockOwner.value = null;
       lockSince.value = null;
     }
+  }
+};
+
+// CA-66: Heartbeat & Break-Lock
+let heartbeatInterval: any = null;
+const setupHeartbeat = () => {
+  if (heartbeatInterval) clearInterval(heartbeatInterval);
+  heartbeatInterval = setInterval(async () => {
+    if (processId.value && document.hasFocus() && !isLocked.value) {
+      try { await api.heartbeatProcessLock(processId.value); } catch (e) {}
+    }
+  }, 30000);
+};
+
+const breakLock = async () => {
+  try {
+    await api.forceUnlockProcess(processId.value);
+    showToast('🔓 Candado roto exitosamente por el Administrador', 'success');
+    await fetchLockState();
+  } catch (err: any) {
+    showToast(err.response?.data?.error || 'Falló al intentar romper candado', 'error');
+  }
+};
+
+// CA-69: Deploy Requests Logic
+const showDeployRequests = ref(false);
+const loadingDeployRequests = ref(false);
+const deployRequests = ref<any[]>([]);
+
+const openDeployRequests = async () => {
+  showDeployRequests.value = true;
+  loadingDeployRequests.value = true;
+  try {
+     const { data } = await api.getDeployRequests(processId.value);
+     deployRequests.value = data || [];
+  } catch (err) {
+     showToast('Error obteniendo solicitudes', 'error');
+  } finally {
+     loadingDeployRequests.value = false;
+  }
+};
+
+const handleDeployRequest = async (id: string, approve: boolean) => {
+  try {
+     if (approve) {
+        await api.approveDeployRequest(id, {});
+        showToast('Solicitud Aprobada. Proceso desplegado.', 'success');
+     } else {
+        await api.rejectDeployRequest(id, { reason: 'Rechazado por UI' });
+        showToast('Solicitud Rechazada.', 'success');
+     }
+     await openDeployRequests();
+     if (deployRequests.value.length === 0) showDeployRequests.value = false;
+  } catch (err) {
+     showToast(`Error al procesar la solicitud`, 'error');
+  }
+};
+
+// CA-70: External Topics
+const externalTopics = ref<string[]>([]);
+const loadingTopics = ref(false);
+
+const fetchTopics = async () => {
+  if (externalTopics.value.length > 0) return;
+  loadingTopics.value = true;
+  try {
+     const { data } = await api.getExternalTaskTopics();
+     externalTopics.value = data || ['topic-legacy-default'];
+  } catch (err) {
+     externalTopics.value = ['topic-fallback'];
+  } finally {
+     loadingTopics.value = false;
   }
 };
 
@@ -972,7 +1136,7 @@ const isTypeCompatible = (schemaType: string, varType: string) => {
   return true;
 };
 
-const saveConnectorMapping = () => {
+const saveConnectorMapping = async () => {
   mappingErrors.value = {};
   for (const schema of connectorSchema.value) {
     const assignedVarName = connectorMappings.value[schema.name];
@@ -993,6 +1157,17 @@ const saveConnectorMapping = () => {
   if (element) {
      const modeling = modelerInstance.get('modeling');
      modeling.updateProperties(element, { "camunda:inputOutput": JSON.stringify(connectorMappings.value) });
+  }
+
+  // CA-68: Integración de Data Mapping a Backend
+  try {
+     await api.saveDataMappings(processId.value, selectedElement.value.id, {
+        connectorId: selectedConnector.value,
+        mappings: connectorMappings.value
+     });
+     showToast('Mapeos persistidos en Base de Datos Mappings', 'success');
+  } catch (err) {
+     showToast('Error persistiendo mappings estructurados (CA-68)', 'error');
   }
 };
 
@@ -1042,6 +1217,7 @@ const emptyBpmn = `<?xml version="1.0" encoding="UTF-8"?>
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
+  setupHeartbeat(); // CA-66
   try {
     const { default: BpmnModeler } = await import('bpmn-js/lib/Modeler');
     // @ts-ignore
@@ -1056,9 +1232,10 @@ onMounted(async () => {
     await modelerInstance.importXML(emptyBpmn);
     modelerInstance.get('canvas').zoom('fit-viewport');
 
-    // Initial Load CA-30 Forms & CA-45 Connectors
+    // Initial Load CA-30 Forms & CA-45 Connectors & CA-70 Topics
     fetchForms();
     fetchConnectors();
+    fetchTopics();
     try {
       const { data } = await api.getBpmnComplexityLimit();
       if (data && data.limit) bpmnComplexityLimit.value = data.limit;
@@ -1097,12 +1274,14 @@ onMounted(async () => {
             sla: bo.get('camunda:dueDate') || '',
             calledElement: bo.calledElement || '',
             formKey: bo.get('camunda:formKey') || '',
+            topic: bo.get('camunda:topic') || '',
+            dmnBinding: bo.get('camunda:decisionRefBinding') || 'deployment', // CA-12: Default seguro
             aiTokenLimit: 4000,
             aiTone: 'NEUTRAL'
           }
         };
       } else {
-        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '' } };
+        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', dmnBinding: 'deployment' } };
       }
     });
 
@@ -1197,6 +1376,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  if (heartbeatInterval) clearInterval(heartbeatInterval); // CA-66
   // CA-04: Purga RAG al destruir el componente Vue nativo (Vue router leave)
   api.destroyCopilotSession();
   window.removeEventListener('beforeunload', api.destroyCopilotSession);
@@ -1343,6 +1523,8 @@ const confirmDeploy = async () => {
       const formData = new FormData();
       formData.append('processId', processId.value);
       formData.append('strategy', deployStrategy.value);
+      formData.append('deploy_comment', deployComment.value); // CA-65
+      formData.append('force_deploy', forceDeploy.value.toString()); // CA-65
       const xmlBlob = new Blob([xml!], { type: 'application/xml' });
       formData.append('file', xmlBlob, `${processId.value}.bpmn`);
 
@@ -1354,7 +1536,13 @@ const confirmDeploy = async () => {
        alert(`Proceso desplegado con Éxito.\\n\\nSe han auto-generado los siguientes perfiles de seguridad:\\n➡ ${deployResponse.data.generatedRoles.join('\\n➡ ')}\\n\\nPuedes asignar estos roles en el CND.`);
     }
     
-    showToast(`✅ Proceso "${currentProcessName.value}" desplegado exitosamente`);
+    // CA-65: Reflejo en Toast
+    const v = deployResponse?.data?.version;
+    const did = deployResponse?.data?.deployment_id;
+    const dat = deployResponse?.data?.deployed_at;
+    const suffix = (v && did) ? ` [v${v} | ID: ${did} | ${dat}]` : '';
+    
+    showToast(`✅ Proceso "${currentProcessName.value}" desplegado exitosamente${suffix}`);
     processStatus.value = 'ACTIVO';
     showDeployModal.value = false;
   } catch (err: any) {
@@ -1471,22 +1659,33 @@ const sendCopilotMessage = async () => {
     const { xml } = await modelerInstance.saveXML({ format: true });
     
     // CA-01 SSE
-    const endpoint = (import.meta as any).env?.VITE_API_URL ? `${(import.meta as any).env.VITE_API_URL}/api/v1/dmn/copilot/stream` : 'http://localhost:8080/api/v1/dmn/copilot/stream';
+    const endpoint = (import.meta as any).env?.VITE_API_URL ? `${(import.meta as any).env.VITE_API_URL}/api/v1/design/processes/copilot/stream` : 'http://localhost:8080/api/v1/design/processes/copilot/stream';
+    
+    // Inyectamos el objeto reactivo para el streming y apuntamos a su índice
+    const activeAiMessage = { role: 'ai', text: '', xmlPayload: undefined, options: undefined };
+    copilotMessages.value.push(activeAiMessage as any);
+    copilotLoading.value = false; // Paramos lottie para dejar ver streaming
+    
     try {
         await fetchEventSource(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('ibpms_token') || ''}` },
             body: JSON.stringify({ prompt, xml }),
             onmessage(msg) {
-                if (msg.event === 'chunk' || msg.data) simulatedText += msg.data;
-                if (msg.data.includes('[END_STREAM]')) throw new Error('GracefulEnd'); 
+                // Fragmentos SSE pasivos
+                const dataText = typeof msg.data === 'string' ? msg.data.replace('[END_STREAM]', '') : '';
+                if (dataText) {
+                    simulatedText += dataText;
+                    activeAiMessage.text += dataText;
+                }
+                if (msg.data && msg.data.includes('[END_STREAM]')) throw new Error('GracefulEnd'); 
             },
             onclose() { throw new Error('GracefulEnd'); },
             onerror(err) { throw err; }
         });
     } catch(e: any) {
         if (e.message !== 'GracefulEnd') {
-             // Fallback
+             activeAiMessage.text += '\n[Conexión SSE perdida o degradada. Usando Fallback de IA Offline]';
              await new Promise(r => setTimeout(r, 2000));
         }
     }
@@ -1509,16 +1708,16 @@ const sendCopilotMessage = async () => {
     // CA-01: Sanear payload puro con DOMPurify
     const cleanXml = DOMPurify.sanitize(aiPayloadXML, { USE_PROFILES: { svg: true } });
 
-    copilotMessages.value.push({
-      role: 'ai',
-      text: prompt.toLowerCase().includes('triage') || prompt.toLowerCase().includes('aclarar') || prompt.toLowerCase().includes('rol') 
-              ? 'He detectado ambigüedad en los Perfiles de Seguridad requeridos. ¿Qué política de identidad deseas aplicar?'
-              : 'Análisis y generación completada atómicamente.',
-      xmlPayload: prompt.toLowerCase().includes('genera') ? cleanXml : undefined,
-      options: prompt.toLowerCase().includes('triage') || prompt.toLowerCase().includes('aclarar') || prompt.toLowerCase().includes('rol')
-              ? ['Usar Rol Existente (SSO)', 'Crear Nuevo Rol IAM', 'Omitir Seguridad (Solo Dev)']
-              : undefined
-    });
+    // Evaluamos el prompt para dotar al SSE de contexto / mocks si no los proveyó el backend
+    if (prompt.toLowerCase().includes('triage') || prompt.toLowerCase().includes('aclarar') || prompt.toLowerCase().includes('rol')) {
+        if (!activeAiMessage.text) activeAiMessage.text = 'He detectado ambigüedad en los Perfiles de Seguridad requeridos. ¿Qué política de identidad deseas aplicar?';
+        activeAiMessage.options = ['Usar Rol Existente (SSO)', 'Crear Nuevo Rol IAM', 'Omitir Seguridad (Solo Dev)'] as any;
+    }
+    
+    if (prompt.toLowerCase().includes('genera') || prompt.toLowerCase().includes('crea')) {
+        if (!activeAiMessage.text) activeAiMessage.text = 'Análisis y generación completada atómicamente.';
+        activeAiMessage.xmlPayload = cleanXml as any;
+    }
 
     if (prompt.toLowerCase().includes('genera') || prompt.toLowerCase().includes('crea')) {
        // CA-08: Inyección Atómica Wrap con Command Stack & Undo/Redo Halo

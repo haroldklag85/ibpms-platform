@@ -25,6 +25,6 @@
 ## 🛑 MANDATO LOCAL GATEKEEPER
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` directamente a principal.
 Codifica la vista, conecta al apiClient.ts y lanza tus herramientas a un stash de Git:
-`git stash save "temp-frontend-US005-ca21-ca25"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

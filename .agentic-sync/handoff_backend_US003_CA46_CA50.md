@@ -16,6 +16,6 @@ En esta Iteración 10, la atención se centra mayoritariamente en la capa visual
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal.
 En cuanto realices los saneamientos y asegures la compilación, archívalos limpiamente:
-`git stash save "temp-backend-US003-ca46-ca50"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualemente al Arquitecto Líder apenas termine el guardado.

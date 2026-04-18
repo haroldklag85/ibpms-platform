@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,9 +14,6 @@ public class OrphanedTaskCleanupIntegrationTest {
 
     @Autowired
     private TaskService taskService;
-    
-    // Asumiremos que el backend emite un Domain Event o que podemos inyectar un manejador sintético
-    @Autowired
 
     @Test
     @DisplayName("US-038 CA-10 Gobernanza: El Listener Asíncrono reacciona a despidos limpiando los Assignees en Camunda")

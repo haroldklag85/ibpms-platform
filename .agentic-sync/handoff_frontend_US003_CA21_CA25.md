@@ -18,6 +18,6 @@ Debes abordar los siguientes Criterios (CA):
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal. 
 En cuanto tu código Vue, Stores y el IDE Zod funcionen armónicamente en caliente (HMR), empaqueta silenciosamente tu contribución ejecutando esta línea estricta en la terminal:
-`git stash save "temp-frontend-US003-ca21-ca25"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Al terminar el Stash, notifica tu éxito al superior.

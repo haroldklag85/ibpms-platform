@@ -19,6 +19,6 @@ Esta es una fase intensiva de Frontend. Tu labor en `FormDesigner.vue` abarca lo
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer un `git commit` directamente. 
 Asegúrate de que la interfaz corre, edita y la firma se puede trazar con el mouse. Luego detente, guarda todo, y cierra:
-`git stash save "temp-frontend-US003-ca31-ca35"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Retorna el reporte de finalización al Arquitecto Humano.

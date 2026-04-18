@@ -14,7 +14,9 @@ import com.ibpms.poc.application.service.ProcessMigrationService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import com.ibpms.poc.application.service.BpmnDesignService;
+import com.ibpms.poc.infrastructure.web.annotation.SandboxOperation;
+import com.ibpms.poc.infrastructure.jpa.repository.ExternalTaskTopicRepository;
 
 /**
  * REST Controller for BPMN Design operations (Integration Gaps Mock).
@@ -23,15 +25,22 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequestMapping("/api/v1/design/processes")
 public class BpmnDesignController {
 
-    private static final Map<String, String> pessimisticLocks = new ConcurrentHashMap<>();
-
     private final PreFlightAnalyzerService preFlightAnalyzerService;
     private final ProcessMigrationService processMigrationService;
+    private final BpmnDesignService bpmnDesignService;
+    private final ExternalTaskTopicRepository externalTaskTopicRepository;
+    private final com.ibpms.poc.infrastructure.jpa.repository.DataMappingRepository dataMappingRepository;
 
     public BpmnDesignController(PreFlightAnalyzerService preFlightAnalyzerService, 
-                                ProcessMigrationService processMigrationService) {
+                                ProcessMigrationService processMigrationService,
+                                BpmnDesignService bpmnDesignService,
+                                ExternalTaskTopicRepository externalTaskTopicRepository,
+                                com.ibpms.poc.infrastructure.jpa.repository.DataMappingRepository dataMappingRepository) {
         this.preFlightAnalyzerService = preFlightAnalyzerService;
         this.processMigrationService = processMigrationService;
+        this.bpmnDesignService = bpmnDesignService;
+        this.externalTaskTopicRepository = externalTaskTopicRepository;
+        this.dataMappingRepository = dataMappingRepository;
     }
 
     @PutMapping("/{id}/draft")
@@ -56,32 +65,53 @@ public class BpmnDesignController {
     @PostMapping("/deploy")
     public ResponseEntity<?> deployBpmnProcess(
             @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "deploy_comment", required = true) String deployComment,
+            @RequestParam(value = "force_deploy", required = false, defaultValue = "false") boolean forceDeploy,
             @RequestHeader(value = "X-Mock-Role", required = false, defaultValue = "GUEST") String role) {
-        
+
         // CA-21: Escudo RBAC para el Despliegue
         if (!"BPMN_Release_Manager".equals(role)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager para comisionar modelos en Producción"));
+                    .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager."));
         }
 
-        if (file.isEmpty() || !(file.getOriginalFilename() != null ? file.getOriginalFilename() : "document").endsWith(".bpmn")) {
+        // CA-65: Validación deploy_comment (min 10 chars)
+        if (deployComment == null || deployComment.trim().length() < 10) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "deploy_comment es obligatorio y debe tener al menos 10 caracteres."));
+        }
+
+        String originalFilename = java.util.Objects.requireNonNullElse(file.getOriginalFilename(), "document");
+        if (file.isEmpty() || !originalFilename.endsWith(".bpmn")) {
             return ResponseEntity.badRequest().body(Map.of("error", "Debe adjuntar un archivo .bpmn válido."));
         }
 
         try {
             DeploymentValidationResponse validation = preFlightAnalyzerService.analizar(file.getInputStream());
-            
+
             if (!validation.isValid()) {
-                // CA-2: Arrojar HTTP 422 si hay errores de validación
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(validation);
             }
 
-            // Aquí se ejecutaría el despliegue al motor Camunda
-            // Por V1 (Mock): simulate deploy
+            // CA-65: Si hay warnings y no se fuerza el deploy, bloquear
+            if (!validation.getWarnings().isEmpty() && !forceDeploy) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                    "error", "El Pre-Flight tiene advertencias. Use force_deploy=true para omitirlas.",
+                    "warnings", validation.getWarnings()
+                ));
+            }
+
+            // CA-65: Response body alineado con SSOT
+            String mockUser = role; // TODO: Obtener desde token JWT
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "message", "Proceso desplegado exitosamente.",
+                "deployment_id", "dep-" + java.util.UUID.randomUUID().toString().substring(0, 8),
+                "process_definition_id", java.util.UUID.randomUUID().toString(),
+                "process_definition_key", originalFilename.replace(".bpmn", ""),
+                "version", 1,
+                "deployed_at", java.time.Instant.now().toString(),
+                "deployed_by", mockUser,
                 "warnings", validation.getWarnings(),
-                "generatedRoles", validation.getGeneratedRoles()
+                "generated_roles", validation.getGeneratedRoles()
             ));
 
         } catch (Exception e) {
@@ -193,27 +223,53 @@ public class BpmnDesignController {
             Map.of("id", "template_1", "name", "Aprobación Simple", "xml", tmplAprobacion)
         ));
     }
-
     /**
-     * CA-16: Bloqueo Pesimista (Adquisición)
+     * CA-66: Bloqueo Pesimista (Adquisición) con DB y Heartbeat
      */
     @PostMapping("/{processDefinitionKey}/lock")
-    public ResponseEntity<?> acquireLock(@PathVariable("processDefinitionKey") String key) {
+    public ResponseEntity<?> acquireLock(@PathVariable("processDefinitionKey") String key, @RequestParam(value="sessionId", defaultValue="unknown") String sessionId) {
         String mockUser = "user-mock-123";
-        if (pessimisticLocks.containsKey(key) && !pessimisticLocks.get(key).equals(mockUser)) {
-            return ResponseEntity.status(423).body(Map.of("error", "El proceso ya se encuentra bloqueado por otro usuario."));
+        try {
+            bpmnDesignService.acquireLockTechnicalKey(key, mockUser, sessionId);
+            return ResponseEntity.ok(Map.of("status", "LOCKED", "owner", mockUser));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(423).body(Map.of("error", ex.getMessage()));
         }
-        pessimisticLocks.put(key, mockUser);
-        return ResponseEntity.ok(Map.of("status", "LOCKED", "owner", mockUser));
     }
 
     /**
-     * CA-16: Bloqueo Pesimista (Liberación)
+     * CA-66: Bloqueo Pesimista (Heartbeat)
+     */
+    @PostMapping("/{processDefinitionKey}/lock/heartbeat")
+    public ResponseEntity<?> heartbeatLock(@PathVariable("processDefinitionKey") String key) {
+        String mockUser = "user-mock-123";
+        try {
+            bpmnDesignService.heartbeatLock(key, mockUser);
+            return ResponseEntity.ok(Map.of("status", "HEARTBEAT_OK"));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(409).body(Map.of("error", ex.getMessage()));
+        }
+    }
+
+    /**
+     * CA-66: Bloqueo Pesimista (Liberación)
      */
     @DeleteMapping("/{processDefinitionKey}/lock")
     public ResponseEntity<?> releaseLock(@PathVariable("processDefinitionKey") String key) {
-        pessimisticLocks.remove(key);
+        String mockUser = "user-mock-123";
+        bpmnDesignService.releaseLockTechnicalKey(key, mockUser);
         return ResponseEntity.ok(Map.of("status", "UNLOCKED"));
+    }
+
+    /**
+     * CA-64: Break-lock de Emergencia
+     */
+    @DeleteMapping("/{processDefinitionKey}/lock/force")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> forceReleaseLock(@PathVariable("processDefinitionKey") String key) {
+        String adminUser = "admin-mock-123"; // TODO: Obtain from token context
+        bpmnDesignService.forceReleaseLock(key, adminUser);
+        return ResponseEntity.ok(Map.of("status", "FORCED_UNLOCKED"));
     }
 
     /**
@@ -227,6 +283,68 @@ public class BpmnDesignController {
     }
 
     /**
+     * CA-69: Request Deploy
+     */
+    @PostMapping("/deploy-requests")
+    public ResponseEntity<?> requestDeploy(@RequestBody Map<String, String> payload) {
+        String processKey = payload.get("processDefinitionKey");
+        String requestedBy = "user-mock-123"; // TODO: Token
+        return ResponseEntity.ok(bpmnDesignService.createDeployRequest(processKey, requestedBy));
+    }
+
+    /**
+     * CA-69: Approve Deploy Request
+     */
+    @PostMapping("/deploy-requests/{id}/approve")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> approveDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload) {
+        String adminUser = "admin-mock-123";
+        String comment = payload.get("comment");
+        return ResponseEntity.ok(bpmnDesignService.approveDeployRequest(id, adminUser, comment));
+    }
+
+    /**
+     * CA-69: Reject Deploy Request
+     */
+    @PostMapping("/deploy-requests/{id}/reject")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> rejectDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload) {
+        String adminUser = "admin-mock-123";
+        String comment = payload.get("comment");
+        return ResponseEntity.ok(bpmnDesignService.rejectDeployRequest(id, adminUser, comment));
+    }
+
+    /**
+     * CA-70: Catálogo de External Task Topics
+     */
+    @GetMapping("/external-task-topics")
+    public ResponseEntity<?> getExternalTaskTopics() {
+        return ResponseEntity.ok(externalTaskTopicRepository.findByIsActiveTrue());
+    }
+
+    /**
+     * CA-68: Data Mappings
+     */
+    @GetMapping("/{processDefinitionKey}/data-mappings")
+    public ResponseEntity<?> getDataMappings(@PathVariable("processDefinitionKey") String key) {
+        return ResponseEntity.ok(dataMappingRepository.findByProcessDefinitionKey(key));
+    }
+
+    @PostMapping("/{processDefinitionKey}/data-mappings")
+    public ResponseEntity<?> createDataMapping(@PathVariable("processDefinitionKey") String key,
+                                               @RequestBody java.util.Map<String, String> payload) {
+        com.ibpms.poc.infrastructure.jpa.entity.DataMappingEntity entity =
+            new com.ibpms.poc.infrastructure.jpa.entity.DataMappingEntity(
+                key,
+                payload.get("taskId"),
+                payload.get("connectorId"),
+                payload.get("mappingJson")
+            );
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+            .body(dataMappingRepository.save(entity));
+    }
+
+    /**
      * CA-19: Autosave Borrador (POST explícito)
      */
     @PostMapping("/{processDefinitionKey}/draft")
@@ -237,6 +355,7 @@ public class BpmnDesignController {
     /**
      * CA-20: Sandbox Simulator (Extrae estáticamente 3 nodos a animar)
      */
+    @SandboxOperation
     @PostMapping("/sandbox-simulate")
     public ResponseEntity<?> sandboxSimulate(@RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(Map.of(
@@ -285,6 +404,7 @@ public class BpmnDesignController {
     /**
      * CA-41: Simulador Hardcore Camunda V1 (Instancia y Aborta)
      */
+    @SandboxOperation
     @PostMapping("/sandbox-spawn")
     public ResponseEntity<?> sandboxSpawnInstance(@RequestParam("processDefinitionKey") String key) {
         String instanceId = UUID.randomUUID().toString();
@@ -312,7 +432,9 @@ public class BpmnDesignController {
     }
 
     /**
-     * CA-50: Diccionario de Variables Zod MOCK
+     * CA-17 / CA-50: Diccionario de Variables BPMN.
+     * Intenta extraer Input/Output parameters de UserTasks del proceso desplegado.
+     * Si no existe proceso desplegado, retorna lista vacía (graceful fallback).
      */
     @GetMapping("/{processDefinitionKey}/variables")
     public ResponseEntity<List<Map<String, String>>> getProcessVariables(@PathVariable("processDefinitionKey") String key) {

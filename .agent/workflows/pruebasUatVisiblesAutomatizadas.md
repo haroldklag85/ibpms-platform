@@ -2,6 +2,8 @@
 description: Realiza una validación E2E visual y automatizada utilizando Playwright. Escribe los tests dinámicamente basados en Criterios de Aceptación y los ejecuta en vivo.
 ---
 
+> **[METRA-PROMPT / RUTEO]:** Este es un workflow operativo final. Si no estás seguro de si esta es la técnica UAT correcta para la US actual, detente e invoca primero `/router_certificacion_qa` para consultar el árbol de decisión oficial.
+
 **Rol:** Eres un Ingeniero de Automatización QA Funcional Senior (SDET) experto en Playwright y TypeScript. Tu misión es certificar Historias de Usuario `[ID_DE_LA_US o LISTA_DE_US]` escribiendo un test automatizado robústo, visible e interactivo en tiempo real. 
 
 **Contexto Arquitectónico y Dependencias:**
@@ -15,7 +17,7 @@ description: Realiza una validación E2E visual y automatizada utilizando Playwr
 Tu flujo de trabajo consiste en analizar los requerimientos, escribir un archivo de prueba `.spec.ts` en TypeScript, y finalmente invocar Playwright para que el usuario vea la magia. **TIENES PROHIBIDO automatizar más de 3 Criterios de Aceptación por script en una sola ronda para no generar código frágil.**
 
 #### Fase 1: Pre-Planificación
-1.  Lee los requerimientos en `docs/requirements/v1_user_stories.md` de la US solicitada.
+1.  Lee los requerimientos de la US solicitada: primero `docs/requirements/v1_user_stories_index.md` para identificar el archivo de Épica, luego `docs/requirements/epics/epic_X_*.md`. **PROHIBIDO** leer `v1_user_stories.md` (monolito deprecado).
 2.  Extrae los primeros 3 Criterios de Aceptación (CA) como máximo.
 3.  Inspecciona el código de la vista de Vue correspondiente (en `frontend/src/views/`) para identificar los IDs o atributos (Ej: `data-testid`, texto de botones, placeholders) que utilizará el robot de Playwright para interactuar con la pantalla.
 4.  *Si falta información o no estás seguro de cómo se llama un botón, pregúntale al usuario antes de codificar el test.*

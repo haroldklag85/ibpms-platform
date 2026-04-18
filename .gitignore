@@ -1,29 +1,78 @@
-# Node.js
-node_modules/
-npm-debug.log
-yarn-error.log
-dist/
-build/
-
-# Java / Maven
-target/
-*.class
+# ==========================================
+# 1. ARCHIVOS BINARIOS Y COMPRIMIDOS (CRÍTICO)
+# ==========================================
 *.jar
 *.war
 *.ear
 *.nar
+*.dll
+*.exe
+*.zip
+*.tar.gz
+*.rar
 
-# IDEs and Editors
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-.classpath
-.project
-.settings/
+# ==========================================
+# 2. INSTALACIONES LOCALES Y BASURA DEL REPO
+# ==========================================
+maven_bin/
+maven_install/
+maven.zip
 
-# OS generated files
+# ==========================================
+# 3. BACKEND (Java / Spring Boot / Maven)
+# ==========================================
+target/
+.mvn/wrapper/maven-wrapper.jar
+mvnw
+mvnw.cmd
+*.log
+mvn_log.txt
+logs/
+
+# ==========================================
+# 4. FRONTEND (Vue 3 / Vite / Node.js)
+# ==========================================
+node_modules/
+dist/
+dist-ssr/
+build/
+.npm/
+coverage/
+
+# ==========================================
+# 5. TESTING (Playwright)
+# ==========================================
+test-results/
+playwright-report/
+blob-report/
+.cache/
+
+# ==========================================
+# 6. PYTHON (RPA / Judicial Scraper)
+# ==========================================
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# ==========================================
+# 7. VARIABLES DE ENTORNO Y SEGURIDAD
+# ==========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+infra/nginx/certs/
+# Nota: Si usas .env.example, se añade como excepción para asegurar que SÍ se suba
+!.env.example
+
+# ==========================================
+# 8. IDEs Y SISTEMAS OPERATIVOS
+# ==========================================
 .DS_Store
 .DS_Store?
 ._*
@@ -31,14 +80,12 @@ target/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Logs
-logs/
-*.log
-
-# Environment Variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.idea/
+.vscode/
+*.swp
+*.swo
+*.suo
+*~
+.classpath
+.project
+.settings/

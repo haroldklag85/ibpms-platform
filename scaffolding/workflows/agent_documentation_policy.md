@@ -19,6 +19,9 @@ Antes de ejecutar cualquier lectura, refactorización funcional o creación de n
 - **La Organización es Ley:** No almacene documentación técnica, minutas de reuniones, prompts, scripts provisionales ni código funcional en carpetas temporales como `/scratch`, `Desktop`, ni en el directorio raíz suelto.
 - El proyecto posee una Jerarquía Oficial:
   - Todo documento de Arquitectura y Requerimientos debe crearse o modificarse exclusivamente dentro de `ibpms-platform/docs/...`
+  - **Aclaración sobre Directorios de Workflows:** Existen dos directorios homónimos pero con propósitos estrictamente separados:
+    1. `scaffolding/workflows/`: ALMACENA EXCLUSIVAMENTE LEYES INMUTABLES. (Políticas Arquitectónicas, Reglas Maestras de UI, Políticas de la Empresa).
+    2. `.agent/workflows/`: ALMACENA EXCLUSIVAMENTE RECETAS OPERATIVAS DIARIAS. (Rutinas de ejecución paso a paso, flujos de debugging o despliegue).
   - Toda la logística del Agente (checklist interno, prompts iterativos) pertenece a `ibpms-platform/scaffolding/...`
   - Todo el código backend pertenece a la estricta separación de Arquitectura Hexagonal instaurada en `ibpms-platform/backend/...`
   - Todo el código frontend (Vue 3, TypeScript, Stores Pinia, Componentes UI) pertenece exclusivamente a `ibpms-platform/frontend/...`

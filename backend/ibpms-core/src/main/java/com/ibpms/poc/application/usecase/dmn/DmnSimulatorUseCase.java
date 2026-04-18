@@ -17,9 +17,24 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * CA-11: Simulador DMN Estéril (Dry-Run).
- * Ejecuta el XML DMN en una "Caja de Arena" (Sandbox) de memoria RAM independiente,
- * sin impactar la base de datos ni el histórico de Camunda.
+ * <b>Arquitectura Base: Simulador DMN Estéril (Dry-Run) bajo Sandbox FEEL</b> (CA-11)
+ * <p>
+ * Este servicio encapsula un caso de uso crítico diseñado bajo principios estrictos de "Zero-Trust Execution".
+ * Su propósito es evaluar expresiones completas de Business Rules (DMN) y tablas de decisión pesadas
+ * que ingresan en formato crudo (Raw XML) desde un cliente Frontend, sin que estas ejecuciones contaminen
+ * la base de datos, el historial de Camunda, ni abran vectores de ejecución de código remota (RCE) a nivel JVM.
+ * </p>
+ * <p>
+ * 🚨 <b>MITIGACIÓN DE COLAPSO DE MEMORIA Y PROTECCIÓN SANDBOX:</b> 🚨<br/>
+ * 1. <b>Aislamiento Absoluto:</b> El motor ({@link DmnEngine}) se instancia como un <i>Standalone Engine</i> efímero.
+ * No posee un connection pool conectado a PostgreSQL ni guarda métricas de auditoría en la BD, blindando el I/O del disco.<br/>
+ * 2. <b>Mitigación de Memory Leaks:</b> Al prescindir de la caché nativa vinculada a los ciclos de vida de ApplicationContext,
+ * los árboles abstractos sintácticos (AST) generados durante decisiones masivas resultan recolectables (GC) de manera limpia
+ * tras abandonar el hilo, previniendo colapsos de memoria (OOM) en la nube.<br/>
+ * 3. <b>Sandbox FEEL:</b> En conjunción con las directrices de seguridad (configuraciones globales ajenas a este bean),
+ * el proceso de Parseo limita intrínsecamente las llamadas HTTP Outbound a servicios externos durante las reglas (FEEL Functions),
+ * cancelando eval-loops infinitos inyectados por atacantes.
+ * </p>
  */
 @Service
 public class DmnSimulatorUseCase {

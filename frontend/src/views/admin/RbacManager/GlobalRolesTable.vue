@@ -20,6 +20,7 @@
             <div class="flex items-center gap-2 font-medium text-gray-900">
               <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
               {{ rol.name }}
+              <span v-if="rol.is_vip_restricted" class="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200" title="Rol restringido VIP">⭐ VIP</span>
             </div>
           </td>
           <td class="p-4 align-top text-gray-600 whitespace-pre-line leading-relaxed">

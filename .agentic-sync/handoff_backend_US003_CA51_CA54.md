@@ -16,6 +16,6 @@ En esta iteración 11 nos enfocamos en refinar interacciones de UI, pero el back
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal.
 En cuanto finalices el análisis y/o adaptación Backend, empaqueta los cambios:
-`git stash save "temp-backend-US003-ca51-ca54"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente al Arquitecto Líder apenas termine el guardado.

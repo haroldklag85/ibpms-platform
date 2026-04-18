@@ -41,6 +41,13 @@ export class ZodBuilder {
      * (ZodTypeAny) de Zod evaluando el ciclo de vida, mutabilidades y validaciones en tiempo de ejecución.
      * Esto minimiza la fricción con FormDesigner al separar las reglas visuales del AST rígido subyacente.
      * 
+     * @fuzzer_glossary
+     * Validadores Admitidos por el QA Sandbox Fuzzer (RAM):
+     * - `z.string()` (incluye `.email()`, `.url()`, `.regex()`, lengths)
+     * - `z.number()` (incluye ranges, min, max)
+     * - `z.boolean()`
+     * - `z.array()` (evaluación recursiva para Grillas y Repetidores)
+     * 
      * @param fields Arreglo jerárquico de metadatos descriptivos traídos del Vue Store o FormDesigner.
      * @param formRules Reglas de validación semántica cruzada interpoladas globalmente (e.g. validación de fechas o saldos).
      * @returns Schema compilado de tipo z.ZodTypeAny preparado para `.safeParse()`.

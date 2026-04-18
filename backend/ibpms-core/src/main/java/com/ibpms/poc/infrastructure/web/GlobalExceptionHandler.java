@@ -8,17 +8,19 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Manejador Global de Excepciones — RFC 7807 Problem Details.
  * Todas las respuestas de error siguen el mismo formato JSON estándar.
  */
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     /** 400 — Error de validación de campos (@Valid) */
@@ -26,12 +28,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationError(MethodArgumentNotValidException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/validation-error")));
+        problem.setType(URI.create("https://ibpms.com/errors/validation-error"));
         problem.setTitle("Error de validación");
-        String detail = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(", "));
-        problem.setDetail(detail);
+        problem.setDetail("Se hallaron errores de validación en la solicitud.");
+        
+        // Mapeo estructurado {field, issue} para que Frontend dibuje inputs rojos
+        List<Map<String, String>> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fe -> Map.of("field", fe.getField(), "issue", fe.getDefaultMessage()))
+                .collect(Collectors.toList());
+                
+        problem.setProperty("errors", fieldErrors);
         return problem;
     }
 
@@ -90,14 +96,26 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    // CA-3: Bloqueo de Concurrencia Optimista (409)
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail handleConcurrency(org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problem.setType(URI.create("https://ibpms.com/errors/optimistic-lock"));
+        problem.setTitle("Conflicto de Múltiples Operadores");
+        problem.setDetail("Datos oxidados. El registro fue modificado por otro operador recientemente. Por favor, refresque y vuelva a intentar.");
+        return problem;
+    }
+
     /** 500 — Error interno genérico */
-    @ApiResponse(responseCode = "500", description = "Error interno no controlado en el Engine", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ApiResponse(responseCode = "500", description = "Error interno - Blindado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
+        log.error("💥 ERROR CRITICO DEL SISTEMA ENVIADO A ELK: ", ex); // Delegación a Logback/ELK
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/internal-error")));
         problem.setTitle("Error interno del servidor");
-        problem.setDetail(ex.getMessage());
+        // PROHIBIDO USAR ex.getMessage(). 
+        problem.setDetail("Fallo del servidor reportado. Se ha generado un registro forense y equipo IT ha sido notificado.");
         return problem;
     }
 }

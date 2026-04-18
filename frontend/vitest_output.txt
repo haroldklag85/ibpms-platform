@@ -1,0 +1,89 @@
+
+> ibpms-frontend@1.0.0 test
+> vitest src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/HaroltAndrésGómezAgu/ProyectoAntigravity/ibpms-platform/frontend[39m
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA Certification (CA-12 to CA-17)[2m > [22m[2mCA-13: Indicador de versión muestra V{N} + estado
+[22m[39mError CA-17 TypeError: Cannot read properties of undefined (reading 'data')
+    at openFuzzerSandbox (C:/Users/HaroltAndrésGómezAgu/ProyectoAntigravity/ibpms-platform/frontend/src/views/admin/Modeler/FormDesigner.vue:1167:34)
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA Certification (CA-12 to CA-17)[2m > [22m[2mCA-14: Errores de superRefine se pintan en naranja
+[22m[39mError CA-17 TypeError: Cannot read properties of undefined (reading 'data')
+    at openFuzzerSandbox (C:/Users/HaroltAndrésGómezAgu/ProyectoAntigravity/ibpms-platform/frontend/src/views/admin/Modeler/FormDesigner.vue:1167:34)
+
+ [31m❯[39m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts [2m([22m[2m4 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[32m 161[2mms[22m[39m
+[31m     [31m×[31m CA-12: Badge muestra "revoked" cuando certification state cambia[39m[32m 72[2mms[22m[39m
+[31m     [31m×[31m CA-13: Indicador de versión muestra V{N} + estado[39m[32m 47[2mms[22m[39m
+[31m     [31m×[31m CA-14: Errores de superRefine se pintan en naranja[39m[32m 26[2mms[22m[39m
+[31m     [31m×[31m CA-17: Panel de coherencia muestra matches y warnings[39m[32m 15[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 4 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22mUS-028: Form Designer QA Certification (CA-12 to CA-17)[2m > [22mCA-12: Badge muestra "revoked" cuando certification state cambia
+[31m[1mAssertionError[22m: expected 'IDE de Formularios Vue3/Zod 🟢 Simple…' to contain '⚠️ Certificación QA revocada — Modifi…'[39m
+
+Expected: [32m"⚠️ Certificación QA revocada — Modificación detectada"[39m
+Received: [31m"IDE de Formularios Vue3/Zod 🟢 Simple 🖵  👁️ Editor bidireccional Vue3 Composition API + Validaciones Zod (US-003)🌐 Trámite Público 🛠️ Herramientas Avanzadas ▼ 🕰️ Historial JSON📄 Exportar a PDF⚙️ Reglas Zod O-T-F🤖 Exportar Robo-Tests⚡ QA Sandbox Fuzzer (RAM) 👁️ Simular Mimetismo ▼ Rol Activo:🛡️ ADMIN👨‍💻 OPERATOR👔 MANAGER🏃 GUEST ✨ Escáner Mágico IA  👁️ Previsualizar UI  🗑 Reset  🚀 Probar (Submit Mock) 🧩 ComponentesMis FragmentosTextoNumérico & FechasSelecciónAvanzadosLayouts (CA-8, CA-34)Accionadores (CA-14)Solicitud Onboarding (V1){ } json <> template <script setup><style scoped>Z zod ❕ Bidireccionalidad Activa (CA-2): Editar Zod o Template actualizará el lienzo visual con un AST Parser Seguro. Sin eval() (CA-4)."[39m
+
+[36m [2m❯[22m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts:[2m65:28[22m[39m
+    [90m 63| [39m    [35mawait[39m wrapper[33m.[39mvm[33m.[39m[34m$nextTick[39m()[33m;[39m
+    [90m 64| [39m    
+    [90m 65| [39m    expect(wrapper.text()).toContain('⚠️ Certificación QA revocada — M…
+    [90m   | [39m                           [31m^[39m
+    [90m 66| [39m    
+    [90m 67| [39m    [90m// Remontamos para probar el estado "certified" orgánicamente[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22mUS-028: Form Designer QA Certification (CA-12 to CA-17)[2m > [22mCA-13: Indicador de versión muestra V{N} + estado
+[31m[1mAssertionError[22m: expected 'IDE de Formularios Vue3/Zod 🟢 Simple…' to contain '📋 Esquema V5'[39m
+
+Expected: [32m"📋 Esquema V5"[39m
+Received: [31m"IDE de Formularios Vue3/Zod 🟢 Simple 🖵  👁️ Editor bidireccional Vue3 Composition API + Validaciones Zod (US-003)🌐 Trámite Público 🛠️ Herramientas Avanzadas ▼ 🕰️ Historial JSON📄 Exportar a PDF⚙️ Reglas Zod O-T-F🤖 Exportar Robo-Tests⚡ QA Sandbox Fuzzer (RAM) 👁️ Simular Mimetismo ▼ Rol Activo:🛡️ ADMIN👨‍💻 OPERATOR👔 MANAGER🏃 GUEST ✨ Escáner Mágico IA  👁️ Previsualizar UI  🗑 Reset  🚀 Probar (Submit Mock) 🧩 ComponentesMis FragmentosTextoNumérico & FechasSelecciónAvanzadosLayouts (CA-8, CA-34)Accionadores (CA-14)Solicitud Onboarding (V1){ } json <> template <script setup><style scoped>Z zod ❕ Bidireccionalidad Activa (CA-2): Editar Zod o Template actualizará el lienzo visual con un AST Parser Seguro. Sin eval() (CA-4)."[39m
+
+[36m [2m❯[22m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts:[2m105:28[22m[39m
+    [90m103| [39m    [35mawait[39m wrapper[33m.[39mvm[33m.[39m[34m$nextTick[39m()[33m;[39m
+    [90m104| [39m    
+    [90m105| [39m    [34mexpect[39m(wrapper[33m.[39m[34mtext[39m())[33m.[39m[34mtoContain[39m([32m'📋 Esquema V5'[39m)[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m106| [39m    [34mexpect[39m(wrapper[33m.[39m[34mtext[39m())[33m.[39m[34mtoContain[39m([32m'Certificado ✅'[39m)[33m;[39m
+    [90m107| [39m  })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22mUS-028: Form Designer QA Certification (CA-12 to CA-17)[2m > [22mCA-14: Errores de superRefine se pintan en naranja
+[31m[1mAssertionError[22m: expected 0 to be greater than 0[39m
+[36m [2m❯[22m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts:[2m139:40[22m[39m
+    [90m137| [39m    [35mconst[39m errorMessagesOrange [33m=[39m wrapper[33m.[39m[34mfindAll[39m([32m'.text-orange-400'[39m)[33m;[39m
+    [90m138| [39m    // Al menos 1 naranja y 1 roja deben pintar en el DOM porque 'fiel…
+    [90m139| [39m    [34mexpect[39m(errorMessagesOrange[33m.[39mlength)[33m.[39m[34mtoBeGreaterThan[39m([34m0[39m)[33m;[39m
+    [90m   | [39m                                       [31m^[39m
+    [90m140| [39m  })
+    [90m141| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22mUS-028: Form Designer QA Certification (CA-12 to CA-17)[2m > [22mCA-17: Panel de coherencia muestra matches y warnings
+[31m[1mAssertionError[22m: expected 'IDE de Formularios Vue3/Zod 🟢 Simple…' to contain '🔗 Coherencia BPMN ↔ Zod'[39m
+
+Expected: [32m"🔗 Coherencia BPMN ↔ Zod"[39m
+Received: [31m"IDE de Formularios Vue3/Zod 🟢 Simple 🖵  👁️ Editor bidireccional Vue3 Composition API + Validaciones Zod (US-003)🌐 Trámite Público 🛠️ Herramientas Avanzadas ▼ 🕰️ Historial JSON📄 Exportar a PDF⚙️ Reglas Zod O-T-F🤖 Exportar Robo-Tests⚡ QA Sandbox Fuzzer (RAM) 👁️ Simular Mimetismo ▼ Rol Activo:🛡️ ADMIN👨‍💻 OPERATOR👔 MANAGER🏃 GUEST ✨ Escáner Mágico IA  👁️ Previsualizar UI  🗑 Reset  🚀 Probar (Submit Mock) 🧩 ComponentesMis FragmentosTextoNumérico & FechasSelecciónAvanzadosLayouts (CA-8, CA-34)Accionadores (CA-14)Solicitud Onboarding (V1){ } json <> template <script setup><style scoped>Z zod ❕ Bidireccionalidad Activa (CA-2): Editar Zod o Template actualizará el lienzo visual con un AST Parser Seguro. Sin eval() (CA-4)."[39m
+
+[36m [2m❯[22m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts:[2m168:28[22m[39m
+    [90m166| [39m    [35mawait[39m wrapper[33m.[39mvm[33m.[39m[34m$nextTick[39m()[33m;[39m
+    [90m167| [39m    
+    [90m168| [39m    [34mexpect[39m(wrapper[33m.[39m[34mtext[39m())[33m.[39m[34mtoContain[39m([32m'🔗 Coherencia BPMN ↔ Zod'[39m)[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m169| [39m    expect(wrapper.text()).toContain("Variable BPMN 'testVar1' → Campo…
+    [90m170| [39m    expect(wrapper.text()).toContain("Variable BPMN 'testVarUnmapped' …
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[90m (4)[39m
+[2m   Start at [22m 22:22:13
+[2m   Duration [22m 2.84s[2m (transform 891ms, setup 54ms, import 1.23s, tests 161ms, environment 1.10s)[22m
+

@@ -25,6 +25,6 @@ Nos adentramos en el core de Resiliencia y Control de Versiones Operativas (DRP 
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a principal.
 Congela tus Controladores en un stash cuando superes la compilación local:
-`git stash save "temp-backend-US005-ca11-ca15"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente al humano que lo lograste.

@@ -54,7 +54,7 @@ Para mantener la soberanía geométrica y prevenir el "Spaghetti Visual", se est
 Aprobadas formalmente por Arquitectura, se establecen las siguientes directrices irrompibles para 15 aristas críticas de diseño:
 
 ### Bloque A: Gobernanza de Capas y Colisiones
-1. **Jerarquía Escalar (Z-Index):** Adopción estricta de la escala nativa de Tailwind CSS: Lienzo (`z-0`), Sidebar (`z-30`), Header (`z-40`), Modales/Popups (`z-50`), Alertas/Toasts (`z-[9999]`).
+1. **Jerarquía Escalar (Z-Index):** Adopción estricta de la escala nativa de temas de PrimeVue asistida por Tailwind: Lienzo (`z-0`), Sidebar (`z-30`), Header (`z-40`), Modales/Popups (`z-50`), Alertas/Toasts (`z-[9999]`).
 2. **Interrupciones Globales (System Banners):** Uso de **"Inline Pushing"**. Los banners críticos (ej. Mantenimiento) se posicionan bajo el Header empujando el Lienzo hacia abajo. Ocupan el ancho y no tapan el contenido (no flotan). Los Modales bloqueantes solo se usan en Faltas Fatales Absolutas (Sesión Muerta).
 
 ### Bloque B: Geometría y Sub-Divisiones del Lienzo
@@ -64,7 +64,7 @@ Aprobadas formalmente por Arquitectura, se establecen las siguientes directrices
 6. **Manejo de Pestañas (Canvas Overflow):** Limitación estricta al estándar de UX de **Scroll-X horizontal visible** para pestañas dinámicas desbordantes. Las listas colapsadas (Dropdowns de pestañas escondidas) están prohibidas por pérdida de mapa mental cognitivo.
 
 ### Bloque C: Comportamiento Responsivo (Móviles y Tablets)
-7. **Breakpoints Oficiales (Puntos de Quiebre):** Únicos permitidos por Tailwind: `sm: 640px`, `md: 768px`, `lg: 1024px` y `xl: 1280px`. Breakpoints quemados arbitrariamente en CSS crudo resultarán en rechazo inmediato en QA.
+7. **Breakpoints Oficiales (Puntos de Quiebre):** Únicos permitidos por el sistema PrimeVue/Tailwind: `sm: 640px`, `md: 768px`, `lg: 1024px` y `xl: 1280px`. Breakpoints quemados arbitrariamente en CSS crudo resultarán en rechazo inmediato en QA.
 8. **Retención de Estado (Sidebar Memory):** El estado del árbol de navegación (carpetas expandidas) debe guardarse incondicionalmente en `localStorage` (Amnesia Zero). 
 9. **Inyección de Carga (Skeleton Loaders):** Cero "Spinners" bloqueantes crudos en renderizados estructurales. Se imponen Skeletons reactivos con animaciones `pulse`.
 

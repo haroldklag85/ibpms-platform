@@ -45,7 +45,8 @@ public class RagIngestionUseCase {
 
     private boolean simulateClamAvNetworkScan(MultipartFile file) {
         // Simulación: Archivos que contengan "virus" en su nombre fallan.
-        String fileName = (file.getOriginalFilename() != null ? file.getOriginalFilename() : "document") != null ? (file.getOriginalFilename() != null ? file.getOriginalFilename() : "document").toLowerCase() : "";
+        String originalName = file.getOriginalFilename();
+        String fileName = (originalName != null ? originalName : "document").toLowerCase();
         return !fileName.contains("eicar") && !fileName.contains("virus");
     }
 }

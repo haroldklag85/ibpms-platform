@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdviceAdapter;
 
 import java.lang.reflect.Type;
-import java.util.regex.Pattern;
 
 /**
  * CA-53: Interceptor de bitácora transversal para enmascarar campos sensibles.
@@ -22,14 +21,15 @@ public class SensitiveDataLoggerAdvice extends RequestBodyAdviceAdapter {
     private static final Logger log = LoggerFactory.getLogger(SensitiveDataLoggerAdvice.class);
 
     @Override
-    public boolean supports(MethodParameter methodParameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
+    public boolean supports(@NonNull MethodParameter methodParameter, @NonNull Type targetType, @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
         return true; 
     }
 
     @Override
-    public Object afterBodyRead(Object body, HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
+    @NonNull
+    public Object afterBodyRead(@NonNull Object body, @NonNull HttpInputMessage inputMessage, @NonNull MethodParameter parameter, @NonNull Type targetType, @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
         
-        if (log.isInfoEnabled() && body != null) {
+        if (log.isInfoEnabled()) {
             try {
                 // Hacemos un log simple. Si el body contiene Maps o DTOs, Jackson lo castearía.
                 String maskedStr = maskObject(body);

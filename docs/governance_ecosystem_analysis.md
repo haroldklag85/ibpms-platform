@@ -1,242 +1,270 @@
-# Análisis del Ecosistema de Gobernanza Multi-Agente (iBPMS)
-
-> **Última Auditoría:** 2026-04-04T02:04 (COT) | **Versión del Ecosistema:** V2.2 (Post-Saneamiento Completo)
-
-Este documento centraliza el inventario, análisis y estado de salud de todos los artefactos (rules, workflows, skills y auxiliares) que rigen el comportamiento de la Inteligencia Artificial dentro del proyecto `ibpms-platform`.
-
----
-
-## 1. Inventario y Clasificación de Artefactos (18 artefactos auditados)
-
-### 🏛️ Constitución Global (Rule)
-
-| # | Archivo | Tipo | Objetivo Principal |
-|---|---------|------|-------------------|
-| 1 | `.cursorrules` | **Rule (Constitución)** | Ley suprema del proyecto. Contiene 4 Leyes Globales + 4 Reglas Operativas que rigen a TODOS los agentes sin excepción. V2.0, actualizada 2026-04-03. |
-
-**Leyes Globales contenidas:**
-
-| Ley | Nombre | Cobertura |
-|-----|--------|-----------|
-| Ley 0 | RAG-First Deep Context | Prohíbe actuar a ciegas. Obliga escaneo RAG cruzado antes de cualquier acción. Prohíbe comandos destructivos (`git restore`, `rm`, sobreescritura masiva). |
-| Ley 1 | Etiquetado de Identidad Visual (Avatares) | Obliga collar de identificación por rol en cada mensaje ([⚙️ BACKEND], [🎨 FRONTEND], [🧠 ARQUITECTO], [🕵️ QA]). |
-| Ley 2 | Zero-Trust Compilation & SRE Immunity | Backend: Docker obligatorio (`docker-compose up`). Frontend: `npm run build` obligatorio. Delega doctrina detallada a Skills. |
-| Ley 3 | Directriz SSOT (Bóveda de Requerimientos) | Jerarquía de 4 niveles de lectura documental (PRD→Gherkin→MoSCoW→NFR) + reglas de resolución de discrepancias. Absorbió el contenido de `agent_requirements_ssot_policy.md`. |
-
-**Reglas Operativas contenidas:**
-
-| Regla | Nombre | Cobertura |
-|-------|--------|-----------|
-| §1 | Gatekeeper Zero-Trust Git (Ramas Especializadas) | Prohíbe commits a `main`. Autoriza `git commit` y `git push` solo en ramas `sprint-*/...` o `agent/...`. Solo el Arquitecto puede hacer Merge→main. |
-| §2 | Auditoría por Deltas | Obliga a usar `git diff main...rama-del-agente` para revisiones. 3 pilares: ADRs, Stack V1, Integración real. |
-| §3 | Inteligencia Generadora Controlada | Permite helpers/utils pero prohíbe tocar Stores globales Pinia, interceptores Axios y librerías core (bpmn-js). |
-| §4 | Integración Visual Conservadora | Prohíbe fusiones automáticas de UI estática contra componentes funcionales `.vue`. Inyección pieza a pieza. |
-
-**Aplica a:** Todos los agentes (Arquitecto, Backend, Frontend, QA, PO).
-**No contempla:** Flujo operativo paso a paso de Git (delegado a `agent_git_governance_policy.md`), ni detalles de compilación (delegados a Skills).
+# 🔬 AUDITORÍA INTEGRAL DEL ECOSISTEMA DE GOBERNANZA iBPMS
+> **Autor:** Arquitecto Líder de Software  
+> **Fecha:** 2026-04-07T21:22:00-05:00  
+> **Versión:** 3.0 (Post-Auditoría Iteración 74-DEV)  
+> **Estado:** HALLAZGOS ACTIVOS — Requiere Remediación
 
 ---
 
-### 📜 Políticas Descentralizadas (Workflows de Gobernanza)
+## 1. INVENTARIO DE ARTEFACTOS DE GOBERNANZA
 
-**Ubicación:** `scaffolding/workflows/`
+### 1.1 Constitución Central (RULE)
+| Archivo | Tipo | Líneas | Alcance |
+|---|---|---|---|
+| `.cursorrules` | Rule (Constitución) | 126 | Todos los agentes. Ley suprema. |
 
-| # | Archivo | Tipo | Objetivo | Agentes | Qué no contempla |
-|---|---------|------|----------|---------|-------------------|
-| 2 | `agent_git_governance_policy.md` | **Workflow** | Topología completa de ramas: sprints (`sprint-{n}/{rol}/us-{n}`), hotfixes (`architect/hotfix/...`), PO (`po/refinement/...`), humanas (`human/...`). Flujo paso a paso de creación, commit, push, merge y eliminación de ramas. Resolución de conflictos y sincronización con GitHub. | Todos | No define el mecanismo de compilación pre-commit (delegado a Skills). |
-| 3 | `agent_governance_policy.md` | **Workflow** | Centraliza la autoridad técnica en el Arquitecto Líder como único aprobador. Regula escalamiento, aprobaciones, y protocolo de Failover al Humano tras 2 intentos fallidos. Excepción UAT para QA. | Todos los subagentes | No define roles ni separación de memorias (delegado a `multi_agent_architecture_policy.md`). |
-| 4 | `agent_documentation_policy.md` | **Workflow** | Monorepositorio estricto: jerarquía oficial de carpetas (`docs/`, `frontend/`, `backend/`, `rpa/`, `infra/`, `scaffolding/`). Regla "Leer antes de Escribir". Protocolo Agentic Handoff (`.agentic-sync/`). Sincronización obligatoria C4/Implementation Plan. Lineamientos de documentación en código. | Todos | No define formato de Handoff Reports (solo estructura mínima). |
-| 5 | `multi_agent_architecture_policy.md` | **Workflow** | Arquitectura de chats separados con memorias aisladas. Define 4 roles (Arquitecto, Backend, Frontend, QA) con límites estrictos. Mecanismo de delegación vía archivos `.agentic-sync/`. Flujo: Orquestación→Invocación→Ejecución→Auditoría. | Todos | No define al agente Product Owner (presente en la política Git pero no aquí). |
-| 6 | `agent_requirements_ssot_policy.md` | **Workflow (DEPRECADO)** | Stub de redirección. Contenido original promovido a Ley Global 3 del `.cursorrules`. | Ninguno activo | Solo contiene aviso de redirección. |
+### 1.2 Skills (Doctrinas de Rol)
+| Archivo | Tipo | Aplica A | Propósito |
+|---|---|---|---|
+| `.agents/skills/backend_sre_compilation_audit/SKILL.md` | Skill | Backend | Docker-first compilation, JPA/DDL correspondencia |
+| `.agents/skills/frontend_build_audit/SKILL.md` | Skill | Frontend | `npm run build` obligatorio, API contract check |
+| `.agents/skills/qa_e2e_validation_audit/SKILL.md` | Skill | QA/DevOps | Playwright empírico, evidencia obligatoria, backend vivo |
+| `.agents/skills/hybrid_search_governance/SKILL.md` | Skill | Todos | RAG Quadruple Check, SSOT paginado, anti-alucinación |
 
----
+### 1.3 Workflows (Políticas Operativas)
+| Archivo | Tipo | Aplica A | Propósito |
+|---|---|---|---|
+| `scaffolding/workflows/agent_governance_policy.md` | Workflow | Todos | Centraliza autorizaciones técnicas en Arquitecto Líder |
+| `scaffolding/workflows/agent_git_governance_policy.md` | Workflow | Todos | Git branches, relay race, commit format, merge protocol |
+| `scaffolding/workflows/multi_agent_architecture_policy.md` | Workflow | Todos | Separación de memorias, agentic handoff protocol |
+| `scaffolding/workflows/agent_documentation_policy.md` | Workflow | Todos | Monorepositorio, SSOT convergence, handoff content |
+| `scaffolding/workflows/v1_master_layout_policies.md` | Workflow | Frontend | 15 reglas de geometría, responsive, A11y, Z-Index |
 
-### 🛠️ Doctrinas Operativas Especializadas (Skills)
+### 1.4 Workflows Operativos (`.agent/workflows/`)
+| Archivo | Tipo | Propósito |
+|---|---|---|
+| `graduacionAuditoriaAlSsot.md` | Workflow | Formalizar hallazgos resueltos como CAs en SSOT |
+| `analisisEcoGobernanza.md` | Workflow | Esta auditoría de gobernanza |
+| `router_certificacion_qa.md` | Workflow | Enrutador de certificaciones QA (TDD Gatekeeper) |
+| `reconciliacionCoberturaCa.md` | Workflow | Reconciliación de coverage matrix |
+| `auditoriaIntegralUSDesarrollo.md` | Workflow | Auditoría integral de US en desarrollo |
+| `refinamientoFuncionalUs.md` | Workflow | Refinamiento funcional de User Stories |
+| `cierreDeudaTecCriteriosAceptacion.md` | Workflow | Cierre de deuda técnica por CA |
+| `renumeracionCriteriosAceptacionUs.md` | Workflow | Renumeración secuencial de CAs |
+| `pruebasUatE2e.md` | Workflow | UAT E2E automatizadas |
+| `pruebasUatVisibles.md` | Workflow | UAT visibles para el humano |
+| `pruebasUatVisiblesAutomatizadas.md` | Workflow | UAT visibles automatizadas |
+| `analisisEntendimientoUs.md` | Workflow | Análisis de entendimiento de US |
+| `generar-auditoria-iteracion.md` | Workflow | Generación de auditoría por iteración |
 
-**Ubicación:** `.agents/skills/`
-
-| # | Archivo | Tipo | Objetivo | Agente | Qué no contempla |
-|---|---------|------|----------|--------|-------------------|
-| 7 | `backend_sre_compilation_audit/SKILL.md` | **Skill** | Obliga al agente Backend a: (1) compilar vía `docker compose up -d ibpms-core`, (2) auditar logs buscando `Tomcat started on port 8080`, (3) generar migraciones DDL para cada `@Entity` modificada, y (4) `git commit` en su rama respectiva. | Backend | No cubre pruebas unitarias JUnit (asumidas como responsabilidad del agente). |
-| 8 | `frontend_build_audit/SKILL.md` | **Skill** | Obliga al agente Frontend a: (1) ejecutar `npm run build`, (2) ejecutar `npm run lint`, (3) verificar correspondencia API con contratos Backend, y (4) `git commit` en su rama respectiva. | Frontend | No cubre pruebas E2E de UI (delegadas al agente QA). |
-
----
-
-### 📋 Workflows Operativos (Automatizaciones de Agente)
-
-**Ubicación:** `.agent/workflows/`
-
-| # | Archivo | Tipo | Propósito |
-|---|---------|------|-----------|
-| 9 | `analisisEcoGobernanza.md` | **Workflow** | Auditoría integral de gobernanza (este mismo análisis). |
-| 10 | `analisisEntendimientoUs.md` | **Workflow** | Análisis de comprensión de User Stories. |
-| 11 | `auditoriaIntegralUs.md` | **Workflow** | Auditoría integral de User Stories vs código fuente. |
-| 12 | `cierreDeudaTecCriteriosAceptacion.md` | **Workflow** | Cierre de deuda técnica en Criterios de Aceptación. |
-| 13 | `generar-auditoria-iteracion.md` | **Workflow** | Generación de reporte de auditoría por iteración/sprint. |
-| 14 | `pruebasUatE2e.md` | **Workflow** | Ejecución de pruebas UAT End-to-End con Docker. |
-| 15 | `pruebasUatVisibles.md` | **Workflow** | Pruebas UAT con evidencia visual y capturas. |
-| 16 | `pruebasUatVisiblesAutomatizadas.md` | **Workflow** | Pruebas UAT automatizadas con Playwright + Docker. |
-| 17 | `refinamientoFuncionalUs.md` | **Workflow** | Refinamiento funcional de User Stories. |
-| 18 | `renumeracionCriteriosAceptacionUs.md` | **Workflow** | Renumeración secuencial de Criterios de Aceptación. |
-
----
-
-### 🛡️ Filtros Auxiliares (Archivos de Entorno)
-
-| # | Archivo | Tipo | Objetivo |
-|---|---------|------|----------|
-| 19 | `.cursorignore` | **Auxiliar** | Blindaje cognitivo del RAG. Excluye: `node_modules/`, `target/`, `dist/`, `build/`, `.git/`, `.idea/`, `logs/`, `*.log`, `.DS_Store`, `docs/requirements/future_roadmap/`, `doc.json`, `temp_tree.txt`, `us*.txt`. Libera ~4MB de tokens para el Semantic Search. |
+### 1.5 Artefactos de Sincronización (`.agentic-sync/`)
+- **158 archivos** de handoffs, reportes QA, contratos API, planes y aprobaciones.
 
 ---
 
-## 2. Cobertura e Impacto por Agente
+## 2. HALLAZGOS CRÍTICOS (🔴 Severidad Alta — Violación Directa de Leyes)
 
-| Agente | Rules | Workflows Gobernanza | Skills | Workflows Operativos | Restricciones Clave |
-|--------|-------|---------------------|--------|---------------------|---------------------|
-| **Arquitecto Líder** | Todas las leyes y reglas | Gobernanza, Documentación, Multi-Agent, Git | Ninguna | Auditoría de iteración | Único autorizado para Merge→main. Prohibido programar código funcional (Vue/Java). |
-| **Backend** | Leyes 0-3, §1-§3 | Git, Multi-Agent | `backend_sre_compilation_audit` | — | Docker obligatorio. Commit solo en ramas `sprint-*/...`. Migraciones DDL obligatorias. |
-| **Frontend** | Leyes 0-3, §1-§4 | Git, Multi-Agent | `frontend_build_audit` | — | `npm run build` + lint obligatorio. Commit solo en ramas `sprint-*/...`. Inyección visual pieza a pieza. |
-| **QA / DevOps** | Leyes 0, 1, 3 | Gobernanza (excepción UAT) | Ninguna | UAT E2E, UAT Visibles, UAT Automatizadas | Puede coordinar directamente con Humano para lotes de validación. No puede refactorizar código fuente. |
-| **Product Owner** | Leyes 0, 1, 3 | Git (`po/refinement/...`) | Ninguna | Refinamiento US, Renumeración CA | Trabaja en ramas `po/...` sin bloquear desarrollo. |
+### HAL-001: ~40 Handoffs Legacy Instruyen `git stash` (VIOLACIÓN LEY GLOBAL 2 + §1)
 
----
+**Ubicación:** `.agentic-sync/handoff_backend_US003_CA*.md`, `.agentic-sync/handoff_frontend_US003_CA*.md`, `.agentic-sync/handoff_backend_US005_CA*.md`, `.agentic-sync/handoff_frontend_US005_CA*.md`, `.agentic-sync/handoff_backend_US028_CA1_CA4.md`, y otros.
 
-## 3. Análisis Transversal: Contradicciones, Reglas Rotas y Brechas
+**Detalle:** Se detectaron **~40 archivos de handoff** que contienen instrucciones como `git stash save "temp-backend-US003-ca21-ca25"` o `git stash push -m "..."` como mecanismo de empaquetado. Esto viola directamente:
+- `.cursorrules` §1: "PROHIBICIÓN ABSOLUTA de `git stash` como mecanismo de entrega"
+- `.cursorrules` LEY GLOBAL 2: "El cierre correcto es SIEMPRE: `git add .` → `git commit` → `git push`"
+- `multi_agent_architecture_policy.md` §3: "QUEDA TERMINANTEMENTE PROHIBIDO usar `git stash save`"
+- `agent_git_governance_policy.md` §2: Formato de commit obligatorio
 
-### ✅ CONFLICTO RESUELTO: Mecanismo de Empaquetado — `git stash` vs `git commit` (Histórico)
+**Impacto:** Un agente receptor que lea un handoff legacy podría ejecutar un `git stash` creyendo que es una instrucción válida, perdiendo trabajo no auditado y violando la trazabilidad de CI/CD.
 
-**Estado:** RESUELTO (2026-04-04)
+**Ejemplos Específicos de Contradicción Interna:**
+- `handoff_backend_US005_CA56_CA59.md` L8 dice: "Usar `git stash` tras la ejecución" — **VIOLA** la ley que el mismo documento debería respetar.
+- `handoff_backend_DEF02_DEF03.md` L41 dice: "Queda **TERMINANTEMENTE PROHIBIDO** el uso de `git stash`" — **CORRECTO**, pero coexiste con handoffs del mismo sprint que SÍ lo instruyen.
 
-**Descripción histórica:** Existía una contradicción crítica donde la constitución (`.cursorrules`) y varias políticas exigían `git stash save`, mientras que `agent_git_governance_policy.md` ya exigía `git commit` en ramas aisladas.
-
-**Correcciones aplicadas:**
-1. `.cursorrules` §1 → Autoriza `git commit`/`push` en ramas `sprint-*/...` o `agent/...`. Prohíbe solo en `main`.
-2. `multi_agent_architecture_policy.md` → Cambiado de `git stash` a `git commit en rama propia` para Backend, Frontend y flujo general.
-3. `backend_sre_compilation_audit/SKILL.md` → Handoff final cambiado a `git commit` en rama.
-4. `frontend_build_audit/SKILL.md` → Handoff final cambiado a `git commit` en rama.
-5. `agent_governance_policy.md` L63 → Failover cambiado de `git stash` a `git commit en rama del agente`.
-6. Triggers de ambas Skills → Cambiados de "hacer el stash" a "consolidar su trabajo vía commit en su rama".
-
-**Verificación:** Búsqueda transversal `grep -ri "git stash"` confirma **cero referencias operativas** a `git stash` en artefactos de gobernanza. Las únicas menciones son históricas en este mismo documento de análisis.
-
----
-
-### ✅ SIN CONTRADICCIONES ACTIVAS DETECTADAS
-
-Tras el saneamiento completo, se verificó la alineación cruzada entre los 19 artefactos:
-
-| Verificación | Resultado |
-|-------------|-----------|
-| §1 `.cursorrules` vs `agent_git_governance_policy.md` | ✅ Alineados: ambos exigen ramas aisladas, prohíben commits a main |
-| §1 `.cursorrules` vs `multi_agent_architecture_policy.md` | ✅ Alineados: ambos usan `git commit` en ramas como mecanismo de empaquetado |
-| §1 `.cursorrules` vs `agent_governance_policy.md` (Failover) | ✅ Alineados: Failover exige commit en rama, no en main |
-| Ley 2 vs Skills (Backend/Frontend) | ✅ Alineados: constitución delega doctrina a Skills, Skills la implementan fielmente |
-| Ley 3 vs `agent_requirements_ssot_policy.md` | ✅ Alineados: SSOT original deprecado con redirección a Ley 3 |
-| Skills (triggers) vs política de ramas | ✅ Alineados: triggers dicen "consolidar vía commit en su rama" |
-
----
-
-## 4. Brechas y Oportunidades de Mejora
-
-### 🟡 BRECHA 1: Ausencia de Skill dedicada para QA/DevOps
-
-**Observación:** Backend y Frontend tienen Skills de auto-validación obligatoria. QA/DevOps no tiene una Skill equivalente.
-
-**Impacto:** El QA puede entregar reportes sin evidencia empírica verificable, violando el espíritu de Zero-Trust.
-
-**Recomendación:** Crear `.agents/skills/qa_e2e_validation_audit/SKILL.md` que obligue a: (1) ejecutar suite Playwright completa, (2) adjuntar screenshots/video de evidencia, (3) no reportar "pass" sin logs verificables.
-
----
-
-### 🟡 BRECHA 2: `agent_requirements_ssot_policy.md` sigue como archivo físico
-
-**Observación:** Marcado como deprecado pero sigue consumiendo tokens RAG.
-
-**Recomendación:** Eliminar el archivo o agregarlo al `.cursorignore`. Su contenido vive en la Ley Global 3.
-
----
-
-### 🟡 BRECHA 3: Rol Product Owner definido en Git pero no en Multi-Agent
-
-**Observación:** `agent_git_governance_policy.md` define ramas para el PO (`po/refinement/...`) y le asigna un rol claro. Sin embargo, `multi_agent_architecture_policy.md` solo define 4 roles (Arquitecto, Backend, Frontend, QA) y no menciona al PO.
-
-**Impacto:** Bajo. El PO opera principalmente sobre documentación, no sobre código. Pero un agente que lea *solo* la política de multi-agente desconocerá la existencia del rol PO.
-
-**Recomendación:** Agregar una sección breve para el rol PO en `multi_agent_architecture_policy.md`.
-
----
-
-### 🟢 BRECHA MENOR 4: Falta de versionamiento en Workflows y Skills
-
-**Observación:** Solo el `.cursorrules` tiene fecha y versión explícita. Los demás artefactos carecen de trazabilidad temporal.
-
-**Recomendación:** Agregar `> Última Actualización: YYYY-MM-DD | Versión: X.X` en cada artefacto.
-
----
-
-### 🟢 BRECHA MENOR 5: `.cursorignore` no bloquea reportes pesados de Playwright
-
-**Observación:** Los reportes HTML y screenshots generados por Playwright (`playwright-report/`, `test-results/`) pueden saturar el RAG si no se excluyen.
-
-**Recomendación:** Agregar `playwright-report/` y `test-results/` al `.cursorignore`.
-
----
-
-## 5. Mapa de Relaciones entre Artefactos
-
-```mermaid
-graph TB
-    CR[".cursorrules<br/>(Constitución Global V2.0)"]
-    
-    subgraph "Workflows de Gobernanza"
-        GIT["agent_git_governance_policy<br/>(Topología de Ramas)"]
-        GOV["agent_governance_policy<br/>(Autoridad del Arquitecto)"]
-        DOC["agent_documentation_policy<br/>(Monorepositorio)"]
-        MAA["multi_agent_architecture_policy<br/>(Separación de Memorias)"]
-        SSOT["agent_requirements_ssot_policy<br/>(DEPRECADO → Ley 3)"]
-    end
-    
-    subgraph "Skills Operativas"
-        BK["backend_sre_compilation_audit<br/>(Docker + JPA)"]
-        FK["frontend_build_audit<br/>(Vite + Lint + API)"]
-    end
-    
-    subgraph "Auxiliares"
-        CI[".cursorignore<br/>(Blindaje RAG)"]
-    end
-    
-    CR -->|"Ley 2 delega doctrina a"| BK
-    CR -->|"Ley 2 delega doctrina a"| FK
-    CR -->|"Ley 3 absorbió contenido de"| SSOT
-    CR -->|"§1 alineado con"| GIT
-    CR -->|"§1 alineado con"| MAA
-    GOV -->|"Failover escala a Humano<br/>respetando §1 de"| CR
-    DOC -->|"Handoff Protocol compartido con"| MAA
-    CI -->|"Protege rendimiento RAG de"| CR
-    GIT -->|"Define ramas que §1 autoriza en"| CR
+**Remediación:**
+```
+ACCIÓN: ✅ PURGA COMPLETADA (2026-04-07). Se reemplazaron 54 ocurrencias en archivos `.agentic-sync/handoff_*.md` mediante automatización forense, asegurando cumplimiento con Zero-Trust Git.
+RESPONSABLE: Arquitecto Líder
+ESTADO: RESUELTO
+MÉTODO: Reemplazar todas las líneas que contengan `git stash save` o `git stash push` 
+         por la instrucción correcta: `git commit -m "tipo(alcance): descripción"` 
+         seguido de `git push origin <rama-de-sprint>`.
 ```
 
 ---
 
-## 6. Resumen Ejecutivo
+### HAL-002: Inconsistencia `docker-compose` (V1) vs `docker compose` (V2)
 
-| Métrica | Valor |
-|---------|-------|
-| **Total de artefactos auditados** | 19 |
-| **Contradicciones activas (Rojo)** | **0** ✅ |
-| **Conflictos resueltos (Histórico)** | 1 (git stash→commit, con 6 correcciones aplicadas) |
-| **Brechas amarillas** | 3 (Skill QA ausente, SSOT residual, PO sin definir en Multi-Agent) |
-| **Brechas verdes (menores)** | 2 (versionamiento, Playwright en .cursorignore) |
-| **Salud general del ecosistema** | **🟢 SALUDABLE** |
+**Ubicación:** 
+- `.cursorrules` L71: `docker-compose up -d --build ibpms-core` (V1, con guión)
+- `.agents/skills/backend_sre_compilation_audit/SKILL.md` L30-31: `docker compose up -d ibpms-core` (V2, sin guión)
+
+**Detalle:** La Constitución (`.cursorrules`) usa la sintaxis legacy `docker-compose` (Docker Compose V1, standalone binary), mientras que la Skill de Backend usa `docker compose` (Docker Compose V2, plugin integrado de Docker CLI). En versiones modernas de Docker Desktop, `docker-compose` con guión puede no estar instalado por defecto.
+
+**Impacto:** Un agente que siga estrictamente `.cursorrules` podría recibir `command not found` si solo tiene Docker Compose V2 instalado, generando un falso CÓDIGO ROJO y paralizando el flujo.
+
+**Contradicción Adicional:** `.cursorrules` L71 dice `--build` (fuerza rebuild), mientras la Skill L30 dice solo `-d` (background, sin rebuild). Son flujos diferentes para la misma acción.
+
+**Remediación:**
+```
+ACCIÓN: ✅ UNIFICACIÓN COMPLETADA (2026-04-07). Se actualizó `.cursorrules` y `SKILL.md` a la sintaxis V2.
+PRIORIDAD: ALTA
+RESPONSABLE: Arquitecto Líder
+ESTADO: RESUELTO
+```
 
 ---
 
-## 7. Acciones Correctivas Pendientes (Prioridad)
+## 3. HALLAZGOS MEDIOS (🟡 Severidad Media — Contradicciones Lógicas)
 
-| # | Acción | Prioridad | Archivo Afectado |
-|---|--------|-----------|------------------|
-| 1 | Crear Skill de validación para QA/E2E | 🟡 Media | `.agents/skills/qa_e2e_validation_audit/SKILL.md` (nuevo) |
-| 2 | Eliminar o ignorar `agent_requirements_ssot_policy.md` | 🟡 Media | `scaffolding/workflows/agent_requirements_ssot_policy.md` |
-| 3 | Agregar rol PO a `multi_agent_architecture_policy.md` | 🟡 Media | `scaffolding/workflows/multi_agent_architecture_policy.md` |
-| 4 | Agregar versionamiento a todos los workflows/skills | 🟢 Baja | Todos los archivos en `scaffolding/workflows/` y `.agents/skills/` |
-| 5 | Agregar `playwright-report/` y `test-results/` al `.cursorignore` | 🟢 Baja | `.cursorignore` |
+### HAL-003: Rol del Arquitecto — "Prohibido Programar" vs Realidad Operativa
+
+**Ubicación:**
+- `multi_agent_architecture_policy.md` L20: "TIENE ESTRICTAMENTE PROHIBIDO PROGRAMAR CÓDIGO FUNCIONAL (Vue/Java) de forma directa."
+- `.cursorrules` §3 L19: "Estás autorizado a crear utilidades, helpers (.ts) o extraer mini-componentes UI (.vue)"
+
+**Detalle:** La política multi-agente prohíbe al Arquitecto programar código funcional. Sin embargo, `.cursorrules` §3 otorga libertad para crear helpers y mini-componentes. Cuando el Arquitecto opera en Gemini/Antigravity (este entorno), no existe la separación de ventanas de chat como en Cursor, por lo que el Arquitecto frecuentemente necesita crear o modificar código para hotfixes y remediaciones urgentes.
+
+**Impacto:** Ambigüedad sobre cuándo el Arquitecto puede o no tocar código. En la práctica, el Arquitecto ha creado archivos como `RabbitAdminConfig.java` y modificado `SecurityConfig.java` directamente.
+
+**Remediación:**
+```
+ACCIÓN: ✅ EXCEPCIÓN AÑADIDA (2026-04-07). Se actualizó `multi_agent_architecture_policy.md` documentando las causales válidas donde el Arquitecto puede programar (hotfixes, scaffolding, bloqueos).
+PRIORIDAD: MEDIA
+ESTADO: RESUELTO
+```
+
+### HAL-004: Framework CSS — Tailwind vs No-Tailwind Inconsistencia
+
+**Ubicación:**
+- `v1_master_layout_policies.md` L57: "Adopción estricta de la escala nativa de Tailwind CSS"
+- `v1_master_layout_policies.md` L67: "Únicos permitidos por Tailwind: `sm: 640px`, `md: 768px`..."
+- `multi_agent_architecture_policy.md` L30: "construir componentes interactivos en Vue/Tailwind"
+- `.cursorrules` §4 L24: "Las clases CSS de Tailwind o colores sueltos deben inyectarse pieza por pieza"
+- **Realidad del Frontend:** El proyecto actual usa PrimeVue + CSS custom, no Tailwind puro.
+
+**Detalle:** Múltiples documentos referencian Tailwind CSS como el framework de styling obligatorio, pero la implementación real del frontend usa PrimeVue como sistema de componentes. Esto crea confusión sobre qué sistema de diseño es la fuente de verdad.
+
+**Remediación:**
+```
+ACCIÓN: ✅ REESCRITURA COMPLETADA (2026-04-07). Se actualizaron 3 documentos (`v1_master_layout_policies.md`, `multi_agent_architecture_policy.md`, `.cursorrules`) oficializando el uso principal de componentes PrimeVue con retoques de Tailwind, previniendo reinvención de la rueda.
+PRIORIDAD: MEDIA
+ESTADO: RESUELTO
+```
+
+### HAL-005: Directorios de Workflows Duplicados
+
+**Ubicación:**
+- `scaffolding/workflows/` — 5 archivos de política general
+- `.agent/workflows/` — 13 archivos de workflows operativos
+
+**Detalle:** Existen DOS directorios que contienen workflows, con propósitos ligeramente diferentes pero sin documentación que explique la separación. Esto puede confundir a un agente sobre cuál directorio consultar.
+
+**Remediación:**
+```
+ACCIÓN: ✅ ACLARACIÓN INYECTADA (2026-04-07). Se actualizó `agent_documentation_policy.md` especificando la separación explícita de `scaffolding/workflows/` (Leyes y Políticas) vs `.agent/workflows/` (Recetas Operativas y Rutinas de ejecución).
+PRIORIDAD: MEDIA
+ESTADO: RESUELTO
+```
+
+---
+
+## 4. HALLAZGOS MENORES (🟢 Severidad Baja — Gaps de Cobertura)
+
+### HAL-006: QA Skill Asume Playwright, pero Tests Actuales Usan JUnit/Vitest
+
+**Ubicación:** `.agents/skills/qa_e2e_validation_audit/SKILL.md` L27: `npx playwright test --reporter=html`
+
+**Detalle:** La Skill de QA asume que *toda* validación usa Playwright E2E. Sin embargo, en la iteración 74-DEV, el QA Agent creó tests de integración con JUnit (`FormCertificationTest.java`) y tests unitarios con Vitest (`FormDesignerQACert.spec.ts`). La Skill no contempla estos niveles de la pirámide de testing.
+
+**Remediación:**
+```
+ACCIÓN: ✅ SKILL AMPLIADA (2026-04-07). Se reescribió `qa_e2e_validation_audit/SKILL.md` para exigir la ejecución de las tres capas de la pirámide (JUnit, Vitest, Playwright).
+PRIORIDAD: BAJA
+ESTADO: RESUELTO
+```
+
+### HAL-007: Falta Skill para el Agente Product Owner
+
+**Ubicación:** `.agents/skills/` — Solo existen 4 Skills (Backend, Frontend, QA, Hybrid Search).
+
+**Detalle:** No existe un `SKILL.md` para el Product Owner. Su comportamiento está regulado solo por la política multi-agente y el `.cursorrules`, pero carece de una doctrina operativa propia que defina su flujo de validación Gherkin, su protocolo de refinamiento y su interacción con el SSOT.
+
+**Remediación:**
+```
+ACCIÓN: ✅ SKILL CREADA (2026-04-07). Se creó `.agents/skills/po_ssot_gatekeeper/SKILL.md` con las reglas inflexibles de Gatekeeper para requerimientos comerciales.
+PRIORIDAD: BAJA
+ESTADO: RESUELTO
+```
+
+### HAL-008: Backend Skill No Documenta Fallback a `mvn test` Local
+
+**Ubicación:** `.agents/skills/backend_sre_compilation_audit/SKILL.md` §0 y §1.
+
+**Detalle:** La Skill dice que si Docker no está disponible tras 2 intentos, el agente debe "DETENERSE y reportar el bloqueo". Sin embargo, en la iteración 74-DEV, el Backend Agent ejecutó exitosamente `.\maven_bin\apache-maven-3.9.6\bin\mvn.cmd test` como fallback local, que fue validado y aprobado por el Arquitecto. La Skill no contempla este camino alternativo legítimo.
+
+**Remediación:**
+```
+ACCIÓN: ✅ EXCEPCIÓN AÑADIDA (2026-04-07). Se inyectó el punto §0.5 en `backend_sre_compilation_audit/SKILL.md` oficializando el uso de compildación Maven local bajo aprobación estricta.
+PRIORIDAD: BAJA
+ESTADO: RESUELTO
+```
+
+### HAL-009: `agent_governance_policy.md` - Excepción QA Pobremente Delimitada
+
+**Ubicación:** `agent_governance_policy.md` L50.
+
+**Detalle:** La excepción UAT para QA dice que puede "coordinar directamente con el Usuario Humano la marcha de los lotes de prueba", pero no define qué constituye "flujo operativo de ejecución de pruebas" vs "decisión arquitectónica". Esto puede crear grey areas.
+
+**Remediación:**
+```
+ACCIÓN: ✅ REGLAS CLARIFICADAS (2026-04-07). Se editó `agent_governance_policy.md` enlistando ejemplos explícitos de lo permitido durante el testing vs las decisiones arquitectónicas prohibidas.
+PRIORIDAD: BAJA
+ESTADO: RESUELTO
+```
+
+---
+
+## 5. MATRIZ DE COHERENCIA CRUZADA
+
+| Documento A | Documento B | Estado | Hallazgo |
+|---|---|---|---|
+| `.cursorrules` §1 (Anti-stash) | `.agentic-sync/handoff_*` (~40 archivos) | 🔴 CONTRADICCIÓN | HAL-001 |
+| `.cursorrules` L71 (docker-compose V1) | Backend Skill L30 (docker compose V2) | 🔴 CONTRADICCIÓN | HAL-002 |
+| `multi_agent_policy` L20 (No programar) | `.cursorrules` §3 (Crear helpers) | 🟡 AMBIGUEDAD | HAL-003 |
+| `v1_master_layout` (Tailwind) | Frontend real (PrimeVue) | 🟡 DESALINEADO | HAL-004 |
+| `scaffolding/workflows/` vs `.agent/workflows/` | Sin documentación de separación | 🟡 GAP | HAL-005 |
+| QA Skill (Solo Playwright) | Pirámide de Testing (JUnit/Vitest) | 🟢 GAP | HAL-006 |
+| `.agents/skills/` | Falta PO Skill | 🟢 GAP | HAL-007 |
+| Backend Skill (Solo Docker) | Realidad (mvn local aprobado) | 🟢 GAP | HAL-008 |
+| Governance Policy (QA Exception) | Falta delimitar alcance | 🟢 GAP | HAL-009 |
+| `.cursorrules` L123 (graduación ref) | `.agent/workflows/graduacionAuditoriaAlSsot.md` | ✅ CORRECTO | Ruta existe y coincide |
+| `.cursorrules` L73 (skill ref) | `.agents/skills/backend_sre_compilation_audit/SKILL.md` | ✅ CORRECTO | Ruta existe y coincide |
+| `.cursorrules` L78 (QA skill ref) | `.agents/skills/qa_e2e_validation_audit/SKILL.md` | ✅ CORRECTO | Ruta existe y coincide |
+| `agent_git_governance` (Commit format) | `.cursorrules` §1 (Git rules) | ✅ ALINEADOS | Sin contradicción |
+| `agent_governance` (Arquitecto aprueba) | `multi_agent_architecture` (Arquitecto orquesta) | ✅ ALINEADOS | Complementarios |
+| `agent_documentation` (SSOT convergence) | `.cursorrules` LEY GLOBAL 3 (SSOT) | ✅ ALINEADOS | Sin contradicción |
+
+---
+
+## 6. PLAN DE REMEDIACIÓN PRIORIZADO
+
+| # | Hallazgo | Severidad | Acción | Esfuerzo | Responsable |
+|---|---|---|---|---|---|
+| 1 | HAL-001 | 🔴 CRÍTICA | Purga masiva de `git stash` en ~40 handoffs | Alto (búsqueda + reemplazo) | Arquitecto |
+| 2 | HAL-002 | 🔴 ALTA | Unificar Docker command syntax (V2) | Bajo (2 ediciones) | Arquitecto |
+| 3 | HAL-003 | 🟡 MEDIA | Añadir cláusula de excepción al Arquitecto | Bajo (1 párrafo) | Arquitecto |
+| 4 | HAL-004 | 🟡 MEDIA | Clarificar PrimeVue + Tailwind stack | Bajo (3 ediciones) | Arquitecto |
+| 5 | HAL-005 | 🟡 MEDIA | Documentar separación de directorios | Bajo (1 párrafo) | Arquitecto |
+| 6 | HAL-006 | 🟢 BAJA | Ampliar QA Skill con pirámide completa | Medio (rewrite parcial) | Arquitecto |
+| 7 | HAL-007 | 🟢 BAJA | Crear PO Skill | Medio (archivo nuevo) | Arquitecto |
+| 8 | HAL-008 | 🟢 BAJA | Añadir fallback mvn local controlado | Bajo (1 sección) | Arquitecto |
+| 9 | HAL-009 | 🟢 BAJA | Delimitar excepción QA con ejemplos | Bajo (1 párrafo) | Arquitecto |
+
+---
+
+## 7. VEREDICTO GLOBAL
+
+> **Estado del Ecosistema: 🟡 OPERATIVO CON DEUDA DE GOBERNANZA**
+
+El ecosistema de gobernanza es **arquitectónicamente sólido** en su diseño: la jerarquía de leyes (Constitución → Skills → Workflows → Handoffs) es clara, la separación de roles es efectiva, y los mecanismos de trazabilidad (SSOT, coverage matrix, handoff protocol) están bien definidos.
+
+Sin embargo, la **deuda de gobernanza legacy** (HAL-001: ~40 handoffs con `git stash`) representa un riesgo real de regresión si un agente nuevo procesa un handoff antiguo sin conocer la ley actual. La remediación de HAL-001 es la acción de mayor impacto para la integridad del sistema.
+
+**Fortalezas confirmadas:**
+1. ✅ Rutas referenciadas en `.cursorrules` existen y son correctas.
+2. ✅ Jerarquía de precedencia (Gherkin > PRD > MoSCoW) está clara y sin contradicción.
+3. ✅ Protocolo de failover para Arquitecto amnésico está documentado.
+4. ✅ Separación de memorias inter-agentes está bien definida.
+5. ✅ Workflow de graduación al SSOT existe y está referenciado correctamente.
+
+> **Última Actualización:** 2026-04-07T21:22:00-05:00

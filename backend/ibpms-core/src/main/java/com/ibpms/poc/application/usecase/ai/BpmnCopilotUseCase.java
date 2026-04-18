@@ -84,10 +84,16 @@ public class BpmnCopilotUseCase {
 
             // Truncamiento Severo de Tokens (1000 Chars Humanos + System Prompt)
             String safePrompt = maskedPrompt != null && maskedPrompt.length() > 1000 
-                ? maskedPrompt.substring(0, 1000) : maskedPrompt;
+                ? maskedPrompt.substring(0, 1000) : (maskedPrompt != null ? maskedPrompt : "");
                 
             log.debug("[SRE-COPILOT] Prompt ensamblado con Segregación Topológica y PII Enmascarado. {}... [System Rule Inyectada]", safePrompt.substring(0, Math.min(20, safePrompt.length())));
             log.trace("[SRE-COPILOT-PROMPT] Reglas Subyacentes: {}", SYSTEM_PROMPT);
+
+            // SRE-01: Graceful Disconnect Listener (Prevenir CPU/Memory Leak si el cliente corta conexión)
+            java.util.concurrent.atomic.AtomicBoolean clientActive = new java.util.concurrent.atomic.AtomicBoolean(true);
+            emitter.onCompletion(() -> clientActive.set(false));
+            emitter.onTimeout(() -> clientActive.set(false));
+            emitter.onError(e -> clientActive.set(false));
 
             // Streaming Mock Asíncrono
             String[] mockXmlChunks = {
@@ -106,6 +112,10 @@ public class BpmnCopilotUseCase {
             StringBuilder semanticXmlAccumulator = new StringBuilder();
 
             for (String chunk : mockXmlChunks) {
+                if (!clientActive.get()) {
+                    log.warn("[SRE-COPILOT] Cliente desconectado abruptamente. Abortando streams SSE para prevenir Memory/CPU Leak.");
+                    return; // Terminación Graceful sin inyectar matemática pesada.
+                }
                 Thread.sleep(600); // Simulando red OpenAI / Anthropic
                 // Transmitiendo el XML lógico en bruto al Front (Sovereign Semantic Streaming)
                 String safeFragment = chunk.replace("\n", ""); 

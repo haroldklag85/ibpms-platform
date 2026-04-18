@@ -58,7 +58,7 @@ class WorkdeskQueryPerformanceTest {
         // Arrange: Mock the JPA page response
         PageRequest pageRequest = PageRequest.of(0, 50);
         Page<WorkdeskProjectionEntity> pagedResponse = new PageImpl<>(mockLargeDataset.subList(0, 50), pageRequest, mockLargeDataset.size());
-        when(repository.findByCombinedSearch(any(), any(), any())).thenReturn(pagedResponse);
+        when(repository.findWorkdeskTasks(any(), any(), any(), any())).thenReturn(pagedResponse);
 
         // Act & Measure Latency
         long startTime = System.currentTimeMillis();

@@ -1,17 +1,23 @@
 package com.ibpms.poc.application.service.mailbox;
 
-import com.ibpms.poc.infrastructure.jpa.entity.SacMailboxEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.SacMailboxRepository;
+import com.ibpms.core.sac.domain.SacMailbox;
+import com.ibpms.core.sac.repository.SacMailboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+// import org.springframework.scheduling.annotation.Scheduled;
+// import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.List;
 
-@Component
+/**
+ * FENCED — Sprint 4 Profilaxis (US-011 Docketing SAC).
+ * Este componente es un duplicado funcional de MailboxPollingCron (com.ibpms.core.sac.worker).
+ * Desactivado como @Component para evitar cruce de fronteras de paquete con com.ibpms.core.sac.
+ * Se reactivará cuando US-011 entre en construcción funcional.
+ */
+// @Component — FENCED: S4 Profilaxis — Duplicado de MailboxPollingCron
 @RequiredArgsConstructor
 @Slf4j
 public class MailboxPollingJob {
@@ -23,53 +29,18 @@ public class MailboxPollingJob {
      * Polling job running every 5 minutes asynchronously to fetch inbound emails.
      * Uses Redis DistributedLock to prevent clustering double-read scenarios.
      */
-    @Scheduled(fixedRate = 300000) // 5 minutes
+    // @Scheduled(fixedRate = 300000) — FENCED: S4 Profilaxis
     public void scanInboundMailboxes() {
-        List<SacMailboxEntity> activeMailboxes = mailboxRepository.findByActiveTrue();
-
-        for (SacMailboxEntity mailbox : activeMailboxes) {
-            String lockKey = "LOCK:MAILBOX:SCAN:" + mailbox.getId();
-
-            // Distributed Lock implementation via Redis SETNX
-            Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(lockKey, "LOCKED", java.util.Objects.requireNonNull(Duration.ofMinutes(4)));
-
-            if (Boolean.TRUE.equals(lockAcquired)) {
-                try {
-                    log.info("Lock acquired for Mailbox {}. Scanning Graph API for new emails...", mailbox.getAlias());
-
-                    // 1. Fetch EMAILS via Graph API (Mocked logic for Epic 13)
-                    // 2. Feed to Agent 3 (AI Triage)
-
-                    // Requirement CA-3: RAG Fallback simulation
-                    simulateAiTriagingWithFallback(mailbox);
-
-                } catch (Exception e) {
-                    log.error("Error processing mailbox {}: {}", mailbox.getAlias(), e.getMessage());
-                } finally {
-                    // Release the Redis Lock
-                    redisTemplate.delete(lockKey);
-                    log.info("Released Distributed Lock for Mailbox {}", mailbox.getAlias());
-                }
-            } else {
-                log.debug("Mailbox {} is currently being processed by another cluster node. Skipping.",
-                        mailbox.getAlias());
-            }
-        }
+        throw new UnsupportedOperationException(
+                "FENCED [US-011]: MailboxPollingJob desactivado por profilaxis S4. " +
+                "Use MailboxPollingCron (com.ibpms.core.sac.worker) como referencia canónica."
+        );
     }
 
-    private void simulateAiTriagingWithFallback(SacMailboxEntity mailbox) {
-        // Simulating Agent 3 processing (RAG classification)
-        double aiConfidenceScore = Math.random();
-
-        if (aiConfidenceScore < 0.20) {
-            // IA fails to classify or confidence is too low -> FALLBACK
-            log.warn("AI Confidence Score ({}%) is too low. Executing RAG Fallback to default ProcessId: {}",
-                    Math.round(aiConfidenceScore * 100), mailbox.getDefaultBpmnProcessId());
-
-            // Logic to instruct Camunda to start the 'defaultBpmnProcessId' bypassing AI.
-        } else {
-            log.info("AI Confidence Score ({}%) is acceptable. Routing dynamically.",
-                    Math.round(aiConfidenceScore * 100));
-        }
+    private void simulateAiTriagingWithFallback(SacMailbox mailbox) {
+        throw new UnsupportedOperationException(
+                "FENCED [US-011]: AI Triaging pendiente de construcción funcional."
+        );
     }
 }
+

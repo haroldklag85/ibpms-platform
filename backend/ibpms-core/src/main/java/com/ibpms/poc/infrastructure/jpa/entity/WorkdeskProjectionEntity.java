@@ -4,6 +4,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,6 +17,8 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "ibpms_workdesk_projection")
+@FilterDef(name = "assigneeSecurityFilter", parameters = {@ParamDef(name = "currentUserId", type = String.class)})
+@Filter(name = "assigneeSecurityFilter", condition = "assignee = :currentUserId OR assignee IS NULL")
 @Getter
 @Setter
 public class WorkdeskProjectionEntity {
@@ -42,6 +47,28 @@ public class WorkdeskProjectionEntity {
     @Column(nullable = false)
     private String status;
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "payload_metadata", columnDefinition = "JSON")
     private String payloadMetadata; // Soporte JSON nativo
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
+
+    @Column(name = "impact_level", nullable = false)
+    private Integer impactLevel;
+
+    @Column(name = "progress_percent")
+    private Integer progressPercent;
+
+    @Column(name = "total_steps")
+    private Integer totalSteps;
+
+    @Column(name = "current_step")
+    private Integer currentStep;
+
+    @Column(name = "process_definition_key")
+    private String processDefinitionKey;
+
+    @Column(name = "category_tag")
+    private String categoryTag;
 }

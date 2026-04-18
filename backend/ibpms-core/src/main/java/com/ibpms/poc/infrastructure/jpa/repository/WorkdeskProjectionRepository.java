@@ -12,15 +12,36 @@ import org.springframework.data.repository.query.Param;
 @Repository
 public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProjectionEntity, String> {
     
-    // Búsqueda dinámica tolerante a null para search keyword y usuario delegado
-    @Query("SELECT w FROM WorkdeskProjectionEntity w WHERE " +
-           "(:search IS NULL OR LOWER(w.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(w.originalTaskId) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "AND (:delegatedUserId IS NULL OR w.assignee = :delegatedUserId)")
-    Page<WorkdeskProjectionEntity> findByCombinedSearch(@Param("search") String search, 
-                                                        @Param("delegatedUserId") String delegatedUserId, 
-                                                        Pageable pageable);
+    // CA-14, CA-19, CA-17: Strict Tenant Isolation + GIN Index ILike + Impact/SLA Sorting
+    @Query(value = "SELECT * FROM ibpms_workdesk_projection w WHERE " +
+           "w.tenant_id = :tenantId AND " +
+           "(:search IS NULL OR w.title ILIKE CONCAT('%', :search, '%')) AND " +
+           "(:assignee IS NULL OR w.assignee = :assignee) " +
+           "ORDER BY w.impact_level DESC, w.sla_expiration_date ASC NULLS LAST", 
+           nativeQuery = true)
+    Page<WorkdeskProjectionEntity> findWorkdeskTasks(
+           @Param("tenantId") String tenantId, 
+           @Param("search") String search, 
+           @Param("assignee") String assignee, 
+           Pageable pageable);
 
-    // Ejemplos de proyecciones especificas para bandejas filtradas
-    Page<WorkdeskProjectionEntity> findByAssignee(String assignee, Pageable pageable);
-    Page<WorkdeskProjectionEntity> findByCandidateGroup(String group, Pageable pageable);
+    // CA-22, CA-29: Faceted Filters & Counters
+    @Query("SELECT new com.ibpms.poc.application.dto.FacetCountDto(w.status, COUNT(w)) " +
+           "FROM WorkdeskProjectionEntity w WHERE w.tenantId = :tenantId GROUP BY w.status")
+    java.util.List<com.ibpms.poc.application.dto.FacetCountDto> countByStatusPerTenant(@Param("tenantId") String tenantId);
+
+    // CA-28, CA-16, CA-21: For Update Skip Locked and Skill Matching
+    @Query(value = """
+        SELECT * FROM ibpms_workdesk_projection w
+        WHERE w.tenant_id = :tenantId
+          AND w.assignee IS NULL
+          AND (:skills IS NULL OR w.category_tag = ANY(CAST(:skills AS VARCHAR[])))
+        ORDER BY w.impact_level DESC, w.sla_expiration_date ASC NULLS LAST
+        LIMIT 1
+        FOR UPDATE SKIP LOCKED
+        """, nativeQuery = true)
+    java.util.Optional<WorkdeskProjectionEntity> findNextAvailableTask(
+        @Param("tenantId") String tenantId,
+        @Param("skills") String[] skills
+    );
 }

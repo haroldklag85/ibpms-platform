@@ -17,6 +17,6 @@ Debes abordar:
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a la rama principal.
 Al finalizar el código de API y servicios en Java, abre una terminal y bloquea tu código:
-`git stash save "temp-backend-US003-ca26-ca30"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Notifícame textualmente apenas hayas completado el Stash.

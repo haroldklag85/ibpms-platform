@@ -25,3 +25,31 @@ databaseChangeLog:
       file: db/changelog/15-add-idempotency-key.xml
   - include:
       file: db/changelog/16-create-profile-tables.xml
+  - include:
+      file: db/changelog/17-cast-to-uuid.sql
+  - include:
+      file: db/changelog/18-create-form-definitions.sql
+  - include:
+      file: db/changelog/19-create-rabbitmq-resilience-tables.sql
+  - include:
+      file: db/changelog/20-us036-rbac-schema.sql
+  - include:
+      file: db/changelog/21-us039-generic-form-schema.sql
+  - include:
+      file: db/changelog/22-us005-bpmn-design-schema.sql
+  - include:
+      file: db/changelog/25-us028-qa-certification-columns.sql
+  - include:
+      file: db/changelog/26-us001-workdesk-schema.sql
+  - include:
+      file: db/changelog/27-us001-workdesk-progress.sql
+  - include:
+      file: db/changelog/sprint3/001_create_form_event_store.sql
+  - include:
+      file: db/changelog/sprint3/002_create_task_drafts.sql
+  - include:
+      file: db/changelog/sprint3/003_create_webhook_intake_tables.sql
+  - include:
+      file: db/changelog/sprint3/004_create_triage_tables.sql
+  - include:
+      file: db/changelog/sprint3/005_create_agile_hub_tables.sql

@@ -11,7 +11,6 @@ C4Context
     title Diagrama de Contexto (V1) - Plataforma iBPMS Táctica
     
     Person(usuario_negocio, "Usuario Interno", "Procesa tareas en Workdesk/Mailbox. Consulta Dashboards.")
-    Person(usuario_negocio, "Usuario Interno", "Procesa tareas en Workdesk/Mailbox. Consulta Dashboards.")
     Person(cliente_externo, "Cliente B2B/B2C", "Consulta estatus en Portal Seguro (Pantalla 18).")
     Person(admin_reglas, "Arquitecto / Admin", "Sube BPMN (Auto-generando Roles), diseña UI y entrena IA.")
     
@@ -101,9 +100,9 @@ C4Container
     Rel(doc_vault, rabbitmq, "Publica evento de documento", "Async Flow / AMQP")
     Rel(rabbitmq, rag_engine, "Consume para indexación vectorial", "Async Flow / AMQP")
     
-    Rel(engine, db, "Escribe Estado (JDBC)", "TCP/3306 (TLS)")
-    Rel(grafana, db, "Consulta Panel Analítico", "TCP/3306")
-    Rel(backend, db, "Escribe Datos Negocio", "TCP/3306 (TLS)")
+    Rel(engine, db, "Escribe Estado (JDBC)", "TCP/5432 (TLS)")
+    Rel(grafana, db, "Consulta Panel Analítico", "TCP/5432")
+    Rel(backend, db, "Escribe Datos Negocio", "TCP/5432 (TLS)")
 ```
 
 ## Nivel 3: Diagrama de Componentes Lógicos (Software Design View V1)
@@ -114,7 +113,7 @@ Demuestra cómo, a pesar de las limitaciones de V1, el backend empotrado y monol
 C4Component
     title Nivel 3 - Diseño de Software Interno (Arquitectura Hexagonal V1 - Spring Boot)
     
-    Container_Boundary(api_app, "Microservicio Spring Boot Monolítico") {
+    Container_Boundary(api_app, "Modular Monolith Spring Boot") {
         System_Boundary(puertos_entrada, "Driving Adapters") {
             Component(rest_ctrl, "REST Controllers", "Spring Web", "@RestController")
             Component(webhook_ctrl, "O365 Webhook", "Spring MVC", "Recibe push MS Graph")
@@ -145,7 +144,7 @@ C4Component
 
     Rel(rest_ctrl, cm_usecase, "Ejecuta Case CRUD", "Interface")
     Rel(rest_ctrl, auth_usecase, "Valida Zero-Trust JWT", "Interface")
-    Rel(rest_ctrl, rule_usecase, "Solicita regla verbal", "Interface")
+    Rel(rest_ctrl, template_usecase, "Solicita regla verbal / iForms", "Interface")
     Rel(rest_ctrl, ff_usecase, "Consulta Enabled Features", "Interface")
     Rel(webhook_ctrl, cm_usecase, "Dispara auto-caso", "Interface")
     
@@ -158,7 +157,7 @@ C4Component
     Rel(camunda_adapter, cm_usecase, "Implementa Workflow", "DI")
     Rel(camunda_adapter, auth_usecase, "Gatilla XML Role Hook", "DeploymentEvent")
     Rel(ai_adapter, cm_usecase, "Infiriendo intenciones/datos", "DI")
-    Rel(ai_adapter, rule_usecase, "Implementa Cerebro NLP a DMN", "DI")
+    Rel(ai_adapter, template_usecase, "Implementa Cerebro NLP a DMN", "DI")
     Rel(doc_adapter, cm_usecase, "Imprime Contratos/Cartas", "DI")
     Rel(jpa_adapter, auth_usecase, "Carga/Guarda Matrices ABAC & Roles Auto-Generados", "Spring Data")
     Rel(erp_adapter, cm_usecase, "Sincroniza External", "DI")

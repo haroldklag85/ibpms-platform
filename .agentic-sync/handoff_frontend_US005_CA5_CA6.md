@@ -21,6 +21,6 @@ Se excluyeron las lógicas de migraciones V2. Nos centramos en la inyección de 
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` directamente a principal. 
 Dibuja el Input de nomenclatura, asegura la mutación del XML y congela todo:
-`git stash save "temp-frontend-US005-ca5-ca6"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Escribe textualmente la comprobación del STASH exitoso en este chat al terminar.

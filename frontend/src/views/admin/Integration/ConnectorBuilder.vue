@@ -253,7 +253,7 @@ const revealSecret = async () => {
 };
 
 // CA-9: Sudo Modal Transversal
-import { useSudo } from '@/composables/useSudo';
+import { useSudo } from '@/composables/workdesk/useSudo';
 import apiClient from '@/services/apiClient';
 
 const { requestSudo } = useSudo();

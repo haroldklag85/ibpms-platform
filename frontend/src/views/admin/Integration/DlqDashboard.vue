@@ -24,17 +24,17 @@
       <div class="bg-gradient-to-br from-rose-50 to-orange-50 dark:from-slate-800 dark:to-slate-800 p-6 rounded-2xl border border-rose-100 dark:border-rose-900/50 shadow-sm relative overflow-hidden group">
         <div class="absolute right-0 top-0 w-24 h-24 bg-rose-500/10 rounded-bl-full transition-transform group-hover:scale-110"></div>
         <p class="text-sm font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-1">Mensajes Atascados</p>
-        <h3 class="text-4xl font-black text-rose-900 dark:text-rose-100">{{ messages.length }}</h3>
+        <h3 class="text-4xl font-black text-rose-900 dark:text-rose-100">{{ summary.totalMessages }}</h3>
       </div>
       <div class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-slate-800 dark:to-slate-800 p-6 rounded-2xl border border-amber-100 dark:border-amber-900/50 shadow-sm relative overflow-hidden group">
         <div class="absolute right-0 top-0 w-24 h-24 bg-amber-500/10 rounded-bl-full transition-transform group-hover:scale-110"></div>
         <p class="text-sm font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1">Warning Rate</p>
-        <h3 class="text-4xl font-black text-amber-900 dark:text-amber-100">12%</h3>
+        <h3 class="text-4xl font-black text-amber-900 dark:text-amber-100">{{ warningRateStatus }}</h3>
       </div>
       <div class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-800 p-6 rounded-2xl border border-emerald-100 dark:border-emerald-900/50 shadow-sm relative overflow-hidden group">
         <div class="absolute right-0 top-0 w-24 h-24 bg-emerald-500/10 rounded-bl-full transition-transform group-hover:scale-110"></div>
         <p class="text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Reintentos Hoy</p>
-        <h3 class="text-4xl font-black text-emerald-900 dark:text-emerald-100">342</h3>
+        <h3 class="text-4xl font-black text-emerald-900 dark:text-emerald-100">{{ summary.retriesToday }}</h3>
       </div>
     </div>
 
@@ -46,8 +46,8 @@
           Colas de Retención (DLQ)
         </h2>
         <div class="flex gap-2">
-           <button @click="purgeAll" class="text-xs font-semibold px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-md transition duration-200" v-if="messages.length > 0">Purgar Todo</button>
-           <button @click="retryAll" class="text-xs font-semibold px-3 py-1.5 bg-teal-100 hover:bg-teal-200 text-teal-700 rounded-md transition duration-200" v-if="messages.length > 0">Reencolar Todo</button>
+           <button @click="purgeAll" class="text-xs font-semibold px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-md transition duration-200" v-if="summary.totalMessages > 0">Purgar Todo</button>
+           <button @click="retryAll" class="text-xs font-semibold px-3 py-1.5 bg-teal-100 hover:bg-teal-200 text-teal-700 rounded-md transition duration-200" v-if="summary.totalMessages > 0">Reencolar Todo</button>
         </div>
       </div>
       
@@ -115,11 +115,67 @@
         </table>
       </div>
     </div>
+
+    <!-- Modals -->
+    <div v-if="isPayloadModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="text-lg font-bold">Inspección de Mensaje</h3>
+          <button @click="isPayloadModalOpen = false" class="text-slate-400 hover:text-slate-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div class="p-6 overflow-y-auto space-y-4">
+          <div>
+            <h4 class="font-semibold text-slate-700 dark:text-slate-300 mb-2">Trace (Error Reason):</h4>
+            <div class="bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 p-3 rounded-lg font-mono text-sm break-words">{{ selectedTrace }}</div>
+          </div>
+          <div>
+            <h4 class="font-semibold text-slate-700 dark:text-slate-300 mb-2">Payload Raw:</h4>
+            <pre class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 p-4 rounded-lg font-mono text-sm overflow-x-auto whitespace-pre-wrap">{{ selectedPayload }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Purge Modal -->
+    <div v-if="isPurgeModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="p-6 border-b border-rose-200 dark:border-rose-900/30 bg-rose-50 dark:bg-rose-900/10">
+          <h3 class="text-lg font-bold text-rose-700 dark:text-rose-400">Confirmar Purga Masiva</h3>
+        </div>
+        <div class="p-6 space-y-4">
+          <p class="text-slate-600 dark:text-slate-300 text-sm">Esta acción es destructiva y eliminará permanentemente todos los mensajes del DLQ.</p>
+          <textarea v-model="purgeJustification" rows="4" class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors resize-none" placeholder="Justifique la purga (mínimo 20 caracteres)..."></textarea>
+          <div class="flex justify-end gap-3 pt-4">
+            <button @click="isPurgeModalOpen = false" class="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors font-medium">Cancelar</button>
+            <button :disabled="purgeJustification.length < 20" @click="executePurge" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium">Confirmar Purga</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Retry Modal -->
+    <div v-if="isRetryModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="p-6 border-b border-teal-200 dark:border-teal-900/30 bg-teal-50 dark:bg-teal-900/10">
+          <h3 class="text-lg font-bold text-teal-700 dark:text-teal-400">Preparar Reintento (Reprocessing)</h3>
+        </div>
+        <div class="p-6 space-y-4">
+          <p class="text-slate-700 dark:text-slate-300 font-medium">Se reintentarán {{ summary.totalMessages }} mensaje(s).</p>
+          <p class="text-slate-500 dark:text-slate-400 text-sm italic border-l-4 border-amber-500 pl-3">Recordatorio: Los Workers de consumo deben ser estrictamente idempotentes según el contrato CA-5 para prevenir efectos duplicados.</p>
+          <div class="flex justify-end gap-3 pt-4">
+            <button @click="isRetryModalOpen = false" class="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors font-medium">Cancelar</button>
+            <button @click="executeRetry" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors font-medium">Reencolar Ahora</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import apiClient from '@/services/apiClient';
 
 interface DLQMessage {
@@ -135,20 +191,49 @@ interface DLQMessage {
 const messages = ref<DLQMessage[]>([]);
 const isLoading = ref(false);
 
+const summary = ref({
+    totalMessages: 0,
+    groupedByQueue: {} as Record<string, number>,
+    oldestMessageTimestamp: '',
+    retriesToday: 0
+});
+
+const isPurgeModalOpen = ref(false);
+const purgeJustification = ref('');
+const isRetryModalOpen = ref(false);
+const isPayloadModalOpen = ref(false);
+const selectedPayload = ref('');
+const selectedTrace = ref('');
+
+const warningRateStatus = computed(() => {
+    const total = summary.value.totalMessages;
+    if (total > 100) return 'CRÍTICO';
+    if (total > 20) return 'Warning';
+    return 'Normal';
+});
+
+const fetchSummary = async () => {
+    try {
+        const res = await apiClient.get('/api/v1/admin/queues/dlq/summary');
+        summary.value = res.data;
+    } catch {
+        // Fallback or leave as 0
+    }
+};
+
 const fetchDLQ = async () => {
     isLoading.value = true;
     try {
-        // MOCK Implementación fallback en caso de no existir API DLQ
-        const res = await apiClient.get('/api/v1/dlq/messages').catch(() => ({
-            data: [
-                { id: 'msg-9a8b7c6d5e4f', exchange: 'amq.topic', routingKey: 'camunda.task.create', errorReason: 'Connection Refused: Postgres DB Pool exhausted.', retries: 4, timestamp: new Date(Date.now() - 3600000).toISOString(), payload: '{"taskId":"123","tenantId":"T1"}' },
-                { id: 'msg-1f2e3d4c5b6a', exchange: 'dlx.exchange', routingKey: 'email.notification.send', errorReason: 'SMTP Auth Failed: Invalid credentials.', retries: 2, timestamp: new Date(Date.now() - 7200000).toISOString(), payload: '{"to":"harolt@antigravity.space"}' },
-                { id: 'msg-bbccdd112233', exchange: 'amq.direct', routingKey: 'integration.s3.upload', errorReason: 'S3 Storage Limit Exceeded for Tenant.', retries: 5, timestamp: new Date(Date.now() - 100000).toISOString(), payload: '{"bucket":"ibpms-docs"}' }
-            ]
-        }));
+        await fetchSummary();
+        const res = await apiClient.get('/api/v1/admin/queues/dlq/messages?page=1&size=50');
         messages.value = res.data;
+    } catch (e: any) {
+        messages.value = [];
+        // show error toast dispatch
+        const evt = new CustomEvent('toast', { detail: { type: 'error', message: 'Error de conexión con el servicio de DLQ' }});
+        window.dispatchEvent(evt);
     } finally {
-        setTimeout(() => isLoading.value = false, 600);
+        isLoading.value = false;
     }
 };
 
@@ -156,16 +241,42 @@ onMounted(() => {
     fetchDLQ();
 });
 
-const retryMsg = (id: string) => {
+const retryMsg = async (id: string) => {
     messages.value = messages.value.filter(m => m.id !== id);
 };
-const purgeMsg = (id: string) => {
+const purgeMsg = async (id: string) => {
     messages.value = messages.value.filter(m => m.id !== id);
 };
-const purgeAll = () => { messages.value = []; };
-const retryAll = () => { messages.value = []; };
+
+const purgeAll = () => { isPurgeModalOpen.value = true; purgeJustification.value = ''; };
+const retryAll = () => { isRetryModalOpen.value = true; };
+
+const executePurge = async () => {
+    try {
+        await apiClient.delete('/api/v1/admin/queues/dlq/purge', {
+            data: { justification: purgeJustification.value }
+        });
+        isPurgeModalOpen.value = false;
+        fetchDLQ();
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+const executeRetry = async () => {
+    try {
+        await apiClient.post('/api/v1/admin/queues/dlq/retry');
+        isRetryModalOpen.value = false;
+        fetchDLQ();
+    } catch (e) {
+        console.error(e);
+    }
+};
+
 const inspectMsg = (msg: DLQMessage) => {
-    alert(`Payload Crudo:\n\n${msg.payload}\n\nTrace:\n${msg.errorReason}`);
+    selectedPayload.value = msg.payload;
+    selectedTrace.value = msg.errorReason;
+    isPayloadModalOpen.value = true;
 };
 </script>
 

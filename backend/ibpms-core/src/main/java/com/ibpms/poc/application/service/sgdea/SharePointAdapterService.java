@@ -26,10 +26,9 @@ public class SharePointAdapterService {
      * @param fileStream Recurso abierto del FileSystem local (.tmp)
      */
     public void uploadMassiveFileStream(String siteId, String fileName, Resource fileStream) {
-        if (fileStream == null || !fileStream.exists()) {
-            throw new IllegalArgumentException("El streaming resource no existe o es inválido.");
-        }
-        // Simulado para V1
+        throw new UnsupportedOperationException(
+            "GAP-1 [US-035]: SharePoint Graph API upload — pendiente refinamiento Sprint asignado."
+        );
     }
 
     /**
@@ -53,10 +52,9 @@ public class SharePointAdapterService {
      * (CA-2).
      */
     public String createFolder(String processName, String caseId) {
-        // Simulación: Graph API POST /drives/{drive-id}/items/{item-id}/children
-        // body: { "name": caseId, "folder": { }, "@microsoft.graph.conflictBehavior":
-        // "rename" }
-        return "folder_" + processName + "_" + caseId;
+        throw new UnsupportedOperationException(
+            "GAP-1 [US-035]: SharePoint Graph API createFolder — pendiente refinamiento Sprint asignado."
+        );
     }
 
     /**
@@ -64,18 +62,17 @@ public class SharePointAdapterService {
      * SharePoint (CA-10).
      */
     public void injectMetadata(String itemId, java.util.Map<String, Object> metadata) {
-        // Simulación: Graph API PATCH
-        // /sites/{site-id}/lists/{list-id}/items/{item-id}/fields
-        // body: { "ProcessName": "Visas", "CaseId": "12345", ... }
+        throw new UnsupportedOperationException(
+            "GAP-1 [US-035]: SharePoint Graph API injectMetadata — pendiente refinamiento Sprint asignado."
+        );
     }
 
     /**
      * Búsqueda delegada en SharePoint usando MS Graph Search API (CA-16).
      */
     public String searchFullText(String query) {
-        // Simulación: Graph API POST /search/query
-        // body: { "requests": [ { "entityTypes": ["listItem"], "query": {
-        // "queryString": query } } ] }
-        return "[MOCK] Resultados de MS Graph para: " + query;
+        throw new UnsupportedOperationException(
+            "GAP-1 [US-035]: SharePoint Graph API searchFullText — pendiente refinamiento Sprint asignado."
+        );
     }
 }

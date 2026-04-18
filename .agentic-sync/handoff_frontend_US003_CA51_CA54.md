@@ -18,6 +18,6 @@ Debes implementar las siguientes características de comportamiento avanzado en 
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer un `git commit` directamente a principal.
 Desarrolla las 4 implementaciones UI solicitadas. Usa Axios mock o variables dummy para probar los Spinners. Al conseguir un canvas estable, estanca el desarrollo usando:
-`git stash save "temp-frontend-US003-ca51-ca54"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Reporta con un mensaje de "Éxito Stash" exclusivo cuando finalices el comando git.

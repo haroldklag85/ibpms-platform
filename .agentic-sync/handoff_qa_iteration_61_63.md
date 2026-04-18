@@ -29,5 +29,5 @@ Se ha levantado el bloqueo de Infraestructura. Tu objetivo exclusivo es desplega
 1. Ejecuta cada prueba estricta sobre el entorno en localhost de forma forense.
 2. Si el sistema sobrevive o cae, documenta un informe en **`pqa_chaos_report_iteration_63_final.md`**.
 3. Mantén el Scope puramente a Testing. **No refactorices código de Java ni de Vue.**
-4. Cuando finalices, empaqueta cualquier script creado (si aplica) con `git stash save "temp-qa-US001-SRE"`.
+4. Cuando finalices, empaqueta cualquier script creado (si aplica) con `git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`.
 5. Notifica al usuario Humano mediante `notify_user` explícitamente que has terminado para que pueda avisarme al chat del Arquitecto.

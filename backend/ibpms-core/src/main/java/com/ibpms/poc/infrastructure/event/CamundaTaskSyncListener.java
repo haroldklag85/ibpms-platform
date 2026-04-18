@@ -71,9 +71,23 @@ public class CamundaTaskSyncListener implements TaskListener {
             projectionRepository.save(projection);
             log.debug("BPMN CQRS Sync ({}) exitoso para tarea {}", eventName, taskId);
             
+            // CA-06 + CA-27: Emisión de evento con vocabulario estandarizado y segregación por Tenant
+            String tenantId = (String) delegateTask.getVariable("tenantId");
+            if (tenantId == null) tenantId = "default";
+            
+            com.ibpms.poc.application.dto.WsWorkdeskEventDTO wsEvent = new com.ibpms.poc.application.dto.WsWorkdeskEventDTO();
+            wsEvent.setTaskId("BPMN-" + taskId);
+            wsEvent.setTenantId(tenantId);
+            
             if ("assignment".equals(eventName) && delegateTask.getAssignee() != null) {
-                String payload = "{\"event\": \"TASK_CLAIMED\", \"taskId\": \"BPMN-" + taskId + "\"}";
-                messagingTemplate.convertAndSend("/topic/workdesk.updates", payload);
+                wsEvent.setAction(com.ibpms.poc.application.dto.WsWorkdeskEventDTO.Action.REMOVE); // CA-06: Ghost deletion
+                messagingTemplate.convertAndSend("/topic/workdesk/" + tenantId, wsEvent);
+            } else if (EVENTNAME_CREATE.equals(eventName)) {
+                wsEvent.setAction(com.ibpms.poc.application.dto.WsWorkdeskEventDTO.Action.ADD);
+                messagingTemplate.convertAndSend("/topic/workdesk/" + tenantId, wsEvent);
+            } else if (EVENTNAME_UPDATE.equals(eventName)) {
+                wsEvent.setAction(com.ibpms.poc.application.dto.WsWorkdeskEventDTO.Action.UPDATE);
+                messagingTemplate.convertAndSend("/topic/workdesk/" + tenantId, wsEvent);
             }
 
         } catch (Exception e) {

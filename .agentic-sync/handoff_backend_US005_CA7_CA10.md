@@ -22,6 +22,6 @@ Nos encargamos del gobierno de transición de diagramas BPMN (Instancias V1 sien
 ## 🛑 MANDATO LOCAL GATEKEEPER (REGLA DE ORO)
 Tienes **ESTRICTAMENTE PROHIBIDO** hacer `git commit` a principal.
 Congela tu Motor Evaluador en un stash cuando superes la compilación local:
-`git stash save "temp-backend-US005-ca7-ca10"`
+`git add . && git commit -m "chore(sync): save progress" && git push origin HEAD`
 
 Informa textualmente la confirmación del guardado.

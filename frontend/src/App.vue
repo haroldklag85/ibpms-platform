@@ -3,6 +3,7 @@ import { RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import NotFound404 from '@/components/common/NotFound404.vue'
 import SudoModal from '@/components/common/SudoModal.vue'
+import ErrorStateGlobal from '@/components/common/ErrorStateGlobal.vue'
 
 const authStore = useAuthStore()
 </script>
@@ -36,4 +37,7 @@ const authStore = useAuthStore()
 
   <!-- CA-9: Transversal Sudo Modal -->
   <SudoModal />
+
+  <!-- CA-1 & CA-3: Global Defensive UI State -->
+  <ErrorStateGlobal />
 </template>

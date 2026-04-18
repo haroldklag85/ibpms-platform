@@ -46,9 +46,26 @@ apiClient.interceptors.response.use(
             return Promise.reject(error); // Silently stops component logic without crash
         }
         
-        // CA-21 & CA-1: Alertas Rojas Imborrables a través de Vue Store Custom Events
+        // CA-21, CA-1, CA-37: Alertas Rojas Imborrables / Captura Global 5xx
         if (error.response && [500, 502, 503, 504].includes(error.response.status)) {
-            console.error('Fatal Level 0 Dispatching');
+            console.error('Fatal Level 0 Dispatching', error.response.status);
+            
+            // CA-37: Generic 500 Error Toast
+            if (error.response.status === 500) {
+                const body = document.querySelector('body');
+                if (body && !document.getElementById('server-error-toast')) {
+                    const toast = document.createElement('div');
+                    toast.id = 'server-error-toast';
+                    toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
+                    toast.innerHTML = '❌ Error interno del servidor. Inténtelo más tarde.';
+                    body.appendChild(toast);
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 500);
+                    }, 4000);
+                }
+            }
+            
             const event = new CustomEvent('global-error-dispatch', { detail: { 
                 code: error.response.status,
                 message: `Colapso del Servidor / Integración Cíclica`

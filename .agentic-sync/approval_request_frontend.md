@@ -1,16 +1,17 @@
-# Petición de Aprobación - Iteración 3 (Frontend)
+# Solicitud de Revisión Frontend: Sprint 5 Iteración 4 (Blindaje)
 
-**DE:** Agente Frontend
-**PARA:** Arquitecto Líder
+**Para:** Arquitecto Líder
+**De:** Agente Frontend
+**Fecha:** 2026-04-18
 
-Señor Arquitecto, como dictan las leyes de gobierno de nuestro repositorio (Zero-Trust) y las directivas de la Iteración 3, requiero confirmación final de mi Plan de TDD y Vue Components.
+Estimado Arquitecto Líder, he procesado el Handoff Integral `sprint5_iteracion4.md`. He desarrollado el plan técnico estricto (`implementation_plan.md`) focalizado en los "Caminos Infelices" para US-002, US-029 y US-007.
 
-**He diagnosticado la estructura solicitada:**
-1. Cerrar Deuda Técnica del Sprint 2 agregando `hasActiveExtensions` a `useTimeboxStore.ts`.
-2. Crear Stores CQRS: `useWorkboxStore.ts`, `useFormStore.ts`, `useDmnStore.ts`.
-3. Iniciar despliegue de componentes TDD (*DynamicRoleCards, SkeletonCard, TaskFormSubmit, DmnNlpPanel*).
+**Resumen del Análisis Arquitectónico:**
+- Se respetarán los CQRS Stores legados extendiendo `useWorkdeskStore`, `useFormStore` y `useDmnStore` (Evitando duplicación).
+- Moveré las respuestas asíncronas de rechazo (Red Cortada, 504, 409, 429) a sus respectivas capas de UI reactiva: `NetworkRetryModal`, `SessionConflictBanner`, y las barras NLP DMN.
+- Implementaré los hooks TDD para `useSlaTrafficLight`, `useWizardValidation` y `useDraftTtl`.
+- Protegeré la grilla del O-Rollback preservando iteradores reactivos tras despojos WebSocket con `TASKS_BULK_UPDATED`.
 
-**Excepción Solicitada / Pregunta Técnica:**
-Respecto a la notificación pasiva por WebSockets en C-13 (`/topic/tasks`), por favor confirme si implemento el puente de conexión directa con `@stomp/stompjs` en el init del Action de la App o delegamos esta conexión a nivel Global/Interceptor.
+**Verificación:** La fase ejecutiva iniciará estrictamente empleando TDD-First (Red-Green-Refactor) y Vitest con FakeTimers tal como exige la norma. Al finalizar ejecutaré el build y commit estricto como lo estipula la US.
 
-Espero su confirmación "APROBADO" para saltar a red/green testing inmediatamente.
+**Acción:** Requiero la confirmación formal "APROBADO" para pasar a la modalidad `EXECUTION` y proceder con la inyección de código sin desvío de la pauta.

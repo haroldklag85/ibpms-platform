@@ -84,11 +84,61 @@ describe('useFormStore', () => {
         // Avanzamos 5.1s
         vi.advanceTimersByTime(5100);
 
-        // Como usamos una internal async on commit, wait it out
+        // Como usamos una internal async on commit, wait it out en microtasks
+        await Promise.resolve();
+        await Promise.resolve();
         await Promise.resolve();
 
-        expect(api.completeTask).toHaveBeenCalledWith('t-ok', { doc: 'doc1' });
+        expect(api.completeTask).toHaveBeenCalledWith('t-ok', { doc: 'doc1' }, expect.any(Object));
         expect(store.isUndoAvailable).toBe(false);
         expect(store.isSubmitting).toBe(false);
+    });
+
+    it('Test CA-31 / CA-32: Fallo de red 504 almacena idempotencyKey y activa requiresRetry', async () => {
+        (api.completeTask as any).mockRejectedValue({ response: { status: 504 } });
+        try {
+            await store.submitForm('t-err', {}, false);
+        } catch (e) {}
+
+        expect(store.requiresRetry).toBe(true);
+        expect(store.idempotencyKey).toBeTruthy();
+        expect(store.retryCount).toBe(0);
+    });
+
+    it('Test CA-31 / CA-32: Retries mantienen misma idempotencyKey y frenan a los 3 reintentos', async () => {
+        // Arrange
+        let requestHeaders: any = {};
+        (api.completeTask as any).mockImplementation((_id: string, _payload: any, config: any) => {
+            requestHeaders = config?.headers || {};
+            return Promise.reject({ response: { status: 504 } });
+        });
+        
+        // Initial fall
+        try { await store.submitForm('t-ret', {}, false); } catch(e){}
+        const initialKey = store.idempotencyKey;
+        
+        // 3 manual retries (simulating NetworkRetryModal pressing retry)
+        try { await store.submitForm('t-ret', {}, false, true); } catch(e){}
+        expect(store.retryCount).toBe(1);
+        expect(requestHeaders['Idempotency-Key']).toBe(initialKey);
+        
+        try { await store.submitForm('t-ret', {}, false, true); } catch(e){}
+        expect(store.retryCount).toBe(2);
+        
+        try { await store.submitForm('t-ret', {}, false, true); } catch(e){}
+        expect(store.retryCount).toBe(3);
+        expect(store.requiresRetry).toBe(false); // Can't retry anymore
+    });
+
+    it('Test CA-35: HTTP 409 con SESSION_CONFLICT dispara evento', async () => {
+        vi.spyOn(window, 'dispatchEvent');
+        (api.completeTask as any).mockRejectedValue({ response: { status: 409, data: { type: 'SESSION_CONFLICT' } } });
+        
+        try { await store.submitForm('t-col', {}, false); } catch(e){}
+        
+        const dispatchedEvent = vi.mocked(window.dispatchEvent).mock.calls.find(
+            call => call[0].type === 'session-conflict-dispatch'
+        );
+        expect(dispatchedEvent).toBeDefined();
     });
 });

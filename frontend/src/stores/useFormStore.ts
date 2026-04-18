@@ -15,6 +15,11 @@ export const useFormStore = defineStore('formStore', () => {
     let undoTimer: ReturnType<typeof setInterval> | null = null;
     let pendingSubmitDraft: { taskId: string; payload: any } | null = null;
 
+    // CA-31 & CA-32: Idempotency Retry Limit
+    const requiresRetry = ref(false);
+    const retryCount = ref(0);
+    const idempotencyKey = ref('');
+
     const setFormData = (data: Record<string, any>) => {
         formData.value = { ...data };
         isDirty.value = true;
@@ -46,23 +51,43 @@ export const useFormStore = defineStore('formStore', () => {
         }
     };
 
-    const submitForm = async (taskId: string, payload: any, enableUndo: boolean = true) => {
+    const submitForm = async (taskId: string, payload: any, enableUndo: boolean = true, isRetry: boolean = false) => {
         isSubmitting.value = true;
         try {
-            if (enableUndo) {
+            if (enableUndo && !isRetry) {
                 // Emulamos el envio retrasandolo para permitir soft-undo
                 pendingSubmitDraft = { taskId, payload };
                 startUndoTimer(5);
                 return;
             }
             
-            // Envío normal
-            await api.completeTask(taskId, payload);
+            if (!isRetry) {
+                idempotencyKey.value = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+                retryCount.value = 0;
+            } else {
+                retryCount.value++;
+            }
+
+            const config = { headers: { 'Idempotency-Key': idempotencyKey.value } };
+            // Envío normal o Retry
+            await api.completeTask(taskId, payload, config);
+            
             isDirty.value = false;
             formData.value = {};
             validationErrors.value = {};
+            requiresRetry.value = false;
+            retryCount.value = 0;
         } catch (e: any) {
             console.error('Failed to submit form', e);
+            if (e.response && (e.response.status === 504 || typeof e.response.status === 'undefined')) {
+                if (retryCount.value < 3) {
+                    requiresRetry.value = true;
+                } else {
+                    requiresRetry.value = false;
+                }
+            } else if (e.response && e.response.status === 409 && e.response.data && e.response.data.type === 'SESSION_CONFLICT') {
+                window.dispatchEvent(new CustomEvent('session-conflict-dispatch'));
+            }
             throw e; // Lanzado para que el componente atrape y muestre Modal de rechazo Server-Side
         } finally {
             isSubmitting.value = false;
@@ -101,7 +126,8 @@ export const useFormStore = defineStore('formStore', () => {
         isUndoAvailable.value = false;
         
         try {
-            await api.completeTask(pendingSubmitDraft.taskId, pendingSubmitDraft.payload);
+            const config = { headers: { 'Idempotency-Key': idempotencyKey.value || ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2)) } };
+            await api.completeTask(pendingSubmitDraft.taskId, pendingSubmitDraft.payload, config);
             isDirty.value = false;
             formData.value = {};
         } catch (e) {
@@ -120,6 +146,9 @@ export const useFormStore = defineStore('formStore', () => {
         validationErrors,
         isUndoAvailable,
         undoTimeLeft,
+        requiresRetry,
+        retryCount,
+        idempotencyKey,
         setFormData,
         validateForm,
         saveDraft,

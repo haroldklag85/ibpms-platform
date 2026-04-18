@@ -44,4 +44,18 @@ public class WorkdeskNotificationService {
 
         messagingTemplate.convertAndSend(destination, payload);
     }
+
+    /**
+     * CA-8: Emite un evento STOMP indicando que un supervisor forzó la liberación de una tarea.
+     */
+    public void notifyTaskForceUnclaimed(String tenantId, String taskId) {
+        String destination = "/topic/workdesk/" + tenantId;
+        
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", "TASK_FORCE_UNCLAIMED");
+        payload.put("taskId", taskId);
+        payload.put("timestamp", System.currentTimeMillis());
+
+        messagingTemplate.convertAndSend(destination, payload);
+    }
 }

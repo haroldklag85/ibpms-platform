@@ -202,19 +202,37 @@ public class AgileTaskService {
     @Transactional
     public void unclaimTask(UUID taskId, String unclaimedBy) {
         AgileTask task = getTaskForUpdate(taskId);
-        if (!"CLAIMED".equals(task.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "La tarea no está en estado CLAIMED");
+        if (task.getAssigneeIds() == null || !task.getAssigneeIds().contains(unclaimedBy)) {
+            throw new com.ibpms.poc.domain.exception.TaskOwnershipViolationException(unclaimedBy);
         }
         task.setStatus("AVAILABLE");
-        if (task.getAssigneeIds() != null) {
-            task.getAssigneeIds().remove(unclaimedBy);
-        }
+        task.getAssigneeIds().remove(unclaimedBy);
         taskRepository.save(task);
 
         messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
                 "event", com.ibpms.poc.domain.model.agile.WebSocketEventType.TASK_UNCLAIMED.name(),
                 "taskId", taskId,
                 "unclaimedBy", unclaimedBy,
+                "timestamp", java.time.Instant.now()
+        ));
+    }
+
+    /**
+     * US-002 CA-8: Force Unclaim de un Supervisor
+     * Libera la tarea anulando las validaciones de ownership y notifica.
+     */
+    @Transactional
+    public void forceUnclaimTask(UUID taskId) {
+        AgileTask task = getTaskForUpdate(taskId);
+        task.setStatus("AVAILABLE");
+        if (task.getAssigneeIds() != null) {
+            task.getAssigneeIds().clear();
+        }
+        taskRepository.save(task);
+
+        messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
+                "event", "TASK_FORCE_UNCLAIMED",
+                "taskId", taskId,
                 "timestamp", java.time.Instant.now()
         ));
     }

@@ -1,5 +1,6 @@
 package com.ibpms.poc.api.controller;
 
+import com.ibpms.poc.application.util.SecurityContextUtils;
 import com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -7,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -29,8 +31,8 @@ public class TaskClaimController {
      */
     @PostMapping("/{taskId}/claim")
     public ResponseEntity<?> claimTask(@PathVariable String taskId) {
-        String assignee = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
-        String tenantId = com.ibpms.poc.application.util.SecurityContextUtils.getTenantId();
+        String assignee = SecurityContextUtils.getAssignee();
+        String tenantId = SecurityContextUtils.getTenantId();
 
         try {
             // Delega en el servicio que usa findByIdForUpdate (CA-11) y guarda en DB con JPA (CA-1)
@@ -52,8 +54,8 @@ public class TaskClaimController {
      */
     @PostMapping("/{taskId}/unclaim")
     public ResponseEntity<?> unclaimTask(@PathVariable String taskId) {
-        String assignee = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
-        String tenantId = com.ibpms.poc.application.util.SecurityContextUtils.getTenantId();
+        String assignee = SecurityContextUtils.getAssignee();
+        String tenantId = SecurityContextUtils.getTenantId();
         
         try {
             taskService.unclaimTask(java.util.UUID.fromString(taskId), assignee);
@@ -65,20 +67,5 @@ public class TaskClaimController {
              return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "CONFLICT", "message", "No se puede liberar la tarea."));
         }
-    }
-}
-
-// Clase de utilidad para el mapa
-class Map {
-    public static java.util.Map<String, String> of(String k1, String v1) {
-        java.util.Map<String, String> m = new java.util.HashMap<>();
-        m.put(k1, v1);
-        return m;
-    }
-    public static java.util.Map<String, String> of(String k1, String v1, String k2, String v2) {
-        java.util.Map<String, String> m = new java.util.HashMap<>();
-        m.put(k1, v1);
-        m.put(k2, v2);
-        return m;
     }
 }

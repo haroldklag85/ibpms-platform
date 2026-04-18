@@ -86,6 +86,27 @@ export const useWorkdeskStore = defineStore('workdesk', {
       }
     },
 
+    // Sprint 5.1 CA-5 / CA-9
+    async fetchTaskPreview(taskId: string) {
+        try {
+            const { data } = await apiClient.get(`/workdesk/tasks/${taskId}/preview`);
+            return data;
+        } catch (error) {
+            console.error('Error en fetchTaskPreview', error);
+            throw error;
+        }
+    },
+
+    async fetchAuditTrail(taskId: string) {
+        try {
+            const { data } = await apiClient.get(`/workdesk/tasks/${taskId}/audit-trail`);
+            return data;
+        } catch (error) {
+            console.error('Error en fetchAuditTrail', error);
+            return []; // Fallback empty array
+        }
+    },
+
     // CA-22: Cambio de Vista Workdesk
     async setActiveView(view: 'PERSONAL' | 'POOL') {
         this.activeView = view;

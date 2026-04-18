@@ -19,7 +19,7 @@
         "axios": "^1.6.7",
         "bpmn-js": "^18.12.1",
         "diagram-js-minimap": "^5.3.0",
-        "dompurify": "^3.3.3",
+        "dompurify": "^3.4.0",
         "frappe-gantt": "^1.2.2",
         "imask": "^7.6.1",
         "jexl": "^2.3.0",

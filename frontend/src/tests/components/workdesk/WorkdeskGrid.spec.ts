@@ -21,66 +21,48 @@ describe('WorkdeskGrid.vue (CA-11 a CA-15 Reclamar y Liberar)', () => {
         vi.restoreAllMocks();
     });
 
-    it('Muestra botón "Reclamar" si la tarea está AVAILABLE', async () => {
+    it('Muestra botón "Ver Detalle" si la tarea está AVAILABLE, abre modal previsualización', async () => {
         const tasks = [
             { unifiedId: 't-1', title: 'Generar Informe', status: 'AVAILABLE', assignee: null }
         ];
 
         const wrapper = mount(WorkdeskGrid, {
-            global: { plugins: [pinia] },
+            global: { plugins: [pinia], stubs: { Teleport: true } },
             props: { tasks }
         });
 
         const btn = wrapper.find('button.text-indigo-600');
         expect(btn.exists()).toBe(true);
-        expect(btn.text()).toBe('Reclamar');
+        expect(btn.text()).toContain('Ver Detalle');
 
         await btn.trigger('click');
-        const store = useWorkdeskStore();
-        expect(store.claimTask).toHaveBeenCalledWith('t-1');
+        expect((wrapper.vm as any).selectedPreviewId).toBe('t-1');
     });
 
-    it('Muestra botón "Liberar" si la tarea está ACTIVE y asignada al usuario actual, y emite unclaimTask', async () => {
+    it('Muestra botón "Liberar" si la tarea está ACTIVE y asignada al usuario actual, abre modal y emite unclaimTask', async () => {
         const tasks = [
             { unifiedId: 't-2', title: 'Facturacion', status: 'ACTIVE', assignee: 'testuser' }
         ];
 
         const wrapper = mount(WorkdeskGrid, {
-            global: { plugins: [pinia] },
+            global: { plugins: [pinia], stubs: { Teleport: true } },
             props: { tasks }
         });
 
         const btn = wrapper.find('button.text-red-600');
         expect(btn.exists()).toBe(true);
-        expect(btn.text()).toContain('Liberar (Unclaim)');
 
+        // Click on Liberar opens the custom prompt
         await btn.trigger('click');
-        expect(window.confirm).toHaveBeenCalled();
+        expect((wrapper.vm as any).unclaimTargetId).toBe('t-2');
         
+        // Find the "Sí, liberar" button inside the custom modal
+        const confirmBtn = wrapper.find('button.bg-red-600.text-white');
+        expect(confirmBtn.exists()).toBe(true);
+        await confirmBtn.trigger('click');
+
         const store = useWorkdeskStore();
         expect(store.unclaimTask).toHaveBeenCalledWith('t-2');
-    });
-
-    it('CA-21: Muestra toast/alerta y la tarea reaparece si store.claimTask falla', async () => {
-        // Simulamos un alert/toast 
-        vi.spyOn(window, 'alert').mockImplementation(() => {});
-        const tasks = [
-            { unifiedId: 't-3', title: 'Claim Fallido', status: 'AVAILABLE', assignee: null }
-        ];
-
-        const wrapper = mount(WorkdeskGrid, {
-            global: { plugins: [pinia] },
-            props: { tasks }
-        });
-
-        const store = useWorkdeskStore();
-        // Simulamos un fallo en claimTask (500)
-        vi.mocked(store.claimTask).mockRejectedValueOnce(new Error('Internal Server Error'));
-
-        await wrapper.find('button.text-indigo-600').trigger('click');
-
-        // La UI debería manejar el rechazo sin crashear.
-        expect(store.claimTask).toHaveBeenCalledWith('t-3');
     });
 
     it('CA-28: Botón Atender Siguiente llama al store', async () => {

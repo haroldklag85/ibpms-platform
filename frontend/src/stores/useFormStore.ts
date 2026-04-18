@@ -79,7 +79,15 @@ export const useFormStore = defineStore('formStore', () => {
             retryCount.value = 0;
         } catch (e: any) {
             console.error('Failed to submit form', e);
-            if (e.response && (e.response.status === 504 || typeof e.response.status === 'undefined')) {
+            if (e.response && e.response.status === 400 && e.response.data && Array.isArray(e.response.data.errors)) {
+                // CA-2 Validation Field-by-Field
+                const backendErrors: Record<string, string> = {};
+                e.response.data.errors.forEach((err: any) => {
+                    backendErrors[err.field] = err.message;
+                });
+                validationErrors.value = backendErrors;
+                throw new Error('ValidationFailed(RFC7807)');
+            } else if (e.response && (e.response.status === 504 || typeof e.response.status === 'undefined')) {
                 if (retryCount.value < 3) {
                     requiresRetry.value = true;
                 } else {

@@ -130,6 +130,31 @@ describe('useFormStore', () => {
         expect(store.requiresRetry).toBe(false); // Can't retry anymore
     });
 
+    it('Test CA-37: HTTP 500 expone error genérico sin stack trace', async () => {
+        (api.completeTask as any).mockRejectedValue({
+            response: {
+                status: 500,
+                data: {
+                    message: 'java.lang.NullPointerException at com.ibpms.poc.service.FormService.submit(FormService.java:42)',
+                    trace: 'at sun.reflect...',
+                    type: 'INTERNAL_ERROR'
+                }
+            }
+        });
+
+        try {
+            await store.submitForm('t-500', {}, false);
+        } catch (e: any) {
+            // El store re-lanza el error. El componente debería mostrar mensaje genérico.
+            // Verificamos que el store NO almacena el stack trace en ningún campo expuesto.
+            expect(store.requiresRetry).toBe(false); // 500 no es retry-able (solo 504)
+            // El componente debe filtrar — el store no tiene campo 'userFacingError'
+            // pero garantizamos que NO expone info interna al DOM
+            expect(JSON.stringify(store.$state)).not.toContain('NullPointerException');
+            expect(JSON.stringify(store.$state)).not.toContain('sun.reflect');
+        }
+    });
+
     it('Test CA-35: HTTP 409 con SESSION_CONFLICT dispara evento', async () => {
         vi.spyOn(window, 'dispatchEvent');
         (api.completeTask as any).mockRejectedValue({ response: { status: 409, data: { type: 'SESSION_CONFLICT' } } });

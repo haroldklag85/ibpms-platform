@@ -34,8 +34,8 @@ public class TriageTaskService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Se requiere especificar processType.");
         }
 
-        TriageTask task = triageTaskRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe tarea de triaje con ID " + id));
+        TriageTask task = triageTaskRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe tarea de triaje con ID (o bloqueada) " + id));
 
         if (!"PENDING".equals(task.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La tarea ya no está pendiente.");
@@ -65,8 +65,8 @@ public class TriageTaskService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El motivo de rechazo es obligatorio.");
         }
 
-        TriageTask task = triageTaskRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe tarea de triaje con ID " + id));
+        TriageTask task = triageTaskRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe tarea de triaje con ID (o bloqueada) " + id));
 
         if (!"PENDING".equals(task.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La tarea ya no está pendiente.");

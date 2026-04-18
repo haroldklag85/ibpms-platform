@@ -145,3 +145,43 @@ Feature: Continuous AI Pruning (Self-Healing Organization)
     And finalmente dispara un Ticket al Workdesk del Arquitecto IT diciendo: "Borrador de Optimización Generado. Revise las conexiones y presione Desplegar".
 ```
 **Trazabilidad UX:** Pantalla 5 (AI Copilot / Evolution Findings) y Modeler (Auto-Refactor).
+
+---
+
+### US-V2-005: Desacoplamiento de Workers a Microservicios (Node.js)
+
+**ÉPICA Afectada:** Arquitectura Core & Resiliencia Cloud (V2)  
+**Valor de Negocio:** Garantizar que los fallos u operaciones pesadas en componentes externos/sistemas integrados (Ej. Office 365, NLP, OCR) no impacten bajo ninguna circunstancia el rendimiento ni la estabilidad del sistema principal (ibpms-core) ni el servicio a los usuarios finales.  
+**Dependencias:** Repositorio principal estabilizado y mecanismos de M2M Auth implementados.
+
+**Descripción:**
+Como Administrador de Arquitectura TI de iBPMS,
+quiero extraer el agente "External Task Client" de Camunda fuera del monolito en Spring Boot,
+para que las tareas automatizadas pesadas o inestables se procesen en un microservicio aislado de Node.js,
+y así evitar caídas en el event-loop principal que interactúa con portal ciudadano y frontales de la plataforma.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: External Worker Decoupling via Node.js
+  Scenario: Creación del Scaffold Minimalista de Node.js (CA-1)
+    Given un entorno Docker/Docker Compose del ecosistema iBPMS local
+    When se despliega el contenedor `ibpms-worker-node` alojando la librería `camunda-external-task-client-js`
+    Then el trabajador se levanta consumiendo menos de 50MB de RAM y puede sondear exitosamente el endpoint del core `api/v1/engine-rest/external-task/fetchAndLock`.
+
+  Scenario: Extracción de Lógica Monolítica (CA-2)
+    Given que el monolito `ibpms-core` originalmente manejaba tareas mediante el Auto-Configuration client
+    When se migran los delegados (ej. procesamiento de correos SAC, NLP de DMN, y firmas digitales) a scripts de TypeScript en el worker
+    Then el `application.yml` del monolito mantiene deshabilitado permanentemente el servicio (`camunda.bpm.client.disable: true`) sin generar pérdida en el flujo de los diagramas BPMN.
+
+  Scenario: Paso de Seguridad Intranet (M2M Auth) (CA-3)
+    Given que la API REST del monolito está protegida por Spring Security (Zero-Trust)
+    When el Worker Node.js solicita tareas
+    Then el Worker adjunta un Token Cliente-Servidor (JWT M2M o API Key interno) garantizado y es autorizado para interactuar en el pool por parte del Core, emitiendo un reporte 200 OK.
+
+  Scenario: Test de Aislamiento de Fallo (CA-4)
+    Given un escenario crítico donde una integración falla o entra en timeout masivo
+    When el Worker Node.js colapsa, consumiendo memoria bruta hasta matar su propio contenedor
+    Then el `ibpms-core` monolítico sigue respondiendo 100% verde y operando la UI sin registrar alteraciones en su ApplicationContext
+    And el Docker daemon regenera automáticamente el worker (restart: always).
+```
+**Trazabilidad Arquitectónica:** Repositorio `ibpms-worker-node`, `docker-compose.yml`, Spring Security Config.

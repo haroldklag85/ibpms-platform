@@ -31,9 +31,11 @@ server:
   servlet:
     context-path: ""
 
-# Disable Camunda auto-deploy and job execution in tests
+# Disable Camunda auto-deploy, job execution and external task client in tests
 camunda:
   bpm:
+    client:
+      disable: true
     deployment-resource-pattern: ""
     job-execution:
       enabled: false

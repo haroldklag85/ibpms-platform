@@ -1,18 +1,18 @@
-# Solicitud de Aprobación QA (US-039 CA-4 al CA-8)
-**Para:** Arquitecto Líder
-**De:** Agente QA Senior (Testcontainers/Playwright)
-**Contexto:** Iteración 72-DEV - Formulario Genérico Base (Pantalla 7.B)
+# Solicitud de Aprobación QA / SDET (Iteración 3, Sprint 5)
 
-El plan de pruebas completo ha sido estructurado en el artefacto central `implementation_plan.md` basándome estrictamente en el handoff proporcionado (`handoff_qa_US039_CA4_CA8.md`). 
+## 📌 Asunto
+Dictamen del Plan de Implementación de Certificación Client-Side (Vitest + Playwright).
 
-## Resumen Ejecutivo de la Cobertura:
-* **CA-4:** Múltiples aserciones REST Assured para los límites físicos (validaciones 400 y payloads corruptos) y renderizados de campos editables en Frontend.
-* **CA-5:** Validación funcional de Whitelists vs Taint Variables (shadow keys) y el comportamiento Fallback de BFF.
-* **CA-6:** Pre-flight checks para Roles VIP mediante inserciones en Database + Testcontainers.
-* **CA-7:** Peticiones puras (PUT/GET/DELETE) certificando el Draft Autosave bajo arquitecturas asíncronas, y simulación de cierres abortivos con persistencia en LocalStorage.
-* **CA-8:** Inyección rigurosa en el BPMN de señales como `TASK_CANCELLED_BY_OPERATOR` en base al Botón de Pánico, garantizando la exigencia formal de justificación.
+## 📄 Resumen de la Estrategia Trazada
+Arquitecto, según las directrices establecidas en `handoff_qa_sprint5_iteracion3.md`, he diseñado el marco de cobertura y testing perimetral sobre los componentes desplegados por el agente Frontend en esta iteración.
 
-Total planeado: **~42 escenarios de TDD defensivo**.
+1. **Vitest (Nivel 1):** Validaré los rendering de Roles Condicionales (US-025), el WebDesk Local (US-002), form builders con Zod (US-029) y el NLP panel (US-007) mediante aserciones DOM completas manipulando stores Mockeados (`createTestingPinia()`).
+2. **Playwright (Nivel 2):** Agrego aserciones sobre usabilidad, como virtual scrolling dinámico sin degradación (<200ms) y la conmutación al vuelo de Roles en el App Shell (Isomorfismo Auth).
+3. **SSoT:** Comprometeré el reporte en la `coverage_matrix.md` al culminar mediante la herramienta `.agent/workflows/reconciliacionCoberturaCa.md`.
 
-## Solicitud:
-Solicito formalmente **GREEN LIGHT** para proceder al modo `EXECUTION`. Una vez aprobado, consolidaré los contenedores, implementaré los scripts y efectuaré `git commit` y `git push` directo a `sprint-3/informe_auditoriaSprint1y2` protegiendo las fronteras tecnológicas del software.
+## 🛑 Checkpoint Táctico
+Deseo proceder con la ejecución (modo EXECUTION) empleando Test-Driven Development (TDD) para estos componentes. Solicitud de confirmación formal para no contravenir ningún límite arquitectónico ni funcional establecido en la planimetría de Sprint S5.
+
+---
+**Agente: QA Automation / SDET**
+*Esperando Veredicto de la Jefatura Técnica...*

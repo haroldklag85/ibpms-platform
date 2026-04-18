@@ -13,7 +13,10 @@ import org.springframework.stereotype.Repository;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
-
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.QueryHints;
 @Repository
 public class TriageTaskRepositoryJpa implements TriageTaskRepository {
 
@@ -34,6 +37,11 @@ public class TriageTaskRepositoryJpa implements TriageTaskRepository {
     }
 
     @Override
+    public Optional<TriageTask> findByIdForUpdate(UUID id) {
+        return repository.findByIdForUpdate(id);
+    }
+
+    @Override
     public Page<TriageTask> findByStatus(String status, Pageable pageable) {
         return repository.findByStatus(status, pageable);
     }
@@ -46,6 +54,11 @@ public class TriageTaskRepositoryJpa implements TriageTaskRepository {
 
 interface SpringDataTriageTaskRepository extends JpaRepository<TriageTask, UUID> {
     Page<TriageTask> findByStatus(String status, Pageable pageable);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")})
+    @Query("SELECT t FROM TriageTask t WHERE t.id = :id")
+    Optional<TriageTask> findByIdForUpdate(@Param("id") UUID id);
 
     @Modifying
     @Query("DELETE FROM TriageTask t WHERE t.status = :status AND t.updatedAt < :cutoff")

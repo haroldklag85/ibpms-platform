@@ -18,7 +18,10 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.springframework.test.context.ActiveProfiles;
+
 @SpringBootTest
+@ActiveProfiles("test")
 public class SlaTimerEngineIntegrationTest {
     @Autowired
     private TaskService taskService;

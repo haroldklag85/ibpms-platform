@@ -148,6 +148,11 @@ export const api = {
     getGlobalInbox: (params: { page?: number; size?: number; sort?: string; search?: string; delegatedUserId?: string }) => 
         apiClient.get('/workdesk/global-inbox', { params }),
 
+    // US-002: Workbox Tasks
+    claimTask: (taskId: string) => apiClient.post(`/workbox/tasks/${taskId}/claim`),
+    completeTask: (taskId: string, payload: any) => apiClient.post(`/workbox/tasks/${taskId}/complete`, payload),
+    saveTaskDraft: (taskId: string, payload: any) => apiClient.put(`/workbox/tasks/${taskId}/draft`, payload),
+
     // 1. AI Correct (Partial Regeneration CA-28)
     correctAiText: (payload: { text: string; delta: string }) => apiClient.post('/ai/correct', payload),
 
@@ -212,6 +217,7 @@ export const api = {
     // 10. AI Agents & Copilot (CA-8 US-005)
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),
     analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
+    generateDmnRules: (payload: any) => apiClient.post(`/dmn/generate`, payload),
 
     // Configuraciones Administrativas (CA-30)
     getBpmnComplexityLimit: () => apiClient.get('/admin/settings/bpmn-complexity-limit'),
@@ -228,5 +234,17 @@ export const api = {
     destroyCopilotSession: () => fetch('/api/v1/ai/copilot/session', { method: 'DELETE', keepalive: true, headers: { 'Authorization': `Bearer ${localStorage.getItem('ibpms_token')}` } }),
 
     // CA-09: Trazador Forense de Descartes ISO (Override)
-    reportIsoOverride: (payload: any) => apiClient.post('/forensics/iso-override', payload)
+    reportIsoOverride: (payload: any) => apiClient.post('/forensics/iso-override', payload),
+
+    // Sprint 5 - Iteración 2: Timebox & SLA
+    getSlaLogs: (taskId: string, page = 0, size = 20) => 
+        apiClient.get(`/agile/tasks/${taskId}/sla-log`, { params: { page, size } }),
+
+    requestTimeboxExtension: (taskId: string, payload: { reason: string; extensionHours: number }) => {
+        // Enviar Idempotency-Key para proteger la concurrencia Zero-Trust
+        const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        return apiClient.post(`/agile/tasks/${taskId}/timebox`, payload, {
+            headers: { 'Idempotency-Key': uuid }
+        });
+    }
 };

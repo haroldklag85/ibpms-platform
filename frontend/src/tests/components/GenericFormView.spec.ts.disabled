@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils';
 // Como el componente aún no ha sido implementado, aplicamos TDD estricto.
 // Importaremos el componente esperado. Cuando el test corra, fallará por archivo no encontrado
 // o por fallas de aserción.
-import GenericFormView from '../../../views/admin/BPMN/GenericFormView.vue';
+import GenericFormView from '@/views/admin/GenericForm/GenericFormView.vue';
 
 describe('GenericFormView.vue (US-039 CA-4 al CA-8)', () => {
   beforeEach(() => {

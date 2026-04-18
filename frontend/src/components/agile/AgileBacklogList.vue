@@ -76,7 +76,7 @@ const processedOrphanedItems = computed(() => {
 
 // CA-13: Stale Ticket Logic
 const isStale = (item: BacklogItem) => {
-   if (!item.updatedAt) return false;
+   if (!item || !item.updatedAt) return false;
    const diffTime = Math.abs(Date.now() - new Date(item.updatedAt).getTime());
    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
    return diffDays > 30;

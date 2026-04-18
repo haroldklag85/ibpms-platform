@@ -93,6 +93,15 @@ export const useWorkdeskStore = defineStore('workdesk', {
       }
     },
 
+    async unclaimTask(taskId: string) {
+      try {
+        const { data } = await apiClient.post(`/tasks/${taskId}/unclaim`);
+        return data;
+      } catch (err: any) {
+        throw err;
+      }
+    },
+
     // CA-21: Skipeo Justificado
     async skipAndNext(taskId: string, reason: string, detail?: string) {
       this.isAttending = true;
@@ -189,6 +198,15 @@ export const useWorkdeskStore = defineStore('workdesk', {
                          break;
                      case 'UPDATE':
                          if (event.payload) this._handleWsUpdate(event.taskId, event.payload);
+                         break;
+                     case 'TASK_UNCLAIMED':
+                         // Lo inyectamos de nuevo como disponible o actualizamos
+                         if (event.payload) {
+                             this._handleWsAdd(event.payload); 
+                         } else {
+                             // Force global fetch si no hay payload en el websocket
+                             this.fetchGlobalInbox(this.currentPage, 50, '', '', '', '', 'AVAILABLE');
+                         }
                          break;
                      case 'PRIORITY_CHANGE':
                          this._handleWsPriorityChange();

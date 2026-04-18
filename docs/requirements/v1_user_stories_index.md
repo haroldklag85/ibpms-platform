@@ -1,6 +1,6 @@
 # 📑 Índice Maestro de User Stories — iBPMS V1
 
-> **Última actualización:** 2026-04-10 | **Total US:** 56 | **Archivos:** 7  
+> **Última actualización:** 2026-04-18 (Auditoría Integral Sección 1.2) | **Total US:** 56 | **Archivos:** 7  
 > **Coverage centralizada:** [`.agentic-sync/coverage_matrix.md`](../../.agentic-sync/coverage_matrix.md)  
 > **Protocolo de lectura:** Los agentes DEBEN leer este índice primero, luego el archivo de épica específico. PROHIBIDO leer `v1_user_stories.md` directamente.
 
@@ -21,13 +21,13 @@
 | US | Nombre | Estado |
 |----|--------|--------|
 | US-000 | Resiliencia Integrada y Enmascaramiento PII Visual | ✅ Completada |
-| US-001 | Obtener Tareas Pendientes en el Workdesk | 🔨 En construcción (50%) |
-| US-002 | Reclamar una Tarea de Grupo (Claim Task) | ❌ Pendiente |
-| US-004 | Iniciar un Proceso mediante Webhook (Plugin O365 Listener) | ❌ Pendiente |
-| US-008 | Mover Tarjeta en Tablero Kanban (Cambio de Estado) | ❌ Pendiente |
-| US-030 | Instanciar y Planificar un Proyecto Ágil (Sprints/Kanban) | ❌ Pendiente |
+| US-001 | Obtener Tareas Pendientes en el Workdesk | ✅ Completada (30/30 CAs — 100%) |
+| US-002 | Reclamar una Tarea de Grupo (Claim Task) | 🔨 En construcción (~9%) ⚠️ CRÍTICO: BD no persiste, assignee hardcodeado |
+| US-004 | Iniciar un Proceso mediante Webhook (Plugin O365 Listener) | 🔨 En construcción (~71%) ⚠️ CA-6 sin RabbitMQ consumer, EmailWebhookController bypasea pipeline |
+| US-008 | Mover Tarjeta en Tablero Kanban (Cambio de Estado) | 🔨 Scaffolding (~10%) — KanbanView con mock data hardcodeado, sin state machine |
+| US-030 | Instanciar y Planificar un Proyecto Ágil (Sprints/Kanban) | 🔨 En construcción (~85%) — Hub Ágil sustancial; CA-2 WBS bloqueado por US-006 |
 | US-031 | Planificación y Ejecución de Proyecto Tradicional (Gantt) | ❌ Pendiente |
-| US-017 | Ejecución y Persistencia Inmutable de Formularios (CQRS & Event Sourcing) | ❌ Pendiente |
+| US-017 | Ejecución y Persistencia Inmutable de Formularios (CQRS & Event Sourcing) | 🔨 Refactoring ADR-001 (FormEventEntity extraída; FormEvent POJO pendiente de purificación) |
 
 ---
 
@@ -38,11 +38,11 @@
 |----|--------|--------|
 | US-003 | Instanciar y Generar un Formulario "iForm Maestro" vs "Simple" | ✅ Completada |
 | US-028 | Simulador de Contratos Zod en Memoria (In-Browser QA Sandbox) | ✅ Completada |
-| US-029 | Ejecución y Envío de Formulario (iForm Maestro o Simple) | ❌ Pendiente |
+| US-029 | Ejecución y Envío de Formulario (iForm Maestro o Simple) | 🔨 En construcción (~55%) — Núcleo ACID sólido; FormBffCoreService mockeado; 26 CAs remediación sin verificar |
 | US-039 | Formulario Genérico Base (Pantalla 7.B - El Camaleón Operativo) | ✅ Completada |
 | US-005 | Desplegar y Versionar un Modelo de Proceso (BPMN) | ✅ Completada |
 | US-006 | Diseñar la Estructura Base (WBS) de una Plantilla de Proyecto | ❌ Pendiente |
-| US-007 | Generador Cognitivo de DMN (NLP a Tablas de Decisión) | ❌ Pendiente |
+| US-007 | Generador Cognitivo de DMN (NLP a Tablas de Decisión) | 🔨 En construcción (~48%) ⚠️ IDOR activo: tenantId hardcodeado en DmnGovernanceController |
 
 ---
 
@@ -129,13 +129,15 @@
 
 ## Resumen de Distribución
 
-| Épica | US | Tamaño | Completadas | En Construcción | Pendientes |
-|-------|:--:|-------:|:-----------:|:---------------:|:----------:|
-| A — Motor Core | 8 | ~100 KB | 1 | 1 | 6 |
-| B — Formularios/BPMN | 7 | ~194 KB | 4 | 0 | 3 |
-| C — IA/MLOps/SAC | 7 | ~30 KB | 0 | 0 | 7 |
-| D — CRM/Intake/Portal | 10 | ~59 KB | 0 | 0 | 10 |
-| E — Seguridad/Config | 7 | ~51 KB | 4 | 0 | 3 |
-| F — Dashboards/Integ. | 10 | ~60 KB | 1 | 0 | 9 |
-| G — IA Cognitiva/RAG | 7 | ~110 KB | 0 | 0 | 7 |
-| **TOTAL** | **56** | **~604 KB** | **10** | **1** | **45** |
+| Épica | US | Tamaño | Completadas | En Construcción | Scaffolding | Pendientes |
+|-------|:--:|-------:|:-----------:|:---------------:|:-----------:|:----------:|
+| A — Motor Core | 8 | ~100 KB | 2 | 3 | 1 | 2 |
+| B — Formularios/BPMN | 7 | ~194 KB | 4 | 2 | 0 | 1 |
+| C — IA/MLOps/SAC | 7 | ~30 KB | 0 | 0 | 0 | 7 |
+| D — CRM/Intake/Portal | 10 | ~59 KB | 0 | 0 | 0 | 10 |
+| E — Seguridad/Config | 7 | ~51 KB | 4 | 0 | 0 | 3 |
+| F — Dashboards/Integ. | 10 | ~60 KB | 1 | 0 | 0 | 9 |
+| G — IA Cognitiva/RAG | 7 | ~110 KB | 0 | 0 | 0 | 7 |
+| **TOTAL** | **56** | **~604 KB** | **11** | **5** | **1** | **39** |
+
+> **Nota (2026-04-18):** Tabla actualizada post Auditoría Integral Sección 1.2. US-001 reclasificada a Completada (100%). US-002, US-004, US-029, US-030 detectadas como En Construcción parcial. US-008 como Scaffolding. US-007 como En Construcción con IDOR crítico. Ver detalles en `.agentic-sync/coverage_matrix.md`.

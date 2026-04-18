@@ -11,6 +11,7 @@ import java.util.UUID;
 public interface TriageTaskRepository {
     TriageTask save(TriageTask task);
     Optional<TriageTask> findById(UUID id);
+    Optional<TriageTask> findByIdForUpdate(UUID id);
     Page<TriageTask> findByStatus(String status, Pageable pageable);
     void deleteByStatusAndUpdatedAtBefore(String status, ZonedDateTime cutoff);
 }

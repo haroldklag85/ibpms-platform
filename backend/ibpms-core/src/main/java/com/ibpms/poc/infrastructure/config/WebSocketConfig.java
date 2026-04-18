@@ -19,11 +19,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         config.setApplicationDestinationPrefixes("/app");
     }
 
+    @org.springframework.beans.factory.annotation.Value("${ibpms.cors.allowed-origins:http://localhost:5173}")
+    private String[] allowedOrigins;
+
     @Override
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
         // Endpoint WebSocket para la conexión inicial de STOMP
         registry.addEndpoint("/ws-endpoint")
-                .setAllowedOriginPatterns("*")
+                .setAllowedOriginPatterns(allowedOrigins)
                 .withSockJS(); // Fallback para navegadores antiguos
     }
 }

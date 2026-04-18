@@ -6,5 +6,5 @@ public interface CompletarTareaUseCase {
     /**
      * Completa una tarea en el motor BPM aportando el payload del formulario.
      */
-    void completar(String taskId, Map<String, Object> variables, String idempotencyKey);
+    void completar(String taskId, Map<String, Object> variables, String idempotencyKey, String username);
 }

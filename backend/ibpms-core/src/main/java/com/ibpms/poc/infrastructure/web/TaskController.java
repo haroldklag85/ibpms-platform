@@ -108,6 +108,11 @@ public class TaskController {
         // 1. Limpieza de máscaras estéticas (CA-31)
         formFieldCleanserService.cleanseVariables(variables);
 
+        String username = SecurityContextHolder.getContext() != null
+                && SecurityContextHolder.getContext().getAuthentication() != null
+                        ? SecurityContextHolder.getContext().getAuthentication().getName()
+                        : "system";
+
         // 2. Auditoría CA-12: Capturar el delta de cambios y Aserción Optimista (CA-72)
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
         if (task != null) {
@@ -128,10 +133,6 @@ public class TaskController {
 
             String processInstanceId = task.getProcessInstanceId();
             Map<String, Object> oldVariables = taskService.getVariables(taskId);
-            String username = SecurityContextHolder.getContext() != null
-                    && SecurityContextHolder.getContext().getAuthentication() != null
-                            ? SecurityContextHolder.getContext().getAuthentication().getName()
-                            : "system";
 
             variables.forEach((key, newValue) -> {
                 Object oldValue = oldVariables.get(key);
@@ -148,7 +149,7 @@ public class TaskController {
         }
 
         // 3. Completar y despachar engine
-        completarTareaUseCase.completar(taskId, variables, idempotencyKey);
+        completarTareaUseCase.completar(taskId, variables, idempotencyKey, username);
 
         return ResponseEntity.noContent().build();
     }

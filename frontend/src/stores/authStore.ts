@@ -10,6 +10,16 @@ export const useAuthStore = defineStore('auth', () => {
     const isHydrating = ref(false);
     const isGlobal404 = ref(false);
 
+    // Sprint 5 (Iteración 1) - Inicialización forzosa de ActiveRole
+    const activeRole = ref<string | null>(null);
+    const effectiveRoles = ref<string[]>([]);
+
+    const initActiveRole = () => {
+        if (user.value && user.value.roles.length > 0) {
+            activeRole.value = user.value.roles[0];
+        }
+    };
+
     // CA-11: Instancia del SSE Listener
     let sseSource: EventSource | null = null;
 
@@ -51,6 +61,7 @@ export const useAuthStore = defineStore('auth', () => {
             // SSO Normal fallback
             user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
         }
+        initActiveRole();
         initSecurityListener();
     };
 
@@ -61,9 +72,15 @@ export const useAuthStore = defineStore('auth', () => {
         }
         token.value = null;
         user.value = null;
+        effectiveRoles.value = [];
         isGlobal404.value = false;
         localStorage.removeItem('ibpms_token');
         // Redirección manejada por RouteGuard o Router al perder state.
+    };
+
+    const switchRole = (roleId: string) => {
+        activeRole.value = roleId;
+        window.dispatchEvent(new CustomEvent('role-switched', { detail: { roleId } }));
     };
 
     // CA-1: Espera síncrona de hidratación
@@ -83,6 +100,15 @@ export const useAuthStore = defineStore('auth', () => {
                  user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
              }
              
+             initActiveRole();
+             // Consumir Api para effective roles
+             try {
+                const { data } = await apiClient.get('/auth/effective-roles');
+                effectiveRoles.value = data || [];
+             } catch(e) {
+                console.warn('Could not fetch effective-roles', e);
+             }
+
              // Enchufamos el SSE
              initSecurityListener();
         } catch (error: any) {
@@ -106,10 +132,13 @@ export const useAuthStore = defineStore('auth', () => {
         token,
         user,
         roles,
+        activeRole,
+        effectiveRoles,
         isHydrating,
         isGlobal404,
         login,
         logout,
+        switchRole,
         hydrateAuth,
         hasAnyRole
     };

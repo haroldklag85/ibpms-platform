@@ -1,6 +1,6 @@
 # 📊 Matriz de Cobertura de Implementación (iBPMS V1)
 
-> **Última actualización:** 2026-04-14 | **Responsable:** Arquitecto Líder
+> **Última actualización:** 2026-04-18 (Auditoría Integral — `/auditoriaIntegralUSDesarrollo.md`) | **Responsable:** Arquitecto Líder
 > **Fuente de Verdad:** Checklist validado manualmente por el PO/Arquitecto Líder
 > **Leyenda:** ✅ Implementado | ⏳ En progreso | ❌ Pendiente | 🚫 Excluido (V2+) | 🔄 Remediación pendiente | ⚠️ Falso Positivo Corregido
 
@@ -19,13 +19,23 @@
 
 | Métrica | Valor |
 |---------|-------|
-| **Total US en V1** | 53+ |
-| **US Completadas** | 10 (US-000, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción** | 1 (US-001 — 26/30 CAs activos, 86%) |
-| **US Pendientes** | 42+ |
-| **CAs Implementados (estimado)** | ~198+ |
-| **CAs Validados QA** | ~38 (~19%) |
-| **Principal Brecha** | 🔴 **QA < 15% en la mayoría de US completadas** |
+| **Total US en V1** | 56 |
+| **US Completadas** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
+| **US En Construcción** | 5 (US-002 ~9%, US-004 ~71%, US-007 ~48%, US-029 ~55%, US-030 ~85%) |
+| **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
+| **US Refactoring** | 1 (US-017 — ADR-001 compliance) |
+| **US Pendientes** | 34 |
+| **CAs Implementados (estimado)** | ~248+ |
+| **CAs Validados QA** | ~38 (~15%) |
+| **Seguridad Crítica** | 🔴 IDOR activo en US-007 (tenantId hardcodeado) + Persistencia BD ausente en US-002 |
+| **Principal Brecha** | 🔴 QA < 15% global. US-002 y US-008 declaradas Operativas sin base real. |
+
+> [!CAUTION]
+> **Corrección 2026-04-18 — Auditoría Integral Sección 1.2:** Se detectaron 2 Falsos Positivos críticos en `future_backlog_v3.md`:
+> - **US-002** declarada ✅ Operativa — real: ~9% (BD no persiste, assignee hardcodeado, sin bulk-claim, sin force-unclaim)
+> - **US-008** declarada ✅ Operativa — real: ~10% Scaffolding (KanbanView.vue usa mock data hardcodeado, sin state machine)
+> Adicionalmente: US-004, US-007, US-029 declaradas Operativas pero son Beta parciales (48–71%).
+> La única US declarada Operativa con alta fidelidad real es US-030 (~85%).
 
 ---
 
@@ -97,6 +107,184 @@
 | **Routing / Anti-Abuse** | CA-8, CA-16, CA-21, CA-28 | Anti-cherry-picking, skill-based routing, skipeo, race condition |
 
 > ✅ **Grupo SLA/Semáforos CERRADO en 80-DEV:** CA-05, CA-11, CA-24, CA-25, CA-31 — Auditados y certificados.
+
+---
+
+## US-002: Reclamar una Tarea de Grupo (Claim Task)
+**Épica:** A — Motor Core | **Estado:** 🔨 EN CONSTRUCCIÓN (~9%) | **Auditado:** 2026-04-18
+**Archivos verificados:** `TaskClaimController.java` · `AutoClaimService.java`
+
+> [!WARNING]
+> **FALSO POSITIVO DETECTADO:** `future_backlog_v3.md` declaraba esta US como ✅ Operativa.
+> La persistencia en BD está **explícitamente comentada** (`taskRepository.assignTask()` — línea 41).
+> `assignee` y `tenantId` hardcodeados (`"e2e_user"`, `"tenant_1"`). Todo reclamo se pierde al reiniciar.
+
+| CA | Título (corto) | Back | Front | QA | Notas |
+|----|----------------|------|-------|----|-------|
+| CA-1 | Reclamo Simultáneo (anti race-condition) | ⚠️ | ✅ | ❌ | Redis SETNX funciona; BD nunca recibe el assignee |
+| CA-2 | Reclamo Masivo en Lote (bulk-claim) | ❌ | ❌ | ❌ | Endpoint `/tasks/bulk-claim` no existe |
+| CA-4 | Liberación con Mensaje Interno | ⚠️ | ❌ | ❌ | `unclaim` borra Redis + WS; sin campo mensaje; sin BD |
+| CA-5 | Modo Sólo Lectura (pre-claim) | ❌ | ❌ | ❌ | Sin endpoint dedicado de read-only |
+| CA-6 | Ghost Job Timeout (Auto-Unclaim Cron) | ⚠️ | ❌ | ❌ | `AutoClaimService` existe; umbral tenant-configurable no verificado |
+| CA-7 | Amnesia Transaccional al Liberar | ❌ | ❌ | ❌ | Sin validación de payload parcial; sin modal advertencia |
+| CA-8 | Despojo Forzoso Supervisor | ❌ | ❌ | ❌ | Endpoint `force-unclaim` no existe |
+| CA-9 | Trazabilidad Forense Pop-Up | ❌ | ❌ | ❌ | Endpoint `audit-trail` no existe; sin tabla de auditoría de reclamos |
+| CA-10 | Resiliencia Offline | ❌ | ❌ | ❌ | Sin Optimistic UI + rollback |
+| CA-11 | Bloqueo Atómico BD (Camunda/SKIP LOCKED) | ❌ | N/A | ❌ | Solo Redis SETNX; sin `SELECT FOR UPDATE SKIP LOCKED`; BD comentada |
+| CA-12 | Evento WebSocket Post-Commit | ✅ | ✅ | ❌ | `notifyTaskClaimed()` / `notifyTaskUnclaimed()` emitidos |
+| CA-14 | Contrato API Estandarizado OpenAPI | ❌ | N/A | ❌ | Sin OpenAPI annotations; endpoints faltantes |
+| CA-22 | Separación Visual Bandeja/Cola Equipo | N/A | ❌ | ❌ | Sin tabs "Mi Bandeja" / "Cola Equipo" |
+
+### Resumen US-002
+- **CAs Totales:** 23 | **CAs Back Implementados:** ~2 | **CAs Front Implementados:** ~2 | **% Real:** ~9%
+- **QA:** ❌ 0%
+- **Bloqueadores Críticos de Seguridad:**
+  - `assignee` hardcodeado `"e2e_user"` — cualquier usuario autenticado actúa como el mismo usuario
+  - Persistencia BD comentada — estado se pierde en cada restart
+- **Handoff requerido:** Sprint 5 Iteración 1 (`handoff_backend_sprint5_iteracion1.md` abierto en IDE)
+
+---
+
+## US-004: Iniciar un Proceso mediante Webhook (Plugin O365 Listener)
+**Épica:** A — Motor Core | **Estado:** 🔨 EN CONSTRUCCIÓN (~71%) | **Auditado:** 2026-04-18
+**Archivos verificados:** `WebhookIntakeController.java` · `WebhookIntakeService.java` · `OrphanPayloadRepositoryJpa.java` · `ClamAvScannerAdapter.java` · `TriagePurgeScheduler.java` · `EmailWebhookController.java`
+
+| CA | Título (corto) | Back | Front | QA | Notas |
+|----|----------------|------|-------|----|-------|
+| CA-1 | Idempotencia (duplicados silenciosos) | ✅ | N/A | ❌ | `WebhookTransaction` con UNIQUE en `message_id` |
+| CA-2 | Bloqueo auto-responders | ✅ | N/A | ❌ | Regex: no-reply, mailer-daemon, postmaster, bounce |
+| CA-3 | Payloads basura → tabla OrphanPayload | ✅ | N/A | ❌ | SHA-256 hash + tipo de error persistido |
+| CA-4 | Whitelist dominios autorizados | ✅ | N/A | ❌ | `existsByDomainAndTenantIdAndIsActiveTrue()` por tenant |
+| CA-5 | Alerta admin si Camunda falla | ❌ | N/A | ❌ | No evidenciado en código auditado |
+| CA-6 | Resiliencia RabbitMQ (Camunda offline) | ❌ | N/A | ❌ | Cola definida en config; **sin `@RabbitListener`** — webhooks se pierden si Camunda cae |
+| CA-7 | Límite de peso configurable (HTTP 413) | ✅ | N/A | ❌ | `maxSizeBytes` default 10MB |
+| CA-8/9 | Pre-Triaje humano en Camunda | ✅ | ❌ | ❌ | `TriageTask` entity + proceso Camunda `Process_PreTriaje_Intake`; UI Pantalla 16 pendiente |
+| CA-10 | HMAC signature validation | ⚠️ | ❌ | ❌ | HmacSHA256 + tiempo constante ✅; sin switch Bearer Token legacy |
+| CA-11 | ClamAV Anti-Malware (fail-secure) | ✅ | N/A | ❌ | REST adapter 5s timeout; fallo → HTTP 503 + DLQ |
+| CA-12 | CRUD Admin Whitelist dominios | ❌ | ❌ | ❌ | `AllowedDomainAdminController` stub `NOT_IMPLEMENTED` (fenced como US-045) |
+| CA-13 | Purga automática 30 días | ✅ | N/A | ❌ | `deleteByCreatedAtBefore` scheduler diario 2AM |
+| CA-17 | Sub-segundo ACK al emisor | ✅ | N/A | ❌ | 202 Accepted sincrónico |
+
+### Resumen US-004
+- **CAs Totales:** 17 | **CAs Back Implementados:** ~9 | **% Real:** ~71%
+- **QA:** ❌ 0%
+- **Riesgo Alto:** `EmailWebhookController` legacy activo — **bypasea todo el pipeline** (sin HMAC, sin ClamAV, sin whitelist)
+- **Bloqueador CA-6:** Sin consumer RabbitMQ activo — sistema falla sincrónico cuando Camunda está offline
+
+---
+
+## US-007: Generador Cognitivo de DMN (NLP a Tablas de Decisión)
+**Épica:** B — Formularios/BPMN | **Estado:** 🔨 EN CONSTRUCCIÓN (~48%) | **Auditado:** 2026-04-18
+**Archivos verificados:** `DmnGovernanceController.java` · `DmnIntelligence.vue`
+
+> [!WARNING]
+> **IDOR ACTIVO:** `tenantId` hardcodeado en `DmnGovernanceController` — un tenant autenticado puede leer/modificar DMNs de otro tenant. Requiere corrección inmediata antes de cualquier despliegue.
+
+| CA | Título (corto) | Back | Front | QA | Notas |
+|----|----------------|------|-------|----|-------|
+| CA-1 | Streaming SSE generación IA | ✅ | ✅ | ❌ | Endpoint SSE + reconexión automática en `DmnIntelligence.vue` |
+| CA-2 | Caché criptográfica (anti DoW) | ⚠️ | N/A | ❌ | Caché por hash ✅; multi-tenant roto por tenantId hardcodeado |
+| CA-3 | GC y Compresión XML borradores | ❌ | N/A | ❌ | No evidenciado `DmnDraftCleanupScheduler` |
+| CA-4 | Sandboxing Anti-RCE & XSS | ⚠️ | ⚠️ | ❌ | Validación XML estructural ✅; XSS en render DOM no verificado |
+| CA-5 | Seudonimización PII del Prompt | ❌ | N/A | ❌ | No evidenciado pre-procesamiento PII antes del LLM |
+| CA-6 | Inmutabilidad DMN & RBAC (anti-IDOR) | ❌ | N/A | ❌ | **IDOR crítico** — tenantId hardcodeado en controller |
+| CA-7 | Hit Policy FIRST + Catch-All | ✅ | ✅ | ❌ | Validación catch-all implementada |
+| CA-8 | Variables planas, prohibición Date-Math | ⚠️ | N/A | ❌ | Validación de tipos básica; date-math no verificado |
+| CA-9 | Límites cognitivos + validación inversa | ❌ | N/A | ❌ | No evidenciado |
+| CA-10 | Virtual Scrolling grilla alta densidad | N/A | ✅ | ❌ | Implementado en `DmnIntelligence.vue` |
+| CA-11 | XAI Explicabilidad + Simulador | N/A | ✅ | ❌ | Panel XAI y simulador de decisiones en `DmnIntelligence.vue` |
+| CA-12 | Contención de Pánico + Trazabilidad Chat | N/A | ✅ | ❌ | Panic modal implementado |
+| CA-13 a CA-18 | [REMEDIACIÓN] Persistencia dual borradores, endpoint simulador, invalidación caché Redis, catálogo DMN, contrato API | ❌ | ❌ | ❌ | Sin verificar — CAs de remediación pendientes de auditoría |
+| CA-19 a CA-25 | [REFINAMIENTO] Resiliencia SSE, normalización prompt, validación post-minificación, rate limiting, buscador, SLA respuesta | ❌ | ❌ | ❌ | Sin verificar — CAs de refinamiento pendientes de auditoría |
+
+### Resumen US-007
+- **CAs Totales:** 25 | **CAs verificados:** 12 | **CAs cumplidos:** ~7 | **% Real:** ~48%
+- **QA:** ❌ 0%
+- **Bloqueador Crítico:** IDOR activo por tenantId hardcodeado — **no apto para producción**
+- **Pendiente auditar:** CAs 13-25 (13 CAs de remediación y refinamiento)
+
+---
+
+## US-008: Mover Tarjeta en Tablero Kanban (Cambio de Estado)
+**Épica:** A — Motor Core | **Estado:** 🔨 Scaffolding (~10%) | **Auditado:** 2026-04-18
+**Archivos verificados:** `KanbanBoardService.java` · `KanbanView.vue`
+
+> [!WARNING]
+> **FALSO POSITIVO DETECTADO:** `future_backlog_v3.md` declaraba esta US como ✅ Operativa.
+> `KanbanView.vue` usa 4 tareas hardcodeadas con `loadBoard()` simulado via `setTimeout`. No hay ninguna llamada real a API. `KanbanBoardService` solo gestiona delegación, no la máquina de estados del tablero.
+> Esta US debería clasificarse en la sección 1.3 de Deuda Técnica Controlada (Scaffolding).
+
+| CA | Título (corto) | Back | Front | QA | Notas |
+|----|----------------|------|-------|----|-------|
+| CA-1 | Bloqueador Modal (columna Blocked) | ❌ | ❌ | ❌ | Sin endpoint de transición con `blockReason`; sin modal en KanbanView |
+| CA-2 | Inmutabilidad DONE (solo lectura) | ❌ | ❌ | ❌ | Sin validación de estado DONE en backend |
+| CA-3 | Timer independiente esfuerzo vs SLA | ❌ | ❌ | ❌ | Sin tabla `ibpms_time_logs`; sin `<UniversalSlaTimer>` |
+| CA-5 | Prohibición CMMN — JPA puro | ✅ | N/A | ❌ | `AgileTaskEntity` persiste como JPA. Correcto por diseño |
+| CA-6 | State Machine PATCH /kanban/{tid}/state | ❌ | ❌ | ❌ | Endpoint PATCH no existe; `KanbanView.vue` mock hardcodeado con `setTimeout` |
+| CA-7 | Event-Driven híbrido → Camunda async | ❌ | N/A | ❌ | Sin publisher de evento para transiciones Kanban |
+| CA-8 | Gobernanza columnas + límite 7 | ❌ | ❌ | ❌ | Sin endpoint de columnas; sin validación de rol |
+
+### Resumen US-008
+- **CAs Totales:** 11 | **CAs cumplidos:** ~1 (CA-5 por diseño arquitectónico) | **% Real:** ~10%
+- **QA:** ❌ 0%
+- **Clasificación recomendada:** Mover de "Operativa" a "Scaffolding" en `future_backlog_v3.md`
+- **Impacto:** US-030 (Hub Ágil) depende del Kanban operativo — el tablero de US-030 en Pantalla 3 no funciona
+
+---
+
+## US-029: Ejecución y Envío de Formulario (iForm Maestro o Simple)
+**Épica:** B — Formularios/BPMN | **Estado:** 🔨 EN CONSTRUCCIÓN (~55%) | **Auditado:** 2026-04-18
+**Archivos verificados:** `FormCompletionService.java` · `FormBffCoreService.java` · `CompletarTareaService.java`
+
+| CA | Título (corto) | Back | Front | QA | Notas |
+|----|----------------|------|-------|----|-------|
+| CA-1 | Submit datos válidos (POST) | ✅ | ✅ | ❌ | `CompletarTareaService` + idempotencia + event sourcing |
+| CA-2 | Submit datos inválidos (Zod 400) | ⚠️ | ⚠️ | ❌ | Validación Zod backend ✅; errores campo-a-campo no confirmados |
+| CA-3 | TTL LocalStorage + GC + PII cifrado | ✅ | ✅ | ❌ | PII encryption US-000 integrada; auto-save con TTL |
+| CA-4 | ACID — Saga compensación Camunda | ✅ | N/A | ❌ | `@Transactional` + Saga inversa si Camunda falla post-persist |
+| CA-5 | BFF Megalítico (prefill contexto) | ❌ | ⚠️ | ❌ | `FormBffCoreService` usa `mockEventSourcingRepository` — BFF no conectado a BD real |
+| CA-6 | Zero-Trust Owner Check (HTTP 403) | ✅ | N/A | ❌ | JWT `userId` vs BD `assignee` verificado antes de submit |
+| CA-7 | Implicit Locking (dueño asignación) | ✅ | N/A | ❌ | Verificación dura de `assignee` en `FormCompletionService` |
+| CA-11 | Autoguardado Híbrido + PII cifrado LS | ✅ | ✅ | ❌ | Integrado con US-000 PII encryption |
+| CA-12 | Idempotencia Anti-Doble-Clic | ✅ | N/A | ❌ | `x-idempotency-key` header + tabla `form_event_store` |
+| CA-16 | Exclusión topológica Camunda + ACID | ✅ | N/A | ❌ | No pasa por Camunda para persistir el formulario |
+| CA-19 a CA-24 | [REMEDIACIÓN] Reconciliación US-029/US-017, feedback visual, confirmación post-submit, wizard, delegación, contrato API borrador | ❌ | ❌ | ❌ | Sin verificar — CAs de remediación pendientes |
+| CA-25 a CA-34 | [REFINAMIENTO] Scroll al error, pre-aviso caducidad borrador, aduana archivos, sesión duplicada, validación condicional, etc. | ❌ | ❌ | ❌ | Sin verificar — CAs de refinamiento pendientes |
+
+### Resumen US-029
+- **CAs Totales:** 34 | **CAs verificados:** 12 | **CAs cumplidos:** ~7 | **% Real:** ~55%
+- **QA:** ❌ 0% (el handoff Sprint 5 Iteración 1 pide test Zero-Trust para CA-6)
+- **Bloqueador Principal:** `FormBffCoreService` con `mockEventSourcingRepository` — prefill sin datos reales de BD
+- **Pendiente auditar:** CAs 19-34 (16 CAs de remediación y refinamiento)
+
+---
+
+## US-030: Instanciar y Planificar un Proyecto Ágil (Sprints/Kanban)
+**Épica:** A — Motor Core | **Estado:** 🔨 EN CONSTRUCCIÓN (~85%) | **Auditado:** 2026-04-18
+**Archivos verificados:** `AgileProjectService.java` · `AgileTaskService.java` · `agileStore.ts` · `AgileSlaChangelogRepository.java`
+
+| CA | Título (corto) | Back | Front | QA | Notas |
+|----|----------------|------|-------|----|-------|
+| CA-1 | Kanban continuo sin Sprints (V1) | ✅ | ✅ | ❌ | Sin modelo Sprint en entidad; flujo continuo |
+| CA-2 | Arranque vacío vs Plantilla WBS | ⚠️ | ⚠️ | ❌ | Inicio vacío ✅; WBS bloqueado (US-006 no existe aún) |
+| CA-3 | CRUD tarjetas con slide-panel | ✅ | ✅ | ❌ | Todos los campos del CA: título, descripción, esfuerzo, responsable, tags |
+| CA-4 | Hard-Delete con Auditoría Forense | ✅ | ✅ | ❌ | Registro inmutable antes del `delete()`; diálogo confirmación |
+| CA-5 | Multi-assignee Hub; 1:1 en operativo | ✅ | ✅ | ❌ | `assignees` (lista) en planificación; 1:1 en Workdesk |
+| CA-6 | Drag & Drop + campo `position` persistido | ✅ | ✅ | ❌ | `reorderTasks()` con campo `position` en BD |
+| CA-7 | Vista Proyecto + Vista Portafolio | ✅ | ✅ | ❌ | Filtro por `leaderId` para portafolio; selector en `agileStore` |
+| CA-8 | Archivo inteligente DONE + toggle | ✅ | ✅ | ❌ | Query filtra `status != DONE` por defecto; `showCompleted` toggle |
+| CA-9 | SLA modificable + bitácora de cambios | ✅ | N/A | ❌ | `AgileSlaChangelogRepository` con valor anterior/nuevo/quien/cuando |
+| CA-10 | Cierre proyecto con cascada CANCELADA | ✅ | ✅ | ❌ | Bulk update + evento de notificación |
+| CA-11 | RBAC: solo Scrum Master / Líder modifican | ✅ | N/A | ❌ | Validación de rol en `AgileProjectService` |
+| CA-12 | Virtual scroll backlog moderno | N/A | ✅ | ❌ | Lista virtualizada en `agileStore.ts` con Zod validation |
+| CA-13 | Detección visual tareas rancias (15 días) | ❌ | ❌ | ❌ | Badge "Inactivo X días" no evidenciado |
+| CA-14 | Carga liviana + reactividad cruzada + masivo | ✅ | ✅ | ❌ | Lazy load detalles; optimistic updates; bulk assign |
+
+### Resumen US-030
+- **CAs Totales:** 14 | **CAs cumplidos:** ~12 | **% Real:** ~85%
+- **QA:** ❌ 0%
+- **GAPs menores:** CA-2 bloqueado por US-006 (WBS) · CA-13 badge visual no verificado · Vista Kanban operativo (US-008) usa mocks
+- **Clasificación:** La US más sólida del lote. Operativa con reservas sobre la integración con Pantalla 3
 
 ---
 
@@ -309,32 +497,43 @@
 
 ---
 
-## Resumen Global de Cobertura (Actualizado 2026-04-14)
+## Resumen Global de Cobertura (Actualizado 2026-04-18)
 
 | Métrica | Valor |
 |---------|-------|
-| **Total US en V1** | 53+ |
-| **US Completadas (Back+Front)** | 10 (US-000, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción** | 1 (US-001 — 30/30 CAs activos, 100%) |
-| **US Pendientes** | 42+ |
-| **CAs Implementados (estimado)** | ~198+ |
-| **CAs Validados QA** | ~38 (~19%) |
-| **Falsos Positivos Corregidos** | 1 (US-001: CA-8) — CA-4 implementado en 81-DEV, CA-5 en 80-DEV, CA-6 en 79-DEV |
-| **Principal Brecha** | 🔴 **QA < 18% global. US-003, US-005, US-038, US-043, US-048 sin QA.** |
+| **Total US en V1** | 56 |
+| **US Completadas (Back+Front)** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
+| **US En Construcción** | 5 (US-002 ~9%, US-004 ~71%, US-007 ~48%, US-029 ~55%, US-030 ~85%) |
+| **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
+| **US Refactoring** | 1 (US-017 — ADR-001 compliance) |
+| **US Pendientes** | 34 |
+| **CAs Implementados (estimado)** | ~248+ |
+| **CAs Validados QA** | ~38 (~15%) |
+| **Falsos Positivos Corregidos** | 3 (US-001 CA-8 · US-002 declarada Operativa · US-008 declarada Operativa) |
+| **Vulnerabilidades Críticas Abiertas** | 2 (IDOR tenantId en US-007 · BD no persiste en US-002) |
+| **Principal Brecha** | 🔴 QA < 15% global. 2 vulnerabilidades de seguridad activas. |
 
-### Brechas Prioritarias
+### Brechas Prioritarias (Post Auditoría 2026-04-18)
 
 | Prioridad | Brecha | US Afectadas | Acción Recomendada |
 |-----------|--------|-------------|-------------------|
-| 🔴 P0 | QA al 0% en US completadas | US-003, US-005, US-038, US-043, US-048 | Sprint de QA dedicado |
-| 🟠 P1 | Desglose CA-a-CA faltante | US-034, US-038, US-039, US-043, US-048 | Reconciliación con `git log --grep="CA-"` |
-| 🟡 P2 | Falsos positivos potenciales | Todas | Auditoría cruzada PO vs matrix cada sprint |
+| 🔴 P0 | IDOR activo — tenantId hardcodeado | US-007 | Hotfix inmediato: extraer tenantId del JWT en `DmnGovernanceController` |
+| 🔴 P0 | Persistencia BD comentada — assignee perdido en restart | US-002 | Handoff Sprint 5 Iteración 1 ya emitido — ejecutar |
+| 🔴 P0 | `EmailWebhookController` bypasea pipeline de seguridad | US-004 | Redirigir o eliminar el controller legacy |
+| 🟠 P1 | US-008 KanbanView con mock hardcodeado | US-008, US-030 | Implementar state machine real antes de declarar US-030 "Operativa" |
+| 🟠 P1 | `FormBffCoreService` mockeado | US-029 | Conectar a BD real antes de Sprint 5 |
+| 🟠 P1 | CA-6 US-004: sin RabbitMQ consumer de intake | US-004 | Implementar `@RabbitListener` para `ibpms.integrations.webhook` |
+| 🟡 P2 | QA al 0% en US completadas | US-003, US-005, US-038, US-043, US-048 | Sprint de QA dedicado |
+| 🟡 P2 | CAs Remediación US-007 (13-18) y US-029 (19-24) sin auditar | US-007, US-029 | Continuar auditoría en próxima iteración |
+| 🟡 P3 | Desglose CA-a-CA faltante | US-034, US-038, US-039, US-043, US-048 | Reconciliación con `git log --grep="CA-"` |
 | 🟡 P3 | Deuda técnica US-043 CA-6 | US-043 | Plan de remediación con ticket |
 | 🟡 P4 | OBS abiertas US-005 | US-005 | Cerrar OBS-1 (CA-68) y OBS-2 (CA-65) |
 
 ---
 
-> **⚡ Próxima acción recomendada:**
-> 1. Ejecutar modularización por Épica (P1) para desbloquear agentes
-> 2. Ejecutar `/reconciliacionCoberturaCa.md` sobre US-034, US-038, US-039, US-043, US-048 para granularizar rangos
-> 3. Planificar Sprint de QA para las 5 US completadas sin cobertura de prueba
+> **⚡ Próxima acción recomendada (post auditoría 2026-04-18):**
+> 1. **P0 SEGURIDAD:** Hotfix `DmnGovernanceController` — extraer `tenantId` del `SecurityContext` (JWT), no hardcodeado
+> 2. **P0 DATOS:** Ejecutar Sprint 5 Iteración 1 (`handoff_backend_sprint5_iteracion1.md`) — conectar `taskRepository.assignTask()` en US-002
+> 3. **P0 SEGURIDAD:** Deprecar o encadenar `EmailWebhookController` al pipeline de `WebhookIntakeService`
+> 4. Ejecutar `/reconciliacionCoberturaCa.md` sobre US-034, US-038, US-039, US-043, US-048
+> 5. Continuar auditoría CAs 13-25 de US-007 y CAs 19-34 de US-029

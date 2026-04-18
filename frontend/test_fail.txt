@@ -1,0 +1,171 @@
+
+> ibpms-frontend@1.0.0 test
+> vitest --run
+
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mC:/Users/HaroltAndrésGómezAgu/ProyectoAntigravity/ibpms-platform/frontend[39m
+
+ [32m✓[39m src/views/admin/RbacManager/__tests__/GlobalRolesTable.spec.ts [2m ([22m[2m8 tests[22m[2m)[22m[90m 170[2mms[22m[39m
+ [32m✓[39m src/components/forms/DynamicForm.spec.ts [2m ([22m[2m6 tests[22m[2m)[22m[90m 223[2mms[22m[39m
+[90mstderr[2m | src/tests/useWorkdeskStore.spec.ts[2m > [22m[2museWorkdeskStore.ts - Iteration 79-DEV (CA-06, CA-13, CA-26, CA-27)[2m > [22m[2mTest 25: CA-15 delegation_403_forbidden_sets_error_state: Respuesta 403 activa isError y limpia items[22m[39m
+Failed to fetch secure workdesk queues { response: { status: [33m403[39m, data: { message: [32m'IDOR Forbidden'[39m } } }
+
+ [32m✓[39m src/tests/useWorkdeskStore.spec.ts [2m ([22m[2m19 tests[22m[2m)[22m[90m 72[2mms[22m[39m
+ [2m[90m↓[39m[22m src/views/__tests__/Workdesk.spec.ts [2m ([22m[2m6 tests[22m [2m|[22m [33m6 skipped[39m[2m)[22m
+[90mstderr[2m | src/tests/views/WorkdeskFacets.spec.ts[2m > [22m[2mUS-001 Iteración 78-DEV: Faceted Filters & Rate Limiting (QA Certification)[2m > [22m[2m[CA-22/CA-29] Facet chips renderizados con contadores cuando store.facets presente[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskGrid.spec.ts[2m > [22m[2mUS-001 Iteración 77-DEV: Workdesk Data Grid (QA Certification)[2m > [22m[2m[CA-03] Data Grid renderiza 6 columnas: Nombre, SLA, Estado, Avance, Recurso, Acciones[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskGrid.spec.ts[2m > [22m[2mUS-001 Iteración 77-DEV: Workdesk Data Grid (QA Certification)[2m > [22m[2m[CA-23] Progress bar muestra porcentaje cuando progressPercent != null[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskFacets.spec.ts[2m > [22m[2mUS-001 Iteración 78-DEV: Faceted Filters & Rate Limiting (QA Certification)[2m > [22m[2m[CA-22] Chip de faceta es clickeable y contiene el handler applyFacetFilter[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskFacets.spec.ts[2m > [22m[2mUS-001 Iteración 78-DEV: Faceted Filters & Rate Limiting (QA Certification)[2m > [22m[2m[CA-29] Facetas no visibles cuando store.facets está vacío[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskGrid.spec.ts[2m > [22m[2mUS-001 Iteración 77-DEV: Workdesk Data Grid (QA Certification)[2m > [22m[2m[CA-23] Columna Avance muestra "N/D" cuando progressPercent es null[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskFacets.spec.ts[2m > [22m[2mUS-001 Iteración 78-DEV: Faceted Filters & Rate Limiting (QA Certification)[2m > [22m[2m[CA-30] Store maneja 429 sin limpiar items existentes[22m[39m
+CA-30: Ignorando error 429 para mantener listado UI intacto
+
+ [32m✓[39m src/tests/views/WorkdeskFacets.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[33m 342[2mms[22m[39m
+[90mstderr[2m | src/tests/views/WorkdeskGrid.spec.ts[2m > [22m[2mUS-001 Iteración 77-DEV: Workdesk Data Grid (QA Certification)[2m > [22m[2m[CA-07/CA-18] Banner degradación visible cuando store.isDegraded = true[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA Certification (CA-12 to CA-17)[2m > [22m[2mCA-12: Badge muestra "revoked" cuando certification state cambia[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA Certification (CA-12 to CA-17)[2m > [22m[2mCA-13: Indicador de versión muestra V{N} + estado[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/views/WorkdeskGrid.spec.ts[2m > [22m[2mUS-001 Iteración 77-DEV: Workdesk Data Grid (QA Certification)[2m > [22m[2m[CA-12] Empty State gamificado muestra celebración cuando items vacíos[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+ [32m✓[39m src/tests/views/WorkdeskGrid.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[33m 1055[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA Certification (CA-12 to CA-17)[2m > [22m[2mCA-14: Errores de superRefine se pintan en naranja[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA Certification (CA-12 to CA-17)[2m > [22m[2mCA-17: Panel de coherencia muestra matches y warnings[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[33m 1081[2mms[22m[39m
+ [32m✓[39m src/tests/e2e/US003_ArchitecturalGaps.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 157[2mms[22m[39m
+ [32m✓[39m src/tests/e2e/US003_FormMasterArchitecture.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 159[2mms[22m[39m
+ [32m✓[39m src/tests/router/RouterGuard.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 50[2mms[22m[39m
+ [33m❯[39m src/tests/components/GenericFormView.spec.ts [2m ([22m[2m0 test[22m[2m)[22m
+[90mstderr[2m | src/tests/views/admin/ProjectBuilder/TemplateBuilder.spec.ts[2m > [22m[2mTemplateBuilder.vue (Orphan Task Protection)[2m > [22m[2mDisables PUBLISH button if any task is missing a form_key[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/views/admin/ProjectBuilder/TemplateBuilder.spec.ts[2m > [22m[2mTemplateBuilder.vue (Orphan Task Protection)[2m > [22m[2mEnables PUBLISH button when all tasks have valid form_keys[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/views/admin/ProjectBuilder/TemplateBuilder.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 214[2mms[22m[39m
+ [32m✓[39m src/tests/views/admin/Integration/DlqDashboard.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 164[2mms[22m[39m
+ [32m✓[39m src/tests/stores/useProjectTemplateStore.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 17[2mms[22m[39m
+ [32m✓[39m src/tests/components/BpmnAiInjection.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 107[2mms[22m[39m
+ [2m[90m↓[39m[22m src/views/admin/Modeler/BpmnDesigner.spec.ts [2m ([22m[2m5 tests[22m [2m|[22m [33m5 skipped[39m[2m)[22m
+ [32m✓[39m src/tests/agileStore.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 126[2mms[22m[39m
+ [32m✓[39m src/tests/components/DynamicForm.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 169[2mms[22m[39m
+ [32m✓[39m src/tests/services/FormEngineService.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [2m[90m↓[39m[22m src/tests/components/MainLayout.spec.ts [2m ([22m[2m2 tests[22m [2m|[22m [33m2 skipped[39m[2m)[22m
+ [32m✓[39m src/services/apiClient.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 127[2mms[22m[39m
+ [32m✓[39m src/tests/intakeStore.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 54[2mms[22m[39m
+ [32m✓[39m src/tests/views/admin/AI/SacConfigManager.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 167[2mms[22m[39m
+ [2m[90m↓[39m[22m src/tests/views/admin/ProjectBuilder/AgileHub.spec.ts [2m ([22m[2m2 tests[22m [2m|[22m [33m2 skipped[39m[2m)[22m
+ [32m✓[39m src/tests/stores/useAuthStore.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[33m 1640[2mms[22m[39m
+ [32m✓[39m src/tests/components/CopilotActionPills.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 72[2mms[22m[39m
+ [32m✓[39m src/tests/components/admin/RbacManager/ApiKeySemaphore.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 66[2mms[22m[39m
+ [32m✓[39m src/tests/components/TaskViewerModal.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 76[2mms[22m[39m
+ [32m✓[39m src/tests/utils/DateTransformer.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 9[2mms[22m[39m
+ [2m[90m↓[39m[22m src/tests/views/admin/Modeler/BpmnDesigner.spec.ts [2m ([22m[2m3 tests[22m [2m|[22m [33m3 skipped[39m[2m)[22m
+ [32m✓[39m src/tests/services/FormDefinitionAPI.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 33[2mms[22m[39m
+ [2m[90m↓[39m[22m src/tests/views/Workdesk.spec.ts [2m ([22m[2m2 tests[22m [2m|[22m [33m2 skipped[39m[2m)[22m
+ [32m✓[39m src/components/common/ErrorStateGlobal.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 51[2mms[22m[39m
+ [32m✓[39m src/tests/components/BpmnAiRecovery.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m src/tests/composables/useSlaEngine.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 44[2mms[22m[39m
+ [32m✓[39m src/tests/components/PanicModal.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 91[2mms[22m[39m
+ [32m✓[39m src/tests/components/DmnAntiXss.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 100[2mms[22m[39m
+ [32m✓[39m src/tests/integration-hub/OutboundDispatcher.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 82[2mms[22m[39m
+ [33m❯[39m src/tests/components/admin/Modeler/BpmnDeployDialog.spec.ts [2m ([22m[2m0 test[22m[2m)[22m
+ [32m✓[39m src/views/admin/Modeler/__tests__/BpmnDmnBinding.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m src/tests/components/BpmnPreFlight.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 90[2mms[22m[39m
+ [32m✓[39m src/views/admin/RbacManager/__tests__/RbacManagerView.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 70[2mms[22m[39m
+ [32m✓[39m src/tests/stores/authStore.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m✓[39m src/tests/integration-hub/CryptographyService.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 59[2mms[22m[39m
+ [2m[90m↓[39m[22m src/tests/components/WorkdeskWidgets.spec.ts [2m ([22m[2m1 test[22m [2m|[22m [33m1 skipped[39m[2m)[22m
+ [32m✓[39m src/tests/dummy.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 4[2mms[22m[39m
+ [33m❯[39m src/tests/ct/Example.spec.ts [2m ([22m[2m0 test[22m[2m)[22m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Failed Suites 3 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/tests/components/GenericFormView.spec.ts [2m[ src/tests/components/GenericFormView.spec.ts ][22m
+[31m[1mError[22m: Failed to resolve import "../../../views/admin/BPMN/GenericFormView.vue" from "src/tests/components/GenericFormView.spec.ts". Does the file exist?[39m
+[90m [2m❯[22m TransformPluginContext._formatError ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49258:41[22m[39m
+[90m [2m❯[22m TransformPluginContext.error ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49253:16[22m[39m
+[90m [2m❯[22m normalizeUrl ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64307:23[22m[39m
+[90m [2m❯[22m async file:/C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64439:39[22m[39m
+[90m [2m❯[22m TransformPluginContext.transform ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64366:7[22m[39m
+[90m [2m❯[22m PluginContainer.transform ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49099:18[22m[39m
+[90m [2m❯[22m loadAndTransform ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m51978:27[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/tests/ct/Example.spec.ts [2m[ src/tests/ct/Example.spec.ts ][22m
+[31m[1mError[22m: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.[39m
+[90m [2m❯[22m TestTypeImpl._currentSuite node_modules/playwright/lib/common/testType.js:[2m75:13[22m[39m
+[90m [2m❯[22m TestTypeImpl._createTest node_modules/playwright/lib/common/testType.js:[2m88:24[22m[39m
+[90m [2m❯[22m Proxy.<anonymous> node_modules/playwright/lib/transform/transform.js:[2m275:12[22m[39m
+[36m [2m❯[22m src/tests/ct/Example.spec.ts:[2m20:1[22m[39m
+    [90m 18| [39m[35mimport[39m { test[33m,[39m expect } [35mfrom[39m [32m'@playwright/experimental-ct-vue'[39m[33m;[39m
+    [90m 19| [39m
+    [90m 20| [39m[34mtest[39m([32m'placeholder - Playwright CT correctly bootstraps Vue mounting'[39m[33m,[39m …
+    [90m   | [39m[31m^[39m
+    [90m 21| [39m  [90m// Este test sirve como smoke test para verificar que la[39m
+    [90m 22| [39m  [90m// infraestructura de Playwright Component Testing está funcional.[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/tests/components/admin/Modeler/BpmnDeployDialog.spec.ts [2m[ src/tests/components/admin/Modeler/BpmnDeployDialog.spec.ts ][22m
+[31m[1mError[22m: Failed to resolve import "@/components/admin/Modeler/BpmnDeployDialog.vue" from "src/tests/components/admin/Modeler/BpmnDeployDialog.spec.ts". Does the file exist?[39m
+[90m [2m❯[22m TransformPluginContext._formatError ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49258:41[22m[39m
+[90m [2m❯[22m TransformPluginContext.error ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49253:16[22m[39m
+[90m [2m❯[22m normalizeUrl ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64307:23[22m[39m
+[90m [2m❯[22m async file:/C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64439:39[22m[39m
+[90m [2m❯[22m TransformPluginContext.transform ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64366:7[22m[39m
+[90m [2m❯[22m PluginContainer.transform ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49099:18[22m[39m
+[90m [2m❯[22m loadAndTransform ../../../../HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m51978:27[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m37 passed[39m[22m[2m | [22m[33m7 skipped[39m[90m (47)[39m
+[2m      Tests [22m [1m[32m122 passed[39m[22m[2m | [22m[33m21 skipped[39m[90m (143)[39m
+[2m   Start at [22m 04:05:17
+[2m   Duration [22m 30.47s[2m (transform 18.55s, setup 16.67s, collect 39.13s, tests 6.99s, environment 89.23s, prepare 15.56s)[22m
+

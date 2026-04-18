@@ -117,16 +117,26 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    /** 500 — Error interno genérico */
+    /** 500 — Error interno genérico (CA-37) */
     @ApiResponse(responseCode = "500", description = "Error interno - Blindado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
         log.error("💥 ERROR CRITICO DEL SISTEMA ENVIADO A ELK: ", ex); // Delegación a Logback/ELK
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/internal-error")));
+        problem.setType(URI.create("about:blank"));
         problem.setTitle("Error interno del servidor");
-        // PROHIBIDO USAR ex.getMessage(). 
-        problem.setDetail("Fallo del servidor reportado. Se ha generado un registro forense y equipo IT ha sido notificado.");
+        problem.setDetail("Error interno del servidor"); // Enmascaramiento total de PII, tal como exige CA-37
+        return problem;
+    }
+    /** 504 — Tiempo de Espera Agotado (SLA CA-24, CA-31) */
+    @ApiResponse(responseCode = "504", description = "Gateway Timeout", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(java.util.concurrent.TimeoutException.class)
+    public ProblemDetail handleTimeoutError(java.util.concurrent.TimeoutException ex) {
+        log.warn("⏳ SLA Timeout interceptado: ", ex);
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.GATEWAY_TIMEOUT);
+        problem.setType(URI.create("https://ibpms.com/errors/gateway-timeout"));
+        problem.setTitle("Tiempo de respuesta excedido");
+        problem.setDetail("La operación no pudo completarse dentro del umbral de tiempo (SLA).");
         return problem;
     }
 }

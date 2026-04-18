@@ -41,6 +41,28 @@ public class WorkboxTaskController {
     }
 
     /**
+     * US-002 CA-28: claim-next. Toma la tarea más alta del pool en atomicidad.
+     */
+    @PostMapping("/claim-next")
+    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    public ResponseEntity<com.ibpms.poc.domain.model.agile.AgileTask> claimNextTask(Authentication auth) {
+        String username = auth != null ? auth.getName() : "system";
+        com.ibpms.poc.domain.model.agile.AgileTask task = taskService.claimNextTask(username);
+        return ResponseEntity.ok(task);
+    }
+
+    /**
+     * US-002 CA-21: Rollback Optimistic UI ante fallo asíncrono.
+     */
+    @PostMapping("/{id}/rollback-claim")
+    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    public ResponseEntity<Void> rollbackClaim(@PathVariable UUID id, Authentication auth) {
+        String username = auth != null ? auth.getName() : "system";
+        taskService.rollbackClaim(id, username);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * US-002: Liberar tarea.
      */
     @PostMapping("/{id}/unclaim")

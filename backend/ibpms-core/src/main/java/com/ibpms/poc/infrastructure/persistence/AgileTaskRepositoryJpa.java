@@ -41,6 +41,11 @@ public class AgileTaskRepositoryJpa {
         return repository.findByProjectIdAndStatusNot(projectId, excludeStatus, pageable);
     }
 
+    public Optional<AgileTask> findNextAvailableTaskForUpdate() {
+        Page<AgileTask> page = repository.findNextAvailableTaskForUpdate(org.springframework.data.domain.PageRequest.of(0, 1));
+        return page.hasContent() ? Optional.of(page.getContent().get(0)) : Optional.empty();
+    }
+
     public void softDelete(UUID id) {
         repository.softDelete(id);
     }
@@ -61,6 +66,11 @@ interface SpringDataAgileTaskRepository extends JpaRepository<AgileTask, UUID> {
     @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")})
     @Query("SELECT t FROM AgileTask t WHERE t.id = :id")
     Optional<AgileTask> findByIdForUpdate(@Param("id") UUID id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")})
+    @Query("SELECT t FROM AgileTask t WHERE t.status = 'AVAILABLE' ORDER BY t.slaDeadline ASC")
+    Page<AgileTask> findNextAvailableTaskForUpdate(Pageable pageable);
 
     @Modifying
     @Query("UPDATE AgileTask t SET t.status = 'DELETED' WHERE t.id = :id")

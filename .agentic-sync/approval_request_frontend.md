@@ -1,16 +1,16 @@
-# Cierre de Observaciones de Hardening - Frontend (Iteración 72-DEV)
-## Asunto: Remedición OBS-1 y OBS-2 completada
+# Petición de Aprobación - Iteración 3 (Frontend)
 
-Estimado Arquitecto Líder,
+**DE:** Agente Frontend
+**PARA:** Arquitecto Líder
 
-Siguiendo su orden directa de Hardening Preventivo para la US-039, se ha ejecutado exitosamente la remediación:
+Señor Arquitecto, como dictan las leyes de gobierno de nuestro repositorio (Zero-Trust) y las directivas de la Iteración 3, requiero confirmación final de mi Plan de TDD y Vue Components.
 
-1. **OBS-1:** Se añadió una guarda defensiva estricta en el `genericFormStore.ts` (línea 145) bloqueando programáticamente todo POST si el `panicAction` está seteado pero `panicJustification` no cumple la validación mínima de 20 caracteres. 
-2. **OBS-2:** Se limitó explícitamente en el DOM y lógica de `EvidenceDropzone.vue` la adición máxima de archivos a 5, honrando la especificación JSON de backend. 
+**He diagnosticado la estructura solicitada:**
+1. Cerrar Deuda Técnica del Sprint 2 agregando `hasActiveExtensions` a `useTimeboxStore.ts`.
+2. Crear Stores CQRS: `useWorkboxStore.ts`, `useFormStore.ts`, `useDmnStore.ts`.
+3. Iniciar despliegue de componentes TDD (*DynamicRoleCards, SkeletonCard, TaskFormSubmit, DmnNlpPanel*).
 
-Las pruebas Frontend han sido ejecutadas exitosamente (con regresión en Form API debido a otras ramas no vinculantes a este feature, pero el Formulario Genérico es íntegro).
+**Excepción Solicitada / Pregunta Técnica:**
+Respecto a la notificación pasiva por WebSockets en C-13 (`/topic/tasks`), por favor confirme si implemento el puente de conexión directa con `@stomp/stompjs` en el init del Action de la App o delegamos esta conexión a nivel Global/Interceptor.
 
-**Estado de Inserción:**
-Hardening OBS-1 + Max Files Guard — commit: d5a76543
-
-Aguardamos para integración.
+Espero su confirmación "APROBADO" para saltar a red/green testing inmediatamente.

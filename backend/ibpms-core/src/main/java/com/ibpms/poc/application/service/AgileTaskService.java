@@ -130,11 +130,68 @@ public class AgileTaskService {
         }
         taskRepository.save(task);
 
-        // US-002 CA-13: Emisión STOMP WebSocket
+        // US-002 CA-13 + CA-27: Emisión STOMP WebSocket Tipada
         messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
-                "event", "TASK_CLAIMED",
+                "event", com.ibpms.poc.domain.model.agile.WebSocketEventType.TASK_CLAIMED.name(),
                 "taskId", taskId,
                 "claimedBy", claimedBy,
+                "timestamp", java.time.Instant.now()
+        ));
+    }
+
+    /**
+     * US-002 CA-28: claim-next con SKIP LOCKED. Reclama la siguiente tarea más urgente de forma atómica.
+     */
+    @Transactional
+    public AgileTask claimNextTask(String claimedBy) {
+        AgileTask task = taskRepository.findNextAvailableTaskForUpdate()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No hay tareas disponibles en el pool"));
+        
+        task.setStatus("CLAIMED");
+        if (task.getAssigneeIds() == null) {
+            task.setAssigneeIds(new java.util.ArrayList<>());
+        }
+        if (!task.getAssigneeIds().contains(claimedBy)) {
+            task.getAssigneeIds().add(claimedBy);
+        }
+        taskRepository.save(task);
+
+        messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
+                "event", com.ibpms.poc.domain.model.agile.WebSocketEventType.TASK_CLAIMED.name(),
+                "taskId", task.getId(),
+                "claimedBy", claimedBy,
+                "timestamp", java.time.Instant.now()
+        ));
+
+        // CA-26: Refresco Automático de Cola STOMP
+        messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
+                "event", com.ibpms.poc.domain.model.agile.WebSocketEventType.TASK_POOL_REFRESH.name(),
+                "timestamp", java.time.Instant.now()
+        ));
+        
+        return task;
+    }
+
+    /**
+     * US-002 CA-21: Rollback Optimistic UI. Libera la tarea SOLO si el asignado actual
+     * concuerda con el solicitante (el fallback timeout).
+     */
+    @Transactional
+    public void rollbackClaim(UUID taskId, String rollbackBy) {
+        AgileTask task = getTaskForUpdate(taskId);
+        
+        if (task.getAssigneeIds() == null || !task.getAssigneeIds().contains(rollbackBy)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La tarea ya fue reclamada por otro operador o no te pertenece");
+        }
+        
+        task.setStatus("AVAILABLE");
+        task.getAssigneeIds().remove(rollbackBy);
+        taskRepository.save(task);
+
+        messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
+                "event", com.ibpms.poc.domain.model.agile.WebSocketEventType.TASK_UNCLAIMED.name(),
+                "taskId", taskId,
+                "unclaimedBy", rollbackBy,
                 "timestamp", java.time.Instant.now()
         ));
     }
@@ -155,7 +212,7 @@ public class AgileTaskService {
         taskRepository.save(task);
 
         messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
-                "event", "TASK_UNCLAIMED",
+                "event", com.ibpms.poc.domain.model.agile.WebSocketEventType.TASK_UNCLAIMED.name(),
                 "taskId", taskId,
                 "unclaimedBy", unclaimedBy,
                 "timestamp", java.time.Instant.now()

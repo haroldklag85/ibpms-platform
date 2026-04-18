@@ -38,15 +38,32 @@ apiClient.interceptors.response.use(
         // CA-19: Detección Offline Instintiva
         if (!error.response || error.code === 'ERR_NETWORK') {
             console.error('Modo Desconectado. La aplicación se ha congelado por falta de Red.');
-            alert('Modo Desconectado. Revisa tu conexión de red.');
+            const event = new CustomEvent('global-error-dispatch', { detail: { 
+                code: 'NETWORK_ERR',
+                message: `Modo Desconectado. Revisa tu conexión de red.`
+            }});
+            window.dispatchEvent(event);
             return Promise.reject(error); // Silently stops component logic without crash
         }
         
-        // CA-21: Alertas Rojas Imborrables (Fatal Level 0)
+        // CA-21 & CA-1: Alertas Rojas Imborrables a través de Vue Store Custom Events
         if (error.response && [500, 502, 503, 504].includes(error.response.status)) {
             console.error('Fatal Level 0 Dispatching');
-            alert(`Colapso del Servidor (Code ${error.response.status}). Reinicie aplicación o contacte IT de inmediato.`);
+            const event = new CustomEvent('global-error-dispatch', { detail: { 
+                code: error.response.status,
+                message: `Colapso del Servidor / Integración Cíclica`
+            }});
+            window.dispatchEvent(event);
             return Promise.reject(error);
+        }
+
+        // Interceptar CA-3: Bloqueo de Concurrencia Optimista
+        if (error.response && error.response.status === 409) {
+            if(error.response.data?.type?.includes("optimistic-lock")) {
+                console.warn('Bloqueo de Concurrencia UI Disparado');
+                const event = new CustomEvent('optimistic-lock-dispatch');
+                window.dispatchEvent(event);
+            }
         }
 
         if (error.response && error.response.status === 401) {

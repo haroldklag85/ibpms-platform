@@ -166,4 +166,25 @@ describe('useFormStore', () => {
         );
         expect(dispatchedEvent).toBeDefined();
     });
+
+    it('Test CA-2: HTTP 400 Backend mapea errores de Zod en validationErrors', async () => {
+        (api.completeTask as any).mockRejectedValue({
+            response: {
+                status: 400,
+                data: {
+                    errors: [{ field: 'email', message: 'Formato inválido' }]
+                }
+            }
+        });
+
+        try {
+            await store.submitForm('t-bad', {}, false);
+        } catch (e) {
+            // expected
+        }
+
+        expect(store.validationErrors['email']).toBe('Formato inválido');
+        // El submit the fallar sin setear flag isSubmitting en true
+        expect(store.isSubmitting).toBe(false);
+    });
 });

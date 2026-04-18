@@ -49,6 +49,8 @@ describe('WorkdeskGrid.vue (CA-11 a CA-15 Reclamar y Liberar)', () => {
             props: { tasks }
         });
 
+        const store = useWorkdeskStore();
+
         const btn = wrapper.find('button.text-red-600');
         expect(btn.exists()).toBe(true);
 
@@ -56,13 +58,24 @@ describe('WorkdeskGrid.vue (CA-11 a CA-15 Reclamar y Liberar)', () => {
         await btn.trigger('click');
         expect((wrapper.vm as any).unclaimTargetId).toBe('t-2');
         
+        // Simular click en Cancelar
+        const cancelBtn = wrapper.find('button.bg-white.text-gray-700');
+        if (cancelBtn.exists()) {
+            await cancelBtn.trigger('click');
+            expect(store.unclaimTask).not.toHaveBeenCalled();
+            expect((wrapper.vm as any).unclaimTargetId).toBeNull();
+            
+            // Reabrir el modal para probar confirmación
+            await btn.trigger('click');
+        }
+
         // Find the "Sí, liberar" button inside the custom modal
         const confirmBtn = wrapper.find('button.bg-red-600.text-white');
         expect(confirmBtn.exists()).toBe(true);
         await confirmBtn.trigger('click');
 
-        const store = useWorkdeskStore();
         expect(store.unclaimTask).toHaveBeenCalledWith('t-2');
+        expect((wrapper.vm as any).unclaimTargetId).toBeNull();
     });
 
     it('CA-28: Botón Atender Siguiente llama al store', async () => {

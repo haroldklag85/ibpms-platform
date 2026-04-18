@@ -24,6 +24,7 @@ describe('useTimeboxStore (Sprint 5 - Iteration 2)', () => {
         expect(store.isLoadingLogs).toBe(false);
         expect(store.isExtendingSla).toBe(false);
         expect(store.errorState).toBeNull();
+        expect(store.hasActiveExtensions).toBe(false);
     });
 
     it('fetchLogs hidrata la bitácora exitosamente', async () => {
@@ -40,6 +41,7 @@ describe('useTimeboxStore (Sprint 5 - Iteration 2)', () => {
         expect(store.changelogs.length).toBe(1);
         expect(store.changelogs[0].id).toBe('log-1');
         expect(store.errorState).toBeNull();
+        expect(store.hasActiveExtensions).toBe(true);
     });
 
     it('fetchLogs maneja fallos estructurales', async () => {

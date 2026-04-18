@@ -1,5 +1,15 @@
 <template>
   <div class="bg-white border text-sm text-gray-700 min-h-[300px]">
+
+    <!-- CA-6 US-036: Acción de creación con selector de herencia piramidal -->
+    <div class="flex justify-end px-4 py-2 border-b border-gray-100 bg-gray-50/50">
+      <button
+        data-testid="btn-open-create-role"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+        @click="createModalOpen = true"
+      >+ Crear Rol</button>
+    </div>
+
     <div v-if="store.isLoading" class="p-8 text-center text-gray-500">
       <svg class="animate-spin h-6 w-6 text-indigo-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
       Sincronizando Active Directory...
@@ -90,6 +100,78 @@
       </tbody>
     </table>
 
+    <!-- CA-6 US-036: Modal de Creación de Rol con selector de Herencia Piramidal -->
+    <div
+      v-if="createModalOpen"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      data-testid="modal-create-role"
+    >
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-[420px] space-y-4">
+        <h3 class="text-base font-bold text-gray-900">Crear Rol Global</h3>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Nombre del Rol</label>
+          <input
+            v-model="newRole.name"
+            type="text"
+            data-testid="input-role-name"
+            placeholder="ROLE_NOMBRE_DESCRIPTIVO"
+            class="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
+          <input
+            v-model="newRole.description"
+            type="text"
+            data-testid="input-role-description"
+            placeholder="Responsabilidades del rol…"
+            class="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+        </div>
+
+        <!-- CA-6: Selector de Rol Padre (Herencia Piramidal) -->
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">
+            Hereda permisos de (Rol Padre)
+            <span class="text-gray-400 font-normal">— opcional</span>
+          </label>
+          <select
+            v-model="newRole.parentRoleId"
+            data-testid="select-parent-role"
+            class="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          >
+            <option value="">— Sin herencia —</option>
+            <option v-for="rol in store.globalRoles" :key="rol.id" :value="rol.id">
+              {{ rol.name }}
+            </option>
+          </select>
+          <p class="text-[10px] text-gray-400 mt-1">
+            El nuevo rol heredará los ProcessPermissions del rol seleccionado y de toda su cadena de ancestros.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input id="isTemplate" v-model="newRole.isTemplate" type="checkbox" class="rounded" data-testid="check-is-template" />
+          <label for="isTemplate" class="text-xs text-gray-600">Es plantilla asignable masivamente</label>
+        </div>
+
+        <div class="flex gap-2 justify-end pt-2">
+          <button
+            class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded"
+            @click="createModalOpen = false"
+          >Cancelar</button>
+          <button
+            class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 font-semibold"
+            :disabled="creatingRole"
+            data-testid="btn-confirm-create-role"
+            @click="confirmCreateRole"
+          >{{ creatingRole ? 'Creando...' : 'Crear Rol' }}</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal de confirmación Asignación Masiva (CA-3) -->
     <div
       v-if="massAssignTarget"
@@ -124,7 +206,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRbacStore } from '@/stores/rbacStore'
 import apiClient from '@/services/apiClient'
 
@@ -144,6 +226,33 @@ function onDeleteRole(rol) {
   apiClient.delete(`/admin/roles/${rol.id}`)
     .then(() => store.fetchRoles())
     .catch(err => alert(`Error al eliminar: ${err?.response?.data?.message ?? err.message}`))
+}
+
+// --- CA-6: Create Role with parentRole ---
+const createModalOpen = ref(false)
+const creatingRole = ref(false)
+const newRole = reactive({ name: '', description: '', parentRoleId: '', isTemplate: false })
+
+async function confirmCreateRole() {
+  if (!newRole.name.trim()) return alert('El nombre del rol es obligatorio.')
+  creatingRole.value = true
+  try {
+    const payload = {
+      name: newRole.name.trim(),
+      description: newRole.description.trim(),
+      isTemplate: newRole.isTemplate,
+      source: 'LOCAL',
+      parentRole: newRole.parentRoleId ? { id: newRole.parentRoleId } : null,
+    }
+    await apiClient.post('/admin/roles/', payload)
+    createModalOpen.value = false
+    Object.assign(newRole, { name: '', description: '', parentRoleId: '', isTemplate: false })
+    store.fetchRoles()
+  } catch (err) {
+    alert(`Error al crear rol: ${err?.response?.data?.message ?? err.message}`)
+  } finally {
+    creatingRole.value = false
+  }
 }
 
 // --- CA-3: Mass Assign ---

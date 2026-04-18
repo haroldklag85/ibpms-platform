@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { api } from '@/services/apiClient';
 
 export interface SlaChangelog {
@@ -16,6 +16,8 @@ export const useTimeboxStore = defineStore('timeboxStore', () => {
     const isLoadingLogs = ref(false);
     const isExtendingSla = ref(false);
     const errorState = ref<{ code: string; message: string } | null>(null);
+
+    const hasActiveExtensions = computed(() => changelogs.value.length > 0);
 
     const fetchLogs = async (taskId: string) => {
         isLoadingLogs.value = true;
@@ -57,6 +59,7 @@ export const useTimeboxStore = defineStore('timeboxStore', () => {
         isLoadingLogs,
         isExtendingSla,
         errorState,
+        hasActiveExtensions,
         fetchLogs,
         extendSla
     };

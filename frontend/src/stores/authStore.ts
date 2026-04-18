@@ -12,6 +12,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     // Sprint 5 (Iteración 1) - Inicialización forzosa de ActiveRole
     const activeRole = ref<string | null>(null);
+    const effectiveRoles = ref<string[]>([]);
 
     const initActiveRole = () => {
         if (user.value && user.value.roles.length > 0) {
@@ -71,9 +72,15 @@ export const useAuthStore = defineStore('auth', () => {
         }
         token.value = null;
         user.value = null;
+        effectiveRoles.value = [];
         isGlobal404.value = false;
         localStorage.removeItem('ibpms_token');
         // Redirección manejada por RouteGuard o Router al perder state.
+    };
+
+    const switchRole = (roleId: string) => {
+        activeRole.value = roleId;
+        window.dispatchEvent(new CustomEvent('role-switched', { detail: { roleId } }));
     };
 
     // CA-1: Espera síncrona de hidratación
@@ -94,6 +101,14 @@ export const useAuthStore = defineStore('auth', () => {
              }
              
              initActiveRole();
+             // Consumir Api para effective roles
+             try {
+                const { data } = await apiClient.get('/auth/effective-roles');
+                effectiveRoles.value = data || [];
+             } catch(e) {
+                console.warn('Could not fetch effective-roles', e);
+             }
+
              // Enchufamos el SSE
              initSecurityListener();
         } catch (error: any) {
@@ -118,10 +133,12 @@ export const useAuthStore = defineStore('auth', () => {
         user,
         roles,
         activeRole,
+        effectiveRoles,
         isHydrating,
         isGlobal404,
         login,
         logout,
+        switchRole,
         hydrateAuth,
         hasAnyRole
     };

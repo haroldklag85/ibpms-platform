@@ -42,12 +42,13 @@ public class TriageTaskRepositoryJpa implements TriageTaskRepository {
     public void deleteByStatusAndUpdatedAtBefore(String status, ZonedDateTime cutoff) {
         repository.deleteOldRecords(status, cutoff);
     }
-
-    interface SpringDataTriageTaskRepository extends JpaRepository<TriageTask, UUID> {
-        Page<TriageTask> findByStatus(String status, Pageable pageable);
-
-        @Modifying
-        @Query("DELETE FROM TriageTask t WHERE t.status = :status AND t.updatedAt < :cutoff")
-        void deleteOldRecords(@Param("status") String status, @Param("cutoff") ZonedDateTime cutoff);
-    }
 }
+
+interface SpringDataTriageTaskRepository extends JpaRepository<TriageTask, UUID> {
+    Page<TriageTask> findByStatus(String status, Pageable pageable);
+
+    @Modifying
+    @Query("DELETE FROM TriageTask t WHERE t.status = :status AND t.updatedAt < :cutoff")
+    void deleteOldRecords(@Param("status") String status, @Param("cutoff") ZonedDateTime cutoff);
+}
+

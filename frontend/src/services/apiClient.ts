@@ -203,6 +203,8 @@ export const api = {
 
     // 9. Formularios (Pantalla 7 / CA-30)
     getForms: () => apiClient.get('/forms'),
+    getFormVersions: (id: string) => apiClient.get(`/forms/${id}/versions`),
+    saveFormVersion: (id: string, payload: any) => apiClient.post(`/forms/${id}`, payload),
 
     // 10. Kanban Status Update (Pantalla 3)
     updateKanbanStatus: (id: string, status: string) => apiClient.patch(`/kanban/items/${id}/status`, { status }),

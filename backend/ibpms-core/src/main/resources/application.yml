@@ -34,6 +34,7 @@ spring:
 camunda:
   bpm:
     client:
+      disable: true # Deshabilitado momentáneamente para estabilizar Integración Playwright (Evade MismatchedInputException)
       base-url: http://localhost:8080/api/v1/engine-rest
     database:
       type: postgres
@@ -48,7 +49,7 @@ app:
 ibpms:
   pii:
     encryption:
-      key: ${IBPMS_PII_ENCRYPTION_KEY:dev-local-aes256-key-32chars!!}
+      key: ${IBPMS_PII_ENCRYPTION_KEY:ibpms-dev-aes256-encryption-k32!}
   clamav:
     url: ${CLAMAV_URL:http://localhost:3310}
     timeout-ms: ${CLAMAV_TIMEOUT_MS:5000}

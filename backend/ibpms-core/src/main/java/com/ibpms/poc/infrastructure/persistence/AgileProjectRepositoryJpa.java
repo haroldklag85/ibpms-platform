@@ -4,6 +4,9 @@ import com.ibpms.poc.domain.model.agile.AgileProject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -33,10 +36,11 @@ public class AgileProjectRepositoryJpa {
     public void updateStatus(UUID projectId, String status) {
         repository.updateStatus(projectId, status);
     }
-
-    interface SpringDataAgileProjectRepository extends JpaRepository<AgileProject, UUID> {
-        @org.springframework.data.jpa.repository.Modifying
-        @org.springframework.data.jpa.repository.Query("UPDATE AgileProject p SET p.status = :status, p.closedAt = CURRENT_TIMESTAMP WHERE p.id = :id")
-        void updateStatus(@org.springframework.data.repository.query.Param("id") UUID id, @org.springframework.data.repository.query.Param("status") String status);
-    }
 }
+
+interface SpringDataAgileProjectRepository extends JpaRepository<AgileProject, UUID> {
+    @Modifying
+    @Query("UPDATE AgileProject p SET p.status = :status, p.closedAt = CURRENT_TIMESTAMP WHERE p.id = :id")
+    void updateStatus(@Param("id") UUID id, @Param("status") String status);
+}
+

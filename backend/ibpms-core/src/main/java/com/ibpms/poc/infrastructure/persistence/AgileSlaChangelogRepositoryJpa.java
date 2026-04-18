@@ -24,8 +24,9 @@ public class AgileSlaChangelogRepositoryJpa {
     public Page<AgileSlaChangelog> findByTaskIdOrderByChangedAtDesc(UUID taskId, Pageable pageable) {
         return repository.findByTaskIdOrderByChangedAtDesc(taskId, pageable);
     }
-
-    interface SpringDataAgileSlaChangelogRepository extends JpaRepository<AgileSlaChangelog, UUID> {
-        Page<AgileSlaChangelog> findByTaskIdOrderByChangedAtDesc(UUID taskId, Pageable pageable);
-    }
 }
+
+interface SpringDataAgileSlaChangelogRepository extends JpaRepository<AgileSlaChangelog, UUID> {
+    Page<AgileSlaChangelog> findByTaskIdOrderByChangedAtDesc(UUID taskId, Pageable pageable);
+}
+

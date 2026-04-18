@@ -44,20 +44,21 @@ public class AgileTaskRepositoryJpa {
     public int bulkCancelTasks(UUID projectId) {
         return repository.bulkCancelTasks(projectId);
     }
-
-    interface SpringDataAgileTaskRepository extends JpaRepository<AgileTask, UUID> {
-        Page<AgileTask> findByProjectIdAndStatusNot(UUID projectId, String excludeStatus, Pageable pageable);
-
-        @Modifying
-        @Query("UPDATE AgileTask t SET t.status = 'DELETED' WHERE t.id = :id")
-        void softDelete(@Param("id") UUID id);
-
-        @Modifying
-        @Query("UPDATE AgileTask t SET t.position = :position WHERE t.id = :id")
-        void updatePosition(@Param("id") UUID id, @Param("position") int position);
-
-        @Modifying
-        @Query("UPDATE AgileTask t SET t.status = 'CANCELLED' WHERE t.projectId = :projectId AND t.status NOT IN ('DONE', 'CANCELLED', 'DELETED')")
-        int bulkCancelTasks(@Param("projectId") UUID projectId);
-    }
 }
+
+interface SpringDataAgileTaskRepository extends JpaRepository<AgileTask, UUID> {
+    Page<AgileTask> findByProjectIdAndStatusNot(UUID projectId, String excludeStatus, Pageable pageable);
+
+    @Modifying
+    @Query("UPDATE AgileTask t SET t.status = 'DELETED' WHERE t.id = :id")
+    void softDelete(@Param("id") UUID id);
+
+    @Modifying
+    @Query("UPDATE AgileTask t SET t.position = :position WHERE t.id = :id")
+    void updatePosition(@Param("id") UUID id, @Param("position") int position);
+
+    @Modifying
+    @Query("UPDATE AgileTask t SET t.status = 'CANCELLED' WHERE t.projectId = :projectId AND t.status NOT IN ('DONE', 'CANCELLED', 'DELETED')")
+    int bulkCancelTasks(@Param("projectId") UUID projectId);
+}
+

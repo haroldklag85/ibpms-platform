@@ -44,9 +44,9 @@ databaseChangeLog:
   - include:
       file: db/changelog/27-us001-workdesk-progress.sql
   - include:
-      file: db/changelog/sprint3/001_domain_events_inbox.sql
+      file: db/changelog/sprint3/001_create_form_event_store.sql
   - include:
-      file: db/changelog/sprint3/002_create_rejection_logs.sql
+      file: db/changelog/sprint3/002_create_task_drafts.sql
   - include:
       file: db/changelog/sprint3/003_create_webhook_intake_tables.sql
   - include:

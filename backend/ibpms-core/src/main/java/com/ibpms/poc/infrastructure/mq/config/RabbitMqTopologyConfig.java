@@ -47,6 +47,7 @@ public class RabbitMqTopologyConfig {
         Map<String, Object> args = new HashMap<>();
         args.put("x-dead-letter-exchange", DLX_EXCHANGE);
         args.put("x-dead-letter-routing-key", "dlq.route");
+        args.put("x-max-priority", 10);
         return args;
     }
 

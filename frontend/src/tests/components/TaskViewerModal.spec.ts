@@ -13,11 +13,16 @@ describe('TaskViewerModal.vue (US-039 p2 - Data Flattening & Prefixing)', () => 
         const wrapper = mount(TaskViewerModal, {
             props: {
                 isOpen: true,
-                taskId: taskId,
-                taskTitle: 'Inspección de Sitio',
-                taskFormKey: 'sys_generic_form',
-                candidateGroups: 'INSPECTORES',
-                context: 'BPMN' as any
+                context: {
+                    taskId: taskId,
+                    sourceEngine: 'BPMN',
+                    prefillData: {
+                        Case_ID: 'CASO-001',
+                        Client_Name: 'Empresa XYZ',
+                        Priority: 'Alta',
+                        SLA: '2 Horas'
+                    }
+                }
             }
         });
 

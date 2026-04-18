@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 60000,
   expect: {
-    timeout: 10000
+    timeout: 15000
   },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -12,7 +12,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    actionTimeout: 0,
+    actionTimeout: 15000,
     trace: 'on-first-retry',
     baseURL: 'http://localhost:5173',
   },

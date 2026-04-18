@@ -28,8 +28,8 @@ public class AzureBlobStorageAdapter implements DocumentStoragePort {
     private BlobContainerClient containerClient;
 
     public AzureBlobStorageAdapter(
-            @Value("${app.azure.storage.connection-string}") String connectionString,
-            @Value("${app.azure.storage.container-name}") String containerName) {
+            @Value("${ibpms.azure.storage.connection-string}") String connectionString,
+            @Value("${ibpms.azure.storage.container-name}") String containerName) {
         this.connectionString = connectionString;
         this.containerName = containerName;
     }

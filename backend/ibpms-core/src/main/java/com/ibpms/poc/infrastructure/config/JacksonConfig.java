@@ -1,22 +1,23 @@
 package com.ibpms.poc.infrastructure.config;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
-/**
- * Configuración global de Serialización JSON.
- * CA-57: Ley de Omisión Pura de Llaves Nulas.
- */
 @Configuration
 public class JacksonConfig {
 
     @Bean
-    public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
-        return builder
-                .serializationInclusion(JsonInclude.Include.NON_NULL)
-                .build();
+    public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer() {
+        return builder -> {
+            // Tolerancia a respuestas vacías y serialización de objetos vacíos
+            builder.featuresToDisable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+            builder.featuresToEnable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+            builder.featuresToEnable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
+            // Evitar fallos restrictivos si algo falla en el parseo (opcional para aumentar tolerancia)
+            builder.featuresToDisable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        };
     }
 }

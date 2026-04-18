@@ -11,6 +11,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.QueryHints;
 
 @Repository
 public class AgileTaskRepositoryJpa {
@@ -27,6 +31,10 @@ public class AgileTaskRepositoryJpa {
 
     public Optional<AgileTask> findById(UUID id) {
         return repository.findById(id);
+    }
+
+    public Optional<AgileTask> findByIdForUpdate(UUID id) {
+        return repository.findByIdForUpdate(id);
     }
 
     public Page<AgileTask> findByProjectIdAndStatusNot(UUID projectId, String excludeStatus, Pageable pageable) {
@@ -48,6 +56,11 @@ public class AgileTaskRepositoryJpa {
 
 interface SpringDataAgileTaskRepository extends JpaRepository<AgileTask, UUID> {
     Page<AgileTask> findByProjectIdAndStatusNot(UUID projectId, String excludeStatus, Pageable pageable);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")})
+    @Query("SELECT t FROM AgileTask t WHERE t.id = :id")
+    Optional<AgileTask> findByIdForUpdate(@Param("id") UUID id);
 
     @Modifying
     @Query("UPDATE AgileTask t SET t.status = 'DELETED' WHERE t.id = :id")

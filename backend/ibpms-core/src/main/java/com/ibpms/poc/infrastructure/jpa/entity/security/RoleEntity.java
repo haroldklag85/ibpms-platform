@@ -37,6 +37,14 @@ public class RoleEntity {
     @JoinColumn(name = "parent_role_id")
     private RoleEntity parentRole;
 
+    // CA-1 US-036: Modelo híbrido EntraID/LOCAL — indica si este rol actúa como Plantilla Clonable
+    @Column(name = "is_template", nullable = false)
+    private Boolean isTemplate = false;
+
+    // CA-1 US-036: Origen del rol — "LOCAL" (creado en iBPMS) o "ENTRA_ID" (sincronizado desde Azure AD)
+    @Column(name = "source", length = 50, nullable = false)
+    private String source = "LOCAL";
+
     public RoleEntity() {}
 
     public RoleEntity(String name, String description) {
@@ -58,4 +66,8 @@ public class RoleEntity {
     public void setProcessPermissions(Set<ProcessPermissionEntity> processPermissions) { this.processPermissions = processPermissions; }
     public RoleEntity getParentRole() { return parentRole; }
     public void setParentRole(RoleEntity parentRole) { this.parentRole = parentRole; }
+    public Boolean getIsTemplate() { return isTemplate; }
+    public void setIsTemplate(Boolean isTemplate) { this.isTemplate = isTemplate; }
+    public String getSource() { return source; }
+    public void setSource(String source) { this.source = source; }
 }

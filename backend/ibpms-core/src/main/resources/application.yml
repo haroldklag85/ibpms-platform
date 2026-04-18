@@ -34,8 +34,10 @@ spring:
 camunda:
   bpm:
     client:
-      disable: true # Deshabilitado momentáneamente para estabilizar Integración Playwright (Evade MismatchedInputException)
+      disable: false # Habilitado para Sprint 5
       base-url: http://localhost:8080/api/v1/engine-rest
+      max-tasks: 1
+      async-response-timeout: 10000
     database:
       type: postgres
     deployment-resource-pattern: classpath:/processes/*.bpmn

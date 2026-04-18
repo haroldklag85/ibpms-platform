@@ -44,6 +44,12 @@ public class AgileTask {
     @Column(name = "position", nullable = false)
     private Integer position;
 
+    @Column(name = "draft_payload", columnDefinition = "TEXT")
+    private String draftPayload;
+
+    @Column(name = "draft_payload_hash", length = 64)
+    private String draftPayloadHash;
+
     @Column(name = "sla_deadline")
     private ZonedDateTime slaDeadline;
 

@@ -33,17 +33,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository roleRepository;
     private final com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository delegationRepository;
     private final com.ibpms.poc.infrastructure.jpa.repository.security.TokenBlacklistRepository tokenBlacklistRepository;
+    private final com.ibpms.poc.application.service.security.RoleHierarchyService roleHierarchyService;
 
     public JwtAuthFilter(JwtTokenProvider jwtTokenProvider, 
                          com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository userRepository,
                          com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository roleRepository,
                          com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository delegationRepository,
-                         com.ibpms.poc.infrastructure.jpa.repository.security.TokenBlacklistRepository tokenBlacklistRepository) {
+                         com.ibpms.poc.infrastructure.jpa.repository.security.TokenBlacklistRepository tokenBlacklistRepository,
+                         com.ibpms.poc.application.service.security.RoleHierarchyService roleHierarchyService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.delegationRepository = delegationRepository;
         this.tokenBlacklistRepository = tokenBlacklistRepository;
+        this.roleHierarchyService = roleHierarchyService;
     }
 
     @Override
@@ -114,6 +117,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         String rName = r.getName().replace("ROLE_", "");
                         if (!roles.contains(rName)) roles.add(rName);
                     });
+                }
+
+                // US-036 CA-6: Enriquecer roles directos con herencia piramidal CTE
+                try {
+                    java.util.Set<String> directRoleSet = new java.util.LinkedHashSet<>(roles);
+                    java.util.Set<String> effectiveRoles = roleHierarchyService.resolveAllEffectiveRoles(directRoleSet);
+                    roles = new java.util.ArrayList<>(effectiveRoles);
+                } catch (Exception e) {
+                    // Fail-Open: Si la jerarquía falla, mantenemos los roles directos del token.
+                    logger.warn("[SRE RESILIENCE] Role hierarchy resolution failed. Using direct roles only. Causa: " + e.getMessage());
                 }
 
                 var authorities = roles.stream()

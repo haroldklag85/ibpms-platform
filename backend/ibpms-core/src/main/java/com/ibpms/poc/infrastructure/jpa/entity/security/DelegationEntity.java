@@ -29,6 +29,10 @@ public class DelegationEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    // CA-9 US-036: Motivo de la cesión temporal (campo auditable, nullable)
+    @Column(name = "reason", length = 500)
+    private String reason;
+
     public DelegationEntity() {}
 
     public DelegationEntity(UserEntity delegator, UserEntity substitute, LocalDateTime startDate, LocalDateTime endDate) {
@@ -50,6 +54,8 @@ public class DelegationEntity {
     public void setEndDate(LocalDateTime endDate) { this.endDate = endDate; }
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
 
     public boolean isCurrentlyValid() {
         LocalDateTime now = LocalDateTime.now();

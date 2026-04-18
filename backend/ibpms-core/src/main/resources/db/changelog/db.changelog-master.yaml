@@ -53,3 +53,7 @@ databaseChangeLog:
       file: db/changelog/sprint3/004_create_triage_tables.sql
   - include:
       file: db/changelog/sprint3/005_create_agile_hub_tables.sql
+  - include:
+      file: db/changelog/sprint3/006_create_mq_resilience_tables.sql
+  - include:
+      file: db/changelog/sprint4/001_us036_role_hybrid_fields.sql

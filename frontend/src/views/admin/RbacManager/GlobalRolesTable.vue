@@ -11,7 +11,7 @@
           <th class="p-4 font-semibold w-1/4">Nombre de Rol Global</th>
           <th class="p-4 font-semibold w-2/4">Descripción y Scope</th>
           <th class="p-4 font-semibold w-1/4">Miembros</th>
-          <th class="p-4 font-semibold w-16 text-center">Admin</th>
+          <th class="p-4 font-semibold text-center">Admin</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200">
@@ -20,6 +20,12 @@
             <div class="flex items-center gap-2 font-medium text-gray-900">
               <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
               {{ rol.name }}
+              <!-- CA-2 US-036: Badge de Guardián para el Rol Root — inmutable por diseño -->
+              <span
+                v-if="isRootRole(rol.name)"
+                class="inline-flex items-center gap-1 rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-800 border border-red-200"
+                title="Rol Guardián Raíz — Inmutable por diseño de seguridad"
+              >🔒 ROOT</span>
               <span v-if="rol.is_vip_restricted" class="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200" title="Rol restringido VIP">⭐ VIP</span>
             </div>
           </td>
@@ -37,16 +43,134 @@
               + Añadir Miembro
             </button>
           </td>
-          <td class="p-4 align-top text-center text-gray-400">
-            <button class="hover:text-indigo-600 w-8 h-8 rounded-full hover:bg-indigo-50 transition-colors">⋮</button>
+          <td class="p-4 align-top text-center">
+            <div class="flex items-center justify-center gap-1">
+
+              <!-- CA-3 US-036: Botón de Asignación Masiva — visible solo en roles plantilla -->
+              <button
+                v-if="rol.isTemplate"
+                data-testid="btn-mass-assign"
+                :data-role-id="rol.id"
+                class="inline-flex items-center gap-1 rounded bg-indigo-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-indigo-700 transition-colors"
+                title="Asignación Masiva de este Rol Plantilla a múltiples usuarios"
+                @click="onMassAssign(rol)"
+              >
+                👥 Masivo
+              </button>
+
+              <!-- CA-2 US-036: Botón Editar — oculto para ROLE_SUPER_ADMIN -->
+              <button
+                v-if="!isRootRole(rol.name)"
+                data-testid="btn-edit-role"
+                :data-role-id="rol.id"
+                class="w-7 h-7 rounded-full hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-gray-400"
+                title="Editar rol"
+              >✏️</button>
+
+              <!-- CA-2 US-036: Botón Borrar — PROHIBIDO para ROLE_SUPER_ADMIN (v-if defensivo) -->
+              <button
+                v-if="!isRootRole(rol.name)"
+                data-testid="btn-delete-role"
+                :data-role-id="rol.id"
+                class="w-7 h-7 rounded-full hover:bg-red-50 hover:text-red-600 transition-colors text-gray-400"
+                title="Eliminar rol"
+                @click="onDeleteRole(rol)"
+              >🗑️</button>
+
+              <!-- CA-2 US-036: Indicador visual cuando el rol es Root (sin acción destructiva) -->
+              <span
+                v-if="isRootRole(rol.name)"
+                class="text-gray-300 text-xs select-none"
+                title="Este rol está protegido y no puede ser modificado ni eliminado"
+              >— protegido —</span>
+
+            </div>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Modal de confirmación Asignación Masiva (CA-3) -->
+    <div
+      v-if="massAssignTarget"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      data-testid="modal-mass-assign"
+    >
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-96">
+        <h3 class="text-base font-bold text-gray-900 mb-1">Asignación Masiva</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          Asignando plantilla <span class="font-semibold text-indigo-700">{{ massAssignTarget.name }}</span>
+          a {{ mockUserIds.length }} usuario(s).
+        </p>
+        <div class="bg-gray-50 rounded p-3 text-xs font-mono text-gray-500 mb-4 break-all">
+          POST /api/v1/admin/roles/{{ massAssignTarget.id }}/assign-massively<br>
+          {{ JSON.stringify(mockUserIds) }}
+        </div>
+        <div class="flex gap-2 justify-end">
+          <button
+            class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded"
+            @click="massAssignTarget = null"
+          >Cancelar</button>
+          <button
+            class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 font-semibold"
+            :disabled="massAssigning"
+            @click="confirmMassAssign"
+          >{{ massAssigning ? 'Asignando...' : 'Confirmar' }}</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRbacStore } from '@/stores/rbacStore'
+import apiClient from '@/services/apiClient'
+
 const store = useRbacStore()
+
+// CA-2 US-036: Constante canónica del Rol Guardián (sincronizada con RoleService.ROOT_ROLE)
+const ROOT_ROLE_NAME = 'ROLE_SUPER_ADMIN'
+
+/** Determina si un nombre de rol es el Guardián Raíz inmutable */
+function isRootRole(name) {
+  return name === ROOT_ROLE_NAME
+}
+
+// --- CA-2: Delete ---
+function onDeleteRole(rol) {
+  if (!confirm(`¿Eliminar el rol "${rol.name}"? Esta acción es irreversible.`)) return
+  apiClient.delete(`/admin/roles/${rol.id}`)
+    .then(() => store.fetchRoles())
+    .catch(err => alert(`Error al eliminar: ${err?.response?.data?.message ?? err.message}`))
+}
+
+// --- CA-3: Mass Assign ---
+const massAssignTarget = ref(null)
+const massAssigning = ref(false)
+// IDs demo para el demostrador (handoff autoriza payload mock)
+const mockUserIds = ['00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002']
+
+function onMassAssign(rol) {
+  massAssignTarget.value = rol
+}
+
+async function confirmMassAssign() {
+  if (!massAssignTarget.value) return
+  massAssigning.value = true
+  try {
+    const { data } = await apiClient.post(
+      `/admin/roles/${massAssignTarget.value.id}/assign-massively`,
+      mockUserIds
+    )
+    alert(`✅ Asignación completada: ${data.assigned} usuario(s) asignados.`)
+    massAssignTarget.value = null
+    store.fetchRoles()
+  } catch (err) {
+    alert(`Error en asignación masiva: ${err?.response?.data?.message ?? err.message}`)
+  } finally {
+    massAssigning.value = false
+  }
+}
 </script>

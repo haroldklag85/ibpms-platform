@@ -10,6 +10,15 @@ export const useAuthStore = defineStore('auth', () => {
     const isHydrating = ref(false);
     const isGlobal404 = ref(false);
 
+    // Sprint 5 (Iteración 1) - Inicialización forzosa de ActiveRole
+    const activeRole = ref<string | null>(null);
+
+    const initActiveRole = () => {
+        if (user.value && user.value.roles.length > 0) {
+            activeRole.value = user.value.roles[0];
+        }
+    };
+
     // CA-11: Instancia del SSE Listener
     let sseSource: EventSource | null = null;
 
@@ -51,6 +60,7 @@ export const useAuthStore = defineStore('auth', () => {
             // SSO Normal fallback
             user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
         }
+        initActiveRole();
         initSecurityListener();
     };
 
@@ -83,6 +93,7 @@ export const useAuthStore = defineStore('auth', () => {
                  user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
              }
              
+             initActiveRole();
              // Enchufamos el SSE
              initSecurityListener();
         } catch (error: any) {
@@ -106,6 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
         token,
         user,
         roles,
+        activeRole,
         isHydrating,
         isGlobal404,
         login,

@@ -106,6 +106,17 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /** 403 — Violación de Propiedad de Tarea (US-029 Zero Trust) */
+    @ApiResponse(responseCode = "403", description = "Acceso denegado: Violación de propiedad de tarea", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(com.ibpms.poc.domain.exception.TaskOwnershipViolationException.class)
+    public ProblemDetail handleTaskOwnershipViolation(com.ibpms.poc.domain.exception.TaskOwnershipViolationException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/forbidden")));
+        problem.setTitle("Acceso Denegado");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
     /** 500 — Error interno genérico */
     @ApiResponse(responseCode = "500", description = "Error interno - Blindado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)

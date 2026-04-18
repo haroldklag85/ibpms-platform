@@ -19,11 +19,16 @@ public class AgileTaskService {
     private final AgileTaskRepositoryJpa taskRepository;
     private final SlaChangeLogService slaChangeLogService;
     private final AuditLogService auditLogService;
+    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
 
-    public AgileTaskService(AgileTaskRepositoryJpa taskRepository, SlaChangeLogService slaChangeLogService, AuditLogService auditLogService) {
+    public AgileTaskService(AgileTaskRepositoryJpa taskRepository, 
+                            SlaChangeLogService slaChangeLogService, 
+                            AuditLogService auditLogService,
+                            org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate) {
         this.taskRepository = taskRepository;
         this.slaChangeLogService = slaChangeLogService;
         this.auditLogService = auditLogService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Transactional
@@ -53,9 +58,14 @@ public class AgileTaskService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
     }
 
+    public AgileTask getTaskForUpdate(UUID taskId) {
+        return taskRepository.findByIdForUpdate(taskId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found (or locked)"));
+    }
+
     @Transactional
     public AgileTask updateTask(UUID taskId, String title, String description, BigDecimal effort, String status, java.time.ZonedDateTime slaDeadline, String updatedBy) {
-        AgileTask task = getTask(taskId);
+        AgileTask task = getTaskForUpdate(taskId);
         if (title != null) task.setTitle(title);
         if (description != null) task.setDescription(description);
         if (effort != null) task.setEffortEstimated(effort);
@@ -75,7 +85,7 @@ public class AgileTaskService {
      */
     @Transactional
     public void deleteTask(UUID taskId, String deletedBy) {
-        AgileTask task = getTask(taskId);
+        AgileTask task = getTaskForUpdate(taskId);
         task.setStatus("DELETED");
         taskRepository.save(task);
     }
@@ -96,9 +106,59 @@ public class AgileTaskService {
     @Transactional
     public void bulkAssign(UUID projectId, List<UUID> taskIds, String userId) {
         for (UUID taskId : taskIds) {
-            AgileTask task = getTask(taskId);
+            AgileTask task = getTaskForUpdate(taskId);
             task.getAssigneeIds().add(userId);
             taskRepository.save(task);
         }
+    }
+
+    /**
+     * US-002: Reclama una tarea y emite un evento WebSocket a la UI.
+     */
+    @Transactional
+    public void claimTask(UUID taskId, String claimedBy) {
+        AgileTask task = getTaskForUpdate(taskId);
+        if (!"OPEN".equals(task.getStatus()) && !"AVAILABLE".equals(task.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La tarea no está disponible para reclamación");
+        }
+        task.setStatus("CLAIMED");
+        if (task.getAssigneeIds() == null) {
+            task.setAssigneeIds(new java.util.ArrayList<>());
+        }
+        if (!task.getAssigneeIds().contains(claimedBy)) {
+            task.getAssigneeIds().add(claimedBy);
+        }
+        taskRepository.save(task);
+
+        // US-002 CA-13: Emisión STOMP WebSocket
+        messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
+                "event", "TASK_CLAIMED",
+                "taskId", taskId,
+                "claimedBy", claimedBy,
+                "timestamp", java.time.Instant.now()
+        ));
+    }
+
+    /**
+     * US-002: Libera una tarea y emite un evento WebSocket a la UI.
+     */
+    @Transactional
+    public void unclaimTask(UUID taskId, String unclaimedBy) {
+        AgileTask task = getTaskForUpdate(taskId);
+        if (!"CLAIMED".equals(task.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La tarea no está en estado CLAIMED");
+        }
+        task.setStatus("AVAILABLE");
+        if (task.getAssigneeIds() != null) {
+            task.getAssigneeIds().remove(unclaimedBy);
+        }
+        taskRepository.save(task);
+
+        messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
+                "event", "TASK_UNCLAIMED",
+                "taskId", taskId,
+                "unclaimedBy", unclaimedBy,
+                "timestamp", java.time.Instant.now()
+        ));
     }
 }

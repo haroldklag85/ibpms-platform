@@ -31,6 +31,21 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
         return [200, { correctedText: `[IA Regenerado vía Mock: ${delta}]` }];
     });
 
+    // US-002: Workbox Tasks
+    mock.onPost(/\/api\/v1\/workbox\/tasks\/.*\/claim/).reply((config) => {
+        if (config.url?.includes('LOCKED')) {
+            return [403, { code: 'TASK_LOCKED', message: 'La tarea está asignada a otro operador' }];
+        }
+        return [200, { status: 'CLAIMED' }];
+    });
+    mock.onPost(/\/api\/v1\/workbox\/tasks\/.*\/complete/).reply(() => [200, { status: 'COMPLETED' }]);
+    mock.onPut(/\/api\/v1\/workbox\/tasks\/.*\/draft/).reply(() => [200, { status: 'DRAFT_SAVED' }]);
+
+    // US-007: DMN Generate
+    mock.onPost('/api/v1/dmn/generate').reply(() => {
+        return [200, { dmnXml: "<?xml version='1.0'?><definitions id='dmn_mock'></definitions>", explanation: "Reglas autogeneradas vía Mock" }];
+    });
+
     // 2. Service Delivery (Pantalla 16)
     mock.onPost('/service-delivery/manual-start').reply(() => {
         return [201, { id: `PROC-MOCK-${Math.floor(Math.random() * 10000)}`, status: 'CREATED' }];
@@ -281,6 +296,31 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
                 totalElements: 3
             }
         }];
+    });
+
+    // 16. Sprint 5 - Iteración 2: Timebox & SLA
+    mock.onGet(/\/api\/v1\/agile\/tasks\/.*\/sla-log/).reply(() => {
+        return [200, {
+            content: [
+                { id: 'log-1', taskId: 'taskId', requestSlaStart: '2026-04-10T10:00:00Z', grantedSlaEnd: '2026-04-12T10:00:00Z', reason: 'Falta de documentos', changedBy: 'operator-1' }
+            ],
+            pageable: { pageNumber: 0, pageSize: 20 },
+            totalElements: 1
+        }];
+    });
+
+    const idempotencyCache = new Set<string>();
+    mock.onPost(/\/api\/v1\/agile\/tasks\/.*\/timebox/).reply((config) => {
+        const idempotencyKey = config.headers ? config.headers['Idempotency-Key'] : null;
+        if (idempotencyKey && idempotencyCache.has(idempotencyKey)) {
+            // QA Scenario: Simulamos que una key ya usada retiene idempotencia y falla o avisa
+            return [409, { code: 'IDEMPOTENCY_CONFLICT', message: 'Doble sumisión detectada. Se retiene idempotencia.' }];
+        }
+        if (idempotencyKey) {
+            idempotencyCache.add(idempotencyKey);
+        }
+        
+        return [200, { status: 'TIMEBOX_EXTENDED', newDueDate: new Date(Date.now() + 86400000).toISOString() }];
     });
 
     return mock;

@@ -1,10 +1,13 @@
 package com.ibpms.poc.infrastructure.web.security;
 
+import com.ibpms.poc.application.dto.security.DelegationRequestDTO;
 import com.ibpms.poc.application.dto.security.PasswordResetResponseDTO;
 import com.ibpms.poc.application.dto.security.UserCreateRequestDTO;
 import com.ibpms.poc.application.dto.security.UserResponseDTO;
 import com.ibpms.poc.application.dto.security.UserUpdateRequestDTO;
+import com.ibpms.poc.application.service.security.DelegationService;
 import com.ibpms.poc.application.service.security.UserService;
+import com.ibpms.poc.infrastructure.jpa.entity.security.DelegationEntity;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,10 +30,14 @@ public class UserAdminController {
 
     private final UserService userService;
     private final TokenBlacklistRepository blacklistRepository;
+    private final DelegationService delegationService;
 
-    public UserAdminController(UserService userService, TokenBlacklistRepository blacklistRepository) {
+    public UserAdminController(UserService userService,
+                               TokenBlacklistRepository blacklistRepository,
+                               DelegationService delegationService) {
         this.userService = userService;
         this.blacklistRepository = blacklistRepository;
+        this.delegationService = delegationService;
     }
 
     @PostMapping
@@ -69,6 +76,23 @@ public class UserAdminController {
         response.put("error", "Method Not Allowed");
         response.put("message", "El borrado físico de identidades está prohibido. Utilice el Soft-Delete (/deactivate).");
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
+    }
+
+    /**
+     * CA-9 US-036 — Cesión Temporal de Poder (Delegación Autónoma Timebox).
+     * POST /api/v1/admin/users/{id}/delegate
+     * Body: { recipientId, startDate, endDate, reason }
+     * Respuesta 201: entidad DelegationEntity persistida.
+     *
+     * El JwtAuthFilter consume DelegationRepository en tiempo real para inyectar
+     * los roles del donante en el contexto JWT del receptor durante la ventana activa.
+     */
+    @PostMapping("/{id}/delegate")
+    public ResponseEntity<DelegationEntity> delegate(
+            @PathVariable UUID id,
+            @RequestBody DelegationRequestDTO dto) {
+        DelegationEntity created = delegationService.createDelegation(id, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     // CA-14: Exorcismo JWT (Kill Session Extremo)

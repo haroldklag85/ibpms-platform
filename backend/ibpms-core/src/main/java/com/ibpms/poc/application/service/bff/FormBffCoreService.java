@@ -8,6 +8,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ibpms.poc.application.service.RejectionLogService;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -17,9 +19,11 @@ public class FormBffCoreService {
     private static final Logger log = LoggerFactory.getLogger(FormBffCoreService.class);
 
     private final TaskService taskService;
+    private final RejectionLogService rejectionLogService;
 
-    public FormBffCoreService(TaskService taskService) {
+    public FormBffCoreService(TaskService taskService, RejectionLogService rejectionLogService) {
         this.taskService = taskService;
+        this.rejectionLogService = rejectionLogService;
     }
 
     /**
@@ -31,6 +35,9 @@ public class FormBffCoreService {
             throw new jakarta.persistence.EntityNotFoundException("Tarea no encontrada en el orquestador BPMN.");
         }
 
+        // Recuperar historial de rechazos si lo hubiera
+        List<Map<String, Object>> rejectionHistory = rejectionLogService.getRejectionHistory(task.getProcessInstanceId());
+
         // Mock del ensamblaje del Mega-DTO
         log.info("BFF Form Context (CA-01): Ensamblando Zod + Layout + Variables de DB para Tarea {}", taskId);
         return Map.of(
@@ -38,7 +45,8 @@ public class FormBffCoreService {
             "taskName", task.getName(),
             "schema_version", "v1.2.0", // Prevención choques generacionales
             "layout", Map.of("type", "grid", "components", "[]"), // Zod Schema / Layout Layout
-            "prefillData", Map.of("applicantName", "Mock User")
+            "prefillData", Map.of("applicantName", "Mock User"),
+            "rejection_history", rejectionHistory // Trazabilidad incluida para el Frontend
         );
     }
 

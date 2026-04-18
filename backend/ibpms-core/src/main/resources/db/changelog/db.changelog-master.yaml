@@ -43,3 +43,13 @@ databaseChangeLog:
       file: db/changelog/26-us001-workdesk-schema.sql
   - include:
       file: db/changelog/27-us001-workdesk-progress.sql
+  - include:
+      file: db/changelog/sprint3/001_domain_events_inbox.sql
+  - include:
+      file: db/changelog/sprint3/002_create_rejection_logs.sql
+  - include:
+      file: db/changelog/sprint3/003_create_webhook_intake_tables.sql
+  - include:
+      file: db/changelog/sprint3/004_create_triage_tables.sql
+  - include:
+      file: db/changelog/sprint3/005_create_agile_hub_tables.sql

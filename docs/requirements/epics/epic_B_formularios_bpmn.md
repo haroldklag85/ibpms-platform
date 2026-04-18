@@ -1821,6 +1821,23 @@ Feature: Standalone Project Template Builder (WBS)
     Then el borrado es estrictamente Local (Muta solo el Proyecto Instanciado)
     And la Plantilla original inmutable "V1.0" no pierde las tareas orgánicamente y futuros proyectos las seguirán heredando intactas.
 
+  # ==============================================================================
+  # REFERENCIA CRUZADA: Integración con US-030 (Hub Ágil)
+  # Fecha de creación: 2026-04-17
+  # Origen: Decisión arquitectónica del Sprint 3 — Slicing Planner
+  # ==============================================================================
+
+  Scenario: [INTEGRACIÓN] Habilitación del Clonaje WBS hacia el Hub Ágil (CA-6)
+    # NOTA OBLIGATORIA: Este CA es una DEUDA de integración con la US-030 CA-2.
+    # La US-030 se construirá SIN el botón "Usar Plantilla WBS" (solo "Iniciar vacío")
+    # porque esta US-006 aún no está desarrollada. Cuando se construya la US-006,
+    # el equipo DEBE habilitar la opción 2 del Pop-Up del CA-2 de la US-030.
+    Given que la US-006 ha sido construida y las Plantillas WBS existen en la Pantalla 8
+    When el Líder de Proyecto crea un nuevo Proyecto Ágil en la Pantalla 9 (US-030 CA-2)
+    Then el sistema DEBERÁ habilitar la opción "Usar una Plantilla WBS" en el Pop-Up de Selección Inicial
+    And el listado de plantillas será alimentado por el endpoint de la US-006 (catálogo de Plantillas activas)
+    And el clonaje profundo de tareas hacia el Hub Ágil (Pantalla 10) seguirá las reglas de copia definidas en el CA-5 de esta US-006 (Independencia Evolutiva Locativa).
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 8 (Project Template Builder).
 

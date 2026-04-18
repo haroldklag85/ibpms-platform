@@ -595,6 +595,14 @@ Feature: Task Claiming and Reassignment
 **Quiero** inyectar un payload automatizado a un Endpoint público de la plataforma
 **Para** instanciar un caso de negocio nuevo automáticamente sin intervención manual humana.
 
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-004:**
+> - **US-001 (Workdesk / Pantalla 1):** Las tareas de Pre-Triaje generadas por el Webhook (CA-8, CA-9) deben consolidarse visualmente en la grilla unificada del Workdesk para que los operarios las detecten y atiendan. Sin esta integración, los correos entrantes aprobados quedarían invisibles en una bandeja aislada (Pantalla 16) que nadie consulta proactivamente.
+> - **US-036 (RBAC & Portal Administrativo / Pantalla 14):** La Whitelist de dominios autorizados (CA-4, CA-12), el límite parametrizable de peso de adjuntos (CA-7) y el switch de seguridad HMAC/Bearer (CA-10) requieren formularios de configuración administrativa expuestos en la Pantalla 14. Sin RBAC, estos parámetros quedarían hardcodeados sin capacidad de gobierno por tenant.
+> - **US-000 (Arquitectura Transversal):** Los mecanismos de Idempotencia (CA-1), bloqueo de auto-responders (CA-2) y auditoría de payloads fallidos (CA-3) consumirán los interceptores globales de ExceptionHandler y el estándar de respuesta de error `{ field, issue, translatedMessage }` definidos por la US-000.
+> - **Infraestructura RabbitMQ (Bloqueante):** La resiliencia ante caída del motor BPMN (CA-6) y el fail-secure del escaneo Anti-Malware (CA-11) dependen de que la topología de RabbitMQ (Exchanges, DLQ, DLX) esté desplegada y operativa en Docker/Kubernetes. Sin esta infraestructura, los Webhooks se perderían irrecuperablemente durante las ventanas de indisponibilidad de Camunda o del escáner.
+
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Secure Webhook Intake and Human Approval
@@ -649,6 +657,78 @@ Feature: Secure Webhook Intake and Human Approval
     Given la exposición pública de la URL del Webhook a internet
     Then por defecto, la API exige validar la firma criptográfica HMAC en los Headers contra un Secreto compartido con Microsoft Graph
     And el Administrador IT posee un switch en la UI para apagar el requerimiento HMAC y solo usar Bearer Tokens si la integración del cliente es heredada (Legacy).
+
+  # ==============================================================================
+  # B. REMEDIACIONES POST-AUDITORÍA (Análisis Funcional 2026-04-17)
+  # Origen: docs/requirements/us004_functional_analysis.md
+  # Tickets: REM-004-01 a REM-004-02
+  # Propósito: Cerrar GAPs de definición detectados por el workflow
+  #            /analisisEntendimientoUs.md antes del inicio de desarrollo de US-004.
+  # Estado: US-004 NO ha sido desarrollada aún. Estos CAs se inyectan ANTES
+  #         de la construcción para blindar la implementación desde el origen.
+  # ==============================================================================
+
+  Scenario: [REMEDIACIÓN] Sanitización Anti-Malware de Adjuntos en Webhook (CA-11)
+    # Origen: REM-004-01 — GAP-1 del us004_functional_analysis.md
+    # Resuelve: El CA-7 limita el peso pero no define escaneo de contenido malicioso.
+    Given un payload de Webhook con archivos adjuntos que superan la validación de peso del CA-7 (≤ 10MB)
+    Then el Backend OBLIGATORIAMENTE someterá cada archivo adjunto a un escaneo Anti-Malware antes de persistirlo en almacenamiento.
+    And 1. En V1, el escaneo se realizará mediante una librería de detección de firmas integrada (Ej: ClamAV vía API REST o contenedor sidecar) invocada sincrónicamente antes del guardado.
+    And 2. Si el escaneo detecta un archivo sospechoso o infectado, el sistema retornará `HTTP 422 Unprocessable Entity` con el mensaje: `{ "error": "MALWARE_DETECTED", "file": "<nombre>", "message": "El archivo adjunto fue rechazado por políticas de seguridad." }`.
+    And 3. El archivo rechazado NO se persistirá en almacenamiento productivo. Se registrará únicamente su hash SHA-256 y metadatos (nombre, tamaño, remitente, timestamp) en la tabla de "Payloads Huérfanos/Fallidos" del CA-3 con el motivo `MALWARE_QUARANTINE`.
+    And 4. Si el servicio de escaneo Anti-Malware no está disponible (caída del sidecar), el sistema aplicará un Fail-Secure: rechazará el archivo retornando `HTTP 503 Service Unavailable` y encolará el payload completo en la DLQ de RabbitMQ (CA-6) para reintento posterior cuando el escáner se recupere.
+    And 5. Los archivos que pasen el escaneo exitosamente se almacenarán con un flag `scan_status: CLEAN` y el hash SHA-256 para verificación futura.
+
+  Scenario: [REMEDIACIÓN] Administración de Whitelist de Dominios Autorizados (CA-12)
+    # Origen: REM-004-02 — GAP-2 del us004_functional_analysis.md
+    # Resuelve: El CA-4 valida dominios pero no define dónde ni cómo se administra la lista.
+    Given la necesidad de gestionar la lista de dominios autorizados para el Webhook de ingesta (CA-4)
+    Then la administración de la Whitelist seguirá las siguientes reglas:
+    And 1. La Whitelist se almacenará como una tabla relacional `ibpms_webhook_allowed_domains` con los campos: `{ id, domain, tenant_id, description, created_by, created_at, is_active }`.
+    And 2. La interfaz administrativa para gestionar la Whitelist se expondrá en la Pantalla 14 (US-036 — Portal Administrativo), dentro de una sección dedicada "Integraciones > Dominios Autorizados".
+    And 3. Los endpoints CRUD serán:
+    And   - `GET /api/v1/admin/webhook/allowed-domains` — Listar dominios (paginado, filtrable).
+    And   - `POST /api/v1/admin/webhook/allowed-domains` — Agregar dominio. Body: `{ domain: "@ejemplo.com", description?: "Cliente XYZ" }`. Validación: formato de dominio válido, no duplicado por tenant.
+    And   - `DELETE /api/v1/admin/webhook/allowed-domains/{id}` — Desactivar dominio (soft-delete con `is_active = false`). No se permite hard-delete para preservar trazabilidad.
+    And 4. Solo usuarios con rol `ADMIN_SISTEMA` o `ADMIN_TENANT` podrán gestionar la Whitelist. Cualquier otro rol recibirá `HTTP 403 Forbidden`.
+    And 5. Cada modificación (alta, baja, reactivación) quedará registrada en el Audit Log con: `{ userId, action: 'WHITELIST_ADD|WHITELIST_REMOVE|WHITELIST_REACTIVATE', domain, timestamp }`.
+    And 6. El Backend aplicará caché en memoria (Redis, TTL: 5 minutos) sobre la Whitelist para no consultar la BD en cada Webhook entrante, garantizando performance sub-milisegundo en la validación del CA-4.
+
+  # ==============================================================================
+  # C. REFINAMIENTO DE VALOR DE NEGOCIO (Análisis 45 Preguntas - 2026-04-17)
+  # Resoluciones estratégicas de producto para la ingesta y manipulación humana
+  # ==============================================================================
+
+  Scenario: Purga Automática de Correos Rechazados (Registro de Basura) (CA-13)
+    Given que el sistema registra internamente los correos rechazados (malformados, no autorizados o con virus)
+    When estos registros cumplen 30 días de haber sido recibidos
+    Then el sistema de manera automática depura (purga) físicamente estos registros
+    And garantizando no saturar la base de datos de auditoría y evitar la retención eterna de datos innecesarios.
+
+  Scenario: Experiencia de Pre-visión y Rechazo en el Triaje (CA-14)
+    Given que el operador humano se dispone a evaluar una Tarea de Pre-Triaje
+    When abra el registro entrante
+    Then el sistema debe mostrar una pre-visualización clara del cuerpo del mensaje original y sus anexos
+    And debe proveer al operador los botones [Aprobar Ingesta] y [Rechazar Petición]
+    And obligando a que si oprime Rechazar, tenga que ingresar obligatoriamente una razón o motivo breve, cambiando el estado final a Cancelado.
+
+  Scenario: Canalización del Trámite Específico (CA-15)
+    Given un operador humano que confirma en la interfaz que el correo es válido y debe procesarse
+    When oprime el botón de [Aprobar Ingesta]
+    Then el sistema obliga al operador a seleccionar desde un menú desplegable el "Tipo de Proceso" que debe iniciar (Ej: "Queja", "Alta de Cliente")
+    And solo al seleccionarlo, el motor arranca el viaje real y oficial dentro de Camunda.
+
+  Scenario: Reloj de Atención al Ciudadano/Cliente en Cola (CA-16)
+    Given que el buzón acaba de recibir y legitimar un correo
+    Then el sistema asigna a la tarea de "Pre-Triaje" un reloj propio (SLA de Entrada) paramétrico
+    And si el tiempo transcurre sin que un operador clasifique o apruebe el requerimiento, la tarea se pondrá en semáforo Amarillo y Rojo, visibilizándola como una emergencia de atención en el tablero general.
+
+  Scenario: Recepción Acusada de Inmediato (Experiencia Diferida) (CA-17)
+    Given que Microsoft u otro buzonazo envía un correo con anexos al iBPMS
+    When la petición es recibida
+    Then el motor responde Inmediatamente (Sub-segundo) "Mensaje Recibido" al emisor externo para evitar cuellos de botella
+    And las tareas de procesamiento exigentes (como el escaneo Anti-virus) ocurren "en el patio trasero" (asíncrono) sin dejar la puerta principal bloqueada.
+
 ```
 **Trazabilidad UX:** Pantalla 11 (Hub de Integraciones: Eventos Entrantes) y Pantalla 16 (Bandeja Inteligente de Intake).
 
@@ -752,6 +832,13 @@ Feature: Kanban Board Task Management
 **Quiero** instanciar un nuevo proyecto Ágil utilizando una estructura base (WBS) y gestionar su Backlog
 **Para** poder planificar iteraciones, asignar responsables directos y liberar tareas hacia los tableros Kanban operativos (Pantalla 3).
 
+> [!IMPORTANT]
+> **Dependencias Externas Críticas de la US-030:**
+> - **US-008 (Mover Tarjeta Kanban / Pantalla 3):** Las tarjetas creadas en el Hub (P10) pasan a vivir operativamente en la P3. Sin el motor de estados y WebSockets de la US-008, las tarjetas no podrían ejecutarse. La política 1:1 de la US-008 CA-4 rige en la ejecución; la multi-asignación del CA-5 de esta US-030 solo aplica en planificación.
+> - **US-006 (Plantillero Transversal / WBS):** El CA-2 de esta US-030 depende de la existencia de Plantillas WBS creadas y administradas por la US-006. Sin plantillas, el Líder solo puede crear proyectos vacíos.
+> - **US-001 (Workdesk / Pantalla 1):** Las tarjetas asignadas nominalmente (CA-5) deben aparecer en la bandeja unificada del Workdesk del operario asignado para que las detecte y trabaje.
+> - **US-000 (Arquitectura Transversal):** Los interceptores de error, la auditoría centralizada y la sanitización XSS del CA-11 consumen las capas base definidas por la US-000.
+
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Agile Project Instantiation and Planning
@@ -760,6 +847,111 @@ Feature: Agile Project Instantiation and Planning
     When el líder de proyecto abre el Agile Hub (Pantalla 10)
     Then el sistema NO utiliza iteraciones con fechas (Sprints) para la Versión 1 del producto
     And el lienzo funciona como un Tablero General de Kanban Continuo (Flujo sin Timebox) donde las tareas se mapean directamente de ToDo a Done, aplazando el marco Scrum complejo para V2.
+
+  # ==============================================================================
+  # B. REFINAMIENTO FUNCIONAL INTEGRAL (45 Preguntas Respondidas - 2026-04-17)
+  # Origen: docs/requirements/us030_refinamiento_funcional.md
+  # Propósito: Construir los pilares CRUD, UX y de seguridad completamente
+  #            ausentes de la definición original de esta User Story.
+  # ==============================================================================
+
+  Scenario: Arranque Selectivo — Backlog en Blanco vs Plantilla WBS Clonada (CA-2)
+    Given que el Líder de Proyecto confirma la creación de un nuevo Proyecto Ágil en la Pantalla 9
+    Then el sistema presenta un Pop-Up de Selección Inicial con dos alternativas:
+    And 1. **"Iniciar vacío":** El Hub Ágil (Pantalla 10) se crea sin tareas, listo para recibir inyección manual.
+    And 2. **"Usar una Plantilla WBS":** Se despliega un listado de Plantillas previamente creadas (US-006). El Líder selecciona una y el sistema clona físicamente todas las tareas del WBS como registros independientes en estado "Para Hacer" (TO DO).
+    And el clonaje es una copia profunda: las tareas clonadas son entidades autónomas desconectadas de la plantilla padre. Cambios futuros en la plantilla NO afectan a los proyectos ya instanciados.
+    And si la plantilla contiene más de 50 tareas, el clonaje se realiza en segundo plano mostrando un indicador de progreso visual (esqueleto animado).
+
+  Scenario: Inyección Manual y Gobierno CRUD de Tarjetas Ágiles (CA-3)
+    Given el Hub Ágil (Pantalla 10) de un proyecto activo
+    Then el Líder de Proyecto o Scrum Master dispondrá de un botón "+ Nueva Tarea" prominente en la barra superior para inyectar tarjetas en cualquier momento.
+    And al presionarlo, se desliza un panel lateral (Canvas/Slide-Panel) con los siguientes campos:
+    And - **Título** (obligatorio, texto corto)
+    And - **Descripción** (obligatorio, editor de texto enriquecido con soporte para pegar imágenes desde el portapapeles Ctrl+V, sanitizado contra inyección de scripts maliciosos)
+    And - **Esfuerzo Estimado** (opcional, numérico en horas)
+    And - **Esfuerzo Real** (opcional, numérico en horas, actualizable durante la ejecución)
+    And - **Responsable(s)** (opcional, uno o varios usuarios del proyecto via combo-box multi-select)
+    And - **Etiqueta/Tag** (opcional, seleccionable con colores ad-hoc creados por el mismo usuario)
+    And - **Notas Adicionales** (opcional, campo de texto libre)
+    And las tarjetas son visibles en la Pantalla 3 (Tablero Kanban operativo) inmediatamente después de guardarse.
+    And el Líder puede editar el Título y la Descripción de cualquier tarea en cualquier momento, incluso si ya está en progreso por otro usuario.
+
+  Scenario: Eliminación Física con Auditoría Forense Obligatoria (CA-4)
+    Given una tarjeta existente en el Hub Ágil que el Líder desea destruir
+    When presiona el botón de eliminación sobre la tarjeta
+    Then el sistema solicita confirmación mediante un diálogo simple de aceptación
+    And al confirmar, la tarjeta se elimina FÍSICAMENTE de la base de datos (Hard-Delete)
+    And ANTES del borrado, el sistema graba un registro inmutable en la tabla de Auditoría con: ID de la tarea eliminada, Título, usuario que ejecutó la eliminación, fecha y hora exacta.
+
+  Scenario: Asignación Flexible Multi-Persona desde el Hub de Planificación (CA-5)
+    Given una tarjeta en el Hub Ágil (Pantalla 10) que requiere asignación de responsables
+    Then el Líder podrá asignar uno o varios usuarios del proyecto como responsables en cualquier momento del ciclo de vida de la tarea (antes, durante o después de iniciarla).
+    And podrá cambiar, agregar o remover responsables libremente.
+    And **Reconciliación con US-008 CA-4 (Single-Assignee):** En el Hub de PLANIFICACIÓN (P10) se permite designar múltiples responsables para visibilidad y reparto de trabajo. Cuando la tarea se ejecuta en el Tablero OPERATIVO (P3), la política 1:1 rige: solo un usuario a la vez puede reclamar y trabajar activamente la tarjeta, garantizando un único dueño del SLA.
+    And la lista desplegable de candidatos se filtra exclusivamente a los miembros activos y registrados en el proyecto actual. Usuarios fuera del proyecto no aparecen.
+
+  Scenario: Priorización Visual por Arrastre Vertical (Drag & Drop) (CA-6)
+    Given la lista de tareas desplegada en el Hub Ágil estilo Backlog
+    Then la prioridad de cada tarea estará determinada por su posición vertical en la lista: las de arriba son las más urgentes, las de abajo las menos prioritarias.
+    And el Líder podrá arrastrar las tarjetas hacia arriba o abajo para reordenarlas.
+    And este orden se persiste en la base de datos como un campo de posición numérica y se refleja consistentemente en todas las vistas del proyecto.
+
+  Scenario: Doble Vista Consolidada — Proyecto Individual vs Portafolio (CA-7)
+    Given la necesidad de gestionar múltiples proyectos Ágiles simultáneamente
+    Then la Pantalla 10 ofrecerá un selector de vista en la barra superior con dos modos:
+    And 1. **"Vista Proyecto":** Muestra exclusivamente las tarjetas del proyecto seleccionado (comportamiento por defecto).
+    And 2. **"Vista Portafolio":** Consolida las tarjetas de todos los proyectos Ágiles activos bajo la jurisdicción del Líder, agrupadas por proyecto, permitiendo una visión gerencial unificada.
+
+  Scenario: Archivo Inteligente de Tareas Completadas (CA-8)
+    Given una tarjeta que ha llegado al estado "DONE" (Completada) en el tablero operativo (Pantalla 3, US-008)
+    Then la tarjeta se ocultará automáticamente del backlog visible en la Pantalla 10 para no saturar la vista del Líder.
+    And existirá un toggle o filtro "Mostrar Completadas" que al activarse revelará el histórico de tareas terminadas como una sección plegable al final de la lista.
+
+  Scenario: Modificación de SLA Individual con Bitácora de Cambios (CA-9)
+    Given una tarjeta activa cuyo plazo de entrega original resulta insuficiente
+    When el Líder modifica el tiempo límite (SLA) desde el panel de detalle de la tarjeta
+    Then el sistema acepta la modificación y la aplica inmediatamente al reloj de la tarea.
+    And TODA modificación de SLA queda registrada en un log visible con: valor anterior, valor nuevo, quién lo cambió y cuándo, garantizando trazabilidad ante auditorías de gestión.
+
+  Scenario: Cierre de Proyecto con Cascada Controlada de Cancelación (CA-10)
+    Given un Líder que decide dar de baja un Proyecto Ágil completo
+    When confirma la acción de "Terminar Proyecto" desde la Pantalla 9
+    Then todas las tarjetas que no hayan alcanzado el estado "DONE" se marcan automáticamente como "CANCELADA"
+    And desaparecen de las bandejas de trabajo (Workdesk/Kanban) de los operarios asignados
+    And el proyecto pasa a estado "Cerrado" y queda en modo solo-lectura para consulta histórica.
+
+  Scenario: [SEGURIDAD] Blindaje de Acceso y Protección contra Abuso (CA-11)
+    Given la exposición de los endpoints del Hub Ágil
+    Then solo los usuarios con rol de Scrum Master o Líder del proyecto específico podrán crear, editar y eliminar tarjetas. Los operarios regulares tendrán acceso de solo lectura al Hub.
+    And todo campo de texto enriquecido (Descripción, Notas) será sanitizado contra inyección de scripts (XSS) antes de persistirse.
+    And las operaciones masivas (crear múltiples tareas de golpe) estarán limitadas a un máximo de 50 tareas por petición para prevenir saturación intencional.
+    And existirá un límite rígido de 500 tarjetas activas por proyecto en V1. Al alcanzarlo, el sistema impedirá crear nuevas tarjetas hasta que se archiven o eliminen las existentes.
+    And si un usuario asignado como responsable es desactivado del sistema, sus tarjetas se marcarán con alerta visual "Sin Propietario" para reasignación inmediata por el Líder.
+
+  Scenario: [UX] Anatomía Visual del Backlog Moderno (CA-12)
+    Given la renderización de la Pantalla 10 (Hub Ágil)
+    Then el backlog se presenta en formato de lista vertical estilo Jira/Linear (no como tablero de columnas)
+    And cada fila de tarjeta muestra: Título, nombre del/los Responsable(s), Etiqueta con color, y Estado actual.
+    And la lista implementa scroll infinito con virtualización del navegador para soportar cientos de tarjetas sin degradar la experiencia visual.
+    And existirá un panel de búsqueda rápida con filtros por Estado, por Asignado y por Etiqueta en la barra superior.
+    And las etiquetas/tags son de colores personalizados (ad-hoc) que el propio usuario puede crear y bautizar libremente.
+    And en la esquina superior derecha existirá un acceso directo **"Saltar al Tablero →"** para navegar instantáneamente a la Pantalla 3 (Kanban operativo) del mismo proyecto.
+
+  Scenario: [UX] Detección Visual de Tareas Abandonadas — Ticket Rancio (CA-13)
+    Given una tarjeta en el backlog que lleva más de 15 días naturales sin actividad alguna (sin cambios de estado, sin ediciones, sin registro de esfuerzo)
+    Then el sistema aplicará automáticamente un indicador visual de abandono compuesto por:
+    And 1. Un borde lateral izquierdo en color ámbar/naranja visible en la fila de la tarjeta.
+    And 2. Un badge con ícono de reloj y el texto "🕐 Inactivo X días" en color ámbar debajo del título.
+    And 3. Una tonalidad de fondo sutilmente más cálida que la de las tarjetas activas.
+    And este indicador desaparecerá automáticamente cuando la tarjeta registre cualquier tipo de actividad (edición, movimiento de estado, registro de esfuerzo).
+
+  Scenario: [RENDIMIENTO] Carga Liviana, Reactividad Cruzada y Operaciones Masivas (CA-14)
+    Given la apertura inicial del Hub Ágil con potencialmente cientos de tarjetas
+    Then los datos de la lista principal traerán únicamente campos ligeros (ID, Título, Estado, Asignado, Etiqueta). La Descripción completa, Notas y demás campos pesados solo se cargarán cuando el Líder haga clic en una tarjeta individual.
+    And si un operario mueve una tarjeta en la Pantalla 3 (Kanban), el cambio de estado se reflejará en tiempo real en la Pantalla 10 si el Líder la tiene abierta simultáneamente.
+    And para asignaciones masivas (Ej: asignar 30 tareas a "María" de una vez), existirá un mecanismo de selección múltiple (checkbox) y acción agrupada que se procesará como una sola operación consolidada, no 30 peticiones individuales.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 9 (Gestor de Proyectos) y Pantalla 10 (Hub Ágil).
 

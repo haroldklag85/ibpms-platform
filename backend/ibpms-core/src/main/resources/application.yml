@@ -45,6 +45,21 @@ camunda:
 app:
   storage:
     path: ./uploads
+ibpms:
+  pii:
+    encryption:
+      key: ${IBPMS_PII_ENCRYPTION_KEY:dev-local-aes256-key-32chars!!}
+  clamav:
+    url: ${CLAMAV_URL:http://localhost:3310}
+    timeout-ms: ${CLAMAV_TIMEOUT_MS:5000}
+  webhook:
+    security:
+      mode: ${WEBHOOK_SECURITY_MODE:HMAC}
+      hmac-secret: ${WEBHOOK_HMAC_SECRET:dev-hmac-secret-key-for-webhook-validation}
+    payload:
+      max-size-bytes: ${WEBHOOK_MAX_PAYLOAD_BYTES:10485760}
+    pre-triage:
+      process-definition-key: ${WEBHOOK_PRE_TRIAGE_PROCESS_KEY:Process_PreTriaje_Intake}
   azure:
     storage:
       connection-string: ${AZURE_STORAGE_CONNECTION_STRING:DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;}

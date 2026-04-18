@@ -37,23 +37,9 @@ public class MailboxPollingCron {
             try {
                 log.info("Extrayendo correos de la cuenta: {} usando protocolo {}", mailbox.getAlias(),
                         mailbox.getProtocol());
-                // 1. Ir a Key Vault por el secreto.
-                // 2. Traer token Oauth2
-                // 3. Ejecutar GET /users/{alias}/mailFolders/Inbox/messages
-                // 4. Instanciar el proceso en Camunda.
-
-                // AI Fallback (CA-3) Mock logic
-                boolean isAiFailure = false; // logic checks AI confidence
-                if (isAiFailure) {
-                    log.warn("Falla en la Tarea Cognitiva. Instanciando Proceso Default: {}",
-                            mailbox.getDefaultBpmnProcessId());
-                    // runtimeService.startProcessInstanceByKey(mailbox.getDefaultBpmnProcessId(),
-                    // processVariables);
-                }
-
-                // CRITICO: La regla de oro dicta que en este punto el correo original permanece
-                // INTACTO.
-                // No se hace DELETE ni MOVE en este scheduler.
+                throw new UnsupportedOperationException(
+                        "GAP-1 [US-035]: MS Graph API email extraction — pendiente refinamiento Sprint asignado."
+                );
             } catch (Exception e) {
                 log.error("Fallo durante el polling del buzón {}", mailbox.getAlias(), e);
             }

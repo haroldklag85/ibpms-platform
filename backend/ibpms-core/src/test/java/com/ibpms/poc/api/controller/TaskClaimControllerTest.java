@@ -1,91 +1,96 @@
 package com.ibpms.poc.api.controller;
 
 import com.ibpms.poc.AbstractIntegrationTest;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
+@AutoConfigureMockMvc
 public class TaskClaimControllerTest extends AbstractIntegrationTest {
 
-    @LocalServerPort
-    private int port;
+    @Autowired
+    private MockMvc mockMvc;
 
     @Autowired
     private StringRedisTemplate redisTemplate;
 
     @BeforeEach
-    public void setup() {
-        RestAssured.port = port;
-        // Limpiar caché de redis antes de cada prueba para aislar estado
+    void setUp() {
+        // Limpiar el Redis para asegurar no contaminación entre tests
         redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
     }
 
     @Test
-    public void testTaskClaim_Success() {
-        String taskId = "task-uuid-1234";
-
-        given()
-            .contentType(ContentType.JSON)
-        .when()
-            .post("/api/v1/tasks/{taskId}/claim", taskId)
-        .then()
-            .statusCode(200);
-
-        // Verificar que el candado quedó en Redis
-        String lockVal = redisTemplate.opsForValue().get("lock:task:claim:" + taskId);
-        assertThat(lockVal).isEqualTo("e2e_user");
-    }
-
-    @Test
-    public void testTaskClaim_RaceConditionPrevention() throws InterruptedException {
-        String taskId = "task-uuid-concurrent";
+    void claimTask_ShouldProvideMutualExclusionUnderHighConcurrency() throws InterruptedException {
+        // Arrange
+        String taskId = "task-concurrent-999";
         int numberOfThreads = 10;
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        List<Callable<Integer>> tasks = new ArrayList<>();
+        CountDownLatch latch = new CountDownLatch(numberOfThreads);
+        
+        AtomicInteger successCounter = new AtomicInteger(0);
+        AtomicInteger conflictCounter = new AtomicInteger(0);
 
+        // Act - Simulate 10 simultaneous requests to the same endpoint
         for (int i = 0; i < numberOfThreads; i++) {
-            tasks.add(() -> {
-                Response response = given()
-                        .contentType(ContentType.JSON)
-                        .post("/api/v1/tasks/{taskId}/claim", taskId);
-                return response.statusCode();
+            executorService.execute(() -> {
+                try {
+                    MvcResult result = mockMvc.perform(post("/api/v1/tasks/{taskId}/claim", taskId))
+                                              .andReturn();
+                    int status = result.getResponse().getStatus();
+                    if (status == 200) {
+                        successCounter.incrementAndGet();
+                    } else if (status == 409) {
+                        conflictCounter.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    latch.countDown();
+                }
             });
         }
 
-        List<Future<Integer>> futures = executorService.invokeAll(tasks);
-        
-        int successCount = 0;
-        int conflictCount = 0;
-
-        for (Future<Integer> future : futures) {
-            try {
-                int status = future.get();
-                if (status == 200) successCount++;
-                if (status == 409) conflictCount++;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
+        latch.await();
         executorService.shutdown();
 
-        // Asegurarse de que el candado atómico SETNX realmente hizo su trabajo
-        assertThat(successCount).as("Solo un hilo debe ganar el candado").isEqualTo(1);
-        assertThat(conflictCount).as("El resto de hilos deben ser rechazados").isEqualTo(numberOfThreads - 1);
+        // Assert
+        // Expect EXACTLY 1 successful claim, and EXACTLY N-1 conflicts due to Redis SETNX Distributed Lock
+        assertThat(successCounter.get()).as("Debe haber exactamente un solo reclamo exitoso").isEqualTo(1);
+        assertThat(conflictCounter.get()).as("Deben haber 9 intentos rechazados por candado ocupado").isEqualTo(numberOfThreads - 1);
+        
+        // Verifica que la llave en Redis realmente exista y contenga el valor de e2e_user (mock)
+        String lockValue = redisTemplate.opsForValue().get("lock:task:claim:" + taskId);
+        assertThat(lockValue).isEqualTo("e2e_user");
+    }
+
+    @Test
+    void unclaimTask_ShouldReleaseLockAndSucceed() throws Exception {
+        // Arrange
+        String taskId = "task-to-unclaim";
+        mockMvc.perform(post("/api/v1/tasks/{taskId}/claim", taskId))
+               .andExpect(result -> assertThat(result.getResponse().getStatus()).isEqualTo(200));
+
+        // Verificar que exista
+        assertThat(redisTemplate.hasKey("lock:task:claim:" + taskId)).isTrue();
+
+        // Act
+        mockMvc.perform(post("/api/v1/tasks/{taskId}/unclaim", taskId))
+               .andExpect(result -> assertThat(result.getResponse().getStatus()).isEqualTo(200));
+
+        // Assert - Redis Lock must be gone
+        assertThat(redisTemplate.hasKey("lock:task:claim:" + taskId)).isFalse();
     }
 }

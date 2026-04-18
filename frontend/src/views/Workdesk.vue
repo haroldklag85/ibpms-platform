@@ -92,10 +92,7 @@
       </div>
 
       <div class="flex items-center gap-4">
-        <!-- CA-8 (Feature Toggle Oculto) -->
-        <button v-if="FEATURE_FORCE_QUEUE" @click="attendNextTask" class="px-3 py-1.5 bg-indigo-600 text-white shadow-sm text-sm font-medium hover:bg-indigo-700 rounded transition hidden sm:inline-block">
-          Atender Siguiente
-        </button>
+        <!-- (CA-8 eliminado de aquí, ahora domina el main content) -->
       </div>
     </header>
 
@@ -212,8 +209,27 @@
 
         <div class="flex-1 overflow-y-auto p-card-p no-scrollbar relative min-h-0">
            
+           <!-- CA-08: Modo Atender Siguiente Oculta Grilla -->
+           <div v-if="store.forceRoutingEnabled" class="absolute inset-0 flex flex-col items-center justify-center p-8 bg-white/90 backdrop-blur z-30">
+               <div class="max-w-md w-full text-center">
+                 <div class="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-indigo-100 shadow-inner">
+                    <span class="material-symbols-outlined text-indigo-600 text-5xl">bolt</span>
+                 </div>
+                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Modo Enrutamiento Forzoso</h2>
+                 <p class="text-gray-500 mb-8 font-medium">El selector manual ha sido deshabilitado temporalmente.<br/>Por favor atienda la siguiente tarea crítica en cola.</p>
+                 <button
+                   class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
+                   :disabled="store.isAttending"
+                   @click="onAttendNextAction"
+                 >
+                   <span class="material-symbols-outlined text-2xl" :class="{ 'animate-spin': store.isAttending }">{{ store.isAttending ? 'hourglass_empty' : 'rocket_launch' }}</span>
+                   <span class="text-lg">{{ store.isAttending ? 'Asignando...' : 'Atender Siguiente Tarea' }}</span>
+                 </button>
+               </div>
+           </div>
+
            <!-- CA-12: Empty State Gamificado -->
-           <div v-if="filteredItems.length === 0 && !store.isLoading" class="absolute inset-0 flex flex-col items-center justify-center">
+           <div v-else-if="filteredItems.length === 0 && !store.isLoading" class="absolute inset-0 flex flex-col items-center justify-center">
              <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-green-50 border-2 border-emerald-200 shadow-lg">
                <span class="material-symbols-outlined text-emerald-500 text-5xl">celebration</span>
              </div>
@@ -234,6 +250,7 @@
                    <th class="px-4 py-3 font-bold">Estado</th>
                    <th class="px-4 py-3 font-bold hidden md:table-cell">Avance</th>
                    <th class="px-4 py-3 font-bold hidden md:table-cell">Recurso</th>
+                   <th class="px-4 py-3 font-bold text-center">Acciones</th>
                  </tr>
                </thead>
                <tbody>
@@ -285,6 +302,14 @@
                        </div>
                        <span class="text-xs text-gray-600 truncate max-w-[100px]">{{ task.assignee || 'Sin Asignar' }}</span>
                      </div>
+                   </td>
+                   <!-- Col 6: Acciones (US-002 Task Claim) -->
+                   <td class="px-4 py-3 text-center" @click.stop>
+                     <button @click="onClaimTask(task)" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:transform active:scale-95 text-white font-bold rounded-lg shadow-sm transition-all text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 mx-auto disabled:opacity-50 min-w-[90px]" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)">
+                       <span v-if="isClaiming === (task.unifiedId || task.originalTaskId)" class="material-symbols-outlined text-[14px] animate-spin">refresh</span>
+                       <span v-else class="material-symbols-outlined text-[14px]">pan_tool</span>
+                       {{ isClaiming === (task.unifiedId || task.originalTaskId) ? 'Cargando' : 'Atender' }}
+                     </button>
                    </td>
                  </tr>
                </tbody>
@@ -375,6 +400,81 @@
         </div>
       </aside>
     </main>
+
+    <!-- VIEWER DE TAREA FAKE PARA DEMOSTRAR SKIPEO CA-21 -->
+    <Transition name="toast-slide">
+      <div v-if="openedTask" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-6">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col h-[80vh]">
+          <div class="px-6 py-4 bg-indigo-600 text-white flex items-center justify-between shadow-md">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-200">ID: {{ openedTask.originalTaskId || openedTask.unifiedId }}</p>
+              <h3 class="text-xl font-bold flex items-center gap-2">
+                {{ openedTask.title || 'Formulario de Tarea' }}
+              </h3>
+            </div>
+            <button @click="openedTask = null" class="text-indigo-200 hover:text-white transition rounded p-1"><span class="material-symbols-outlined">close</span></button>
+          </div>
+          <div class="p-8 flex-1 overflow-y-auto bg-gray-50">
+             <div class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center text-gray-500 font-medium h-full flex flex-col items-center justify-center">
+                 <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">design_services</span>
+                 Aquí cargaría el formulario dinámico real de la tarea (US-028/003).<br/>
+                 Simulemos que el cliente no contesta y necesitas hacer skip.
+             </div>
+          </div>
+          <div class="px-6 py-4 border-t border-gray-200 bg-white flex justify-between gap-3 shadow-inner">
+             <button @click="openSkipReason" class="px-5 py-2.5 text-sm font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg shadow-sm transition flex items-center gap-2 border border-amber-200">
+                <span class="material-symbols-outlined text-[18px]">skip_next</span> Skipeo Justificado
+             </button>
+             <button @click="openedTask = null" class="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition">
+                <span class="material-symbols-outlined align-middle mr-1 text-[18px]">done_all</span> Completar Tarea
+             </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- CA-21: Modal para Skipeo Justificado -->
+    <Transition name="toast-slide">
+      <div v-if="showSkipModal" class="fixed inset-0 z-[110] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-amber-50">
+            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <span class="material-symbols-outlined text-amber-500">skip_next</span>
+              Justificar Pausa / Skipeo
+            </h3>
+            <button @click="closeSkipModal" class="text-gray-400 hover:text-gray-600 p-1 bg-white rounded"><span class="material-symbols-outlined">close</span></button>
+          </div>
+          <div class="p-6 space-y-4">
+             <div class="bg-cyan-50 border border-cyan-200 text-cyan-800 p-3 rounded-lg text-[13px] flex gap-3 shadow-sm">
+                <span class="material-symbols-outlined mt-0.5 text-cyan-600">info</span>
+                <p>Estás a punto de saltar una tarea crítica. Esta acción quedará <strong>inmutablemente registrada en el Audit Log</strong> del sistema (NFR-OBS-01).</p>
+             </div>
+             <div>
+               <label class="block text-sm font-bold text-gray-700 mb-1.5">Motivo de salto <span class="text-red-500">*</span></label>
+               <select v-model="skipForm.reason" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition font-medium">
+                 <option value="" disabled>Seleccione un motivo...</option>
+                 <option value="CLIENTE_NO_RESPONDE">El cliente no responde / No está disponible</option>
+                 <option value="REQUIERE_DOCUMENTACION">Requiere documentación adicional externa</option>
+                 <option value="FUERA_DE_AREA">Fuera de mi área de especialidad</option>
+                 <option value="OTRO">Otro (Especificar)</option>
+               </select>
+             </div>
+             <div v-if="skipForm.reason === 'OTRO'">
+               <label class="block text-sm font-bold text-gray-700 mb-1.5">Detalle del motivo <span class="text-red-500">*</span></label>
+               <textarea v-model="skipForm.detail" rows="3" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition placeholder-gray-400" placeholder="Mínimo 10 caracteres explicatorios..."></textarea>
+               <p v-if="skipForm.detail.length > 0 && skipForm.detail.length < 10" class="text-xs text-red-500 mt-1.5 font-medium flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">error</span> El detalle debe tener al menos 10 caracteres.</p>
+             </div>
+          </div>
+          <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+             <button @click="closeSkipModal" class="px-4 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-800 hover:bg-gray-200/60 rounded-lg transition" :disabled="store.isAttending">Cancelar</button>
+             <button @click="submitSkip" :disabled="isSkipFormInvalid || store.isAttending" class="px-5 py-2.5 text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2">
+                <span v-if="store.isAttending" class="material-symbols-outlined animate-spin text-[18px]">refresh</span>
+                Confirmar Salto
+             </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -382,10 +482,12 @@
 defineOptions({ name: 'Workdesk' });
 
 import { ref, watch, onMounted, onUnmounted, defineAsyncComponent, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useWorkdeskStore } from '@/stores/useWorkdeskStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useTimeStore } from '@/stores/timeStore';
 
+const router = useRouter();
 const store = useWorkdeskStore();
 const timeStore = useTimeStore();
 const toastSuccess = ref('');
@@ -404,11 +506,8 @@ watch(() => store.items.length, (newLen) => {
 const isMetricsPanelOpen = ref(true);
 
 // ==========================================
-// Gap CA-8: Toggle oculto Anti Cherry-Picking
+// Búsqueda & Delegación & Filtros Dinámicos (Gaps CA-2, CA-4)
 // ==========================================
-const FEATURE_FORCE_QUEUE = (import.meta as any).env.VITE_FEATURE_FORCE_QUEUE === 'true' || false;
-
-// ── CA-7: Inyección Dinámica ──
 const authStore = useAuthStore();
 const AdminMetricsWidget = defineAsyncComponent(() => import('@/views/admin/Analytics/DashboardBAM.vue'));
 
@@ -506,9 +605,92 @@ const loadData = async () => {
     await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 50, searchQuery.value, delegatedId || undefined, typeFilter.value, slaFilter.value, statusFilter.value);
 };
 
+// ==========================================
+// CA-08/CA-16: Modo Attend Next y Tarea Abierta
+// ==========================================
+const openedTask = ref<any>(null);
+
+const onAttendNextAction = async () => {
+    try {
+        const item = await store.attendNext();
+        toastSuccess.value = `¡Tarea Asignada Atómicamente!`;
+        setTimeout(() => { toastSuccess.value = ''; }, 3000);
+        openedTask.value = item;
+    } catch (err: any) {
+        store.errorMessage = err.message || 'Error asignando siguiente tarea crítica.';
+        store.isError = true;
+    }
+}
+
+const isClaiming = ref<string | null>(null);
+
+const onClaimTask = async (task: any) => {
+    const taskIdString = task.unifiedId || task.originalTaskId;
+    isClaiming.value = taskIdString;
+    try {
+        await store.claimTask(taskIdString);
+        toastSuccess.value = 'Tarea atendida con éxito.';
+        setTimeout(() => { toastSuccess.value = ''; }, 3000);
+        // US-002: Enrutamiento programático a FormGen (usamos vista FormDesigner mock)
+        router.push({ name: 'FormDesigner' });
+    } catch (err: any) {
+        console.error(err);
+        if (err.response?.status === 409) {
+            store.errorMessage = 'Alguien ya ha tomado esta tarea.';
+        } else {
+            store.errorMessage = err.response?.data?.message || 'Error al intentar atender la tarea.';
+        }
+        store.isError = true;
+    } finally {
+        isClaiming.value = null;
+    }
+}
+
 const mockOpenTask = (task: any) => {
-    toastSuccess.value = `Work in progress: Abriendo Tarea ${task.unifiedId}...`;
-    setTimeout(() => { toastSuccess.value = ''; }, 3000);
+    openedTask.value = task;
+}
+
+// ==========================================
+// CA-21: Lógica del Modal de Skipeo Justificado
+// ==========================================
+const showSkipModal = ref(false);
+const skipForm = ref({ reason: '', detail: '' });
+
+const isSkipFormInvalid = computed(() => {
+    if (!skipForm.value.reason) return true;
+    if (skipForm.value.reason === 'OTRO' && skipForm.value.detail.trim().length < 10) return true;
+    return false;
+});
+
+const openSkipReason = () => {
+    skipForm.value = { reason: '', detail: '' };
+    showSkipModal.value = true;
+}
+
+const closeSkipModal = () => {
+    if (store.isAttending) return;
+    showSkipModal.value = false;
+}
+
+const submitSkip = async () => {
+    if (!openedTask.value) return;
+    try {
+        const newItem = await store.skipAndNext(
+            openedTask.value.unifiedId || openedTask.value.originalTaskId, 
+            skipForm.value.reason, 
+            skipForm.value.detail
+        );
+        toastSuccess.value = `Skipeo registrado. Nueva Tarea Asignada.`;
+        setTimeout(() => { toastSuccess.value = ''; }, 3000);
+        
+        // Cerrar modal y abrir la nueva tarea en el fake viewer
+        showSkipModal.value = false;
+        openedTask.value = newItem;
+    } catch (err: any) {
+        store.errorMessage = err.message || 'Error realizando skipeo justificado.';
+        store.isError = true;
+        showSkipModal.value = false;
+    }
 }
 
 const clearToasts = () => {
@@ -587,7 +769,8 @@ const countWarningSLA = () => {
 const INACTIVITY_THRESHOLD_MS = 5 * 60 * 1000;
 let visibilityCleanup: (() => void) | null = null;
 
-onMounted(() => {
+onMounted(async () => {
+    await store.checkForceRouting(); // CA-08: Verificar Feature Toggle
     loadData();
 
     // CA-05/CA-11: Arrancar Heartbeat Store en vez de setInterval

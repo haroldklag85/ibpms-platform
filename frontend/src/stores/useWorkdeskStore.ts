@@ -49,10 +49,65 @@ export const useWorkdeskStore = defineStore('workdesk', {
     _removalTimer: null as ReturnType<typeof setTimeout> | null,
     _refillDebounce: null as ReturnType<typeof setTimeout> | null,
     // CA-15: Contexto de delegación de la última respuesta
-    lastDelegationContext: null as { delegatedUserId: string; delegatedUserDisplayName: string; delegationActive: boolean } | null
+    lastDelegationContext: null as { delegatedUserId: string; delegatedUserDisplayName: string; delegationActive: boolean } | null,
+    // CA-08: Modo Atender Siguiente
+    forceRoutingEnabled: false,
+    isAttending: false
   }),
 
   actions: {
+    // CA-08: Verificar si el Feature Toggle está activado
+    async checkForceRouting() {
+      try {
+        const { data } = await apiClient.get('/workdesk/feature-toggles/FORCE_ROUTING');
+        this.forceRoutingEnabled = data.enabled;
+      } catch (err) {
+        console.warn('CA-08: No se pudo obtener feature toggle', err);
+        this.forceRoutingEnabled = false;
+      }
+    },
+
+    // CA-08 / CA-16: Atender Siguiente Tarea (Skill-Based Routing)
+    async attendNext() {
+      this.isAttending = true;
+      try {
+        const { data } = await apiClient.post('/workdesk/attend-next');
+        return data;
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          throw new Error('No hay tareas disponibles en este momento.');
+        }
+        throw err;
+      } finally {
+        this.isAttending = false;
+      }
+    },
+
+    // US-002: Task Claim UI
+    async claimTask(taskId: string) {
+      try {
+        const { data } = await apiClient.post(`/tasks/${taskId}/claim`);
+        return data;
+      } catch (err: any) {
+        throw err;
+      }
+    },
+
+    // CA-21: Skipeo Justificado
+    async skipAndNext(taskId: string, reason: string, detail?: string) {
+      this.isAttending = true;
+      try {
+        const { data } = await apiClient.post('/workdesk/attend-next/skip', {
+          taskId, skipReason: reason, skipReasonDetail: detail
+        });
+        return data;
+      } catch (err: any) {
+        throw err;
+      } finally {
+        this.isAttending = false;
+      }
+    },
+
     async fetchGlobalInbox(page: number = 0, size: number = 50, search?: string, delegatedToId?: string, typeFilter?: string, slaFilter?: string, statusFilter?: string) {
       this.isLoading = true;
       this.isError = false;

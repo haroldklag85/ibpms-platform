@@ -48,7 +48,7 @@ class KanbanTaskSyncListenerTest {
     }
 
     @Test
-    void whenTaskHasNoAssignee_thenSyncsToCQRS_ButDoesNotBroadcastWebsocket() {
+    void whenTaskHasNoAssignee_thenSyncsToCQRS_AndBroadcastsUpdateWebsocket() {
         // Arrange
         when(projectionRepository.findById(anyString())).thenReturn(Optional.empty());
 
@@ -57,7 +57,10 @@ class KanbanTaskSyncListenerTest {
 
         // Assert
         verify(projectionRepository, times(1)).save(any(WorkdeskProjectionEntity.class));
-        verify(messagingTemplate, never()).convertAndSend(anyString(), anyString());
+        verify(messagingTemplate, times(1)).convertAndSend(
+            eq("/topic/workdesk/default"),
+            any(com.ibpms.poc.application.dto.WsWorkdeskEventDTO.class)
+        );
     }
 
     @Test
@@ -78,14 +81,9 @@ class KanbanTaskSyncListenerTest {
         assertEquals("agent.smith", saved.getAssignee());
 
         // Assert Websocket Broadcast
-        ArgumentCaptor<String> topicCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> payloadCaptor = ArgumentCaptor.forClass(String.class);
-        
-        verify(messagingTemplate, times(1)).convertAndSend(topicCaptor.capture(), payloadCaptor.capture());
-        
-        assertEquals("/topic/workdesk.updates", topicCaptor.getValue());
-        // Assert the specific payload format
-        assertTrue(payloadCaptor.getValue().contains("\"event\": \"TASK_CLAIMED\""));
-        assertTrue(payloadCaptor.getValue().contains(mockTask.getId().toString()));
+        verify(messagingTemplate, times(1)).convertAndSend(
+            eq("/topic/workdesk/default"),
+            any(com.ibpms.poc.application.dto.WsWorkdeskEventDTO.class)
+        );
     }
 }

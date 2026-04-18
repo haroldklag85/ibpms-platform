@@ -1,6 +1,6 @@
 package com.ibpms.poc.application.service.inbox;
 
-import com.ibpms.poc.domain.model.SacMailbox;
+import com.ibpms.core.sac.domain.SacMailbox;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

@@ -263,4 +263,20 @@ describe('useWorkdeskStore.ts - Iteration 79-DEV (CA-06, CA-13, CA-26, CA-27)', 
         expect(store.lastDelegationContext).toBeNull();
     });
 
+    it('Test 28: Ghost Deletion (Shift-Left Test): Inicializar 5 tareas, recibe REMOVE y longitud cae a 4', async () => {
+        for(let i=1; i<=5; i++) {
+            store.items.push({ unifiedId: `TD-${i}`, status: 'ACTIVE', title: `T${i}`, sourceSystem: 'BPMN', originalTaskId: `t${i}`, slaExpirationDate: '', assignee: null, progressPercent: 0, financialImpactHigh: false, typeBadge: '⚡ Flujo' });
+        }
+        expect(store.items.length).toBe(5);
+
+        // Disparamos evento simulando STOMP
+        store._handleWsRemove('TD-3');
+
+        // Consumir timers para forzar _removalTimer y el timer de desvanecimiento visual (-800ms)
+        vi.runAllTimers();
+
+        expect(store.items.length).toBe(4);
+        const deletedItem = store.items.find(i => i.unifiedId === 'TD-3');
+        expect(deletedItem).toBeUndefined();
+    });
 });

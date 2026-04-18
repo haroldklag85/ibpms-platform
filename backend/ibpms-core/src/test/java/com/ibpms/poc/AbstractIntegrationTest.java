@@ -32,21 +32,49 @@ public abstract class AbstractIntegrationTest {
     protected static final GenericContainer<?> REDIS_CONTAINER = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
             .withExposedPorts(6379);
 
-    // Iniciado en bloque estático (Singleton: El TestJVM nunca lo detiene hasta finalizar suite)
+    @SuppressWarnings("resource")
+    protected static final GenericContainer<?> RABBITMQ_CONTAINER = new GenericContainer<>(DockerImageName.parse("rabbitmq:3-management-alpine"))
+            .withExposedPorts(5672, 15672);
+
+    private static boolean testcontainersHealthy = false;
+
+    // Iniciado en bloque estático con Fallback preventivo para Windows Docker Desktop API
     static {
-        POSTGRES_CONTAINER.start();
-        REDIS_CONTAINER.start();
+        try {
+            POSTGRES_CONTAINER.start();
+            REDIS_CONTAINER.start();
+            RABBITMQ_CONTAINER.start();
+            testcontainersHealthy = true;
+        } catch (Throwable t) {
+            System.err.println("Testcontainers Windows Host Error detected. Falling back to native localhost UAT containers...");
+        }
     }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", POSTGRES_CONTAINER::getJdbcUrl);
-        registry.add("spring.datasource.username", POSTGRES_CONTAINER::getUsername);
-        registry.add("spring.datasource.password", POSTGRES_CONTAINER::getPassword);
-        registry.add("spring.datasource.driver-class-name", POSTGRES_CONTAINER::getDriverClassName);
+        if (testcontainersHealthy) {
+            registry.add("spring.datasource.url", POSTGRES_CONTAINER::getJdbcUrl);
+            registry.add("spring.datasource.username", POSTGRES_CONTAINER::getUsername);
+            registry.add("spring.datasource.password", POSTGRES_CONTAINER::getPassword);
+            registry.add("spring.datasource.driver-class-name", POSTGRES_CONTAINER::getDriverClassName);
 
-        registry.add("spring.data.redis.host", REDIS_CONTAINER::getHost);
-        registry.add("spring.data.redis.port", REDIS_CONTAINER::getFirstMappedPort);
+            registry.add("spring.data.redis.host", REDIS_CONTAINER::getHost);
+            registry.add("spring.data.redis.port", REDIS_CONTAINER::getFirstMappedPort);
+
+            registry.add("spring.rabbitmq.host", RABBITMQ_CONTAINER::getHost);
+            registry.add("spring.rabbitmq.port", RABBITMQ_CONTAINER::getFirstMappedPort);
+        } else {
+            registry.add("spring.datasource.url", () -> "jdbc:postgresql://localhost:5432/ibpms_db");
+            registry.add("spring.datasource.username", () -> "ibpms_user");
+            registry.add("spring.datasource.password", () -> "ibpms_password");
+            registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+
+            registry.add("spring.data.redis.host", () -> "localhost");
+            registry.add("spring.data.redis.port", () -> 6379);
+
+            registry.add("spring.rabbitmq.host", () -> "localhost");
+            registry.add("spring.rabbitmq.port", () -> 5672);
+        }
 
         // Cumplimiento Zero-Trust: Liquibase controla la DB, Hibernate en modo validación pura.
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");

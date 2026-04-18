@@ -37,6 +37,13 @@ export const useMenuStore = defineStore('menu', () => {
                         ]
                     },
                     {
+                        title: 'Intake (Pre-Triaje)',
+                        roles: ['Global Admin', 'ROLE_SUPER_ADMIN'],
+                        items: [
+                           { path: '/intake-triage', icon: 'mark_email_unread', label: 'Inbox Intake' }
+                        ]
+                    },
+                    {
                         title: 'Directivo',
                         roles: ['ROLE_SUPER_ADMIN', 'Global Admin'],
                         items: [

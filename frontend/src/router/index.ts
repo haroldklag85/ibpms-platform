@@ -30,6 +30,12 @@ const router = createRouter({
                     component: () => import('@/views/Workdesk.vue'), // Pantalla 1
                 },
                 {
+                    path: 'intake-triage',
+                    name: 'IntakeTriage',
+                    component: () => import('@/views/IntakeTriageView.vue'), // Pantalla 16
+                    meta: { title: 'Triaje Intake', roles: ['Global Admin', 'ROLE_SUPER_ADMIN'] } 
+                },
+                {
                     path: 'kanban',
                     name: 'KanbanBoard',
                     component: () => import('@/views/kanban/KanbanView.vue'),
@@ -113,7 +119,7 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
-            path: '/admin/projects/agile-hub',
+            path: '/admin/projects/agile-hub/:projectId?',
             name: 'AgileHub',
             component: () => import('@/views/admin/ProjectBuilder/AgileHub.vue'),
             meta: { requiresAuth: true }

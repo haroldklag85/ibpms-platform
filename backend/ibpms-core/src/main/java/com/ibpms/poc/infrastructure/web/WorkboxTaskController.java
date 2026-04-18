@@ -35,7 +35,7 @@ public class WorkboxTaskController {
     @PostMapping("/{id}/claim")
     @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
     public ResponseEntity<Void> claimTask(@PathVariable UUID id, Authentication auth) {
-        String username = auth != null ? auth.getName() : "system";
+        String username = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
         taskService.claimTask(id, username);
         return ResponseEntity.ok().build();
     }
@@ -46,7 +46,7 @@ public class WorkboxTaskController {
     @PostMapping("/claim-next")
     @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
     public ResponseEntity<com.ibpms.poc.domain.model.agile.AgileTask> claimNextTask(Authentication auth) {
-        String username = auth != null ? auth.getName() : "system";
+        String username = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
         com.ibpms.poc.domain.model.agile.AgileTask task = taskService.claimNextTask(username);
         return ResponseEntity.ok(task);
     }
@@ -57,7 +57,7 @@ public class WorkboxTaskController {
     @PostMapping("/{id}/rollback-claim")
     @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
     public ResponseEntity<Void> rollbackClaim(@PathVariable UUID id, Authentication auth) {
-        String username = auth != null ? auth.getName() : "system";
+        String username = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
         taskService.rollbackClaim(id, username);
         return ResponseEntity.ok().build();
     }
@@ -68,7 +68,7 @@ public class WorkboxTaskController {
     @PostMapping("/{id}/unclaim")
     @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
     public ResponseEntity<Void> unclaimTask(@PathVariable UUID id, Authentication auth) {
-        String username = auth != null ? auth.getName() : "system";
+        String username = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
         taskService.unclaimTask(id, username);
         return ResponseEntity.ok().build();
     }
@@ -81,7 +81,7 @@ public class WorkboxTaskController {
     public ResponseEntity<Void> saveDraft(@PathVariable UUID id, 
                                           @RequestBody Map<String, Object> payload, 
                                           Authentication auth) {
-        String username = auth != null ? auth.getName() : "system";
+        String username = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
         draftService.saveDraft(id, payload, username);
         return ResponseEntity.ok().build();
     }
@@ -94,7 +94,7 @@ public class WorkboxTaskController {
     public ResponseEntity<Void> completeTask(@PathVariable UUID id, 
                                              @RequestBody Map<String, Object> payload, 
                                              Authentication auth) {
-        String username = auth != null ? auth.getName() : "system";
+        String username = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
         draftService.completeTask(id, payload, username);
         return ResponseEntity.ok().build();
     }

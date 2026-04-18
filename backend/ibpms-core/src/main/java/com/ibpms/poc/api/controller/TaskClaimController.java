@@ -15,38 +15,32 @@ public class TaskClaimController {
 
     private final StringRedisTemplate redisTemplate;
     private final WorkdeskNotificationService notificationService;
+    private final com.ibpms.poc.application.service.AgileTaskService taskService;
 
-    public TaskClaimController(StringRedisTemplate redisTemplate, WorkdeskNotificationService notificationService) {
+    public TaskClaimController(StringRedisTemplate redisTemplate, WorkdeskNotificationService notificationService, com.ibpms.poc.application.service.AgileTaskService taskService) {
         this.redisTemplate = redisTemplate;
         this.notificationService = notificationService;
+        this.taskService = taskService;
     }
 
     /**
      * POST /api/v1/tasks/{taskId}/claim
-     * Reclama una tarea para el usuario autenticado, previniendo condiciones de carrera con Redis SETNX.
+     * Reclama una tarea basándose en DB como fuente de verdad (SKIP LOCKED).
      */
     @PostMapping("/{taskId}/claim")
     public ResponseEntity<?> claimTask(@PathVariable String taskId) {
-        // En producción el assignee y tenantId vienen del JWT Mock (SecurityContext)
-        // Para mock E2E usaremos valores hardcodeados temporales indicados por el Auth Bypass helper
-        String assignee = "e2e_user"; 
-        String tenantId = "tenant_1";
+        String assignee = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
+        String tenantId = com.ibpms.poc.application.util.SecurityContextUtils.getTenantId();
 
-        String lockKey = "lock:task:claim:" + taskId;
-
-        // Intentar adquirir el candado atómico (SETNX) por 2 horas maximo
-        Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(lockKey, assignee, Duration.ofHours(2));
-
-        if (Boolean.TRUE.equals(lockAcquired)) {
-            // [AQUÍ IRÍA LA INYECCIÓN HACIA EL REPOSITORIO DE BASE DE DATOS PARA UPDATES]
-            // taskRepository.assignTask(taskId, assignee);
-
+        try {
+            // Delega en el servicio que usa findByIdForUpdate (CA-11) y guarda en DB con JPA (CA-1)
+            taskService.claimTask(java.util.UUID.fromString(taskId), assignee);
+            
             // Notificar eventos de WebSocket a los demás (US-001)
             notificationService.notifyTaskClaimed(tenantId, taskId, assignee);
 
             return ResponseEntity.ok(Map.of("message", "Tarea reclamada exitosamente.", "taskId", taskId));
-        } else {
-            // Falso significa que la llave ya existe (Race condition ganada por otro)
+        } catch (org.springframework.web.server.ResponseStatusException | org.springframework.dao.OptimisticLockingFailureException ex) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "CONFLICT", "message", "La tarea ya fue reclamada por alguien más."));
         }
@@ -58,16 +52,19 @@ public class TaskClaimController {
      */
     @PostMapping("/{taskId}/unclaim")
     public ResponseEntity<?> unclaimTask(@PathVariable String taskId) {
-        String tenantId = "tenant_1";
-        String lockKey = "lock:task:claim:" + taskId;
-
-        redisTemplate.delete(lockKey);
-
-        // [AQUÍ IRÍA ACTUALIZACIÓN A LA BD PONIENDO ASSIGNEE A NULL]
+        String assignee = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
+        String tenantId = com.ibpms.poc.application.util.SecurityContextUtils.getTenantId();
         
-        notificationService.notifyTaskUnclaimed(tenantId, taskId);
+        try {
+            taskService.unclaimTask(java.util.UUID.fromString(taskId), assignee);
+            
+            notificationService.notifyTaskUnclaimed(tenantId, taskId);
 
-        return ResponseEntity.ok(Map.of("message", "Tarea liberada."));
+            return ResponseEntity.ok(Map.of("message", "Tarea liberada."));
+        } catch (Exception ex) {
+             return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "CONFLICT", "message", "No se puede liberar la tarea."));
+        }
     }
 }
 

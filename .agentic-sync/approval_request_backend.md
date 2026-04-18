@@ -1,17 +1,20 @@
-# Solicitud de Revisión de Arquitectura: Sprint 5 Iteración 4 (Blindaje QA Defensivo)
+# Solicitud de Revisión de Arquitectura: Sprint 5.1 (Remediación Deuda Técnica)
 
 **Fecha/Hora:** 2026-04-18
 **Agente Requirente:** Backend Agent (Antigravity)
 **Estado:** PENDIENTE DE APROBACIÓN LÍDER
-**Rama:** `main`
+**Rama:** `sprint-5/iteracion4`
 
-## Resumen del Plan de Implementación
-Cumpliendo con la directiva de la Iteración 4, he planificado integralmente la fortificación de los componentes interactivos. Se incorporará la gestión de resiliencia y semántica de fallos, abarcando:
-1. Validaciones preventivas de estado y concurrencia optimista (`claim-next` seguro vía `SKIP LOCKED`, Rollbacks, y control multi-sesión restrictivo 409).
-2. Semántica `RFC 7807` a nivel Global para enmascarar excepciones de negocio.
-3. Consolidación tipada del protocolo WebSocket sumado a estrategias de agregación (Buffer/Bulk).
-4. Restricciones analíticas y de parser para inyecciones de XML DMN engañosas, controladas con interceptores y rate limiters (Resilience4j).
+## Resumen del Plan de Implementación (Remediación)
+
+De acuerdo a las directivas operativas de remediación de Cierre de Deuda Técnica (US-002, US-007, US-029), el `implementation_plan` ha sido trazado abordando las fallas de seguridad persistentes e irregularidades en bases de datos:
+
+1. **Security & Context:** Desplazamiento total de identificadores estáticos (`"e2e_user"`, strings hardcodeados) por inyección dinámica desde el `SecurityContextAdapter` (Spring Security), mitigando un inminente IDOR en la gestión DMN de `DmnGovernanceController` y en el `/claim` transversal. Segmentación estricta en el repositorio (Cache y BD) por `tenantId`.
+2. **Data Persistence & Isolation:** Supresión de Repositories "mock" (`MockEventSourcingRepository`) en el componente BFF en pro del uso del Repositorio JPA real. Incorporación del Changelog para `claim_audit_log` enfocado a auditar el `force-unclaim`.
+3. **Data Loss & Sanitization:** Implementación de `PiiSanitizer` (Regex pre-LLM invocation). 
+4. **Resiliency:** Consolidación de un `DmnDraftCleanupScheduler` y enmascaramiento estandarizado `ConstraintViolationException` (Zod Server-side format) a RFC 7807 en el `GlobalExceptionHandler`.
 
 ## Confirmación
-He adoptado estrictamente la política TDD, la segregación CQRS sobre el Audit de Despojos, y el aseguramiento del Quality Gate en Maven.
-Por favor, Arquitecto, revíse el `implementation_plan.md` asociado para confirmar la viabilidad técnica antes del pase a fase EXECUTION.
+No se introducirán Features nuevos. Toda modificación está enfocada 100% a estabilizar las fallas reportadas. Cuento con las tácticas de JUnit (`@WebMvcTest` y `@DataJpaTest`) mapeadas en TDD para la certificación frente al QA.
+
+Por favor, Arquitecto Líder, verifique los detalles técnicos depositados en el `implementation_plan.md` asociado y emita el veredicto para transición a la fase de EXECUTION en el componente Backend.

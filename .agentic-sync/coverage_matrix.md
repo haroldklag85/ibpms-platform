@@ -582,12 +582,12 @@
 | **Vulnerabilidades Críticas Abiertas** | 1 (IDOR tenantId en US-007 + US-027) |
 | **Principal Brecha** | 🟡 QA < 13% global. IDOR en 2 US de IA. US-008 Kanban sigue mock. |
 
-### Brechas Prioritarias (Post Reconciliación PO 2026-04-18T15:25)
+### Brechas Prioritarias (Post Reconciliación PO 2026-04-18T15:25 + Hotfixes Sprint 6.1)
 
 | Prioridad | Brecha | US Afectadas | Acción Recomendada |
 |-----------|--------|-------------|-------------------|
-| 🔴 P0 | IDOR activo — tenantId hardcodeado | US-007, US-027 | Hotfix: extraer tenantId del JWT en `DmnGovernanceController` y `BpmnCopilotController` |
-| 🔴 P0 | `EmailWebhookController` bypasea pipeline de seguridad | US-004 | Redirigir o eliminar el controller legacy |
+| ✅ RESUELTO | IDOR activo — tenantId hardcodeado | US-007, US-027 | Hotfix: extraer tenantId del JWT en `DmnGovernanceController` y `BpmnCopilotController` (Hecho en S6.1) |
+| ✅ RESUELTO | `EmailWebhookController` bypasea pipeline de seguridad | US-004 | Redirigir o eliminar el controller legacy (Deprecado a 410 Gone en S6.1) |
 | 🟠 P1 | US-008 KanbanView con mock hardcodeado | US-008, US-030 | Implementar state machine real |
 | 🟠 P1 | `FormBffCoreService` prefill parcialmente mock | US-029, US-017 | Conectar prefill a BD real |
 | 🟠 P1 | CA-6 US-004: sin RabbitMQ consumer de intake | US-004 | Implementar `@RabbitListener` |
@@ -599,9 +599,8 @@
 
 ---
 
-> **⚡ Próxima acción recomendada (post reconciliación PO 2026-04-18T15:25):**
-> 1. **P0 SEGURIDAD:** Hotfix IDOR en `BpmnCopilotController.java:73` y `DmnGovernanceController` — extraer `tenantId` del JWT
-> 2. **P0 SEGURIDAD:** Deprecar o encadenar `EmailWebhookController` al pipeline de `WebhookIntakeService`
-> 3. **P1 CONECTIVIDAD:** Conectar `FormBffCoreService.generateMegaDtoFormContext()` a datos reales de BD
-> 4. Ejecutar `/reconciliacionCoberturaCa.md` sobre US-034, US-038, US-039, US-043, US-048
-> 5. Iniciar Sprint QA dedicado para las 11 US completadas con 0% QA
+> **⚡ Próxima acción recomendada:**
+> 1. **✅ P0 SEGURIDAD COMPLETADO:** Hotfix IDOR y Webhooks cerrados en Sprint 6.1.
+> 2. **P1 CONECTIVIDAD:** Conectar `FormBffCoreService.generateMegaDtoFormContext()` a datos reales de BD
+> 3. Ejecutar `/reconciliacionCoberturaCa.md` sobre US-034, US-038, US-039, US-043, US-048
+> 4. Iniciar Sprint QA dedicado para las 11 US completadas con 0% QA

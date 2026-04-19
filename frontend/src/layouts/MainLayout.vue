@@ -103,14 +103,19 @@
       <!-- Top Navigation Bar Header Global -->
       <header class="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center px-8 shrink-0 justify-between z-20">
         
-        <!-- Breadcrumbs o Título de Contexto -->
-        <div class="flex items-center gap-4 hidden sm:flex truncate flex-1">
-           <div class="flex items-center text-sm font-medium text-slate-500">
+        <!-- Breadcrumbs Dinámicos (R3-B) -->
+        <div class="flex items-center gap-1 hidden sm:flex truncate flex-1">
+           <router-link to="/" class="flex items-center text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">
               <span class="material-symbols-outlined text-[18px] mr-1">business_center</span>
-              <span>Workspace</span>
-              <span class="mx-2 text-slate-300">/</span>
-              <span class="text-slate-900 font-bold truncate">Enterprise Application</span>
-           </div>
+              <span>iBPMS</span>
+           </router-link>
+           <template v-for="(crumb, idx) in breadcrumbs" :key="idx">
+              <span class="mx-1 text-slate-300 text-xs">/</span>
+              <router-link v-if="idx < breadcrumbs.length - 1" :to="crumb.path" class="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors truncate">
+                {{ crumb.label }}
+              </router-link>
+              <span v-else class="text-sm font-bold text-slate-900 truncate">{{ crumb.label }}</span>
+           </template>
         </div>
 
         <div class="flex items-center gap-4 shrink-0">
@@ -174,15 +179,63 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 
 const router = useRouter();
+const route = useRoute();
 const preferencesStore = usePreferencesStore();
 const authStore = useAuthStore();
 const menuStore = useMenuStore();
+
+// R3-B: Mapa de nombres legibles para breadcrumbs
+const routeNameMap: Record<string, string> = {
+  'workdesk': 'Bandeja Unificada',
+  'inbox': 'Workdesk Legacy',
+  'kanban': 'Tablero Kanban',
+  'intake-triage': 'Inbox Intake',
+  'admin': 'Administración',
+  'modeler': 'Diseñador',
+  'bpmn': 'BPMN Modeler',
+  'dmn': 'DMN Copilot',
+  'forms': 'Formularios',
+  'designer': 'Diseñador Formularios',
+  'integration': 'Integración',
+  'catalog': 'Catálogo Conectores',
+  'builder': 'Constructor API',
+  'mapper': 'Visual Mapper',
+  'dlq': 'DLQ Dashboard',
+  'analytics': 'Análisis',
+  'bam': 'BAM Dashboard',
+  'security': 'Seguridad',
+  'identity': 'Gobernanza Identidades',
+  'incidents': 'Centro Incidentes',
+  'projects': 'Proyectos',
+  'manager': 'Gestor Proyectos',
+  'agile-hub': 'Hub Ágil',
+  'project-builder': 'Project Builder',
+  'intake': 'Intake Manual',
+  'customer360': 'Customer 360',
+  'mailboxes': 'Buzones SAC',
+  'portal': 'Portal',
+  'tracking': 'Seguimiento Cliente',
+  'sgdea': 'SGDEA',
+  'vault': 'Bóveda Documental',
+  'ai': 'Inteligencia Artificial',
+  'prompts': 'Librería Prompts',
+  'pmo': 'PMO',
+  'settings': 'Configuración'
+};
+
+const breadcrumbs = computed(() => {
+  const segments = route.path.split('/').filter(Boolean);
+  return segments.map((seg, idx) => ({
+    label: routeNameMap[seg] || seg.charAt(0).toUpperCase() + seg.slice(1),
+    path: '/' + segments.slice(0, idx + 1).join('/')
+  }));
+});
 
 onMounted(() => {
     // CA-6: Hidratación dinámica del árbol Topológico de Rutas

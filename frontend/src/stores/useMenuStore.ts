@@ -37,19 +37,21 @@ export const useMenuStore = defineStore('menu', () => {
                         ]
                     },
                     {
-                        title: 'Intake (Pre-Triaje)',
+                        title: 'Service Delivery',
                         roles: ['Global Admin', 'ROLE_SUPER_ADMIN'],
                         items: [
-                           { path: '/intake-triage', icon: 'mark_email_unread', label: 'Inbox Intake' }
+                           { path: '/intake-triage', icon: 'mark_email_unread', label: 'Inbox Intake' },
+                           { path: '/admin/intake', icon: 'post_add', label: 'Intake Manual' },
+                           { path: '/admin/customer360', icon: 'person_search', label: 'Customer 360' },
+                           { path: '/portal/tracking', icon: 'track_changes', label: 'Portal Cliente' }
                         ]
                     },
                     {
                         title: 'Directivo',
                         roles: ['ROLE_SUPER_ADMIN', 'Global Admin'],
                         items: [
-                           { path: '/admin/analytics/bam', icon: 'insights', label: 'BAM Analytics' }
-                           /* GAP-4 [US-045]: Oculto hasta Sprint de refinamiento */
-                           /* { path: '/admin/pmo/settings', icon: 'chronic', label: 'Centro PMO / SLA' } */
+                           { path: '/admin/analytics/bam', icon: 'insights', label: 'BAM Analytics' },
+                           { path: '/admin/pmo/settings', icon: 'chronic', label: 'Centro PMO / SLA' }
                         ]
                     },
                     {
@@ -62,16 +64,34 @@ export const useMenuStore = defineStore('menu', () => {
                         ]
                     },
                     {
+                        title: 'Integración',
+                        roles: ['ROLE_SUPER_ADMIN'],
+                        items: [
+                           { path: '/admin/integration/catalog', icon: 'hub', label: 'Catálogo Conectores' },
+                           { path: '/admin/integration/builder', icon: 'extension', label: 'Constructor API' },
+                           { path: '/admin/integration/mapper', icon: 'conversion_path', label: 'Visual Mapper' },
+                           { path: '/admin/integration/dlq', icon: 'queue', label: 'DLQ Dashboard' }
+                        ]
+                    },
+                    {
+                        title: 'Proyectos',
+                        roles: ['ROLE_SUPER_ADMIN', 'Global Admin'],
+                        items: [
+                           { path: '/admin/project-builder', icon: 'construction', label: 'Project Builder' },
+                           { path: '/admin/projects/manager', icon: 'folder_managed', label: 'Gestor Proyectos' },
+                           { path: '/admin/projects/agile-hub', icon: 'speed', label: 'Hub Ágil' }
+                        ]
+                    },
+                    {
                         title: 'Administración',
                         roles: ['ROLE_SUPER_ADMIN'],
                         items: [
                            { path: '/admin/security/identity', icon: 'shield_person', label: 'Seguridad (RBAC)' },
-                           /* GAP-4 [US-045] / GAP-6 [US-021]: Oculto hasta Sprint de refinamiento */
-                           /* { path: '/admin/integration/builder', icon: 'extension', label: 'Extensiones' }, */
-                           { path: '/admin/integration/dlq', icon: 'queue', label: 'DLQ Dashboard' },
-                           { path: '/admin/projects/manager', icon: 'folder_managed', label: 'Gestor Proyectos' },
-                           { path: '/admin/projects/agile-hub', icon: 'speed', label: 'Hub Ágil' },
-                           { path: '/admin/mailboxes', icon: 'mark_email_read', label: 'Buzones SAC' }
+                           { path: '/admin/mailboxes', icon: 'mark_email_read', label: 'Buzones SAC' },
+                           { path: '/admin/incidents', icon: 'warning', label: 'Centro Incidentes' },
+                           { path: '/sgdea/vault', icon: 'inventory_2', label: 'Bóveda Documental' },
+                           { path: '/ai/prompts', icon: 'psychology', label: 'Librería Prompts IA' },
+                           { path: '/admin', icon: 'settings', label: 'Configuración General' }
                         ]
                     }
                  ]

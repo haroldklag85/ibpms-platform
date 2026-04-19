@@ -323,5 +323,174 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
         return [200, { status: 'TIMEBOX_EXTENDED', newDueDate: new Date(Date.now() + 86400000).toISOString() }];
     });
 
+    // ═══════════════════════════════════════════════════════════════════
+    // R2: Mocks Faltantes para Cabecera BpmnDesigner y Pantallas Admin
+    // ═══════════════════════════════════════════════════════════════════
+
+    // Auth: Effective Roles & Token Refresh
+    mock.onGet('/auth/effective-roles').reply(200, ['ROLE_USER', 'ROLE_APPROVER', 'ROLE_SUPER_ADMIN', 'Global Admin']);
+    mock.onPost('/auth/refresh').reply(200, { token: localStorage.getItem('ibpms_token') || 'MOCK_REFRESHED_JWT' });
+
+    // BPMN Process Versions (CA-6)
+    mock.onGet(/\/design\/processes\/.*\/versions/).reply(200, [
+        { version: 3, deployedBy: 'Harolt Gómez', deployedAt: new Date(Date.now() - 86400000).toISOString(), comment: 'Agregado gateway de aprobación' },
+        { version: 2, deployedBy: 'Ana García', deployedAt: new Date(Date.now() - 172800000).toISOString(), comment: 'Refactorización de lanes' },
+        { version: 1, deployedBy: 'System', deployedAt: new Date(Date.now() - 604800000).toISOString(), comment: 'Versión inicial' }
+    ]);
+
+    // BPMN Process Lock (CA-7 / CA-66)
+    mock.onGet(/\/design\/processes\/.*\/lock/).reply(200, { active: false, owner: null, since: null });
+    mock.onPost(/\/design\/processes\/.*\/lock\/heartbeat/).reply(204);
+    mock.onDelete(/\/design\/processes\/.*\/lock\/force/).reply(200, { status: 'UNLOCKED' });
+
+    // BPMN Audit Logs (CA-42)
+    mock.onGet(/\/design\/processes\/.*\/audit-logs/).reply(200, [
+        { action: 'IMPORT_XML', user: 'Harolt Gómez', date: new Date(Date.now() - 3600000).toISOString(), version: 3, details: 'Importación manual desde archivo' },
+        { action: 'VALIDATE', user: 'System', date: new Date(Date.now() - 7200000).toISOString(), version: 3, details: 'Pre-flight completado sin errores' },
+        { action: 'REQUEST_DEPLOY', user: 'Ana García', date: new Date(Date.now() - 14400000).toISOString(), version: 2, details: 'Solicitud enviada a Release Manager' },
+        { action: 'DEPLOY', user: 'Carlos R.', date: new Date(Date.now() - 86400000).toISOString(), version: 2, details: 'Desplegado con estrategia COEXIST' }
+    ]);
+
+    // BPMN Deploy Requests (CA-69)
+    mock.onGet(/\/design\/processes\/.*\/deploy-requests/).reply(200, [
+        { id: 'DR-001', requestedBy: 'Ana García', requestedAt: new Date(Date.now() - 3600000).toISOString(), status: 'PENDING', comment: 'Listo para producción' }
+    ]);
+    mock.onPost(/\/design\/deploy-requests\/.*\/approve/).reply(200, { status: 'APPROVED' });
+    mock.onPost(/\/design\/deploy-requests\/.*\/reject/).reply(200, { status: 'REJECTED' });
+
+    // BPMN Request Deployment (CA-25)
+    mock.onPost(/\/design\/processes\/.*\/request-deployment/).reply(201, { id: 'DR-002', status: 'PENDING' });
+
+    // BPMN Deploy (multipart)
+    mock.onPost('/design/processes/deploy').reply(200, {
+        deployment_id: 'DEP-MOCK-' + Date.now(),
+        version: 4,
+        deployed_at: new Date().toISOString(),
+        generatedRoles: ['Lane_Operador', 'Lane_Supervisor']
+    });
+
+    // BPMN Validate
+    mock.onPost('/design/processes/validate').reply(200, { valid: true, warnings: [], errors: [] });
+
+    // BPMN Catalog & Templates
+    mock.onGet('/design/processes/catalog').reply(200, [
+        { id: 'proc-001', name: 'Crédito de Consumo', version: 3, status: 'ACTIVO', deployedAt: new Date().toISOString() },
+        { id: 'proc-002', name: 'Onboarding Jurídico', version: 1, status: 'BORRADOR', deployedAt: null },
+        { id: 'proc-003', name: 'Reclamación Seguros', version: 2, status: 'ACTIVO', deployedAt: new Date().toISOString() }
+    ]);
+    mock.onGet('/design/processes/templates').reply(200, [
+        { id: 'tpl-credit', name: 'Plantilla Crédito Estándar', xml: null },
+        { id: 'tpl-onboard', name: 'Plantilla Onboarding', xml: null }
+    ]);
+
+    // BPMN Archive (CA-32)
+    mock.onPost(/\/design\/processes\/.*\/archive/).reply(200, { status: 'ARCHIVED' });
+
+    // BPMN Rollback (CA-15)
+    mock.onPost(/\/design\/processes\/.*\/rollback\/.*/).reply(200, { status: 'RESTORED' });
+
+    // BPMN Sandbox Spawn (CA-41) — la ruta real que usa runSandbox()
+    mock.onPost('/design/processes/sandbox-spawn').reply(200, { status: 'SIMULATED', logId: 'SIM-' + Date.now(), executionTime: '1.2s' });
+
+    // BPMN Variables (CA-17 / CA-49)
+    mock.onGet(/\/design\/processes\/.*\/variables/).reply(200, [
+        { name: 'montoSolicitado', type: 'Double', defaultValue: '0.0' },
+        { name: 'clienteId', type: 'String', defaultValue: '' },
+        { name: 'aprobado', type: 'Boolean', defaultValue: 'false' },
+        { name: 'scoreRiesgo', type: 'Integer', defaultValue: '0' }
+    ]);
+
+    // Integration Connectors (CA-45 / CA-49)
+    mock.onGet('/integrations/connectors').reply(200, [
+        { id: 'rest-generic', name: 'REST Genérico', type: 'REST', icon: '🌐' },
+        { id: 'soap-legacy', name: 'SOAP Legacy', type: 'SOAP', icon: '📦' },
+        { id: 'graph-o365', name: 'Microsoft Graph', type: 'GRAPH', icon: '🔷' },
+        { id: 'smtp-email', name: 'Email SMTP', type: 'SMTP', icon: '📧' }
+    ]);
+    mock.onGet(/\/integrations\/connectors\/.*\/schema/).reply(200, {
+        inputs: [{ name: 'url', type: 'string', required: true }, { name: 'method', type: 'enum', values: ['GET', 'POST', 'PUT', 'DELETE'] }],
+        outputs: [{ name: 'responseBody', type: 'object' }, { name: 'statusCode', type: 'integer' }]
+    });
+
+    // External Task Topics (CA-70)
+    mock.onGet('/design/external-task-topics').reply(200, [
+        'topic-email-notification',
+        'topic-document-generation',
+        'topic-score-calculation',
+        'topic-sap-integration'
+    ]);
+
+    // DMN Definitions (Sprint 6.1 CA-12)
+    mock.onGet('/dmn-models/definitions').reply(200, [
+        { id: 'dmn-scoring-v1', name: 'Scoring Crédito', version: 1 },
+        { id: 'dmn-tarifario-v2', name: 'Tarifario Productos', version: 2 },
+        { id: 'dmn-riesgo-v1', name: 'Evaluación de Riesgo', version: 1 },
+        { id: 'dmn-elegibilidad-v3', name: 'Elegibilidad Cliente', version: 3 }
+    ]);
+
+    // Forms (CA-30)
+    mock.onGet('/forms').reply(200, [
+        { id: 'form-001', name: 'Formulario Solicitud Crédito', type: 'MAESTRO', version: 2 },
+        { id: 'form-002', name: 'Formulario Aprobación Rápida', type: 'SIMPLE', version: 1 },
+        { id: 'form-003', name: 'Checklist Documentos', type: 'SIMPLE', version: 1 }
+    ]);
+    mock.onGet(/\/forms\/.*\/versions/).reply(200, [
+        { version: 2, createdAt: new Date().toISOString(), createdBy: 'Harolt Gómez' },
+        { version: 1, createdAt: new Date(Date.now() - 604800000).toISOString(), createdBy: 'System' }
+    ]);
+    mock.onPost(/\/forms\/.*/).reply(200, { status: 'SAVED', version: 3 });
+
+    // Admin Settings — BPMN Complexity Limit (CA-30)
+    mock.onGet('/admin/settings/bpmn-complexity-limit').reply(200, { limit: 100 });
+
+    // Kanban Board (Sprint 6.1 B2)
+    mock.onGet('/kanban/board').reply(200, [
+        {
+            id: 'TODO', title: 'Por Hacer',
+            items: [
+                { id: 'T-001', title: 'Revisar Nómina Enero', status: 'TODO', createdAt: new Date().toISOString(), slaHours: 24, hoursElapsed: 2, assignee: 'Pedro P.', priority: 'MEDIUM' },
+                { id: 'T-005', title: 'Validar Documentos ACME', status: 'TODO', createdAt: new Date().toISOString(), slaHours: 48, hoursElapsed: 0, assignee: null, priority: 'HIGH' }
+            ]
+        },
+        {
+            id: 'IN_PROGRESS', title: 'En Progreso', wipLimit: 3,
+            items: [
+                { id: 'T-002', title: 'Auditoría Legal Incidente', status: 'IN_PROGRESS', createdAt: new Date().toISOString(), slaHours: 72, hoursElapsed: 18, assignee: 'Carlos R.', priority: 'CRITICAL' },
+                { id: 'T-003', title: 'Carga de Documentos', status: 'IN_PROGRESS', createdAt: new Date().toISOString(), slaHours: 24, hoursElapsed: 6, assignee: 'Ana L.', priority: 'LOW' }
+            ]
+        },
+        {
+            id: 'BLOCKED', title: 'Bloqueado',
+            items: []
+        },
+        {
+            id: 'DONE', title: 'Completado',
+            items: [
+                { id: 'T-004', title: 'Envío Tarjeta Crédito', status: 'DONE', createdAt: new Date(Date.now() - 172800000).toISOString(), slaHours: 24, hoursElapsed: 22, assignee: 'María T.', priority: 'MEDIUM' }
+            ]
+        }
+    ]);
+
+    // Data Mappings (CA-68)
+    mock.onPost(/\/design\/processes\/.*\/tasks\/.*\/mappings/).reply(200, { status: 'SAVED' });
+
+    // Incidents DRP (CA-13)
+    mock.onGet('/admin/incidents').reply(200, [
+        { id: 'INC-001', type: 'EXECUTION_ERROR', processKey: 'Crédito Consumo', message: 'NullPointerException en ServiceTask', timestamp: new Date().toISOString(), retryable: true },
+        { id: 'INC-002', type: 'TIMEOUT', processKey: 'Onboarding', message: 'Timer SLA expirado sin resolución', timestamp: new Date().toISOString(), retryable: false }
+    ]);
+    mock.onPost(/\/admin\/incidents\/.*\/retry/).reply(200, { status: 'RETRIED' });
+    mock.onDelete(/\/admin\/incidents\/.*/).reply(200, { status: 'ABORTED' });
+
+    // AI Copilot Session (CA-04)
+    mock.onDelete('/ai/copilot/session').reply(204);
+    mock.onPost(/\/ai\/copilot\/bpmn\/.*/).reply(200, { analysis: 'Cumplimiento ISO 9001 al 92%. Recomendación: agregar gateway de escalamiento.' });
+
+    // Forensics ISO Override (CA-09)
+    mock.onPost('/forensics/iso-override').reply(201, { logged: true });
+
+    // Menu Layout (CA-6 — el endpoint real que MainLayout intentará llamar primero)
+    mock.onGet('/api/v1/menu-layout').reply(404);
+
     return mock;
 };

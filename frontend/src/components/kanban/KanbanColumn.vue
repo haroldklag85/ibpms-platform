@@ -15,6 +15,7 @@
         item-key="id"
         group="kanban"
         ghost-class="opacity-50"
+        :disabled="disabled"
         @change="onChange"
       >
         <template #item="{ element }">
@@ -46,6 +47,10 @@ const props = defineProps({
   items: {
     type: Array as PropType<KanbanItem[]>,
     required: true
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 });
 

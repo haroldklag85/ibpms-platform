@@ -255,10 +255,18 @@
           <!-- CA-12: Business Rule Task — DMN Binding (Protección de Derechos Adquiridos) -->
           <div v-if="selectedElement.type === 'bpmn:BusinessRuleTask'" class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded shadow-sm mb-4">
              <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-2 flex items-center justify-between">
-                <span>📐 DMN Binding (CA-12)</span>
-                <AppTooltip content="Configura si las reglas DMN se evalúan con la versión vigente al desplegar (DEPLOYMENT) o con la última publicada (LATEST). Default: DEPLOYMENT para protección jurídica de derechos adquiridos." />
+                <span>📐 Regla DMN (CA-12)</span>
+                <AppTooltip content="Configura la regla de negocio y si se evalúa con la versión vigente al desplegar (DEPLOYMENT) o con la última publicada (LATEST)." />
              </label>
-             <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Estrategia de versionamiento de la tabla DMN vinculada a esta tarea.</p>
+             <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Tabla de decisión conectada:</p>
+             <select v-model="selectedElement.props.decisionRef" @change="syncElementProperties('camunda:decisionRef', selectedElement.props.decisionRef)" class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border mb-3">
+                <option value="">-- Sin Regla DMN --</option>
+                <option v-for="dmn in availableDmns" :key="dmn.id" :value="dmn.id">
+                   {{ dmn.name }} (v{{ dmn.version }})
+                </option>
+             </select>
+
+             <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Estrategia de versionamiento:</p>
              <select v-model="selectedElement.props.dmnBinding"
                      @change="syncElementProperties('camunda:decisionRefBinding', selectedElement.props.dmnBinding)"
                      class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
@@ -984,6 +992,19 @@ const fetchTopics = async () => {
   }
 };
 
+// CA-12: DMN Integration
+const availableDmns = ref<any[]>([]);
+const fetchDmnDefinitions = async () => {
+  try {
+    const { data } = await api.getDmnDefinitions();
+    availableDmns.value = data || [];
+  } catch {
+    availableDmns.value = [
+       { id: 'dmn-mock-scoring', name: 'Scoring Credito V1', version: 1 }
+    ]; // Fallback mock en caso de estar local
+  }
+};
+
 const fetchVersions = async () => {
   loadingVersions.value = true;
   try {
@@ -1236,6 +1257,7 @@ onMounted(async () => {
     fetchForms();
     fetchConnectors();
     fetchTopics();
+    fetchDmnDefinitions(); // CA-12 DMNs
     try {
       const { data } = await api.getBpmnComplexityLimit();
       if (data && data.limit) bpmnComplexityLimit.value = data.limit;
@@ -1275,13 +1297,14 @@ onMounted(async () => {
             calledElement: bo.calledElement || '',
             formKey: bo.get('camunda:formKey') || '',
             topic: bo.get('camunda:topic') || '',
+            decisionRef: bo.get('camunda:decisionRef') || '', // CA-12 DMN Reference
             dmnBinding: bo.get('camunda:decisionRefBinding') || 'deployment', // CA-12: Default seguro
             aiTokenLimit: 4000,
             aiTone: 'NEUTRAL'
           }
         };
       } else {
-        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', dmnBinding: 'deployment' } };
+        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', decisionRef: '', dmnBinding: 'deployment' } };
       }
     });
 

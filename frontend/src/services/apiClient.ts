@@ -229,12 +229,16 @@ export const api = {
     saveFormVersion: (id: string, payload: any) => apiClient.post(`/forms/${id}`, payload),
 
     // 10. Kanban Status Update (Pantalla 3)
-    updateKanbanStatus: (id: string, status: string) => apiClient.patch(`/kanban/items/${id}/status`, { status }),
+    getKanbanBoard: () => apiClient.get('/kanban/board'),
+    updateKanbanStatus: (id: string, payload: any) => apiClient.patch(`/kanban/items/${id}/status`, payload),
 
     // 10. AI Agents & Copilot (CA-8 US-005)
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),
     analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
     generateDmnRules: (payload: any) => apiClient.post(`/dmn/generate`, payload),
+
+    // Sprint 6.1: DMN Definitions
+    getDmnDefinitions: () => apiClient.get('/dmn-models/definitions'),
 
     // Configuraciones Administrativas (CA-30)
     getBpmnComplexityLimit: () => apiClient.get('/admin/settings/bpmn-complexity-limit'),

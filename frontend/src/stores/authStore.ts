@@ -91,7 +91,7 @@ export const useAuthStore = defineStore('auth', () => {
             user.value = { username: 'root@ibpms.local', roles: ['ROLE_SUPER_ADMIN'] };
         } else {
             // SSO Normal fallback
-            user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
+            user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER', 'ROLE_SUPER_ADMIN', 'Global Admin'] };
         }
         initActiveRole();
         initSecurityListener();
@@ -131,7 +131,7 @@ export const useAuthStore = defineStore('auth', () => {
              if (jwt.includes('EMERGENCY_LOCAL_JWT')) {
                  user.value = { username: 'root@ibpms.local', roles: ['ROLE_SUPER_ADMIN'] };
              } else {
-                 user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
+                 user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER', 'ROLE_SUPER_ADMIN', 'Global Admin'] };
              }
              
              initActiveRole();

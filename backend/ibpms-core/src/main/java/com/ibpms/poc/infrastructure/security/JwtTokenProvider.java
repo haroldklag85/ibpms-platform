@@ -35,15 +35,16 @@ public class JwtTokenProvider {
     }
 
     // ── Generación (útil para tests) ───────────────────────────────────────────
-    public String generateToken(String subject, List<String> roles) {
+    public String generateToken(String subject, List<String> roles, String tenantId) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationSeconds * 1000L);
         return Jwts.builder()
                 .subject(subject)
                 .claim("roles", roles)
+                .claim("tenant_id", tenantId)
                 .issuedAt(now)
                 .expiration(expiry)
-                .signWith(secretKey)
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 

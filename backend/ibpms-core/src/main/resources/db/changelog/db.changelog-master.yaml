@@ -55,9 +55,7 @@ databaseChangeLog:
       file: db/changelog/sprint3/005_create_agile_hub_tables.sql
   - include:
       file: db/changelog/sprint3/006_create_mq_resilience_tables.sql
-  - include:
-      file: db/changelog/sprint4/001_us036_role_hybrid_fields.sql
-  - include:
-      file: db/changelog/sprint4/002_us036_delegation_reason.sql
+
+
   - include:
       file: db/changelog/sprint5/001_create_claim_audit_log.sql

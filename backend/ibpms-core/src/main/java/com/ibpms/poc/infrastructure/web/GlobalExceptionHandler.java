@@ -138,6 +138,18 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /** 403 — Acceso Denegado (Fallos genéricos de @PreAuthorize) */
+    @ApiResponse(responseCode = "403", description = "Acceso denegado: Privilegios insuficientes", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(org.springframework.security.access.AccessDeniedException ex) {
+        ex.printStackTrace(); // TEMP DIAGNOSTIC
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/forbidden")));
+        problem.setTitle("Acceso Denegado");
+        problem.setDetail("No tienes suficientes privilegios para acceder a este recurso.");
+        return problem;
+    }
+
     /** 500 — Error interno genérico (CA-37) */
     @ApiResponse(responseCode = "500", description = "Error interno - Blindado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)

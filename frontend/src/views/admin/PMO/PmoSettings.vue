@@ -170,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import apiClient from '@/services/apiClient';
 
 // ── ESTADO CA-3: Config Horas ──
@@ -188,25 +188,31 @@ const currentTraceId = ref('');
 const submitSlaConfig = async () => {
     isSubmitting.value = true;
     try {
-        // Simulación de llamada Endpoint PMO
-        const response = await apiClient.post('/api/v1/admin/pmo/sla/recalculate', slaForm.value);
+        // Guardar configuración de horas
+        await apiClient.put('/admin/sla/business-hours', {
+            startTime: slaForm.value.startHour,
+            endTime: slaForm.value.endHour,
+            timezone: slaForm.value.timezone,
+            workOnWeekends: false
+        });
         
-        // CA-3: Manejo 202 O interceptación simulada si 'applyRetroactive' es verdadero
-        if (response.status === 202 || slaForm.value.applyRetroactive) {
-            currentTraceId.value = `JOB-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
-            show202Modal.value = true;
-            // Opcional: El backend real devolvería 202. Lo inferimos basado en el request si estamos codeando el happy-path en local.
+        // CA-3: Manejo 202 si 'applyRetroactive' es verdadero
+        if (slaForm.value.applyRetroactive) {
+            const response = await apiClient.post('/admin/sla/apply', null, { 
+                params: { applyRetroactively: true } 
+            });
+            if (response.status === 202) {
+                currentTraceId.value = `JOB-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+                show202Modal.value = true;
+            } else {
+                alert('Horarios actualizados en Memoria Camunda y recálculo iniciado.');
+            }
         } else {
             alert('Horarios actualizados en Memoria Camunda (Solo nuevas Instancias).');
         }
     } catch (e) {
-        // En Fallback Local de UAT
-        if (slaForm.value.applyRetroactive) {
-            currentTraceId.value = `LOCAL_JOB-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
-            show202Modal.value = true;
-        } else {
-            alert('Configuración SLA guardada (Fallback API).');
-        }
+        console.error('Error guardando configuración SLA', e);
+        alert('Ocurrió un error al guardar la configuración SLA.');
     } finally {
         isSubmitting.value = false;
     }
@@ -215,31 +221,70 @@ const submitSlaConfig = async () => {
 // ── ESTADO CA-5: Grid de Feriados ──
 interface HolidayEntity { id: string; date: string; name: string; scope: 'GLOBAL' | 'REGIONAL'; }
 
-const holidays = ref<HolidayEntity[]>([
-    { id: 'HOL1', date: '2026-01-01', name: 'Día de Año Nuevo', scope: 'GLOBAL' },
-    { id: 'HOL2', date: '2026-05-01', name: 'Día del Trabajador (Labor Day)', scope: 'GLOBAL' }
-]);
+const holidays = ref<HolidayEntity[]>([]);
 
 const newHoliday = ref({ date: '', name: '', scope: 'GLOBAL' });
 
-const addHoliday = () => {
+const addHoliday = async () => {
     if (!newHoliday.value.date || !newHoliday.value.name) {
         alert('Complete Fecha (AAAA-MM-DD) y Motivo para asentar el asueto.');
         return;
     }
-    holidays.value.push({
-        id: `HOL_${Date.now()}`,
-        date: newHoliday.value.date,
-        name: newHoliday.value.name,
-        scope: newHoliday.value.scope as 'GLOBAL' | 'REGIONAL'
-    });
-    // Limpiar Input
-    newHoliday.value = { date: '', name: '', scope: 'GLOBAL' };
+    try {
+        const response = await apiClient.post('/admin/sla/holidays', {
+            holidayDate: newHoliday.value.date,
+            description: newHoliday.value.name
+        });
+        holidays.value.push({
+            id: response.data.id,
+            date: response.data.holidayDate,
+            name: response.data.description,
+            scope: newHoliday.value.scope as 'GLOBAL' | 'REGIONAL'
+        });
+        // Limpiar Input
+        newHoliday.value = { date: '', name: '', scope: 'GLOBAL' };
+    } catch (e) {
+        console.error('Error agregando asueto', e);
+        alert('Error al agregar el asueto.');
+    }
 };
 
-const removeHoliday = (id: string) => {
-    holidays.value = holidays.value.filter(h => h.id !== id);
+const removeHoliday = async (id: string) => {
+    try {
+        await apiClient.delete(`/admin/sla/holidays/${id}`);
+        holidays.value = holidays.value.filter(h => h.id !== id);
+    } catch (e) {
+        console.error('Error al eliminar asueto', e);
+        alert('Error al eliminar asueto.');
+    }
 };
+
+onMounted(async () => {
+    try {
+        const resHours = await apiClient.get('/admin/sla/business-hours');
+        if (resHours.data) {
+            slaForm.value.startHour = resHours.data.startTime || '08:00';
+            slaForm.value.endHour = resHours.data.endTime || '18:00';
+            slaForm.value.timezone = resHours.data.timezone || 'America/Bogota';
+        }
+    } catch (e) {
+        console.warn('Fallback business hours', e);
+    }
+
+    try {
+        const resHols = await apiClient.get('/admin/sla/holidays');
+        if (resHols.data) {
+            holidays.value = resHols.data.map((h: any) => ({
+                id: h.id,
+                date: h.holidayDate,
+                name: h.description,
+                scope: 'GLOBAL'
+            }));
+        }
+    } catch (e) {
+        console.warn('Fallback holidays', e);
+    }
+});
 </script>
 
 <style scoped>

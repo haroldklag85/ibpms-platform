@@ -16,7 +16,7 @@ export default defineConfig({
         open: false,
         proxy: {
             '/api': {
-                target: 'http://localhost:8080', // Apuntando al APIM o Backend Spring Boot Local
+                target: 'http://127.0.0.1:8080', // Apuntando al APIM o Backend Spring Boot Local
                 changeOrigin: true,
                 secure: false,
             },

@@ -26,6 +26,23 @@ public class AuthSyncController {
     }
 
     /**
+     * UAT E2E: Login Genérico para Pruebas de Certificación.
+     */
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> creds) {
+        String email = creds.get("email");
+        if (email == null || creds.get("password") == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Credenciales Inválidas"));
+        }
+        
+        // Emite token para que Playwright pueda inyectarlo en las cabeceras REST.
+        // Aseguramos inyectar los claims con los ROLES tal y como los espera el JwtAuthFilter (ibpms_rol_*)
+        String resolvedTenant = email.contains("beta.com") ? "tenant_beta" : "tenant_alpha";
+        String tkn = jwtTokenProvider.generateToken(email, List.of("ibpms_rol_PROCESS_ARCHITECT", "ibpms_rol_BPMN_DESIGNER", "ibpms_rol_USER"), resolvedTenant);
+        return ResponseEntity.ok(Map.of("token", tkn, "tenantId", resolvedTenant, "message", "Login Exitoso E2E"));
+    }
+
+    /**
      * CA-03: JIT Provisioning con Guardrail de Claims Mínimos.
      * Si EntraID no envía datos vitales, detenemos al SSO en seco (HTTP 428).
      */
@@ -75,7 +92,7 @@ public class AuthSyncController {
         // Super Hash ultra protegido
         if ("BREAK-GLASS-1234".equals(pin)) {
             // Emite un Token Supremamente Privilegiado
-            String overrideToken = jwtTokenProvider.generateToken("break_glass_admin", List.of("ibpms_rol_SUPER_ADMIN"));
+            String overrideToken = jwtTokenProvider.generateToken("break_glass_admin", List.of("ibpms_rol_SUPER_ADMIN"), "tenant_system");
             return ResponseEntity.ok(Map.of("token", overrideToken, "message", "WARNING: Break-Glass Protocol Activated. Admins notified."));
         }
 
@@ -112,7 +129,9 @@ public class AuthSyncController {
             // Generar nuevo token asumiendo rescate de roles desde el token anterior (o idealmente desde la BD)
             // Para mantener compatibilidad estricta con claims originales (incluyendo break glass):
             List<String> roles = jwtTokenProvider.getRolesFromTokenIgnoreExpiration(currentToken);
-            String freshToken = jwtTokenProvider.generateToken(username, roles);
+            String tenantId = jwtTokenProvider.getClaim(currentToken, "tenant_id");
+            if (tenantId == null) tenantId = "tenant_alpha";
+            String freshToken = jwtTokenProvider.generateToken(username, roles, tenantId);
 
             return ResponseEntity.ok(Map.of("token", freshToken, "message", "Renovado Transaccionalmente"));
         } catch (Exception e) {

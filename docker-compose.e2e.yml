@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   postgres-e2e:
-    image: postgres:15-alpine
+    image: ankane/pgvector:latest
     environment:
       POSTGRES_DB: ibpms_e2e
       POSTGRES_USER: ibpms

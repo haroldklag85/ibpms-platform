@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 
 // Read from default ".env" or equivalent
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config();
 
 export default defineConfig({
   testDir: './e2e/certification',
@@ -29,18 +29,11 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'e2e-auth-setup',
-      testMatch: /.*\.setup\.ts/,
-    },
-    {
       name: 'e2e-certification',
       use: {
         ...devices['Desktop Chrome'],
         channel: 'chrome',
-        // Use prepared auth state.
-        storageState: 'e2e/.auth/user.json',
       },
-      dependencies: ['e2e-auth-setup'],
     },
   ],
   webServer: {

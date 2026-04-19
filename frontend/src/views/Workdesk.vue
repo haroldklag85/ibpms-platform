@@ -273,6 +273,7 @@
                        <!-- CA-10: Badge de Autorización Tipográfica -->
                        <span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold border border-indigo-200 shrink-0">{{ task.targetRole || 'Rol Operativo' }}</span>
                        
+                       <span v-if="task.variables?.isSlaAtRisk === true && getSlaStatus(task.slaExpirationDate) !== 'EXPIRED'" class="px-1.5 py-0.5 bg-amber-500 text-white rounded text-[9px] font-bold border border-amber-600 shrink-0" title="SLA en Riesgo (<20% restante)">⚠️ SLA en Riesgo</span>
                        <span v-if="task.financialImpactHigh" class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[9px] font-black border border-red-200 shrink-0">🔥 Impacto</span>
                      </div>
                    </td>

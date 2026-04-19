@@ -1,18 +1,23 @@
-# Solicitud de Aprobación QA / SDET (Iteración 3, Sprint 5)
+# 🔍 Solicitud de Aprobación QA — Sprint 5.1
 
-## 📌 Asunto
-Dictamen del Plan de Implementación de Certificación Client-Side (Vitest + Playwright).
+> **De:** Agente SDET / QA Lead
+> **Para:** Arquitecto Líder
+> **Fecha:** 2026-04-18
+> **Sprint:** 5.1 (Remediación y Deuda Técnica)
 
-## 📄 Resumen de la Estrategia Trazada
-Arquitecto, según las directrices establecidas en `handoff_qa_sprint5_iteracion3.md`, he diseñado el marco de cobertura y testing perimetral sobre los componentes desplegados por el agente Frontend en esta iteración.
+## 📋 Resumen del Plan Propuesto
 
-1. **Vitest (Nivel 1):** Validaré los rendering de Roles Condicionales (US-025), el WebDesk Local (US-002), form builders con Zod (US-029) y el NLP panel (US-007) mediante aserciones DOM completas manipulando stores Mockeados (`createTestingPinia()`).
-2. **Playwright (Nivel 2):** Agrego aserciones sobre usabilidad, como virtual scrolling dinámico sin degradación (<200ms) y la conmutación al vuelo de Roles en el App Shell (Isomorfismo Auth).
-3. **SSoT:** Comprometeré el reporte en la `coverage_matrix.md` al culminar mediante la herramienta `.agent/workflows/reconciliacionCoberturaCa.md`.
+Basado en el handoff `handoff_qa_sprint5_1.md`, he elaborado el plan de implementación en mi memoria (Implementation Plan Artifact) para certificar las vulnerabilidades y fallos corregidos en el Backend y documentados en la rama `sprint-5/iteracion4`.
 
-## 🛑 Checkpoint Táctico
-Deseo proceder con la ejecución (modo EXECUTION) empleando Test-Driven Development (TDD) para estos componentes. Solicitud de confirmación formal para no contravenir ningún límite arquitectónico ni funcional establecido en la planimetría de Sprint S5.
+### Alcance Principal:
+1. **Nivel 1 (Componentes & Unit - Vitest):** Aserciones para `TaskPreviewModal` (read-only), `ClaimAuditTrail` (chronological timeline), validación de confirmaciones de liberación en `WorkdeskGrid`, sanitización estricta XSS de DMN y testeo del volcado de estado de interceptor 400 Zod en `useFormStore`.
+2. **Nivel 2 (Flujos E2E - Playwright):** Validación del JWT simulado de claim, fuerza de liberación (force-unclaim 200 vs 403), audit trail y multi-contexts de inquilinos (Tenant Isolation CA-6) para certificar que el hueco IDOR está efectivamente cerrado, junto con visualizaciones de Zod y Rollback (Camunda fail).
 
----
-**Agente: QA Automation / SDET**
-*Esperando Veredicto de la Jefatura Técnica...*
+### Adherencia a Gobernanza:
+- Cumplimiento de la Pirámide ADR-010.
+- Ejecuciones de compuertas `npm run test:unit`, `npm run build` y Playwright antes de emitir commits (Cero-Trust QA).
+- Cierre formal actualizando la `coverage_matrix.md` y emitiendo el acta oficial.
+
+## 🛑 Permiso de Ejecución
+
+Sr. Arquitecto, solicito su visto bueno para proceder al modo `EXECUTION`. ¿Aprueba usted el plan de aserciones propuesto y me autoriza a aplicar TDD/Clean Code para estas certificaciones?

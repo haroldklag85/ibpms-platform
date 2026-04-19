@@ -12,9 +12,11 @@ import java.util.List;
 public class AutoClaimService {
 
     private final TaskService taskService;
+    private final com.ibpms.poc.application.config.ClaimProperties claimProperties;
 
-    public AutoClaimService(TaskService taskService) {
+    public AutoClaimService(TaskService taskService, com.ibpms.poc.application.config.ClaimProperties claimProperties) {
         this.taskService = taskService;
+        this.claimProperties = claimProperties;
     }
 
     /**

@@ -8,7 +8,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibpms.poc.application.service.RejectionLogService;
+import com.ibpms.poc.domain.model.EventType;
+import com.ibpms.poc.domain.model.FormEvent;
+import com.ibpms.poc.domain.port.FormEventRepository;
+
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -20,10 +26,17 @@ public class FormBffCoreService {
 
     private final TaskService taskService;
     private final RejectionLogService rejectionLogService;
+    private final FormEventRepository formEventRepository;
+    private final ObjectMapper objectMapper;
 
-    public FormBffCoreService(TaskService taskService, RejectionLogService rejectionLogService) {
+    public FormBffCoreService(TaskService taskService, 
+                              RejectionLogService rejectionLogService,
+                              FormEventRepository formEventRepository,
+                              ObjectMapper objectMapper) {
         this.taskService = taskService;
         this.rejectionLogService = rejectionLogService;
+        this.formEventRepository = formEventRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -69,7 +82,23 @@ public class FormBffCoreService {
 
         // CA-08: Separación de Responsabilidades y Event Sourcing (CQRS)
         log.info("CQRS (CA-08): Inyectando 'Form_Submitted_Event' inmutable en PostgreSQL. Payload Size: {}", massivePayload.size());
-        // mockEventSourcingRepository.save(new FormSubmittedEvent(taskId, massivePayload));
+        
+        try {
+            String payloadStr = objectMapper.writeValueAsString(massivePayload);
+            FormEvent event = FormEvent.builder()
+                .eventId(java.util.UUID.randomUUID())
+                .eventType(EventType.FORM_SUBMITTED)
+                .taskId(taskId)
+                .processInstanceId(task.getProcessInstanceId())
+                .userId(userId)
+                .payloadJson(payloadStr)
+                .schemaVersion("v1.2.0")
+                .createdAt(Instant.now())
+                .build();
+            formEventRepository.save(event);
+        } catch (Exception e) {
+            throw new IllegalStateException("Error persistiendo evento CQRS", e);
+        }
         
         // CA-09: Exclusión Topológica Estratégica de Camunda Engine
         // TIENE ESTRICTAMENTE PROHIBIDO empujar el Payload masivo.

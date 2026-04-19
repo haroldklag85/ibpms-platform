@@ -5,6 +5,7 @@
 > **Objetivo:** Establecer la infraestructura de comunicación inter-agente, el framework E2E y los Casos de Uso UAT para habilitar la ejecución Dual Track a partir del Sprint 1.  
 > **Fecha de inicio:** 2026-04-11  
 > **Propuesta:** C — Dual Track con Orquestación Multi-Agente (ACP)
+> **Single Source of Truth (SSOT):** [coverage_matrix.md](../../.agentic-sync/coverage_matrix.md) (Estado real del avance del producto)
 
 ---
 

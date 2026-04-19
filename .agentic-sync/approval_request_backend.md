@@ -1,19 +1,20 @@
-# Solicitud de Aprobación - Arquitectura Backend (Sprint 5, Iteración 3)
+# Solicitud de Revisión de Arquitectura: Sprint 5.1 (Remediación Deuda Técnica)
 
-**Remitente:** Agente Backend
-**Destinatario:** Arquitecto Líder
-**Fecha:** 2026-04-18
+**Fecha/Hora:** 2026-04-18
+**Agente Requirente:** Backend Agent (Antigravity)
+**Estado:** PENDIENTE DE APROBACIÓN LÍDER
+**Rama:** `sprint-5/iteracion4`
 
-Estimado Arquitecto Líder,
+## Resumen del Plan de Implementación (Remediación)
 
-Siguiendo el protocolo estricto de inicio de Sprint 5 - Iteración 3, comunico formalmente que he recepcionado el documento `.agentic-sync/handoff_backend_sprint5_iteracion3.md`. He completado la planificación requerida deteniendo la ejecución de código (EXECUTION MODE) de forma preventiva.
+De acuerdo a las directivas operativas de remediación de Cierre de Deuda Técnica (US-002, US-007, US-029), el `implementation_plan` ha sido trazado abordando las fallas de seguridad persistentes e irregularidades en bases de datos:
 
-He generado un **Plan de Implementación** formal detallando las intervenciones requeridas para:
-- Estabilización del broker WebSocket (STOMP) y emisión transaccional (US-002).
-- Rutas seguras de Borrador (debounced) y Complete con barreras de estado y payload RFC 7807 (US-029).
-- Adaptación dinámica GAI/DMN con validadores JSR-380 rigurosos (US-007).
-- Endpoint del BFF Expositivo para la matriz consolidada de roles/widgets (US-025).
+1. **Security & Context:** Desplazamiento total de identificadores estáticos (`"e2e_user"`, strings hardcodeados) por inyección dinámica desde el `SecurityContextAdapter` (Spring Security), mitigando un inminente IDOR en la gestión DMN de `DmnGovernanceController` y en el `/claim` transversal. Segmentación estricta en el repositorio (Cache y BD) por `tenantId`.
+2. **Data Persistence & Isolation:** Supresión de Repositories "mock" (`MockEventSourcingRepository`) en el componente BFF en pro del uso del Repositorio JPA real. Incorporación del Changelog para `claim_audit_log` enfocado a auditar el `force-unclaim`.
+3. **Data Loss & Sanitization:** Implementación de `PiiSanitizer` (Regex pre-LLM invocation). 
+4. **Resiliency:** Consolidación de un `DmnDraftCleanupScheduler` y enmascaramiento estandarizado `ConstraintViolationException` (Zod Server-side format) a RFC 7807 en el `GlobalExceptionHandler`.
 
-Solicito tu Visto Bueno (Go/No-Go) al plan de arquitectura de la Iteración 3. Adjunto encontrarás mi compromiso de operar bajo estrictos flujos TDD, adherirme a las convenciones de Clean Code vigentes y superar el Quality Gate exigido de compilación.
+## Confirmación
+No se introducirán Features nuevos. Toda modificación está enfocada 100% a estabilizar las fallas reportadas. Cuento con las tácticas de JUnit (`@WebMvcTest` y `@DataJpaTest`) mapeadas en TDD para la certificación frente al QA.
 
-Quedo a la espera de tu respuesta, traída a este canal de parte del Humano, para entrar en modo EXECUTION.
+Por favor, Arquitecto Líder, verifique los detalles técnicos depositados en el `implementation_plan.md` asociado y emita el veredicto para transición a la fase de EXECUTION en el componente Backend.

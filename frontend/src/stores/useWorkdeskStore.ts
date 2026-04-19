@@ -52,7 +52,10 @@ export const useWorkdeskStore = defineStore('workdesk', {
     lastDelegationContext: null as { delegatedUserId: string; delegatedUserDisplayName: string; delegationActive: boolean } | null,
     // CA-08: Modo Atender Siguiente
     forceRoutingEnabled: false,
-    isAttending: false
+    isAttending: false,
+    // CA-22: Tabs Workdesk
+    activeView: 'PERSONAL' as 'PERSONAL' | 'POOL',
+    _bulkDebounce: null as ReturnType<typeof setTimeout> | null
   }),
 
   actions: {
@@ -83,14 +86,62 @@ export const useWorkdeskStore = defineStore('workdesk', {
       }
     },
 
-    // US-002: Task Claim UI
+    // Sprint 5.1 CA-5 / CA-9
+    async fetchTaskPreview(taskId: string) {
+        try {
+            const { data } = await apiClient.get(`/workdesk/tasks/${taskId}/preview`);
+            return data;
+        } catch (error) {
+            console.error('Error en fetchTaskPreview', error);
+            throw error;
+        }
+    },
+
+    async fetchAuditTrail(taskId: string) {
+        try {
+            const { data } = await apiClient.get(`/workdesk/tasks/${taskId}/audit-trail`);
+            return data;
+        } catch (error) {
+            console.error('Error en fetchAuditTrail', error);
+            return []; // Fallback empty array
+        }
+    },
+
+    // CA-22: Cambio de Vista Workdesk
+    async setActiveView(view: 'PERSONAL' | 'POOL') {
+        this.activeView = view;
+        await this.fetchGlobalInbox(0, 15);
+    },
+
+    // US-002: Task Claim UI (CA-21 Optimistic UI Rollback)
     async claimTask(taskId: string) {
-      try {
-        const { data } = await apiClient.post(`/tasks/${taskId}/claim`);
-        return data;
-      } catch (err: any) {
-        throw err;
-      }
+        // Snapshot
+        const snapshot = structuredClone(this.items);
+        // Mutar Optimistically
+        this.items = this.items.filter(i => i.unifiedId !== taskId && i.originalTaskId !== taskId);
+        
+        try {
+            const { data } = await apiClient.post(`/tasks/${taskId}/claim`);
+            return data;
+        } catch (err: any) {
+            // Rollback
+            this.items = snapshot;
+            
+            // CA-21 Toast error explícito
+            const body = document.querySelector('body');
+            if (body && !document.getElementById('optimistic-rollback-toast')) {
+                const toast = document.createElement('div');
+                toast.id = 'optimistic-rollback-toast';
+                toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; transition:opacity 0.5s;';
+                toast.innerHTML = '❌ No se pudo reclamar. La tarea ha sido devuelta al pool.';
+                body.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }
+            throw err;
+        }
     },
 
     async unclaimTask(taskId: string) {
@@ -133,7 +184,8 @@ export const useWorkdeskStore = defineStore('workdesk', {
               ...(delegatedToId ? { delegatedToId } : {}),
               ...(typeFilter ? { type: typeFilter } : {}),
               ...(slaFilter ? { slaLevel: slaFilter } : {}),
-              ...(statusFilter ? { status: statusFilter } : {})
+              ...(statusFilter ? { status: statusFilter } : {}),
+              view: this.activeView
             }
         });
         
@@ -207,6 +259,13 @@ export const useWorkdeskStore = defineStore('workdesk', {
                              // Force global fetch si no hay payload en el websocket
                              this.fetchGlobalInbox(this.currentPage, 50, '', '', '', '', 'AVAILABLE');
                          }
+                         break;
+                     case 'TASK_FORCE_UNCLAIMED':
+                         this._handleWsRemove(event.taskId);
+                         this._showForceUnclaimToast();
+                         break;
+                     case 'TASKS_BULK_UPDATED':
+                         this._handleWsBulkUpdate();
                          break;
                      case 'PRIORITY_CHANGE':
                          this._handleWsPriorityChange();
@@ -290,6 +349,29 @@ export const useWorkdeskStore = defineStore('workdesk', {
         
         if (this.items.length === 0 && this.currentPage > 0) {
             await this.fetchGlobalInbox(0, 15);
+        }
+    },
+
+    _handleWsBulkUpdate() {
+        if (this._bulkDebounce) clearTimeout(this._bulkDebounce);
+        this._bulkDebounce = setTimeout(() => {
+            this.fetchGlobalInbox(this.currentPage, 15);
+            this._bulkDebounce = null;
+        }, 300);
+    },
+
+    _showForceUnclaimToast() {
+        const body = document.querySelector('body');
+        if (body && !document.getElementById('force-unclaim-toast')) {
+            const toast = document.createElement('div');
+            toast.id = 'force-unclaim-toast';
+            toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; transition:opacity 0.5s;';
+            toast.innerHTML = '⚠️ Un supervisor ha reasignado tu tarea.';
+            body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
         }
     }
 

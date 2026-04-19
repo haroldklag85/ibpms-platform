@@ -2,6 +2,7 @@ package com.ibpms.poc.infrastructure.web;
 
 import com.ibpms.poc.application.service.AgileTaskService;
 import com.ibpms.poc.application.service.TaskDraftService;
+import com.ibpms.poc.application.util.SecurityContextUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -23,10 +24,16 @@ public class WorkboxTaskController {
 
     private final AgileTaskService taskService;
     private final TaskDraftService draftService;
+    private final com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService notificationService;
+    private final com.ibpms.poc.application.service.ClaimAuditService claimAuditService;
 
-    public WorkboxTaskController(AgileTaskService taskService, TaskDraftService draftService) {
+    public WorkboxTaskController(AgileTaskService taskService, TaskDraftService draftService, 
+                                 com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService notificationService,
+                                 com.ibpms.poc.application.service.ClaimAuditService claimAuditService) {
         this.taskService = taskService;
         this.draftService = draftService;
+        this.notificationService = notificationService;
+        this.claimAuditService = claimAuditService;
     }
 
     /**
@@ -35,8 +42,30 @@ public class WorkboxTaskController {
     @PostMapping("/{id}/claim")
     @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
     public ResponseEntity<Void> claimTask(@PathVariable UUID id, Authentication auth) {
-        String username = auth != null ? auth.getName() : "system";
+        String username = SecurityContextUtils.getAssignee();
         taskService.claimTask(id, username);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * US-002 CA-28: claim-next. Toma la tarea más alta del pool en atomicidad.
+     */
+    @PostMapping("/claim-next")
+    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    public ResponseEntity<com.ibpms.poc.domain.model.agile.AgileTask> claimNextTask(Authentication auth) {
+        String username = SecurityContextUtils.getAssignee();
+        com.ibpms.poc.domain.model.agile.AgileTask task = taskService.claimNextTask(username);
+        return ResponseEntity.ok(task);
+    }
+
+    /**
+     * US-002 CA-21: Rollback Optimistic UI ante fallo asíncrono.
+     */
+    @PostMapping("/{id}/rollback-claim")
+    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    public ResponseEntity<Void> rollbackClaim(@PathVariable UUID id, Authentication auth) {
+        String username = SecurityContextUtils.getAssignee();
+        taskService.rollbackClaim(id, username);
         return ResponseEntity.ok().build();
     }
 
@@ -46,7 +75,7 @@ public class WorkboxTaskController {
     @PostMapping("/{id}/unclaim")
     @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
     public ResponseEntity<Void> unclaimTask(@PathVariable UUID id, Authentication auth) {
-        String username = auth != null ? auth.getName() : "system";
+        String username = SecurityContextUtils.getAssignee();
         taskService.unclaimTask(id, username);
         return ResponseEntity.ok().build();
     }
@@ -59,7 +88,7 @@ public class WorkboxTaskController {
     public ResponseEntity<Void> saveDraft(@PathVariable UUID id, 
                                           @RequestBody Map<String, Object> payload, 
                                           Authentication auth) {
-        String username = auth != null ? auth.getName() : "system";
+        String username = SecurityContextUtils.getAssignee();
         draftService.saveDraft(id, payload, username);
         return ResponseEntity.ok().build();
     }
@@ -72,8 +101,51 @@ public class WorkboxTaskController {
     public ResponseEntity<Void> completeTask(@PathVariable UUID id, 
                                              @RequestBody Map<String, Object> payload, 
                                              Authentication auth) {
-        String username = auth != null ? auth.getName() : "system";
+        String username = SecurityContextUtils.getAssignee();
         draftService.completeTask(id, payload, username);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * US-002 CA-5: Preview Read-Only sin Lock (No requiere estar asignado).
+     */
+    @GetMapping("/{id}/preview")
+    public ResponseEntity<Map<String, Object>> previewTask(@PathVariable UUID id) {
+        com.ibpms.poc.domain.model.agile.AgileTask task = taskService.getTaskById(id);
+        // Exponer solo datos genéricos sin estados alterables:
+        return ResponseEntity.ok(Map.of(
+                "title", task.getTitle(),
+                "description", task.getDescription(),
+                "slaExpiration", task.getSlaExpiration(),
+                "status", task.getStatus(),
+                "assignee", task.getAssignee() != null ? task.getAssignee() : ""
+        ));
+    }
+
+    /**
+     * US-002 CA-8: Force Unclaim de un Supervisor
+     */
+    @PostMapping("/{id}/force-unclaim")
+    @PreAuthorize("hasRole('SUPERVISOR') or hasRole('ADMIN')")
+    public ResponseEntity<Void> forceUnclaim(@PathVariable UUID id) {
+        String supervisor = SecurityContextUtils.getAssignee();
+        String tenantId = SecurityContextUtils.getTenantId();
+        
+        // El taskService libera la tarea igual que un unclaim normal, pero saltando seguridad de current assignee
+        taskService.forceUnclaimTask(id);
+
+        // Emitir audit y notificación
+        claimAuditService.auditForceUnclaim(id, supervisor, tenantId);
+        notificationService.notifyTaskForceUnclaimed(tenantId, id.toString());
+
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * US-002 CA-9: Historial de reclamos (Audit Trail).
+     */
+    @GetMapping("/{id}/audit-trail")
+    public ResponseEntity<java.util.List<com.ibpms.poc.domain.model.audit.ClaimAuditLog>> auditTrail(@PathVariable UUID id) {
+        return ResponseEntity.ok(claimAuditService.getAuditTrail(id));
     }
 }

@@ -3,7 +3,7 @@ import MockAdapter from 'axios-mock-adapter';
 import apiClient from './apiClient';
 import { createPinia, setActivePinia } from 'pinia';
 
-describe('apiClient Interceptors (CA-1 / CA-3)', () => {
+describe('apiClient Interceptors (CA-1 / CA-3 / CA-37)', () => {
 
     let mock: MockAdapter;
 
@@ -26,6 +26,8 @@ describe('apiClient Interceptors (CA-1 / CA-3)', () => {
     afterEach(() => {
         mock.restore();
         vi.restoreAllMocks();
+        const toast = document.getElementById('server-error-toast');
+        if (toast) toast.remove();
     });
 
     it('test_Frontend_Interceptor_EmitsCustomEvent - Envía 500 y emite global-error-dispatch sin usar alert()', async () => {
@@ -53,6 +55,11 @@ describe('apiClient Interceptors (CA-1 / CA-3)', () => {
 
         // Assert (QA-CA-1 Strict): alert() jamaś se debe invocar
         expect(window.alert).not.toHaveBeenCalled();
+
+        // Testing CA-37: Generic Error Toast on 500
+        const toast = document.getElementById('server-error-toast');
+        expect(toast).toBeTruthy();
+        expect(toast?.innerHTML).toContain('Error interno del servidor. Inténtelo más tarde.');
     });
 
     it('test_Frontend_Interceptor_OptimisticLock - Envía 409 y emite optimistic-lock-dispatch', async () => {

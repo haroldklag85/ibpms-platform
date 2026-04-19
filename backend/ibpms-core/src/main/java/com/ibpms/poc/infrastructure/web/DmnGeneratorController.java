@@ -37,13 +37,32 @@ public class DmnGeneratorController {
     ) {}
 
     /**
-     * US-007: Generación de reglas DMN usando adaptador IA delegando a infraestructura.
+     * US-007 CA-24: SLA timeout 15s con CompletableFuture.orTimeout().
      */
     @PostMapping("/generate")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<DmnXmlResponseDto> generateDmn(@Valid @RequestBody GenerateDmnRequest request) {
+    public java.util.concurrent.CompletableFuture<ResponseEntity<DmnXmlResponseDto>> generateDmn(@Valid @RequestBody GenerateDmnRequest request) {
         NlpPromptRequestDto portRequest = new NlpPromptRequestDto(request.prompt());
-        DmnXmlResponseDto response = aiDmnGeneratorPort.generateDmnFromPrompt(portRequest);
-        return ResponseEntity.ok(response);
+        
+        return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            DmnXmlResponseDto response = aiDmnGeneratorPort.generateDmnFromPrompt(portRequest);
+            return ResponseEntity.ok(response);
+        }).orTimeout(15, java.util.concurrent.TimeUnit.SECONDS);
+    }
+
+    /**
+     * US-007 CA-23: Rate Limiting Simulador.
+     */
+    @PostMapping("/simulate")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OPERADOR')")
+    @io.github.resilience4j.ratelimiter.annotation.RateLimiter(name = "dmnSimulator", fallbackMethod = "simulateRateLimitFallback")
+    public ResponseEntity<String> simulateDmn(@RequestBody java.util.Map<String, Object> variables) {
+        return ResponseEntity.ok("Simulación Exitosa"); // Stub Iteration 4
+    }
+
+    public ResponseEntity<String> simulateRateLimitFallback(java.util.Map<String, Object> variables, io.github.resilience4j.ratelimiter.RequestNotPermitted ex) {
+        return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", "60")
+                .body("Rate limit excedido (10 req/min). Por favor espere.");
     }
 }

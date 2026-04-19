@@ -40,4 +40,17 @@ describe('V1.2 QA: Motor Anti-XSS para Inyecciones Cognitivas de DMN (Iteración
         // El tag 'img' podría sobrevivir en versión inofensiva o borrarse, pero 'onerror' es 100% extirpado.
         expect(renderedHtml).toContain('Aprobado <img src="x">');
     });
+
+    it('Bloquea intentos de XSS mediante pseudo-protocolos (javascript:)', async () => {
+        const payload = `<a href="javascript:alert('xss')">Ver detalles</a>`;
+        const wrapper = mount(DmnVariableRenderer, {
+            props: { rawInput: payload }
+        });
+
+        await wrapper.vm.$nextTick();
+        const html = wrapper.find('.dmn-output').html();
+        
+        // El href malicioso debe removerse o invalidarse
+        expect(html).not.toContain('javascript:alert');
+    });
 });

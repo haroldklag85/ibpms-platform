@@ -1,5 +1,6 @@
 package com.ibpms.poc.api.controller;
 
+import com.ibpms.poc.application.util.SecurityContextUtils;
 import com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -7,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -15,38 +17,32 @@ public class TaskClaimController {
 
     private final StringRedisTemplate redisTemplate;
     private final WorkdeskNotificationService notificationService;
+    private final com.ibpms.poc.application.service.AgileTaskService taskService;
 
-    public TaskClaimController(StringRedisTemplate redisTemplate, WorkdeskNotificationService notificationService) {
+    public TaskClaimController(StringRedisTemplate redisTemplate, WorkdeskNotificationService notificationService, com.ibpms.poc.application.service.AgileTaskService taskService) {
         this.redisTemplate = redisTemplate;
         this.notificationService = notificationService;
+        this.taskService = taskService;
     }
 
     /**
      * POST /api/v1/tasks/{taskId}/claim
-     * Reclama una tarea para el usuario autenticado, previniendo condiciones de carrera con Redis SETNX.
+     * Reclama una tarea basándose en DB como fuente de verdad (SKIP LOCKED).
      */
     @PostMapping("/{taskId}/claim")
     public ResponseEntity<?> claimTask(@PathVariable String taskId) {
-        // En producción el assignee y tenantId vienen del JWT Mock (SecurityContext)
-        // Para mock E2E usaremos valores hardcodeados temporales indicados por el Auth Bypass helper
-        String assignee = "e2e_user"; 
-        String tenantId = "tenant_1";
+        String assignee = SecurityContextUtils.getAssignee();
+        String tenantId = SecurityContextUtils.getTenantId();
 
-        String lockKey = "lock:task:claim:" + taskId;
-
-        // Intentar adquirir el candado atómico (SETNX) por 2 horas maximo
-        Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(lockKey, assignee, Duration.ofHours(2));
-
-        if (Boolean.TRUE.equals(lockAcquired)) {
-            // [AQUÍ IRÍA LA INYECCIÓN HACIA EL REPOSITORIO DE BASE DE DATOS PARA UPDATES]
-            // taskRepository.assignTask(taskId, assignee);
-
+        try {
+            // Delega en el servicio que usa findByIdForUpdate (CA-11) y guarda en DB con JPA (CA-1)
+            taskService.claimTask(java.util.UUID.fromString(taskId), assignee);
+            
             // Notificar eventos de WebSocket a los demás (US-001)
             notificationService.notifyTaskClaimed(tenantId, taskId, assignee);
 
             return ResponseEntity.ok(Map.of("message", "Tarea reclamada exitosamente.", "taskId", taskId));
-        } else {
-            // Falso significa que la llave ya existe (Race condition ganada por otro)
+        } catch (org.springframework.web.server.ResponseStatusException | org.springframework.dao.OptimisticLockingFailureException ex) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "CONFLICT", "message", "La tarea ya fue reclamada por alguien más."));
         }
@@ -58,30 +54,18 @@ public class TaskClaimController {
      */
     @PostMapping("/{taskId}/unclaim")
     public ResponseEntity<?> unclaimTask(@PathVariable String taskId) {
-        String tenantId = "tenant_1";
-        String lockKey = "lock:task:claim:" + taskId;
-
-        redisTemplate.delete(lockKey);
-
-        // [AQUÍ IRÍA ACTUALIZACIÓN A LA BD PONIENDO ASSIGNEE A NULL]
+        String assignee = SecurityContextUtils.getAssignee();
+        String tenantId = SecurityContextUtils.getTenantId();
         
-        notificationService.notifyTaskUnclaimed(tenantId, taskId);
+        try {
+            taskService.unclaimTask(java.util.UUID.fromString(taskId), assignee);
+            
+            notificationService.notifyTaskUnclaimed(tenantId, taskId);
 
-        return ResponseEntity.ok(Map.of("message", "Tarea liberada."));
-    }
-}
-
-// Clase de utilidad para el mapa
-class Map {
-    public static java.util.Map<String, String> of(String k1, String v1) {
-        java.util.Map<String, String> m = new java.util.HashMap<>();
-        m.put(k1, v1);
-        return m;
-    }
-    public static java.util.Map<String, String> of(String k1, String v1, String k2, String v2) {
-        java.util.Map<String, String> m = new java.util.HashMap<>();
-        m.put(k1, v1);
-        m.put(k2, v2);
-        return m;
+            return ResponseEntity.ok(Map.of("message", "Tarea liberada."));
+        } catch (Exception ex) {
+             return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "CONFLICT", "message", "No se puede liberar la tarea."));
+        }
     }
 }

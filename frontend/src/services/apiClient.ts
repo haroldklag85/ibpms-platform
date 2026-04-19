@@ -239,6 +239,11 @@ export const api = {
     // Configuraciones Administrativas (CA-30)
     getBpmnComplexityLimit: () => apiClient.get('/admin/settings/bpmn-complexity-limit'),
 
+    // -------------------------------------------------------------
+    // US-048 (Iteración 2): Renovación Silenciosa
+    // -------------------------------------------------------------
+    refreshToken: () => apiClient.post('/auth/refresh'),
+
     // 11. Public Tracking (Pantalla 18)
     getPublicTracking: (trackingCode: string) => apiClient.get(`/public/tracking/${trackingCode}`),
 

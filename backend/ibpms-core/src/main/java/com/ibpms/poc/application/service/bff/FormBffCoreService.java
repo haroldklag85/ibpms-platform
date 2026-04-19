@@ -93,7 +93,7 @@ public class FormBffCoreService {
                 .userId(userId)
                 .payloadJson(payloadStr)
                 .schemaVersion("v1.2.0")
-                .createdAt(Instant.now())
+                .createdAt(java.time.ZonedDateTime.now())
                 .build();
             formEventRepository.save(event);
         } catch (Exception e) {

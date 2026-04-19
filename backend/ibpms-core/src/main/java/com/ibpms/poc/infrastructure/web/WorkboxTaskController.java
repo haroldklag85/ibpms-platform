@@ -111,14 +111,14 @@ public class WorkboxTaskController {
      */
     @GetMapping("/{id}/preview")
     public ResponseEntity<Map<String, Object>> previewTask(@PathVariable UUID id) {
-        com.ibpms.poc.domain.model.agile.AgileTask task = taskService.getTaskById(id);
+        com.ibpms.poc.domain.model.agile.AgileTask task = taskService.getTask(id);
         // Exponer solo datos genéricos sin estados alterables:
         return ResponseEntity.ok(Map.of(
                 "title", task.getTitle(),
                 "description", task.getDescription(),
-                "slaExpiration", task.getSlaExpiration(),
+                "slaExpiration", task.getSlaDeadline(),
                 "status", task.getStatus(),
-                "assignee", task.getAssignee() != null ? task.getAssignee() : ""
+                "assignee", task.getAssigneeIds() != null && !task.getAssigneeIds().isEmpty() ? String.join(",", task.getAssigneeIds()) : ""
         ));
     }
 

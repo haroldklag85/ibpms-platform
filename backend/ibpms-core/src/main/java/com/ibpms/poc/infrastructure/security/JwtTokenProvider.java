@@ -22,7 +22,7 @@ public class JwtTokenProvider {
     @Value("${jwt.secret:changeme-this-must-be-at-least-32-chars!!}")
     private String secretString;
 
-    @Value("${jwt.expiration-seconds:3600}")
+    @Value("${jwt.expiration-seconds:900}")
     private long expirationSeconds;
 
     private SecretKey secretKey;
@@ -81,5 +81,26 @@ public class JwtTokenProvider {
     public String getClaim(String token, String claimKey) {
         Object claim = parseClaims(token).get(claimKey);
         return claim != null ? claim.toString() : null;
+    }
+
+    public String getUsernameFromTokenIgnoreExpiration(String token) {
+        try {
+            return getSubject(token);
+        } catch (ExpiredJwtException e) {
+            return e.getClaims().getSubject();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getRolesFromTokenIgnoreExpiration(String token) {
+        try {
+            return getRoles(token);
+        } catch (ExpiredJwtException e) {
+            Object roles = e.getClaims().get("roles");
+            if (roles instanceof List<?>) {
+                return (List<String>) roles;
+            }
+            return List.of();
+        }
     }
 }

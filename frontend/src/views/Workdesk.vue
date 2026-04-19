@@ -270,6 +270,9 @@
                          <span class="font-semibold text-[#1e1b4b] truncate max-w-[280px] group-hover:text-indigo-600 transition-colors">{{ task.title }}</span>
                          <span class="text-[10px] font-mono text-gray-400">{{ task.originalTaskId }}</span>
                        </div>
+                       <!-- CA-10: Badge de Autorización Tipográfica -->
+                       <span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold border border-indigo-200 shrink-0">{{ task.targetRole || 'Rol Operativo' }}</span>
+                       
                        <span v-if="task.financialImpactHigh" class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[9px] font-black border border-red-200 shrink-0">🔥 Impacto</span>
                      </div>
                    </td>

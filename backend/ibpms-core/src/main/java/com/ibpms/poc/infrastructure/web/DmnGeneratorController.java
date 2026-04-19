@@ -42,8 +42,8 @@ public class DmnGeneratorController {
     @PostMapping("/generate")
     @PreAuthorize("hasRole('ADMIN')")
     public java.util.concurrent.CompletableFuture<ResponseEntity<DmnXmlResponseDto>> generateDmn(@Valid @RequestBody GenerateDmnRequest request) {
-        NlpPromptRequestDto portRequest = new NlpPromptRequestDto(request.prompt());
-        
+        String tenantId = com.ibpms.poc.infrastructure.security.SecurityContextUtils.getTenantId();
+        NlpPromptRequestDto portRequest = new NlpPromptRequestDto(request.prompt(), tenantId, java.util.Collections.emptyMap());
         return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
             DmnXmlResponseDto response = aiDmnGeneratorPort.generateDmnFromPrompt(portRequest);
             return ResponseEntity.ok(response);

@@ -6,6 +6,9 @@ export const useRbacStore = defineStore('rbac', () => {
     // Estado
     const roles = ref([])
     const isLoading = ref(false)
+    // CA-12: Anomalías de Seguridad (Tablero CISO)
+    const anomalies = ref([])
+
     const auditLogs = ref([
         { timestamp: '10:45am', message: 'Administrador añadió a @Pedro al rol VPE_Finanzas' },
         { timestamp: '09:30am', message: 'Al desplegar BPMN_Crédito, el sistema autogeneró el rol PROCESS:Credito:Analista_Riesgos' }
@@ -79,12 +82,39 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
+    // CA-12: Obtener anomalías del Dashboard CISO
+    async function fetchAnomalies() {
+        isLoading.value = true
+        try {
+            const response = await apiClient.get('/api/v1/security/anomalies')
+            anomalies.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo anomalías", error)
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    // CA-12: Resolver anomalía (Investigada/Mitigada/Ignorada)
+    async function resolveAnomaly(id, resolutionStatus) {
+        try {
+            await apiClient.patch(`/api/v1/security/anomalies/${id}/resolve?status=${resolutionStatus}`)
+            await fetchAnomalies() // Refrescar lista
+        } catch (error) {
+            console.error("Error resolviendo anomalía", error)
+            throw error
+        }
+    }
+
     return {
         roles,
+        anomalies,
         auditLogs,
         isLoading,
         globalRoles,
         processRoles,
-        fetchRoles
+        fetchRoles,
+        fetchAnomalies,
+        resolveAnomaly
     }
 })

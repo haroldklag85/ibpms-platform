@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import apiClient from '@/services/apiClient';
 
 export const useAuthStore = defineStore('auth', () => {
     // Estado Reactivo
@@ -49,6 +50,37 @@ export const useAuthStore = defineStore('auth', () => {
         }
     };
 
+    // CA-4011: Token Rotator Interval (Silent Auto-Renewal)
+    let rotatorInterval: ReturnType<typeof setInterval> | null = null;
+
+    const startTokenRotator = () => {
+        if (rotatorInterval) clearInterval(rotatorInterval);
+        // Desencadena cada 10 minutos (600,000 ms) para renovar el JWT antes del TTL de 15mins
+        rotatorInterval = setInterval(async () => {
+            if (!token.value) return;
+            try {
+                const { data } = await apiClient.post('/auth/refresh');
+                if (data && data.token) {
+                    token.value = data.token;
+                    localStorage.setItem('ibpms_token', data.token);
+                    console.info('[AuthStore] CA-4011: Token renovado silenciosamente.');
+                }
+            } catch (error) {
+                console.error('[AuthStore] Falla en la Rotación del Token. Forzando expiración por seguridad (Kill-Switch / Timeout).');
+                alert('Sesión expirada o privilegios revocados. Inicie sesión nuevamente.');
+                logout();
+                window.location.href = '/login';
+            }
+        }, 600000); // 10 Minutos
+    };
+
+    const stopTokenRotator = () => {
+        if (rotatorInterval) {
+            clearInterval(rotatorInterval);
+            rotatorInterval = null;
+        }
+    };
+
     // Funciones de Mutación
     const login = (jwt: string) => {
         token.value = jwt;
@@ -63,6 +95,7 @@ export const useAuthStore = defineStore('auth', () => {
         }
         initActiveRole();
         initSecurityListener();
+        startTokenRotator();
     };
 
     const logout = () => {
@@ -70,6 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
             sseSource.close();
             sseSource = null;
         }
+        stopTokenRotator();
         token.value = null;
         user.value = null;
         effectiveRoles.value = [];

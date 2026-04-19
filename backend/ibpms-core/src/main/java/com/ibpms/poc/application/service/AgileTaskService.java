@@ -123,7 +123,7 @@ public class AgileTaskService {
         }
         task.setStatus("CLAIMED");
         if (task.getAssigneeIds() == null) {
-            task.setAssigneeIds(new java.util.ArrayList<>());
+            task.setAssigneeIds(new java.util.HashSet<>());
         }
         if (!task.getAssigneeIds().contains(claimedBy)) {
             task.getAssigneeIds().add(claimedBy);
@@ -149,7 +149,7 @@ public class AgileTaskService {
         
         task.setStatus("CLAIMED");
         if (task.getAssigneeIds() == null) {
-            task.setAssigneeIds(new java.util.ArrayList<>());
+            task.setAssigneeIds(new java.util.HashSet<>());
         }
         if (!task.getAssigneeIds().contains(claimedBy)) {
             task.getAssigneeIds().add(claimedBy);

@@ -13,6 +13,13 @@ const router = createRouter({
             component: () => import('@/views/Login.vue'),
             meta: { isPublic: true } // CA-5: Exención
         },
+        // --- Bloque Público CA-15 (iForm Anónimo) ---
+        {
+            path: '/public/start/:processKey',
+            name: 'PublicIntake',
+            component: () => import('@/views/public/PublicIntake.vue'),
+            meta: { requiresAuth: false, isPublic: true } // CA-5
+        },
         {
             path: '/',
             component: () => import('@/layouts/MainLayout.vue'),
@@ -69,126 +76,120 @@ const router = createRouter({
                     path: 'admin/modeler/dmn',
                     name: 'DmnIntelligence',
                     component: () => import('@/views/admin/Modeler/DmnIntelligence.vue'),
+                },
+                // --- Pantallas Reinsertadas de Grupos 2 y 3 ---
+                {
+                    path: 'inbox',
+                    name: 'InboxMailbox',
+                    component: () => import('@/views/inbox/InboxView.vue'),
+                    meta: { requiresAuth: true }
+                },
+                // --- Bloque 3: Service Delivery Intake ---
+                {
+                    path: 'admin/intake',
+                    name: 'IntakeManual',
+                    component: () => import('@/views/admin/ServiceDelivery/IntakeManual.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: 'admin/customer360',
+                    name: 'Customer360',
+                    component: () => import('@/views/admin/ServiceDelivery/Customer360.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: 'portal/tracking',
+                    name: 'CustomerPortal',
+                    // Aprobado a ser integrado en MainLayout a petición del usuario.
+                    component: () => import('@/views/public/CustomerPortal.vue'),
+                    meta: { requiresAuth: false, isPublic: true }
+                },
+                // --- Bloque A: Project Builder ---
+                {
+                    path: 'admin/project-builder',
+                    name: 'ProjectBuilder',
+                    component: () => import('@/views/admin/ProjectBuilder/ProjectBuilder.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: 'admin/projects/manager',
+                    name: 'ProjectManager',
+                    component: () => import('@/views/admin/ProjectBuilder/ProjectManager.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: 'admin/projects/agile-hub/:projectId?',
+                    name: 'AgileHub',
+                    component: () => import('@/views/admin/ProjectBuilder/AgileHub.vue'),
+                    meta: { requiresAuth: true }
+                },
+                // --- Bloque C: Dashboards BAM & Analytics ---
+                {
+                    path: 'admin/analytics/bam',
+                    name: 'DashboardBAM',
+                    component: () => import('@/views/admin/Analytics/DashboardBAM.vue'),
+                    meta: { requiresAuth: true }
+                },
+                // --- Bloque F: Integration Hub (Pantalla 11) ---
+                {
+                    path: 'admin/integration/catalog',
+                    name: 'ConnectorCatalog',
+                    component: () => import('@/views/admin/Integration/ConnectorCatalog.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: 'admin/integration/builder',
+                    name: 'ConnectorBuilder',
+                    component: () => import('@/views/admin/Integration/ConnectorBuilder.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: 'admin/integration/mapper',
+                    name: 'VisualMapper',
+                    component: () => import('@/views/admin/Integration/VisualMapper.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: 'admin/integration/dlq',
+                    name: 'DlqDashboard',
+                    component: () => import('@/views/admin/Integration/DlqDashboard.vue'),
+                    meta: { requiresAuth: true, requiredRole: 'ADMIN_IT' }
+                },
+                // --- Bloque G: SGDEA (Pantalla 12) ---
+                {
+                    path: 'sgdea/vault',
+                    name: 'SGD_Vault',
+                    component: () => import('@/views/admin/SGDEA/DocumentGrid.vue'),
+                    meta: { title: 'Bóveda Documental', requiresAuth: true }
+                },
+                {
+                    path: 'ai/prompts',
+                    name: 'AI_PromptLibrary',
+                    component: () => import('@/views/admin/AI/PromptLibrary.vue'),
+                    meta: { title: 'Librería de Prompts', requiresAuth: true, roles: ['Global Admin', 'prompt_engineer'] } 
+                },
+                // --- Epic 13: SacConfigManager (Pantalla 15) ---
+                {
+                    path: 'admin/mailboxes',
+                    name: 'SacConfigManager',
+                    component: () => import('@/views/admin/AI/SacConfigManager.vue'),
+                    meta: { title: 'Buzones Inbound Graph', requiresAuth: true, roles: ['Global Admin'] }
+                },
+                // --- Bloque J: Identity Governance (Pantalla 14) ---
+                {
+                    path: 'admin/security/identity',
+                    name: 'IdentityGovernance',
+                    component: () => import('@/views/admin/Security/IdentityGovernance.vue'),
+                    meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN'] }
+                },
+                // --- Bloque K: PMO SLA Management (Pantalla 19) CA-1 a CA-6 ---
+                {
+                    path: 'admin/pmo/settings',
+                    name: 'PmoSettings',
+                    component: () => import('@/views/admin/PMO/PmoSettings.vue'),
+                    meta: { title: 'Configuración PMO / SLA', requiresAuth: true, roles: ['Global Admin', 'ROLE_SUPER_ADMIN'] }
                 }
             ]
-        },
-        {
-            path: '/inbox',
-            name: 'InboxMailbox',
-            component: () => import('@/views/inbox/InboxView.vue'),
-            meta: { requiresAuth: true }
-        },
-        // --- Bloque Público CA-15 (iForm Anónimo) ---
-        {
-            path: '/public/start/:processKey',
-            name: 'PublicIntake',
-            component: () => import('@/views/public/PublicIntake.vue'),
-            meta: { requiresAuth: false, isPublic: true } // CA-5
-        },
-        // --- Bloque 3: Service Delivery Intake ---
-        {
-            path: '/admin/intake',
-            name: 'IntakeManual',
-            component: () => import('@/views/admin/ServiceDelivery/IntakeManual.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/admin/customer360',
-            name: 'Customer360',
-            component: () => import('@/views/admin/ServiceDelivery/Customer360.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/portal/tracking',
-            name: 'CustomerPortal',
-            component: () => import('@/views/public/CustomerPortal.vue'),
-            // No auth required
-            meta: { requiresAuth: false, isPublic: true } // CA-5
-        },
-        // --- Bloque A: Project Builder ---
-        {
-            path: '/admin/project-builder',
-            name: 'ProjectBuilder',
-            component: () => import('@/views/admin/ProjectBuilder/ProjectBuilder.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/admin/projects/manager',
-            name: 'ProjectManager',
-            component: () => import('@/views/admin/ProjectBuilder/ProjectManager.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/admin/projects/agile-hub/:projectId?',
-            name: 'AgileHub',
-            component: () => import('@/views/admin/ProjectBuilder/AgileHub.vue'),
-            meta: { requiresAuth: true }
-        },
-        // --- Bloque C: Dashboards BAM & Analytics ---
-        {
-            path: '/admin/analytics/bam',
-            name: 'DashboardBAM',
-            component: () => import('@/views/admin/Analytics/DashboardBAM.vue'),
-            meta: { requiresAuth: true }
-        },
-        // --- Bloque F: Integration Hub (Pantalla 11) ---
-        {
-            path: '/admin/integration/catalog',
-            name: 'ConnectorCatalog',
-            component: () => import('@/views/admin/Integration/ConnectorCatalog.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/admin/integration/builder',
-            name: 'ConnectorBuilder',
-            component: () => import('@/views/admin/Integration/ConnectorBuilder.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/admin/integration/mapper',
-            name: 'VisualMapper',
-            component: () => import('@/views/admin/Integration/VisualMapper.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/admin/integration/dlq',
-            name: 'DlqDashboard',
-            component: () => import('@/views/admin/Integration/DlqDashboard.vue'),
-            meta: { requiresAuth: true, requiredRole: 'ADMIN_IT' }
-        },
-        // --- Bloque G: SGDEA (Pantalla 12) ---
-        {
-            path: '/sgdea/vault',
-            name: 'SGD_Vault',
-            component: () => import('@/views/admin/SGDEA/DocumentGrid.vue'),
-            meta: { title: 'Bóveda Documental', requiresAuth: true }
-        },
-        {
-            path: '/ai/prompts',
-            name: 'AI_PromptLibrary',
-            component: () => import('@/views/admin/AI/PromptLibrary.vue'),
-            meta: { title: 'Librería de Prompts', requiresAuth: true, roles: ['Global Admin', 'prompt_engineer'] } // CA-7 Role guard futuro
-        },
-        // --- Epic 13: SacConfigManager (Pantalla 15) ---
-        {
-            path: '/admin/mailboxes',
-            name: 'SacConfigManager',
-            component: () => import('@/views/admin/AI/SacConfigManager.vue'),
-            meta: { title: 'Buzones Inbound Graph', requiresAuth: true, roles: ['Global Admin'] }
-        },
-        // --- Bloque J: Identity Governance (Pantalla 14) ---
-        {
-            path: '/admin/security/identity',
-            name: 'IdentityGovernance',
-            component: () => import('@/views/admin/Security/IdentityGovernance.vue'),
-            meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN'] }
-        },
-        // --- Bloque K: PMO SLA Management (Pantalla 19) CA-1 a CA-6 ---
-        {
-            path: '/admin/pmo/settings',
-            name: 'PmoSettings',
-            component: () => import('@/views/admin/PMO/PmoSettings.vue'),
-            meta: { title: 'Configuración PMO / SLA', requiresAuth: true, roles: ['Global Admin', 'ROLE_SUPER_ADMIN'] }
         }
     ]
 });

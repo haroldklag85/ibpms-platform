@@ -81,8 +81,8 @@ describe('Dead Letter Queue Dashboard (DLQ) CA-8', () => {
         const routerPath = path.resolve(__dirname, '../../../../../src/router/index.ts');
         const routerSource = fs.readFileSync(routerPath, 'utf-8');
 
-        // Regex simple para atrapar la defincion de la ruta dlq
-        const dlqRoutePattern = /path:\s*['"`]\/admin\/integration\/dlq['"`][\s\S]*?meta:\s*\{[^}]*requiredRole:\s*['"`]ADMIN_IT['"`]/g;
+        // Regex simple para atrapar la defincion de la ruta dlq, con o sin slash inicial
+        const dlqRoutePattern = /path:\s*['"`]\/?admin\/integration\/dlq['"`][\s\S]*?meta:\s*\{[^}]*requiredRole:\s*['"`]ADMIN_IT['"`]/;
         expect(dlqRoutePattern.test(routerSource)).toBe(true);
     });
 });

@@ -65,4 +65,23 @@ public class DmnGovernanceUseCase {
         // Asumiendo que V2_DRAFT es una fila aparte. O en este caso (V1 MOC) simplemente lo borramos.
         dmnRepository.delete(dmn);
     }
+
+    /**
+     * Consulta la API REST de Camunda 7 (/engine-rest/decision-definition)
+     * filtrando por tenant y retornando id, key, name, version, deploymentId.
+     */
+    public java.util.List<com.ibpms.poc.application.dto.DmnDefinitionDto> listDeployedDecisionDefinitions(String tenantId) {
+        String url = "http://localhost:8080/engine-rest/decision-definition?tenantIdIn=" + tenantId + "&latestVersion=true";
+        org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+        try {
+            // Se asume el contrato Array JSON nativo de Camunda 7 REST API
+            com.ibpms.poc.application.dto.DmnDefinitionDto[] definitions = restTemplate.getForObject(url, com.ibpms.poc.application.dto.DmnDefinitionDto[].class);
+            if (definitions != null) {
+                return java.util.Arrays.asList(definitions);
+            }
+        } catch (Exception e) {
+            log.error("[DMN CATALOG ERROR] Error invocando al engine-rest: {}", e.getMessage());
+        }
+        return java.util.Collections.emptyList();
+    }
 }

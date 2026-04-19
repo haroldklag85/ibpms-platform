@@ -10,14 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthSyncController {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
-    public AuthSyncController(JwtTokenProvider jwtTokenProvider) {
+    public AuthSyncController(JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -75,5 +80,43 @@ public class AuthSyncController {
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    /**
+     * CA-4011: Rotación Continua Silenciosa (Silent Auto-Renewal).
+     * Refresca el JWT (inmortalizando la sesión) condicionado a que el usuario
+     * mantenga la bandera isActive=true en base de datos. Anula el Fail-Open.
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Token Ausente o Malformado"));
+        }
+        
+        String currentToken = authHeader.substring(7);
+        
+        // Extraemos Username saltándonos la expiración (si estuviera sutilmente vencido)
+        try {
+            String username = jwtTokenProvider.getUsernameFromTokenIgnoreExpiration(currentToken);
+            if (username == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Token Inválido"));
+            }
+
+            // Chequeo Cero-Trust explícito: ¿Sigue el usuario activo en DB?
+            boolean isActive = userRepository.isUserActive(username).orElse(false);
+            if (!isActive) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("code", "PRIVILEGES_CHANGED", "message", "Cuenta Deshabilitada M2M"));
+            }
+
+            // Generar nuevo token asumiendo rescate de roles desde el token anterior (o idealmente desde la BD)
+            // Para mantener compatibilidad estricta con claims originales (incluyendo break glass):
+            List<String> roles = jwtTokenProvider.getRolesFromTokenIgnoreExpiration(currentToken);
+            String freshToken = jwtTokenProvider.generateToken(username, roles);
+
+            return ResponseEntity.ok(Map.of("token", freshToken, "message", "Renovado Transaccionalmente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Token Defectuoso o Rechazado"));
+        }
     }
 }

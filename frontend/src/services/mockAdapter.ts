@@ -5,20 +5,10 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
     // Activamos el mock global sobre la instancia de apiClient
     const mock = new MockAdapter(apiClient, { delayResponse: 600 });
 
-    // 0. Workdesk / Bandeja de Tareas
-    mock.onGet('/tareas/candidatas').reply(200, [
-        { id: 'T-002', name: 'Auditoría Legal Incidente', processDefinitionId: 'LEGAL-AUDIT', priority: 80, created: new Date().toISOString() },
-        { id: 'T-003', name: 'Carga de Documentos', processDefinitionId: 'SGDEA-INBOX', priority: 40, created: new Date().toISOString() }
-    ]);
-
-    mock.onGet('/tareas').reply(200, [
-        { id: 'T-001', name: 'Revisar Nómina Enero', processDefinitionId: 'HR-PAYROLL', priority: 30, created: new Date().toISOString() },
-        { id: 'T-004', name: 'Envío Tarjeta Crédito', processDefinitionId: 'REQ-CARD', priority: 20, created: new Date().toISOString() }
-    ]);
-
-    mock.onPost(/\/tareas\/.*\/claim/).reply(200, { status: 'CLAIMED' });
-    mock.onPost(/\/tareas\/.*\/unclaim/).reply(200, { status: 'UNCLAIMED' });
-    mock.onPost(/\/tareas\/.*\/reassign/).reply(200, { status: 'REASSIGNED' });
+    // [REMOVIDO PARA UAT REAL J-04] 0. Workdesk / Bandeja de Tareas
+    /* mock.onGet('/tareas/candidatas').reply(200, [ ... ]); */
+    /* mock.onGet('/tareas').reply(200, [ ... ]); */
+    /* mock.onPost(/\/tareas\/.*\/claim/).reply( ... ); */
 
     mock.onGet('/users/peers').reply(200, [
         { id: 'user-001', name: 'Ana García', role: 'Operador SAC' },
@@ -31,16 +21,10 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
         return [200, { correctedText: `[IA Regenerado vía Mock: ${delta}]` }];
     });
 
-    // US-002: Workbox Tasks
-    mock.onPost(/\/api\/v1\/workbox\/tasks\/.*\/claim/).reply((config) => {
-        if (config.url?.includes('LOCKED')) {
-            return [403, { code: 'TASK_LOCKED', message: 'La tarea está asignada a otro operador' }];
-        }
-        return [200, { status: 'CLAIMED' }];
-    });
-    mock.onPost(/\/api\/v1\/workbox\/tasks\/.*\/complete/).reply(() => [200, { status: 'COMPLETED' }]);
-    mock.onPut(/\/api\/v1\/workbox\/tasks\/.*\/draft/).reply(() => [200, { status: 'DRAFT_SAVED' }]);
-
+    // [REMOVIDO PARA UAT REAL J-04] US-002: Workbox Tasks
+    /* mock.onPost(/\/api\/v1\/workbox\/tasks\/.*\/claim/).reply(...) */
+    /* mock.onPost(/\/api\/v1\/workbox\/tasks\/.*\/complete/).reply(...) */
+    /* mock.onPut(/\/api\/v1\/workbox\/tasks\/.*\/draft/).reply(...) */
     // US-007: DMN Generate
     mock.onPost('/api/v1/dmn/generate').reply(() => {
         return [200, { dmnXml: "<?xml version='1.0'?><definitions id='dmn_mock'></definitions>", explanation: "Reglas autogeneradas vía Mock" }];
@@ -102,10 +86,8 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
         }];
     });
 
-    // 9. Kanban Status Update (Pantalla 3)
-    mock.onPatch(/\/kanban\/items\/.*\/status/).reply(() => {
-        return [200, { status: 'UPDATED' }];
-    });
+    // [REMOVIDO PARA UAT REAL J-04] 9. Kanban Status Update (Pantalla 3)
+    /* mock.onPatch(/\/kanban\/items\/.*\/status/).reply(...) */
 
     // 10. AI DMN Translate (Pantalla 4/15)
     mock.onPost('/ai/dmn/translate').reply(() => {
@@ -256,47 +238,8 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
         return [201, payload];
     });
 
-    // 15. Pantalla 1 (Epic 1 - Hybrid Workdesk US-001)
-    mock.onGet(/\/workdesk\/global-inbox/).reply((config) => {
-        // Obtenemos param de url o simulamos
-        // const params = config.params || { page: 0, size: 50 };
-        return [200, {
-            content: [
-                {
-                    unifiedId: "BPMN-9a8b7c",
-                    sourceSystem: "BPMN",
-                    originalTaskId: "9a8b7c",
-                    title: "Aprobación Legal: Contrato ACME",
-                    slaExpirationDate: new Date(Date.now() - 3600000).toISOString(), // Expirado hace 1 hr
-                    status: "URGENT",
-                    assignee: "maria.lopez"
-                },
-                {
-                    unifiedId: "KANBAN-3f2d1a",
-                    sourceSystem: "KANBAN",
-                    originalTaskId: "3f2d1a",
-                    title: "Desarrollo de API Rest",
-                    slaExpirationDate: new Date(Date.now() + 86400000).toISOString(), // Vence en 1 día
-                    status: "PENDING",
-                    assignee: "carlos.dev"
-                },
-                {
-                    unifiedId: "BPMN-1c2b3a",
-                    sourceSystem: "BPMN",
-                    originalTaskId: "1c2b3a",
-                    title: "Revisión Técnica - Componente UI",
-                    slaExpirationDate: new Date(Date.now() + 604800000).toISOString(), // Vence en 7 días
-                    status: "NORMAL",
-                    assignee: null
-                }
-            ],
-            pageable: {
-                pageNumber: 0,
-                pageSize: 50,
-                totalElements: 3
-            }
-        }];
-    });
+    // [REMOVIDO PARA UAT REAL J-04] 15. Pantalla 1 (Epic 1 - Hybrid Workdesk US-001)
+    /* mock.onGet(/\/workdesk\/global-inbox/).reply(...) */
 
     // 16. Sprint 5 - Iteración 2: Timebox & SLA
     mock.onGet(/\/api\/v1\/agile\/tasks\/.*\/sla-log/).reply(() => {
@@ -443,33 +386,8 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
     // Admin Settings — BPMN Complexity Limit (CA-30)
     mock.onGet('/admin/settings/bpmn-complexity-limit').reply(200, { limit: 100 });
 
-    // Kanban Board (Sprint 6.1 B2)
-    mock.onGet('/kanban/board').reply(200, [
-        {
-            id: 'TODO', title: 'Por Hacer',
-            items: [
-                { id: 'T-001', title: 'Revisar Nómina Enero', status: 'TODO', createdAt: new Date().toISOString(), slaHours: 24, hoursElapsed: 2, assignee: 'Pedro P.', priority: 'MEDIUM' },
-                { id: 'T-005', title: 'Validar Documentos ACME', status: 'TODO', createdAt: new Date().toISOString(), slaHours: 48, hoursElapsed: 0, assignee: null, priority: 'HIGH' }
-            ]
-        },
-        {
-            id: 'IN_PROGRESS', title: 'En Progreso', wipLimit: 3,
-            items: [
-                { id: 'T-002', title: 'Auditoría Legal Incidente', status: 'IN_PROGRESS', createdAt: new Date().toISOString(), slaHours: 72, hoursElapsed: 18, assignee: 'Carlos R.', priority: 'CRITICAL' },
-                { id: 'T-003', title: 'Carga de Documentos', status: 'IN_PROGRESS', createdAt: new Date().toISOString(), slaHours: 24, hoursElapsed: 6, assignee: 'Ana L.', priority: 'LOW' }
-            ]
-        },
-        {
-            id: 'BLOCKED', title: 'Bloqueado',
-            items: []
-        },
-        {
-            id: 'DONE', title: 'Completado',
-            items: [
-                { id: 'T-004', title: 'Envío Tarjeta Crédito', status: 'DONE', createdAt: new Date(Date.now() - 172800000).toISOString(), slaHours: 24, hoursElapsed: 22, assignee: 'María T.', priority: 'MEDIUM' }
-            ]
-        }
-    ]);
+    // [REMOVIDO PARA UAT REAL J-04] Kanban Board (Sprint 6.1 B2)
+    /* mock.onGet('/kanban/board').reply(...) */
 
     // Data Mappings (CA-68)
     mock.onPost(/\/design\/processes\/.*\/tasks\/.*\/mappings/).reply(200, { status: 'SAVED' });

@@ -20,9 +20,32 @@ export const useFormStore = defineStore('formStore', () => {
     const retryCount = ref(0);
     const idempotencyKey = ref('');
 
-    const setFormData = (data: Record<string, any>) => {
+    const setFormData = (data: Record<string, any>, taskId?: string) => {
         formData.value = { ...data };
         isDirty.value = true;
+        
+        // Amnesia Cero: Persistir draft en local
+        if (taskId) {
+            localStorage.setItem(`ibpms_draft_${taskId}`, JSON.stringify(data));
+        }
+    };
+
+    const loadLocalDraft = (taskId: string) => {
+        const draft = localStorage.getItem(`ibpms_draft_${taskId}`);
+        if (draft) {
+            try {
+                formData.value = JSON.parse(draft);
+                isDirty.value = true;
+                return true;
+            } catch(e) {
+                console.error('Error loading draft', e);
+            }
+        }
+        return false;
+    };
+
+    const clearLocalDraft = (taskId: string) => {
+        localStorage.removeItem(`ibpms_draft_${taskId}`);
     };
 
     const validateForm = (schema: z.ZodSchema): boolean => {
@@ -72,6 +95,7 @@ export const useFormStore = defineStore('formStore', () => {
             // Envío normal o Retry
             await api.completeTask(taskId, payload, config);
             
+            clearLocalDraft(taskId);
             isDirty.value = false;
             formData.value = {};
             validationErrors.value = {};
@@ -136,6 +160,7 @@ export const useFormStore = defineStore('formStore', () => {
         try {
             const config = { headers: { 'Idempotency-Key': idempotencyKey.value || ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2)) } };
             await api.completeTask(pendingSubmitDraft.taskId, pendingSubmitDraft.payload, config);
+            clearLocalDraft(pendingSubmitDraft.taskId);
             isDirty.value = false;
             formData.value = {};
         } catch (e) {
@@ -158,6 +183,8 @@ export const useFormStore = defineStore('formStore', () => {
         retryCount,
         idempotencyKey,
         setFormData,
+        loadLocalDraft,
+        clearLocalDraft,
         validateForm,
         saveDraft,
         submitForm,

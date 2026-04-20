@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col pt-2 bg-white">
+  <div class="h-full flex flex-col pt-2 bg-white" data-testid="kanban-board">
     <div class="flex justify-between items-center mb-6 px-6">
       <div class="flex items-center space-x-3">
          <h2 class="text-2xl font-bold text-gray-800">Tablero Kanban Interactivo</h2>
@@ -9,7 +9,11 @@
         <button @click="loadBoard" class="px-4 py-2 bg-ibpms text-white rounded text-sm hover:bg-gray-800 shadow-sm transition">
           🔄 Recargar Tablero
         </button>
-        <span v-if="syncStatus" class="text-xs text-ibpms-brand font-medium animate-pulse">{{ syncStatus }}</span>
+        <div class="sync-indicator text-sm font-medium" data-testid="kanban-sync-status">
+          <span v-if="syncStatus === 'saving'" class="text-yellow-600 animate-pulse">⏳ Guardando...</span>
+          <span v-else-if="syncStatus === 'ok'" class="text-green-600">✅ OK</span>
+          <span v-else-if="syncStatus === 'error'" class="text-red-600">❌ Error</span>
+        </div>
       </div>
     </div>
 
@@ -37,10 +41,10 @@
        <div class="bg-white p-6 rounded shadow-xl w-96">
           <h3 class="text-lg font-bold text-red-600 mb-2">Bloquear Tarea</h3>
           <p class="text-sm text-gray-600 mb-4">Por favor, especifica el Motivo de Bloqueo para la tarea <strong>{{ taskToBlock?.title }}</strong>.</p>
-          <textarea v-model="blockReasonInput" rows="3" class="w-full border rounded p-2 text-sm mb-4" placeholder="Ej: Faltan documentos del cliente..."></textarea>
+          <textarea v-model="blockReasonInput" rows="3" class="w-full border rounded p-2 text-sm mb-4" placeholder="Describe el motivo del bloqueo..." data-testid="block-reason-input"></textarea>
           <div class="flex justify-end space-x-2">
-             <button @click="cancelBlock" class="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm">Cancelar</button>
-             <button @click="confirmBlock" :disabled="!blockReasonInput.trim()" class="px-4 py-2 bg-red-600 text-white rounded text-sm disabled:opacity-50">Bloquear</button>
+             <button @click="cancelBlock" class="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm" data-testid="cancel-block">Cancelar</button>
+             <button @click="confirmBlock" :disabled="!blockReasonInput.trim()" class="px-4 py-2 bg-red-600 text-white rounded text-sm disabled:opacity-50" data-testid="confirm-block">Bloquear</button>
           </div>
        </div>
     </div>
@@ -77,11 +81,16 @@ const handleItemMove = async ({ item, newStatus }: { item: any, newStatus: strin
   }
 
   try {
-    syncStatus.value = `Guardando ${item.id}...`;
+    syncStatus.value = 'saving';
     await kanbanStore.moveTask(item.id, newStatus);
-    syncStatus.value = `OK`;
-  } catch(error) {
-    syncStatus.value = `Error`;
+    syncStatus.value = 'ok';
+  } catch(error: any) {
+    syncStatus.value = 'error';
+    if (error.response?.status === 403) {
+      alert('Esta tarea está completada y no puede modificarse');
+    } else if (error.response?.status === 400) {
+      alert('Transición de estado no válida');
+    }
   } finally {
     setTimeout(() => syncStatus.value = '', 2000);
   }
@@ -91,11 +100,11 @@ const confirmBlock = async () => {
     if (!taskToBlock.value || !blockReasonInput.value.trim()) return;
     
     try {
-        syncStatus.value = `Bloqueando ${taskToBlock.value.id}...`;
+        syncStatus.value = 'saving';
         await kanbanStore.moveTask(taskToBlock.value.id, 'BLOCKED', blockReasonInput.value.trim());
-        syncStatus.value = `Bloqueado OK`;
+        syncStatus.value = 'ok';
     } catch(error) {
-        syncStatus.value = `Error al bloquear`;
+        syncStatus.value = 'error';
     } finally {
         showBlockModal.value = false;
         taskToBlock.value = null;

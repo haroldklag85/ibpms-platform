@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col flex-shrink-0 w-80 bg-gray-50 rounded-lg shadow-inner overflow-hidden border border-gray-200">
+  <div class="flex flex-col flex-shrink-0 w-80 bg-gray-50 rounded-lg shadow-inner overflow-hidden border border-gray-200" :data-testid="'kanban-column-' + column.id">
     
     <!-- Column Header -->
     <div class="px-4 py-3 flex justify-between items-center border-b" :class="column.color">
@@ -15,7 +15,7 @@
         item-key="id"
         group="kanban"
         ghost-class="opacity-50"
-        :disabled="disabled"
+        :disabled="disabled || column.id === 'DONE'"
         @change="onChange"
       >
         <template #item="{ element }">

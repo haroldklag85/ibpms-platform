@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white p-3 rounded shadow-sm border border-gray-200 cursor-move hover:shadow-md transition group">
+  <div class="bg-white p-3 rounded shadow-sm border border-gray-200 transition group" 
+       :class="{'cursor-move hover:shadow-md': item.status !== 'DONE', 'done-readonly': item.status === 'DONE'}"
+       :data-testid="'kanban-card-' + item.id">
     <div class="flex justify-between items-start mb-2">
       <span class="text-xs font-bold px-2 py-1 rounded" :class="priorityClass">
         {{ priorityLabel }}
@@ -41,3 +43,11 @@ const priorityLabel = computed(() => {
   return props.item.priority > 50 ? 'URG' : 'NORM';
 });
 </script>
+
+<style scoped>
+.done-readonly {
+  opacity: 0.7;
+  cursor: default;
+  pointer-events: none; /* Previene drag manual e interactividades extras */
+}
+</style>

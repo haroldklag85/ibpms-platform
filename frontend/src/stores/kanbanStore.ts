@@ -33,36 +33,11 @@ export const useKanbanStore = defineStore('kanban', {
             this.error = null;
             try {
                 const { data } = await api.getKanbanBoard();
-                this.columns = data;
+                this.columns = data.columns || data;
             } catch (error: any) {
-                // If it fails (like offline/mock behavior in local dev without live backend), prepopulate a mock to prevent UI crash
                 console.error("Error fetching board", error);
-                this.columns = [
-                    {
-                        id: 'TODO',
-                        title: 'Por Hacer',
-                        items: [
-                             { id: 'TASK-100', title: 'Revisión Documental', status: 'TODO', createdAt: new Date().toISOString(), slaHours: 24, hoursElapsed: 2, assignee: 'Ana Torres' }
-                        ]
-                    },
-                    {
-                        id: 'IN_PROGRESS',
-                        title: 'En Progreso',
-                        items: [],
-                        wipLimit: 3
-                    },
-                    {
-                        id: 'BLOCKED',
-                        title: 'Bloqueado',
-                        items: []
-                    },
-                    {
-                        id: 'DONE',
-                        title: 'Completado',
-                        items: []
-                    }
-                ];
                 this.error = "Error al conectar con el servidor.";
+                throw error;
             } finally {
                 this.loading = false;
             }

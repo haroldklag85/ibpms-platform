@@ -230,7 +230,7 @@ export const api = {
 
     // 10. Kanban Status Update (Pantalla 3)
     getKanbanBoard: () => apiClient.get('/kanban/board'),
-    updateKanbanStatus: (id: string, payload: any) => apiClient.patch(`/kanban/items/${id}/status`, payload),
+    updateKanbanStatus: (id: string, payload: any) => apiClient.patch(`/kanban/${id}/state`, payload),
 
     // 10. AI Agents & Copilot (CA-8 US-005)
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),

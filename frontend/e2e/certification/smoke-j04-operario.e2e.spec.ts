@@ -7,8 +7,9 @@ test.describe('Smoke J-04: Operario MVP — Happy Path', () => {
     // Timeout extendido para backend real
     test.setTimeout(90000);
     
-    // 1. Login real
+    // 2. Operario inicia sesión
     await page.goto('/login');
+    await page.click('[data-testid="break-glass-toggle"]');
     await page.fill('[data-testid="email-input"]', USERS.OPERARIO_ALPHA.email);
     await page.fill('[data-testid="password-input"]', USERS.OPERARIO_ALPHA.password);
     await page.click('[data-testid="login-submit"]');

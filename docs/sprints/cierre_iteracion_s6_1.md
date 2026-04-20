@@ -15,9 +15,9 @@ Se ejecutó la ceremonia de auditoría táctica de seguridad y estabilización d
 | :------- | :------------- | :----------------- | :-------------------- |
 | **B1** | `idor-copilot.e2e.spec.ts` | ✅ PASS (2/2) | Aislamiento cruzado tenant estabilizado |
 | **B2** | `webhook-legacy.e2e.spec.ts` | ✅ PASS (2/2) | Respuesta 410 procesada correctamenta |
-| **B3** | `smoke-j04-operario.e2e.spec.ts`| ❌ FAIL (0/1) | Selector/Timeout en la pantalla de Login |
-| **B4** | `b20-dmn-dropdown.e2e.spec.ts` | ❌ FAIL (0/1) | Selector/Timeout en la pantalla de Login |
-| **B5** | `kanban-board.e2e.spec.ts` | ❌ FAIL (0/1) | Selector/Timeout en la pantalla de Login |
+| **B3** | `smoke-j04-operario.e2e.spec.ts`| ❌ FAIL (0/1) | Selector/Timeout en la pantalla de Workdesk (`task-list`) |
+| **B4** | `b20-dmn-dropdown.e2e.spec.ts` | ❌ FAIL (0/1) | Selector/Timeout en la pantalla de Canvas (`bpmn-canvas`) |
+| **B5** | `kanban-board.e2e.spec.ts` | ❌ FAIL (0/1) | Selector/Timeout en la pantalla Kanban (`kanban-card`) |
 
 ## Remediación de Vulnerabilidades (P0) Cerradas
 
@@ -31,8 +31,8 @@ Se ejecutó la ceremonia de auditoría táctica de seguridad y estabilización d
 
 ## Deuda Técnica Residual Adquirida
 
-Dado el fallo generalizado de timeouts E2E por locators de UI del flujo principal (Login), originaste la deuda técnica para **Sprint 6.2 / Iteration 45**:
-1. **[OBS-FRONT]** Reparar selectores (pe. placeholder de correo en vistas operativas) en Playwright de cara a certificar B3, B4 y B5 en el MVP.
+Dado el fallo de los E2E en las pantallas subsecuentes al Login (Workdesk, Kanban, Canvas), originaste la deuda técnica para **Sprint 6.2 / Iteration 45**:
+1. **[OBS-FRONT]** Garantizar que el Backend esté inyectando correctamente la data semilla (Workdesk tasks, Kanban UI items, y DMNs generadas) durante los resets E2E para certificar los Lotes B3, B4 y B5 completos en Playwright.
 
 ---
 **Firmado Electrónicamente:**

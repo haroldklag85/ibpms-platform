@@ -8,6 +8,7 @@ test.describe('B-20: Dropdown DMN en BpmnDesigner', () => {
     
     // Login como Arquitecto
     await page.goto('/login');
+    await page.click('[data-testid="break-glass-toggle"]');
     await page.fill('[data-testid="email-input"]', USERS.ARQUITECTO_ALPHA.email);
     await page.fill('[data-testid="password-input"]', USERS.ARQUITECTO_ALPHA.password);
     await page.click('[data-testid="login-submit"]');

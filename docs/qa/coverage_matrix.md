@@ -13,9 +13,9 @@
 | **US-041 (Copilot)** | CU-JSEC-02b | idor-copilot.e2e.spec.ts | Tenant Alpha destruye su sesión | ✅ PASS | Lote 1 (HTML Rep) |
 | **US-017 (Webhook)** | CU-JSEC-17 | webhook-legacy.e2e.spec.ts | POST retorna 410 Gone | ✅ PASS | Lote 2 (HTML Rep) |
 | **US-017 (Webhook)** | CU-JSEC-17b | webhook-legacy.e2e.spec.ts | POST sin state retorna 410 Gone | ✅ PASS | Lote 2 (HTML Rep) |
-| **US-B20 (DMN)** | B-20 (Dropdown) | b20-dmn-dropdown.e2e.spec.ts | Seleccionar BusinessRuleTask muestra dropdown DMN | ❌ FAIL | Timeout/Selector |
-| **US-027 (Kanban)** | OBS-1 / B5 | kanban-board.e2e.spec.ts | Operario interactua con Kanban real | ❌ FAIL | Timeout/Selector |
-| **US-J04 (Workdesk)** | CU-J04-01→06 | smoke-j04-operario.e2e.spec.ts | Login → Workdesk → Claim... → Desaparición | ❌ FAIL | Timeout/Selector |
+| **US-B20 (DMN)** | B-20 (Dropdown) | b20-dmn-dropdown.e2e.spec.ts | Seleccionar BusinessRuleTask muestra dropdown DMN | ❌ FAIL | Timeout en bpmn-canvas |
+| **US-027 (Kanban)** | OBS-1 / B5 | kanban-board.e2e.spec.ts | Operario interactua con Kanban real | ❌ FAIL | Timeout en kanban-card |
+| **US-J04 (Workdesk)** | CU-J04-01→06 | smoke-j04-operario.e2e.spec.ts | Login → Workdesk → Claim... → Desaparición | ❌ FAIL | Timeout en task-list |
 | **US-043 (SLA Engine)** | PENDIENTE | - | - | ⏳ PENDIENTE | - |
 | **US-001 (Portal)** | PENDIENTE | - | - | ⏳ PENDIENTE | - |
 | **US-002 (BPMN UI)** | PENDIENTE | - | - | ⏳ PENDIENTE | - |

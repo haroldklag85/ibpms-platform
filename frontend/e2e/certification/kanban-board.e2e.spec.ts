@@ -7,6 +7,7 @@ test.describe('OBS-1 / B5: Kanban View Real Backend', () => {
     test.setTimeout(90000);
     // 1. Autenticación
     await page.goto('/login');
+    await page.click('[data-testid="break-glass-toggle"]');
     await page.fill('[data-testid="email-input"]', USERS.OPERARIO_ALPHA.email);
     await page.fill('[data-testid="password-input"]', USERS.OPERARIO_ALPHA.password);
     await page.click('[data-testid="login-submit"]');

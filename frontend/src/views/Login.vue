@@ -45,7 +45,7 @@
          </div>
 
          <div class="text-center">
-             <button @click="enableBreakGlass" class="text-[10px] font-bold text-gray-400 hover:text-red-600 transition tracking-widest uppercase underline decoration-gray-300 hover:decoration-red-300 underline-offset-4">
+             <button data-testid="break-glass-toggle" @click="enableBreakGlass" class="text-[10px] font-bold text-gray-400 hover:text-red-600 transition tracking-widest uppercase underline decoration-gray-300 hover:decoration-red-300 underline-offset-4">
                  ⚠️ Break-Glass Recovery (IT Only)
              </button>
          </div>
@@ -64,6 +64,7 @@
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Usuario Táctico</label>
               <input 
+                data-testid="email-input"
                 v-model="email" 
                 type="email" 
                 required 
@@ -75,6 +76,7 @@
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Contraseña Bóveda</label>
               <input 
+                data-testid="password-input"
                 v-model="password" 
                 type="password" 
                 required
@@ -84,6 +86,7 @@
 
             <div class="pt-2">
               <button 
+                data-testid="login-submit"
                 type="submit" 
                 class="w-full flex items-center justify-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
               >

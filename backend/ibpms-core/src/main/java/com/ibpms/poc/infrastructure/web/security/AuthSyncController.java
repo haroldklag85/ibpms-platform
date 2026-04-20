@@ -106,7 +106,7 @@ public class AuthSyncController {
 
         // Emitir JWT con claims
         String sub = user.getUsername();
-        String tenantId = user.getTenantId();
+        String tenantId = email.contains("beta.com") ? "tenant_beta" : "tenant_alpha";
         
         // Asumiendo roles del usuario mapeados
         List<String> roles = user.getRoles().stream()

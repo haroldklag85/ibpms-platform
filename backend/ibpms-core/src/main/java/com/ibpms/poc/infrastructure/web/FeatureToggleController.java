@@ -1,43 +1,41 @@
 package com.ibpms.poc.infrastructure.web;
 
-import com.ibpms.poc.application.service.FeatureToggleService;
-import com.ibpms.poc.application.util.SecurityContextUtils;
+import com.ibpms.poc.infrastructure.jpa.entity.FeatureToggleEntity;
+import com.ibpms.poc.infrastructure.jpa.repository.FeatureToggleRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/admin/toggles")
+@RequestMapping("/api/v1/workdesk/feature-toggles")
 public class FeatureToggleController {
 
-    private final FeatureToggleService featureToggleService;
+    private final FeatureToggleRepository featureToggleRepository;
 
-    public FeatureToggleController(FeatureToggleService featureToggleService) {
-        this.featureToggleService = featureToggleService;
+    public FeatureToggleController(FeatureToggleRepository featureToggleRepository) {
+        this.featureToggleRepository = featureToggleRepository;
     }
 
     @GetMapping("/{key}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Boolean>> getToggle(@PathVariable String key) {
-        String tenantId = SecurityContextUtils.getTenantId();
-        boolean isEnabled = featureToggleService.isFeatureEnabled(tenantId, key);
-        return ResponseEntity.ok(Map.of("enabled", isEnabled));
-    }
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getFeatureToggle(@PathVariable String key, Authentication authentication) {
+        // Fallback or mapping for POC tenant
+        String tenantId = (authentication != null && authentication.getName() != null) ? authentication.getName() : "default";
 
-    @PutMapping("/{key}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> setToggle(@PathVariable String key, @RequestBody Map<String, Boolean> payload) {
-        String tenantId = SecurityContextUtils.getTenantId();
-        String username = SecurityContextUtils.getAssignee();
+        Optional<FeatureToggleEntity> toggle = featureToggleRepository.findByTenantIdAndToggleKey(tenantId, key);
         
-        Boolean enabled = payload.get("enabled");
-        if (enabled == null) {
-            return ResponseEntity.badRequest().build();
+        if (toggle.isPresent()) {
+            return ResponseEntity.ok(Map.of("enabled", toggle.get().getEnabled()));
         }
 
-        featureToggleService.setFeatureToggle(tenantId, key, enabled, username);
-        return ResponseEntity.noContent().build();
+        // Return a default disabled object instead of throwing 404 to avoid frontend dispatch errors
+        return ResponseEntity.ok(Map.of("enabled", false));
     }
 }

@@ -3,9 +3,9 @@ package com.ibpms.poc.application.service;
 import com.ibpms.poc.application.dto.PreFlightResultDTO;
 import com.ibpms.poc.infrastructure.jpa.entity.BpmnDesignAuditLogEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.BpmnProcessDesignEntity;
-import com.ibpms.poc.infrastructure.jpa.entity.IbpmsRoleEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.BpmnDesignAuditLogRepository;
-import com.ibpms.poc.infrastructure.jpa.repository.IbpmsRoleRepository;
+import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
+import com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -50,12 +50,12 @@ public class PreFlightAnalyzerService {
 
     private final BpmnDesignService designService;
     private final BpmnDesignAuditLogRepository auditRepository;
-    private final IbpmsRoleRepository roleRepository;
+    private final RoleRepository roleRepository;
     private final com.ibpms.poc.infrastructure.jpa.repository.ExternalTaskTopicRepository externalTaskTopicRepository;
 
     public PreFlightAnalyzerService(BpmnDesignService designService,
             BpmnDesignAuditLogRepository auditRepository,
-            IbpmsRoleRepository roleRepository,
+            RoleRepository roleRepository,
             com.ibpms.poc.infrastructure.jpa.repository.ExternalTaskTopicRepository externalTaskTopicRepository) {
         this.designService = designService;
         this.auditRepository = auditRepository;
@@ -131,7 +131,7 @@ public class PreFlightAnalyzerService {
 
             // CA-6 VIP Pre-allocation mapping
             List<String> vipRoleNames = roleRepository.findByIsVipRestrictedTrue().stream()
-                .map(IbpmsRoleEntity::getName).map(String::toUpperCase).collect(Collectors.toList());
+                .map(RoleEntity::getName).map(String::toUpperCase).collect(Collectors.toList());
 
             // CA-2: Control de diagrama roto (Falta End Event)
             Collection<EndEvent> endEvents = modelInstance.getModelElementsByType(EndEvent.class);

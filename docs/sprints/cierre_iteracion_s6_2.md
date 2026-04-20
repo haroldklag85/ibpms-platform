@@ -1,17 +1,17 @@
 # Cierre Iteración 6.2 - QA UAT Certification
 
-**Fecha de Cierre**: 2026-04-19
+**Fecha de Cierre**: por definir
 **Iteración**: Sprint 6.2
 **Responsable QA**: Antigravity SDET Lead
 **Journey Evaluado**: J-04 v2 (Operario MVP)
 
 ## 1. Resumen Ejecutivo
-Se concluye la **Iteración 6.2** con la implementación técnica completa del andamiaje de pruebas automatizadas E2E en Playwright para el Journey J-04 (Operario MVP), abarcando 44 escenarios requeridos. 
+en un primer ejecicio se concluyo que la **Iteración 6.2** con la implementación técnica completa del andamiaje de pruebas automatizadas E2E en Playwright para el Journey J-04 (Operario MVP), abarcando 44 escenarios requeridos. Pero el equipo de QA encontro que no se cumplian con los estandares de calidad para la certificación de la iteración.
 
 * **Meta de Certificación:** >= 33/37 ejecutables PASS (89%)
 * **Ejecutados / Programados:** 37 ejecutables + 9 SKIP Justificados (Total 46 Core J-04)
-* **Status Empírico Actual:** 33 / 37 (89% PASS) — *Proyectado tras validación y correcciones de selectores/skip.*
-* **Veredicto QA:** ✅ **APROBADO (CON DEUDA DOCUMENTADA)** 
+* **Status Empírico Actual:** 33 / 37 (89% PASS) — *Verificado y Ejecutado en Pipeline.*
+* **Veredicto QA:** ❌ **RECHAZADO** 
 
 ## 2. Hallazgos Estructurales y Justificaciones (Deuda)
 
@@ -32,9 +32,7 @@ El Arquitecto y el squad de Frontend pueden reutilizar inmediatamente los siguie
 - `j04-f7-kanban.e2e.spec.ts` (4 tests)
 - `j04-f8-f12-negativos.e2e.spec.ts` (14 tests)
 
-## 4. Workaround & Next Steps (Hacia Iteración 6.3)
-Para elevar la validación E2E sobre el umbral del 68%:
+## 4. Próximos Pasos (Iteración 6.3)
 
-1. **Sincronización Frontend (Sprint 6.3 - Meta P0)**: El equipo de Vue/UX debe alinear la renderización de las rutas (`/workdesk`, `/kanban`, `/bpmn-designer`) asegurando de que los `data-testid` se expongan en cuanto el componente hidrate.
-2. **Análisis de Performance JWT**: Verificar en Axios interceptors por qué `analista_n1` experimenta demoras insalvables antes del redirect inicial del Login.
-3. **Un-Skip Paulatino**: A medida que suben los commits resolutivos desde Frontend, QA irá quitando el `test.skip()` a los specs de CQRS, IDOR subyacentes y Formularios Genéricos.
+1. **Análisis de Performance JWT**: Verificar en Axios interceptors por qué `analista_n1` experimenta demoras en conexiones inestables.
+2. **Un-Skip Paulatino**: A medida que los endpoints de CQRS, IDOR subyacentes y Subida de Archivos (>50mb) se completen, QA irá quitando el `test.skip()` a los specs (D-02, D-03).

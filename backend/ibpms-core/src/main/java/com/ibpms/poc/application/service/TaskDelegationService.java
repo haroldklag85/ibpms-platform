@@ -18,11 +18,11 @@ public class TaskDelegationService {
     private static final Logger log = LoggerFactory.getLogger(TaskDelegationService.class);
 
     private final IbpmsProfileRepository profileRepository;
-    private final DelegationService delegationService;
+    private final com.ibpms.poc.infrastructure.jpa.repository.UserDelegationRepository delegationRepository;
 
-    public TaskDelegationService(IbpmsProfileRepository profileRepository, DelegationService delegationService) {
+    public TaskDelegationService(IbpmsProfileRepository profileRepository, com.ibpms.poc.infrastructure.jpa.repository.UserDelegationRepository delegationRepository) {
         this.profileRepository = profileRepository;
-        this.delegationService = delegationService;
+        this.delegationRepository = delegationRepository;
     }
     /**
      * Revisa si una tarea pertenece a una delegación vigente o si ya expiró.
@@ -78,7 +78,7 @@ public class TaskDelegationService {
     }
 
     private boolean checkDelegationAuthority(String executiveId, String assistantId, String tenantId) {
-        return delegationService.hasDelegation(executiveId, assistantId, tenantId);
+        return delegationRepository.findBySupervisorIdAndAssistantIdAndTenantId(executiveId, assistantId, tenantId).isPresent();
     }
 
     private String resolveDisplayName(String userId) {

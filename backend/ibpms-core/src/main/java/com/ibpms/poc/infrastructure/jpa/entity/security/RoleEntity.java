@@ -45,6 +45,15 @@ public class RoleEntity {
     @Column(name = "source", length = 50, nullable = false)
     private String source = "LOCAL";
 
+    @Column(name = "is_vip_restricted")
+    private Boolean isVipRestricted = false;
+
+    @Column(name = "process_definition_id", length = 255)
+    private String processDefinitionId;
+
+    @Column(name = "lane_id", length = 255)
+    private String laneId;
+
     public RoleEntity() {}
 
     public RoleEntity(String name, String description) {
@@ -70,4 +79,10 @@ public class RoleEntity {
     public void setIsTemplate(Boolean isTemplate) { this.isTemplate = isTemplate; }
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
+    public Boolean getIsVipRestricted() { return isVipRestricted; }
+    public void setIsVipRestricted(Boolean isVipRestricted) { this.isVipRestricted = isVipRestricted; }
+    public String getProcessDefinitionId() { return processDefinitionId; }
+    public void setProcessDefinitionId(String processDefinitionId) { this.processDefinitionId = processDefinitionId; }
+    public String getLaneId() { return laneId; }
+    public void setLaneId(String laneId) { this.laneId = laneId; }
 }

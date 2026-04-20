@@ -79,7 +79,9 @@ public class WorkdeskQueryController {
                 delegationContext = new DelegationContextDTO(delegatedUserId, assistantDisplayName, true);
             }
 
-            Page<WorkdeskProjectionEntity> entities = projectionRepository.findWorkdeskTasks(tenantId, search, effectiveAssignee, pageable);
+            // Remove sort from pageable to prevent Spring Data natively appending the entity property as a raw SQL column
+            Pageable safePageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            Page<WorkdeskProjectionEntity> entities = projectionRepository.findWorkdeskTasks(tenantId, search, effectiveAssignee, safePageable);
             
             Page<WorkdeskGlobalItemDTO> dtoPage = entities.map(e -> {
                 WorkdeskGlobalItemDTO dto = new WorkdeskGlobalItemDTO();

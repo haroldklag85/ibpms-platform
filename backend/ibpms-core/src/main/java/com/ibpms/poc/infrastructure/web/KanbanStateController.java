@@ -25,14 +25,14 @@ public class KanbanStateController {
     }
 
     @PatchMapping("/{taskId}/state")
-    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> updateState(@PathVariable String taskId, @Valid @RequestBody UpdateStateRequest request) {
         boardService.updateTaskState(taskId, request.newState(), stateMachine);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/board")
-    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Map<String, List<Map<String, Object>>>> getBoard() {
         String tenantId = SecurityContextUtils.getTenantId();
         // Llama al BoardService para retornar las tareas agrupadas por estado (columnas) para el tenant

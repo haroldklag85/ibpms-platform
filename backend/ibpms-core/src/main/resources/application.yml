@@ -18,9 +18,17 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
+    # HO-03: Defer datasource init para que seed-dev.sql se ejecute DESPUÉS de Liquibase + Hibernate DDL
+    defer-datasource-initialization: false
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
+  # HO-03: Auto-carga de datos mínimos para desarrollo local
+  sql:
+    init:
+      mode: never
+      data-locations: classpath:seed-dev.sql
+      continue-on-error: true
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}

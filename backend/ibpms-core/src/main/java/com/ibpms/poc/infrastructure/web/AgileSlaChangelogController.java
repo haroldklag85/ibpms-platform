@@ -25,7 +25,7 @@ public class AgileSlaChangelogController {
 
     // CA-9: Bitácora SLA
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Page<AgileSlaChangelog>> getSlaLogs(
         @PathVariable UUID taskId,
         Pageable pageable) {

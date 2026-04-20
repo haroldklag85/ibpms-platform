@@ -466,7 +466,7 @@ public class WorkdeskRepositoryTest {
     @Test
     void testDelegationValidation_SelfDelegationNoop() {
         // Arrange
-        com.ibpms.poc.application.service.TaskDelegationService service = new com.ibpms.poc.application.service.TaskDelegationService(null);
+        com.ibpms.poc.application.service.TaskDelegationService service = new com.ibpms.poc.application.service.TaskDelegationService(null, null);
 
         // Act
         String result = service.validateDelegationHierarchy("userA", "userA", "tenant1");
@@ -487,7 +487,7 @@ public class WorkdeskRepositoryTest {
         // dice explícitamente "V1 Placeholder", dejaremos el test preparado
         // pero condicionado si es posible, o ajustaremos el checkDelegationAuthority.
         
-        com.ibpms.poc.application.service.TaskDelegationService service = new com.ibpms.poc.application.service.TaskDelegationService(null) {
+        com.ibpms.poc.application.service.TaskDelegationService service = new com.ibpms.poc.application.service.TaskDelegationService(null, null) {
             // Mock interno de prueba
             protected boolean checkDelegationAuthority(String executiveId, String assistantId, String tenantId) {
                 return false; // Simular rechazo

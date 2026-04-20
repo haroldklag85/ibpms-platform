@@ -3,36 +3,7 @@ INSERT INTO tenants (id, name, domain) VALUES
   ('tenant_alpha', 'Alpha Corp', 'alpha.com')
 ON CONFLICT (id) DO NOTHING;
 
--- Usuarios E2E (passwords: BCrypt de 'Test123!')
--- Hash: $2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri
-INSERT INTO users (id, email, password_hash, tenant_id, display_name) VALUES
-  ('usr_admin_alpha', 'admin@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', 'tenant_alpha', 'Admin Alpha'),
-  ('analista_n1', 'analista_n1@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', 'tenant_alpha', 'Analista N1'),
-  ('perito_a', 'perito_a@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', 'tenant_alpha', 'Perito A'),
-  ('perito_b', 'perito_b@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', 'tenant_alpha', 'Perito B'),
-  ('director_1', 'director_1@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', 'tenant_alpha', 'Director 1')
-ON CONFLICT (id) DO NOTHING;
 
--- Roles RBAC
-INSERT INTO user_roles (user_id, role) VALUES
-  ('usr_admin_alpha', 'ROLE_SUPER_ADMIN'),
-  ('analista_n1', 'ROLE_OPERARIO'),
-  ('perito_a', 'ROLE_OPERARIO'),
-  ('perito_b', 'ROLE_OPERARIO'),
-  ('director_1', 'ROLE_SUPERVISOR')
-ON CONFLICT DO NOTHING;
-
--- Delegaciones J-04 (PRE-04)
-CREATE TABLE IF NOT EXISTS user_delegation (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    supervisor_id VARCHAR(100),
-    assistant_id VARCHAR(100),
-    tenant_id VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-INSERT INTO user_delegation (supervisor_id, assistant_id, tenant_id) VALUES
-  ('director_1', 'analista_n1', 'tenant_alpha')
-ON CONFLICT DO NOTHING;
 
 -- Feature Toggle (CU-J04-23)
 CREATE TABLE IF NOT EXISTS ibpms_feature_toggles (
@@ -47,36 +18,14 @@ INSERT INTO ibpms_feature_toggles (tenant_id, toggle_key, enabled, changed_by) V
   ('tenant_alpha', 'forceRouting', false, 'admin')
 ON CONFLICT DO NOTHING;
 
--- DMN Definition Publish (B4 re-run)
-CREATE TABLE IF NOT EXISTS dmn_definition (
-    id VARCHAR(100) PRIMARY KEY,
-    key VARCHAR(100),
-    version INT,
-    resource_name VARCHAR(200),
-    tenant_id VARCHAR(100)
-);
-INSERT INTO dmn_definition (id, key, version, resource_name, tenant_id) VALUES
-  ('dmn-1', 'risk_assessment', 1, 'risk_assessment.dmn', 'tenant_alpha')
-ON CONFLICT DO NOTHING;
+
 
 -- Kanban Board E2E
 INSERT INTO kanban_boards (id, project_name, owner_id, created_at) VALUES 
   ('123e4567-e89b-12d3-a456-426614174000', 'Project Alpha', 'director_1', CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
--- Kanban Columns (PRE-08)
-CREATE TABLE IF NOT EXISTS kanban_column (
-    id VARCHAR(50) PRIMARY KEY,
-    board_id UUID,
-    name VARCHAR(50),
-    position INT
-);
-INSERT INTO kanban_column (id, board_id, name, position) VALUES
-  ('TODO', '123e4567-e89b-12d3-a456-426614174000', 'To Do', 1),
-  ('IN_PROGRESS', '123e4567-e89b-12d3-a456-426614174000', 'In Progress', 2),
-  ('BLOCKED', '123e4567-e89b-12d3-a456-426614174000', 'Blocked', 3),
-  ('DONE', '123e4567-e89b-12d3-a456-426614174000', 'Done', 4)
-ON CONFLICT DO NOTHING;
+
 
 -- Kanban Tasks (F7: 3 TODO, 1 DONE)
 INSERT INTO ibpms_task (id, board_id, title, status, created_at) VALUES
@@ -110,4 +59,73 @@ INSERT INTO ibpms_workdesk_projection (id, source_system, original_task_id, titl
   ('wd_task_3', 'BPMN', 'task_3', 'Workdesk Task 3 (Red)', NULL, 'Adjusters', CURRENT_TIMESTAMP + INTERVAL '1 hours', 'PENDING', 'tenant_alpha', 3),
   -- Gray SLA (Expired)
   ('wd_task_4', 'BPMN', 'task_4', 'Workdesk Task 4 (Gray Expired)', NULL, 'Adjusters', CURRENT_TIMESTAMP - INTERVAL '1 days', 'PENDING', 'tenant_alpha', 4)
+ON CONFLICT (id) DO NOTHING;
+
+-- Seeds for Security Login (Emergency Login requires ibpms_security_user)
+INSERT INTO ibpms_security_user (id, username, email, password_hash, is_active, is_external_idp, created_at) VALUES 
+  (gen_random_uuid(), 'admin', 'admin@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'analista', 'analista_n1@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'perito_a', 'perito_a@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'perito_b', 'perito_b@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'director_1', 'director_1@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP)
+ON CONFLICT (email) DO UPDATE 
+SET password_hash = EXCLUDED.password_hash,
+    username = EXCLUDED.username;
+
+-- Catálogo de Roles JPA (ibpms_security_role) — Requerido por FK de la tabla pivote
+INSERT INTO ibpms_security_role (id, name, description, is_template, source) VALUES
+  (gen_random_uuid(), 'ROLE_SUPER_ADMIN', 'Super Administrador Global con acceso total', false, 'LOCAL'),
+  (gen_random_uuid(), 'ROLE_OPERARIO', 'Operario de Bandeja Unificada', false, 'LOCAL'),
+  (gen_random_uuid(), 'ROLE_SUPERVISOR', 'Supervisor de Área con delegación', false, 'LOCAL')
+ON CONFLICT (name) DO NOTHING;
+
+-- Mapeo ManyToMany: ibpms_security_user_roles (User ↔ Role)
+INSERT INTO ibpms_security_user_roles (user_id, role_id)
+SELECT u.id, r.id FROM ibpms_security_user u, ibpms_security_role r
+WHERE u.email = 'admin@alpha.com' AND r.name = 'ROLE_SUPER_ADMIN'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO ibpms_security_user_roles (user_id, role_id)
+SELECT u.id, r.id FROM ibpms_security_user u, ibpms_security_role r
+WHERE u.email = 'analista_n1@alpha.com' AND r.name = 'ROLE_OPERARIO'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO ibpms_security_user_roles (user_id, role_id)
+SELECT u.id, r.id FROM ibpms_security_user u, ibpms_security_role r
+WHERE u.email = 'perito_a@alpha.com' AND r.name = 'ROLE_OPERARIO'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO ibpms_security_user_roles (user_id, role_id)
+SELECT u.id, r.id FROM ibpms_security_user u, ibpms_security_role r
+WHERE u.email = 'perito_b@alpha.com' AND r.name = 'ROLE_OPERARIO'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO ibpms_security_user_roles (user_id, role_id)
+SELECT u.id, r.id FROM ibpms_security_user u, ibpms_security_role r
+WHERE u.email = 'director_1@alpha.com' AND r.name = 'ROLE_SUPERVISOR'
+ON CONFLICT DO NOTHING;
+
+-- ====================================================================
+-- B-1 FIX: Delegación en tabla JPA correcta (ibpms_security_delegation)
+-- Requerido por: CU-J04-20 a 22, CU-J04-NEG-04
+-- La tabla 'user_delegation' (línea 26) es LEGACY/DEPRECATED.
+-- El backend (TaskDelegationService + DelegationEntity) usa esta tabla.
+-- ====================================================================
+INSERT INTO ibpms_security_delegation (id, delegator_id, substitute_id, start_date, end_date, is_active, reason)
+SELECT gen_random_uuid(), d.id, a.id,
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '365 days',
+       true, 'Delegación de escritorio para UAT J-04'
+FROM ibpms_security_user d, ibpms_security_user a
+WHERE d.username = 'director_1' AND a.username = 'analista'
+ON CONFLICT DO NOTHING;
+
+-- ====================================================================
+-- B-2 FIX: Tarea de Director en Workdesk Projection
+-- Requerido por: CU-J04-39 (Firma Final Director)
+-- Sin esta tarea, el Director no ve nada en su bandeja personal.
+-- ====================================================================
+INSERT INTO ibpms_workdesk_projection (id, source_system, original_task_id, title, assignee, candidate_group,
+    sla_expiration_date, status, tenant_id, impact_level) VALUES
+  ('wd_task_5', 'BPMN', 'task_5', 'Firma Final (Director)', NULL, 'Directors',
+   CURRENT_TIMESTAMP + INTERVAL '5 days', 'PENDING', 'tenant_alpha', 1)
 ON CONFLICT (id) DO NOTHING;

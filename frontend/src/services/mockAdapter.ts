@@ -257,7 +257,7 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
     });
 
     // 15. Pantalla 1 (Epic 1 - Hybrid Workdesk US-001)
-    mock.onGet(/\/api\/v1\/workdesk\/global-inbox/).reply((config) => {
+    mock.onGet(/\/workdesk\/global-inbox/).reply((config) => {
         // Obtenemos param de url o simulamos
         // const params = config.params || { page: 0, size: 50 };
         return [200, {
@@ -491,6 +491,10 @@ export const setupMockAdapter = (apiClient: AxiosInstance) => {
 
     // Menu Layout (CA-6 — el endpoint real que MainLayout intentará llamar primero)
     mock.onGet('/api/v1/menu-layout').reply(404);
+
+    // Habilitar PassThrough para Auth UAT
+    mock.onPost('/auth/emergency-login').passThrough();
+    mock.onAny().passThrough();
 
     return mock;
 };

@@ -37,7 +37,7 @@ export const useMenuStore = defineStore('menu', () => {
                     },
                     {
                         title: 'Service Delivery',
-                        roles: ['Global Admin', 'ROLE_SUPER_ADMIN'],
+                        roles: ['SUPER_ADMIN', 'SUPERVISOR'],
                         items: [
                            { path: '/intake-triage', icon: 'mark_email_unread', label: 'Inbox Intake' },
                            { path: '/admin/intake', icon: 'post_add', label: 'Intake Manual' },
@@ -47,7 +47,7 @@ export const useMenuStore = defineStore('menu', () => {
                     },
                     {
                         title: 'Directivo',
-                        roles: ['ROLE_SUPER_ADMIN', 'Global Admin'],
+                        roles: ['SUPER_ADMIN', 'SUPERVISOR'],
                         items: [
                            { path: '/admin/analytics/bam', icon: 'insights', label: 'BAM Analytics' },
                            { path: '/admin/pmo/settings', icon: 'chronic', label: 'Centro PMO / SLA' }
@@ -55,7 +55,7 @@ export const useMenuStore = defineStore('menu', () => {
                     },
                     {
                         title: 'Configuración',
-                        roles: ['ROLE_SUPER_ADMIN'],
+                        roles: ['SUPER_ADMIN'],
                         items: [
                            { path: '/admin/modeler/bpmn', icon: 'account_tree', label: 'Venture Modeler' },
                            { path: '/admin/modeler/dmn', icon: 'rule', label: 'DMN Copilot' },
@@ -64,7 +64,7 @@ export const useMenuStore = defineStore('menu', () => {
                     },
                     {
                         title: 'Integración',
-                        roles: ['ROLE_SUPER_ADMIN'],
+                        roles: ['SUPER_ADMIN'],
                         items: [
                            { path: '/admin/integration/catalog', icon: 'hub', label: 'Catálogo Conectores' },
                            { path: '/admin/integration/builder', icon: 'extension', label: 'Constructor API' },
@@ -74,7 +74,7 @@ export const useMenuStore = defineStore('menu', () => {
                     },
                     {
                         title: 'Proyectos',
-                        roles: ['ROLE_SUPER_ADMIN', 'Global Admin'],
+                        roles: ['SUPER_ADMIN', 'SUPERVISOR'],
                         items: [
                            { path: '/admin/project-builder', icon: 'construction', label: 'Project Builder' },
                            { path: '/admin/projects/manager', icon: 'folder_managed', label: 'Gestor Proyectos' },
@@ -83,7 +83,7 @@ export const useMenuStore = defineStore('menu', () => {
                     },
                     {
                         title: 'Administración',
-                        roles: ['ROLE_SUPER_ADMIN'],
+                        roles: ['SUPER_ADMIN'],
                         items: [
                            { path: '/admin/security/identity', icon: 'shield_person', label: 'Seguridad (RBAC)' },
                            { path: '/admin/mailboxes', icon: 'mark_email_read', label: 'Buzones SAC' },

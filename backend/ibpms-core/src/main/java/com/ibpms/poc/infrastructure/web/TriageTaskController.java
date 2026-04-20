@@ -23,7 +23,7 @@ public class TriageTaskController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Page<TriageTask>> getTriageTasks(
             @RequestParam(required = false, defaultValue = "PENDING") String status,
             Pageable pageable) {
@@ -31,7 +31,7 @@ public class TriageTaskController {
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<TriageTask> approveTask(
             @PathVariable UUID id,
             @Valid @RequestBody ApproveTriageRequest request) {
@@ -39,7 +39,7 @@ public class TriageTaskController {
     }
 
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<TriageTask> rejectTask(
             @PathVariable UUID id,
             @Valid @RequestBody RejectTriageRequest request) {

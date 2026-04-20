@@ -238,8 +238,8 @@ const submitJitProfile = async () => {
 // ===============================================
 const handleEmergencyLogin = async () => {
     try {
-        console.log(`[BREAK-GLASS] Forzando POST /api/v1/auth/emergency-login para ${email.value}`);
-        const response = await apiClient.post('/api/v1/auth/emergency-login', { email: email.value, password: password.value });
+        console.log(`[BREAK-GLASS] Forzando POST /auth/emergency-login para ${email.value}`);
+        const response = await apiClient.post('/auth/emergency-login', { email: email.value, password: password.value });
         const { token } = response.data;
         authStore.login(token);
         router.push('/workdesk');

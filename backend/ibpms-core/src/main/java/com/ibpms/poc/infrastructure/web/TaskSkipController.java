@@ -23,7 +23,7 @@ public class TaskSkipController {
     }
 
     @PostMapping("/{taskId}/skip")
-    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<AgileTask> skipTask(@PathVariable UUID taskId, @Valid @RequestBody TaskSkipRequest request) {
         String username = SecurityContextUtils.getAssignee();
         String tenantId = SecurityContextUtils.getTenantId();

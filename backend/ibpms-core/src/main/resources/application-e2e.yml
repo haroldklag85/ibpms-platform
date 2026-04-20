@@ -3,6 +3,15 @@ spring:
     url: jdbc:postgresql://localhost:5433/ibpms_e2e
     username: ibpms
     password: ibpms_e2e_pass
+  # HO-01: Auto-carga del seed al iniciar con perfil e2e
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:seed-e2e.sql
+      continue-on-error: true
+  # Desactivar Liquibase en e2e (Hibernate ddl-auto:update maneja esquemas)
+  liquibase:
+    enabled: false
   redis:
     host: localhost
     port: 6380

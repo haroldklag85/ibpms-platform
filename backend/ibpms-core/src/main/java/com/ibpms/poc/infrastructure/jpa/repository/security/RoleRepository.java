@@ -14,6 +14,7 @@ import java.util.UUID;
 public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
 
     Optional<RoleEntity> findByName(String name);
+    List<RoleEntity> findByIsVipRestrictedTrue();
 
     /**
      * CA-6 US-036 — Resolución de Árbol de Permisos por Herencia Piramidal.

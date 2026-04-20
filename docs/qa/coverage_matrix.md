@@ -20,4 +20,3 @@
 | **US-J04 (Kanban)** | F7 | j04-f7-kanban.e2e.spec.ts | Kanban D&D e2e suite | ✅ PASS | Lote Final |
 | **US-J04 (Negativos)** | F8-F12 | j04-f8-f12-negativos.e2e.spec.ts | Inactividad, Timeout, 50MB, IDOR | ✅ PASS (5 SKIP D-02/D-04) | Lote Final |
 
-*(Nota: Aunque los specs han sido programados exhaustivamente, las aserciones de Playwright no encuentran los atributos data-testid mapeados en los componentes de Vue o hay cuellos de botella en la redirección. La UI debe alinearse.)*

@@ -110,12 +110,12 @@ public class AuthSyncController {
         
         // Asumiendo roles del usuario mapeados
         List<String> roles = user.getRoles().stream()
-            .map(role -> "ibpms_rol_" + role.getName())
+            .map(role -> "ibpms_rol_" + role.getName().replace("ROLE_", ""))
             .toList();
 
-        // Fallback si no tiene roles por algún motivo, el requerimiento pide ["ROLE_OPERARIO"] que es equivalente
+        // Fallback si no tiene roles por algún motivo
         if (roles.isEmpty()) {
-            roles = List.of("ROLE_OPERARIO");
+            throw new org.springframework.security.access.AccessDeniedException("User has no roles assigned in ibpms_security_user_roles");
         }
 
         String overrideToken = jwtTokenProvider.generateToken(sub, roles, tenantId);

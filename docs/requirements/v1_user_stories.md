@@ -6065,6 +6065,55 @@ Feature: Hexagonal CQRS Persistence, Zero-Trust Validation and Task Completion
     And 3. Las tablas de proyección analítica del CA-01 NO se archivan (se mantienen activas para dashboards).
     And 4. Los eventos archivados siguen siendo INMUTABLES y consultables bajo demanda — el archivado NO es un borrado, es una reubicación.
     And 5. Los usuarios con rol `AUDITOR` podrán consultar eventos archivados a través de una interfaz administrativa (diferido a V2).
+
+  # ==============================================================================
+  # E. REFINAMIENTO UX/UI PARA ESCONDER COMPLEJIDAD CQRS (MONITOREO DE CONEXIÓN)
+  # Asunto: Propuesta Refinamiento US - Refactorización de UX/UI para el Monitoreo 
+  # de Conexión (Ex-CQRS Engine) hacia un componente no intrusivo (Toast Flotante).
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO UX/UI] Visibilidad y Minimalismo - Ley de Hick (CA-19)
+    Given que el usuario se encuentra operando en el Workdesk
+    When el estado de la conexión de red (WebSocket/STOMP) sea estable (ONLINE)
+    Then el sistema no debe mostrar ningún indicador permanente o intrusivo de conexión en pantalla, garantizando que el diseño esté 100% limpio.
+
+  Scenario: [REFINAMIENTO UX/UI] Nomenclatura Orientada a Negocio (CA-20)
+    Given que ocurre una pérdida de conectividad
+    When el sistema notifique al usuario
+    Then está estrictamente prohibido utilizar jerga técnica como "CQRS", "Event Sourcing" o "STOMP". Debe usarse exclusivamente lenguaje de usuario final ("Estado de la Red" o "Sincronización Automática").
+
+  Scenario: [REFINAMIENTO UX/UI] Tolerancia a micro-cortes / Debounce 5s (CA-21)
+    Given que se pierde la conexión de red
+    When el sistema detecta la desconexión
+    Then debe esperar internamente 5 segundos (debounce) antes de lanzar la alerta visual
+    And si la red se recupera en menos de esos 5 segundos, la alerta nunca debe dispararse (evitando molestar por micro-caídas).
+
+  Scenario: [REFINAMIENTO UX/UI] Componente No Intrusivo / Posicionamiento (CA-22)
+    Given que la desconexión supera los 5 segundos
+    When la alerta visual sea renderizada
+    Then debe aparecer como un "Toast Flotante" posicionado en la esquina inferior izquierda
+    And en ningún momento afectará, desplazará o bloqueará los elementos de la tabla de tareas ni el panel lateral.
+
+  Scenario: [REFINAMIENTO UX/UI] Degradación Asistida y Operatividad Parcial (CA-23)
+    Given que el Toast de OFFLINE se encuentra activo en pantalla
+    When el usuario intente interactuar con el Workdesk
+    Then toda la pantalla mantendrá su paleta de colores normal (sin bloqueos oscuros ni modales) permitiéndole copiar información, revisar datos ya cargados y seguir escaneando su bandeja de entrada (operatividad pasiva).
+
+  Scenario: [REFINAMIENTO UX/UI] Ergonomía de Acción - Ley de Fitts (CA-24)
+    Given que se muestra la notificación Toast de desconexión (Estado rojo)
+    When el usuario necesite forzar un reintento
+    Then debe existir un botón primario altamente clickeable y ancho con la etiqueta "Reconectar", en lugar de obligarlo a refrescar toda la página (F5).
+
+  Scenario: [REFINAMIENTO UX/UI] Feedback Animado de Proceso (CA-25)
+    Given que el usuario pulsa el botón "Reconectar"
+    When el sistema esté intentando reestablecer la conexión
+    Then el Toast rojo debe transformarse en un estado gris/ámbar intermedio, mostrando un spinner animado y el texto "Reconectando..." para evitar clicks compulsivos.
+
+  Scenario: [REFINAMIENTO UX/UI] Desaparición Confirmada de Éxito (CA-26)
+    Given que el sistema recupera satisfactoriamente el estado a ONLINE
+    When finaliza el proceso de reconexión
+    Then el Toast debe transformarse a un Flash Verde transitorio con un check ✅ y el texto "Conexión Restaurada" durante 3 segundos
+    And luego de esos 3 segundos, el Toast debe desaparecer automáticamente, devolviendo la limpieza total a la interfaz.
 ```
 
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Tarea) y BFF Invisible.

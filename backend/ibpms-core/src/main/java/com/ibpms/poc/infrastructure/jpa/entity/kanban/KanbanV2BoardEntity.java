@@ -6,8 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "ibpms_kanban_board")
-public class KanbanBoardEntity {
+@Table(name = "ibpms_kanban_board_v2") // optional, just to make sure
+public class KanbanV2BoardEntity {
 
     @Id
     @Column(name = "id", length = 50)

@@ -4,8 +4,14 @@ import { useAuthStore } from '@/stores/authStore'
 import NotFound404 from '@/components/common/NotFound404.vue'
 import SudoModal from '@/components/common/SudoModal.vue'
 import ErrorStateGlobal from '@/components/common/ErrorStateGlobal.vue'
+import { onMounted } from 'vue'
+import { LocalStorageGarbageCollector } from '@/services/LocalStorageGarbageCollector'
 
 const authStore = useAuthStore()
+
+onMounted(() => {
+  LocalStorageGarbageCollector.run()
+})
 </script>
 
 <template>

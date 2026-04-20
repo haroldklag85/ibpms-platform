@@ -911,6 +911,11 @@ const availableFieldsFlat = computed(() => {
     return flat(canvasFields.value);
 });
 
+// CA-90 / REM-003-04: Límites de Rendimiento para Formularios de Alta Densidad
+const MAX_FORM_FIELDS = 200;
+const isHighDensityForm = computed(() => availableFieldsFlat.value.length > MAX_FORM_FIELDS);
+
+
 const saveVisualRules = () => {
     showToast(`Reglas cruzadas configuradas (${visualRules.value.length} activas)`, 'success');
     showGlobalRulesModal.value = false;
@@ -1453,8 +1458,6 @@ const flatFields = (fields: any[]): any[] => {
   return res;
 };
 
-// CA-90: High density form state calculated with performance considerations
-const isHighDensityForm = computed(() => flatFields(canvasFields.value).length > 200);
 
 // HTML generator recursivo para Template (AST to Vue)
 const generateFieldHTML = (field: any, indent: string = '      ', parentBinding: string = 'formData'): string => {

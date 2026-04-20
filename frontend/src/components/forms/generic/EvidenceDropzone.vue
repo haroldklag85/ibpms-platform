@@ -66,12 +66,29 @@ const handleFileSelect = (e: Event) => {
   }
 }
 
+const MAX_FILE_SIZE_MB = 10
+const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'application/pdf']
 const MAX_FILES = 5
 
 const addFiles = (newFiles: File[]) => {
   const remaining = MAX_FILES - store.files.length
   if (remaining <= 0) return
-  const allowed = newFiles.slice(0, remaining)
+  
+  const validFiles = newFiles.filter(f => {
+    if (f.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      alert(`Archivo ${f.name} excede el límite de ${MAX_FILE_SIZE_MB}MB.`);
+      console.warn(`Archivo ${f.name} excede ${MAX_FILE_SIZE_MB}MB`);
+      return false;
+    }
+    if (!ALLOWED_TYPES.includes(f.type)) {
+      alert(`Tipo de archivo ${f.type} no permitido. Use PNG, JPG, o PDF.`);
+      console.warn(`Tipo de archivo ${f.type} no permitido`);
+      return false;
+    }
+    return true;
+  });
+  
+  const allowed = validFiles.slice(0, remaining)
   store.files = [...store.files, ...allowed]
 }
 

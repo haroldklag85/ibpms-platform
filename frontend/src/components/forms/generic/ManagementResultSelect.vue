@@ -10,7 +10,7 @@
     >
       <option value="" disabled>Seleccione un resultado...</option>
       <option v-for="option in store.allowedResults" :key="option" :value="option">
-        {{ option }}
+        {{ getLabel(option) }}
       </option>
     </select>
   </div>
@@ -20,4 +20,13 @@
 import { useGenericFormStore } from '@/stores/genericFormStore'
 
 const store = useGenericFormStore()
+
+const RESULT_LABELS: Record<string, string> = {
+  'APPROVED': 'Aprobado',
+  'REJECTED': 'Rechazado',
+  'PENDING_INFO': 'Pendiente de Información',
+  'ESCALATED': 'Escalado a Superior'
+}
+
+const getLabel = (key: string) => RESULT_LABELS[key] || key
 </script>

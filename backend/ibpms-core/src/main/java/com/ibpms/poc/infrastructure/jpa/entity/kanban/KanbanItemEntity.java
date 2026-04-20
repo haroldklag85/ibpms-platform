@@ -13,7 +13,7 @@ public class KanbanItemEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
-    private KanbanBoardEntity board;
+    private KanbanV2BoardEntity board;
 
     @Column(name = "title", nullable = false, length = 200)
     private String title;
@@ -36,8 +36,8 @@ public class KanbanItemEntity {
     // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
-    public KanbanBoardEntity getBoard() { return board; }
-    public void setBoard(KanbanBoardEntity board) { this.board = board; }
+    public KanbanV2BoardEntity getBoard() { return board; }
+    public void setBoard(KanbanV2BoardEntity board) { this.board = board; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getStatus() { return status; }

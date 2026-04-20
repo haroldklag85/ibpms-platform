@@ -19,10 +19,12 @@ public class AuthSyncController {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
-    public AuthSyncController(JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
+    public AuthSyncController(JwtTokenProvider jwtTokenProvider, UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -75,28 +77,50 @@ public class AuthSyncController {
     }
 
     /**
-     * CA-04: Protocolo Break-Glass (Login de Emergencia Blindado)
-     * Prohibido su uso desde Internet. Exclusivo de VPN/Intranet Corporativa.
+     * Protocolo Emergency Login para Sprint 6.2 (Valida contra BCrypt y retorna JWT)
      */
     @PostMapping("/emergency-login")
-    public ResponseEntity<?> breakGlassLogin(@RequestBody Map<String, String> creds, HttpServletRequest request) {
-        String ip = request.getRemoteAddr();
+    public ResponseEntity<?> emergencyLogin(@RequestBody Map<String, String> creds) {
+        String email = creds.get("email");
+        String rawPassword = creds.get("password");
+
+        if (email == null || rawPassword == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Falta email o password"));
+        }
+
+        Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByEmail(email);
         
-        // Filtro Crudo de Subnets Seguras (Mock PoC)
-        if (!ip.equals("127.0.0.1") && !ip.equals("0:0:0:0:0:0:0:1") && !ip.startsWith("10.") && !ip.startsWith("192.168.")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("BREAK-GLASS DENIED: Su IP (" + ip + ") carece de habilitación perimetral.");
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Credenciales Inválidas"));
         }
 
-        String pin = creds.get("adminPin");
-        // Super Hash ultra protegido
-        if ("BREAK-GLASS-1234".equals(pin)) {
-            // Emite un Token Supremamente Privilegiado
-            String overrideToken = jwtTokenProvider.generateToken("break_glass_admin", List.of("ibpms_rol_SUPER_ADMIN"), "tenant_system");
-            return ResponseEntity.ok(Map.of("token", overrideToken, "message", "WARNING: Break-Glass Protocol Activated. Admins notified."));
+        com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity user = userOpt.get();
+
+        if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Credenciales Inválidas"));
         }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!user.getIsActive()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Cuenta deshabilitada"));
+        }
+
+        // Emitir JWT con claims
+        String sub = user.getUsername();
+        String tenantId = user.getTenantId();
+        
+        // Asumiendo roles del usuario mapeados
+        List<String> roles = user.getRoles().stream()
+            .map(role -> "ibpms_rol_" + role.getName())
+            .toList();
+
+        // Fallback si no tiene roles por algún motivo, el requerimiento pide ["ROLE_OPERARIO"] que es equivalente
+        if (roles.isEmpty()) {
+            roles = List.of("ROLE_OPERARIO");
+        }
+
+        String overrideToken = jwtTokenProvider.generateToken(sub, roles, tenantId);
+        
+        return ResponseEntity.ok(Map.of("token", overrideToken, "message", "Emergency login successful"));
     }
 
     /**

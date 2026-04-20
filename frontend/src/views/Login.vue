@@ -239,11 +239,10 @@ const submitJitProfile = async () => {
 const handleEmergencyLogin = async () => {
     try {
         console.log(`[BREAK-GLASS] Forzando POST /api/v1/auth/emergency-login para ${email.value}`);
-        // Simulamos POST al endpoint secreto
-        // const response = await apiClient.post('/api/v1/auth/emergency-login', { username: email.value, password: password.value });
-        
-        authStore.login('EMERGENCY_LOCAL_JWT_666');
-        router.push('/');
+        const response = await apiClient.post('/api/v1/auth/emergency-login', { email: email.value, password: password.value });
+        const { token } = response.data;
+        authStore.login(token);
+        router.push('/workdesk');
     } catch (e) {
         alert('Credenciales de bóveda rechazadas o IP denegada.');
     }

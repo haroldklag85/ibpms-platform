@@ -6,34 +6,34 @@ export const TENANTS = {
 export const USERS = {
   ADMIN_ALPHA: { 
     email: 'admin@alpha.com', 
-    password: 'Test1234!', 
+    password: 'Test123!', 
     tenant: TENANTS.ALPHA.id,
     roles: ['ROLE_SUPER_ADMIN'] 
   },
-  OPERARIO_ALPHA: { 
-    email: 'operario@alpha.com', 
-    password: 'Test1234!', 
+  ANALISTA_N1: { 
+    email: 'analista_n1@alpha.com', 
+    password: 'Test123!', 
     tenant: TENANTS.ALPHA.id,
     roles: ['ROLE_OPERARIO'] 
   },
-  ARQUITECTO_ALPHA: { 
-    email: 'arquitecto@alpha.com', 
-    password: 'Test1234!', 
+  PERITO_A: {
+    email: 'perito_a@alpha.com',
+    password: 'Test123!',
     tenant: TENANTS.ALPHA.id,
-    roles: ['ROLE_PROCESS_ARCHITECT'] 
+    roles: ['ROLE_OPERARIO']
   },
-  ADMIN_BETA: { 
-    email: 'admin@beta.com', 
-    password: 'Test1234!', 
-    tenant: TENANTS.BETA.id,
-    roles: ['ROLE_SUPER_ADMIN'] 
+  PERITO_B: {
+    email: 'perito_b@alpha.com',
+    password: 'Test123!',
+    tenant: TENANTS.ALPHA.id,
+    roles: ['ROLE_OPERARIO']
   },
-  OPERARIO_BETA: { 
-    email: 'operario@beta.com', 
-    password: 'Test1234!', 
-    tenant: TENANTS.BETA.id,
-    roles: ['ROLE_OPERARIO'] 
-  },
+  DIRECTOR_1: {
+    email: 'director_1@alpha.com',
+    password: 'Test123!',
+    tenant: TENANTS.ALPHA.id,
+    roles: ['ROLE_SUPERVISOR']
+  }
 } as const;
 
 

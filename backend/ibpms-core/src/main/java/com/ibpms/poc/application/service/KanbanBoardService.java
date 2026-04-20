@@ -6,6 +6,10 @@ import com.ibpms.poc.infrastructure.jpa.repository.KanbanTaskRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 public class KanbanBoardService implements DelegateTaskUseCase {
 
@@ -36,5 +40,46 @@ public class KanbanBoardService implements DelegateTaskUseCase {
         KanbanTaskEntity savedSubTask = taskRepository.save(subTask);
 
         return savedSubTask.getId().toString();
+    }
+
+    @Transactional
+    public void updateTaskState(String taskId, String newState, KanbanStateMachine stateMachine) {
+        KanbanTaskEntity task = taskRepository.findById(java.util.Objects.requireNonNull(java.util.UUID.fromString(taskId)))
+                .orElseThrow(() -> new RuntimeException("Tarea no encontrada"));
+
+        stateMachine.validateTransition(task.getStatus(), newState);
+
+        task.setStatus(newState);
+        taskRepository.save(task);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, List<Map<String, Object>>> getBoardColumns(String tenantId) {
+        List<KanbanTaskEntity> tasks = taskRepository.findTasksByTenantId(tenantId);
+        
+        // Agrupar por estado (TODO, IN_PROGRESS, BLOCKED, DONE)
+        Map<String, List<Map<String, Object>>> grouped = tasks.stream()
+            .collect(Collectors.groupingBy(
+                KanbanTaskEntity::getStatus,
+                Collectors.mapping(
+                    task -> Map.of(
+                        "id", task.getId(),
+                        "title", task.getTitle(),
+                        "state", task.getStatus(),
+                        "assignee", task.getAssignee() != null ? task.getAssignee() : "Unassigned"
+                        // El object map puede extenderse si hay SLA, description u otros datos necesarios para UI
+                    ),
+                    Collectors.toList()
+                )
+            ));
+            
+        return Map.of("columns", 
+            List.of(
+                Map.of("name", "TODO", "tasks", grouped.getOrDefault("TODO", List.of())),
+                Map.of("name", "IN_PROGRESS", "tasks", grouped.getOrDefault("IN_PROGRESS", List.of())),
+                Map.of("name", "BLOCKED", "tasks", grouped.getOrDefault("BLOCKED", List.of())),
+                Map.of("name", "DONE", "tasks", grouped.getOrDefault("DONE", List.of()))
+            )
+        );
     }
 }

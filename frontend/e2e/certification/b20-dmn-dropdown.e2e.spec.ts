@@ -6,11 +6,11 @@ test.describe('B-20: Dropdown DMN en BpmnDesigner', () => {
   test('Seleccionar BusinessRuleTask muestra dropdown DMN con tablas publicadas', async ({ page }) => {
     test.setTimeout(60000);
     
-    // Login como Arquitecto
+    // Login como Admin
     await page.goto('/login');
     await page.click('[data-testid="break-glass-toggle"]');
-    await page.fill('[data-testid="email-input"]', USERS.ARQUITECTO_ALPHA.email);
-    await page.fill('[data-testid="password-input"]', USERS.ARQUITECTO_ALPHA.password);
+    await page.fill('[data-testid="email-input"]', USERS.ADMIN_ALPHA.email);
+    await page.fill('[data-testid="password-input"]', USERS.ADMIN_ALPHA.password);
     await page.click('[data-testid="login-submit"]');
     
     // Navegar al BPMN Designer

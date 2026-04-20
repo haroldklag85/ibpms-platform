@@ -66,7 +66,7 @@ export const useKanbanStore = defineStore('kanban', {
                     }
                 }
 
-                const payload: any = { status: newStatus };
+                const payload: any = { newState: newStatus };
                 if (blockReason) payload.blockReason = blockReason;
                 await api.updateKanbanStatus(taskId, payload);
             } catch (error) {

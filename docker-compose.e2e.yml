@@ -8,6 +8,8 @@ services:
       POSTGRES_PASSWORD: ibpms_e2e_pass
     ports:
       - "5433:5432"
+    volumes:
+      - ./backend/ibpms-core/src/main/resources/seed-e2e.sql:/docker-entrypoint-initdb.d/02-seed.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ibpms -d ibpms_e2e"]
       interval: 5s

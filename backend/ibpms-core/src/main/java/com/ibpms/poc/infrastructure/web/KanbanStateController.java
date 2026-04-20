@@ -1,0 +1,46 @@
+package com.ibpms.poc.infrastructure.web;
+
+import com.ibpms.poc.application.service.KanbanBoardService;
+import com.ibpms.poc.application.service.KanbanStateMachine;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.application.util.SecurityContextUtils;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/kanban")
+public class KanbanStateController {
+
+    private final KanbanBoardService boardService;
+    private final KanbanStateMachine stateMachine;
+
+    public KanbanStateController(KanbanBoardService boardService, KanbanStateMachine stateMachine) {
+        this.boardService = boardService;
+        this.stateMachine = stateMachine;
+    }
+
+    @PatchMapping("/{taskId}/state")
+    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    public ResponseEntity<Void> updateState(@PathVariable String taskId, @Valid @RequestBody UpdateStateRequest request) {
+        boardService.updateTaskState(taskId, request.newState(), stateMachine);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/board")
+    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, List<Map<String, Object>>>> getBoard() {
+        String tenantId = SecurityContextUtils.getTenantId();
+        // Llama al BoardService para retornar las tareas agrupadas por estado (columnas) para el tenant
+        Map<String, List<Map<String, Object>>> columns = boardService.getBoardColumns(tenantId);
+        return ResponseEntity.ok(columns);
+    }
+
+    public record UpdateStateRequest(
+            @NotBlank(message = "El nuevo estado es requerido") String newState
+    ) {}
+}

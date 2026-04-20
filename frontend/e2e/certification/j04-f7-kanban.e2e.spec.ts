@@ -14,7 +14,7 @@ test.describe('J-04 F7: Kanban Board Drag & Drop, Block, GenericForm', () => {
 
   test('CU-J04-29 | Navegación al Kanban -> columnas con >=3 tareas en TODO', async ({ page }) => {
     await page.goto('/kanban');
-    const todoColumn = page.locator('[data-testid="column-TODO"]');
+    const todoColumn = page.locator('[data-testid="kanban-column-TODO"]');
     if (await todoColumn.isVisible()) {
       const cards = todoColumn.locator('[data-testid^="kanban-card-"]');
       expect(await cards.count()).toBeGreaterThanOrEqual(1); // Relaxed for MVP
@@ -24,9 +24,9 @@ test.describe('J-04 F7: Kanban Board Drag & Drop, Block, GenericForm', () => {
   test('CU-J04-30 | Flujo completo: TODO -> IN_PROGRESS -> BLOCKED -> IN_PROGRESS -> DONE', async ({ page }) => {
     await page.goto('/kanban');
     const card = page.locator('[data-testid^="kanban-card-"]').first();
-    const inProgressColumn = page.locator('[data-testid="column-IN_PROGRESS"]');
-    const blockedColumn = page.locator('[data-testid="column-BLOCKED"]');
-    const doneColumn = page.locator('[data-testid="column-DONE"]');
+    const inProgressColumn = page.locator('[data-testid="kanban-column-IN_PROGRESS"]');
+    const blockedColumn = page.locator('[data-testid="kanban-column-BLOCKED"]');
+    const doneColumn = page.locator('[data-testid="kanban-column-DONE"]');
 
     if (await card.isVisible() && await inProgressColumn.isVisible()) {
       await card.dragTo(inProgressColumn);
@@ -46,8 +46,17 @@ test.describe('J-04 F7: Kanban Board Drag & Drop, Block, GenericForm', () => {
   });
 
   test('CU-J04-31 | Happy path directo: TODO -> IN_PROGRESS -> DONE', async ({ page }) => {
-    // Similar to above without BLOCKED
-    test.skip();
+    await page.goto('/kanban');
+    const card = page.locator('[data-testid^="kanban-card-"]').first();
+    const inProgressColumn = page.locator('[data-testid="kanban-column-IN_PROGRESS"]');
+    const doneColumn = page.locator('[data-testid="kanban-column-DONE"]');
+
+    if (await card.isVisible() && await inProgressColumn.isVisible()) {
+      await card.dragTo(inProgressColumn);
+      await expect(page.locator('[data-testid="kanban-sync-status"]')).toContainText('OK', { timeout: 10000 });
+      await card.dragTo(doneColumn);
+      await expect(page.locator('[data-testid="kanban-sync-status"]')).toContainText('OK', { timeout: 10000 });
+    }
   });
 
   test('CU-J04-32 | Formulario Genérico: abrir tarea sin formulario', async ({ page }) => {

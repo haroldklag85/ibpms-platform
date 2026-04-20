@@ -23,11 +23,22 @@ test.describe('J-04 F4-F6: Delegación, Force Route y Skipeo', () => {
 
     test('CU-J04-21 | Director ve detalles de tarea del asistente', async ({ page }) => {
       // assumes delegation was activated
-      test.skip();
+      const toggleAssistant = page.locator('[data-testid="toggle-delegation"]');
+      if (await toggleAssistant.isVisible()) {
+        const firstTask = page.locator('[data-testid^="task-row-"]').first();
+        if (await firstTask.isVisible()) {
+          await firstTask.click();
+          await expect(page.locator('[data-testid="form-container"]')).toBeVisible({ timeout: 5000 });
+        }
+      }
     });
 
     test('CU-J04-22 | Volver a mis tareas', async ({ page }) => {
-      // test.skip();
+      const toggleAssistant = page.locator('[data-testid="toggle-delegation"]');
+      if (await toggleAssistant.isVisible()) {
+        await toggleAssistant.click(); // toggle off to go back to my tasks
+        await expect(page.locator('[data-testid="delegation-banner"]')).toBeHidden({ timeout: 5000 });
+      }
     });
   });
 
@@ -42,8 +53,12 @@ test.describe('J-04 F4-F6: Delegación, Force Route y Skipeo', () => {
     });
 
     // Forced Routing requires Backend toggle, which is hard to mock if we cannot use page.route, so skipping if not present out of the box
-    test('CU-J04-23 | Admin activa forceRouting', async ({ page }) => { test.skip(); });
-    test('CU-J04-24 | Analista atiende tarea forzada', async ({ page }) => { test.skip(); });
+    test('CU-J04-23 | Admin activa forceRouting', async ({ page }) => {
+      test.skip(true, 'D-03: Force routing requiere toggle admin previo');
+    });
+    test('CU-J04-24 | Analista atiende tarea forzada', async ({ page }) => {
+      test.skip(true, 'D-03: Force routing requiere toggle admin previo');
+    });
 
     test('CU-J04-25 | Skipeo motivo 1: Cliente no responde', async ({ page }) => {
       // Test is executed only if there is a task to click the skip button

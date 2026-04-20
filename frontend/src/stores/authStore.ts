@@ -126,12 +126,13 @@ export const useAuthStore = defineStore('auth', () => {
             const jwt = token.value || localStorage.getItem('ibpms_token');
             if (!jwt) throw { status: 401 };
 
-            // Simulación Validación API Backend (V1)
-             if (jwt.includes('EMERGENCY_LOCAL_JWT')) {
-                 user.value = { username: 'root@ibpms.local', roles: ['ROLE_SUPER_ADMIN'] };
-             } else {
-                 user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER', 'ROLE_SUPER_ADMIN', 'Global Admin'] };
-             }
+            try {
+                const payload = JSON.parse(atob(jwt.split('.')[1]));
+                const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', ''));
+                user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
+            } catch (e) {
+                user.value = { username: 'unknown', roles: ['ROLE_USER'] };
+            }
              
              initActiveRole();
              // Consumir Api para effective roles

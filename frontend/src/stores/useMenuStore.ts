@@ -29,10 +29,9 @@ export const useMenuStore = defineStore('menu', () => {
              const { data } = await apiClient.get('/api/v1/menu-layout').catch(() => ({
                  data: [
                     {
-                        title: 'Workdesk',
+                        title: 'Operativo',
                         items: [
                            { path: '/workdesk', icon: 'inbox', label: 'Bandeja Unificada' },
-                           { path: '/inbox', icon: 'mail', label: 'Workdesk (Legacy)' },
                            { path: '/kanban', icon: 'view_kanban', label: 'Tablero Kanban' }
                         ]
                     },
@@ -55,7 +54,7 @@ export const useMenuStore = defineStore('menu', () => {
                         ]
                     },
                     {
-                        title: 'Arquitectura',
+                        title: 'Configuración',
                         roles: ['ROLE_SUPER_ADMIN'],
                         items: [
                            { path: '/admin/modeler/bpmn', icon: 'account_tree', label: 'Venture Modeler' },

@@ -36,11 +36,7 @@ const router = createRouter({
                     name: 'Workdesk',
                     component: () => import('@/views/Workdesk.vue'), // Pantalla 1
                 },
-                {
-                    path: 'workdesk-mock',
-                    name: 'WorkdeskMockup',
-                    component: () => import('@/views/WorkdeskMockup.vue'),
-                },
+
                 {
                     path: 'intake-triage',
                     name: 'IntakeTriage',

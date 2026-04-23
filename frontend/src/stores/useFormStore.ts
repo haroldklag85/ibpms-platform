@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { z } from 'zod';
 import { api } from '@/services/apiClient';
+import { useConnectionStore } from '@/stores/connectionStore';
 
 export const useFormStore = defineStore('formStore', () => {
     const formData = ref<Record<string, any>>({});
@@ -16,8 +17,6 @@ export const useFormStore = defineStore('formStore', () => {
     let pendingSubmitDraft: { taskId: string; payload: any } | null = null;
 
     // CA-31 & CA-32: Idempotency Retry Limit
-    const requiresRetry = ref(false);
-    const retryCount = ref(0);
     const idempotencyKey = ref('');
 
     const setFormData = (data: Record<string, any>, taskId?: string) => {
@@ -84,11 +83,12 @@ export const useFormStore = defineStore('formStore', () => {
                 return;
             }
             
+            const connectionStore = useConnectionStore();
             if (!isRetry) {
                 idempotencyKey.value = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-                retryCount.value = 0;
+                connectionStore.retryCount = 0;
             } else {
-                retryCount.value++;
+                connectionStore.retryCount++;
             }
 
             const config = { headers: { 'Idempotency-Key': idempotencyKey.value } };
@@ -99,8 +99,8 @@ export const useFormStore = defineStore('formStore', () => {
             isDirty.value = false;
             formData.value = {};
             validationErrors.value = {};
-            requiresRetry.value = false;
-            retryCount.value = 0;
+            connectionStore.requiresRetry = false;
+            connectionStore.retryCount = 0;
         } catch (e: any) {
             console.error('Failed to submit form', e);
             if (e.response && e.response.status === 400 && e.response.data && Array.isArray(e.response.data.errors)) {
@@ -112,10 +112,10 @@ export const useFormStore = defineStore('formStore', () => {
                 validationErrors.value = backendErrors;
                 throw new Error('ValidationFailed(RFC7807)');
             } else if (e.response && (e.response.status === 504 || typeof e.response.status === 'undefined')) {
-                if (retryCount.value < 3) {
-                    requiresRetry.value = true;
+                if (connectionStore.retryCount < 3) {
+                    connectionStore.requiresRetry = true;
                 } else {
-                    requiresRetry.value = false;
+                    connectionStore.requiresRetry = false;
                 }
             } else if (e.response && e.response.status === 409 && e.response.data && e.response.data.type === 'SESSION_CONFLICT') {
                 window.dispatchEvent(new CustomEvent('session-conflict-dispatch'));
@@ -179,8 +179,6 @@ export const useFormStore = defineStore('formStore', () => {
         validationErrors,
         isUndoAvailable,
         undoTimeLeft,
-        requiresRetry,
-        retryCount,
         idempotencyKey,
         setFormData,
         loadLocalDraft,

@@ -60,4 +60,51 @@ public class AuthSyncControllerTest {
             authSyncController.emergencyLogin(creds);
         });
     }
+    @Test
+    public void testEmergencyLoginMissingFields() {
+        Map<String, String> creds = Map.of("email", "test@alpha.com"); // missing password
+        org.springframework.http.ResponseEntity<?> response = authSyncController.emergencyLogin(creds);
+        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Map<String, String> body = (Map<String, String>) response.getBody();
+        org.junit.jupiter.api.Assertions.assertEquals("MISSING_FIELDS", body.get("code"));
+    }
+
+    @Test
+    public void testEmergencyLoginUserNotFound() {
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        Map<String, String> creds = Map.of("email", "no@alpha.com", "password", "123");
+        org.springframework.http.ResponseEntity<?> response = authSyncController.emergencyLogin(creds);
+        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.http.HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        Map<String, String> body = (Map<String, String>) response.getBody();
+        org.junit.jupiter.api.Assertions.assertEquals("USER_NOT_FOUND", body.get("code"));
+    }
+
+    @Test
+    public void testEmergencyLoginInvalidPassword() {
+        UserEntity user = new UserEntity();
+        user.setPasswordHash("hash");
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        Map<String, String> creds = Map.of("email", "admin@alpha.com", "password", "wrong");
+        org.springframework.http.ResponseEntity<?> response = authSyncController.emergencyLogin(creds);
+        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.http.HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        Map<String, String> body = (Map<String, String>) response.getBody();
+        org.junit.jupiter.api.Assertions.assertEquals("INVALID_PASSWORD", body.get("code"));
+    }
+
+    @Test
+    public void testEmergencyLoginAccountDisabled() {
+        UserEntity user = new UserEntity();
+        user.setPasswordHash("hash");
+        user.setIsActive(false);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+
+        Map<String, String> creds = Map.of("email", "admin@alpha.com", "password", "correct");
+        org.springframework.http.ResponseEntity<?> response = authSyncController.emergencyLogin(creds);
+        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.http.HttpStatus.FORBIDDEN, response.getStatusCode());
+        Map<String, String> body = (Map<String, String>) response.getBody();
+        org.junit.jupiter.api.Assertions.assertEquals("ACCOUNT_DISABLED", body.get("code"));
+    }
 }

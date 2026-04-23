@@ -139,4 +139,17 @@ public class FormCertificationTest {
             .statusCode(200)
             .body("$", isA(java.util.List.class));
     }
+
+    @Test
+    public void testCertifyWithoutAuthReturnsUnauthorized() {
+        // POST /certify sin Authorization header -> HTTP 401 o 403
+        UUID formId = UUID.randomUUID();
+        
+        given()
+            .contentType(ContentType.JSON)
+            .when()
+            .post("/api/v1/design/forms/{id}/certify", formId)
+            .then()
+            .statusCode(anyOf(is(401), is(403)));
+    }
 }

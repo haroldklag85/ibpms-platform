@@ -298,6 +298,19 @@ curl.exe -s -o NUL -w "%{http_code}" http://localhost:8080/actuator/health
 - **Causa:** Un proceso Java zombie del host o la instancia de Docker cuando intentas correr `mvn spring-boot:run` directamente en Windows estando Docker activo.
 - **Resolución:** Usar siempre Docker para el backend. Si se necesita local: `docker stop ibpms-core-dev` primero.
 
+### 8.3 Incidente "Falso 500 por Enmascaramiento Frontend" (2026-04-20)
+
+- **Síntoma:** Frontend mostraba `Error 500 - Colapso del Servidor` incluso después de que el backend se recuperó del bootloop JPA. El equipo invirtió ~3 horas adicionales buscando un error 500 inexistente en los controladores de auth.
+- **Causa:** El interceptor `apiClient.ts` agrupa los códigos `[500, 502, 503, 504]` bajo un solo mensaje genérico. El proxy Vite devolvía **502 Bad Gateway** (backend en bootloop), pero la UI lo reportaba como "Error 500".
+- **Resolución:** Diagnóstico diferenciado documentado en [ADR-014](../adr_014_frontend_error_observability.md). Se creó un [Runbook de Diagnóstico de Auth](./RUNBOOK_AUTH_DIAGNOSTICS.md) con árbol de decisión para evitar recurrencia.
+- **Lección Clave:** Ante cualquier "Error 500" reportado por la UI, **siempre validar el código HTTP real** haciendo una petición directa al backend (sin proxy Vite) antes de asumir que el controlador tiene un bug.
+
+### 8.4 Incidente "Credenciales Inválidas Post-Remediación" (2026-04-20)
+
+- **Síntoma:** Tras resolver el bootloop y el enmascaramiento, el login seguía fallando con 401.
+- **Causa:** La base de datos UAT (`ibpms-postgres-uat`) solo contiene un usuario: `root@ibpms.local`. Las pruebas se hacían con emails como `admin@empresa.com` que no existen en la tabla `ibpms_security_user`.
+- **Resolución:** Documentar las credenciales válidas de prueba en el [Runbook §4](./RUNBOOK_AUTH_DIAGNOSTICS.md#4-validación-de-credenciales).
+
 ---
 
 ## 9. Checklist Pre-Refactorización de Entidades JPA

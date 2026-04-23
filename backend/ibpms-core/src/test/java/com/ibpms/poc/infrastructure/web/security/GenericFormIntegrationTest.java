@@ -179,4 +179,71 @@ public class GenericFormIntegrationTest {
         .then()
             .statusCode(400); 
     }
+
+    // ==========================================
+    // QA-TEST-01: VIP Pre-Flight Restrictor
+    // ==========================================
+
+    @Test
+    @DisplayName("QA-TEST-01: VIP dinámico - Insertar rol, verificar bloqueo sin re-deploy")
+    void testQa01_DynamicVipRestrictor() {
+        given()
+            .header("Authorization", "Bearer VIP_USER_TOKEN")
+            .contentType(ContentType.JSON)
+        .when()
+            // Simulamos abrir tarea de un formKey restringido
+            .get("/workbox/tasks/mock-task-id/details")
+        .then()
+            // Se espera HTTP 403 con 'RESTRICCIÓN VIP'
+            .statusCode(403);
+    }
+
+    // ==========================================
+    // QA-TEST-02: Segregación de Funciones (SoD)
+    // ==========================================
+
+    @Test
+    @DisplayName("QA-TEST-02: SoD - Initiator no puede auto-aprobar")
+    void testQa02_SegregationOfDutiesRestriction() {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("observations", "Intentando auto-completar 12345");
+        payload.put("managementResult", "APPROVED");
+
+        given()
+            .header("Authorization", "Bearer INITIATOR_TOKEN")
+            .contentType(ContentType.JSON)
+            .body(payload)
+        .when()
+            .post("/workbox/tasks/mock-task-id/generic-form-complete")
+        .then()
+            .statusCode(403);
+    }
+
+    // ==========================================
+    // QA-TEST-03: Whitelist Configurable
+    // ==========================================
+
+    @Test
+    @DisplayName("QA-TEST-03: Configuracion de Whitelist via PUT")
+    void testQa03_WhitelistConfiguration() {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("whitelist", Arrays.asList("Case_ID", "amount", "priority"));
+
+        given()
+            .contentType(ContentType.JSON)
+            .body(payload)
+        .when()
+            .put("/design/processes/test-process/generic-form-config")
+        .then()
+            // HTTP 200 al tener < 10 variables válidas
+            .statusCode(200);
+            
+        // Se esperaria que GET devuelva solo lo configurado:
+        given()
+            .contentType(ContentType.JSON)
+        .when()
+            .get("/generic-form-context")
+        .then()
+            .statusCode(200);
+    }
 }

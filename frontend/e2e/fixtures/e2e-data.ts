@@ -33,6 +33,12 @@ export const USERS = {
     password: 'Test123!',
     tenant: TENANTS.ALPHA.id,
     roles: ['ROLE_SUPERVISOR']
+  },
+  VIP_DIRECTOR: {
+    email: 'vip_director@alpha.com',
+    password: 'Test123!',
+    tenant: TENANTS.ALPHA.id,
+    roles: ['ROLE_ALTA_DIRECCION']
   }
 } as const;
 

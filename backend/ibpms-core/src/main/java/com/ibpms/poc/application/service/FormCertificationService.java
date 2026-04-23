@@ -2,6 +2,7 @@ package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.infrastructure.jpa.entity.FormDefinitionEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.FormDefinitionRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -36,11 +37,14 @@ public class FormCertificationService {
 
     private final FormDefinitionRepository formDefinitionRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final ObjectMapper objectMapper;
 
     public FormCertificationService(FormDefinitionRepository formDefinitionRepository,
-                                     JdbcTemplate jdbcTemplate) {
+                                     JdbcTemplate jdbcTemplate,
+                                     ObjectMapper objectMapper) {
         this.formDefinitionRepository = formDefinitionRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.objectMapper = objectMapper;
     }
 
     // ─────────────────────────────────────────────
@@ -143,6 +147,12 @@ public class FormCertificationService {
 
     @Transactional
     public FormDefinitionEntity createNewVersion(UUID formId, int newVersionId, String schemaContent, String createdBy) {
+        try {
+            objectMapper.readTree(schemaContent);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Form schemaContent is not a valid JSON string");
+        }
+
         FormDefinitionEntity newVersion = new FormDefinitionEntity();
         newVersion.setFormId(formId);
         newVersion.setVersionId(newVersionId);

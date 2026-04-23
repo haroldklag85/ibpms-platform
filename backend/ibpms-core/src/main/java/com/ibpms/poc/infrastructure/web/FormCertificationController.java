@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * REST Controller for QA Certification operations (US-028 CA-12/CA-13/CA-16).
@@ -38,7 +39,12 @@ public class FormCertificationController {
         try {
             // Ensure entity exists (auto-create if missing for test scenarios)
             certificationService.ensureEntityExists(id);
-            FormDefinitionEntity entity = certificationService.certifyForm(id, "qa-system", null);
+            org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Authentication required for QA certification"));
+            }
+            String currentUser = auth.getName();
+            FormDefinitionEntity entity = certificationService.certifyForm(id, currentUser, null);
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("id", entity.getId());
             response.put("form_id", entity.getFormId());

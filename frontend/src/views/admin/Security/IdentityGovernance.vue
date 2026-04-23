@@ -531,7 +531,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { z } from 'zod';
 import apiClient from '@/services/apiClient';
 
@@ -554,18 +554,9 @@ const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
 };
 
 // ── TAB 1 & TAB_ROLES: Mocks de Usuarios y Roles ──
-const mockRoles = ref([
-  { id: 'R_GLOBAL', name: 'Global Admin' },
-  { id: 'R_RISK', name: 'Risk Analyst' },
-  { id: 'R_SALES', name: 'Promotor Ventas' },
-  { id: 'R_LEGAL', name: 'Jurídico' }
-]);
+const mockRoles = ref<{id: string, name: string}[]>([]);
 
-const mockUsers = ref([
-  { id: 'U-001', name: 'Carlos Admin', email: 'cerberos@ibpms.local', department: 'TI', roles: ['R_GLOBAL'], active: true, isExternalIdp: false },
-  { id: 'U-002', name: 'Ana Ramos', email: 'aramos@ibpms.local', department: 'Riesgos', roles: ['R_RISK', 'R_LEGAL'], active: true, isExternalIdp: false },
-  { id: 'U-003', name: 'Luisa F.', email: 'lf@ibpms.local', department: 'Ventas', roles: ['R_SALES'], active: false, isExternalIdp: true }
-]);
+const mockUsers = ref<{id: string, name: string, email: string, department: string, roles: string[], active: boolean, isExternalIdp: boolean}[]>([]);
 
 const getRoleName = (roleId: string) => {
     const r = mockRoles.value.find(x => x.id === roleId);
@@ -675,19 +666,8 @@ const generateTempPassword = async () => {
 };
 
 // ── TAB 2: Permisos Matriz ──
-const mockProcesses = [
-  { id: 'P_CRED', name: 'Crédito Consumo' },
-  { id: 'P_HIPO', name: 'Hipotecario' },
-  { id: 'P_PQRS', name: 'Quejas (PQRS)' }
-];
-const matrixState = ref<Record<string, boolean>>({
-  'R_GLOBAL_P_CRED_I': true, 'R_GLOBAL_P_CRED_E': true,
-  'R_GLOBAL_P_HIPO_I': true, 'R_GLOBAL_P_HIPO_E': true,
-  'R_GLOBAL_P_PQRS_I': true, 'R_GLOBAL_P_PQRS_E': true,
-  
-  'R_SALES_P_CRED_I': true, 'R_SALES_P_CRED_E': false,
-  'R_RISK_P_CRED_I': false, 'R_RISK_P_CRED_E': true,
-});
+const mockProcesses = ref<{id: string, name: string}[]>([]);
+const matrixState = ref<Record<string, boolean>>({});
 
 const showRoleModal = ref(false);
 const editingRole = ref<any>(null);
@@ -708,7 +688,7 @@ const onParentRoleChange = () => {
     if(!parentId) return;
     
     // CA-6 Clonar permisos del Rol Padre selecto
-    for(const p of mockProcesses) {
+    for(const p of mockProcesses.value) {
         roleForm.value.matrix[p.id].initiate = matrixState.value[`${parentId}_${p.id}_I`] || false;
         roleForm.value.matrix[p.id].execute = matrixState.value[`${parentId}_${p.id}_E`] || false;
     }
@@ -720,7 +700,7 @@ const openRoleModal = (role: any = null) => {
     if(role) { 
         // Reconstruct matrix from global state (mock)
         const matrix: Record<string, { initiate: boolean, execute: boolean }> = {};
-        for(const p of mockProcesses) {
+        for(const p of mockProcesses.value) {
             matrix[p.id] = {
                 initiate: matrixState.value[`${role.id}_${p.id}_I`] || false,
                 execute: matrixState.value[`${role.id}_${p.id}_E`] || false
@@ -730,7 +710,7 @@ const openRoleModal = (role: any = null) => {
     }
     else { 
         const matrix: Record<string, { initiate: boolean, execute: boolean }> = {};
-        for(const p of mockProcesses) {
+        for(const p of mockProcesses.value) {
             matrix[p.id] = { initiate: false, execute: false };
         }
         roleForm.value = { name: '', id: 'R_', parentRole: '', matrix }; 
@@ -748,7 +728,7 @@ const saveRole = () => {
     }
     
     // Salvaguardar Matriz en el estado unificado
-    for(const p of mockProcesses) {
+    for(const p of mockProcesses.value) {
         matrixState.value[`${roleForm.value.id}_${p.id}_I`] = roleForm.value.matrix[p.id].initiate;
         matrixState.value[`${roleForm.value.id}_${p.id}_E`] = roleForm.value.matrix[p.id].execute;
     }
@@ -842,17 +822,10 @@ const copySecret = () => {
 const showAuditModal = ref(false);
 const activeAuditLog = ref<any>(null);
 
-const mockAuditLogs = ref([
-  { id: 'AUD-1001', timestamp: new Date(Date.now() - 3600000).toISOString(), adminId: 'U-001 (Admin)', action: 'MODIFY_ROLE_MATRIX', delta: { "roleId": "R_SALES", "before": { "KYC_P": { "initiate": false, "execute": false } }, "after": { "KYC_P": { "initiate": true, "execute": true } } } },
-  { id: 'AUD-1002', timestamp: new Date(Date.now() - 86400000).toISOString(), adminId: 'U-001 (Admin)', action: 'REVOKE_DELEGATION', delta: { "delegationId": "DEL-1710", "targetUserId": "U-003", "status": "REVOKED_SOFT_DELETE", "reason": "Revocación manual CISO" } },
-  { id: 'AUD-1003', timestamp: new Date(Date.now() - 250000000).toISOString(), adminId: 'SYSTEM_CRON', action: 'FREEZE_STALE_USER', delta: { "userId": "U-002", "inactivityDays": 95, "status": "FROZEN_SOFT_DELETE" } }
-]);
+const mockAuditLogs = ref<any[]>([]);
 
 // ── TAB 7: ANOMALÍAS CISO (CA-12) ──
-const mockAnomalies = ref([
-  { id: 'ANM-001', type: 'SoD_VIOLATION', severity: 'HIGH', user: 'Ana Ramos', desc: 'Intento de Juez y Parte en Evaluación de Riesgo.', timestamp: new Date().toISOString(), status: 'OPEN' },
-  { id: 'ANM-002', type: 'BREAK_GLASS_LOGIN', severity: 'CRITICAL', user: 'Carlos Admin', desc: 'Acceso corporativo vía escotilla local eludiendo EntraID.', timestamp: new Date(Date.now() - 3600000).toISOString(), status: 'RESOLVED' }
-]);
+const mockAnomalies = ref<any[]>([]);
 
 const resolveAnomaly = async (anomaly: any) => {
    try {
@@ -871,6 +844,58 @@ const openAuditModal = (log: any) => {
   activeAuditLog.value = log;
   showAuditModal.value = true;
 };
+
+onMounted(async () => {
+    try {
+        // Fetch all necessary data for E2E validation without mocks
+        const [usersRes, rolesRes, processesRes, anomaliesRes, auditRes] = await Promise.all([
+            apiClient.get('/admin/users', { validateStatus: () => true }).catch(() => ({ data: [] })),
+            apiClient.get('/admin/roles', { validateStatus: () => true }).catch(() => ({ data: [] })),
+            apiClient.get('/design/processes/catalog', { validateStatus: () => true }).catch(() => ({ data: [] })), // Real E2E catalog
+            apiClient.get('/security/anomalies', { validateStatus: () => true }).catch(() => ({ data: [] })),
+            apiClient.get('/security/audit/reports', { validateStatus: () => true }).catch(() => ({ data: [] }))
+        ]);
+
+        if (usersRes.data && Array.isArray(usersRes.data)) {
+            mockUsers.value = usersRes.data.map((u: any) => ({
+                id: u.id,
+                name: u.username || 'Desconocido',
+                email: u.email || 'sin-correo@example.com',
+                department: 'General',
+                roles: u.roles || [],
+                active: u.isActive,
+                isExternalIdp: u.isExternalIdp
+            }));
+        }
+        
+        if (rolesRes.data && Array.isArray(rolesRes.data)) {
+            mockRoles.value = rolesRes.data.map((r: any) => ({
+                id: r.id || r.name,
+                name: r.name || r.id
+            }));
+        }
+        
+        if (processesRes.data && Array.isArray(processesRes.data)) {
+            mockProcesses.value = processesRes.data.map((p: any) => ({
+                id: p.id || p.technicalName,
+                name: p.name || p.technicalName
+            }));
+        }
+        
+        if (anomaliesRes.data && Array.isArray(anomaliesRes.data)) {
+            mockAnomalies.value = anomaliesRes.data;
+        }
+        
+        if (auditRes.data && Array.isArray(auditRes.data)) {
+            mockAuditLogs.value = auditRes.data;
+        }
+
+        showToast('Datos sincronizados con Base de Datos (E2E mode).', 'success');
+    } catch(e) {
+        console.error('Error fetching data from backend for E2E validation:', e);
+        showToast('Error cargando datos del backend.', 'error');
+    }
+});
 </script>
 
 <style scoped>

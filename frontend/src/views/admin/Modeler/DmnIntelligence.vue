@@ -348,7 +348,8 @@ const generateRule = async () => {
     let simulatedText = '';
 
     try {
-        const dmnEndpoint = (import.meta as any).env?.VITE_API_URL ? `${(import.meta as any).env.VITE_API_URL}/api/v1/dmn/copilot/stream` : 'http://localhost:8080/api/v1/dmn/copilot/stream';
+        const baseURL = (import.meta as any).env?.VITE_API_URL || '';
+        const dmnEndpoint = `${baseURL}/api/v1/dmn/copilot/stream`;
 
         await fetchEventSource(dmnEndpoint, {
             method: 'POST',

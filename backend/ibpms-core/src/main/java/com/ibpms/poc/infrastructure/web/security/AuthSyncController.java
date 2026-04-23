@@ -85,23 +85,35 @@ public class AuthSyncController {
         String rawPassword = creds.get("password");
 
         if (email == null || rawPassword == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Falta email o password"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "code", "MISSING_FIELDS",
+                "message", "Los campos 'email' y 'password' son obligatorios."
+            ));
         }
 
         Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByEmail(email);
         
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Credenciales Inválidas"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "code", "USER_NOT_FOUND",
+                "message", "No existe una cuenta asociada al correo proporcionado."
+            ));
         }
 
         com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity user = userOpt.get();
 
         if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Credenciales Inválidas"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "code", "INVALID_PASSWORD",
+                "message", "La contraseña proporcionada es incorrecta."
+            ));
         }
 
         if (!user.getIsActive()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Cuenta deshabilitada"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "code", "ACCOUNT_DISABLED",
+                "message", "La cuenta existe pero se encuentra deshabilitada. Contacte al administrador."
+            ));
         }
 
         // Emitir JWT con claims

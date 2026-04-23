@@ -30,8 +30,9 @@ export const useAuthStore = defineStore('auth', () => {
         if (sseSource) sseSource.close();
         
         try {
-            // Mock de UAT, en Producción apunta a: /api/v1/security/stream?streamId=...
-            const TARGET_SSE = (import.meta as any).env.VITE_API_URL ? `${(import.meta as any).env.VITE_API_URL}/api/v1/security/stream` : 'http://localhost:8080/api/v1/security/stream';
+            // Configuración segura usando el cliente HTTP Base URL o URI relativa para la Proxy de Vite
+            const baseURL = (import.meta as any).env.VITE_API_URL || '';
+            const TARGET_SSE = `${baseURL}/api/v1/security/stream`;
             
             sseSource = new EventSource(TARGET_SSE);
             sseSource.onmessage = (event) => {

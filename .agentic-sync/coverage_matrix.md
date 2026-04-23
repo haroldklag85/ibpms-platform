@@ -1,6 +1,6 @@
 # 📊 Matriz de Cobertura de Implementación (iBPMS V1)
 
-> **Última actualización:** 2026-04-18T15:25 (Reconciliación PO Cruzada — Código Fuente vs Matrix) | **Responsable:** Product Owner + Arquitecto Líder
+> **Última actualización:** 2026-04-22T23:49 (Reconciliación Arquitecto — Cierre Deuda Técnica US-017 CA-19→CA-26 + Delegación S6.2) | **Responsable:** Arquitecto Líder
 > **Fuente de Verdad:** Checklist validado manualmente por el PO/Arquitecto Líder
 > **Leyenda:** ✅ Implementado | ⏳ En progreso | ❌ Pendiente | 🚫 Excluido (V2+) | 🔄 Remediación pendiente | ⚠️ Falso Positivo Corregido
 
@@ -21,8 +21,8 @@
 |---------|-------|
 | **Total US en V1** | 56 |
 | **US Completadas** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción (avanzadas >60%)** | 7 (US-002 ~68%, US-004 ~71%, US-017 ~78%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
-| **US En Construcción (tempranas <50%)** | 1 (US-007 ~48% — bloqueada por IDOR) |
+| **US En Construcción (avanzadas >60%)** | 6 (US-002 ~68%, US-004 ~71%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
+| **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — bloqueada por IDOR, US-017 ~50% — 8 CAs UX/UI pendientes) |
 | **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
 | **US Pendientes** | 32 |
 | **CAs Implementados (estimado)** | ~290+ |
@@ -397,10 +397,19 @@
 | CA-14 | ACID Fallback Saga Inverso | ✅ | N/A | ❌ | S5.1 | `FORM_SUBMIT_ROLLED_BACK` event + `SagaCompensationException` + `CamundaCompletionAdapter` retry 3x |
 | CA-15 | Auto-Claim Group-Level | ✅ | N/A | ❌ | S5.1 | `AutoClaimService.tryAutoClaim()` integrado |
 | CA-16 | Trazabilidad Rechazos BFF | ✅ | N/A | ❌ | S5.1 | `RejectionLogService.getRejectionHistory()` integrado en BFF |
+| CA-19 | [UX/UI] Debounce Visual 5s No Intrusivo | N/A | ❌ | ❌ | — | Handoff Frontend emitido. `useConnectionStatus.ts` + `connectionStore.ts` [NUEVO] |
+| CA-20 | [UX/UI] Toast Flotante Inferior Izquierda | N/A | ❌ | ❌ | — | `ConnectionToast.vue` [NUEVO]. z-index: 9990 |
+| CA-21 | [UX/UI] Lenguaje de Negocio (Sin Jerga) | N/A | ❌ | ❌ | — | Prohibido: CQRS, STOMP, Event Sourcing, WebSocket |
+| CA-22 | [UX/UI] Operatividad Pasiva No-Bloqueante | N/A | ❌ | ❌ | — | Sin overlay full-screen. pointer-events: auto |
+| CA-23 | [UX/UI] Transición a Modo Degradado | N/A | ❌ | ❌ | — | Mutación a DEGRADED tras desconexión persistente |
+| CA-24 | [UX/UI] Reconexión Silenciosa Background | N/A | ❌ | ❌ | — | Sin botones "Reintentar". Auto-sync |
+| CA-25 | [UX/UI] Feedback Positivo Desvanecimiento 3s | N/A | ❌ | ❌ | — | RESTORED → verde → 3s → fade-out 500ms → v-if=false |
+| CA-26 | [UX/UI] Anti-Colisión con ErrorStateGlobal | N/A | ❌ | ❌ | — | ErrorStateGlobal z-9998 > ConnectionToast z-9990. Estado SILENCED |
 
 ### Resumen US-017
-- **Total CAs:** 16 | **✅ Completos:** 10 | **⚠️ Parciales:** 2 | **❌ Pendiente:** 4 | **% Real:** ~78%
+- **Total CAs:** 24 | **✅ Completos:** 10 | **⚠️ Parciales:** 2 | **❌ Pendiente:** 12 (4 arquitectura + 8 UX/UI) | **% Real:** ~50%
 - **ADR-001:** ✅ Cumplido — dominio libre de JPA
+- **Sección E (CA-19 a CA-26):** 🆕 8 CAs UX/UI delegados a Frontend. Handoff emitido: `handoff_frontend_US017_CA19_CA26.md`
 
 ---
 
@@ -573,13 +582,13 @@
 |---------|-------|
 | **Total US en V1** | 56 |
 | **US Completadas (Back+Front)** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción (avanzadas >60%)** | 7 (US-002 ~68%, US-004 ~71%, US-017 ~78%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
-| **US En Construcción (tempranas <50%)** | 1 (US-007 ~48% — bloqueada por IDOR) |
+| **US En Construcción (avanzadas >60%)** | 6 (US-002 ~68%, US-004 ~71%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
+| **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — bloqueada por IDOR, US-017 ~50% — 8 CAs UX/UI pendientes) |
 | **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
 | **US Pendientes** | 32 |
 | **CAs Implementados (estimado)** | ~290+ |
 | **CAs Validados QA** | ~38 (~13%) |
-| **Falsos Positivos Corregidos** | 5 (US-001 CA-8 · US-002 9%→68% · US-017 0%→78% · US-025 ausente · US-027 ausente) |
+| **Falsos Positivos Corregidos** | 5 (US-001 CA-8 · US-002 9%→68% · US-017 0%→50% · US-025 ausente · US-027 ausente) |
 | **Vulnerabilidades Críticas Abiertas** | 0 (IDOR US-007 + US-027 cerrado en S6.1; Webhook legacy US-004 deprecado a 410) |
 | **Principal Brecha** | 🟡 QA < 13% global. US-008 Kanban sigue mock. Data seed E2E pendiente para UI tests. |
 | **E2E Sprint 6.1** | 4/7 PASS (57%) — Lotes B1+B2 PASS (Security), B3+B4+B5 FAIL (UI sin data seed) |
@@ -602,6 +611,7 @@
 | 🟡 P3 | Desglose CA-a-CA faltante | US-034, US-038, US-039, US-043, US-048 | Reconciliación con `git log --grep="CA-"` | ❌ Pendiente |
 | 🟡 P3 | Deuda técnica US-043 CA-6 | US-043 | Plan de remediación | ❌ Pendiente |
 | 🟡 P4 | OBS abiertas US-005 | US-005 | Cerrar OBS-1 (CA-68) y OBS-2 (CA-65) | ❌ Pendiente |
+| 🟢 P1 | US-017 CA-19 a CA-26 UX/UI delegados | US-017 | Handoff Frontend + QA emitidos (Toast Flotante Conexión) | ⏳ Delegado |
 
 ---
 

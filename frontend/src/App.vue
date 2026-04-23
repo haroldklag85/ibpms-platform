@@ -4,10 +4,14 @@ import { useAuthStore } from '@/stores/authStore'
 import NotFound404 from '@/components/common/NotFound404.vue'
 import SudoModal from '@/components/common/SudoModal.vue'
 import ErrorStateGlobal from '@/components/common/ErrorStateGlobal.vue'
+import ConnectionToast from '@/components/common/ConnectionToast.vue'
+import { useConnectionStatus } from '@/composables/useConnectionStatus'
 import { onMounted } from 'vue'
 import { LocalStorageGarbageCollector } from '@/services/LocalStorageGarbageCollector'
 
 const authStore = useAuthStore()
+
+useConnectionStatus()
 
 onMounted(() => {
   LocalStorageGarbageCollector.run()
@@ -46,4 +50,7 @@ onMounted(() => {
 
   <!-- CA-1 & CA-3: Global Defensive UI State -->
   <ErrorStateGlobal />
+
+  <!-- CA-20: Connection Toast -->
+  <ConnectionToast />
 </template>

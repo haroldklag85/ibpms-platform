@@ -1682,7 +1682,8 @@ const sendCopilotMessage = async () => {
     const { xml } = await modelerInstance.saveXML({ format: true });
     
     // CA-01 SSE
-    const endpoint = (import.meta as any).env?.VITE_API_URL ? `${(import.meta as any).env.VITE_API_URL}/api/v1/design/processes/copilot/stream` : 'http://localhost:8080/api/v1/design/processes/copilot/stream';
+    const baseURL = (import.meta as any).env?.VITE_API_URL || '';
+    const endpoint = `${baseURL}/api/v1/design/processes/copilot/stream`;
     
     // Inyectamos el objeto reactivo para el streming y apuntamos a su índice
     const activeAiMessage = { role: 'ai', text: '', xmlPayload: undefined, options: undefined };

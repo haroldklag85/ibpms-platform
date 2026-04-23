@@ -799,6 +799,7 @@
                      <div class="flex gap-2">
                         <button @click="generateMockPath('happy')" class="text-[10px] bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200">Autocompletar Happy</button>
                         <button @click="generateMockPath('sad')" class="text-[10px] bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200">Autocompletar Sad</button>
+                        <button @click="fuzzerPayload = '{\n  \n}'" class="text-[10px] bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200">🗑️ Limpiar</button>
                      </div>
                   </div>
                   <textarea v-model="fuzzerPayload" class="flex-1 form-textarea font-mono text-xs p-3 border-gray-300 rounded shadow-sm resize-none"></textarea>
@@ -843,6 +844,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useLocalStorage } from '@vueuse/core';
 import VueDraggable from 'vuedraggable';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
@@ -1157,11 +1159,11 @@ const generateVitestSpec = () => {
 
 // CA-79: Consola QA Sandbox Fuzzer
 const showFuzzerModal = ref(false);
-const fuzzerPayload = ref('{\n  \n}');
+const fuzzerPayload = useLocalStorage(`fuzzer_${route.query.id || 'draft'}`, '{\n  \n}');
 const fuzzerErrors = ref<{msg: string, isRefine: boolean}[]>([]);
 
 const openFuzzerSandbox = async () => {
-    fuzzerPayload.value = '{\n  \n}';
+    if (!fuzzerPayload.value || fuzzerPayload.value.trim() === '{}') { fuzzerPayload.value = '{\n  \n}'; }
     fuzzerErrors.value = [];
     showFuzzerModal.value = true;
 

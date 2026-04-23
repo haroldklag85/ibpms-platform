@@ -25,7 +25,8 @@ export class LocalStorageGarbageCollector {
 
               try {
                   const parsed = JSON.parse(val);
-                  const timestamp = parsed._timestamp || parsed.updatedAt ? new Date(parsed.updatedAt).getTime() : 0;
+                  const tsField = parsed.updatedAt || parsed._timestamp;
+                  const timestamp = tsField ? new Date(tsField).getTime() : 0;
                   cacheKeys.push({ key, bytes, timestamp });
               } catch (e) {
                   // Si no se puede parsear o no tiene timestamp, se asume 0 para ser candidato a limpieza

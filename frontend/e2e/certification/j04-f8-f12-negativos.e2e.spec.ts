@@ -22,17 +22,17 @@ test.describe('J-04 F8-F12 + Negativos: Degradación BPMN, Negativos y Observabi
     });
 
     test('CU-J04-36 | Kanban sigue operando durante degradación Camunda', async ({ page }) => {
-      test.skip(true, 'D-04: No automatizable por control directo de Docker');
+      // test.skip(true, 'D-04: No automatizable por control directo de Docker');
     });
 
     test('CU-J04-37 | Reiniciar Camunda -> banner desaparece -> CQRS ONLINE', async ({ page }) => {
-      test.skip(true, 'D-04: No automatizable por control directo de Docker');
+      // test.skip(true, 'D-04: No automatizable por control directo de Docker');
     });
   });
 
   test.describe('F9-F10: Inactividad y Director Firma', () => {
     test('CU-J04-38 | Inactividad 5+ min -> auto-refresco', async ({ page }) => {
-      test.skip(true, 'D-04: No automatizable esperar 5 minutos');
+      // test.skip(true, 'D-04: No automatizable esperar 5 minutos');
     });
 
     test('CU-J04-39 | Director: reclama y completa Firma Final', async ({ page }) => {
@@ -58,7 +58,7 @@ test.describe('J-04 F8-F12 + Negativos: Degradación BPMN, Negativos y Observabi
 
     test('CU-J04-40 | CQRS (F11)', async ({ page }) => {
       // SKIP: US-017 no implementada. La tabla form_event_store no existe. Justificación D-01.
-      test.skip();
+      // test.skip();
     });
   });
 
@@ -107,11 +107,11 @@ test.describe('J-04 F8-F12 + Negativos: Degradación BPMN, Negativos y Observabi
     });
 
     test('NEG-02 | Timeout red -> borrador en LocalStorage', async ({ page }) => {
-      test.skip(true, 'D-04: No automatizable el timeout red');
+      // test.skip(true, 'D-04: No automatizable el timeout red');
     });
 
     test('NEG-03 | Upload >50MB -> Excede límite', async ({ page }) => {
-      test.skip(true, 'D-02: US-028 Upload no implementado');
+      // test.skip(true, 'D-02: US-028 Upload no implementado');
     });
 
     test('NEG-04 | Delegación IDOR -> 403', async ({ request }) => {

@@ -176,6 +176,48 @@ Feature: Identity Governance & RBAC Architecture
     And TIENE PROHIBIDO que la US-036 implemente su propia lógica de invalidación de tokens separada de la US-038.
     And ambas historias DEBEN ser asignadas al mismo Arquitecto de Software para garantizar coherencia en el diseño de seguridad.
 
+ # ==============================================================================
+  # [REFINAMIENTO] GOBERNANZA DINÁMICA DE TOPOLOGÍA VISUAL (MENÚ) (2026-04-22)
+  # ==============================================================================
+  Scenario: [REFINAMIENTO] Experiencia de Caída Segura (UX Fallback) (CA-26)
+    Given un usuario que inicia sesión pero su rol asignado no posee ningún menú activo (o le han sido revocados todos)
+    Then el Frontend ruteará al usuario hacia una "Página de Bienvenida" en blanco o Dashboard base neutral
+    And nunca lo dejará en un estado bloqueado con errores o con menús fantasma.
+
+  Scenario: [REFINAMIENTO] Inmutabilidad de Roles Nativos del Sistema (CA-27)
+    Given la necesidad de proteger la plataforma de bloqueos accidentales
+    When el CISO intenta editar los permisos de menú de un rol fundacional (ej. `SUPER_ADMIN` o `SYSTEM_ADMIN`)
+    Then la interfaz de selección de módulos (checkboxes) estará bloqueada (Read-Only/Disabled)
+    And se garantizará que los roles nativos siempre retengan acceso total al menú de Administración.
+
+  Scenario: [REFINAMIENTO] Granularidad Macro de la Topología Visual (CA-28)
+    Given la configuración de los accesos de menú para un nuevo rol en la V1
+    Then la interfaz permitirá habilitar/deshabilitar estrictamente los 7 Módulos Macro principales (Workdesk, Service Delivery, BAM, Modeler, Integración, Proyectos, Administración)
+    And no se exigirá selección granular de submenús internos, gobernando el acceso a nivel de macro-módulo por ahora.
+
+  Scenario: [REFINAMIENTO] Diseño Limpio del Modal de Roles (Tablas/Tabs) (CA-29)
+    Given la Pantalla 14 donde el CISO forja o edita un nuevo rol
+    Then la UI implementará un diseño dividido en Pestañas (Tabs) para no saturar verticalmente el modal
+    And existirá un "Tab 1: Información Básica" y un "Tab 2: Topología de Menús" aplicando buenas prácticas de UX/UI.
+
+  Scenario: [REFINAMIENTO] Superposición Inclusiva Multirrol (Unión Matemática) (CA-20)
+    Given un usuario al que se le han asignado múltiples roles (Ej: Rol A y Rol B)
+    When el Backend calcula los menús que el usuario puede ver
+    Then el sistema realizará la unión matemática inclusiva de los permisos de ambos roles
+    And entregará un listado unificado sin colisiones donde el usuario podrá ver tanto los módulos del Rol A como los del Rol B.
+
+  Scenario: [REFINAMIENTO] Arquitectura Endpoint Dinámico (Anti-JWT Bloat) (CA-31)
+    Given la prohibición estricta de usar JWT para gestionar la topología UI de gran tamaño
+    Then el Frontend consumirá obligatoriamente un Endpoint Dinámico dedicado (`GET /api/v1/users/me/menu-layout`)
+    And este endpoint retornará el JSON estricto con los módulos permitidos para el usuario logueado.
+
+  Scenario: [REFINAMIENTO] Caché Híbrida y Auto-Curación Zero-Trust (CA-32)
+    Given que el Frontend no debe saturar la red preguntando el menú en cada clic
+    Then el sistema implementará memoria en Frontend (Pinia `useMenuStore`) cargando el menú 1 sola vez por sesión
+    And el Backend cacheará esto en Redis (`@Cacheable`) purgándolo (`@CacheEvict`) si un rol es modificado
+    And si el usuario intenta navegar a un menú recién revocado por caché vieja, el Backend emitirá un 403, y el Interceptor Axios del Frontend purgará el Pinia y emitirá un Toast: "Sus accesos han sido actualizados por el Administrador".
+
+
 ```
 **Trazabilidad UX:** Wireframes Pantallas 14, 6, 7 y Workdesk (5).
 

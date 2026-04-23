@@ -181,6 +181,18 @@
 
 ---
 
+### Iteración 6.2_1 (Puente) — Cierre de Deuda Técnica (Jackson Recursion) & UI Workdesk
+
+> **Estado:** ✅ **COMPLETADA — SELLADA OFICIALMENTE (2026-04-22)**
+> **Veredicto:** PASS E2E Zero-Mock (US-017 CA-19 a CA-26) | BUG-S6-001 CERRADO
+> **Cierre formal:** `.agentic-sync/cierre_iteracion_deudaTec_US017_CA19_CA26.md`
+
+**Objetivo:** Planear y ejecutar el cierre de la deuda técnica diferida referente al desbordamiento de memoria por recursividad infinita de Jackson en las entidades de Identity Governance (`UserEntity` <-> `RoleEntity`), bloqueante para la estabilización total de los catálogos en UAT, y certificar la UI del Workdesk (ConnectionToast).
+
+**Criterio de éxito:** Modificar las entidades JPA con anotaciones `@JsonIgnore` para aislar los grafos cíclicos. Certificar CA-19 a CA-26 en Zero-Mock E2E. ✅ **CUMPLIDO**.
+
+---
+
 ### Iteración 6.3 — Journey J-02 (Primer Uso E2E — Diseñador)
 
 **Objetivo:** Certificar el ciclo completo de diseño: Forms → BPMN → Deploy → Ejecución.

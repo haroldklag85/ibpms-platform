@@ -65,8 +65,8 @@
                 <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">Acciones</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 bg-white">
-              <tr v-for="user in mockUsers" :key="user.id" class="hover:bg-gray-50">
+            <tbody class="divide-y divide-gray-100 bg-white">
+              <tr v-for="user in systemUsers" :key="user.id" class="hover:bg-gray-50">
                 <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ user.name }} <span class="text-xs text-gray-400 block">{{ user.email }}</span></td>
                 <td class="px-4 py-3 text-sm text-gray-500">
                     <span v-if="user.isExternalIdp" class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200">Azure EntraID</span>
@@ -110,8 +110,8 @@
                 <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">Acciones</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 bg-white">
-              <tr v-for="role in mockRoles" :key="role.id" class="hover:bg-gray-50">
+            <tbody class="divide-y divide-gray-100 bg-white">
+              <tr v-for="role in systemRoles" :key="role.id" class="hover:bg-gray-50">
                 <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ role.id }}</td>
                 <td class="px-4 py-3 text-sm font-bold text-gray-900">{{ role.name }}</td>
                 <td class="px-4 py-3 text-right text-sm">
@@ -136,15 +136,15 @@
                <thead class="bg-gray-800">
                  <tr>
                    <th class="px-4 py-3 text-left text-xs font-bold text-white uppercase sticky left-0 bg-gray-900 z-10 w-48">Rol Funcional</th>
-                   <th v-for="proc in mockProcesses" :key="proc.id" class="px-4 py-3 text-center text-[10px] font-bold text-gray-300 uppercase w-32 border-l border-gray-700">
+                   <th v-for="proc in systemProcesses" :key="proc.id" class="px-4 py-3 text-center text-[10px] font-bold text-gray-300 uppercase w-32 border-l border-gray-700">
                      {{ proc.name }}
                    </th>
                  </tr>
                </thead>
                <tbody class="divide-y divide-gray-200 bg-white">
-                 <tr v-for="role in mockRoles" :key="role.id" class="hover:bg-indigo-50/30">
+                 <tr v-for="role in systemRoles" :key="role.id" class="hover:bg-indigo-50/30">
                    <td class="px-4 py-3 text-xs font-bold text-gray-900 bg-gray-50/80 sticky left-0 z-10 border-r">{{ role.name }}</td>
-                   <td v-for="proc in mockProcesses" :key="proc.id" class="px-2 py-3 text-center border-l bg-white">
+                   <td v-for="proc in systemProcesses" :key="proc.id" class="px-2 py-3 text-center border-l bg-white">
                       <div class="flex justify-center items-center gap-3">
                         <label class="flex items-center gap-1 cursor-pointer" title="Puede Iniciar el Proceso">
                           <input type="checkbox" v-model="matrixState[`${role.id}_${proc.id}_I`]" class="w-3.5 h-3.5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300" @change="markMatrixDirty">
@@ -181,7 +181,7 @@
                 <label class="block text-xs font-bold text-gray-700 mb-1">Delegar hacia (Asistente/Colega)</label>
                 <select v-model="delForm.targetUser" required class="w-full text-sm border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border">
                    <option value="" disabled>Seleccione usuario...</option>
-                   <option v-for="u in mockUsers" :key="u.id" :value="u.id">{{ u.name }} ({{ u.roles?.length ? getRoleName(u.roles[0]) : 'Sin Rol Principal' }})</option>
+                   <option v-for="u in systemUsers" :key="u.id" :value="u.id">{{ u.name }} ({{ u.roles?.length ? getRoleName(u.roles[0]) : 'Sin Rol Principal' }})</option>
                 </select>
               </div>
               <div class="grid grid-cols-2 gap-2">
@@ -288,9 +288,9 @@
                 <th class="px-4 py-3 text-right text-xs font-bold uppercase">Evidencia Forense</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 bg-white">
-               <tr v-for="log in mockAuditLogs" :key="log.id" class="hover:bg-gray-50">
-                 <td class="px-4 py-3 text-xs font-mono text-gray-700">{{ log.timestamp }}</td>
+            <tbody class="divide-y divide-gray-100 bg-white">
+               <tr v-for="log in auditLogs" :key="log.id" class="hover:bg-gray-50">
+                 <td class="px-4 py-3 text-xs whitespace-nowrap text-gray-500 font-mono">{{ new Date(log.timestamp).toLocaleString() }}</td>
                  <td class="px-4 py-3 text-sm font-bold text-indigo-700">{{ log.adminId }}</td>
                  <td class="px-4 py-3 text-xs">
                     <span class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded font-bold border border-gray-200 uppercase tracking-widest">{{ log.action }}</span>
@@ -325,26 +325,26 @@
                 <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">Acción CISO</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 bg-white">
-               <tr v-for="anm in mockAnomalies" :key="anm.id" :class="anm.status === 'OPEN' ? 'bg-red-50/50 hover:bg-red-50' : 'hover:bg-gray-50'">
-                 <td class="px-4 py-4 text-xs font-mono font-bold" :class="anm.status === 'OPEN' ? 'text-red-700' : 'text-gray-500'">{{ anm.id }}<br/><span class="text-[10px] font-sans font-normal text-gray-400">{{ anm.timestamp.slice(0,16).replace('T', ' ') }}</span></td>
-                 <td class="px-4 py-4 text-xs">
-                    <span class="px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[10px]" :class="anm.severity === 'CRITICAL' ? 'bg-red-600 text-white' : 'bg-orange-100 text-orange-800 border border-orange-200'">{{ anm.type.replace('_', ' ') }}</span>
-                    <div class="mt-1 text-gray-500 font-medium">Actor: <b>{{ anm.user }}</b></div>
+            <tbody class="divide-y divide-gray-100 bg-white">
+               <tr v-for="anomaly in securityAnomalies" :key="anomaly.id" class="hover:bg-red-50 transition-colors">
+                 <td class="px-4 py-3 text-xs whitespace-nowrap text-gray-500 font-mono">{{ new Date(anomaly.detectedAt).toLocaleString() }}</td>
+                 <td class="px-4 py-3 text-xs">
+                    <span class="px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[10px]" :class="anomaly.severity === 'CRITICAL' ? 'bg-red-600 text-white' : 'bg-orange-100 text-orange-800 border border-orange-200'">{{ anomaly.type.replace('_', ' ') }}</span>
+                    <div class="mt-1 text-gray-500 font-medium">Actor: <b>{{ anomaly.user }}</b></div>
                  </td>
-                 <td class="px-4 py-4 text-sm font-medium text-gray-800">{{ anm.desc }}</td>
-                 <td class="px-4 py-4 text-center">
-                    <span v-if="anm.status === 'OPEN'" class="text-red-600 font-black animate-pulse uppercase tracking-widest text-[10px]">⚠️ ABIERTA</span>
+                 <td class="px-4 py-3 text-sm font-medium text-gray-800">{{ anomaly.desc }}</td>
+                 <td class="px-4 py-3 text-center">
+                    <span v-if="anomaly.status === 'OPEN'" class="text-red-600 font-black animate-pulse uppercase tracking-widest text-[10px]">⚠️ ABIERTA</span>
                     <span v-else class="text-emerald-600 font-bold flex flex-col items-center uppercase tracking-widest text-[10px]"><span class="material-symbols-outlined text-[16px]">verified</span> SUBSANADA</span>
                  </td>
-                 <td class="px-4 py-4 text-right">
-                    <button v-if="anm.status === 'OPEN'" @click="resolveAnomaly(anm)" class="bg-white border-2 border-emerald-500 text-emerald-600 font-bold px-3 py-1.5 rounded text-xs hover:bg-emerald-50 transition shadow-sm flex items-center justify-end gap-1 ml-auto">
+                 <td class="px-4 py-3 text-right">
+                    <button v-if="anomaly.status === 'OPEN'" @click="resolveAnomaly(anomaly)" class="bg-white border-2 border-emerald-500 text-emerald-600 font-bold px-3 py-1.5 rounded text-xs hover:bg-emerald-50 transition shadow-sm flex items-center justify-end gap-1 ml-auto">
                         ✅ Marcar Subsanado
                     </button>
                     <span v-else class="text-gray-400 text-xs font-medium italic">Acción Cerrada</span>
                  </td>
                </tr>
-               <tr v-if="mockAnomalies.length === 0">
+               <tr v-if="securityAnomalies.length === 0">
                  <td colspan="5" class="py-12 text-center text-gray-400 font-medium">No se detectan incidentes de seguridad (Limpieza IAM).</td>
                </tr>
             </tbody>
@@ -380,7 +380,7 @@
                      <label class="block text-xs font-bold text-gray-700 mb-1">Asignación de Roles (Multi-Select CA-6)</label>
                      <p class="text-[10px] text-gray-500 mb-2 leading-tight">Mapea múltiples sombreros simultáneamente seleccionando en el cuadro múltiple.</p>
                      <select multiple v-model="userForm.roles" class="w-full text-sm border-gray-300 rounded focus:ring-indigo-500 border p-2 h-32 bg-gray-50 cursor-pointer">
-                         <option v-for="r in mockRoles" :key="r.id" :value="r.id" class="p-1 border-b hover:bg-indigo-50">{{ r.name }}</option>
+                         <option v-for="r in systemRoles" :key="r.id" :value="r.id" class="p-1 border-b hover:bg-indigo-50">{{ r.name }}</option>
                      </select>
                 </div>
                 
@@ -454,7 +454,7 @@
                         <label class="block text-[11px] font-bold text-indigo-700 mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_tree</span> Heredar Políticas de Rol Padre</label>
                         <select v-model="roleForm.parentRole" @change="onParentRoleChange" class="w-full text-sm border-indigo-200 rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-indigo-50 text-indigo-900 font-semibold cursor-pointer" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)">
                            <option value="">-- Sin Herencia (Desde Cero) --</option>
-                           <option v-for="r in mockRoles" :key="r.id" :value="r.id" :disabled="r.id === roleForm.id">{{ r.name }} ({{ r.id }})</option>
+                           <option v-for="r in systemRoles" :key="r.id" :value="r.id" :disabled="r.id === roleForm.id">{{ r.name }} ({{ r.id }})</option>
                         </select>
                      </div>
                      
@@ -469,7 +469,7 @@
                                  </tr>
                              </thead>
                              <tbody class="divide-y divide-gray-100 bg-white">
-                                  <tr v-for="proc in mockProcesses" :key="proc.id" class="hover:bg-gray-50">
+                                  <tr v-for="proc in systemProcesses" :key="proc.id" class="hover:bg-gray-50">
                                       <td class="px-3 py-2 text-xs font-medium text-gray-700">{{ proc.name }}</td>
                                       <td class="px-3 py-2 text-center">
                                           <input type="checkbox" v-model="roleForm.matrix[proc.id].initiate" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="text-indigo-600 focus:ring-indigo-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
@@ -613,13 +613,14 @@ const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
   setTimeout(() => { toast.value.msg = ''; }, 4000);
 };
 
-// ── TAB 1 & TAB_ROLES: Mocks de Usuarios y Roles ──
-const mockRoles = ref<{id: string, name: string}[]>([]);
-
-const mockUsers = ref<{id: string, name: string, email: string, department: string, roles: string[], active: boolean, isExternalIdp: boolean}[]>([]);
+const systemRoles = ref<any[]>([]);
+const systemUsers = ref<any[]>([]);
+const systemProcesses = ref<any[]>([]);
+const auditLogs = ref<any[]>([]);
+const securityAnomalies = ref<any[]>([]);
 
 const getRoleName = (roleId: string) => {
-    const r = mockRoles.value.find(x => x.id === roleId);
+    const r = systemRoles.value.find(x => x.id === roleId);
     return r ? r.name : roleId;
 };
 
@@ -632,7 +633,6 @@ const toggleUserStatus = async (user: any) => {
         if(!user.active) showToast(`Usuario ${user.name} desactivado (Kill Switch accionado).`, 'error');
         else showToast(`Usuario ${user.name} activado exitosamente.`, 'success');
     } catch(e: any) {
-        // En un entorno 100% real revertimos, local mode ignoramos 404 mocking
         if (!e.message?.includes('Network Error')) {
             showToast('Fallback local: Kill Switch emulado (sin Backend)', 'success');
         } else {
@@ -695,12 +695,12 @@ const saveUser = async () => {
     
     // Simulate Backend Save
     if(editingUser.value) {
-        const u = mockUsers.value.find(x => x.id === editingUser.value.id);
+        const u = systemUsers.value.find(x => x.id === editingUser.value.id);
         if(u) Object.assign(u, userForm.value);
         showToast('Usuario actualizado con éxito', 'success');
     } else {
-        mockUsers.value.unshift({
-            id: 'U-00' + (mockUsers.value.length + 1),
+        systemUsers.value.unshift({
+            id: 'U-00' + (systemUsers.value.length + 1),
             ...userForm.value,
             active: true
         });
@@ -714,19 +714,16 @@ const tempPasswordValue = ref('');
 const generateTempPassword = async () => {
     if(!editingUser.value) return;
     try {
-        // Mock Backend Axios Request -> HTTP 200 Plain Text (CA-3)
         const res = await apiClient.post(`/api/v1/admin/users/${editingUser.value.id}/reset-password`);
         tempPasswordValue.value = res.data.tempPassword || 'Auto$Zod' + Math.floor(Math.random()*9999) + '!';
         showTempPassModal.value = true;
     } catch(e) {
-        // Degraded Mode para entorno POC
         tempPasswordValue.value = 'Offline$Dev' + Math.floor(Math.random()*9999) + '!';
         showTempPassModal.value = true;
     }
 };
 
 // ── TAB 2: Permisos Matriz ──
-const mockProcesses = ref<{id: string, name: string}[]>([]);
 const matrixState = ref<Record<string, boolean>>({});
 
 const showRoleModal = ref(false);
@@ -740,7 +737,6 @@ const roleMatrixSchema = z.record(z.object({
 }));
 
 const roleMatrixValidation = computed(() => {
-    // CA-4 Zod Check
     return roleMatrixSchema.safeParse(roleForm.value.matrix).success;
 });
 
@@ -748,8 +744,7 @@ const onParentRoleChange = () => {
     const parentId = roleForm.value.parentRole;
     if(!parentId) return;
     
-    // CA-6 Clonar permisos del Rol Padre selecto
-    for(const p of mockProcesses.value) {
+    for(const p of systemProcesses.value) {
         roleForm.value.matrix[p.id].initiate = matrixState.value[`${parentId}_${p.id}_I`] || false;
         roleForm.value.matrix[p.id].execute = matrixState.value[`${parentId}_${p.id}_E`] || false;
     }
@@ -760,9 +755,8 @@ const openRoleModal = (role: any = null) => {
     editingRole.value = role;
     roleModalTab.value = 'basic';
     if(role) { 
-        // Reconstruct matrix from global state (mock)
         const matrix: Record<string, { initiate: boolean, execute: boolean }> = {};
-        for(const p of mockProcesses.value) {
+        for(const p of systemProcesses.value) {
             matrix[p.id] = {
                 initiate: matrixState.value[`${role.id}_${p.id}_I`] || false,
                 execute: matrixState.value[`${role.id}_${p.id}_E`] || false
@@ -772,7 +766,7 @@ const openRoleModal = (role: any = null) => {
     }
     else { 
         const matrix: Record<string, { initiate: boolean, execute: boolean }> = {};
-        for(const p of mockProcesses.value) {
+        for(const p of systemProcesses.value) {
             matrix[p.id] = { initiate: false, execute: false };
         }
         roleForm.value = { name: '', id: 'R_', parentRole: '', matrix, topology: { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } }; 
@@ -780,17 +774,16 @@ const openRoleModal = (role: any = null) => {
     showRoleModal.value = true;
 };
 const saveRole = () => {
-    if(!roleMatrixValidation.value) return; // Zod Interlock
+    if(!roleMatrixValidation.value) return; 
     
     if(editingRole.value) {
-        const r = mockRoles.value.find(x => x.id === editingRole.value.id);
+        const r = systemRoles.value.find(x => x.id === editingRole.value.id);
         if(r) Object.assign(r, { id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology });
     } else {
-        mockRoles.value.push({ id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology } as any);
+        systemRoles.value.push({ id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology } as any);
     }
     
-    // Salvaguardar Matriz en el estado unificado
-    for(const p of mockProcesses.value) {
+    for(const p of systemProcesses.value) {
         matrixState.value[`${roleForm.value.id}_${p.id}_I`] = roleForm.value.matrix[p.id].initiate;
         matrixState.value[`${roleForm.value.id}_${p.id}_E`] = roleForm.value.matrix[p.id].execute;
     }
@@ -820,7 +813,6 @@ const downloadMatrixCsv = async () => {
     showToast('Auditoría CISO descargada con éxito.', 'success');
   } catch (e) {
     showToast('Fallback local: Generando Blob Simulado CISO.', 'success');
-    // Fallback Blob creation for local UAT
     const fallbackBlob = new Blob(["PROCESS,ROLE,INITIATE,EXECUTE\nKYC_P,R_GLOBAL,TRUE,TRUE"], { type: 'text/csv' });
     const fallbackUrl = window.URL.createObjectURL(fallbackBlob);
     const fallbackLink = document.createElement('a');
@@ -837,7 +829,7 @@ const delForm = ref({ targetUser: '', start: '', end: '' });
 const activeDelegations = ref<{ id: string, targetName: string, start: string, end: string }[]>([]);
 
 const createDelegation = () => {
-  const tUser = mockUsers.value.find(u => u.id === delForm.value.targetUser);
+  const tUser = systemUsers.value.find(u => u.id === delForm.value.targetUser);
   activeDelegations.value.push({
     id: `DEL-${Date.now()}`,
     targetName: tUser?.name || 'Desconocido',
@@ -880,14 +872,10 @@ const copySecret = () => {
     showToast('¡Secreto copiado al portapapeles!');
   }
 };
-// ── TAB 6: AUDITORÍA CISO (CA-17) ──
+
+// ── TAB 6/7: AUDITORÍA Y ANOMALÍAS ──
 const showAuditModal = ref(false);
 const activeAuditLog = ref<any>(null);
-
-const mockAuditLogs = ref<any[]>([]);
-
-// ── TAB 7: ANOMALÍAS CISO (CA-12) ──
-const mockAnomalies = ref<any[]>([]);
 
 const resolveAnomaly = async (anomaly: any) => {
    try {
@@ -911,15 +899,15 @@ onMounted(async () => {
     try {
         // Fetch all necessary data for E2E validation without mocks
         const [usersRes, rolesRes, processesRes, anomaliesRes, auditRes] = await Promise.all([
-            apiClient.get('/admin/users', { validateStatus: () => true }).catch(() => ({ data: [] })),
-            apiClient.get('/admin/roles', { validateStatus: () => true }).catch(() => ({ data: [] })),
-            apiClient.get('/design/processes', { validateStatus: () => true }).catch(() => ({ data: [] })), // GET /api/v1/design/processes → BpmnDesignController.getAllLatestProcesses()
-            apiClient.get('/security/anomalies', { validateStatus: () => true }).catch(() => ({ data: [] })),
-            apiClient.get('/security/audit/reports', { validateStatus: () => true }).catch(() => ({ data: [] }))
+            apiClient.get('/admin/users').catch(() => ({ data: [] })),
+            apiClient.get('/admin/roles').catch(() => ({ data: [] })),
+            apiClient.get('/design/processes').catch(() => ({ data: [] })), // GET /api/v1/design/processes → BpmnDesignController.getAllLatestProcesses()
+            apiClient.get('/security/anomalies').catch(() => ({ data: [] })),
+            apiClient.get('/security/audit/reports').catch(() => ({ data: [] }))
         ]);
 
         if (usersRes.data && Array.isArray(usersRes.data)) {
-            mockUsers.value = usersRes.data.map((u: any) => ({
+            systemUsers.value = usersRes.data.map((u: any) => ({
                 id: u.id,
                 name: u.username || 'Desconocido',
                 email: u.email || 'sin-correo@example.com',
@@ -931,25 +919,25 @@ onMounted(async () => {
         }
         
         if (rolesRes.data && Array.isArray(rolesRes.data)) {
-            mockRoles.value = rolesRes.data.map((r: any) => ({
+            systemRoles.value = rolesRes.data.map((r: any) => ({
                 id: r.id || r.name,
                 name: r.name || r.id
             }));
         }
         
         if (processesRes.data && Array.isArray(processesRes.data)) {
-            mockProcesses.value = processesRes.data.map((p: any) => ({
+            systemProcesses.value = processesRes.data.map((p: any) => ({
                 id: p.key || p.id || p.technicalName, // BpmnDesignController devuelve 'key', no 'id'
                 name: p.name || p.key || p.technicalName
             }));
         }
         
         if (anomaliesRes.data && Array.isArray(anomaliesRes.data)) {
-            mockAnomalies.value = anomaliesRes.data;
+            securityAnomalies.value = anomaliesRes.data;
         }
         
         if (auditRes.data && Array.isArray(auditRes.data)) {
-            mockAuditLogs.value = auditRes.data;
+            auditLogs.value = auditRes.data;
         }
 
         showToast('Datos sincronizados con Base de Datos (E2E mode).', 'success');

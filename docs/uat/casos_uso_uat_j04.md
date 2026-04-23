@@ -365,11 +365,11 @@
 
 | Paso | Actor | Acción | Resultado Esperado |
 |:----:|-------|--------|-------------------|
-| 1 | Director | Login → navega a `/workdesk` | Su bandeja personal (tareas de `Directors`) |
-| 2 | Director | Hace clic en toggle "👤 Tareas de mi Asistente" | Toggle cambia a amber |
-| 3 | Sistema | Fetch con `assistantId` del Analista N1 | GET `/api/v1/tasks?delegatedUser=analista_n1` |
+| 1 | Director | Login → navega a `/workdesk` | Su bandeja personal |
+| 2 | Director | Hace clic en toggle "👤 Ver Escritorio de Otro Operario" | Se abre buscador de empleados |
+| 3 | Director | Busca "analista_n1" y selecciona | GET `/api/v1/tasks?delegatedUser=analista_n1` |
 | 4 | Sistema | Banner amber: "Estás viendo el escritorio de **analista_n1**" | Banner con botón "Volver a mis tareas" |
-| 5 | Director | Ve las tareas del Analista N1 (no las suyas propias) | Grilla muestra tareas del grupo `Adjusters` |
+| 5 | Director | Ve las tareas del Analista N1 (Delegación Abierta intra-Tenant) | Grilla muestra tareas del otro usuario |
 
 **Estado esperado:** ✅ PASA
 
@@ -451,8 +451,8 @@
 | 2 | Sistema | Info banner: "Esta acción quedará inmutablemente registrada en el Audit Log" | Warning visible |
 | 3 | Analista | Selecciona: "El cliente no responde / No está disponible" | Motivo seleccionado |
 | 4 | Analista | Presiona "Confirmar Salto" | `store.skipAndNext()` ejecuta |
-| 5 | Sistema | Skipeo registrado + nueva tarea asignada automáticamente | Toast: "Skipeo registrado. Nueva Tarea Asignada." |
-| 6 | Sistema | Modal se cierra, nueva tarea abierta en el viewer | Flujo continuo |
+| 5 | Sistema | Skipeo registrado. Tarea des-asignada y devuelta a la cola general. | Toast: "Tarea devuelta a la cola exitosamente." |
+| 6 | Sistema | Modal se cierra, redirección a la bandeja principal `/workdesk` | Operario listo para tomar otra tarea |
 
 **Estado esperado:** ✅ PASA
 
@@ -475,7 +475,7 @@
 | Paso | Actor | Acción | Resultado Esperado |
 |:----:|-------|--------|-------------------|
 | 1 | Analista | Skipeo → selecciona "Fuera de mi área de especialidad" | — |
-| 2 | Analista | Confirma | Skipeo registrado + nueva tarea |
+| 2 | Analista | Confirma | Skipeo registrado + tarea devuelta a la cola general |
 
 **Estado esperado:** ✅ PASA
 
@@ -523,14 +523,11 @@
 
 | Paso | Actor | Acción | Resultado Esperado |
 |:----:|-------|--------|-------------------|
-| 1 | Analista | Arrastra tarea de TODO → IN_PROGRESS | `kanbanStore.moveTask(id, 'IN_PROGRESS')` → sync OK |
-| 2 | Sistema | Sync status: "Guardando..." → "OK" | Animación de sincronización |
-| 3 | Analista | Arrastra tarea de IN_PROGRESS → BLOCKED | Modal de bloqueo se abre |
-| 4 | Sistema | "Por favor, especifica el Motivo de Bloqueo" | Textarea obligatorio |
-| 5 | Analista | Escribe: "Esperando respuesta del perito externo" | Motivo válido |
-| 6 | Analista | Presiona "Bloquear" | `moveTask(id, 'BLOCKED', reason)` → tarea en columna BLOCKED |
-| 7 | Analista | Arrastra de BLOCKED → IN_PROGRESS | Desbloqueo, tarea regresa al flujo |
-| 8 | Analista | Arrastra de IN_PROGRESS → DONE | Tarea completada |
+| 1 | Analista | Arrastra tarea de TODO → BLOCKED (Transición Flexible) | Modal de bloqueo se abre |
+| 2 | Sistema | "Por favor, especifica el Motivo de Bloqueo" | Textarea obligatorio |
+| 3 | Analista | Escribe: "Falta documentación" y Presiona "Bloquear" | Tarea en columna BLOCKED |
+| 4 | Analista | Arrastra de BLOCKED → DONE (Transición Flexible) | Tarea completada directamente |
+| 5 | Sistema | Sincronización exitosa sin errores de State Machine | `moveTask` OK |
 
 **Estado esperado:** ✅ PASA  
 **Criterio:** Secuencia completa: TODO → IN_PROGRESS → BLOCKED (motivo) → IN_PROGRESS → DONE.
@@ -762,17 +759,17 @@
 
 ---
 
-### CU-J04-NEG-04: Delegación IDOR — Operario sin relación jerárquica
+### CU-J04-NEG-04: Delegación IDOR — Operario de distinto Tenant (Cross-Tenant)
 
 **US:** US-001 | **CAs:** CA-04, CA-15
 
 | Paso | Resultado Esperado |
 |:----:|-------------------|
-| 1 | Perito A intenta activar modo delegación hacia `director_1` |
-| 2 | Backend valida jerarquía: Perito NO es jefe de Director |
+| 1 | Perito A (Tenant Alpha) intenta ver tareas de Operario B (Tenant Beta) |
+| 2 | Backend valida pertenencia: Los usuarios pertenecen a Tenants distintos |
 | 3 | HTTP 403 Forbidden |
 | 4 | Sistema revierte a modo "Mis Tareas" |
-| 5 | Alert: "No tiene permisos para ver el escritorio de este usuario" |
+| 5 | Alert: "No tiene permisos para ver el escritorio de este usuario (Tenant Mismatch)" |
 
 **Estado esperado:** ✅ PASA
 

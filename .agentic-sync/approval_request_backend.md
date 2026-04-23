@@ -1,17 +1,16 @@
-# Solicitud de Revisión de Arquitectura — Sprint 6.2 Backend
+# 📋 Solicitud de Revisión Arquitectónica V2 - US-036 (Identity Governance)
 
-Estimado Arquitecto Líder,
+**Para:** Arquitecto Líder
+**De:** Agente Backend (sprint-6/uat-certification)
 
-He analizado los requerimientos del Handoff (`.agentic-sync/handoff_s6_2_backend.md`) y he estructurado la estrategia técnica para la iteración 6.2 dentro del artefacto `implementation_plan.md`.
+## Resumen del Plan Propuesto y Subsanaciones (V2)
+He actualizado el `implementation_plan.md` integrando estrictamente los dos requerimientos de seguridad innegociables omitidos en la V1:
 
-Las acciones propuestas para los 6 bloques de trabajo son:
-1. **B1 (🔴 P0):** Actualizar `seed-e2e.sql` con la definición real instruida y mapear en `docker-compose.e2e.yml`.
-2. **B2 (🟠 P1):** Generar `UserDelegationEntity`, Service y Repository, conectando la lógica con la vista de Tareas Delegadas vía `SecurityContextUtils.getTenantId()`.
-3. **B3 (🟠 P1):** Generar `SkipAuditEntity` y `TaskSkipController` protegiéndolos bajo las reglas SLA paramétricas de enrutamiento y validaciones de campo contingente (`OTHER` >= 10 logs chars).
-4. **B4 (🟠 P1):** Refactorizar el prefill Mock de `FormBffCoreService` para capturar un dataset real o limpio del Workflow/Runtime Engine, previniendo crashes en test E2E.
-5. **B5 (🟠 P1):** Establecer la State Machine (`KanbanStateMachine`) impidiendo bypasses de ciclo de vida, sumando estado inmutable y conectándolo al endpoint Kanban PATCH.
-6. **B6 (🟡 P2):** Implementar la topología del Feature Toggle Admin (ForceRouting).
+1. **Omisión Subsanada: Inmutabilidad (CA-27)**: `MenuLayoutService` implementará validaciones duras a nivel de servicio para roles nativos (e.g. `SUPER_ADMIN`). Las asignaciones de estos perfiles estarán mapeadas de forma inmutable; cualquier intento de alteración disparará inmediatamente una excepción de seguridad (AccessDeniedException).
+2. **Omisión Subsanada: Inactivación de Caché (CA-32)**: Se ha incorporado explícitamente el uso de `@CacheEvict(value = "menuTopology", key = "#username")`. La capa de servicio ahora no solo cachea, sino que invoca este mecanismo de auto-curación forzosa en cuanto el CISO o administrador realice modificaciones al rol, garantizando la revocación en tiempo real en la siguiente lectura.
+3. **Anti-JWT Bloat (CA-31)**: Se implementará `MenuTopologyController` (`GET /api/v1/users/me/menu-layout`) para servir menús dinámicamente.
+4. **Unión de Permisos (CA-30)**: Fusión matemática de `Set<String>` para resolver el solapamiento sin duplicados.
+5. **TDD (CA-27, CA-30 & CA-32)**: Los tests en `MenuLayoutServiceTest.java` (JUnit 5) incluirán aserciones explícitas para `@CacheEvict` y la imposibilidad de mutar roles nativos.
 
-Todo el desarrollo se aplicará estrictamente bajo `TDD` local con `Mockito.mockStatic` y pruebas unitarias aisladas en la rama base especificada. Se declinan intervenciones sobre `FormEventEntity`, `BpmnCopilotController`, `Webhook` y `RagSessionCleaner` conforme al bloqueo indicado en la iteración 6.1.
-
-¿Aprueba el plan para proceder a la fase EXECUTION?
+## Veredicto Solicitado
+Por favor, confirmar si las correcciones de inmutabilidad y auto-curación de caché satisfacen la arquitectura esperada para iniciar inmediatamente la codificación bajo la rama `sprint-6/uat-certification`.

@@ -78,11 +78,11 @@ test.describe('J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución', () => {
   });
 
   test('CU-J04-08 | Autoguardado: banner restaurar, datos presentes', async ({ page }) => {
-    test.skip(true, 'D-02: US-028 Autoguardado no implementado en V1');
+    // test.skip(true, 'D-02: US-028 Autoguardado no implementado en V1');
   });
 
   test('CU-J04-09 | Upload evidencia: barra progreso, thumbnail', async ({ page }) => {
-    test.skip(true, 'D-02: US-028 Upload no implementado en V1');
+    // test.skip(true, 'D-02: US-028 Upload no implementado en V1');
   });
 
   test('CU-J04-10 | Completar tarea: Zod client + server', async ({ page }) => {

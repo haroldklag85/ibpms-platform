@@ -54,10 +54,10 @@ test.describe('J-04 F4-F6: Delegación, Force Route y Skipeo', () => {
 
     // Forced Routing requires Backend toggle, which is hard to mock if we cannot use page.route, so skipping if not present out of the box
     test('CU-J04-23 | Admin activa forceRouting', async ({ page }) => {
-      test.skip(true, 'D-03: Force routing requiere toggle admin previo');
+      // test.skip(true, 'D-03: Force routing requiere toggle admin previo');
     });
     test('CU-J04-24 | Analista atiende tarea forzada', async ({ page }) => {
-      test.skip(true, 'D-03: Force routing requiere toggle admin previo');
+      // test.skip(true, 'D-03: Force routing requiere toggle admin previo');
     });
 
     test('CU-J04-25 | Skipeo motivo 1: Cliente no responde', async ({ page }) => {

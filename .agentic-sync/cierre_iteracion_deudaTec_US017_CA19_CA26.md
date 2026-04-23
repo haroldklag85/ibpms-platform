@@ -1,50 +1,24 @@
-# 🏁 Cierre de Iteración — Deuda Técnica CA-19 a CA-26 — US-017
+# Reporte de Cierre: Iteración 6.2_1 (Puente)
 
-> **Fecha:** 2026-04-22 | **Rama:** `sprint-6/uat-certification` | **Arquitecto:** Líder
+**Fecha de Cierre:** 2026-04-22
+**Autor:** Arquitecto Líder SW
+**Estado:** ✅ SELLADO
 
-## CAs Ejecutados (Fase: Delegación)
-| CA | Estado | Agente Backend | Agente Frontend | Agente QA |
-|----|:------:|:-:|:-:|:-:|
-| CA-19 | ❌ Delegado | N/A | handoff emitido | handoff emitido |
-| CA-20 | ❌ Delegado | N/A | handoff emitido | handoff emitido |
-| CA-21 | ❌ Delegado | N/A | handoff emitido | handoff emitido |
-| CA-22 | ❌ Delegado | N/A | handoff emitido | handoff emitido |
-| CA-23 | ❌ Delegado | N/A | handoff emitido | handoff emitido |
-| CA-24 | ❌ Delegado | N/A | handoff emitido | handoff emitido |
-| CA-25 | ❌ Delegado | N/A | handoff emitido | handoff emitido |
-| CA-26 | ❌ Delegado | N/A | handoff emitido | handoff emitido |
+## 🎯 Objetivo Alcanzado
+Se ha completado satisfactoriamente el cierre de la deuda técnica de Backend (Recursividad de Jackson) y la certificación del componente UI `ConnectionToast` (Frontend), habilitando el entorno E2E real (Zero-Mock).
 
-## CAs Excluidos (Diferidos)
-| CA | Motivo de Exclusión | Versión Destino |
-|----|---------------------|:-:|
-| — | Ningún CA excluido | — |
+## 📊 Veredicto de Certificación
+* **Backend:** Remediación de `StackOverflowError` mediante la ruptura de ciclos bidireccionales en JPA (`UserEntity`, `RoleEntity`) usando `@JsonIgnore`. API `/api/v1/admin/users` estabilizada (HTTP 200).
+* **Frontend:** Resolución del `BUG-S6-001`. Inyección exitosa de clases faltantes y acoplamiento de Custom Events (`global-error-dispatch`).
+* **QA (Zero-Mock-E2E):** Retest completado exitosamente (Verde). Los criterios de aceptación CA-19 al CA-26 correspondientes a la resiliencia UI de la US-017 (Workdesk) han pasado la batería de pruebas en Playwright sin requerir mocks de red.
 
-## ADRs Validados
-| ADR | Resultado |
-|-----|:---------:|
-| ADR-002 (Vue 3 Microfrontends) | ✅ Aplica — Composable + Pinia + SFC |
-| ADR-010 (Testing Pyramid) | ✅ Aplica — Vitest obligatorio en handoff |
+## 🔒 Artefactos Modificados
+* `UserEntity.java` & `RoleEntity.java`
+* `ConnectionToast.vue`
+* `us017-connection-toast.e2e.spec.ts`
+* `sprint_plan_s6.md`
+* `epic_E_seguridad_identidad_config.md` (Refinamientos CA-26 a CA-32 integrados).
+* `sprint_6_bugs.md` (BUG-S6-001 Cerrado).
 
-## Violaciones Detectadas y Resueltas
-| Violación | Agente | Intento de Resolución | Estado Final |
-|-----------|--------|:---------------------:|:------------:|
-| — | — | — | Sin violaciones detectadas en fase de delegación |
-
-## Metrics
-- **Rechazos totales:** 0
-- **Escalamientos:** 0
-- **Ciclos de ida/vuelta humano:** 0 (delegación directa)
-- **Tiempo estimado de ejecución:** ~7.5h (estimación PO)
-
-## Artefactos Generados
-| Artefacto | Ruta |
-|-----------|------|
-| Handoff Frontend (Arquitecto → Dev Frontend) | `.agentic-sync/handoff_frontend_US017_CA19_CA26.md` |
-| Handoff QA (Arquitecto → QA) | `.agentic-sync/handoff_qa_US017_CA19_CA26.md` |
-| Coverage Matrix actualizada | `.agentic-sync/coverage_matrix.md` (US-017 ampliada a 24 CAs) |
-| Reporte de Reconciliación | Artefacto `reconciliacion_cobertura_US017.md` |
-
-## Próximos Pasos (Secuencial Obligatorio)
-1. ⏳ **Frontend:** Ejecutar handoff → `connectionStore.ts` → `useConnectionStatus.ts` → `ConnectionToast.vue` → `App.vue` → Vitest
-2. ⏳ **QA:** Post-Frontend → Validar 8 CAs con Gherkin scenarios
-3. ⏳ **Arquitecto:** Auditoría post-ejecución (Fase 4 del workflow)
+## 🚀 Siguiente Paso Oficial
+Con la US-017 certificada y el backend emitiendo respuestas limpias, debemos reanudar las pruebas pendientes de la **Iteración 6.1**. El equipo QA tiene luz verde para la ejecución de la **Suite completa de 53 Escenarios E2E** correspondientes al **Journey J-04**, a fin de certificar las fallas detectadas previamente en la evaluación manual de cara al UAT release.

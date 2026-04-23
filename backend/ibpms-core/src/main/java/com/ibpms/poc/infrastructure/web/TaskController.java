@@ -66,9 +66,10 @@ public class TaskController {
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "PENDING") String status,
-            @RequestParam(required = false) Integer priority) {
+            @RequestParam(required = false) Integer priority,
+            @RequestParam(required = false) String delegatedUser) {
 
-        List<TaskDTO> result = listarTareasUseCase.listar(limit, offset, status, priority);
+        List<TaskDTO> result = listarTareasUseCase.listar(limit, offset, status, priority, delegatedUser);
         return ResponseEntity.ok(result);
     }
 

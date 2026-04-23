@@ -2,7 +2,7 @@
   <transition name="fade-slide">
     <div 
       v-if="store.isVisible" 
-      class="fixed bottom-6 left-6 z-[9990] max-w-[320px] pointer-events-auto rounded-lg shadow-lg border p-4 flex items-center space-x-3 transition-colors duration-300"
+      class="connection-toast fixed bottom-6 left-6 z-[9990] max-w-[320px] pointer-events-auto rounded-lg shadow-lg border p-4 flex items-center space-x-3 transition-colors duration-300"
       :class="store.currentColor"
     >
       <span class="material-symbols-outlined text-2xl flex-shrink-0" :class="{ 'animate-spin': store.status === 'RECONNECTING' }">

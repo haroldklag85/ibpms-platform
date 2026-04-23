@@ -35,6 +35,18 @@
             <span class="material-symbols-outlined animate-spin text-slate-500">sync</span>
          </div>
          
+         <!-- Fallback Visual CA-26: Sin topología de menús -->
+         <template v-else-if="menuStore.layout.length === 0">
+            <div class="flex flex-col items-center justify-center p-4 mt-8 text-center fade-in" v-if="!isSidebarCollapsed">
+                <span class="material-symbols-outlined text-4xl text-slate-600 mb-2">security_update_warning</span>
+                <p class="text-xs text-slate-400 font-bold">Sin Topología de Menús</p>
+                <p class="text-[10px] text-slate-500 mt-1">Sus roles no tienen acceso a ningún módulo. Contacte al Administrador o CISO.</p>
+            </div>
+            <div class="flex flex-col items-center justify-center p-2 mt-8 text-center fade-in" v-else>
+                <span class="material-symbols-outlined text-2xl text-slate-600" title="Sin Topología de Menús">security_update_warning</span>
+            </div>
+         </template>
+         
          <template v-else v-for="(group, gIdx) in menuStore.layout" :key="'g'+gIdx">
             <template v-if="!group.roles || authStore.hasAnyRole(group.roles)">
                

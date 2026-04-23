@@ -428,60 +428,120 @@
        <div v-if="showRoleModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
          <div class="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full border border-gray-200 h-[80vh] flex flex-col">
              <h3 class="text-lg font-bold text-gray-800 mb-4">{{ editingRole ? 'Modificar Identificador' : 'Forjar Nuevo Rol Transversal' }}</h3>
+             
+             <!-- Pestañas del Modal (CA-29) -->
+             <div class="flex border-b border-gray-200 mb-4">
+                 <button type="button" @click="roleModalTab = 'basic'" :class="roleModalTab === 'basic' ? 'border-indigo-600 text-indigo-700 font-bold border-b-2' : 'text-gray-500 hover:text-gray-700 font-medium'" class="px-4 py-2 text-sm transition-colors">Información Básica</button>
+                 <button type="button" @click="roleModalTab = 'topology'" :class="roleModalTab === 'topology' ? 'border-indigo-600 text-indigo-700 font-bold border-b-2' : 'text-gray-500 hover:text-gray-700 font-medium'" class="px-4 py-2 text-sm transition-colors">Topología de Menús</button>
+             </div>
+
              <div class="flex-1 overflow-y-auto space-y-4 pr-2">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                       <label class="block text-[11px] font-bold text-gray-700 mb-1">ID TÉCNICO VINCULANTE (Camunda Auth Key)</label>
-                       <input type="text" v-model="roleForm.id" class="w-full font-mono text-xs border border-gray-300 rounded focus:ring-indigo-500 bg-gray-50 p-2 uppercase" placeholder="R_NUEVO_ROL" required :readonly="!!editingRole" :disabled="!!editingRole" />
-                    </div>
-                    <div>
-                       <label class="block text-[11px] font-bold text-gray-700 mb-1">Etiqueta Lógica y Administrativa</label>
-                       <input type="text" v-model="roleForm.name" class="w-full text-sm border-gray-300 rounded focus:ring-indigo-500 border p-2" placeholder="Gestor Funcional..." required />
-                    </div>
-                </div>
-                <!-- CA-6 Herencia Visual -->
-                <div>
-                   <label class="block text-[11px] font-bold text-indigo-700 mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_tree</span> Heredar Políticas de Rol Padre</label>
-                   <select v-model="roleForm.parentRole" @change="onParentRoleChange" class="w-full text-sm border-indigo-200 rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-indigo-50 text-indigo-900 font-semibold cursor-pointer">
-                      <option value="">-- Sin Herencia (Desde Cero) --</option>
-                      <option v-for="r in mockRoles" :key="r.id" :value="r.id" :disabled="r.id === roleForm.id">{{ r.name }} ({{ r.id }})</option>
-                   </select>
-                </div>
-                
-                <h4 class="font-bold text-sm text-gray-800 mt-6 border-b pb-2">Matriz de Concesiones Zod (CA-4)</h4>
-                <div class="border rounded-lg overflow-hidden min-h-[50px] mb-4">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-indigo-50">
-                            <tr>
-                                <th class="px-3 py-2 text-left text-[10px] font-bold text-indigo-800 uppercase">Definición BPMN</th>
-                                <th class="px-3 py-2 text-center text-[10px] font-bold text-indigo-800 uppercase tooltip" title="Derecho a iniciar instancias nuevas">I (Initiate)</th>
-                                <th class="px-3 py-2 text-center text-[10px] font-bold text-indigo-800 uppercase tooltip" title="Derecho a reclamar Human Tasks">E (Execute)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 bg-white">
-                             <tr v-for="proc in mockProcesses" :key="proc.id" class="hover:bg-gray-50">
-                                 <td class="px-3 py-2 text-xs font-medium text-gray-700">{{ proc.name }}</td>
-                                 <td class="px-3 py-2 text-center">
-                                     <input type="checkbox" v-model="roleForm.matrix[proc.id].initiate" class="text-indigo-600 focus:ring-indigo-500 rounded h-4 w-4 bg-gray-50 border-gray-300" />
-                                 </td>
-                                 <td class="px-3 py-2 text-center">
-                                     <input type="checkbox" v-model="roleForm.matrix[proc.id].execute" class="text-emerald-600 focus:ring-emerald-500 rounded h-4 w-4 bg-gray-50 border-gray-300" />
-                                 </td>
-                             </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <!-- CA-3 Asignación Masiva Button -->
-                <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg flex justify-between items-center" v-if="editingRole">
-                    <div>
-                        <p class="text-xs font-bold text-yellow-800">Operador Categórico de Plantilla (CA-3)</p>
-                        <p class="text-[10px] text-yellow-700 mt-0.5">Sobrescribe los privilegios de los usuarios asociados forzosamente.</p>
-                    </div>
-                    <button type="button" @click="showToast('Ejecutando propagación asíncrona a todos los usuarios', 'success')" class="text-[10px] font-bold text-yellow-900 bg-yellow-200 px-3 py-1.5 rounded hover:bg-yellow-300 border border-yellow-400">PROPAGACIÓN MASIVA</button>
-                </div>
+                 
+                 <!-- TAB: Información Básica -->
+                 <div v-if="roleModalTab === 'basic'" class="space-y-4">
+                     <div class="grid grid-cols-2 gap-4">
+                         <div>
+                            <label class="block text-[11px] font-bold text-gray-700 mb-1">ID TÉCNICO VINCULANTE (Camunda Auth Key)</label>
+                            <input type="text" v-model="roleForm.id" class="w-full font-mono text-xs border border-gray-300 rounded focus:ring-indigo-500 bg-gray-50 p-2 uppercase" placeholder="R_NUEVO_ROL" required :readonly="!!editingRole" :disabled="!!editingRole" />
+                         </div>
+                         <div>
+                            <label class="block text-[11px] font-bold text-gray-700 mb-1">Etiqueta Lógica y Administrativa</label>
+                            <input type="text" v-model="roleForm.name" class="w-full text-sm border-gray-300 rounded focus:ring-indigo-500 border p-2" placeholder="Gestor Funcional..." required :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" />
+                         </div>
+                     </div>
+                     <!-- CA-6 Herencia Visual -->
+                     <div>
+                        <label class="block text-[11px] font-bold text-indigo-700 mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_tree</span> Heredar Políticas de Rol Padre</label>
+                        <select v-model="roleForm.parentRole" @change="onParentRoleChange" class="w-full text-sm border-indigo-200 rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-indigo-50 text-indigo-900 font-semibold cursor-pointer" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)">
+                           <option value="">-- Sin Herencia (Desde Cero) --</option>
+                           <option v-for="r in mockRoles" :key="r.id" :value="r.id" :disabled="r.id === roleForm.id">{{ r.name }} ({{ r.id }})</option>
+                        </select>
+                     </div>
+                     
+                     <h4 class="font-bold text-sm text-gray-800 mt-6 border-b pb-2">Matriz de Concesiones Zod (CA-4)</h4>
+                     <div class="border rounded-lg overflow-hidden min-h-[50px] mb-4">
+                         <table class="min-w-full divide-y divide-gray-200">
+                             <thead class="bg-indigo-50">
+                                 <tr>
+                                     <th class="px-3 py-2 text-left text-[10px] font-bold text-indigo-800 uppercase">Definición BPMN</th>
+                                     <th class="px-3 py-2 text-center text-[10px] font-bold text-indigo-800 uppercase tooltip" title="Derecho a iniciar instancias nuevas">I (Initiate)</th>
+                                     <th class="px-3 py-2 text-center text-[10px] font-bold text-indigo-800 uppercase tooltip" title="Derecho a reclamar Human Tasks">E (Execute)</th>
+                                 </tr>
+                             </thead>
+                             <tbody class="divide-y divide-gray-100 bg-white">
+                                  <tr v-for="proc in mockProcesses" :key="proc.id" class="hover:bg-gray-50">
+                                      <td class="px-3 py-2 text-xs font-medium text-gray-700">{{ proc.name }}</td>
+                                      <td class="px-3 py-2 text-center">
+                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].initiate" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="text-indigo-600 focus:ring-indigo-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
+                                      </td>
+                                      <td class="px-3 py-2 text-center">
+                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].execute" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="text-emerald-600 focus:ring-emerald-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
+                                      </td>
+                                  </tr>
+                             </tbody>
+                         </table>
+                     </div>
+                     <!-- CA-3 Asignación Masiva Button -->
+                     <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg flex justify-between items-center" v-if="editingRole">
+                         <div>
+                             <p class="text-xs font-bold text-yellow-800">Operador Categórico de Plantilla (CA-3)</p>
+                             <p class="text-[10px] text-yellow-700 mt-0.5">Sobrescribe los privilegios de los usuarios asociados forzosamente.</p>
+                         </div>
+                         <button type="button" @click="showToast('Ejecutando propagación asíncrona a todos los usuarios', 'success')" class="text-[10px] font-bold text-yellow-900 bg-yellow-200 px-3 py-1.5 rounded hover:bg-yellow-300 border border-yellow-400">PROPAGACIÓN MASIVA</button>
+                     </div>
+                 </div>
+
+                 <!-- TAB: Topología de Menús (CA-28) -->
+                 <div v-else-if="roleModalTab === 'topology'" class="space-y-4">
+                     <p class="text-sm text-gray-500 mb-2">Configure qué módulos estarán visibles para este Rol en el Sidebar principal. (CA-28)</p>
+                     
+                     <div v-if="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="bg-blue-50 border border-blue-200 p-3 rounded-lg flex gap-2 items-center mb-4">
+                         <span class="material-symbols-outlined text-blue-500">lock</span>
+                         <span class="text-xs font-bold text-blue-800">Inmutabilidad (CA-27): Los Roles Fundacionales no pueden ser restringidos visualmente.</span>
+                     </div>
+
+                     <div class="grid grid-cols-2 gap-3">
+                         <!-- Módulos Macro -->
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.WORKDESK" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                             <div><span class="font-bold text-sm text-gray-800">Operativo / Workdesk</span><br/><span class="text-[10px] text-gray-500">Bandeja Unificada y Kanban</span></div>
+                         </label>
+                         
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.SERVICE_DELIVERY" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                             <div><span class="font-bold text-sm text-gray-800">Service Delivery</span><br/><span class="text-[10px] text-gray-500">Intake, Customer 360, Portal</span></div>
+                         </label>
+                         
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.BAM" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                             <div><span class="font-bold text-sm text-gray-800">Directivo (BAM)</span><br/><span class="text-[10px] text-gray-500">Analytics y PMO Settings</span></div>
+                         </label>
+                         
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.MODELER" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                             <div><span class="font-bold text-sm text-gray-800">Configuración Modeler</span><br/><span class="text-[10px] text-gray-500">BPMN, DMN, Forms</span></div>
+                         </label>
+
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.INTEGRATION" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                             <div><span class="font-bold text-sm text-gray-800">Integración</span><br/><span class="text-[10px] text-gray-500">API Builder, Mapper, DLQ</span></div>
+                         </label>
+
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.PROJECTS" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                             <div><span class="font-bold text-sm text-gray-800">Proyectos</span><br/><span class="text-[10px] text-gray-500">Gestor Ágil, PMO</span></div>
+                         </label>
+
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.ADMINISTRATION" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                             <div><span class="font-bold text-sm text-gray-800">Administración</span><br/><span class="text-[10px] text-gray-500">Identity, Buzones, Incidentes</span></div>
+                         </label>
+                     </div>
+                 </div>
+                 
              </div>
              <div class="mt-4 pt-4 flex justify-end gap-3 border-t">
-               <span v-if="!roleMatrixValidation" class="text-red-500 text-xs font-bold mr-auto self-center">⚠️ Fallo Zod. Estructura Corrupta.</span>
+               <span v-if="!roleMatrixValidation && roleModalTab === 'basic'" class="text-red-500 text-xs font-bold mr-auto self-center">⚠️ Fallo Zod. Estructura Corrupta.</span>
                <button @click="showRoleModal = false" class="px-4 py-2 text-sm text-gray-700 font-medium hover:bg-gray-100 rounded transition border">Cerrar</button>
                <button @click="saveRole" :disabled="!roleMatrixValidation" class="bg-indigo-600 text-white px-5 py-2 rounded shadow text-sm font-bold hover:bg-indigo-700 transition disabled:opacity-50">Consolidar Rol</button>
              </div>
@@ -670,8 +730,9 @@ const mockProcesses = ref<{id: string, name: string}[]>([]);
 const matrixState = ref<Record<string, boolean>>({});
 
 const showRoleModal = ref(false);
+const roleModalTab = ref<'basic' | 'topology'>('basic');
 const editingRole = ref<any>(null);
-const roleForm = ref({ name: '', id: '', parentRole: '', matrix: {} as Record<string, { initiate: boolean, execute: boolean }> });
+const roleForm = ref({ name: '', id: '', parentRole: '', matrix: {} as Record<string, { initiate: boolean, execute: boolean }>, topology: { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } });
 
 const roleMatrixSchema = z.record(z.object({
     initiate: z.boolean(),
@@ -697,6 +758,7 @@ const onParentRoleChange = () => {
 
 const openRoleModal = (role: any = null) => {
     editingRole.value = role;
+    roleModalTab.value = 'basic';
     if(role) { 
         // Reconstruct matrix from global state (mock)
         const matrix: Record<string, { initiate: boolean, execute: boolean }> = {};
@@ -706,14 +768,14 @@ const openRoleModal = (role: any = null) => {
                 execute: matrixState.value[`${role.id}_${p.id}_E`] || false
             };
         }
-        roleForm.value = { ...role, parentRole: '', matrix }; 
+        roleForm.value = { ...role, parentRole: '', matrix, topology: role.topology || { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } }; 
     }
     else { 
         const matrix: Record<string, { initiate: boolean, execute: boolean }> = {};
         for(const p of mockProcesses.value) {
             matrix[p.id] = { initiate: false, execute: false };
         }
-        roleForm.value = { name: '', id: 'R_', parentRole: '', matrix }; 
+        roleForm.value = { name: '', id: 'R_', parentRole: '', matrix, topology: { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } }; 
     }
     showRoleModal.value = true;
 };
@@ -722,9 +784,9 @@ const saveRole = () => {
     
     if(editingRole.value) {
         const r = mockRoles.value.find(x => x.id === editingRole.value.id);
-        if(r) Object.assign(r, { id: roleForm.value.id, name: roleForm.value.name });
+        if(r) Object.assign(r, { id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology });
     } else {
-        mockRoles.value.push({ id: roleForm.value.id, name: roleForm.value.name });
+        mockRoles.value.push({ id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology } as any);
     }
     
     // Salvaguardar Matriz en el estado unificado
@@ -851,7 +913,7 @@ onMounted(async () => {
         const [usersRes, rolesRes, processesRes, anomaliesRes, auditRes] = await Promise.all([
             apiClient.get('/admin/users', { validateStatus: () => true }).catch(() => ({ data: [] })),
             apiClient.get('/admin/roles', { validateStatus: () => true }).catch(() => ({ data: [] })),
-            apiClient.get('/design/processes/catalog', { validateStatus: () => true }).catch(() => ({ data: [] })), // Real E2E catalog
+            apiClient.get('/design/processes', { validateStatus: () => true }).catch(() => ({ data: [] })), // GET /api/v1/design/processes → BpmnDesignController.getAllLatestProcesses()
             apiClient.get('/security/anomalies', { validateStatus: () => true }).catch(() => ({ data: [] })),
             apiClient.get('/security/audit/reports', { validateStatus: () => true }).catch(() => ({ data: [] }))
         ]);
@@ -877,8 +939,8 @@ onMounted(async () => {
         
         if (processesRes.data && Array.isArray(processesRes.data)) {
             mockProcesses.value = processesRes.data.map((p: any) => ({
-                id: p.id || p.technicalName,
-                name: p.name || p.technicalName
+                id: p.key || p.id || p.technicalName, // BpmnDesignController devuelve 'key', no 'id'
+                name: p.name || p.key || p.technicalName
             }));
         }
         

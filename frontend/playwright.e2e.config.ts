@@ -35,6 +35,14 @@ export default defineConfig({
         channel: 'chrome',
       },
     },
+    {
+      name: 'Zero-Mock-E2E',
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chrome',
+        baseURL: process.env.ZERO_MOCK_URL || 'http://localhost:5173',
+      },
+    },
   ],
   webServer: {
     command: 'npm run dev',

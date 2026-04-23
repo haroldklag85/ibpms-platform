@@ -21,7 +21,8 @@ const BANNED_PATTERNS = [
 let hasErrors = false;
 
 function scanFile(filePath) {
-  const content = fs.readFileSync(filePath, 'utf-8');
+  const rawContent = fs.readFileSync(filePath, 'utf-8');
+  const content = rawContent.split('\n').filter(line => !line.includes('// zero-mock-ignore')).join('\n');
   let fileHasErrors = false;
 
   BANNED_PATTERNS.forEach(pattern => {

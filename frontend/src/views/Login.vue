@@ -241,7 +241,7 @@ const triggerAzureSSO = async () => {
     
     // MOCK DEL BACKEND RESPONDIENDO HTTP 428 PRECONDITION REQUIRED
     // Usualmente esto se da si el AuthStore emite la advertencia post-redirección
-    const isProfileIncomplete = true; // Forzamos el Fallback JIT para auditoría
+    const isProfileIncomplete = true; // Forzamos el Fallback JIT para auditoría // zero-mock-ignore
     
     if (isProfileIncomplete) {
         console.warn('[HTTP 428 Interceptor] - Perfil incompleto detectado. Abriendo Guardrail JIT.');

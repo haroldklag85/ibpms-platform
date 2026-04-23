@@ -109,3 +109,21 @@ Es de suma importancia notar que la ejecución incrementó los test pasados a 36
 La Jefatura ha rechazado explícitamente asumir la caída por infraestructura local. Se exige que el 100% de los 55 escenarios pasen exitosamente para dar cierre a la Iteración 6.2. 
 **Acción Requerida:** 
 Generar Handoffs de optimización cruzada (Infra/BD, Backend, Frontend, QA) para erradicar los cuellos de botella de concurrencia, latencia del DataGrid y multi-instancia en el entorno local actual.
+
+---
+
+## Registro de Incidencias QA - Deuda Técnica Zero-Mock (Componentes Compartidos)
+
+**Bug ID:** BUG-S6-005
+**Fecha:** 2026-04-23
+**Componente:** `AssigneeMultiSelect.vue` (y componentes `agile/` transversales)
+**Reportado por:** Agente de Arquitectura
+**Contexto:** Construcción y conexión de API real de `GET /users` para cumplir la directriz Zero-Mock en el Sprint 6.2.
+**Estado:** 🔴 ABIERTO (Para Iteración 6.2)
+
+### Descripción del Error
+El componente `AssigneeMultiSelect.vue` (US-030 CA-05) utiliza actualmente una lista *mock* "hardcodeada" de usuarios para asignar responsables a las tarjetas Kanban/Agile. Dado el mandato Zero-Mock, los componentes compartidos también deben estar conectados a las APIs productivas.
+
+### Acción Requerida
+1. **Backend:** Construir / Exponer la API real de `GET /api/v1/users` (si no existe) que retorne la lista de usuarios elegibles para un proyecto.
+2. **Frontend:** Conectar el componente `AssigneeMultiSelect.vue` con dicho endpoint para poblar dinámicamente el listado, eliminando cualquier declaración `mock` y resolviendo la violación (VIOL-C2) del escáner anti-mock.

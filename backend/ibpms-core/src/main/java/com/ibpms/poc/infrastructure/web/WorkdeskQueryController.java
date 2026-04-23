@@ -5,7 +5,7 @@ import com.ibpms.poc.application.dto.WorkdeskResponseDTO;
 import com.ibpms.poc.application.dto.DelegationContextDTO;
 import com.ibpms.poc.application.service.TaskDelegationService;
 import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository;
+import com.ibpms.poc.application.service.WorkdeskQueryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -30,12 +30,12 @@ public class WorkdeskQueryController {
 
     private static final Logger log = LoggerFactory.getLogger(WorkdeskQueryController.class);
 
-    private final WorkdeskProjectionRepository projectionRepository;
+    private final WorkdeskQueryService workdeskQueryService;
     private final TaskDelegationService taskDelegationService;
     private final Bucket bucket;
 
-    public WorkdeskQueryController(WorkdeskProjectionRepository projectionRepository, TaskDelegationService taskDelegationService) {
-        this.projectionRepository = projectionRepository;
+    public WorkdeskQueryController(WorkdeskQueryService workdeskQueryService, TaskDelegationService taskDelegationService) {
+        this.workdeskQueryService = workdeskQueryService;
         this.taskDelegationService = taskDelegationService;
         // CA-30: Rate Limiting
         Bandwidth limit = Bandwidth.builder().capacity(60).refillGreedy(60, Duration.ofMinutes(1)).build();
@@ -81,7 +81,7 @@ public class WorkdeskQueryController {
 
             // Remove sort from pageable to prevent Spring Data natively appending the entity property as a raw SQL column
             Pageable safePageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
-            Page<WorkdeskProjectionEntity> entities = projectionRepository.findWorkdeskTasks(tenantId, search, effectiveAssignee, safePageable);
+            Page<WorkdeskProjectionEntity> entities = workdeskQueryService.getWorkdeskTasks(tenantId, search, effectiveAssignee, safePageable);
             
             Page<WorkdeskGlobalItemDTO> dtoPage = entities.map(e -> {
                 WorkdeskGlobalItemDTO dto = new WorkdeskGlobalItemDTO();
@@ -144,7 +144,7 @@ public class WorkdeskQueryController {
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
             String tenantId = (auth != null && auth.getName() != null) ? auth.getName() : "default";
 
-            java.util.List<com.ibpms.poc.application.dto.FacetCountDto> facets = projectionRepository.countByStatusPerTenant(tenantId);
+            java.util.List<com.ibpms.poc.application.dto.FacetCountDto> facets = workdeskQueryService.getFacets(tenantId);
             return ResponseEntity.ok(facets);
         } catch (Exception e) {
             log.error("Error obteniendo facetas (CA-22, CA-29)", e);

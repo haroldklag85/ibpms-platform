@@ -7,6 +7,7 @@ services:
     image: ankane/pgvector:latest
     container_name: ibpms-postgres-uat
     restart: unless-stopped
+    command: postgres -c max_connections=200
     environment:
       POSTGRES_USER: ibpms_user
       POSTGRES_PASSWORD: ibpms_password

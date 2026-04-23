@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.util.UUID;
 import java.util.Set;
 import java.util.HashSet;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "ibpms_security_role")
@@ -20,6 +21,7 @@ public class RoleEntity {
     private String description;
 
     @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
     private Set<UserEntity> users = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -35,6 +37,7 @@ public class RoleEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_role_id")
+    @JsonIgnore
     private RoleEntity parentRole;
 
     // CA-1 US-036: Modelo híbrido EntraID/LOCAL — indica si este rol actúa como Plantilla Clonable

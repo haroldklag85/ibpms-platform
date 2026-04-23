@@ -47,6 +47,21 @@ apiClient.interceptors.response.use(
             return Promise.reject(error); // Silently stops component logic without crash
         }
         
+        const config = error.config as InternalAxiosRequestConfig & { _retryCount?: number };
+        
+        // J-04: Optimistic UI / Backoff Exponencial para 429 y 503
+        if (config && error.response && [429, 503].includes(error.response.status)) {
+            config._retryCount = config._retryCount || 0;
+            if (config._retryCount < 3) {
+                config._retryCount += 1;
+                const backoff = Math.pow(2, config._retryCount) * 1000; // 2s, 4s, 8s
+                console.warn(`J-04: Reintento automático (${config._retryCount}/3) en ${backoff}ms por HTTP ${error.response.status}`);
+                return new Promise(resolve => {
+                    setTimeout(() => resolve(apiClient(config)), backoff);
+                });
+            }
+        }
+        
         // CA-21, CA-1, CA-37: Alertas Rojas Imborrables / Captura Global 5xx
         if (error.response && [500, 502, 503, 504].includes(error.response.status)) {
             console.error('Fatal Level 0 Dispatching', error.response.status);

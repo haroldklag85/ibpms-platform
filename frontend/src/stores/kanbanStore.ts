@@ -68,10 +68,15 @@ export const useKanbanStore = defineStore('kanban', {
 
                 const payload: any = { newState: newStatus };
                 if (blockReason) payload.blockReason = blockReason;
-                await api.updateKanbanStatus(taskId, payload);
+                
+                // UI Optimista: Fire-and-Forget
+                api.updateKanbanStatus(taskId, payload).catch(error => {
+                    console.warn("Fallo en Optimistic UI, revirtiendo estado...", error);
+                    // Rollback on failure
+                    this.fetchBoard(); // Re-sync
+                });
             } catch (error) {
-                // Rollback on failure
-                this.fetchBoard(); // Re-sync
+                console.error("Error al mover la tarjeta", error);
                 throw error;
             }
         }

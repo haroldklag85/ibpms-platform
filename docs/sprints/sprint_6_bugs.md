@@ -81,3 +81,31 @@ Las áreas clave de falla siguen siendo idénticas a BUG-S6-002, indicando que e
 
 ### Acción Requerida
 El parche de estabilización no está reflejándose en el entorno de Pruebas `Zero-Mock-E2E`. Se solicita a Arquitectura verificar si la base de datos realmente está reteniendo la Data Seed o si el contenedor Playwright no alcanza la red del Backend a tiempo.
+
+---
+
+## Registro de Incidencias QA - Ejecución Forzada sin Skips (J-04 Suite)
+
+**Bug ID:** BUG-S6-004
+**Fecha:** 2026-04-22
+**Componente:** Suite Completa J-04 (55 Escenarios, Sin Skips)
+**Reportado por:** Agente QA Especialista en UAT y Playwright
+**Contexto:** Ejecución Masiva Forzada habilitando todos los escenarios (Deudas Técnicas omitidas).
+**Estado:** 🔴 ABIERTO (Mandato Directivo: Resolutorio Obligatorio)
+
+### Descripción del Error
+Bajo instrucción directa, se removieron los 10 comandos `test.skip()` de las pruebas que correspondían a funcionalidades V2 (Uploads, Autoguardados) y automatizaciones dependientes de Docker/Red (Timeouts provocados). 
+
+* **Resultado Global:** 36 Passed, 0 Skipped, 19 Failed.
+* **Exit code:** 1.
+* **Tiempo Total de Ejecución:** ~11.1 minutos.
+
+### Detalle Técnico (Playwright Trace)
+Es de suma importancia notar que la ejecución incrementó los test pasados a 36, confirmando que algunas de las funcionalidades supuestamente "no automatizables" pasaron con éxito bajo el Backend actual. Sin embargo, persisten 19 fallos:
+1. Las fallas reportadas en BUG-S6-003 siguen presentes (Workdesk, Timeouts de Director, Kanban Modal y Multi-instancia).
+2. Forzar los tests bloqueados por "Falta de implementación V2" no revirtió el problema de fondo del entorno E2E.
+
+### Directiva de Remediación (Mandato de Jefatura)
+La Jefatura ha rechazado explícitamente asumir la caída por infraestructura local. Se exige que el 100% de los 55 escenarios pasen exitosamente para dar cierre a la Iteración 6.2. 
+**Acción Requerida:** 
+Generar Handoffs de optimización cruzada (Infra/BD, Backend, Frontend, QA) para erradicar los cuellos de botella de concurrencia, latencia del DataGrid y multi-instancia en el entorno local actual.

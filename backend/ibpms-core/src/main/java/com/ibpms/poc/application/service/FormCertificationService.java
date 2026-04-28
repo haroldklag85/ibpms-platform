@@ -1,12 +1,12 @@
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.infrastructure.jpa.entity.FormDefinitionEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.FormDefinitionRepository;
+import com.ibpms.poc.application.port.out.FormDefinitionPort;
+import com.ibpms.poc.application.port.out.AuditLogPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -35,15 +35,15 @@ public class FormCertificationService {
     private static final int PAYLOAD_RAW_LIMIT = 32 * 1024;       // 32KB
     private static final int PAYLOAD_COMPRESSED_LIMIT = 64 * 1024; // 64KB
 
-    private final FormDefinitionRepository formDefinitionRepository;
-    private final JdbcTemplate jdbcTemplate;
+    private final FormDefinitionPort formDefinitionPort;
+    private final AuditLogPort auditLogPort;
     private final ObjectMapper objectMapper;
 
-    public FormCertificationService(FormDefinitionRepository formDefinitionRepository,
-                                     JdbcTemplate jdbcTemplate,
+    public FormCertificationService(FormDefinitionPort formDefinitionPort,
+                                     AuditLogPort auditLogPort,
                                      ObjectMapper objectMapper) {
-        this.formDefinitionRepository = formDefinitionRepository;
-        this.jdbcTemplate = jdbcTemplate;
+        this.formDefinitionPort = formDefinitionPort;
+        this.auditLogPort = auditLogPort;
         this.objectMapper = objectMapper;
     }
 
@@ -53,7 +53,7 @@ public class FormCertificationService {
 
     @Transactional
     public void ensureEntityExists(UUID formDefinitionId) {
-        if (!formDefinitionRepository.existsById(formDefinitionId)) {
+        if (!formDefinitionPort.existsById(formDefinitionId)) {
             FormDefinitionEntity stub = new FormDefinitionEntity();
             stub.setId(formDefinitionId);
             stub.setFormId(formDefinitionId);
@@ -62,7 +62,7 @@ public class FormCertificationService {
             stub.setCreatedBy("system");
             stub.setHashSha256(computeSha256("{}"));
             stub.setIsQaCertified(false);
-            formDefinitionRepository.save(stub);
+            formDefinitionPort.save(stub);
             log.info("Auto-created stub FormDefinitionEntity for {}", formDefinitionId);
         }
     }
@@ -73,7 +73,7 @@ public class FormCertificationService {
 
     @Transactional
     public FormDefinitionEntity certifyForm(UUID formDefinitionId, String certifierUserId, String payloadJson) {
-        FormDefinitionEntity entity = formDefinitionRepository.findById(formDefinitionId)
+        FormDefinitionEntity entity = formDefinitionPort.findById(formDefinitionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "FormDefinition not found: " + formDefinitionId));
 
         // CA-16: Concurrencia optimista — si ya está certificada, rechazar
@@ -96,7 +96,7 @@ public class FormCertificationService {
         entity.setCertifiedSchemaHash(currentHash);
         entity.setCertifiedBy(certifierUserId);
         entity.setCertifiedAt(LocalDateTime.now());
-        formDefinitionRepository.save(entity);
+        formDefinitionPort.save(entity);
 
         // CA-15: Registrar en audit log con payload truncamiento
         auditLog(certifierUserId, "QA_CERTIFIED",
@@ -113,7 +113,7 @@ public class FormCertificationService {
 
     @Transactional
     public void onSchemaModified(UUID formDefinitionId, String modifiedBy) {
-        FormDefinitionEntity entity = formDefinitionRepository.findById(formDefinitionId)
+        FormDefinitionEntity entity = formDefinitionPort.findById(formDefinitionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "FormDefinition not found"));
 
         if (!Boolean.TRUE.equals(entity.getIsQaCertified())) {
@@ -129,7 +129,7 @@ public class FormCertificationService {
             entity.setCertifiedSchemaHash(null);
             entity.setCertifiedBy(null);
             entity.setCertifiedAt(null);
-            formDefinitionRepository.save(entity);
+            formDefinitionPort.save(entity);
 
             // Audit log inmutable
             String details = "{\"action\": \"QA_CERT_REVOKED\", \"reason\": \"Schema modified post-certification\"," +
@@ -166,7 +166,7 @@ public class FormCertificationService {
         newVersion.setCertifiedBy(null);
         newVersion.setCertifiedAt(null);
 
-        formDefinitionRepository.save(newVersion);
+        formDefinitionPort.save(newVersion);
         log.info("New schema version V{} created for form {} — born uncertified (CA-13)", newVersionId, formId);
         return newVersion;
     }
@@ -202,10 +202,9 @@ public class FormCertificationService {
             }
         }
 
-        jdbcTemplate.update(
-                "INSERT INTO ibpms_audit_log (id, entity_type, entity_id, event_type, performed_by, created_at, payload_snapshot, is_compressed, truncated, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)",
+        auditLogPort.saveAuditLog(
                 id, "FORM_DEFINITION", id, action, userId,
-                java.sql.Timestamp.valueOf(LocalDateTime.now()),
+                LocalDateTime.now(),
                 payloadBytes, isCompressed, truncated, detailsJson
         );
     }

@@ -1,16 +1,15 @@
-**De:** Agente QA E2E (Playwright)
-**Para:** Arquitecto Líder
-**Rama:** `sprint-6_uat_certification`
-**Asunto:** Solicitud de Aprobación - Optimización de Concurrencia E2E (J-04)
+# Solicitud de Aprobación - QA (Sprint 6.2)
 
-Estimado Arquitecto Líder,
+Arquitecto Líder, he elaborado el plan de trabajo para la ejecución masiva y certificación E2E Zero-Mock de la Suite J-04 correspondiente al Sprint 6.2.
 
-Siguiendo el handoff `.agentic-sync/handoff_qa_J04_Opt.md`, he analizado la configuración y establecido el siguiente plan técnico para aliviar el entorno local y estabilizar los Timeouts E2E:
+## Resumen del Plan:
+1. **Auditoría Infra:** Verificación de salud de Docker (`ibpms-core`) y puerto 8080 antes de arrancar, cumpliendo con la regla Cero-Confianza del SRE.
+2. **Validación de Código:** Confirmar eliminación total de deudas técnicas (0 `test.skip()`) en la suite Playwright.
+3. **Ejecución Zero-Mock:** Correr la suite con 4 workers usando el comando oficial `npx playwright test e2e/certification/ --project="Zero-Mock-E2E" --reporter=html`.
+4. **Validación Zod y SLA:** Prestar atención particular a la carga de bandeja (<=2s) y los botones de pánico.
+5. **Reporte Forense:** Si hay fallos remanentes que no sean subsanados por el parche del backend, se generará trazabilidad completa (Trace logs, Screenshots, Consola) cruzada con SSOT Gherkin.
 
-**Plan de Cambios (`frontend/playwright.e2e.config.ts`):**
-1. **Reducción de Paralelismo:** Fijar de manera estricta `workers: 2` (reemplazando la validación del CI actual o undefined).
-2. **Action Timeout Tuning:** Mantener `actionTimeout` en 15000ms y agregar explícitamente `navigationTimeout: 15000` en el bloque `use`.
+Por favor, revisa el plan en detalle en el archivo `implementation_plan.md` y concédeme tu aprobación para proceder con la Fase Ejecutiva.
 
-Tras aplicar estos ajustes, lanzaré nuevamente la suite bajo la bandera `--project="Zero-Mock-E2E" --workers=2` para confirmar que los timeouts desaparecen y validar el cumplimiento del CA correspondiente a Zero-Mock (J-04).
-
-Quedo a la espera de tu veredicto formal para pasar a modo `EXECUTION`.
+Saludos,
+Agente QA Especialista.

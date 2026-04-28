@@ -1,13 +1,16 @@
-# Solicitud de Aprobación - Backend (J-04 Optimización Concurrencia)
+# Solicitud de Revisión: Estabilización Backend y Zero-Mock (Sprint 6.2)
 
-Arquitecto Líder, he elaborado el plan de implementación para abordar la mitigación de los timeouts en el entorno E2E.
+Arquitecto Líder, he analizado el requerimiento BUG-S6-004 y BUG-S6-005 documentado en el handoff. El plan propuesto para mitigar los cuellos de botella e implementar el catálogo es el siguiente:
 
-**Estrategia Propuesta:**
-1. **Adición de Dependencias:** Inclusión de `spring-boot-starter-cache` en `pom.xml` para aprovechar las abstracciones nativas de caché.
-2. **Refactorización Hexagonal:** Desplazamiento de la lógica de consulta desde `WorkdeskQueryController` hacia una nueva clase `WorkdeskQueryService` para habilitar inyección segura AOP.
-3. **Caché Distribuido (Redis):** Se habilita `@Cacheable("workdesk_tasks")` en el nuevo servicio basando la llave del caché en tenant, usuario, búsqueda y páginación.
-4. **Invalidación (Eviction):** Debido al alto costo de la fragmentación de `@CacheEvict` a lo largo de docenas de servicios dispares (Sagas, DMN, Webhooks), se optó por la alternativa de **"TTL corto"** especificada en el Handoff. Se usará un TTL global de 10 segundos para "workdesk_tasks" mediante `RedisCacheManagerBuilderCustomizer`.
+**1. Endpoint de Usuarios (Zero-Mock)**
+He detectado que la lógica y seguridad base ya existe en `UserAdminController` y `UserService`. Implementaré un nuevo `UserController.java` en la ruta pública `/api/v1/users` que delega a `userService.listAll()`. El DTO retornado (`UserResponseDTO`) es seguro: expone ID, username, email, y roles, excluyendo cualquier rastro del hash BCrypt o datos transaccionales, cumpliendo con la regla Zero-Trust.
 
-El plan completo se encuentra en `implementation_plan.md`.
+**2. Optimización Concurrencia (Delegaciones)**
+En `AgileTaskService.java`, identifiqué un patrón de N+1 oculto y vulnerabilidad a deadlocks en `bulkAssign`, donde se itera un array de `UUID` y se hace `getTaskForUpdate` iterativo. Para sanear esto:
+- Modificaré la rutina para **ordenar lexicográficamente la lista de Task IDs** antes del ciclo. Esto asegura que transacciones concurrentes adquieran locks en el mismo orden, eludiendo la condición circular del motor JPA/Postgres.
+- Envolveré la captura en bloques try-catch detectando `OptimisticLockingFailureException`, registrando un Warning claro para auditoría en caso de que una tarea ya esté pisada.
 
-¿Apruebas la arquitectura propuesta y el refactor hacia el Application Service para proceder al modo EXECUTION?
+**3. Optimizaciones en la Bandeja Workdesk**
+Añadiré una migración SQL en Liquibase (`34-sprint6-bugs-fix.sql`) agregando el índice `idx_workdesk_search` a `ibpms_workdesk_projection(tenant_id, assignee)` para liquidar los timeouts persistentes durante los full table scans.
+
+Ruego revisión para avanzar a la ejecución.

@@ -11,9 +11,6 @@ const apiClient: AxiosInstance = axios.create({
     timeout: 10000, // Timeout seguro
 });
 
-// [Handoff Requirement]: Backend no dispone de servidor live en pipeline local. Activamos Modo Mock Estricto.
-import { setupMockAdapter } from './mockAdapter';
-setupMockAdapter(apiClient);
 
 // Interceptor de Request para anexar el Bearer Token corporativo si existe
 apiClient.interceptors.request.use(

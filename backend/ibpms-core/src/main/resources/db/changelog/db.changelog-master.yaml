@@ -72,3 +72,5 @@ databaseChangeLog:
       file: db/changelog/32-add-user-hierarchy.sql
   - include:
       file: db/changelog/33-create-kanban-schema.sql
+  - include:
+      file: db/changelog/34-sprint6-bugs-fix.sql

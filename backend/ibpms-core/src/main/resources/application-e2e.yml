@@ -4,7 +4,7 @@ spring:
     username: ibpms
     password: ibpms_e2e_pass
     hikari:
-      maximum-pool-size: 50
+      maximum-pool-size: 40
       minimum-idle: 10
       connection-timeout: 20000
   # HO-01: Auto-carga del seed al iniciar con perfil e2e

@@ -2,7 +2,7 @@ version: '3.8'
 services:
   postgres-e2e:
     image: ankane/pgvector:latest
-    command: postgres -c max_connections=200
+    command: ["postgres", "-c", "max_connections=150", "-c", "shared_buffers=1GB"]
     environment:
       POSTGRES_DB: ibpms_e2e
       POSTGRES_USER: ibpms

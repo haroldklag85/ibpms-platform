@@ -65,7 +65,7 @@ services:
     image: maven:3.9.6-eclipse-temurin-21
     container_name: ibpms-core-dev
     restart: unless-stopped
-    working_dir: /app/ibpms-core
+    working_dir: /app
     environment:
       - POSTGRES_HOST=ibpms-postgres
       - RABBITMQ_HOST=ibpms-rabbitmq
@@ -75,7 +75,7 @@ services:
       - maven_data:/root/.m2
     ports:
       - "8080:8080"
-    command: mvn spring-boot:run
+    command: bash -c "mvn clean install -DskipTests && cd ibpms-core && mvn spring-boot:run"
     depends_on:
       ibpms-postgres:
         condition: service_healthy

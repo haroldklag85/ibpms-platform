@@ -1,4 +1,11 @@
 -- liquibase formatted sql
+-- changeset antigravity:31-ensure-pk-user-roles-schema endDelimiter:/
+CREATE TABLE IF NOT EXISTS ibpms_security_user_roles (
+    user_id UUID NOT NULL,
+    role_id UUID NOT NULL
+);
+/
+
 -- changeset antigravity:31-ensure-pk-user-roles endDelimiter:/
 -- validCheckSum: ANY
 

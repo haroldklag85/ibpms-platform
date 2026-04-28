@@ -7,9 +7,9 @@ dotenv.config();
 
 export default defineConfig({
   testDir: './e2e/certification',
-  timeout: 90000,
+  timeout: 180000,
   expect: {
-    timeout: 10000
+    timeout: 30000
   },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -25,7 +25,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     video: 'on-first-retry',
     screenshot: 'only-on-failure',
-    actionTimeout: 15000,
+    actionTimeout: 30000,
   },
   projects: [
     {

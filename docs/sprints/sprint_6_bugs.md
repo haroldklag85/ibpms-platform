@@ -127,3 +127,31 @@ El componente `AssigneeMultiSelect.vue` (US-030 CA-05) utiliza actualmente una l
 ### Acción Requerida
 1. **Backend:** Construir / Exponer la API real de `GET /api/v1/users` (si no existe) que retorne la lista de usuarios elegibles para un proyecto.
 2. **Frontend:** Conectar el componente `AssigneeMultiSelect.vue` con dicho endpoint para poblar dinámicamente el listado, eliminando cualquier declaración `mock` y resolviendo la violación (VIOL-C2) del escáner anti-mock.
+
+---
+
+## Registro de Incidencias QA - Ejecución Final Zero-Mock (J-04 Suite sin skips - 4 Workers)
+
+**Bug ID:** BUG-S6-006
+**Fecha:** 2026-04-28
+**Componente:** Suite Completa J-04 (55 Escenarios, Sin Skips) / Backend Docker (`ibpms-core-dev`)
+**Reportado por:** Agente QA Especialista en UAT y Playwright
+**Contexto:** Ejecución Masiva Forzada habilitando todos los escenarios con 4 workers bajo perfil `Zero-Mock-E2E`.
+**Estado:** 🔴 ABIERTO (Crítico - Backend Offline)
+
+### Descripción del Error
+Bajo el perfil Zero-Mock, la ejecución masiva falló catastróficamente resultando en **45 tests fallidos y 2 flaky**, tras 54.4 minutos de ejecución. Todos los fallos sistémicos arrojan `Timeout of 90000ms exceeded while running "beforeEach" hook` al momento de hacer login y esperar el ruteo a `/workdesk`.
+
+### Detalle Técnico (Diagnóstico Forense)
+Al realizar la auditoría forense sobre la capa Docker (contenedor `ibpms-core-dev`), se descubrió que **el backend no ha estado en ejecución** durante la suite de pruebas. El contenedor se encuentra en un estado de _CrashLoopBackOff_ (reinicios continuos) debido a un fallo en el build de Maven:
+
+```text
+[ERROR] Failed to execute goal on project ibpms-poc: Could not resolve dependencies for project com.ibpms:ibpms-poc:jar:0.0.1-SNAPSHOT: The following artifacts could not be resolved: com.ibpms:ibpms-dmn-engine:jar:1.0.0-SNAPSHOT (absent): Could not find artifact com.ibpms:ibpms-dmn-engine:jar:1.0.0-SNAPSHOT
+```
+
+* **Causa Raíz:** Falta la dependencia `ibpms-dmn-engine:1.0.0-SNAPSHOT` en el repositorio local de Maven del contenedor.
+* **Impacto en Playwright:** Al estar el backend caído, las llamadas `POST /login` no pueden completarse. Como el frontend no puede autenticar, nunca navega a `/workdesk`. El test runner de Playwright agota su límite de 90 segundos (`page.waitForURL(/workdesk/)`) en cada uno de los 55 tests (x2 por los reintentos), inflando masivamente el tiempo de ejecución a casi una hora.
+
+### Acción Requerida
+El Arquitecto Líder o el equipo de Backend debe resolver el problema de resolución de dependencias de `ibpms-dmn-engine` en el `pom.xml` o asegurarse de que dicho módulo sea construido/instalado (`mvn clean install`) antes de levantar el contenedor `ibpms-core-dev`.
+Una vez que el contenedor levante correctamente (estado "Up" sostenido), se deberá reanudar la certificación masiva E2E.

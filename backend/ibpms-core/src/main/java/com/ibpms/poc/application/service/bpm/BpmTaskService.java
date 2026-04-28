@@ -189,7 +189,7 @@ public class BpmTaskService {
     /**
      * Obtiene los roles VIP con restricciones cacheados por 5 minutos (Caffeine)
      */
-    @Cacheable(value = "vipRoles", key = "'ALL'", unless = "#result.isEmpty()")
+    @Cacheable(value = "vipRoles", key = "'ALL'", unless = "#result.isEmpty()", cacheManager = "caffeineCacheManager")
     public List<String> getVipRoleNames() {
         return roleRepository.findByIsVipRestrictedTrue()
                 .stream().map(r -> "ROLE_" + r.getName())

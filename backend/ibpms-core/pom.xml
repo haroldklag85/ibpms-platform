@@ -70,6 +70,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
+		<!-- Caffeine L1 In-Process Cache para caches de dominio sin latencia de red -->
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+		</dependency>
 		<!-- RabbitMQ / AMQP Message Broker para Throttling de Integraciones (Pantalla 8) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

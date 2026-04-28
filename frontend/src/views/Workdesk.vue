@@ -261,7 +261,7 @@
                  <tr 
                    v-for="task in filteredItems" 
                    :key="task.unifiedId"
-                   @click="mockOpenTask(task)"
+                   @click="openTaskDetails(task)"
                    :class="[{ 'is-ghost': (task as any)._isGhost, 'is-new': (task as any)._isNew }, 'workdesk-row border-b border-gray-100 hover:bg-indigo-50/30 cursor-pointer transition-colors group']"
                    :data-testid="'task-row-' + (task.unifiedId || task.originalTaskId)"
                  >
@@ -655,7 +655,7 @@ const onClaimTask = async (task: any) => {
     }
 }
 
-const mockOpenTask = (task: any) => {
+const openTaskDetails = (task: any) => {
     openedTask.value = task;
 }
 

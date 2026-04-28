@@ -27,7 +27,7 @@ export const useMenuStore = defineStore('menu', () => {
         try {
              // CA-31: Endpoint Dinámico (Anti-JWT Bloat)
              // Si el endpoint falla o devuelve error, asumimos un layout vacío por Zero-Trust (y se disparará CA-26)
-             const { data } = await apiClient.get('/api/v1/users/me/menu-layout').catch(() => ({
+             const { data } = await apiClient.get('/users/me/menu-layout').catch(() => ({
                  data: []
              }));
              layout.value = data;

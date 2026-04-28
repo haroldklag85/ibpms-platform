@@ -58,26 +58,23 @@
           📜 Versiones
         </button>
         <!-- Deploy Requests CA-69 -->
-        <button v-show="mockRole === 'BPMN_Release_Manager'" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
+        <button v-show="activeRole === 'BPMN_Release_Manager'" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
           📨 Solicitudes
         </button>
-        <!-- Mock Role CA-21 -->
-        <select v-model="mockRole" title="Evaluar UI con diferentes perfiles CA-21" class="text-xs bg-indigo-50 dark:bg-gray-700 border-indigo-200 dark:border-gray-600 rounded px-2 py-1 focus:ring-indigo-500 text-indigo-800 dark:text-white font-bold ml-2">
-           <option value="BPMN_Designer">👨‍💻 Diseñador</option>
-           <option value="BPMN_Release_Manager">👑 Release Manager</option>
-           <!-- CA-66 -->
-           <option value="Super_Admin">🛡️ Super Admin</option>
-        </select>
+        <!-- Active Role CA-21 -->
+        <span class="text-xs bg-indigo-50 dark:bg-gray-700 border-indigo-200 dark:border-gray-600 rounded px-2 py-1 text-indigo-800 dark:text-white font-bold ml-2">
+           Rol Activo: {{ activeRole }}
+        </span>
         <!-- Instance Manager CA-8 -->
         <button @click="showInstancesManager = true" class="bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold hover:bg-indigo-100 flex items-center gap-1 transition">
           🧬 Gestor de Instancias
         </button>
         <!-- Request Deploy -->
-        <button v-show="mockRole === 'BPMN_Designer'" @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
+        <button v-show="activeRole === 'BPMN_Designer'" @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
           📩 Solicitar Despliegue
         </button>
         <!-- Deploy (CA-21) -->
-        <button v-show="mockRole === 'BPMN_Release_Manager'"
+        <button v-show="activeRole === 'BPMN_Release_Manager'"
                 @click="showDeployModal = true" 
                 :disabled="isDeploying || !['VALIDATED', 'WARNING'].includes(preFlightStatus)" 
                 class="bg-indigo-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 transition">
@@ -93,7 +90,7 @@
         <span v-if="isLocked" class="flex items-center text-orange-700 font-bold bg-orange-100 px-3 py-1 rounded shadow-sm border border-orange-200">
           🔒 SOLO LECTURA: Bloqueado por {{ lockOwner }} ({{ lockSince }})
           <!-- CA-66: Break Lock -->
-          <button v-if="mockRole === 'Super_Admin'" @click="breakLock" class="ml-3 bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded text-[10px] uppercase transition shadow-sm border border-red-800">🔓 Romper Candado</button>
+          <button v-if="activeRole === 'Super_Admin'" @click="breakLock" class="ml-3 bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded text-[10px] uppercase transition shadow-sm border border-red-800">🔓 Romper Candado</button>
         </span>
         <span v-else class="text-green-600 font-medium">🔓 Edición Exclusiva Adquirida</span>
       </div>
@@ -720,6 +717,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent } from 'vue';
+import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/services/apiClient';
 import { debounce } from 'lodash-es';
 import AppTooltip from '@/components/common/AppTooltip.vue';
@@ -731,7 +729,8 @@ import DOMPurify from 'dompurify';
 const Vue3Lottie = defineAsyncComponent(() => import('vue3-lottie').then(m => m.Vue3Lottie));
 
 const corruptNodeId = ref<string | null>(null);
-const mockRole = ref<'BPMN_Designer' | 'BPMN_Release_Manager' | 'Super_Admin'>('BPMN_Release_Manager'); // CA-21, CA-66
+const authStore = useAuthStore();
+const activeRole = computed(() => authStore.roles?.[0] || 'BPMN_Designer'); // Reemplaza mockRole CA-21, CA-66
 
 // ── Types ────────────────────────────────────────────────────
 interface BpmnElement {

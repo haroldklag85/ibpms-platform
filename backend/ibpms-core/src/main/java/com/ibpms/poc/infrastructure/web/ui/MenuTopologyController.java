@@ -19,7 +19,7 @@ public class MenuTopologyController {
         this.menuLayoutService = menuLayoutService;
     }
 
-    @GetMapping("/menu-layout")
+    @GetMapping("/topology")
     public ResponseEntity<MenuTopologyDTO> getMyMenuTopology(@AuthenticationPrincipal UserDetails user) {
         // En un entorno JWT, el username suele ser el claim del token o puede venir como String si no usamos UserDetails
         String username = (user != null) ? user.getUsername() : "anonymous";

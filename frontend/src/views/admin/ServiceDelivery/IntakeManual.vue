@@ -8,8 +8,7 @@
       <div class="flex gap-3 items-center">
         <!-- Mock toggle for Role -->
         <label class="flex items-center gap-2 text-xs bg-gray-100 px-3 py-1 rounded border">
-          <input type="checkbox" v-model="isSacLeader" class="rounded text-blue-600 focus:ring-blue-500">
-          Rol Emulado: SAC_Leader
+           Rol Activo: {{ isSacLeader ? 'SAC_Leader' : 'General' }}
         </label>
         <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold tracking-wide">
           Role_Admin_Intake
@@ -122,7 +121,7 @@
                </tr>
              </thead>
              <tbody class="divide-y divide-gray-200">
-               <tr v-for="mail in mockEmails" :key="mail.id" class="hover:bg-gray-50">
+               <tr v-for="mail in pendingEmails" :key="mail.id" class="hover:bg-gray-50">
                  <td class="px-4 py-3 text-sm text-gray-900">{{ mail.sender }}</td>
                  <td class="px-4 py-3 text-sm text-gray-500 truncate max-w-xs">{{ mail.subject }}</td>
                  <td class="px-4 py-3 text-right">
@@ -177,8 +176,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { api } from '@/services/apiClient';
+import { useAuthStore } from '@/stores/authStore';
+
+const authStore = useAuthStore();
+const isSacLeader = computed(() => authStore.roles?.includes('SAC_Leader'));
 
 const isSubmitting = ref(false);
 const successMessage = ref('');
@@ -223,13 +226,18 @@ const submitIntake = async () => {
 // Modal Lectura Plana (CA-10) Lógica
 // ==========================================
 const readonlyMailModal = ref(false);
-const isSacLeader = ref(false); // Mock de rol SAC_Leader
 const selectedMail = ref<null | { id: string, sender: string, subject: string, body: string }>(null);
 
-const mockEmails = ref([
-  { id: 'MAIL-1', sender: 'cliente1@empresa.com', subject: 'Solicitud de Crédito Corporativo', body: 'Adjunto mis extractos bancarios para la solicitud del crédito. Quedo atento.' },
-  { id: 'MAIL-2', sender: 'soporte@external.com', subject: 'Falla en acceso al portal Docusign', body: 'No puedo ver los expedientes desde ayer. Arroja HTTP 500.' }
-]);
+const pendingEmails = ref<any[]>([]);
+
+onMounted(async () => {
+   try {
+      const response = await api.getPendingEmails?.() || { data: [] };
+      pendingEmails.value = response.data;
+   } catch (e) {
+      console.error('Error fetching emails', e);
+   }
+});
 
 const openReadonlyMail = (mail: any) => {
   selectedMail.value = mail;

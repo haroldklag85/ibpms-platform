@@ -34,7 +34,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="instance in mockedInstances" :key="instance.id" 
+            <tr v-for="instance in activeInstances" :key="instance.id" 
                 class="border-b border-gray-100 dark:border-gray-700 transition"
                 :class="{ 'opacity-60 bg-red-50/30 dark:bg-red-900/10': !instance.isMigratable, 'hover:bg-indigo-50 dark:hover:bg-indigo-900/20': instance.isMigratable }">
               
@@ -61,7 +61,7 @@
                 </span>
               </td>
             </tr>
-            <tr v-if="mockedInstances.length === 0">
+            <tr v-if="activeInstances.length === 0">
               <td colspan="5" class="text-center py-6 text-gray-500 italic">No hay instancias antiguas en vuelo para este proceso.</td>
             </tr>
           </tbody>
@@ -89,6 +89,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 
+import apiClient from '@/services/apiClient';
+
 const props = defineProps({
   show: { type: Boolean, default: false },
   processId: { type: String, required: true },
@@ -101,19 +103,18 @@ const loading = ref(true);
 const isMigrating = ref(false);
 const selectedInstances = ref<string[]>([]);
 
-// Mocked DB state
-const mockedInstances = ref([
-  { id: '10f9-a1b2-inst-001', version: 'V1', currentNode: 'Task_AprobarVentas', isMigratable: true },
-  { id: '20c4-f8d9-inst-002', version: 'V1', currentNode: 'Task_ValidarCompliance', isMigratable: true },
-  { id: '39a1-b6e5-inst-003', version: 'V1', currentNode: 'Task_LegacyVerification', isMigratable: false }, // Guillotina visual (CA-9)
-  { id: '44d8-c2a1-inst-004', version: 'V1', currentNode: 'Task_AprobarVentas', isMigratable: true }
-]);
+// Real DB state
+const activeInstances = ref<any[]>([]);
 
-onMounted(() => {
-  // Simulate network fetch
-  setTimeout(() => {
+onMounted(async () => {
+  try {
+    const { data } = await apiClient.get(`/design/processes/${props.processId}/instances`);
+    activeInstances.value = data || [];
+  } catch (error) {
+    console.error('Error fetching instances:', error);
+  } finally {
     loading.value = false;
-  }, 800);
+  }
 });
 
 const executeMigration = async () => {

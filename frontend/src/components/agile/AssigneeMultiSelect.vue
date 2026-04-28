@@ -55,7 +55,7 @@
 import { ref, computed, onMounted } from 'vue';
 import type { AgileAssignee } from '@/types/agile';
 import { useAgileStore } from '@/stores/agileStore';
-import apiClient from '@/services/apiClient';
+import { useUserStore } from '@/stores/useUserStore';
 
 const props = defineProps<{
   itemId: string;
@@ -63,28 +63,21 @@ const props = defineProps<{
 }>();
 
 const agileStore = useAgileStore();
+const userStore = useUserStore();
 const isDropdownOpen = ref(false);
 const searchQuery = ref('');
 
 // A local tracker for checkboxes inside the dropdown
 const pendingAssignments = ref<string[]>([...props.currentAssignees.map(a => a.userId)]);
 
-// Real API call (If returns 404, interceptor handles it, but we avoid static mocks)
-const activeDirectory = ref<any[]>([]);
-
 onMounted(async () => {
-   try {
-      const { data } = await apiClient.get('/users');
-      activeDirectory.value = data || [];
-   } catch (error) {
-      console.warn('Assignee directory fetch failed or endpoint missing');
-   }
+   await userStore.fetchUsers();
 });
 
 const filteredActiveDirectory = computed(() => {
-  if (!searchQuery.value) return activeDirectory.value;
+  if (!searchQuery.value) return userStore.users;
   const q = searchQuery.value.toLowerCase();
-  return activeDirectory.value.filter(u => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q));
+  return userStore.users.filter(u => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q));
 });
 
 const isAssigned = (userId: string) => pendingAssignments.value.includes(userId);

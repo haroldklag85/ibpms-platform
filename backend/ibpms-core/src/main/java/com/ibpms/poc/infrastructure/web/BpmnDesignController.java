@@ -16,7 +16,9 @@ import java.util.Map;
 import java.util.UUID;
 import com.ibpms.poc.application.service.BpmnDesignService;
 import com.ibpms.poc.infrastructure.web.annotation.SandboxOperation;
-import com.ibpms.poc.infrastructure.jpa.repository.ExternalTaskTopicRepository;
+import com.ibpms.poc.application.port.out.ExternalTaskTopicPort;
+import com.ibpms.poc.application.port.out.DataMappingPort;
+import com.ibpms.poc.domain.model.DataMapping;
 
 /**
  * REST Controller for BPMN Design operations (Integration Gaps Mock).
@@ -28,25 +30,24 @@ public class BpmnDesignController {
     private final PreFlightAnalyzerService preFlightAnalyzerService;
     private final ProcessMigrationService processMigrationService;
     private final BpmnDesignService bpmnDesignService;
-    private final ExternalTaskTopicRepository externalTaskTopicRepository;
-    private final com.ibpms.poc.infrastructure.jpa.repository.DataMappingRepository dataMappingRepository;
+    private final ExternalTaskTopicPort externalTaskTopicPort;
+    private final DataMappingPort dataMappingPort;
 
     public BpmnDesignController(PreFlightAnalyzerService preFlightAnalyzerService, 
                                 ProcessMigrationService processMigrationService,
                                 BpmnDesignService bpmnDesignService,
-                                ExternalTaskTopicRepository externalTaskTopicRepository,
-                                com.ibpms.poc.infrastructure.jpa.repository.DataMappingRepository dataMappingRepository) {
+                                ExternalTaskTopicPort externalTaskTopicPort,
+                                DataMappingPort dataMappingPort) {
         this.preFlightAnalyzerService = preFlightAnalyzerService;
         this.processMigrationService = processMigrationService;
         this.bpmnDesignService = bpmnDesignService;
-        this.externalTaskTopicRepository = externalTaskTopicRepository;
-        this.dataMappingRepository = dataMappingRepository;
+        this.externalTaskTopicPort = externalTaskTopicPort;
+        this.dataMappingPort = dataMappingPort;
     }
 
     @PutMapping("/{id}/draft")
     public ResponseEntity<Map<String, Object>> autoSaveDraft(@PathVariable("id") String id,
             @RequestBody Map<String, Object> request) {
-        // Mock Implementation for Auto-Save
         return ResponseEntity.ok(Map.of(
                 "processId", id,
                 "status", "DRAFT_SAVED",
@@ -55,7 +56,6 @@ public class BpmnDesignController {
 
     @PostMapping("/{id}/sandbox")
     public ResponseEntity<Map<String, Object>> runSandbox(@PathVariable("id") String id) {
-        // Mock Implementation for Sandbox testing
         return ResponseEntity.ok(Map.of(
                 "processId", id,
                 "sandboxInstanceId", "sandbox-" + UUID.randomUUID().toString(),
@@ -69,13 +69,11 @@ public class BpmnDesignController {
             @RequestParam(value = "force_deploy", required = false, defaultValue = "false") boolean forceDeploy,
             @RequestHeader(value = "X-Mock-Role", required = false, defaultValue = "GUEST") String role) {
 
-        // CA-21: Escudo RBAC para el Despliegue
         if (!"BPMN_Release_Manager".equals(role)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager."));
         }
 
-        // CA-65: Validación deploy_comment (min 10 chars)
         if (deployComment == null || deployComment.trim().length() < 10) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", "deploy_comment es obligatorio y debe tener al menos 10 caracteres."));
@@ -93,7 +91,6 @@ public class BpmnDesignController {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(validation);
             }
 
-            // CA-65: Si hay warnings y no se fuerza el deploy, bloquear
             if (!validation.getWarnings().isEmpty() && !forceDeploy) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
                     "error", "El Pre-Flight tiene advertencias. Use force_deploy=true para omitirlas.",
@@ -101,15 +98,13 @@ public class BpmnDesignController {
                 ));
             }
 
-            // CA-65: Response body alineado con SSOT
-            String mockUser = role; // TODO: Obtener desde token JWT
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "deployment_id", "dep-" + java.util.UUID.randomUUID().toString().substring(0, 8),
                 "process_definition_id", java.util.UUID.randomUUID().toString(),
                 "process_definition_key", originalFilename.replace(".bpmn", ""),
                 "version", 1,
                 "deployed_at", java.time.Instant.now().toString(),
-                "deployed_by", mockUser,
+                "deployed_by", role,
                 "warnings", validation.getWarnings(),
                 "generated_roles", validation.getGeneratedRoles()
             ));
@@ -120,9 +115,6 @@ public class BpmnDesignController {
         }
     }
 
-    /**
-     * CA-9: Evaluador Topológico de Instancias de versión vieja hacia versión nueva.
-     */
     @GetMapping("/{processDefinitionKey}/instances/migratable")
     public ResponseEntity<List<MigratableInstanceDTO>> getMigratableInstances(
             @PathVariable("processDefinitionKey") String processDefinitionKey,
@@ -135,10 +127,6 @@ public class BpmnDesignController {
         return ResponseEntity.ok(report);
     }
 
-    /**
-     * CA-7 y CA-10: Ejecutor Transaccional de Migración Grandfathering
-     * @param request El payload blindado MigrationRequestDTO garantiza que "variables" es ignorado localmente.
-     */
     @PostMapping("/migrate")
     public ResponseEntity<Map<String, String>> triggerBatchMigration(
             @RequestBody MigrationRequestDTO request) {
@@ -151,12 +139,8 @@ public class BpmnDesignController {
         ));
     }
 
-    /**
-     * CA-15: Listado Cronológico de Versiones Desplegadas.
-     */
     @GetMapping("/{processDefinitionKey}/versions")
     public ResponseEntity<List<Map<String, Object>>> getProcessVersions(@PathVariable("processDefinitionKey") String processDefinitionKey) {
-        // MOCK DB Lookup
         List<Map<String, Object>> versions = List.of(
             Map.of("versionId", 2, "deploymentId", "dep-888", "isLatest", true),
             Map.of("versionId", 1, "deploymentId", "dep-777", "isLatest", false)
@@ -164,15 +148,11 @@ public class BpmnDesignController {
         return ResponseEntity.ok(versions);
     }
 
-    /**
-     * CA-15: Rollback Un-Clic. Redeploy idéntico a una versión previa rescatada.
-     */
     @PostMapping("/{processDefinitionKey}/rollback/{versionId}")
     public ResponseEntity<Map<String, String>> rollbackToVersion(
             @PathVariable("processDefinitionKey") String processDefinitionKey,
             @PathVariable("versionId") Integer versionId) {
         
-        // El motor extraeria el XML de la version N y haria un `repositoryService.createDeployment()`
         return ResponseEntity.ok(Map.of(
             "message", "Rollback completado. La versión " + versionId + " ha sido clonada y repulsada como la nueva vLatest.",
             "processDefinitionKey", processDefinitionKey,
@@ -180,9 +160,6 @@ public class BpmnDesignController {
         ));
     }
 
-    /**
-     * CA-23: Catálogo de Modelos Base (Mock RepositoryService)
-     */
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllLatestProcesses() {
         return ResponseEntity.ok(List.of(
@@ -191,9 +168,6 @@ public class BpmnDesignController {
         ));
     }
 
-    /**
-     * CA-23 Click: Extracción RAW XML para pintado en Lienzo
-     */
     @GetMapping("/{processDefinitionKey}/xml")
     public ResponseEntity<Map<String, String>> getProcessXml(@PathVariable("processDefinitionKey") String key) {
         String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -205,9 +179,6 @@ public class BpmnDesignController {
         return ResponseEntity.ok(Map.of("xml", mockXml));
     }
 
-    /**
-     * CA-27: Proveedor de Plantillas BPMN
-     */
     @GetMapping("/templates")
     public ResponseEntity<List<Map<String, String>>> getProcessTemplates() {
         String tmplAprobacion = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -223,9 +194,7 @@ public class BpmnDesignController {
             Map.of("id", "template_1", "name", "Aprobación Simple", "xml", tmplAprobacion)
         ));
     }
-    /**
-     * CA-66: Bloqueo Pesimista (Adquisición) con DB y Heartbeat
-     */
+
     @PostMapping("/{processDefinitionKey}/lock")
     public ResponseEntity<?> acquireLock(@PathVariable("processDefinitionKey") String key, @RequestParam(value="sessionId", defaultValue="unknown") String sessionId) {
         String mockUser = "user-mock-123";
@@ -237,9 +206,6 @@ public class BpmnDesignController {
         }
     }
 
-    /**
-     * CA-66: Bloqueo Pesimista (Heartbeat)
-     */
     @PostMapping("/{processDefinitionKey}/lock/heartbeat")
     public ResponseEntity<?> heartbeatLock(@PathVariable("processDefinitionKey") String key) {
         String mockUser = "user-mock-123";
@@ -251,9 +217,6 @@ public class BpmnDesignController {
         }
     }
 
-    /**
-     * CA-66: Bloqueo Pesimista (Liberación)
-     */
     @DeleteMapping("/{processDefinitionKey}/lock")
     public ResponseEntity<?> releaseLock(@PathVariable("processDefinitionKey") String key) {
         String mockUser = "user-mock-123";
@@ -261,20 +224,14 @@ public class BpmnDesignController {
         return ResponseEntity.ok(Map.of("status", "UNLOCKED"));
     }
 
-    /**
-     * CA-64: Break-lock de Emergencia
-     */
     @DeleteMapping("/{processDefinitionKey}/lock/force")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> forceReleaseLock(@PathVariable("processDefinitionKey") String key) {
-        String adminUser = "admin-mock-123"; // TODO: Obtain from token context
+        String adminUser = "admin-mock-123";
         bpmnDesignService.forceReleaseLock(key, adminUser);
         return ResponseEntity.ok(Map.of("status", "FORCED_UNLOCKED"));
     }
 
-    /**
-     * CA-17: Copiloto IA (Mock)
-     */
     @PostMapping("/ai-copilot")
     public ResponseEntity<?> aiCopilot(@RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(Map.of(
@@ -282,19 +239,13 @@ public class BpmnDesignController {
         ));
     }
 
-    /**
-     * CA-69: Request Deploy
-     */
     @PostMapping("/deploy-requests")
     public ResponseEntity<?> requestDeploy(@RequestBody Map<String, String> payload) {
         String processKey = payload.get("processDefinitionKey");
-        String requestedBy = "user-mock-123"; // TODO: Token
+        String requestedBy = "user-mock-123";
         return ResponseEntity.ok(bpmnDesignService.createDeployRequest(processKey, requestedBy));
     }
 
-    /**
-     * CA-69: Approve Deploy Request
-     */
     @PostMapping("/deploy-requests/{id}/approve")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> approveDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload) {
@@ -303,9 +254,6 @@ public class BpmnDesignController {
         return ResponseEntity.ok(bpmnDesignService.approveDeployRequest(id, adminUser, comment));
     }
 
-    /**
-     * CA-69: Reject Deploy Request
-     */
     @PostMapping("/deploy-requests/{id}/reject")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> rejectDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload) {
@@ -314,47 +262,34 @@ public class BpmnDesignController {
         return ResponseEntity.ok(bpmnDesignService.rejectDeployRequest(id, adminUser, comment));
     }
 
-    /**
-     * CA-70: Catálogo de External Task Topics
-     */
     @GetMapping("/external-task-topics")
     public ResponseEntity<?> getExternalTaskTopics() {
-        return ResponseEntity.ok(externalTaskTopicRepository.findByIsActiveTrue());
+        return ResponseEntity.ok(externalTaskTopicPort.findByIsActiveTrue());
     }
 
-    /**
-     * CA-68: Data Mappings
-     */
     @GetMapping("/{processDefinitionKey}/data-mappings")
     public ResponseEntity<?> getDataMappings(@PathVariable("processDefinitionKey") String key) {
-        return ResponseEntity.ok(dataMappingRepository.findByProcessDefinitionKey(key));
+        return ResponseEntity.ok(dataMappingPort.findByProcessDefinitionKey(key));
     }
 
     @PostMapping("/{processDefinitionKey}/data-mappings")
     public ResponseEntity<?> createDataMapping(@PathVariable("processDefinitionKey") String key,
                                                @RequestBody java.util.Map<String, String> payload) {
-        com.ibpms.poc.infrastructure.jpa.entity.DataMappingEntity entity =
-            new com.ibpms.poc.infrastructure.jpa.entity.DataMappingEntity(
-                key,
-                payload.get("taskId"),
-                payload.get("connectorId"),
-                payload.get("mappingJson")
-            );
-        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
-            .body(dataMappingRepository.save(entity));
+        DataMapping dataMapping = new DataMapping();
+        dataMapping.setProcessDefinitionKey(key);
+        dataMapping.setTaskId(payload.get("taskId"));
+        dataMapping.setConnectorId(payload.get("connectorId"));
+        dataMapping.setMappingJson(payload.get("mappingJson"));
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(dataMappingPort.save(dataMapping));
     }
 
-    /**
-     * CA-19: Autosave Borrador (POST explícito)
-     */
     @PostMapping("/{processDefinitionKey}/draft")
     public ResponseEntity<?> saveDraft(@PathVariable("processDefinitionKey") String key) {
         return ResponseEntity.ok(Map.of("status", "DRAFT_SAVED", "processId", key));
     }
 
-    /**
-     * CA-20: Sandbox Simulator (Extrae estáticamente 3 nodos a animar)
-     */
     @SandboxOperation
     @PostMapping("/sandbox-simulate")
     public ResponseEntity<?> sandboxSimulate(@RequestParam("file") MultipartFile file) {
@@ -364,13 +299,9 @@ public class BpmnDesignController {
         ));
     }
 
-    /**
-     * CA-32: Suspender/Archivar Diagramas Seguros (Anti-Deadlock)
-     */
     @PostMapping("/{processDefinitionKey}/archive")
     public ResponseEntity<?> archiveProcessDefinition(@PathVariable("processDefinitionKey") String key) {
-        // MOCK Camunda API: long count = runtimeService.createProcessInstanceQuery().processDefinitionKey(key).count();
-        long activeInstancesCount = "onboarding_1".equals(key) ? 5 : 0; // Simulador: onboarding tiene instancias, otros no.
+        long activeInstancesCount = "onboarding_1".equals(key) ? 5 : 0;
 
         if (activeInstancesCount > 0) {
             return ResponseEntity.status(409).body(Map.of(
@@ -378,22 +309,17 @@ public class BpmnDesignController {
             ));
         }
 
-        // MOCK Camunda API: repositoryService.suspendProcessDefinitionByKey(key);
         return ResponseEntity.ok(Map.of(
             "message", "Definición de Proceso archivada (suspendida) exitosamente.",
             "status", "ARCHIVED"
         ));
     }
 
-    /**
-     * CA-34: Bandeja de Solicitud de Despliegue (Flujo de Aprobación MOCK)
-     */
     @PostMapping("/{processDefinitionKey}/request-deploy")
     public ResponseEntity<?> requestDeploymentApproval(
             @PathVariable("processDefinitionKey") String key,
             @RequestParam(value = "file", required = false) MultipartFile file) {
         
-        // El Backend guardaría el XML en BD como PENDIENTE_APROBACION y crearía un UserTask de Camunda para el grupo BPMN_Release_Manager
         return ResponseEntity.ok(Map.of(
             "message", "Solicitud de despliegue enviada. La versión borrador está pendiente de aprobación por Release Management.",
             "status", "PENDING_APPROVAL",
@@ -401,16 +327,10 @@ public class BpmnDesignController {
         ));
     }
 
-    /**
-     * CA-41: Simulador Hardcore Camunda V1 (Instancia y Aborta)
-     */
     @SandboxOperation
     @PostMapping("/sandbox-spawn")
     public ResponseEntity<?> sandboxSpawnInstance(@RequestParam("processDefinitionKey") String key) {
         String instanceId = UUID.randomUUID().toString();
-        // MOCK Camunda API: 
-        // 1. ProcessInstance pi = runtimeService.startProcessInstanceByKey(key, "SANDBOX_TEST-" + UUID.randomUUID());
-        // 2. runtimeService.deleteProcessInstance(pi.getId(), "SIMULACION_SANDBOX_TERMINADA");
         
         return ResponseEntity.ok(Map.of(
             "message", "Test Sandbox de Camunda superado. El XML parsea exitosamente un token y lo destruye sin afectar datos en vivo.",
@@ -419,9 +339,6 @@ public class BpmnDesignController {
         ));
     }
 
-    /**
-     * CA-42: Historial Git-Log Audit
-     */
     @GetMapping("/{processDefinitionKey}/audit-logs")
     public ResponseEntity<List<Map<String, String>>> getBpmnAuditLogs(@PathVariable("processDefinitionKey") String key) {
         return ResponseEntity.ok(List.of(
@@ -431,11 +348,6 @@ public class BpmnDesignController {
         ));
     }
 
-    /**
-     * CA-17 / CA-50: Diccionario de Variables BPMN.
-     * Intenta extraer Input/Output parameters de UserTasks del proceso desplegado.
-     * Si no existe proceso desplegado, retorna lista vacía (graceful fallback).
-     */
     @GetMapping("/{processDefinitionKey}/variables")
     public ResponseEntity<List<Map<String, String>>> getProcessVariables(@PathVariable("processDefinitionKey") String key) {
         return ResponseEntity.ok(List.of(

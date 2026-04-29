@@ -1,15 +1,16 @@
-# Solicitud de Aprobación - QA (Sprint 6.2)
+# Solicitud de Revisión QA: ARQ-005 (Core Deploy Pipeline)
 
-Arquitecto Líder, he elaborado el plan de trabajo para la ejecución masiva y certificación E2E Zero-Mock de la Suite J-04 correspondiente al Sprint 6.2.
+**A la atención del Arquitecto Líder:**
 
-## Resumen del Plan:
-1. **Auditoría Infra:** Verificación de salud de Docker (`ibpms-core`) y puerto 8080 antes de arrancar, cumpliendo con la regla Cero-Confianza del SRE.
-2. **Validación de Código:** Confirmar eliminación total de deudas técnicas (0 `test.skip()`) en la suite Playwright.
-3. **Ejecución Zero-Mock:** Correr la suite con 4 workers usando el comando oficial `npx playwright test e2e/certification/ --project="Zero-Mock-E2E" --reporter=html`.
-4. **Validación Zod y SLA:** Prestar atención particular a la carga de bandeja (<=2s) y los botones de pánico.
-5. **Reporte Forense:** Si hay fallos remanentes que no sean subsanados por el parche del backend, se generará trazabilidad completa (Trace logs, Screenshots, Consola) cruzada con SSOT Gherkin.
+He formulado mi plan de implementación para certificar la resolución de la Deuda Técnica ARQ-005. 
 
-Por favor, revisa el plan en detalle en el archivo `implementation_plan.md` y concédeme tu aprobación para proceder con la Fase Ejecutiva.
+El foco principal es verificar que el equipo Backend haya limpiado el controlador y los servicios core de inyecciones indebidas de JPA y bibliotecas de Camunda, certificando que el diseño respeta estrictamente los ADRs de Arquitectura Hexagonal y Camunda Embedded (ADR-001 y ADR-003).
 
-Saludos,
-Agente QA Especialista.
+**Puntos Clave del Plan de Certificación (basado en el Handoff):**
+1. Validar que `BpmnDesignController.java` esté limpio de importaciones a `Repository` y entidades JPA.
+2. Validar que `PreFlightAnalyzerService.java` no use librerías de `org.camunda` ni `infrastructure.jpa` directamente.
+3. Validar que `BpmnDesignService.java` esté blindado y libre de `infrastructure.jpa.entity`.
+4. Comprobar que los adaptadores subyacentes existen físicamente en la infraestructura.
+5. Ejecutar compilación y validación empírica vía `mvn clean test`.
+
+¿Apruebas este plan para transicionar a modo `EXECUTION` e iniciar los 7 checkpoints forenses?

@@ -33,6 +33,7 @@ public class BpmnProcessDesign {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String createdBy;
+    private String genericFormWhitelist;
 
     // Factory para creación nueva
     public static BpmnProcessDesign crear(String name, FormPattern formPattern, String createdBy) {
@@ -139,6 +140,11 @@ public class BpmnProcessDesign {
                 .replaceAll("^-|-$", "");
     }
 
+    public void updateGenericFormConfig(String whitelistJson) {
+        this.genericFormWhitelist = whitelistJson;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     // --- Getters ---
     public UUID getId() {
         return id;
@@ -190,5 +196,9 @@ public class BpmnProcessDesign {
 
     public String getCreatedBy() {
         return createdBy;
+    }
+
+    public String getGenericFormWhitelist() {
+        return genericFormWhitelist;
     }
 }

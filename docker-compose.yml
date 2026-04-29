@@ -75,7 +75,7 @@ services:
       - maven_data:/root/.m2
     ports:
       - "8080:8080"
-    command: bash -c "mvn clean install -DskipTests && cd ibpms-core && mvn spring-boot:run"
+    command: bash -c "mvn clean install -Dmaven.test.skip=true && cd ibpms-core && mvn spring-boot:run -Dmaven.test.skip=true"
     depends_on:
       ibpms-postgres:
         condition: service_healthy

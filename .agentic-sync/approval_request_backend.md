@@ -1,16 +1,27 @@
-# Solicitud de Revisión: Estabilización Backend y Zero-Mock (Sprint 6.2)
+# 🛡️ Solicitud de Revisión Backend: Remediación ARQ-005
 
-Arquitecto Líder, he analizado el requerimiento BUG-S6-004 y BUG-S6-005 documentado en el handoff. El plan propuesto para mitigar los cuellos de botella e implementar el catálogo es el siguiente:
+**Para:** Arquitecto Líder
+**De:** Agente Backend
+**Iteración:** Remediación Arquitectónica ARQ-005
 
-**1. Endpoint de Usuarios (Zero-Mock)**
-He detectado que la lógica y seguridad base ya existe en `UserAdminController` y `UserService`. Implementaré un nuevo `UserController.java` en la ruta pública `/api/v1/users` que delega a `userService.listAll()`. El DTO retornado (`UserResponseDTO`) es seguro: expone ID, username, email, y roles, excluyendo cualquier rastro del hash BCrypt o datos transaccionales, cumpliendo con la regla Zero-Trust.
+## Resumen del Plan de Implementación
 
-**2. Optimización Concurrencia (Delegaciones)**
-En `AgileTaskService.java`, identifiqué un patrón de N+1 oculto y vulnerabilidad a deadlocks en `bulkAssign`, donde se itera un array de `UUID` y se hace `getTaskForUpdate` iterativo. Para sanear esto:
-- Modificaré la rutina para **ordenar lexicográficamente la lista de Task IDs** antes del ciclo. Esto asegura que transacciones concurrentes adquieran locks en el mismo orden, eludiendo la condición circular del motor JPA/Postgres.
-- Envolveré la captura en bloques try-catch detectando `OptimisticLockingFailureException`, registrando un Warning claro para auditoría en caso de que una tarea ya esté pisada.
+He elaborado el plan para eliminar la deuda técnica que vincula directamente a `BpmnDesignController`, `PreFlightAnalyzerService` y `BpmnDesignService` con repositorios JPA y con la API embebida de Camunda.
 
-**3. Optimizaciones en la Bandeja Workdesk**
-Añadiré una migración SQL en Liquibase (`34-sprint6-bugs-fix.sql`) agregando el índice `idx_workdesk_search` a `ibpms_workdesk_projection(tenant_id, assignee)` para liquidar los timeouts persistentes durante los full table scans.
+### Acciones Estratégicas:
+1. **Creación de Puertos (application/port/out/):**
+   - `BpmnDesignPort`, `BpmnAuditPort`, `ProcessLockPort`, `DeployRequestPort`, `ExternalTaskTopicPort`, `DataMappingPort`.
+   - `BpmnValidationPort`: Un puerto crucial para recibir el stream BPMN y devolver un `DeploymentValidationResponse`, abstrayendo a Camunda.
+   
+2. **Creación de Adaptadores (infrastructure/adapter/):**
+   - Adaptadores JPA para persistencia (`BpmnDesignJpaAdapter`, `BpmnAuditJpaAdapter`, etc.)
+   - `CamundaBpmnValidationAdapter`: Contendrá toda la lógica del SDK org.camunda.*, cumpliendo el principio del ADR-003.
+   
+3. **Refactorización de Servicios de Aplicación:**
+   - **`PreFlightAnalyzerService`**: Será limpiado de 15+ imports de `org.camunda.bpm.model.bpmn.*` y usará el `BpmnValidationPort`.
+   - **`BpmnDesignService`**: Será limpiado de todas las dependencias `infrastructure.jpa.entity.*` y utilizará exclusivamente los nuevos puertos.
+   
+4. **Limpieza del Controller:**
+   - **`BpmnDesignController`**: Se eliminará la inyección de repositorios JPA y el manejo directo de entidades (`DataMappingEntity`). Los métodos pertinentes serán delegados a `BpmnDesignService`.
 
-Ruego revisión para avanzar a la ejecución.
+Solicito autorización (✅ PASS o ❌ REJECT) para iniciar la fase de EXECUTION en TDD según este plan.

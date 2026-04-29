@@ -1,6 +1,7 @@
 package com.ibpms.poc.infrastructure.adapter;
 
 import com.ibpms.poc.application.port.out.FormCertificationPort;
+import com.ibpms.poc.domain.model.FormCertification;
 import com.ibpms.poc.infrastructure.jpa.entity.FormCertificationEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.FormCertificationRepository;
 import org.springframework.stereotype.Component;
@@ -18,12 +19,39 @@ public class FormCertificationJpaAdapter implements FormCertificationPort {
     }
 
     @Override
-    public Optional<FormCertificationEntity> findByFormDefinitionId(UUID formDefinitionId) {
-        return repository.findByFormDefinitionId(formDefinitionId);
+    public Optional<FormCertification> findByFormDefinitionId(UUID formDefinitionId) {
+        return repository.findByFormDefinitionId(formDefinitionId)
+                .map(this::toDomain);
     }
 
     @Override
-    public FormCertificationEntity save(FormCertificationEntity entity) {
-        return repository.save(entity);
+    public FormCertification save(FormCertification domain) {
+        FormCertificationEntity entity = toEntity(domain);
+        FormCertificationEntity saved = repository.save(entity);
+        return toDomain(saved);
+    }
+
+    private FormCertification toDomain(FormCertificationEntity entity) {
+        if (entity == null) return null;
+        return new FormCertification(
+                entity.getId(),
+                entity.getFormDefinitionId(),
+                entity.getIsQaCertified(),
+                entity.getCertifiedSchemaHash(),
+                entity.getCertifiedBy(),
+                entity.getCertifiedAt()
+        );
+    }
+
+    private FormCertificationEntity toEntity(FormCertification domain) {
+        if (domain == null) return null;
+        FormCertificationEntity entity = new FormCertificationEntity();
+        entity.setId(domain.getId());
+        entity.setFormDefinitionId(domain.getFormDefinitionId());
+        entity.setIsQaCertified(domain.getIsQaCertified());
+        entity.setCertifiedSchemaHash(domain.getCertifiedSchemaHash());
+        entity.setCertifiedBy(domain.getCertifiedBy());
+        entity.setCertifiedAt(domain.getCertifiedAt());
+        return entity;
     }
 }

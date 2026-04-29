@@ -1,6 +1,6 @@
 package com.ibpms.poc.application.port.out;
 
-import com.ibpms.poc.infrastructure.jpa.entity.FormDefinitionEntity;
+import com.ibpms.poc.domain.model.FormDefinition;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,8 +12,10 @@ public interface FormDefinitionPort {
 
     boolean existsById(UUID id);
 
-    Optional<FormDefinitionEntity> findById(UUID id);
+    Optional<FormDefinition> findById(UUID id);
+    
+    java.util.List<FormDefinition> findByFormIdOrderByVersionIdDesc(UUID formId);
 
-    FormDefinitionEntity save(FormDefinitionEntity entity);
+    FormDefinition save(FormDefinition formDefinition);
 
 }

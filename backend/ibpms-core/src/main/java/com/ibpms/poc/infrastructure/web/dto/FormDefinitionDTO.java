@@ -1,7 +1,7 @@
 package com.ibpms.poc.infrastructure.web.dto;
 
-import com.ibpms.poc.infrastructure.jpa.entity.FormCertificationEntity;
-import com.ibpms.poc.infrastructure.jpa.entity.FormDefinitionEntity;
+import com.ibpms.poc.domain.model.FormCertification;
+import com.ibpms.poc.domain.model.FormDefinition;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -24,7 +24,7 @@ public class FormDefinitionDTO {
     public FormDefinitionDTO() {
     }
 
-    public static FormDefinitionDTO from(FormDefinitionEntity def, FormCertificationEntity cert) {
+    public static FormDefinitionDTO from(FormDefinition def, FormCertification cert) {
         FormDefinitionDTO dto = new FormDefinitionDTO();
         dto.setId(def.getId());
         dto.setFormId(def.getFormId());

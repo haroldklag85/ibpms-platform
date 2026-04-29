@@ -1,7 +1,7 @@
 package com.ibpms.poc.application.service;
 
-import com.ibpms.poc.infrastructure.jpa.entity.FormCertificationEntity;
-import com.ibpms.poc.infrastructure.jpa.entity.FormDefinitionEntity;
+import com.ibpms.poc.domain.model.FormCertification;
+import com.ibpms.poc.domain.model.FormDefinition;
 import com.ibpms.poc.application.port.out.FormDefinitionPort;
 import com.ibpms.poc.application.port.out.FormCertificationPort;
 import com.ibpms.poc.application.port.out.AuditLogPort;
@@ -61,7 +61,7 @@ public class FormCertificationService {
     @Transactional
     public void ensureEntityExists(UUID formDefinitionId) {
         if (!formDefinitionPort.existsById(formDefinitionId)) {
-            FormDefinitionEntity stub = new FormDefinitionEntity();
+            FormDefinition stub = new FormDefinition();
             stub.setId(formDefinitionId);
             stub.setFormId(formDefinitionId);
             stub.setVersionId(1);
@@ -70,12 +70,12 @@ public class FormCertificationService {
             stub.setHashSha256(computeSha256("{}"));
             formDefinitionPort.save(stub);
 
-            FormCertificationEntity cert = new FormCertificationEntity();
+            FormCertification cert = new FormCertification();
             cert.setFormDefinitionId(formDefinitionId);
             cert.setIsQaCertified(false);
             formCertificationPort.save(cert);
 
-            log.info("Auto-created stub FormDefinitionEntity for {}", formDefinitionId);
+            log.info("Auto-created stub FormDefinition for {}", formDefinitionId);
         }
     }
 
@@ -85,12 +85,12 @@ public class FormCertificationService {
 
     @Transactional
     public FormDefinitionDTO certifyForm(UUID formDefinitionId, String certifierUserId, String payloadJson) {
-        FormDefinitionEntity entity = formDefinitionPort.findById(formDefinitionId)
+        FormDefinition entity = formDefinitionPort.findById(formDefinitionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "FormDefinition not found: " + formDefinitionId));
 
-        FormCertificationEntity cert = formCertificationPort.findByFormDefinitionId(formDefinitionId)
+        FormCertification cert = formCertificationPort.findByFormDefinitionId(formDefinitionId)
                 .orElseGet(() -> {
-                    FormCertificationEntity newCert = new FormCertificationEntity();
+                    FormCertification newCert = new FormCertification();
                     newCert.setFormDefinitionId(formDefinitionId);
                     return newCert;
                 });
@@ -123,7 +123,8 @@ public class FormCertificationService {
                 payloadJson);
 
         log.info("QA Certification granted for FormDefinition {} by {}", formDefinitionId, certifierUserId);
-        return FormDefinitionDTO.from(entity, cert);
+        
+        return toDTO(entity, cert);
     }
 
     // ──────────────────────────────────────────────────────
@@ -132,15 +133,15 @@ public class FormCertificationService {
 
     @Transactional
     public void onSchemaModified(UUID formDefinitionId, String modifiedBy) {
-        FormDefinitionEntity entity = formDefinitionPort.findById(formDefinitionId)
+        FormDefinition entity = formDefinitionPort.findById(formDefinitionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "FormDefinition not found"));
 
-        Optional<FormCertificationEntity> certOpt = formCertificationPort.findByFormDefinitionId(formDefinitionId);
+        Optional<FormCertification> certOpt = formCertificationPort.findByFormDefinitionId(formDefinitionId);
         if (certOpt.isEmpty() || !Boolean.TRUE.equals(certOpt.get().getIsQaCertified())) {
             return; // Not certified, nothing to revoke
         }
 
-        FormCertificationEntity cert = certOpt.get();
+        FormCertification cert = certOpt.get();
         String previousHash = cert.getCertifiedSchemaHash();
         String newHash = computeSha256(entity.getSchemaContent());
 
@@ -174,7 +175,7 @@ public class FormCertificationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Form schemaContent is not a valid JSON string");
         }
 
-        FormDefinitionEntity newVersion = new FormDefinitionEntity();
+        FormDefinition newVersion = new FormDefinition();
         newVersion.setFormId(formId);
         newVersion.setVersionId(newVersionId);
         newVersion.setSchemaContent(schemaContent);
@@ -184,7 +185,7 @@ public class FormCertificationService {
         formDefinitionPort.save(newVersion);
 
         // CA-13: El sello NO se hereda. Nace sin certificar.
-        FormCertificationEntity newCert = new FormCertificationEntity();
+        FormCertification newCert = new FormCertification();
         newCert.setFormDefinitionId(newVersion.getId());
         newCert.setIsQaCertified(false);
         newCert.setCertifiedSchemaHash(null);
@@ -194,7 +195,7 @@ public class FormCertificationService {
         formCertificationPort.save(newCert);
 
         log.info("New schema version V{} created for form {} — born uncertified (CA-13)", newVersionId, formId);
-        return FormDefinitionDTO.from(newVersion, newCert);
+        return toDTO(newVersion, newCert);
     }
 
     // ───────────────────────────────────────────────────────────
@@ -258,5 +259,26 @@ public class FormCertificationService {
             log.error("GZIP compression failed", e);
             return data; // Fallback: return raw
         }
+    }
+    
+    private FormDefinitionDTO toDTO(FormDefinition def, FormCertification cert) {
+        FormDefinitionDTO dto = new FormDefinitionDTO();
+        dto.setId(def.getId());
+        dto.setFormId(def.getFormId());
+        dto.setVersionId(def.getVersionId());
+        dto.setSchemaContent(def.getSchemaContent());
+        dto.setCreatedBy(def.getCreatedBy());
+        dto.setCreatedAt(def.getCreatedAt());
+        dto.setHashSha256(def.getHashSha256());
+
+        if (cert != null) {
+            dto.setIsQaCertified(cert.getIsQaCertified());
+            dto.setCertifiedSchemaHash(cert.getCertifiedSchemaHash());
+            dto.setCertifiedBy(cert.getCertifiedBy());
+            dto.setCertifiedAt(cert.getCertifiedAt());
+        } else {
+            dto.setIsQaCertified(false);
+        }
+        return dto;
     }
 }

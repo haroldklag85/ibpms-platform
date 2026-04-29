@@ -44,13 +44,13 @@ public class FormCertificationController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Authentication required for QA certification"));
             }
             String currentUser = auth.getName();
-            FormDefinitionEntity entity = certificationService.certifyForm(id, currentUser, null);
+            com.ibpms.poc.infrastructure.web.dto.FormDefinitionDTO dto = certificationService.certifyForm(id, currentUser, null);
             Map<String, Object> response = new LinkedHashMap<>();
-            response.put("id", entity.getId());
-            response.put("form_id", entity.getFormId());
-            response.put("is_qa_certified", entity.getIsQaCertified());
-            response.put("certified_by", entity.getCertifiedBy());
-            response.put("certified_at", entity.getCertifiedAt());
+            response.put("id", dto.getId());
+            response.put("form_id", dto.getFormId());
+            response.put("is_qa_certified", dto.getIsQaCertified());
+            response.put("certified_by", dto.getCertifiedBy());
+            response.put("certified_at", dto.getCertifiedAt());
             return ResponseEntity.ok(response);
         } catch (ResponseStatusException ex) {
             if (ex.getStatusCode() == HttpStatus.CONFLICT) {
@@ -70,13 +70,13 @@ public class FormCertificationController {
     public ResponseEntity<Map<String, Object>> createNewVersion(
             @PathVariable UUID id,
             @RequestBody(required = false) String schemaContent) {
-        FormDefinitionEntity entity = certificationService.createNewVersion(
+        com.ibpms.poc.infrastructure.web.dto.FormDefinitionDTO dto = certificationService.createNewVersion(
                 id, 1, schemaContent != null ? schemaContent : "{}", "system");
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("id", entity.getId());
-        response.put("form_id", entity.getFormId());
-        response.put("version_id", entity.getVersionId());
-        response.put("is_qa_certified", entity.getIsQaCertified());
+        response.put("id", dto.getId());
+        response.put("form_id", dto.getFormId());
+        response.put("version_id", dto.getVersionId());
+        response.put("is_qa_certified", dto.getIsQaCertified());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

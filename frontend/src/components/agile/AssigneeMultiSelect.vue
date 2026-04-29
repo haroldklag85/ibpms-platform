@@ -21,7 +21,7 @@
       </button>
     </div>
 
-    <!-- Dropdown to select/search users (Mock logic as Identity Governance is separate) -->
+    <!-- Dropdown to select/search users -->
     <div v-if="isDropdownOpen" class="absolute left-0 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 z-50 p-2">
        <input 
           type="text" 

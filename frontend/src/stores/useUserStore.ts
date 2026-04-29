@@ -11,7 +11,7 @@ export const useUserStore = defineStore('user', () => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await apiClient.get('/api/v1/users')
+      const response = await apiClient.get('/users')
       users.value = response.data || []
     } catch (e) {
       console.error('Error fetching users:', e)

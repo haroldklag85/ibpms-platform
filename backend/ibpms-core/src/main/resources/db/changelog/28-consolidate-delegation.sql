@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS ibpms_security_user (
 -- changeset antigravity:28-consolidate-delegation-schema
 CREATE TABLE IF NOT EXISTS ibpms_security_delegation (
     id UUID PRIMARY KEY,
-    delegator_id VARCHAR(50) NOT NULL,
-    substitute_id VARCHAR(50) NOT NULL,
+    delegator_id UUID NOT NULL,
+    substitute_id UUID NOT NULL,
     start_date TIMESTAMP NOT NULL,
     end_date TIMESTAMP NOT NULL,
     is_active BOOLEAN DEFAULT true,

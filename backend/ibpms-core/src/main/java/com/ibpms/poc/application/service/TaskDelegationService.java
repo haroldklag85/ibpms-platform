@@ -18,9 +18,11 @@ public class TaskDelegationService {
     private static final Logger log = LoggerFactory.getLogger(TaskDelegationService.class);
 
     private final IbpmsProfileRepository profileRepository;
+    private final com.ibpms.poc.infrastructure.jpa.repository.UserDelegationRepository delegationRepository;
 
-    public TaskDelegationService(IbpmsProfileRepository profileRepository) {
+    public TaskDelegationService(IbpmsProfileRepository profileRepository, com.ibpms.poc.infrastructure.jpa.repository.UserDelegationRepository delegationRepository) {
         this.profileRepository = profileRepository;
+        this.delegationRepository = delegationRepository;
     }
     /**
      * Revisa si una tarea pertenece a una delegación vigente o si ya expiró.
@@ -76,10 +78,7 @@ public class TaskDelegationService {
     }
 
     private boolean checkDelegationAuthority(String executiveId, String assistantId, String tenantId) {
-        // PLACEHOLDER V1 — Reemplazar con validación real cuando ibpms_delegation_authority exista
-        log.warn("CA-15 V1 PLACEHOLDER: Using profile-based hierarchy check. " +
-                 "Replace with ibpms_delegation_authority query when DDL is available.");
-        return true; // TEMPORAL — TODO
+        return delegationRepository.findBySupervisorIdAndAssistantIdAndTenantId(executiveId, assistantId, tenantId).isPresent();
     }
 
     private String resolveDisplayName(String userId) {

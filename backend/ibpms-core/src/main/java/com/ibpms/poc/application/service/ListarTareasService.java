@@ -27,11 +27,15 @@ public class ListarTareasService implements ListarTareasUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TaskDTO> listar(int limit, int offset, String status, Integer priority) {
+    public List<TaskDTO> listar(int limit, int offset, String status, Integer priority, String delegatedUser) {
         TaskQuery query = taskService.createTaskQuery();
 
         if (priority != null) {
             query.taskPriority(priority);
+        }
+
+        if (delegatedUser != null && !delegatedUser.isBlank()) {
+            query.taskAssignee(delegatedUser);
         }
 
         // Camunda native sorting

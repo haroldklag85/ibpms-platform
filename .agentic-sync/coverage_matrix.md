@@ -1,6 +1,6 @@
 # 📊 Matriz de Cobertura de Implementación (iBPMS V1)
 
-> **Última actualización:** 2026-04-18T15:25 (Reconciliación PO Cruzada — Código Fuente vs Matrix) | **Responsable:** Product Owner + Arquitecto Líder
+> **Última actualización:** 2026-04-22T23:49 (Reconciliación Arquitecto — Cierre Deuda Técnica US-017 CA-19→CA-26 + Delegación S6.2) | **Responsable:** Arquitecto Líder
 > **Fuente de Verdad:** Checklist validado manualmente por el PO/Arquitecto Líder
 > **Leyenda:** ✅ Implementado | ⏳ En progreso | ❌ Pendiente | 🚫 Excluido (V2+) | 🔄 Remediación pendiente | ⚠️ Falso Positivo Corregido
 
@@ -21,14 +21,15 @@
 |---------|-------|
 | **Total US en V1** | 56 |
 | **US Completadas** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción (avanzadas >60%)** | 7 (US-002 ~68%, US-004 ~71%, US-017 ~78%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
-| **US En Construcción (tempranas <50%)** | 1 (US-007 ~48% — bloqueada por IDOR) |
+| **US En Construcción (avanzadas >60%)** | 6 (US-002 ~68%, US-004 ~71%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
+| **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — bloqueada por IDOR, US-017 ~50% — 8 CAs UX/UI pendientes) |
 | **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
 | **US Pendientes** | 32 |
 | **CAs Implementados (estimado)** | ~290+ |
 | **CAs Validados QA** | ~38 (~13%) |
-| **Seguridad Crítica** | 🟡 IDOR activo en US-007 y US-027 (tenantId hardcodeado) — US-002 BD ya corregida |
-| **Principal Brecha** | 🟡 QA < 13% global. IDOR en 2 US de IA. US-008 Kanban sigue mock. |
+| **Seguridad Crítica** | ✅ IDOR cerrado en US-007 y US-027 (remediado en S6.1: role prefix + tenant propagation + Anti-IDOR startsWith) — US-002 BD corregida en S5.1 |
+| **Principal Brecha** | 🟡 QA < 13% global. US-008 Kanban sigue mock. Data seed E2E pendiente. |
+| **E2E Sprint 6.1** | 4/7 PASS (57%) — Seguridad 100%, UI 0% (falta data seed operacional) |
 
 > [!CAUTION]
 > **Corrección 2026-04-18 — Auditoría Integral Sección 1.2:** Se detectaron 2 Falsos Positivos críticos en `future_backlog_v3.md`:
@@ -396,10 +397,19 @@
 | CA-14 | ACID Fallback Saga Inverso | ✅ | N/A | ❌ | S5.1 | `FORM_SUBMIT_ROLLED_BACK` event + `SagaCompensationException` + `CamundaCompletionAdapter` retry 3x |
 | CA-15 | Auto-Claim Group-Level | ✅ | N/A | ❌ | S5.1 | `AutoClaimService.tryAutoClaim()` integrado |
 | CA-16 | Trazabilidad Rechazos BFF | ✅ | N/A | ❌ | S5.1 | `RejectionLogService.getRejectionHistory()` integrado en BFF |
+| CA-19 | [UX/UI] Debounce Visual 5s No Intrusivo | N/A | ❌ | ❌ | — | Handoff Frontend emitido. `useConnectionStatus.ts` + `connectionStore.ts` [NUEVO] |
+| CA-20 | [UX/UI] Toast Flotante Inferior Izquierda | N/A | ❌ | ❌ | — | `ConnectionToast.vue` [NUEVO]. z-index: 9990 |
+| CA-21 | [UX/UI] Lenguaje de Negocio (Sin Jerga) | N/A | ❌ | ❌ | — | Prohibido: CQRS, STOMP, Event Sourcing, WebSocket |
+| CA-22 | [UX/UI] Operatividad Pasiva No-Bloqueante | N/A | ❌ | ❌ | — | Sin overlay full-screen. pointer-events: auto |
+| CA-23 | [UX/UI] Transición a Modo Degradado | N/A | ❌ | ❌ | — | Mutación a DEGRADED tras desconexión persistente |
+| CA-24 | [UX/UI] Reconexión Silenciosa Background | N/A | ❌ | ❌ | — | Sin botones "Reintentar". Auto-sync |
+| CA-25 | [UX/UI] Feedback Positivo Desvanecimiento 3s | N/A | ❌ | ❌ | — | RESTORED → verde → 3s → fade-out 500ms → v-if=false |
+| CA-26 | [UX/UI] Anti-Colisión con ErrorStateGlobal | N/A | ❌ | ❌ | — | ErrorStateGlobal z-9998 > ConnectionToast z-9990. Estado SILENCED |
 
 ### Resumen US-017
-- **Total CAs:** 16 | **✅ Completos:** 10 | **⚠️ Parciales:** 2 | **❌ Pendiente:** 4 | **% Real:** ~78%
+- **Total CAs:** 24 | **✅ Completos:** 10 | **⚠️ Parciales:** 2 | **❌ Pendiente:** 12 (4 arquitectura + 8 UX/UI) | **% Real:** ~50%
 - **ADR-001:** ✅ Cumplido — dominio libre de JPA
+- **Sección E (CA-19 a CA-26):** 🆕 8 CAs UX/UI delegados a Frontend. Handoff emitido: `handoff_frontend_US017_CA19_CA26.md`
 
 ---
 
@@ -572,36 +582,42 @@
 |---------|-------|
 | **Total US en V1** | 56 |
 | **US Completadas (Back+Front)** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
-| **US En Construcción (avanzadas >60%)** | 7 (US-002 ~68%, US-004 ~71%, US-017 ~78%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
-| **US En Construcción (tempranas <50%)** | 1 (US-007 ~48% — bloqueada por IDOR) |
+| **US En Construcción (avanzadas >60%)** | 6 (US-002 ~68%, US-004 ~71%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
+| **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — bloqueada por IDOR, US-017 ~50% — 8 CAs UX/UI pendientes) |
 | **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
 | **US Pendientes** | 32 |
 | **CAs Implementados (estimado)** | ~290+ |
 | **CAs Validados QA** | ~38 (~13%) |
-| **Falsos Positivos Corregidos** | 5 (US-001 CA-8 · US-002 9%→68% · US-017 0%→78% · US-025 ausente · US-027 ausente) |
-| **Vulnerabilidades Críticas Abiertas** | 1 (IDOR tenantId en US-007 + US-027) |
-| **Principal Brecha** | 🟡 QA < 13% global. IDOR en 2 US de IA. US-008 Kanban sigue mock. |
+| **Falsos Positivos Corregidos** | 5 (US-001 CA-8 · US-002 9%→68% · US-017 0%→50% · US-025 ausente · US-027 ausente) |
+| **Vulnerabilidades Críticas Abiertas** | 0 (IDOR US-007 + US-027 cerrado en S6.1; Webhook legacy US-004 deprecado a 410) |
+| **Principal Brecha** | 🟡 QA < 13% global. US-008 Kanban sigue mock. Data seed E2E pendiente para UI tests. |
+| **E2E Sprint 6.1** | 4/7 PASS (57%) — Lotes B1+B2 PASS (Security), B3+B4+B5 FAIL (UI sin data seed) |
 
-### Brechas Prioritarias (Post Reconciliación PO 2026-04-18T15:25)
+### Brechas Prioritarias (Post Iteración 6.1 — 2026-04-19)
 
-| Prioridad | Brecha | US Afectadas | Acción Recomendada |
-|-----------|--------|-------------|-------------------|
-| 🔴 P0 | IDOR activo — tenantId hardcodeado | US-007, US-027 | Hotfix: extraer tenantId del JWT en `DmnGovernanceController` y `BpmnCopilotController` |
-| 🔴 P0 | `EmailWebhookController` bypasea pipeline de seguridad | US-004 | Redirigir o eliminar el controller legacy |
-| 🟠 P1 | US-008 KanbanView con mock hardcodeado | US-008, US-030 | Implementar state machine real |
-| 🟠 P1 | `FormBffCoreService` prefill parcialmente mock | US-029, US-017 | Conectar prefill a BD real |
-| 🟠 P1 | CA-6 US-004: sin RabbitMQ consumer de intake | US-004 | Implementar `@RabbitListener` |
-| 🟡 P2 | QA al 0% en US completadas | US-003, US-005, US-038, US-043, US-048 | Sprint de QA dedicado |
-| 🟡 P2 | CAs Remediación US-007 (13-18) sin auditar | US-007 | Continuar auditoría |
-| 🟡 P3 | Desglose CA-a-CA faltante | US-034, US-038, US-039, US-043, US-048 | Reconciliación con `git log --grep="CA-"` |
-| 🟡 P3 | Deuda técnica US-043 CA-6 | US-043 | Plan de remediación con ticket |
-| 🟡 P4 | OBS abiertas US-005 | US-005 | Cerrar OBS-1 (CA-68) y OBS-2 (CA-65) |
+| Prioridad | Brecha | US Afectadas | Acción Recomendada | Estado |
+|-----------|--------|-------------|-------------------|:------:|
+| ✅ CERRADO S6.1 | IDOR activo — tenantId hardcodeado | US-007, US-027 | Hotfix: role prefix `ibpms_rol_*`, tenant propagation en JwtAuthFilter, Anti-IDOR `startsWith` en RagSessionCleanerUseCase | ✅ E2E 2/2 PASS |
+| ✅ CERRADO S6.1 | `EmailWebhookController` bypasea pipeline de seguridad | US-004 | Deprecado a HTTP 410 Gone | ✅ E2E 2/2 PASS |
+| ✅ CERRADO S6.1 | B-20: Vinculación DMN↔BPMN no visual | US-005, US-007 | Dropdown visual + endpoint `/api/v1/dmn/definitions` | ✅ |
+| ✅ CERRADO S6.1 | Login.vue sin data-testid E2E | Frontend | Añadidos 4 data-testid (break-glass-toggle, email, password, submit) | ✅ |
+| ✅ CERRADO S6.1 | Debug System.out.println en SecurityContextUtils | Backend | Removidos 6 println | ✅ |
+| 🔴 P0 It.6.2 | Data seed operacional para E2E UI | Backend/Infra | SQL seed: tasks, DMN definitions, Kanban cards para BD E2E | ❌ Pendiente |
+| 🟠 P1 | US-008 KanbanView con mock hardcodeado | US-008, US-030 | Implementar state machine real + endpoint PATCH | ❌ Pendiente |
+| 🟠 P1 | `FormBffCoreService` prefill parcialmente mock | US-029, US-017 | Conectar prefill a BD real | ❌ Pendiente |
+| 🟠 P1 | CA-6 US-004: sin RabbitMQ consumer de intake | US-004 | Implementar `@RabbitListener` | ❌ Pendiente |
+| 🟡 P2 | QA al 0% en US completadas | US-003, US-005, US-038, US-043, US-048 | Sprint de QA dedicado | ❌ Pendiente |
+| 🟡 P2 | CAs Remediación US-007 (13-18) sin auditar | US-007 | Continuar auditoría | ❌ Pendiente |
+| 🟡 P3 | Desglose CA-a-CA faltante | US-034, US-038, US-039, US-043, US-048 | Reconciliación con `git log --grep="CA-"` | ❌ Pendiente |
+| 🟡 P3 | Deuda técnica US-043 CA-6 | US-043 | Plan de remediación | ❌ Pendiente |
+| 🟡 P4 | OBS abiertas US-005 | US-005 | Cerrar OBS-1 (CA-68) y OBS-2 (CA-65) | ❌ Pendiente |
+| 🟢 P1 | US-017 CA-19 a CA-26 UX/UI delegados | US-017 | Handoff Frontend + QA emitidos (Toast Flotante Conexión) | ⏳ Delegado |
 
 ---
 
-> **⚡ Próxima acción recomendada (post reconciliación PO 2026-04-18T15:25):**
-> 1. **P0 SEGURIDAD:** Hotfix IDOR en `BpmnCopilotController.java:73` y `DmnGovernanceController` — extraer `tenantId` del JWT
-> 2. **P0 SEGURIDAD:** Deprecar o encadenar `EmailWebhookController` al pipeline de `WebhookIntakeService`
-> 3. **P1 CONECTIVIDAD:** Conectar `FormBffCoreService.generateMegaDtoFormContext()` a datos reales de BD
-> 4. Ejecutar `/reconciliacionCoberturaCa.md` sobre US-034, US-038, US-039, US-043, US-048
-> 5. Iniciar Sprint QA dedicado para las 11 US completadas con 0% QA
+> **⚡ Próxima acción recomendada (Iteración 6.2):**
+> 1. **✅ P0 SEGURIDAD COMPLETADO:** Hotfix IDOR y Webhooks cerrados en Sprint 6.1.
+> 2. **🔴 P0 DATA SEED:** Crear `seed-e2e.sql` con datos operacionales (AgileTask, DMN definitions, Kanban cards) para que Lotes B3-B5 pasen.
+> 3. **🟠 P1 CONECTIVIDAD:** Conectar `FormBffCoreService.generateMegaDtoFormContext()` a datos reales de BD.
+> 4. **🟠 P1 KANBAN:** Implementar state machine real US-008 + endpoint PATCH.
+> 5. Re-ejecutar suite E2E completa para alcanzar 7/7 PASS (100%).

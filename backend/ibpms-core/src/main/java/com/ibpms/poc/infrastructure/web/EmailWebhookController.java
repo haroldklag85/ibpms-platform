@@ -11,6 +11,7 @@ import java.util.Map;
 /**
  * Adaptador Driving — Controlador REST HTTP para Graph API o Azure Logic Apps.
  */
+@Deprecated(since = "v1.0.0", forRemoval = true)
 @RestController
 @RequestMapping("/inbound/email-webhook")
 public class EmailWebhookController {
@@ -25,24 +26,17 @@ public class EmailWebhookController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> receiveEmailNotification(
+    public ResponseEntity<Map<String, String>> receiveEmailNotification(
             @RequestHeader(value = "ClientState", required = false) String clientState,
             @RequestBody Map<String, Object> payload) {
-
-        // 1. Verificación de Origen (Auth por ClientState, no por JWT)
-        if (clientState == null || !clientState.equals(expectedClientState)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 No Autorizado
-        }
-
-        // 2. Extracción defensiva del Payload Mock (MS Graph Resource Data)
-        String subject = (String) payload.getOrDefault("subject", "Asunto no definido");
-        String body = (String) payload.getOrDefault("body", "");
-        String sender = (String) payload.getOrDefault("sender", "unknown@domain.com");
-
-        // 3. Orquestación Asíncrona (A fines de PoC es sincrónica con 202)
-        webhookUseCase.procesarEmail(subject, body, sender);
-
-        // 4. Retorno HTTP 202 Accepted (Standard de Webhooks para evitar time-outs)
-        return ResponseEntity.accepted().build();
+        
+        // SECURITY GATE: Legacy endpoint deprecado.
+        // Todas las integraciones deben usar POST /api/v1/intake/webhook (WebhookIntakeService)
+        return ResponseEntity.status(HttpStatus.GONE) // HTTP 410 Gone
+                .body(Map.of(
+                    "error", "ENDPOINT_DEPRECATED",
+                    "message", "This endpoint has been deprecated. Use POST /api/v1/intake/webhook with HMAC validation.",
+                    "migration", "/api/v1/intake/webhook"
+                ));
     }
 }

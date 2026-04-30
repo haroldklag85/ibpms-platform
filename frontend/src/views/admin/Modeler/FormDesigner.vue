@@ -78,10 +78,10 @@
           </button>
           <div class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-xl hidden group-hover:block z-50 overflow-hidden text-xs">
             <div class="px-3 py-2 bg-gray-50 border-b border-gray-100 font-bold text-gray-500">Rol Activo:</div>
-            <button @click="mockContext.rbacRole = 'ADMIN'" :class="{'bg-blue-50 font-bold': mockContext.rbacRole === 'ADMIN'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">🛡️ ADMIN</button>
-            <button @click="mockContext.rbacRole = 'OPERATOR'" :class="{'bg-blue-50 font-bold': mockContext.rbacRole === 'OPERATOR'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">👨‍💻 OPERATOR</button>
-            <button @click="mockContext.rbacRole = 'MANAGER'" :class="{'bg-blue-50 font-bold': mockContext.rbacRole === 'MANAGER'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">👔 MANAGER</button>
-            <button @click="mockContext.rbacRole = 'GUEST'" :class="{'bg-blue-50 font-bold': mockContext.rbacRole === 'GUEST'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">🏃 GUEST</button>
+            <button @click="simulatorContext.rbacRole = 'ADMIN'" :class="{'bg-blue-50 font-bold': simulatorContext.rbacRole === 'ADMIN'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">🛡️ ADMIN</button>
+            <button @click="simulatorContext.rbacRole = 'OPERATOR'" :class="{'bg-blue-50 font-bold': simulatorContext.rbacRole === 'OPERATOR'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">👨‍💻 OPERATOR</button>
+            <button @click="simulatorContext.rbacRole = 'MANAGER'" :class="{'bg-blue-50 font-bold': simulatorContext.rbacRole === 'MANAGER'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">👔 MANAGER</button>
+            <button @click="simulatorContext.rbacRole = 'GUEST'" :class="{'bg-blue-50 font-bold': simulatorContext.rbacRole === 'GUEST'}" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition">🏃 GUEST</button>
           </div>
         </div>
 
@@ -96,8 +96,8 @@
           🗑 Reset
         </button>
 
-        <button @click="simulateMockSubmit" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
-          🚀 Probar (Submit Mock)
+        <button @click="simulateFormSubmit" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+          🚀 Probar (Submit)
         </button>
       </div>
     </header>
@@ -769,7 +769,7 @@
                <button @click="showPreviewModal = false" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
             </div>
             <div class="p-6 overflow-y-auto flex-1 relative bg-white m-4 rounded shadow-sm border border-gray-200">
-               <FormRenderer :schema="canvasFields" v-model="previewFormData" :mockContext="mockContext" />
+               <FormRenderer :schema="canvasFields" v-model="previewFormData" :simulatorContext="simulatorContext" />
             </div>
             <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center text-xs text-gray-400 font-mono">
                <span>Live FormData: {{ JSON.stringify(previewFormData) }}</span>
@@ -799,6 +799,7 @@
                      <div class="flex gap-2">
                         <button @click="generateMockPath('happy')" class="text-[10px] bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200">Autocompletar Happy</button>
                         <button @click="generateMockPath('sad')" class="text-[10px] bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200">Autocompletar Sad</button>
+                        <button @click="fuzzerPayload = '{\n  \n}'" class="text-[10px] bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200">🗑️ Limpiar</button>
                      </div>
                   </div>
                   <textarea v-model="fuzzerPayload" class="flex-1 form-textarea font-mono text-xs p-3 border-gray-300 rounded shadow-sm resize-none"></textarea>
@@ -843,6 +844,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useLocalStorage } from '@vueuse/core';
 import VueDraggable from 'vuedraggable';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
@@ -851,15 +853,17 @@ import AppTooltip from '@/components/common/AppTooltip.vue';
 import FormRenderer from '@/components/forms/FormRenderer.vue';
 // @ts-ignore
 import jexl from 'jexl';
+import { useAuthStore } from '@/stores/authStore';
 
 // GAP 9: Mimetismo RBAC
 import { reactive } from 'vue';
-const mockContext = reactive({ rbacRole: 'ADMIN' });
+const authStore = useAuthStore();
+const simulatorContext = reactive({ rbacRole: authStore.roles?.[0] || 'ADMIN' });
 
 const evaluateMockVis = (node: any) => {
     if (!node.visibilityCondition) return true;
     try {
-        return jexl.evalSync(node.visibilityCondition, { data: {}, context: mockContext });
+        return jexl.evalSync(node.visibilityCondition, { data: {}, context: simulatorContext });
     } catch {
         return true; 
     }
@@ -910,6 +914,11 @@ const availableFieldsFlat = computed(() => {
     };
     return flat(canvasFields.value);
 });
+
+// CA-90 / REM-003-04: Límites de Rendimiento para Formularios de Alta Densidad
+const MAX_FORM_FIELDS = 200;
+const isHighDensityForm = computed(() => availableFieldsFlat.value.length > MAX_FORM_FIELDS);
+
 
 const saveVisualRules = () => {
     showToast(`Reglas cruzadas configuradas (${visualRules.value.length} activas)`, 'success');
@@ -1152,11 +1161,11 @@ const generateVitestSpec = () => {
 
 // CA-79: Consola QA Sandbox Fuzzer
 const showFuzzerModal = ref(false);
-const fuzzerPayload = ref('{\n  \n}');
+const fuzzerPayload = useLocalStorage(`fuzzer_${route.query.id || 'draft'}`, '{\n  \n}');
 const fuzzerErrors = ref<{msg: string, isRefine: boolean}[]>([]);
 
 const openFuzzerSandbox = async () => {
-    fuzzerPayload.value = '{\n  \n}';
+    if (!fuzzerPayload.value || fuzzerPayload.value.trim() === '{}') { fuzzerPayload.value = '{\n  \n}'; }
     fuzzerErrors.value = [];
     showFuzzerModal.value = true;
 
@@ -1453,8 +1462,6 @@ const flatFields = (fields: any[]): any[] => {
   return res;
 };
 
-// CA-90: High density form state calculated with performance considerations
-const isHighDensityForm = computed(() => flatFields(canvasFields.value).length > 200);
 
 // HTML generator recursivo para Template (AST to Vue)
 const generateFieldHTML = (field: any, indent: string = '      ', parentBinding: string = 'formData'): string => {

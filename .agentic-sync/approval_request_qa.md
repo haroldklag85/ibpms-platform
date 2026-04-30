@@ -1,23 +1,16 @@
-# 🔍 Solicitud de Aprobación QA — Sprint 5.1
+# Solicitud de Revisión QA: ARQ-005 (Core Deploy Pipeline)
 
-> **De:** Agente SDET / QA Lead
-> **Para:** Arquitecto Líder
-> **Fecha:** 2026-04-18
-> **Sprint:** 5.1 (Remediación y Deuda Técnica)
+**A la atención del Arquitecto Líder:**
 
-## 📋 Resumen del Plan Propuesto
+He formulado mi plan de implementación para certificar la resolución de la Deuda Técnica ARQ-005. 
 
-Basado en el handoff `handoff_qa_sprint5_1.md`, he elaborado el plan de implementación en mi memoria (Implementation Plan Artifact) para certificar las vulnerabilidades y fallos corregidos en el Backend y documentados en la rama `sprint-5/iteracion4`.
+El foco principal es verificar que el equipo Backend haya limpiado el controlador y los servicios core de inyecciones indebidas de JPA y bibliotecas de Camunda, certificando que el diseño respeta estrictamente los ADRs de Arquitectura Hexagonal y Camunda Embedded (ADR-001 y ADR-003).
 
-### Alcance Principal:
-1. **Nivel 1 (Componentes & Unit - Vitest):** Aserciones para `TaskPreviewModal` (read-only), `ClaimAuditTrail` (chronological timeline), validación de confirmaciones de liberación en `WorkdeskGrid`, sanitización estricta XSS de DMN y testeo del volcado de estado de interceptor 400 Zod en `useFormStore`.
-2. **Nivel 2 (Flujos E2E - Playwright):** Validación del JWT simulado de claim, fuerza de liberación (force-unclaim 200 vs 403), audit trail y multi-contexts de inquilinos (Tenant Isolation CA-6) para certificar que el hueco IDOR está efectivamente cerrado, junto con visualizaciones de Zod y Rollback (Camunda fail).
+**Puntos Clave del Plan de Certificación (basado en el Handoff):**
+1. Validar que `BpmnDesignController.java` esté limpio de importaciones a `Repository` y entidades JPA.
+2. Validar que `PreFlightAnalyzerService.java` no use librerías de `org.camunda` ni `infrastructure.jpa` directamente.
+3. Validar que `BpmnDesignService.java` esté blindado y libre de `infrastructure.jpa.entity`.
+4. Comprobar que los adaptadores subyacentes existen físicamente en la infraestructura.
+5. Ejecutar compilación y validación empírica vía `mvn clean test`.
 
-### Adherencia a Gobernanza:
-- Cumplimiento de la Pirámide ADR-010.
-- Ejecuciones de compuertas `npm run test:unit`, `npm run build` y Playwright antes de emitir commits (Cero-Trust QA).
-- Cierre formal actualizando la `coverage_matrix.md` y emitiendo el acta oficial.
-
-## 🛑 Permiso de Ejecución
-
-Sr. Arquitecto, solicito su visto bueno para proceder al modo `EXECUTION`. ¿Aprueba usted el plan de aserciones propuesto y me autoriza a aplicar TDD/Clean Code para estas certificaciones?
+¿Apruebas este plan para transicionar a modo `EXECUTION` e iniciar los 7 checkpoints forenses?

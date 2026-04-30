@@ -55,9 +55,24 @@ databaseChangeLog:
       file: db/changelog/sprint3/005_create_agile_hub_tables.sql
   - include:
       file: db/changelog/sprint3/006_create_mq_resilience_tables.sql
-  - include:
-      file: db/changelog/sprint4/001_us036_role_hybrid_fields.sql
-  - include:
-      file: db/changelog/sprint4/002_us036_delegation_reason.sql
+
+
   - include:
       file: db/changelog/sprint5/001_create_claim_audit_log.sql
+  # HO-02 Sprint 6.2: Consolidación de delegación (3 tablas → 1)
+  - include:
+      file: db/changelog/28-consolidate-delegation.sql
+  - include:
+      file: db/changelog/29-consolidate-roles.sql
+  - include:
+      file: db/changelog/30-tenant-fk.sql
+  - include:
+      file: db/changelog/31-ensure-pk-user-roles.sql
+  - include:
+      file: db/changelog/32-add-user-hierarchy.sql
+  - include:
+      file: db/changelog/33-create-kanban-schema.sql
+  - include:
+      file: db/changelog/34-sprint6-bugs-fix.sql
+  - include:
+      file: db/changelog/35-arq02804-split-certification.sql

@@ -45,6 +45,17 @@
         </svg>
         Mis Delegaciones
       </button>
+
+      <!-- CA-12 US-038: Pestaña CISO Dashboard (Anomalies) -->
+      <button
+        @click="activeTab = 'anomalies'"
+        class="py-3 text-sm font-medium border-b-2 transition-colors duration-150 flex items-center gap-2"
+        :class="activeTab === 'anomalies' ? 'border-red-600 text-red-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+        data-testid="tab-anomalies"
+      >
+        <span class="material-symbols-outlined text-[16px] text-red-600">security</span>
+        Tablero CISO
+      </button>
     </div>
 
     <!-- Contenedor Dinámico -->
@@ -62,6 +73,9 @@
       <!-- CA-9 US-036: Consola de Delegaciones Temporales -->
       <RbacDelegationLog v-if="activeTab === 'delegations'" />
 
+      <!-- CA-12 US-038: Anomalías Backend -->
+      <SecurityAnomalyTable v-if="activeTab === 'anomalies'" />
+
     </div>
   </div>
 </template>
@@ -73,6 +87,7 @@ import GlobalRolesTable from './GlobalRolesTable.vue'
 import ProcessRolesTable from './ProcessRolesTable.vue'
 import ServiceAccountsTable from './ServiceAccountsTable.vue'
 import RbacDelegationLog from './RbacDelegationLog.vue'
+import SecurityAnomalyTable from './SecurityAnomalyTable.vue'
 
 const store = useRbacStore()
 const activeTab = ref('global')

@@ -7,6 +7,7 @@ services:
     image: ankane/pgvector:latest
     container_name: ibpms-postgres-uat
     restart: unless-stopped
+    command: ["postgres", "-c", "max_connections=150", "-c", "shared_buffers=1GB"]
     environment:
       POSTGRES_USER: ibpms_user
       POSTGRES_PASSWORD: ibpms_password
@@ -84,7 +85,11 @@ services:
       - maven_data:/root/.m2
     ports:
       - "8080:8080"
+<<<<<<< HEAD
     command: bash -c "mvn install -DskipTests && cd ibpms-core && mvn spring-boot:run -DskipTests"
+=======
+    command: bash -c "mvn clean install -Dmaven.test.skip=true && cd ibpms-core && mvn spring-boot:run -Dmaven.test.skip=true"
+>>>>>>> 6f34bcaed55cc473cc0706f6539b8075af0e2812
     depends_on:
       ibpms-postgres:
         condition: service_healthy

@@ -105,10 +105,21 @@ public class AgileTaskService {
      */
     @Transactional
     public void bulkAssign(UUID projectId, List<UUID> taskIds, String userId) {
-        for (UUID taskId : taskIds) {
-            AgileTask task = getTaskForUpdate(taskId);
-            task.getAssigneeIds().add(userId);
-            taskRepository.save(task);
+        // Ordenamiento lexicográfico para prevenir deadlocks en concurrencia masiva
+        List<UUID> sortedTaskIds = taskIds.stream().sorted().toList();
+        for (UUID taskId : sortedTaskIds) {
+            try {
+                AgileTask task = getTaskForUpdate(taskId);
+                if (task.getAssigneeIds() == null) {
+                    task.setAssigneeIds(new java.util.HashSet<>());
+                }
+                task.getAssigneeIds().add(userId);
+                taskRepository.save(task);
+            } catch (org.springframework.dao.OptimisticLockingFailureException | org.springframework.dao.CannotAcquireLockException e) {
+                // Logueo defensivo en caso de pisada de datos o lock timeout
+                System.err.println("[DEFENSIVO] Conflicto transaccional al asignar tarea " + taskId + ": " + e.getMessage());
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Conflicto de concurrencia en la asignación de tareas. Reintente.", e);
+            }
         }
     }
 
@@ -123,7 +134,7 @@ public class AgileTaskService {
         }
         task.setStatus("CLAIMED");
         if (task.getAssigneeIds() == null) {
-            task.setAssigneeIds(new java.util.ArrayList<>());
+            task.setAssigneeIds(new java.util.HashSet<>());
         }
         if (!task.getAssigneeIds().contains(claimedBy)) {
             task.getAssigneeIds().add(claimedBy);
@@ -149,7 +160,7 @@ public class AgileTaskService {
         
         task.setStatus("CLAIMED");
         if (task.getAssigneeIds() == null) {
-            task.setAssigneeIds(new java.util.ArrayList<>());
+            task.setAssigneeIds(new java.util.HashSet<>());
         }
         if (!task.getAssigneeIds().contains(claimedBy)) {
             task.getAssigneeIds().add(claimedBy);

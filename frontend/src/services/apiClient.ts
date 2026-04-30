@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
+import { useMenuStore } from '@/stores/useMenuStore';
 
 // Instancia global con baseUrl que pasa por el Proxy de Vite (/api -> localhost:8080)
 const apiClient: AxiosInstance = axios.create({
@@ -10,9 +11,6 @@ const apiClient: AxiosInstance = axios.create({
     timeout: 10000, // Timeout seguro
 });
 
-// [Handoff Requirement]: Backend no dispone de servidor live en pipeline local. Activamos Modo Mock Estricto.
-import { setupMockAdapter } from './mockAdapter';
-setupMockAdapter(apiClient);
 
 // Interceptor de Request para anexar el Bearer Token corporativo si existe
 apiClient.interceptors.request.use(
@@ -44,6 +42,21 @@ apiClient.interceptors.response.use(
             }});
             window.dispatchEvent(event);
             return Promise.reject(error); // Silently stops component logic without crash
+        }
+        
+        const config = error.config as InternalAxiosRequestConfig & { _retryCount?: number };
+        
+        // J-04: Optimistic UI / Backoff Exponencial para 429 y 503
+        if (config && error.response && [429, 503].includes(error.response.status)) {
+            config._retryCount = config._retryCount || 0;
+            if (config._retryCount < 3) {
+                config._retryCount += 1;
+                const backoff = Math.pow(2, config._retryCount) * 1000; // 2s, 4s, 8s
+                console.warn(`J-04: Reintento automático (${config._retryCount}/3) en ${backoff}ms por HTTP ${error.response.status}`);
+                return new Promise(resolve => {
+                    setTimeout(() => resolve(apiClient(config)), backoff);
+                });
+            }
         }
         
         // CA-21, CA-1, CA-37: Alertas Rojas Imborrables / Captura Global 5xx
@@ -149,6 +162,24 @@ apiClient.interceptors.response.use(
                const authStore = useAuthStore();
                authStore.logout();
                window.location.href = '/login?alert=Sesión Invalidada por Seguridad';
+            } else {
+               // CA-32: Auto-Curación Zero-Trust
+               console.warn('CA-32: Revocación de acceso detectada (403). Purgando topología local.');
+               const menuStore = useMenuStore();
+               menuStore.purgeTopology();
+               
+               const body = document.querySelector('body');
+               if (body && !document.getElementById('privilege-update-toast')) {
+                   const toast = document.createElement('div');
+                   toast.id = 'privilege-update-toast';
+                   toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
+                   toast.innerHTML = '🔄 Sus accesos han sido actualizados por el Administrador';
+                   body.appendChild(toast);
+                   setTimeout(() => {
+                       toast.style.opacity = '0';
+                       setTimeout(() => toast.remove(), 500);
+                   }, 4000);
+               }
             }
         }
         return Promise.reject(error);
@@ -229,15 +260,24 @@ export const api = {
     saveFormVersion: (id: string, payload: any) => apiClient.post(`/forms/${id}`, payload),
 
     // 10. Kanban Status Update (Pantalla 3)
-    updateKanbanStatus: (id: string, status: string) => apiClient.patch(`/kanban/items/${id}/status`, { status }),
+    getKanbanBoard: () => apiClient.get('/kanban/board'),
+    updateKanbanStatus: (id: string, payload: any) => apiClient.patch(`/kanban/${id}/state`, payload),
 
     // 10. AI Agents & Copilot (CA-8 US-005)
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),
     analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
     generateDmnRules: (payload: any) => apiClient.post(`/dmn/generate`, payload),
 
+    // Sprint 6.1: DMN Definitions
+    getDmnDefinitions: () => apiClient.get('/dmn-models/definitions'),
+
     // Configuraciones Administrativas (CA-30)
     getBpmnComplexityLimit: () => apiClient.get('/admin/settings/bpmn-complexity-limit'),
+
+    // -------------------------------------------------------------
+    // US-048 (Iteración 2): Renovación Silenciosa
+    // -------------------------------------------------------------
+    refreshToken: () => apiClient.post('/auth/refresh'),
 
     // 11. Public Tracking (Pantalla 18)
     getPublicTracking: (trackingCode: string) => apiClient.get(`/public/tracking/${trackingCode}`),

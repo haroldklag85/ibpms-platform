@@ -182,11 +182,11 @@
         <h3 class="text-base font-bold text-gray-900 mb-1">Asignación Masiva</h3>
         <p class="text-sm text-gray-600 mb-4">
           Asignando plantilla <span class="font-semibold text-indigo-700">{{ massAssignTarget.name }}</span>
-          a {{ mockUserIds.length }} usuario(s).
+          a {{ demoUserIds.length }} usuario(s).
         </p>
         <div class="bg-gray-50 rounded p-3 text-xs font-mono text-gray-500 mb-4 break-all">
           POST /api/v1/admin/roles/{{ massAssignTarget.id }}/assign-massively<br>
-          {{ JSON.stringify(mockUserIds) }}
+          {{ JSON.stringify(demoUserIds) }}
         </div>
         <div class="flex gap-2 justify-end">
           <button
@@ -209,6 +209,7 @@
 import { ref, reactive } from 'vue'
 import { useRbacStore } from '@/stores/rbacStore'
 import apiClient from '@/services/apiClient'
+import { RoleFactories } from '@/tests/factories'
 
 const store = useRbacStore()
 
@@ -258,8 +259,8 @@ async function confirmCreateRole() {
 // --- CA-3: Mass Assign ---
 const massAssignTarget = ref(null)
 const massAssigning = ref(false)
-// IDs demo para el demostrador (handoff autoriza payload mock)
-const mockUserIds = ['00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002']
+// IDs obtenidos del factory de tests
+const demoUserIds = RoleFactories.demoUserIds
 
 function onMassAssign(rol) {
   massAssignTarget.value = rol
@@ -271,7 +272,7 @@ async function confirmMassAssign() {
   try {
     const { data } = await apiClient.post(
       `/admin/roles/${massAssignTarget.value.id}/assign-massively`,
-      mockUserIds
+      demoUserIds
     )
     alert(`✅ Asignación completada: ${data.assigned} usuario(s) asignados.`)
     massAssignTarget.value = null

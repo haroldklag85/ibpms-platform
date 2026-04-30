@@ -40,7 +40,7 @@ public class WorkboxTaskController {
      * US-002: Reclamar tarea (asume propiedad exclusiva).
      */
     @PostMapping("/{id}/claim")
-    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> claimTask(@PathVariable UUID id, Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
         taskService.claimTask(id, username);
@@ -51,7 +51,7 @@ public class WorkboxTaskController {
      * US-002 CA-28: claim-next. Toma la tarea más alta del pool en atomicidad.
      */
     @PostMapping("/claim-next")
-    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<com.ibpms.poc.domain.model.agile.AgileTask> claimNextTask(Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
         com.ibpms.poc.domain.model.agile.AgileTask task = taskService.claimNextTask(username);
@@ -62,7 +62,7 @@ public class WorkboxTaskController {
      * US-002 CA-21: Rollback Optimistic UI ante fallo asíncrono.
      */
     @PostMapping("/{id}/rollback-claim")
-    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> rollbackClaim(@PathVariable UUID id, Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
         taskService.rollbackClaim(id, username);
@@ -73,7 +73,7 @@ public class WorkboxTaskController {
      * US-002: Liberar tarea.
      */
     @PostMapping("/{id}/unclaim")
-    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> unclaimTask(@PathVariable UUID id, Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
         taskService.unclaimTask(id, username);
@@ -84,7 +84,7 @@ public class WorkboxTaskController {
      * US-029: Guardado progresivo (Borrador) con Debounce Server-Side.
      */
     @PutMapping("/{id}/draft")
-    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> saveDraft(@PathVariable UUID id, 
                                           @RequestBody Map<String, Object> payload, 
                                           Authentication auth) {
@@ -97,7 +97,7 @@ public class WorkboxTaskController {
      * US-029: Completitud de tarea (Validada).
      */
     @PostMapping("/{id}/complete")
-    @PreAuthorize("hasRole('OPERADOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> completeTask(@PathVariable UUID id, 
                                              @RequestBody Map<String, Object> payload, 
                                              Authentication auth) {
@@ -111,14 +111,14 @@ public class WorkboxTaskController {
      */
     @GetMapping("/{id}/preview")
     public ResponseEntity<Map<String, Object>> previewTask(@PathVariable UUID id) {
-        com.ibpms.poc.domain.model.agile.AgileTask task = taskService.getTaskById(id);
+        com.ibpms.poc.domain.model.agile.AgileTask task = taskService.getTask(id);
         // Exponer solo datos genéricos sin estados alterables:
         return ResponseEntity.ok(Map.of(
                 "title", task.getTitle(),
                 "description", task.getDescription(),
-                "slaExpiration", task.getSlaExpiration(),
+                "slaExpiration", task.getSlaDeadline(),
                 "status", task.getStatus(),
-                "assignee", task.getAssignee() != null ? task.getAssignee() : ""
+                "assignee", task.getAssigneeIds() != null && !task.getAssigneeIds().isEmpty() ? String.join(",", task.getAssigneeIds()) : ""
         ));
     }
 
@@ -126,7 +126,7 @@ public class WorkboxTaskController {
      * US-002 CA-8: Force Unclaim de un Supervisor
      */
     @PostMapping("/{id}/force-unclaim")
-    @PreAuthorize("hasRole('SUPERVISOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> forceUnclaim(@PathVariable UUID id) {
         String supervisor = SecurityContextUtils.getAssignee();
         String tenantId = SecurityContextUtils.getTenantId();

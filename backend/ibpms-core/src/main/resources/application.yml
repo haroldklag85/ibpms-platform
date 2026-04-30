@@ -1,4 +1,8 @@
 spring:
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=5m
   servlet:
     multipart:
       max-file-size: 50MB
@@ -10,6 +14,10 @@ spring:
     username: ${POSTGRES_USER:ibpms_user}
     password: ${POSTGRES_PASSWORD:ibpms_password}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 40
+      minimum-idle: 10
+      connection-timeout: 20000
   jpa:
     hibernate:
       ddl-auto: update # Auto-reparación por Hibernate
@@ -18,9 +26,17 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
+    # HO-03: Defer datasource init para que seed-dev.sql se ejecute DESPUÉS de Liquibase + Hibernate DDL
+    defer-datasource-initialization: false
   liquibase:
     enabled: true
-    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  # HO-03: Auto-carga de datos mínimos para desarrollo local
+  sql:
+    init:
+      mode: never
+      data-locations: classpath:seed-dev.sql
+      continue-on-error: true
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
@@ -70,12 +86,10 @@ ibpms:
 
 jwt:
   secret: ${JWT_SECRET:changeme-this-must-be-at-least-32-chars-for-hs256-signature!!}
-  expiration: 3600
+  expiration: 900
 
 server:
   port: 8080
-  servlet:
-    context-path: /api/v1
   tomcat:
     max-http-form-post-size: 50MB
 

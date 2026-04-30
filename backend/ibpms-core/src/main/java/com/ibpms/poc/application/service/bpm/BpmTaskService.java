@@ -9,10 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import com.ibpms.poc.application.dto.bpm.GenericTaskPayloadDTO;
 import com.ibpms.poc.application.event.GenericTaskCompletedEvent;
+import com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository;
 
+import org.springframework.cache.annotation.Cacheable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * CA-5: Wrapper Crítico de Seguridad (Row-Level Security).
@@ -24,10 +27,12 @@ public class BpmTaskService {
 
     private final TaskService camundaTaskService;
     private final ApplicationEventPublisher eventPublisher;
+    private final RoleRepository roleRepository;
 
-    public BpmTaskService(TaskService camundaTaskService, ApplicationEventPublisher eventPublisher) {
+    public BpmTaskService(TaskService camundaTaskService, ApplicationEventPublisher eventPublisher, RoleRepository roleRepository) {
         this.camundaTaskService = camundaTaskService;
         this.eventPublisher = eventPublisher;
+        this.roleRepository = roleRepository;
     }
 
     /**
@@ -91,8 +96,9 @@ public class BpmTaskService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tarea no encontrada.");
         }
 
-        // CA-1: VIP Pre-Flight Restrictor
-        boolean isVip = userRoles != null && (userRoles.contains("ROLE_ALTA_DIRECCION") || userRoles.contains("ROLE_APROBADOR_FINANCIERO"));
+        // CA-1 + CA-6 (REM-039-A): VIP Pre-Flight Restrictor — Dinámico desde BD (con Caché)
+        List<String> vipRoleNames = getVipRoleNames();
+        boolean isVip = userRoles != null && userRoles.stream().anyMatch(vipRoleNames::contains);
         
         if ("sys_generic_form".equals(task.getFormKey()) && isVip) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
@@ -178,5 +184,15 @@ public class BpmTaskService {
                 userId,
                 variables
         ));
+    }
+
+    /**
+     * Obtiene los roles VIP con restricciones cacheados por 5 minutos (Caffeine)
+     */
+    @Cacheable(value = "vipRoles", key = "'ALL'", unless = "#result.isEmpty()", cacheManager = "caffeineCacheManager")
+    public List<String> getVipRoleNames() {
+        return roleRepository.findByIsVipRestrictedTrue()
+                .stream().map(r -> "ROLE_" + r.getName())
+                .collect(Collectors.toList());
     }
 }

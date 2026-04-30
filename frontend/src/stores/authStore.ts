@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import apiClient from '@/services/apiClient';
 
 export const useAuthStore = defineStore('auth', () => {
     // Estado Reactivo
@@ -29,8 +30,9 @@ export const useAuthStore = defineStore('auth', () => {
         if (sseSource) sseSource.close();
         
         try {
-            // Mock de UAT, en Producción apunta a: /api/v1/security/stream?streamId=...
-            const TARGET_SSE = (import.meta as any).env.VITE_API_URL ? `${(import.meta as any).env.VITE_API_URL}/api/v1/security/stream` : 'http://localhost:8080/api/v1/security/stream';
+            // Configuración segura usando el cliente HTTP Base URL o URI relativa para la Proxy de Vite
+            const baseURL = (import.meta as any).env.VITE_API_URL || '';
+            const TARGET_SSE = `${baseURL}/api/v1/security/stream`;
             
             sseSource = new EventSource(TARGET_SSE);
             sseSource.onmessage = (event) => {
@@ -49,20 +51,51 @@ export const useAuthStore = defineStore('auth', () => {
         }
     };
 
+    // CA-4011: Token Rotator Interval (Silent Auto-Renewal)
+    let rotatorInterval: ReturnType<typeof setInterval> | null = null;
+
+    const startTokenRotator = () => {
+        if (rotatorInterval) clearInterval(rotatorInterval);
+        // Desencadena cada 10 minutos (600,000 ms) para renovar el JWT antes del TTL de 15mins
+        rotatorInterval = setInterval(async () => {
+            if (!token.value) return;
+            try {
+                const { data } = await apiClient.post('/auth/refresh');
+                if (data && data.token) {
+                    token.value = data.token;
+                    localStorage.setItem('ibpms_token', data.token);
+                    console.info('[AuthStore] CA-4011: Token renovado silenciosamente.');
+                }
+            } catch (error) {
+                console.error('[AuthStore] Falla en la Rotación del Token. Forzando expiración por seguridad (Kill-Switch / Timeout).');
+                alert('Sesión expirada o privilegios revocados. Inicie sesión nuevamente.');
+                logout();
+                window.location.href = '/login';
+            }
+        }, 600000); // 10 Minutos
+    };
+
+    const stopTokenRotator = () => {
+        if (rotatorInterval) {
+            clearInterval(rotatorInterval);
+            rotatorInterval = null;
+        }
+    };
+
     // Funciones de Mutación
     const login = (jwt: string) => {
         token.value = jwt;
         localStorage.setItem('ibpms_token', jwt);
-        
-        // Decodificación Mock (UAT)
-        if (jwt.includes('EMERGENCY_LOCAL_JWT')) {
-            user.value = { username: 'root@ibpms.local', roles: ['ROLE_SUPER_ADMIN'] };
-        } else {
-            // SSO Normal fallback
-            user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
+        try {
+            const payload = JSON.parse(atob(jwt.split('.')[1]));
+            const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', ''));
+            user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
+        } catch (e) {
+            user.value = { username: 'unknown', roles: ['ROLE_USER'] };
         }
         initActiveRole();
         initSecurityListener();
+        startTokenRotator();
     };
 
     const logout = () => {
@@ -70,6 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
             sseSource.close();
             sseSource = null;
         }
+        stopTokenRotator();
         token.value = null;
         user.value = null;
         effectiveRoles.value = [];
@@ -93,12 +127,13 @@ export const useAuthStore = defineStore('auth', () => {
             const jwt = token.value || localStorage.getItem('ibpms_token');
             if (!jwt) throw { status: 401 };
 
-            // Simulación Validación API Backend (V1)
-             if (jwt.includes('EMERGENCY_LOCAL_JWT')) {
-                 user.value = { username: 'root@ibpms.local', roles: ['ROLE_SUPER_ADMIN'] };
-             } else {
-                 user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
-             }
+            try {
+                const payload = JSON.parse(atob(jwt.split('.')[1]));
+                const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', ''));
+                user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
+            } catch (e) {
+                user.value = { username: 'unknown', roles: ['ROLE_USER'] };
+            }
              
              initActiveRole();
              // Consumir Api para effective roles

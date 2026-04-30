@@ -1,0 +1,244 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+Running 7 tests using 4 workers
+
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+  x  1 [e2e-certification] › e2e\certification\idor-copilot.e2e.spec.ts:6:3 › P0: IDOR BpmnCopilotController — Cross-Tenant Session Wipe › CU-JSEC-02: Tenant Alpha NO puede destruir sesión de Tenant Beta (4ms)
+  x  4 [e2e-certification] › e2e\certification\idor-copilot.e2e.spec.ts:22:3 › P0: IDOR BpmnCopilotController — Cross-Tenant Session Wipe › CU-JSEC-02b: Tenant Alpha SÍ puede destruir su propia sesión (4ms)
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+  x  3 [e2e-certification] › e2e\certification\b20-dmn-dropdown.e2e.spec.ts:6:3 › B-20: Dropdown DMN en BpmnDesigner › Seleccionar BusinessRuleTask muestra dropdown DMN con tablas publicadas (9ms)
+  x  2 [e2e-certification] › e2e\certification\kanban-board.e2e.spec.ts:6:3 › OBS-1 / B5: Kanban View Real Backend › Operario interactua con Kanban real (API, Blocked modal, Done inmutable) (9ms)
+  x  5 [e2e-certification] › e2e\certification\idor-copilot.e2e.spec.ts:6:3 › P0: IDOR BpmnCopilotController — Cross-Tenant Session Wipe › CU-JSEC-02: Tenant Alpha NO puede destruir sesión de Tenant Beta (retry #1) (6ms)
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+  x  6 [e2e-certification] › e2e\certification\idor-copilot.e2e.spec.ts:22:3 › P0: IDOR BpmnCopilotController — Cross-Tenant Session Wipe › CU-JSEC-02b: Tenant Alpha SÍ puede destruir su propia sesión (retry #1) (6ms)
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+  x  10 [e2e-certification] › e2e\certification\webhook-legacy.e2e.spec.ts:6:3 › P0: EmailWebhookController — Deprecated Legacy Endpoint › CU-JSEC-17: POST /inbound/email-webhook retorna HTTP 410 Gone (4ms)
+  x  8 [e2e-certification] › e2e\certification\smoke-j04-operario.e2e.spec.ts:6:3 › Smoke J-04: Operario MVP — Happy Path › CU-J04-01→06: Login → Workdesk → Claim → Form → Submit → Desaparición (8ms)
+  x  9 [e2e-certification] › e2e\certification\kanban-board.e2e.spec.ts:6:3 › OBS-1 / B5: Kanban View Real Backend › Operario interactua con Kanban real (API, Blocked modal, Done inmutable) (retry #1) (9ms)
+  x  7 [e2e-certification] › e2e\certification\b20-dmn-dropdown.e2e.spec.ts:6:3 › B-20: Dropdown DMN en BpmnDesigner › Seleccionar BusinessRuleTask muestra dropdown DMN con tablas publicadas (retry #1) (9ms)
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+  x  11 [e2e-certification] › e2e\certification\webhook-legacy.e2e.spec.ts:6:3 › P0: EmailWebhookController — Deprecated Legacy Endpoint › CU-JSEC-17: POST /inbound/email-webhook retorna HTTP 410 Gone (retry #1) (8ms)
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+  x  13 [e2e-certification] › e2e\certification\webhook-legacy.e2e.spec.ts:20:3 › P0: EmailWebhookController — Deprecated Legacy Endpoint › CU-JSEC-17b: POST sin ClientState también retorna 410 (no 403) (4ms)
+  x  12 [e2e-certification] › e2e\certification\smoke-j04-operario.e2e.spec.ts:6:3 › Smoke J-04: Operario MVP — Happy Path › CU-J04-01→06: Login → Workdesk → Claim → Form → Submit → Desaparición (retry #1) (8ms)
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+  x  14 [e2e-certification] › e2e\certification\webhook-legacy.e2e.spec.ts:20:3 › P0: EmailWebhookController — Deprecated Legacy Endpoint › CU-JSEC-17b: POST sin ClientState también retorna 410 (no 403) (retry #1) (3ms)
+
+
+  1) [e2e-certification] › e2e\certification\b20-dmn-dropdown.e2e.spec.ts:6:3 › B-20: Dropdown DMN en BpmnDesigner › Seleccionar BusinessRuleTask muestra dropdown DMN con tablas publicadas 
+
+    Error: Error reading storage state from e2e/.auth/user.json:
+    ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\b20-dmn-dropdown.e2e-B-20--4f9a0-n-DMN-con-tablas-publicadas-e2e-certification\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\b20-dmn-dropdown.e2e-B-20--4f9a0-n-DMN-con-tablas-publicadas-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\b20-dmn-dropdown.e2e-B-20--4f9a0-n-DMN-con-tablas-publicadas-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: Error reading storage state from e2e/.auth/user.json:
+    ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\b20-dmn-dropdown.e2e-B-20--4f9a0-n-DMN-con-tablas-publicadas-e2e-certification-retry1\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\b20-dmn-dropdown.e2e-B-20--4f9a0-n-DMN-con-tablas-publicadas-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\b20-dmn-dropdown.e2e-B-20--4f9a0-n-DMN-con-tablas-publicadas-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [e2e-certification] › e2e\certification\idor-copilot.e2e.spec.ts:6:3 › P0: IDOR BpmnCopilotController — Cross-Tenant Session Wipe › CU-JSEC-02: Tenant Alpha NO puede destruir sesión de Tenant Beta 
+
+    Error: ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\idor-copilot.e2e-P0-IDOR-B-8ea16-truir-sesión-de-Tenant-Beta-e2e-certification\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\idor-copilot.e2e-P0-IDOR-B-8ea16-truir-sesión-de-Tenant-Beta-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\idor-copilot.e2e-P0-IDOR-B-8ea16-truir-sesión-de-Tenant-Beta-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\idor-copilot.e2e-P0-IDOR-B-8ea16-truir-sesión-de-Tenant-Beta-e2e-certification-retry1\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\idor-copilot.e2e-P0-IDOR-B-8ea16-truir-sesión-de-Tenant-Beta-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\idor-copilot.e2e-P0-IDOR-B-8ea16-truir-sesión-de-Tenant-Beta-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [e2e-certification] › e2e\certification\idor-copilot.e2e.spec.ts:22:3 › P0: IDOR BpmnCopilotController — Cross-Tenant Session Wipe › CU-JSEC-02b: Tenant Alpha SÍ puede destruir su propia sesión 
+
+    Error: ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\idor-copilot.e2e-P0-IDOR-B-ecfdd-e-destruir-su-propia-sesión-e2e-certification\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\idor-copilot.e2e-P0-IDOR-B-ecfdd-e-destruir-su-propia-sesión-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\idor-copilot.e2e-P0-IDOR-B-ecfdd-e-destruir-su-propia-sesión-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\idor-copilot.e2e-P0-IDOR-B-ecfdd-e-destruir-su-propia-sesión-e2e-certification-retry1\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\idor-copilot.e2e-P0-IDOR-B-ecfdd-e-destruir-su-propia-sesión-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\idor-copilot.e2e-P0-IDOR-B-ecfdd-e-destruir-su-propia-sesión-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [e2e-certification] › e2e\certification\kanban-board.e2e.spec.ts:6:3 › OBS-1 / B5: Kanban View Real Backend › Operario interactua con Kanban real (API, Blocked modal, Done inmutable) 
+
+    Error: Error reading storage state from e2e/.auth/user.json:
+    ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\kanban-board.e2e-OBS-1-B5--c494e-ocked-modal-Done-inmutable--e2e-certification\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\kanban-board.e2e-OBS-1-B5--c494e-ocked-modal-Done-inmutable--e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\kanban-board.e2e-OBS-1-B5--c494e-ocked-modal-Done-inmutable--e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: Error reading storage state from e2e/.auth/user.json:
+    ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\kanban-board.e2e-OBS-1-B5--c494e-ocked-modal-Done-inmutable--e2e-certification-retry1\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\kanban-board.e2e-OBS-1-B5--c494e-ocked-modal-Done-inmutable--e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\kanban-board.e2e-OBS-1-B5--c494e-ocked-modal-Done-inmutable--e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [e2e-certification] › e2e\certification\smoke-j04-operario.e2e.spec.ts:6:3 › Smoke J-04: Operario MVP — Happy Path › CU-J04-01→06: Login → Workdesk → Claim → Form → Submit → Desaparición 
+
+    Error: Error reading storage state from e2e/.auth/user.json:
+    ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\smoke-j04-operario.e2e-Smo-266cc-orm-→-Submit-→-Desaparición-e2e-certification\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\smoke-j04-operario.e2e-Smo-266cc-orm-→-Submit-→-Desaparición-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\smoke-j04-operario.e2e-Smo-266cc-orm-→-Submit-→-Desaparición-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: Error reading storage state from e2e/.auth/user.json:
+    ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\smoke-j04-operario.e2e-Smo-266cc-orm-→-Submit-→-Desaparición-e2e-certification-retry1\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\smoke-j04-operario.e2e-Smo-266cc-orm-→-Submit-→-Desaparición-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\smoke-j04-operario.e2e-Smo-266cc-orm-→-Submit-→-Desaparición-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [e2e-certification] › e2e\certification\webhook-legacy.e2e.spec.ts:6:3 › P0: EmailWebhookController — Deprecated Legacy Endpoint › CU-JSEC-17: POST /inbound/email-webhook retorna HTTP 410 Gone 
+
+    Error: ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\webhook-legacy.e2e-P0-Emai-6ff24-bhook-retorna-HTTP-410-Gone-e2e-certification\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\webhook-legacy.e2e-P0-Emai-6ff24-bhook-retorna-HTTP-410-Gone-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\webhook-legacy.e2e-P0-Emai-6ff24-bhook-retorna-HTTP-410-Gone-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\webhook-legacy.e2e-P0-Emai-6ff24-bhook-retorna-HTTP-410-Gone-e2e-certification-retry1\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\webhook-legacy.e2e-P0-Emai-6ff24-bhook-retorna-HTTP-410-Gone-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\webhook-legacy.e2e-P0-Emai-6ff24-bhook-retorna-HTTP-410-Gone-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [e2e-certification] › e2e\certification\webhook-legacy.e2e.spec.ts:20:3 › P0: EmailWebhookController — Deprecated Legacy Endpoint › CU-JSEC-17b: POST sin ClientState también retorna 410 (no 403) 
+
+    Error: ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\webhook-legacy.e2e-P0-Emai-c38d0-también-retorna-410-no-403--e2e-certification\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\webhook-legacy.e2e-P0-Emai-c38d0-también-retorna-410-no-403--e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\webhook-legacy.e2e-P0-Emai-c38d0-también-retorna-410-no-403--e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: ENOENT: no such file or directory, open 'C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\.auth\user.json'
+
+    Error Context: test-results\webhook-legacy.e2e-P0-Emai-c38d0-también-retorna-410-no-403--e2e-certification-retry1\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\webhook-legacy.e2e-P0-Emai-c38d0-también-retorna-410-no-403--e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\webhook-legacy.e2e-P0-Emai-c38d0-también-retorna-410-no-403--e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7 failed
+    [e2e-certification] › e2e\certification\b20-dmn-dropdown.e2e.spec.ts:6:3 › B-20: Dropdown DMN en BpmnDesigner › Seleccionar BusinessRuleTask muestra dropdown DMN con tablas publicadas 
+    [e2e-certification] › e2e\certification\idor-copilot.e2e.spec.ts:6:3 › P0: IDOR BpmnCopilotController — Cross-Tenant Session Wipe › CU-JSEC-02: Tenant Alpha NO puede destruir sesión de Tenant Beta 
+    [e2e-certification] › e2e\certification\idor-copilot.e2e.spec.ts:22:3 › P0: IDOR BpmnCopilotController — Cross-Tenant Session Wipe › CU-JSEC-02b: Tenant Alpha SÍ puede destruir su propia sesión 
+    [e2e-certification] › e2e\certification\kanban-board.e2e.spec.ts:6:3 › OBS-1 / B5: Kanban View Real Backend › Operario interactua con Kanban real (API, Blocked modal, Done inmutable) 
+    [e2e-certification] › e2e\certification\smoke-j04-operario.e2e.spec.ts:6:3 › Smoke J-04: Operario MVP — Happy Path › CU-J04-01→06: Login → Workdesk → Claim → Form → Submit → Desaparición 
+    [e2e-certification] › e2e\certification\webhook-legacy.e2e.spec.ts:6:3 › P0: EmailWebhookController — Deprecated Legacy Endpoint › CU-JSEC-17: POST /inbound/email-webhook retorna HTTP 410 Gone 
+    [e2e-certification] › e2e\certification\webhook-legacy.e2e.spec.ts:20:3 › P0: EmailWebhookController — Deprecated Legacy Endpoint › CU-JSEC-17b: POST sin ClientState también retorna 410 (no 403) 

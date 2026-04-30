@@ -45,6 +45,7 @@
                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                ]"
                @click="switchDelegationMode('DELEGATED')"
+               data-testid="toggle-delegation"
              >
                👤 Tareas de mi Asistente
              </button>
@@ -82,6 +83,7 @@
           <input 
             v-model="searchQuery"
             @input="onSearchInput"
+            data-testid="workdesk-search-input"
             class="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none" 
             placeholder="Buscar por ID, título o asignado..." type="search"
           />
@@ -106,6 +108,7 @@
     <Transition name="slide-down">
       <div
         v-if="delegationMode === 'DELEGATED' && delegatedUserName"
+        data-testid="delegation-banner"
         class="w-full px-6 py-2.5 flex items-center gap-3 border-b border-amber-200/60 bg-amber-50 shadow-sm shrink-0"
         role="alert"
         aria-live="polite"
@@ -125,7 +128,7 @@
 
     <!-- CA-07/CA-18: Banner de Degradación BPMN -->
     <Transition name="toast-slide">
-      <div v-if="store.isDegraded" class="bg-amber-50 border-b border-amber-300 p-3 shadow-sm flex items-center flex-shrink-0 gap-3">
+      <div v-if="store.isDegraded" class="bg-amber-50 border-b border-amber-300 p-3 shadow-sm flex items-center flex-shrink-0 gap-3" data-testid="degradation-banner">
         <span class="material-symbols-outlined text-amber-600 text-xl animate-pulse shrink-0">warning</span>
         <div>
           <p class="text-amber-800 font-bold text-sm">Sincronización BPMN degradada temporalmente</p>
@@ -221,6 +224,7 @@
                    class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
                    :disabled="store.isAttending"
                    @click="onAttendNextAction"
+                   data-testid="btn-force-routing"
                  >
                    <span class="material-symbols-outlined text-2xl" :class="{ 'animate-spin': store.isAttending }">{{ store.isAttending ? 'hourglass_empty' : 'rocket_launch' }}</span>
                    <span class="text-lg">{{ store.isAttending ? 'Asignando...' : 'Atender Siguiente Tarea' }}</span>
@@ -229,7 +233,7 @@
            </div>
 
            <!-- CA-12: Empty State Gamificado -->
-           <div v-else-if="filteredItems.length === 0 && !store.isLoading" class="absolute inset-0 flex flex-col items-center justify-center">
+           <div v-else-if="filteredItems.length === 0 && !store.isLoading" class="absolute inset-0 flex flex-col items-center justify-center" data-testid="empty-state">
              <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-green-50 border-2 border-emerald-200 shadow-lg">
                <span class="material-symbols-outlined text-emerald-500 text-5xl">celebration</span>
              </div>
@@ -242,8 +246,8 @@
            
            <!-- CA-03: Data Grid Universal 5 Columnas -->
            <div v-else class="overflow-x-auto">
-             <table class="w-full text-sm text-left">
-               <thead class="text-[10px] uppercase tracking-wider text-gray-400 border-b border-gray-200 bg-gray-50/50">
+             <table class="w-full text-sm text-left" data-testid="task-list">
+               <thead class="text-[10px] uppercase tracking-wider text-gray-400 border-b border-gray-200 bg-gray-50/50" data-testid="task-list-header">
                  <tr>
                    <th class="px-4 py-3 font-bold">Nombre</th>
                    <th class="px-4 py-3 font-bold">SLA</th>
@@ -257,8 +261,9 @@
                  <tr 
                    v-for="task in filteredItems" 
                    :key="task.unifiedId"
-                   @click="mockOpenTask(task)"
+                   @click="openTaskDetails(task)"
                    :class="[{ 'is-ghost': (task as any)._isGhost, 'is-new': (task as any)._isNew }, 'workdesk-row border-b border-gray-100 hover:bg-indigo-50/30 cursor-pointer transition-colors group']"
+                   :data-testid="'task-row-' + (task.unifiedId || task.originalTaskId)"
                  >
                    <!-- Col 1: Nombre + Badge Tipo + Badge Impacto -->
                    <td class="px-4 py-3">
@@ -270,12 +275,16 @@
                          <span class="font-semibold text-[#1e1b4b] truncate max-w-[280px] group-hover:text-indigo-600 transition-colors">{{ task.title }}</span>
                          <span class="text-[10px] font-mono text-gray-400">{{ task.originalTaskId }}</span>
                        </div>
+                       <!-- CA-10: Badge de Autorización Tipográfica -->
+                       <span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold border border-indigo-200 shrink-0">{{ task.targetRole || 'Rol Operativo' }}</span>
+                       
+                       <span v-if="task.variables?.isSlaAtRisk === true && getSlaStatus(task.slaExpirationDate) !== 'EXPIRED'" class="px-1.5 py-0.5 bg-amber-500 text-white rounded text-[9px] font-bold border border-amber-600 shrink-0" title="SLA en Riesgo (<20% restante)">⚠️ SLA en Riesgo</span>
                        <span v-if="task.financialImpactHigh" class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[9px] font-black border border-red-200 shrink-0">🔥 Impacto</span>
                      </div>
                    </td>
                    <!-- Col 2: SLA Semáforo Vivo con Iconografía Accesible (CA-11) -->
                    <td class="px-4 py-3">
-                     <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 w-fit', getSlaPillClass(task.slaExpirationDate)]">
+                     <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 w-fit', getSlaPillClass(task.slaExpirationDate)]" :data-testid="'sla-pill-' + (task.unifiedId || task.originalTaskId)">
                        <span class="text-xs">{{ getSlaIcon(task.slaExpirationDate) }}</span>
                        {{ getSlaRelativeTime(task.slaExpirationDate) }}
                      </span>
@@ -305,7 +314,7 @@
                    </td>
                    <!-- Col 6: Acciones (US-002 Task Claim) -->
                    <td class="px-4 py-3 text-center" @click.stop>
-                     <button @click="onClaimTask(task)" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:transform active:scale-95 text-white font-bold rounded-lg shadow-sm transition-all text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 mx-auto disabled:opacity-50 min-w-[90px]" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)">
+                     <button @click="onClaimTask(task)" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:transform active:scale-95 text-white font-bold rounded-lg shadow-sm transition-all text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 mx-auto disabled:opacity-50 min-w-[90px]" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)" :data-testid="'claim-button-' + (task.unifiedId || task.originalTaskId)">
                        <span v-if="isClaiming === (task.unifiedId || task.originalTaskId)" class="material-symbols-outlined text-[14px] animate-spin">refresh</span>
                        <span v-else class="material-symbols-outlined text-[14px]">pan_tool</span>
                        {{ isClaiming === (task.unifiedId || task.originalTaskId) ? 'Cargando' : 'Atender' }}
@@ -345,14 +354,14 @@
       </section>
 
       <!-- 25% Sidebar Metrics -->
-      <aside v-if="isMetricsPanelOpen" class="hidden lg:block w-1/4 bg-white p-8 overflow-y-auto no-scrollbar relative z-10 shrink-0 transition-all duration-300">
+      <aside v-if="isMetricsPanelOpen" class="hidden lg:block w-1/4 bg-white p-8 overflow-y-auto no-scrollbar relative z-10 shrink-0 transition-all duration-300" data-testid="metrics-panel">
         <div class="space-y-10">
           <div>
             <h2 class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-8">Resumen Operativo</h2>
             <div class="space-y-8">
               <div class="flex items-center gap-4">
                 <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100">
-                   <span class="text-base font-bold text-indigo-700">{{ store.pageInfo.totalElements }}</span>
+                   <span class="text-base font-bold text-indigo-700" data-testid="metric-total-tasks">{{ store.pageInfo.totalElements }}</span>
                 </div>
                 <div>
                   <p class="text-sm font-bold text-gray-900">Total Tareas</p>
@@ -361,7 +370,7 @@
               </div>
               <div class="flex items-center gap-4">
                 <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-red-50 border border-red-100">
-                   <span class="text-base font-bold text-red-600">{{ countExpiredSLA() }}</span>
+                   <span class="text-base font-bold text-red-600" data-testid="metric-overdue-tasks">{{ countExpiredSLA() }}</span>
                    <div v-if="countExpiredSLA() > 0" class="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></div>
                 </div>
                 <div>
@@ -371,7 +380,7 @@
               </div>
               <div class="flex items-center gap-4">
                 <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-yellow-50 border border-yellow-100">
-                   <span class="text-base font-bold text-yellow-600">{{ countWarningSLA() }}</span>
+                   <span class="text-base font-bold text-yellow-600" data-testid="metric-expiring-tasks">{{ countWarningSLA() }}</span>
                 </div>
                 <div>
                   <p class="text-sm font-bold text-gray-900">Por Expirar</p>
@@ -382,7 +391,7 @@
           </div>
 
           <div class="pt-8 border-t border-gray-100">
-             <div class="mt-2 bg-slate-50 p-5 rounded-xl border border-slate-200">
+             <div class="mt-2 bg-slate-50 p-5 rounded-xl border border-slate-200" data-testid="metric-cqrs-status">
                <div class="flex items-center gap-2 mb-3">
                  <span class="material-symbols-outlined text-indigo-500 text-lg">public</span>
                  <p class="text-xs text-indigo-800 font-bold uppercase tracking-widest">CQRS Engine</p>
@@ -414,7 +423,7 @@
             </div>
             <button @click="openedTask = null" class="text-indigo-200 hover:text-white transition rounded p-1"><span class="material-symbols-outlined">close</span></button>
           </div>
-          <div class="p-8 flex-1 overflow-y-auto bg-gray-50">
+          <div class="p-8 flex-1 overflow-y-auto bg-gray-50" data-testid="form-container">
              <div class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center text-gray-500 font-medium h-full flex flex-col items-center justify-center">
                  <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">design_services</span>
                  Aquí cargaría el formulario dinámico real de la tarea (US-028/003).<br/>
@@ -422,10 +431,10 @@
              </div>
           </div>
           <div class="px-6 py-4 border-t border-gray-200 bg-white flex justify-between gap-3 shadow-inner">
-             <button @click="openSkipReason" class="px-5 py-2.5 text-sm font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg shadow-sm transition flex items-center gap-2 border border-amber-200">
+             <button @click="openSkipReason" class="px-5 py-2.5 text-sm font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg shadow-sm transition flex items-center gap-2 border border-amber-200" data-testid="btn-skipeo">
                 <span class="material-symbols-outlined text-[18px]">skip_next</span> Skipeo Justificado
              </button>
-             <button @click="openedTask = null" class="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition">
+             <button @click="openedTask = null" class="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition" data-testid="form-submit">
                 <span class="material-symbols-outlined align-middle mr-1 text-[18px]">done_all</span> Completar Tarea
              </button>
           </div>
@@ -451,23 +460,23 @@
              </div>
              <div>
                <label class="block text-sm font-bold text-gray-700 mb-1.5">Motivo de salto <span class="text-red-500">*</span></label>
-               <select v-model="skipForm.reason" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition font-medium">
+               <select v-model="skipForm.reason" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition font-medium" data-testid="select-skip-reason">
                  <option value="" disabled>Seleccione un motivo...</option>
-                 <option value="CLIENTE_NO_RESPONDE">El cliente no responde / No está disponible</option>
-                 <option value="REQUIERE_DOCUMENTACION">Requiere documentación adicional externa</option>
-                 <option value="FUERA_DE_AREA">Fuera de mi área de especialidad</option>
-                 <option value="OTRO">Otro (Especificar)</option>
+                 <option value="CLIENT_NO_RESPONSE">El cliente no responde / No está disponible</option>
+                 <option value="REQUIRES_DOCUMENTATION">Requiere documentación adicional externa</option>
+                 <option value="OUT_OF_AREA">Fuera de mi área de especialidad</option>
+                 <option value="OTHER">Otro (Especificar)</option>
                </select>
              </div>
-             <div v-if="skipForm.reason === 'OTRO'">
+             <div v-if="skipForm.reason === 'OTHER'">
                <label class="block text-sm font-bold text-gray-700 mb-1.5">Detalle del motivo <span class="text-red-500">*</span></label>
-               <textarea v-model="skipForm.detail" rows="3" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition placeholder-gray-400" placeholder="Mínimo 10 caracteres explicatorios..."></textarea>
+               <textarea v-model="skipForm.detail" rows="3" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition placeholder-gray-400" placeholder="Mínimo 10 caracteres explicatorios..." data-testid="textarea-skip-detail"></textarea>
                <p v-if="skipForm.detail.length > 0 && skipForm.detail.length < 10" class="text-xs text-red-500 mt-1.5 font-medium flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">error</span> El detalle debe tener al menos 10 caracteres.</p>
              </div>
           </div>
           <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
              <button @click="closeSkipModal" class="px-4 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-800 hover:bg-gray-200/60 rounded-lg transition" :disabled="store.isAttending">Cancelar</button>
-             <button @click="submitSkip" :disabled="isSkipFormInvalid || store.isAttending" class="px-5 py-2.5 text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2">
+             <button @click="submitSkip" :disabled="isSkipFormInvalid || store.isAttending" class="px-5 py-2.5 text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2" data-testid="confirm-skip">
                 <span v-if="store.isAttending" class="material-symbols-outlined animate-spin text-[18px]">refresh</span>
                 Confirmar Salto
              </button>
@@ -646,7 +655,7 @@ const onClaimTask = async (task: any) => {
     }
 }
 
-const mockOpenTask = (task: any) => {
+const openTaskDetails = (task: any) => {
     openedTask.value = task;
 }
 
@@ -658,7 +667,7 @@ const skipForm = ref({ reason: '', detail: '' });
 
 const isSkipFormInvalid = computed(() => {
     if (!skipForm.value.reason) return true;
-    if (skipForm.value.reason === 'OTRO' && skipForm.value.detail.trim().length < 10) return true;
+    if (skipForm.value.reason === 'OTHER' && skipForm.value.detail.trim().length < 10) return true;
     return false;
 });
 

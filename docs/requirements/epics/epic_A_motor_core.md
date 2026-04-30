@@ -1225,6 +1225,60 @@ Feature: Hexagonal CQRS Persistence, Zero-Trust Validation and Task Completion
     And 3. Las tablas de proyección analítica del CA-01 NO se archivan (se mantienen activas para dashboards).
     And 4. Los eventos archivados siguen siendo INMUTABLES y consultables bajo demanda — el archivado NO es un borrado, es una reubicación.
     And 5. Los usuarios con rol `AUDITOR` podrán consultar eventos archivados a través de una interfaz administrativa (diferido a V2).
+
+  # ==============================================================================
+  # E. REFINAMIENTO UX/UI PARA ESCONDER COMPLEJIDAD CQRS (MONITOREO DE CONEXIÓN)
+  # Origen: Refactorización Híbrida solicitada por Diseño UX (2026-04-20)
+  # Propósito: Reemplazar el bloque técnico "CQRS Engine / Sync Eventual" con un
+  #            componente de "Toast" no intrusivo y orientado a negocio.
+  # ==============================================================================
+
+  Scenario: [UX/UI] Monitoreo Asíncrono No Intrusivo (Debounce Visual) (CA-19)
+    Given la necesidad de comunicar el estado de sincronización (CQRS/Event Sourcing) a un usuario de negocio
+    Then el Frontend TIENE PROHIBIDO mostrar bloques técnicos fijos (Ej: "Estado: Sincronizando CQRS Engine").
+    And implementará un debounce visual de 5 segundos. Es decir, las micro-sincronizaciones (ej. edición rápida de un campo) operarán de manera invisible si se resuelven en menos de 5 segundos.
+    And si la sincronización supera los 5 segundos (latencia o desconexión), se activará el componente Toast Flotante del CA-20.
+
+  Scenario: [UX/UI] Anatomía y Posicionamiento del Toast Flotante (CA-20)
+    Given la activación del componente de monitoreo asíncrono
+    Then se proyectará como un "Toast Flotante" (Notificación pequeña y transitoria).
+    And OBLIGATORIAMENTE se ubicará en la esquina inferior izquierda de la pantalla, evitando colisiones con acciones críticas (Fitts's Law), perfiles de usuario o modales centrales.
+
+  Scenario: [UX/UI] Lenguaje Orientado a Negocio (Prohibición de Jerga) (CA-21)
+    Given que el Toast Flotante emite un estado de conexión
+    Then el lenguaje TIENE PROHIBIDO incluir términos arquitectónicos (`CQRS`, `STOMP`, `Event Sourcing`).
+    And debe utilizar semántica de negocio estandarizada.
+    And Estados permitidos: "Guardando cambios...", "Trabajando sin conexión", o "Conexión restaurada".
+
+  Scenario: [UX/UI] Interfaz Cinética y Operatividad Pasiva en Desconexión (CA-22)
+    Given una desconexión de red que activa el estado "Trabajando sin conexión"
+    Then el Toast Flotante SERÁ NO-BLOQUEANTE.
+    And el usuario PODRÁ continuar ejecutando "operatividad pasiva" en la interfaz actual (ej. interactuar con modales abiertos, copiar texto de lectura, desplazarse por el Workdesk).
+    And no se desplegará una pantalla completa de error que interrumpa su lectura o trabajo en curso inmediato.
+
+  Scenario: [UX/UI] Transición Predictiva a Modo Degradado (CA-23)
+    Given un estado persistente de desconexión detectado por el frontend
+    Then el Toast Flotante mutará a un estado visual explícito de "Modo Degradado" (ej. ícono 🔴 / 🟡).
+    And el componente indicará claramente que los datos ingresados desde ese momento se almacenarán en modo "Borrador Local" (LocalStorage de US-029) y estarán pendientes de envío definitivo.
+
+  Scenario: [UX/UI] Reconexión Silenciosa en Background (CA-24)
+    Given un usuario trabajando en Modo Degradado
+    When la red se restablece en el navegador
+    Then el Frontend ejecutará el barrido y sincronización pendiente de forma automática en el *background*.
+    And NO exigirá que el usuario oprima botones de "Reintentar" ni modales bloqueantes.
+
+  Scenario: [UX/UI] Feedback Positivo y Desvanecimiento de Éxito (CA-25)
+    Given la sincronización exitosa de los datos pendientes tras una reconexión
+    Then el Toast Flotante pasará brevemente a un estado de éxito (ej. color verde: "Cambios guardados").
+    And permanecerá en pantalla un máximo de 3 segundos (Regla de Hicks).
+    And finalmente se desvanecerá, dejando la pantalla limpia y retornando al estado de invisibilidad (CA-19).
+
+  Scenario: [UX/UI] Prevención Contra Colisiones Visuales en Error Fuerte (CA-26)
+    Given la convivencia del Toast Flotante de conexión y los Modales de Error Transaccional
+    When la base de datos o el motor devuelven un error duro de negocio (HTTP 4XX / 500)
+    Then la notificación de error transaccional de negocio toma PRIORIDAD ABSOLUTA.
+    And se proyectará a través de los modales estándar (o `Toast de Error Critico` superior derecho) de la US-000.
+    And el Toast inferior izquierdo de conexión entrará en estado de latencia/silencio para no saturar al usuario con doble mensajería.
 ```
 
 **Trazabilidad UX:** Wireframes Pantalla 2 (Vista de Tarea) y BFF Invisible.

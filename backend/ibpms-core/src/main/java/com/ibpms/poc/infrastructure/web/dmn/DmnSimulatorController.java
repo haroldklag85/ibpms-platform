@@ -24,7 +24,7 @@ public class DmnSimulatorController {
      * Endpoint aséptico de simulación (No guarda nada).
      * @param payload RequestBody que debe contener el "xml" y un map de "variables".
      */
-    @PostMapping("/simulate")
+    @PostMapping("/simulate-sandbox")
     @PreAuthorize("hasAuthority('ROLE_PROCESS_ARCHITECT')")
     public ResponseEntity<Object> simulateDmn(@RequestBody Map<String, Object> payload) {
         

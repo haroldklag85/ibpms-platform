@@ -5,11 +5,15 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
+        "dev:e2e": "vite --port 5174 --strictPort",
         "build": "vite build",
         "preview": "vite preview",
         "test": "vitest",
         "test:ui": "vitest --ui",
-        "test:ct": "playwright test -c playwright-ct.config.ts"
+        "test:ct": "playwright test -c playwright-ct.config.ts",
+        "lint:mocks": "node scripts/anti-mock-scanner.js",
+        "generate-types": "openapi-typescript http://localhost:8080/v3/api-docs -o src/types/api-schema.d.ts",
+        "prepare": "husky install"
     },
     "dependencies": {
         "@guolao/vue-monaco-editor": "^1.6.0",
@@ -49,7 +53,10 @@
         "@vue/test-utils": "^2.4.6",
         "autoprefixer": "^10.4.17",
         "axios-mock-adapter": "^2.1.0",
+        "dotenv": "^17.4.2",
+        "husky": "^9.1.7",
         "jsdom": "^28.1.0",
+        "openapi-typescript": "^7.13.0",
         "postcss": "^8.4.35",
         "tailwindcss": "^3.4.1",
         "typescript": "^5.2.2",

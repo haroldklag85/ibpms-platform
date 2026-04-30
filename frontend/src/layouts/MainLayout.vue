@@ -35,6 +35,18 @@
             <span class="material-symbols-outlined animate-spin text-slate-500">sync</span>
          </div>
          
+         <!-- Fallback Visual CA-26: Sin topología de menús -->
+         <template v-else-if="menuStore.layout.length === 0">
+            <div class="flex flex-col items-center justify-center p-4 mt-8 text-center fade-in" v-if="!isSidebarCollapsed">
+                <span class="material-symbols-outlined text-4xl text-slate-600 mb-2">security_update_warning</span>
+                <p class="text-xs text-slate-400 font-bold">Sin Topología de Menús</p>
+                <p class="text-[10px] text-slate-500 mt-1">Sus roles no tienen acceso a ningún módulo. Contacte al Administrador o CISO.</p>
+            </div>
+            <div class="flex flex-col items-center justify-center p-2 mt-8 text-center fade-in" v-else>
+                <span class="material-symbols-outlined text-2xl text-slate-600" title="Sin Topología de Menús">security_update_warning</span>
+            </div>
+         </template>
+         
          <template v-else v-for="(group, gIdx) in menuStore.layout" :key="'g'+gIdx">
             <template v-if="!group.roles || authStore.hasAnyRole(group.roles)">
                
@@ -103,14 +115,19 @@
       <!-- Top Navigation Bar Header Global -->
       <header class="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center px-8 shrink-0 justify-between z-20">
         
-        <!-- Breadcrumbs o Título de Contexto -->
-        <div class="flex items-center gap-4 hidden sm:flex truncate flex-1">
-           <div class="flex items-center text-sm font-medium text-slate-500">
+        <!-- Breadcrumbs Dinámicos (R3-B) -->
+        <div class="flex items-center gap-1 hidden sm:flex truncate flex-1">
+           <router-link to="/" class="flex items-center text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">
               <span class="material-symbols-outlined text-[18px] mr-1">business_center</span>
-              <span>Workspace</span>
-              <span class="mx-2 text-slate-300">/</span>
-              <span class="text-slate-900 font-bold truncate">Enterprise Application</span>
-           </div>
+              <span>iBPMS</span>
+           </router-link>
+           <template v-for="(crumb, idx) in breadcrumbs" :key="idx">
+              <span class="mx-1 text-slate-300 text-xs">/</span>
+              <router-link v-if="idx < breadcrumbs.length - 1" :to="crumb.path" class="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors truncate">
+                {{ crumb.label }}
+              </router-link>
+              <span v-else class="text-sm font-bold text-slate-900 truncate">{{ crumb.label }}</span>
+           </template>
         </div>
 
         <div class="flex items-center gap-4 shrink-0">
@@ -174,15 +191,63 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 
 const router = useRouter();
+const route = useRoute();
 const preferencesStore = usePreferencesStore();
 const authStore = useAuthStore();
 const menuStore = useMenuStore();
+
+// R3-B: Mapa de nombres legibles para breadcrumbs
+const routeNameMap: Record<string, string> = {
+  'workdesk': 'Bandeja Unificada',
+  'inbox': 'Workdesk Legacy',
+  'kanban': 'Tablero Kanban',
+  'intake-triage': 'Inbox Intake',
+  'admin': 'Administración',
+  'modeler': 'Diseñador',
+  'bpmn': 'BPMN Modeler',
+  'dmn': 'DMN Copilot',
+  'forms': 'Formularios',
+  'designer': 'Diseñador Formularios',
+  'integration': 'Integración',
+  'catalog': 'Catálogo Conectores',
+  'builder': 'Constructor API',
+  'mapper': 'Visual Mapper',
+  'dlq': 'DLQ Dashboard',
+  'analytics': 'Análisis',
+  'bam': 'BAM Dashboard',
+  'security': 'Seguridad',
+  'identity': 'Gobernanza Identidades',
+  'incidents': 'Centro Incidentes',
+  'projects': 'Proyectos',
+  'manager': 'Gestor Proyectos',
+  'agile-hub': 'Hub Ágil',
+  'project-builder': 'Project Builder',
+  'intake': 'Intake Manual',
+  'customer360': 'Customer 360',
+  'mailboxes': 'Buzones SAC',
+  'portal': 'Portal',
+  'tracking': 'Seguimiento Cliente',
+  'sgdea': 'SGDEA',
+  'vault': 'Bóveda Documental',
+  'ai': 'Inteligencia Artificial',
+  'prompts': 'Librería Prompts',
+  'pmo': 'PMO',
+  'settings': 'Configuración'
+};
+
+const breadcrumbs = computed(() => {
+  const segments = route.path.split('/').filter(Boolean);
+  return segments.map((seg, idx) => ({
+    label: routeNameMap[seg] || seg.charAt(0).toUpperCase() + seg.slice(1),
+    path: '/' + segments.slice(0, idx + 1).join('/')
+  }));
+});
 
 onMounted(() => {
     // CA-6: Hidratación dinámica del árbol Topológico de Rutas

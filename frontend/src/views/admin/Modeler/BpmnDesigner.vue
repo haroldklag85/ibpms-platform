@@ -58,26 +58,23 @@
           📜 Versiones
         </button>
         <!-- Deploy Requests CA-69 -->
-        <button v-show="mockRole === 'BPMN_Release_Manager'" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
+        <button v-show="activeRole === 'BPMN_Release_Manager'" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
           📨 Solicitudes
         </button>
-        <!-- Mock Role CA-21 -->
-        <select v-model="mockRole" title="Evaluar UI con diferentes perfiles CA-21" class="text-xs bg-indigo-50 dark:bg-gray-700 border-indigo-200 dark:border-gray-600 rounded px-2 py-1 focus:ring-indigo-500 text-indigo-800 dark:text-white font-bold ml-2">
-           <option value="BPMN_Designer">👨‍💻 Diseñador</option>
-           <option value="BPMN_Release_Manager">👑 Release Manager</option>
-           <!-- CA-66 -->
-           <option value="Super_Admin">🛡️ Super Admin</option>
-        </select>
+        <!-- Active Role CA-21 -->
+        <span class="text-xs bg-indigo-50 dark:bg-gray-700 border-indigo-200 dark:border-gray-600 rounded px-2 py-1 text-indigo-800 dark:text-white font-bold ml-2">
+           Rol Activo: {{ activeRole }}
+        </span>
         <!-- Instance Manager CA-8 -->
         <button @click="showInstancesManager = true" class="bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold hover:bg-indigo-100 flex items-center gap-1 transition">
           🧬 Gestor de Instancias
         </button>
         <!-- Request Deploy -->
-        <button v-show="mockRole === 'BPMN_Designer'" @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
+        <button v-show="activeRole === 'BPMN_Designer'" @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
           📩 Solicitar Despliegue
         </button>
         <!-- Deploy (CA-21) -->
-        <button v-show="mockRole === 'BPMN_Release_Manager'"
+        <button v-show="activeRole === 'BPMN_Release_Manager'"
                 @click="showDeployModal = true" 
                 :disabled="isDeploying || !['VALIDATED', 'WARNING'].includes(preFlightStatus)" 
                 class="bg-indigo-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 transition">
@@ -93,7 +90,7 @@
         <span v-if="isLocked" class="flex items-center text-orange-700 font-bold bg-orange-100 px-3 py-1 rounded shadow-sm border border-orange-200">
           🔒 SOLO LECTURA: Bloqueado por {{ lockOwner }} ({{ lockSince }})
           <!-- CA-66: Break Lock -->
-          <button v-if="mockRole === 'Super_Admin'" @click="breakLock" class="ml-3 bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded text-[10px] uppercase transition shadow-sm border border-red-800">🔓 Romper Candado</button>
+          <button v-if="activeRole === 'Super_Admin'" @click="breakLock" class="ml-3 bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded text-[10px] uppercase transition shadow-sm border border-red-800">🔓 Romper Candado</button>
         </span>
         <span v-else class="text-green-600 font-medium">🔓 Edición Exclusiva Adquirida</span>
       </div>
@@ -255,10 +252,18 @@
           <!-- CA-12: Business Rule Task — DMN Binding (Protección de Derechos Adquiridos) -->
           <div v-if="selectedElement.type === 'bpmn:BusinessRuleTask'" class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded shadow-sm mb-4">
              <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-2 flex items-center justify-between">
-                <span>📐 DMN Binding (CA-12)</span>
-                <AppTooltip content="Configura si las reglas DMN se evalúan con la versión vigente al desplegar (DEPLOYMENT) o con la última publicada (LATEST). Default: DEPLOYMENT para protección jurídica de derechos adquiridos." />
+                <span>📐 Regla DMN (CA-12)</span>
+                <AppTooltip content="Configura la regla de negocio y si se evalúa con la versión vigente al desplegar (DEPLOYMENT) o con la última publicada (LATEST)." />
              </label>
-             <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Estrategia de versionamiento de la tabla DMN vinculada a esta tarea.</p>
+             <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Tabla de decisión conectada:</p>
+             <select v-model="selectedElement.props.decisionRef" @change="syncElementProperties('camunda:decisionRef', selectedElement.props.decisionRef)" class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border mb-3">
+                <option value="">-- Sin Regla DMN --</option>
+                <option v-for="dmn in availableDmns" :key="dmn.id" :value="dmn.id">
+                   {{ dmn.name }} (v{{ dmn.version }})
+                </option>
+             </select>
+
+             <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Estrategia de versionamiento:</p>
              <select v-model="selectedElement.props.dmnBinding"
                      @change="syncElementProperties('camunda:decisionRefBinding', selectedElement.props.dmnBinding)"
                      class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
@@ -712,6 +717,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent } from 'vue';
+import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/services/apiClient';
 import { debounce } from 'lodash-es';
 import AppTooltip from '@/components/common/AppTooltip.vue';
@@ -723,7 +729,8 @@ import DOMPurify from 'dompurify';
 const Vue3Lottie = defineAsyncComponent(() => import('vue3-lottie').then(m => m.Vue3Lottie));
 
 const corruptNodeId = ref<string | null>(null);
-const mockRole = ref<'BPMN_Designer' | 'BPMN_Release_Manager' | 'Super_Admin'>('BPMN_Release_Manager'); // CA-21, CA-66
+const authStore = useAuthStore();
+const activeRole = computed(() => authStore.roles?.[0] || 'BPMN_Designer'); // Reemplaza mockRole CA-21, CA-66
 
 // ── Types ────────────────────────────────────────────────────
 interface BpmnElement {
@@ -984,6 +991,19 @@ const fetchTopics = async () => {
   }
 };
 
+// CA-12: DMN Integration
+const availableDmns = ref<any[]>([]);
+const fetchDmnDefinitions = async () => {
+  try {
+    const { data } = await api.getDmnDefinitions();
+    availableDmns.value = data || [];
+  } catch {
+    availableDmns.value = [
+       { id: 'dmn-mock-scoring', name: 'Scoring Credito V1', version: 1 }
+    ]; // Fallback mock en caso de estar local
+  }
+};
+
 const fetchVersions = async () => {
   loadingVersions.value = true;
   try {
@@ -1236,6 +1256,7 @@ onMounted(async () => {
     fetchForms();
     fetchConnectors();
     fetchTopics();
+    fetchDmnDefinitions(); // CA-12 DMNs
     try {
       const { data } = await api.getBpmnComplexityLimit();
       if (data && data.limit) bpmnComplexityLimit.value = data.limit;
@@ -1275,13 +1296,14 @@ onMounted(async () => {
             calledElement: bo.calledElement || '',
             formKey: bo.get('camunda:formKey') || '',
             topic: bo.get('camunda:topic') || '',
+            decisionRef: bo.get('camunda:decisionRef') || '', // CA-12 DMN Reference
             dmnBinding: bo.get('camunda:decisionRefBinding') || 'deployment', // CA-12: Default seguro
             aiTokenLimit: 4000,
             aiTone: 'NEUTRAL'
           }
         };
       } else {
-        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', dmnBinding: 'deployment' } };
+        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', decisionRef: '', dmnBinding: 'deployment' } };
       }
     });
 
@@ -1659,7 +1681,8 @@ const sendCopilotMessage = async () => {
     const { xml } = await modelerInstance.saveXML({ format: true });
     
     // CA-01 SSE
-    const endpoint = (import.meta as any).env?.VITE_API_URL ? `${(import.meta as any).env.VITE_API_URL}/api/v1/design/processes/copilot/stream` : 'http://localhost:8080/api/v1/design/processes/copilot/stream';
+    const baseURL = (import.meta as any).env?.VITE_API_URL || '';
+    const endpoint = `${baseURL}/api/v1/design/processes/copilot/stream`;
     
     // Inyectamos el objeto reactivo para el streming y apuntamos a su índice
     const activeAiMessage = { role: 'ai', text: '', xmlPayload: undefined, options: undefined };

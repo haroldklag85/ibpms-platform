@@ -23,7 +23,7 @@
            </div>
            
            <div class="mt-8 flex justify-end gap-4">
-               <button @click="mockSubmit" class="bg-indigo-600 text-white font-bold px-6 py-2.5 rounded shadow-lg hover:bg-indigo-700 transition w-full sm:w-auto">🚀 Enviar Formulario Anónimo</button>
+               <button @click="submitAnonymousForm" class="bg-indigo-600 text-white font-bold px-6 py-2.5 rounded shadow-lg hover:bg-indigo-700 transition w-full sm:w-auto">🚀 Enviar Formulario Anónimo</button>
            </div>
         </main>
         
@@ -41,7 +41,7 @@ import { useRoute } from 'vue-router';
 const route = useRoute();
 const processKey = computed(() => route.params.processKey || 'UNKNOWN_PROCESS');
 
-const mockSubmit = () => {
+const submitAnonymousForm = () => {
     alert(`Formulario Público ${processKey.value} inyectado como Citizen Request en Camunda.`);
 };
 </script>

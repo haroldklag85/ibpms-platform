@@ -43,7 +43,7 @@
         </div>
 
         <div v-else-if="currentTab === 'users'" class="animate-fade-in h-full">
-           <RbacManager :users="mockUsers" @edit-roles="openRoleModal" />
+           <RbacManager :users="activeUsers" @edit-roles="openRoleModal" />
         </div>
 
         <div v-else class="flex flex-col items-center justify-center h-full text-gray-400">
@@ -104,9 +104,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import IntegrationsList from '@/components/admin/IntegrationsList.vue';
 import RbacManager from '@/components/admin/RbacManager.vue';
+import apiClient from '@/services/apiClient';
 import type { WebhookConfig, WebhookDirection } from '@/types/Integration';
 import type { UserProfile } from '@/types/Security';
 
@@ -114,12 +115,17 @@ const currentTab = ref('users'); // Empezar probando el Tab de Usuarios
 const isSlideOpen = ref(false);
 const draftType = ref<WebhookDirection>('OUTBOUND');
 
-// Mock Data Users
-const mockUsers = ref<UserProfile[]>([
-  { userId: "c.romero", fullName: "Carlos Romero", email: "c.romero@empresa.com", department: "Operaciones", assignedRoles: ["RECLAMADOR", "BASICO"], isActive: true },
-  { userId: "a.luna", fullName: "Ana Luna", email: "a.luna@empresa.com", department: "Sistemas (TI)", assignedRoles: ["ADMIN_PLATAFORMA", "SUPERVISOR"], isActive: true },
-  { userId: "e.perez", fullName: "Elena Pérez", email: "e.perez@empresa.com", department: "Finanzas", assignedRoles: ["APROBADOR_PAGOS"], isActive: false }
-]);
+// Real Data Users
+const activeUsers = ref<UserProfile[]>([]);
+
+onMounted(async () => {
+  try {
+    const { data } = await apiClient.get('/admin/users');
+    activeUsers.value = data || [];
+  } catch (err) {
+    console.error('Failed to load users:', err);
+  }
+});
 
 const openRoleModal = (user: UserProfile) => {
   alert(`Desplegando modal de asignación de roles para: ${user.fullName}`);

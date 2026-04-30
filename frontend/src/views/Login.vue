@@ -45,7 +45,7 @@
          </div>
 
          <div class="text-center">
-             <button @click="enableBreakGlass" class="text-[10px] font-bold text-gray-400 hover:text-red-600 transition tracking-widest uppercase underline decoration-gray-300 hover:decoration-red-300 underline-offset-4">
+             <button data-testid="break-glass-toggle" @click="enableBreakGlass" class="text-[10px] font-bold text-gray-400 hover:text-red-600 transition tracking-widest uppercase underline decoration-gray-300 hover:decoration-red-300 underline-offset-4">
                  ⚠️ Break-Glass Recovery (IT Only)
              </button>
          </div>
@@ -60,10 +60,51 @@
              <p class="text-xs text-red-500 mt-1 font-medium leading-tight">Uso exclusivo para fallos de Federación SAML/OIDC. Su IP será auditada.</p>
          </div>
 
+         <!-- Banner de Error Diferenciado (Break-Glass) -->
+         <div 
+             v-if="loginError" 
+             data-testid="login-error-banner"
+             class="rounded-lg p-3 text-center mb-4 border animate-fade-in"
+             :class="{
+                 'bg-amber-50 border-amber-200': loginError.code === 'USER_NOT_FOUND',
+                 'bg-red-50 border-red-200': loginError.code === 'INVALID_PASSWORD',
+                 'bg-gray-100 border-gray-300': loginError.code === 'ACCOUNT_DISABLED',
+                 'bg-yellow-50 border-yellow-200': loginError.code === 'MISSING_FIELDS',
+                 'bg-red-100 border-red-300': loginError.code === 'UNKNOWN'
+             }"
+         >
+             <div class="flex items-center justify-center gap-2">
+                 <span class="material-symbols-outlined text-[18px]"
+                     :class="{
+                         'text-amber-600': loginError.code === 'USER_NOT_FOUND',
+                         'text-red-600': loginError.code === 'INVALID_PASSWORD' || loginError.code === 'UNKNOWN',
+                         'text-gray-600': loginError.code === 'ACCOUNT_DISABLED',
+                         'text-yellow-600': loginError.code === 'MISSING_FIELDS'
+                     }"
+                 >
+                     {{ loginError.code === 'USER_NOT_FOUND' ? 'person_off' : 
+                        loginError.code === 'INVALID_PASSWORD' ? 'lock' : 
+                        loginError.code === 'ACCOUNT_DISABLED' ? 'block' : 
+                        'error' }}
+                 </span>
+                 <p class="text-sm font-semibold"
+                     :class="{
+                         'text-amber-800': loginError.code === 'USER_NOT_FOUND',
+                         'text-red-800': loginError.code === 'INVALID_PASSWORD' || loginError.code === 'UNKNOWN',
+                         'text-gray-800': loginError.code === 'ACCOUNT_DISABLED',
+                         'text-yellow-800': loginError.code === 'MISSING_FIELDS'
+                     }"
+                 >
+                     {{ loginError.message }}
+                 </p>
+             </div>
+         </div>
+
          <form @submit.prevent="handleEmergencyLogin" class="space-y-5">
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Usuario Táctico</label>
               <input 
+                data-testid="email-input"
                 v-model="email" 
                 type="email" 
                 required 
@@ -75,6 +116,7 @@
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Contraseña Bóveda</label>
               <input 
+                data-testid="password-input"
                 v-model="password" 
                 type="password" 
                 required
@@ -84,6 +126,7 @@
 
             <div class="pt-2">
               <button 
+                data-testid="login-submit"
                 type="submit" 
                 class="w-full flex items-center justify-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
               >
@@ -159,6 +202,7 @@ const authStore = useAuthStore();
 const isBreakGlass = ref(false);
 const email = ref('');
 const password = ref('');
+const loginError = ref<{ code: string; message: string } | null>(null);
 
 // JIT CA-3 States
 const showJitModal = ref(false);
@@ -182,6 +226,7 @@ const enableBreakGlass = () => {
 
 const disableBreakGlass = () => {
     isBreakGlass.value = false;
+    loginError.value = null;
     router.replace({ query: {} });
     email.value = '';
     password.value = '';
@@ -196,7 +241,7 @@ const triggerAzureSSO = async () => {
     
     // MOCK DEL BACKEND RESPONDIENDO HTTP 428 PRECONDITION REQUIRED
     // Usualmente esto se da si el AuthStore emite la advertencia post-redirección
-    const isProfileIncomplete = true; // Forzamos el Fallback JIT para auditoría
+    const isProfileIncomplete = true; // Forzamos el Fallback JIT para auditoría // zero-mock-ignore
     
     if (isProfileIncomplete) {
         console.warn('[HTTP 428 Interceptor] - Perfil incompleto detectado. Abriendo Guardrail JIT.');
@@ -234,15 +279,52 @@ const submitJitProfile = async () => {
 // VISTA 2: BREAK-GLASS EMERGENCY LOGIN CA-4
 // ===============================================
 const handleEmergencyLogin = async () => {
+    loginError.value = null; // Limpiar error previo
     try {
-        console.log(`[BREAK-GLASS] Forzando POST /api/v1/auth/emergency-login para ${email.value}`);
-        // Simulamos POST al endpoint secreto
-        // const response = await apiClient.post('/api/v1/auth/emergency-login', { username: email.value, password: password.value });
-        
-        authStore.login('EMERGENCY_LOCAL_JWT_666');
-        router.push('/');
-    } catch (e) {
-        alert('Credenciales de bóveda rechazadas o IP denegada.');
+        console.log(`[BREAK-GLASS] Forzando POST /auth/emergency-login para ${email.value}`);
+        const response = await apiClient.post('/auth/emergency-login', { 
+            email: email.value, 
+            password: password.value 
+        });
+        const { token } = response.data;
+        authStore.login(token);
+        router.push('/workdesk');
+    } catch (e: any) {
+        const responseData = e?.response?.data;
+        const code = responseData?.code || 'UNKNOWN';
+        const message = responseData?.message;
+
+        switch (code) {
+            case 'USER_NOT_FOUND':
+                loginError.value = {
+                    code,
+                    message: message || 'No existe una cuenta asociada al correo proporcionado.'
+                };
+                break;
+            case 'INVALID_PASSWORD':
+                loginError.value = {
+                    code,
+                    message: message || 'La contraseña proporcionada es incorrecta.'
+                };
+                break;
+            case 'ACCOUNT_DISABLED':
+                loginError.value = {
+                    code,
+                    message: message || 'La cuenta se encuentra deshabilitada. Contacte al administrador.'
+                };
+                break;
+            case 'MISSING_FIELDS':
+                loginError.value = {
+                    code,
+                    message: message || 'Debe ingresar correo y contraseña.'
+                };
+                break;
+            default:
+                loginError.value = {
+                    code: 'UNKNOWN',
+                    message: 'Error de conexión con el servidor. Verifique que el backend esté activo.'
+                };
+        }
     }
 };
 </script>

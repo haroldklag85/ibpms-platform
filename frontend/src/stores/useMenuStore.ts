@@ -25,68 +25,24 @@ export const useMenuStore = defineStore('menu', () => {
         
         isLoading.value = true;
         try {
-             // Mock UAT (En V2, esto proviene de /api/v1/menu-layout)
-             const { data } = await apiClient.get('/api/v1/menu-layout').catch(() => ({
-                 data: [
-                    {
-                        title: 'Workdesk',
-                        items: [
-                           { path: '/workdesk', icon: 'inbox', label: 'Bandeja Unificada' },
-                           { path: '/inbox', icon: 'mail', label: 'Workdesk (Legacy)' },
-                           { path: '/kanban', icon: 'view_kanban', label: 'Tablero Kanban' }
-                        ]
-                    },
-                    {
-                        title: 'Intake (Pre-Triaje)',
-                        roles: ['Global Admin', 'ROLE_SUPER_ADMIN'],
-                        items: [
-                           { path: '/intake-triage', icon: 'mark_email_unread', label: 'Inbox Intake' }
-                        ]
-                    },
-                    {
-                        title: 'Directivo',
-                        roles: ['ROLE_SUPER_ADMIN', 'Global Admin'],
-                        items: [
-                           { path: '/admin/analytics/bam', icon: 'insights', label: 'BAM Analytics' }
-                           /* GAP-4 [US-045]: Oculto hasta Sprint de refinamiento */
-                           /* { path: '/admin/pmo/settings', icon: 'chronic', label: 'Centro PMO / SLA' } */
-                        ]
-                    },
-                    {
-                        title: 'Arquitectura',
-                        roles: ['ROLE_SUPER_ADMIN'],
-                        items: [
-                           { path: '/admin/modeler/bpmn', icon: 'account_tree', label: 'Venture Modeler' },
-                           { path: '/admin/modeler/dmn', icon: 'rule', label: 'DMN Copilot' },
-                           { path: '/admin/modeler/forms', icon: 'dynamic_form', label: 'Form Engine' }
-                        ]
-                    },
-                    {
-                        title: 'Administración',
-                        roles: ['ROLE_SUPER_ADMIN'],
-                        items: [
-                           { path: '/admin/security/identity', icon: 'shield_person', label: 'Seguridad (RBAC)' },
-                           /* GAP-4 [US-045] / GAP-6 [US-021]: Oculto hasta Sprint de refinamiento */
-                           /* { path: '/admin/integration/builder', icon: 'extension', label: 'Extensiones' }, */
-                           { path: '/admin/integration/dlq', icon: 'queue', label: 'DLQ Dashboard' },
-                           { path: '/admin/projects/manager', icon: 'folder_managed', label: 'Gestor Proyectos' },
-                           { path: '/admin/projects/agile-hub', icon: 'speed', label: 'Hub Ágil' },
-                           { path: '/admin/mailboxes', icon: 'mark_email_read', label: 'Buzones SAC' }
-                        ]
-                    }
-                 ]
+             // CA-31: Endpoint Dinámico (Anti-JWT Bloat)
+             // Si el endpoint falla o devuelve error, asumimos un layout vacío por Zero-Trust (y se disparará CA-26)
+             const { data } = await apiClient.get('/users/me/menu-layout').catch(() => ({
+                 data: []
              }));
              layout.value = data;
         } catch (e) {
              console.error('No se pudo hidratar el Menú Dinámico', e);
+             layout.value = [];
         } finally {
              isLoading.value = false;
         }
     };
 
-    const clearMenuCache = () => {
+    // CA-32: Auto-Curación. Purga la topología del cliente
+    const purgeTopology = () => {
         layout.value = [];
     };
 
-    return { layout, isLoading, fetchMenuLayout, clearMenuCache };
+    return { layout, isLoading, fetchMenuLayout, purgeTopology };
 });

@@ -95,6 +95,12 @@ public class GenericFormService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Implicit locking violation: Only assignee can submit");
         }
 
+        List<String> ALLOWED_RESULTS = List.of("APPROVED", "REJECTED", "PENDING_INFO", "ESCALATED");
+        if (!ALLOWED_RESULTS.contains(request.getManagementResult())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                "managementResult must be one of: " + ALLOWED_RESULTS);
+        }
+
         // CA-8 validation
         String panicAction = request.getPanicAction();
         if (panicAction != null && !panicAction.isEmpty()) {

@@ -220,7 +220,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
       if (this.stompClient && this.stompClient.active) return;
 
       // URL base nativa para WebSockets STOMP hacia el backend
-      const socketUrl = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:8080/ws-endpoint';
+      const socketUrl = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:8080/ws/workdesk/websocket';
 
       this.stompClient = new Client({
         brokerURL: socketUrl,
@@ -235,8 +235,21 @@ export const useWorkdeskStore = defineStore('workdesk', {
       this.stompClient.onConnect = (_frame) => {
         this.stompConnected = true;
         
+        // Ghost Deletion Listener (Paso 4.A)
+        this.stompClient?.subscribe('/topic/workdesk/ghost-deletes', (message) => {
+           try {
+               const event = JSON.parse(message.body);
+               const currentUser = useAuthStore().user?.username;
+               if (event.status === 'CLAIMED' && event.assignee !== currentUser) {
+                   this.removeTaskWithGhostAnimation(event.taskId);
+               }
+           } catch(e) {
+               console.error("Error parsing STOMP Ghost Delete event", e);
+           }
+        });
+
         // CA-27: Suscripción segregada por Tenant
-        const tenantId = useAuthStore().tenantId || 'default';
+        const tenantId = (useAuthStore() as any).tenantId || 'default';
         this.stompClient?.subscribe(`/topic/workdesk/${tenantId}`, (message) => {
           if (message.body) {
              try {
@@ -291,6 +304,10 @@ export const useWorkdeskStore = defineStore('workdesk', {
             this.stompClient.deactivate();
             this.stompConnected = false;
         }
+    },
+
+    removeTaskWithGhostAnimation(taskId: string) {
+        this._handleWsRemove(taskId);
     },
 
     // CA-13: Throttling & Auto-refill helpers

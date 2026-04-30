@@ -5,6 +5,7 @@ import com.ibpms.poc.infrastructure.jpa.entity.security.DelegationEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
+import com.ibpms.poc.infrastructure.mq.producer.TaskRescueProducer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,11 +31,14 @@ public class DelegationService {
 
     private final DelegationRepository delegationRepository;
     private final UserRepository userRepository;
+    private final TaskRescueProducer taskRescueProducer;
 
     public DelegationService(DelegationRepository delegationRepository,
-                             UserRepository userRepository) {
+                             UserRepository userRepository,
+                             TaskRescueProducer taskRescueProducer) {
         this.delegationRepository = delegationRepository;
         this.userRepository = userRepository;
+        this.taskRescueProducer = taskRescueProducer;
     }
 
     /**
@@ -78,6 +82,11 @@ public class DelegationService {
 
         DelegationEntity delegation = new DelegationEntity(donor, recipient, dto.getStartDate(), dto.getEndDate());
         delegation.setReason(dto.getReason());
-        return delegationRepository.save(delegation);
+        DelegationEntity saved = delegationRepository.save(delegation);
+
+        // CA-07 Trigger massive unclaim to free donor's tasks
+        taskRescueProducer.triggerMassiveUnclaim(donorId.toString());
+
+        return saved;
     }
 }

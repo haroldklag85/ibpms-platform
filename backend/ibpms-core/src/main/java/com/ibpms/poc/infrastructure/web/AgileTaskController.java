@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -26,17 +27,18 @@ public class AgileTaskController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<AgileTask> createTask(
         @PathVariable UUID projectId,
-        @Valid @RequestBody CreateTaskRequest request) {
-        String createdBy = "admin";
+        @Valid @RequestBody CreateTaskRequest request,
+        Authentication authentication) {
+        String createdBy = authentication.getName();
         return ResponseEntity.ok(taskService.createTask(
             projectId, request.title(), request.description(), request.effort(), createdBy));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Page<AgileTask>> listTasks(
         @PathVariable UUID projectId,
         @RequestParam(required = false, defaultValue = "false") boolean showCompleted,
@@ -45,7 +47,7 @@ public class AgileTaskController {
     }
 
     @GetMapping("/{taskId}")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<AgileTask> getTaskDetail(
         @PathVariable UUID projectId,
         @PathVariable UUID taskId) {
@@ -53,30 +55,32 @@ public class AgileTaskController {
     }
 
     @PatchMapping("/{taskId}")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<AgileTask> updateTask(
         @PathVariable UUID projectId,
         @PathVariable UUID taskId,
-        @Valid @RequestBody UpdateTaskRequest request) {
-        String updatedBy = "admin"; // Simulado
+        @Valid @RequestBody UpdateTaskRequest request,
+        Authentication authentication) {
+        String updatedBy = authentication.getName();
         return ResponseEntity.ok(taskService.updateTask(
             taskId, request.title(), request.description(), request.effort(), request.status(), request.slaDeadline(), updatedBy));
     }
 
     // CA-4: Eliminar con auditoría forense (Soft delete)
     @DeleteMapping("/{taskId}")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> deleteTask(
         @PathVariable UUID projectId,
-        @PathVariable UUID taskId) {
-        String deletedBy = "admin"; // Simulado
+        @PathVariable UUID taskId,
+        Authentication authentication) {
+        String deletedBy = authentication.getName();
         taskService.deleteTask(taskId, deletedBy);
         return ResponseEntity.noContent().build();
     }
 
     // CA-6: Reordenar por drag & drop
     @PatchMapping("/reorder")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> reorderTasks(
         @PathVariable UUID projectId,
         @Valid @RequestBody ReorderRequest request) {
@@ -86,7 +90,7 @@ public class AgileTaskController {
 
     // CA-5 + CA-14: Asignación masiva interactiva
     @PostMapping("/bulk-assign")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> bulkAssign(
         @PathVariable UUID projectId,
         @Valid @RequestBody BulkAssignRequest request) {

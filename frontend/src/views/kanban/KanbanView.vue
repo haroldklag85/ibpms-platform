@@ -1,12 +1,19 @@
 <template>
-  <div class="h-full flex flex-col pt-2 bg-white">
+  <div class="h-full flex flex-col pt-2 bg-white" data-testid="kanban-board">
     <div class="flex justify-between items-center mb-6 px-6">
-      <h2 class="text-2xl font-bold text-gray-800">Tablero Kanban Interactívo</h2>
+      <div class="flex items-center space-x-3">
+         <h2 class="text-2xl font-bold text-gray-800">Tablero Kanban Interactivo</h2>
+         <span v-if="isReadonly" class="px-2 py-1 bg-gray-200 text-gray-600 text-xs font-bold rounded">Modo Lectura</span>
+      </div>
       <div class="flex items-center space-x-3">
         <button @click="loadBoard" class="px-4 py-2 bg-ibpms text-white rounded text-sm hover:bg-gray-800 shadow-sm transition">
           🔄 Recargar Tablero
         </button>
-        <span v-if="syncStatus" class="text-xs text-ibpms-brand font-medium animate-pulse">{{ syncStatus }}</span>
+        <div class="sync-indicator text-sm font-medium" data-testid="kanban-sync-status">
+          <span v-if="syncStatus === 'saving'" class="text-yellow-600 animate-pulse">⏳ Guardando...</span>
+          <span v-else-if="syncStatus === 'ok'" class="text-green-600">✅ OK</span>
+          <span v-else-if="syncStatus === 'error'" class="text-red-600">❌ Error</span>
+        </div>
       </div>
     </div>
 
@@ -14,81 +21,105 @@
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-ibpms-brand"></div>
     </div>
 
-    <!-- Área de Arrastre con Desplazamiento Horizontal (Tablero) -->
     <div v-else class="flex-1 overflow-x-auto overflow-y-hidden pb-4 px-6">
       <div class="flex space-x-6 h-full items-start">
         
         <KanbanColumn 
-          v-for="col in board.columns" 
+          v-for="col in kanbanStore.columns" 
           :key="col.id" 
           :column="col"
-          :items="getItemsForColumn(col.id)"
+          :items="col.items"
+          :disabled="isReadonly"
           @itemMoved="handleItemMove"
         />
 
       </div>
     </div>
+
+    <!-- Modal para Bloqueos -->
+    <div v-if="showBlockModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+       <div class="bg-white p-6 rounded shadow-xl w-96">
+          <h3 class="text-lg font-bold text-red-600 mb-2">Bloquear Tarea</h3>
+          <p class="text-sm text-gray-600 mb-4">Por favor, especifica el Motivo de Bloqueo para la tarea <strong>{{ taskToBlock?.title }}</strong>.</p>
+          <textarea v-model="blockReasonInput" rows="3" class="w-full border rounded p-2 text-sm mb-4" placeholder="Describe el motivo del bloqueo..." data-testid="block-reason-input"></textarea>
+          <div class="flex justify-end space-x-2">
+             <button @click="cancelBlock" class="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm" data-testid="cancel-block">Cancelar</button>
+             <button @click="confirmBlock" :disabled="!blockReasonInput.trim()" class="px-4 py-2 bg-red-600 text-white rounded text-sm disabled:opacity-50" data-testid="confirm-block">Bloquear</button>
+          </div>
+       </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { api } from '@/services/apiClient';
-import type { KanbanBoard, KanbanItem } from '@/types/Kanban';
+import { ref, onMounted, computed } from 'vue';
+import { useKanbanStore } from '@/stores/kanbanStore';
 import KanbanColumn from '@/components/kanban/KanbanColumn.vue';
+import { useAuthStore } from '@/stores/authStore';
 
-const isLoading = ref(true);
+const kanbanStore = useKanbanStore();
+const authStore = useAuthStore();
+
 const syncStatus = ref('');
+const isReadonly = ref(false); // Lógica temporal. TODO: Ligar a RBAC real si se requiere
 
-// Tablero de Prueba (Mock para este Sprint).
-// Próximamente se obtendrá vía Axios (KanbanService)
-const board = ref<KanbanBoard>({
-  boardId: "board_operaciones",
-  columns: [
-    { id: "TODO", title: "Por Hacer", color: "bg-gray-100" },
-    { id: "DOING", title: "En Progreso", color: "bg-blue-50" },
-    { id: "DONE", title: "Finalizado", color: "bg-green-50" }
-  ],
-  items: [
-    { id: "T-001", title: "Revisar Nómina Enero", status: "TODO", priority: 10, assignee: "Pedro P." },
-    { id: "T-002", title: "Auditoría Legal Incidente", status: "DOING", priority: 80, assignee: "Carlos R." },
-    { id: "T-003", title: "Carga de Documentos", status: "DOING", priority: 40, assignee: "Ana L." },
-    { id: "T-004", title: "Envío Tarjeta Crédito", status: "DONE", priority: 20 }
-  ]
-});
+// Block Modal State
+const showBlockModal = ref(false);
+const taskToBlock = ref<any>(null);
+const blockReasonInput = ref('');
 
-const getItemsForColumn = (columnId: string) => {
-  return board.value.items.filter(i => i.status === columnId);
-};
+const isLoading = computed(() => kanbanStore.loading);
 
-// Evento emitido cuando un Item es soltado (Dropped) en una Columna Diferente.
-const handleItemMove = async ({ item, newStatus }: { item: KanbanItem, newStatus: string }) => {
+const handleItemMove = async ({ item, newStatus }: { item: any, newStatus: string }) => {
+  if (isReadonly.value) return;
+
+  if (newStatus === 'BLOCKED') {
+     taskToBlock.value = item;
+     blockReasonInput.value = '';
+     showBlockModal.value = true;
+     return;
+  }
+
   try {
-    // 1. Mostrar estado de sincronización.
-    syncStatus.value = `Sincronizando Muvimiento T-${item.id}...`;
-    
-    // 2. Ejecutar la llamada Axios que actualiza esto en Backend (PATCH /api/v1/kanban/items/{id}/status)
-    await api.updateKanbanStatus(item.id, newStatus);
-
-    // 3. Modificamos el estado Local Reactivo si el Service responde OK.
-    const targetItem = board.value.items.find(i => i.id === item.id);
-    if(targetItem) {
-      targetItem.status = newStatus;
+    syncStatus.value = 'saving';
+    await kanbanStore.moveTask(item.id, newStatus);
+    syncStatus.value = 'ok';
+  } catch(error: any) {
+    syncStatus.value = 'error';
+    if (error.response?.status === 403) {
+      alert('Esta tarea está completada y no puede modificarse');
+    } else if (error.response?.status === 400) {
+      alert('Transición de estado no válida');
     }
-    syncStatus.value = `Guardado OK`;
-  } catch(error) {
-    console.error('No se pudo mover la tarea en remoto Kanban', error);
-    syncStatus.value = `Error Sincronización`;
   } finally {
     setTimeout(() => syncStatus.value = '', 2000);
   }
 };
 
-const loadBoard = () => {
-  isLoading.value = true;
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 600);
+const confirmBlock = async () => {
+    if (!taskToBlock.value || !blockReasonInput.value.trim()) return;
+    
+    try {
+        syncStatus.value = 'saving';
+        await kanbanStore.moveTask(taskToBlock.value.id, 'BLOCKED', blockReasonInput.value.trim());
+        syncStatus.value = 'ok';
+    } catch(error) {
+        syncStatus.value = 'error';
+    } finally {
+        showBlockModal.value = false;
+        taskToBlock.value = null;
+        setTimeout(() => syncStatus.value = '', 2000);
+    }
+};
+
+const cancelBlock = () => {
+    showBlockModal.value = false;
+    taskToBlock.value = null;
+    kanbanStore.fetchBoard(); // rollback visually
+};
+
+const loadBoard = async () => {
+  await kanbanStore.fetchBoard();
 };
 
 onMounted(() => {

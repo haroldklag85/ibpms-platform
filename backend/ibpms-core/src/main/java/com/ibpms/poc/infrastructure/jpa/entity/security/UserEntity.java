@@ -5,6 +5,7 @@ import java.util.UUID;
 import java.util.Set;
 import java.util.HashSet;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "ibpms_security_user")
@@ -40,6 +41,11 @@ public class UserEntity {
     )
     private Set<RoleEntity> roles = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    @JsonIgnore
+    private UserEntity manager;
+
     public UserEntity() {
         this.createdAt = LocalDateTime.now();
     }
@@ -67,4 +73,6 @@ public class UserEntity {
     public void setRoles(Set<RoleEntity> roles) { this.roles = roles; }
     public String getSkills() { return skills; }
     public void setSkills(String skills) { this.skills = skills; }
+    public UserEntity getManager() { return manager; }
+    public void setManager(UserEntity manager) { this.manager = manager; }
 }

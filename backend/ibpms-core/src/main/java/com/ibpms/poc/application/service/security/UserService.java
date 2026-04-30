@@ -8,6 +8,7 @@ import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
+import com.ibpms.poc.infrastructure.mq.producer.TaskRescueProducer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +27,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TaskRescueProducer taskRescueProducer;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TaskRescueProducer taskRescueProducer) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.taskRescueProducer = taskRescueProducer;
     }
 
     public UserResponseDTO createUser(UserCreateRequestDTO dto) {
@@ -84,6 +87,12 @@ public class UserService {
         }
 
         userRepository.save(user);
+
+        if (Boolean.FALSE.equals(dto.getIsActive())) {
+            // CA-08 Trigger mass unclaim if user was deactivated
+            taskRescueProducer.triggerMassiveUnclaim(id.toString());
+        }
+
         return toDto(user);
     }
 
@@ -114,6 +123,10 @@ public class UserService {
 
         user.setIsActive(false);
         userRepository.save(user);
+        
+        // CA-08 Trigger mass unclaim since user is deactivated
+        taskRescueProducer.triggerMassiveUnclaim(id.toString());
+        
         // Nota Arquitectura: el rechazo final de los JWT activos de este usuario lo hace el JwtAuthFilter en vivo contra JPA.
     }
 

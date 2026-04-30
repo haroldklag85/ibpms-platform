@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { z } from 'zod';
 import { api } from '@/services/apiClient';
+import { useConnectionStore } from '@/stores/connectionStore';
 
 export const useFormStore = defineStore('formStore', () => {
     const formData = ref<Record<string, any>>({});
@@ -16,13 +17,34 @@ export const useFormStore = defineStore('formStore', () => {
     let pendingSubmitDraft: { taskId: string; payload: any } | null = null;
 
     // CA-31 & CA-32: Idempotency Retry Limit
-    const requiresRetry = ref(false);
-    const retryCount = ref(0);
     const idempotencyKey = ref('');
 
-    const setFormData = (data: Record<string, any>) => {
+    const setFormData = (data: Record<string, any>, taskId?: string) => {
         formData.value = { ...data };
         isDirty.value = true;
+        
+        // Amnesia Cero: Persistir draft en local
+        if (taskId) {
+            localStorage.setItem(`ibpms_draft_${taskId}`, JSON.stringify(data));
+        }
+    };
+
+    const loadLocalDraft = (taskId: string) => {
+        const draft = localStorage.getItem(`ibpms_draft_${taskId}`);
+        if (draft) {
+            try {
+                formData.value = JSON.parse(draft);
+                isDirty.value = true;
+                return true;
+            } catch(e) {
+                console.error('Error loading draft', e);
+            }
+        }
+        return false;
+    };
+
+    const clearLocalDraft = (taskId: string) => {
+        localStorage.removeItem(`ibpms_draft_${taskId}`);
     };
 
     const validateForm = (schema: z.ZodSchema): boolean => {
@@ -61,22 +83,24 @@ export const useFormStore = defineStore('formStore', () => {
                 return;
             }
             
+            const connectionStore = useConnectionStore();
             if (!isRetry) {
                 idempotencyKey.value = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-                retryCount.value = 0;
+                connectionStore.retryCount = 0;
             } else {
-                retryCount.value++;
+                connectionStore.retryCount++;
             }
 
             const config = { headers: { 'Idempotency-Key': idempotencyKey.value } };
             // Envío normal o Retry
             await api.completeTask(taskId, payload, config);
             
+            clearLocalDraft(taskId);
             isDirty.value = false;
             formData.value = {};
             validationErrors.value = {};
-            requiresRetry.value = false;
-            retryCount.value = 0;
+            connectionStore.requiresRetry = false;
+            connectionStore.retryCount = 0;
         } catch (e: any) {
             console.error('Failed to submit form', e);
             if (e.response && e.response.status === 400 && e.response.data && Array.isArray(e.response.data.errors)) {
@@ -88,10 +112,10 @@ export const useFormStore = defineStore('formStore', () => {
                 validationErrors.value = backendErrors;
                 throw new Error('ValidationFailed(RFC7807)');
             } else if (e.response && (e.response.status === 504 || typeof e.response.status === 'undefined')) {
-                if (retryCount.value < 3) {
-                    requiresRetry.value = true;
+                if (connectionStore.retryCount < 3) {
+                    connectionStore.requiresRetry = true;
                 } else {
-                    requiresRetry.value = false;
+                    connectionStore.requiresRetry = false;
                 }
             } else if (e.response && e.response.status === 409 && e.response.data && e.response.data.type === 'SESSION_CONFLICT') {
                 window.dispatchEvent(new CustomEvent('session-conflict-dispatch'));
@@ -136,6 +160,7 @@ export const useFormStore = defineStore('formStore', () => {
         try {
             const config = { headers: { 'Idempotency-Key': idempotencyKey.value || ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2)) } };
             await api.completeTask(pendingSubmitDraft.taskId, pendingSubmitDraft.payload, config);
+            clearLocalDraft(pendingSubmitDraft.taskId);
             isDirty.value = false;
             formData.value = {};
         } catch (e) {
@@ -154,10 +179,10 @@ export const useFormStore = defineStore('formStore', () => {
         validationErrors,
         isUndoAvailable,
         undoTimeLeft,
-        requiresRetry,
-        retryCount,
         idempotencyKey,
         setFormData,
+        loadLocalDraft,
+        clearLocalDraft,
         validateForm,
         saveDraft,
         submitForm,

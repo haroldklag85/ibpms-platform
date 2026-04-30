@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/analytics")
-@PreAuthorize("hasRole('Directivo') or hasRole('Admin_Intake')")
+@PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'Global Admin', 'Directivo', 'Admin_Intake')")
 public class AnalyticsController {
 
     private final ObtenerMetricasUseCase obtenerMetricasUseCase;

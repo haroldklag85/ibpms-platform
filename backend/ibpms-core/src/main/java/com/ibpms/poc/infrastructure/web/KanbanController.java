@@ -62,11 +62,18 @@ public class KanbanController {
      * Frontend.
      * Utiliza PATCH para actualizar solo el atributo "status" de la tarjeta.
      */
-    @PatchMapping("/tasks/{taskId}/status")
-    public ResponseEntity<?> updateTaskStatus(@PathVariable UUID taskId, @RequestBody Map<String, String> payload) {
+    @PatchMapping("/tasks/{taskId}/move")
+    public ResponseEntity<?> moveTask(@PathVariable UUID taskId, @RequestBody Map<String, String> payload) {
         String newStatus = payload.get("newStatus");
         if (newStatus == null || newStatus.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("El campo 'newStatus' es requerido.");
+        }
+
+        if ("BLOCKED".equalsIgnoreCase(newStatus)) {
+            String reason = payload.get("reason");
+            if (reason == null || reason.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("El campo 'reason' es obligatorio cuando se mueve a estado BLOCKED.");
+            }
         }
 
         Optional<KanbanTaskEntity> taskOpt = taskRepository.findById(java.util.Objects.requireNonNull(taskId));

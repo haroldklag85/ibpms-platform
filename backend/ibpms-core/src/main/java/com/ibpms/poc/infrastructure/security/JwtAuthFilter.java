@@ -113,10 +113,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         delegationRepository.findActiveDelegationsForSubstitute(userOpt.get().getId(), java.time.LocalDateTime.now());
                 
                 for (com.ibpms.poc.infrastructure.jpa.entity.security.DelegationEntity delegation : activeDelegations) {
-                    delegation.getDelegator().getRoles().forEach(r -> {
+                    for (com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity r : delegation.getDelegator().getRoles()) {
                         String rName = r.getName().replace("ROLE_", "");
                         if (!roles.contains(rName)) roles.add(rName);
-                    });
+                    }
                 }
 
                 // US-036 CA-6: Enriquecer roles directos con herencia piramidal CTE
@@ -134,6 +134,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .collect(Collectors.toList());
 
                 var auth = new UsernamePasswordAuthenticationToken(subject, null, authorities);
+                String tenantId = jwtTokenProvider.getClaim(token, "tenant_id");
+                if (tenantId != null) {
+                    auth.setDetails(java.util.Map.of("tenant_id", tenantId));
+                }
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
             // Si el token es inválido, o usuario revocado, no se establece contexto → Spring devuelve 401

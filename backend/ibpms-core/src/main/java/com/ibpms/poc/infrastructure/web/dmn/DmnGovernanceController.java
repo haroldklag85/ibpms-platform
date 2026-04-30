@@ -85,4 +85,15 @@ public class DmnGovernanceController {
             "confidence", 0.95
         ));
     }
+
+    /**
+     * B-20: Lista las tablas DMN publicadas en el motor Camunda.
+     * Consumido por BpmnDesigner (Frontend) para dropdown visual de decisionRef.
+     */
+    @GetMapping("/definitions")
+    public ResponseEntity<?> listDeployedDmnDefinitions() {
+        String invokerTenant = SecurityContextUtils.getTenantId();
+        var definitions = dmnGovernanceUseCase.listDeployedDecisionDefinitions(invokerTenant);
+        return ResponseEntity.ok(definitions);
+    }
 }

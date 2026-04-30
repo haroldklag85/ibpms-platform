@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn" 
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                  id="Definitions_1x5j0x2" 
+                  targetNamespace="http://bpmn.io/schema/bpmn" 
+                  exporter="Camunda Modeler" 
+                  exporterVersion="5.20.0">
+
+  <bpmn:collaboration id="Collaboration_Claims">
+    <bpmn:participant id="Participant_InsuranceCompany" name="Aseguradora Integral (iBPMS)" processRef="Process_InsuranceClaim" />
+    <bpmn:participant id="Participant_Customer" name="Cliente / Asegurado" />
+    <bpmn:messageFlow id="Flow_Message_ReceiveClaim" sourceRef="Participant_Customer" targetRef="StartEvent_ClaimReceived" />
+    <bpmn:messageFlow id="Flow_Message_RequestInfo" sourceRef="Task_ManualReview" targetRef="Participant_Customer" />
+    <bpmn:messageFlow id="Flow_Message_SendPayment" sourceRef="CallActivity_Payment" targetRef="Participant_Customer" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_InsuranceClaim" name="Gestión y Liquidación de Siniestros V2" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_System" name="Motor del Sistema y DMN">
+        <!-- Tareas automatizadas puras y espera de mensajes. Ningún agente cognitivo AI. -->
+        <bpmn:flowNodeRef>StartEvent_ClaimReceived</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>BusinessRule_FraudCheck</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_FraudDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_AutoRejected</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_WaitForPoliceReport</bpmn:flowNodeRef>
+      </bpmn:lane>
+      
+      <bpmn:lane id="Lane_Adjuster" name="Analista de Siniestros N1">
+        <bpmn:flowNodeRef>Task_ManualReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_ReviewTimeout</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Parallel_Docs</bpmn:flowNodeRef>
+      </bpmn:lane>
+
+      <bpmn:lane id="Lane_Expert" name="Peritos Evaluadores Externos">
+        <bpmn:flowNodeRef>Task_DamageAssessment</bpmn:flowNodeRef>
+      </bpmn:lane>
+
+      <bpmn:lane id="Lane_Supervisor" name="Comité de Resolución">
+        <bpmn:flowNodeRef>Task_Escalation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Escalation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Parallel_Join</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>SubProcess_Investigation</bpmn:flowNodeRef>
+      </bpmn:lane>
+
+      <bpmn:lane id="Lane_Finance" name="Departamento de Tesorería">
+        <bpmn:flowNodeRef>Task_ReserveFunds</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_ReserveCompensate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CancelReserve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>CallActivity_Payment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_PaymentError</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_ThrowCompensate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Error</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_ClaimClosed</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Start Event (Message) -->
+    <bpmn:startEvent id="StartEvent_ClaimReceived" name="Siniestro Reportado (API/App)">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1" messageRef="Message_Claim" />
+    </bpmn:startEvent>
+
+    <!-- Business Rule Task (DMN) - Sistema Puro -->
+    <bpmn:businessRuleTask id="BusinessRule_FraudCheck" name="Evaluación Automática de Cobertura (DMN)" camunda:resultVariable="claimDecision" camunda:decisionRef="Decide_Claim_Coverage" camunda:mapDecisionResult="singleEntry">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+
+    <!-- Exclusive Gateway -->
+    <bpmn:exclusiveGateway id="Gateway_FraudDecision" name="¿Veredicto DMN?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Approve</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Review</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Reject Path -->
+    <bpmn:sequenceFlow id="Flow_Reject" name="Fuera de Política" sourceRef="Gateway_FraudDecision" targetRef="EndEvent_AutoRejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${claimDecision == 'REJECT'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="EndEvent_AutoRejected" name="Siniestro Terminado por Sistema">
+      <bpmn:incoming>Flow_Reject</bpmn:incoming>
+      <bpmn:terminateEventDefinition id="TerminateEventDefinition_1" />
+    </bpmn:endEvent>
+
+    <!-- Review Path -->
+    <bpmn:sequenceFlow id="Flow_Review" name="Análisis Manual" sourceRef="Gateway_FraudDecision" targetRef="Task_ManualReview">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${claimDecision == 'REVIEW'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <!-- User Task en Carril Analista -->
+    <bpmn:userTask id="Task_ManualReview" name="Auditar Información Siniestro" camunda:candidateGroups="Adjusters">
+      <bpmn:incoming>Flow_Review</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToGateway</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Boundary Timer Event -->
+    <bpmn:boundaryEvent id="Event_ReviewTimeout" name="Límite Legal (72 Horas)" attachedToRef="Task_ManualReview" cancelActivity="true">
+      <bpmn:outgoing>Flow_Escalate</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT72H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+
+    <bpmn:userTask id="Task_Escalation" name="Veredicto de Supervisor Vencido" camunda:candidateGroups="Supervisors">
+      <bpmn:incoming>Flow_Escalate</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndEscalation</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Escalation" name="Forzado a Escalamiento Legal">
+        <bpmn:incoming>Flow_EndEscalation</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_Escalate" sourceRef="Event_ReviewTimeout" targetRef="Task_Escalation" />
+    <bpmn:sequenceFlow id="Flow_EndEscalation" sourceRef="Task_Escalation" targetRef="End_Escalation" />
+
+    <bpmn:sequenceFlow id="Flow_ToGateway" sourceRef="Task_ManualReview" targetRef="Gateway_Parallel_Docs" />
+
+    <!-- Parallel Gateway -->
+    <bpmn:parallelGateway id="Gateway_Parallel_Docs" name="Bifurcar Investigación">
+      <bpmn:incoming>Flow_ToGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Par1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Par2</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <!-- Ruta 1: Espera de Reporte en Carril del Sistema -->
+    <bpmn:sequenceFlow id="Flow_Par1" sourceRef="Gateway_Parallel_Docs" targetRef="Event_WaitForPoliceReport" />
+    <bpmn:intermediateCatchEvent id="Event_WaitForPoliceReport" name="Vigilancia de API (Docs Policiales)">
+      <bpmn:incoming>Flow_Par1</bpmn:incoming>
+      <bpmn:outgoing>Flow_Par1_End</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_2" messageRef="Message_PoliceReport" />
+    </bpmn:intermediateCatchEvent>
+
+    <!-- Ruta 2: Evaluación Experto Múltiple en Carril Peritos -->
+    <bpmn:sequenceFlow id="Flow_Par2" sourceRef="Gateway_Parallel_Docs" targetRef="Task_DamageAssessment" />
+    <bpmn:userTask id="Task_DamageAssessment" name="Evaluar Daños Dinámicamente" camunda:assignee="${perito}">
+      <bpmn:incoming>Flow_Par2</bpmn:incoming>
+      <bpmn:outgoing>Flow_Par2_End</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false" camunda:collection="listadoPeritos" camunda:elementVariable="perito" />
+    </bpmn:userTask>
+
+    <!-- Join Parallel en Carril Comité -->
+    <bpmn:sequenceFlow id="Flow_Par1_End" sourceRef="Event_WaitForPoliceReport" targetRef="Gateway_Parallel_Join" />
+    <bpmn:sequenceFlow id="Flow_Par2_End" sourceRef="Task_DamageAssessment" targetRef="Gateway_Parallel_Join" />
+    <bpmn:parallelGateway id="Gateway_Parallel_Join" name="Esperar Convergencia">
+      <bpmn:incoming>Flow_Par1_End</bpmn:incoming>
+      <bpmn:incoming>Flow_Par2_End</bpmn:incoming>
+      <bpmn:outgoing>Flow_Subprocess</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <!-- Sub-Process Estandar en Carril Comité -->
+    <bpmn:sequenceFlow id="Flow_Subprocess" sourceRef="Gateway_Parallel_Join" targetRef="SubProcess_Investigation" />
+    
+    <bpmn:subProcess id="SubProcess_Investigation" name="Aprobación Consolidada de Siniestro">
+      <bpmn:incoming>Flow_Subprocess</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToApproval</bpmn:outgoing>
+      <bpmn:startEvent id="Start_Sub">
+        <bpmn:outgoing>Flow_Sub1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:scriptTask id="Task_CalculateFormula" name="Fórmula Matemática Liquidación" scriptFormat="javascript">
+        <bpmn:incoming>Flow_Sub1</bpmn:incoming>
+        <bpmn:outgoing>Flow_Sub2</bpmn:outgoing>
+        <bpmn:script>execution.setVariable("pagoFinal", 10000);</bpmn:script>
+      </bpmn:scriptTask>
+      <bpmn:userTask id="Task_DirectorApproval" name="Firma Final (Director)" camunda:candidateGroups="Directors">
+        <bpmn:incoming>Flow_Sub2</bpmn:incoming>
+        <bpmn:outgoing>Flow_Sub_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="End_Sub">
+        <bpmn:incoming>Flow_Sub_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_Sub1" sourceRef="Start_Sub" targetRef="Task_CalculateFormula" />
+      <bpmn:sequenceFlow id="Flow_Sub2" sourceRef="Task_CalculateFormula" targetRef="Task_DirectorApproval" />
+      <bpmn:sequenceFlow id="Flow_Sub_End" sourceRef="Task_DirectorApproval" targetRef="End_Sub" />
+    </bpmn:subProcess>
+
+    <bpmn:sequenceFlow id="Flow_ToApproval" sourceRef="SubProcess_Investigation" targetRef="Task_ReserveFunds" />
+    
+    <bpmn:sequenceFlow id="Flow_Approve" name="Fast-Track DMN" sourceRef="Gateway_FraudDecision" targetRef="Task_ReserveFunds">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${claimDecision == 'APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- Ruta Financiera: Tarea Compensable, Límite de Compensación, y CallActivity -->
+    <bpmn:serviceTask id="Task_ReserveFunds" name="Bloquear Fondos Tesorería" camunda:type="external" camunda:topic="reserve-funds">
+      <bpmn:incoming>Flow_Approve</bpmn:incoming>
+      <bpmn:incoming>Flow_ToApproval</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToPayment</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Compensation Binding en la Tarea Financiera -->
+    <bpmn:boundaryEvent id="Event_ReserveCompensate" attachedToRef="Task_ReserveFunds">
+      <bpmn:compensateEventDefinition id="CompensateEventDefinition_1" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="Task_CancelReserve" name="Soltar Fondos / Módulo Rollback" isForCompensation="true" camunda:type="external" camunda:topic="rollback-funds" />
+    <bpmn:association id="Association_Comp_Block" sourceRef="Event_ReserveCompensate" targetRef="Task_CancelReserve" />
+
+    <bpmn:sequenceFlow id="Flow_ToPayment" sourceRef="Task_ReserveFunds" targetRef="CallActivity_Payment" />
+
+    <bpmn:callActivity id="CallActivity_Payment" name="Enlazar Microservicio de Pago SAP" calledElement="Process_Payment">
+      <bpmn:extensionElements>
+        <camunda:in variables="all" />
+        <camunda:out variables="all" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToPayment</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndNormal</bpmn:outgoing>
+    </bpmn:callActivity>
+
+    <!-- Error Boundary Event on Payment -->
+    <bpmn:boundaryEvent id="Event_PaymentError" name="Fallo en Transferencia Bancaria" attachedToRef="CallActivity_Payment">
+      <bpmn:outgoing>Flow_ToCompensate</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1" errorRef="Error_PaymentSync" />
+    </bpmn:boundaryEvent>
+
+    <!-- Compensation Flow Trigger -->
+    <bpmn:sequenceFlow id="Flow_ToCompensate" sourceRef="Event_PaymentError" targetRef="Event_ThrowCompensate" />
+    <bpmn:intermediateThrowEvent id="Event_ThrowCompensate" name="Disparar Undo Financiero">
+      <bpmn:incoming>Flow_ToCompensate</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndError</bpmn:outgoing>
+      <bpmn:compensateEventDefinition id="CompensateEventDefinition_2" />
+    </bpmn:intermediateThrowEvent>
+
+    <bpmn:endEvent id="EndEvent_Error" name="Cancelado por Banco Crítico">
+      <bpmn:incoming>Flow_EndError</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_EndError" sourceRef="Event_ThrowCompensate" targetRef="EndEvent_Error" />
+
+    <!-- Normal End -->
+    <bpmn:sequenceFlow id="Flow_EndNormal" sourceRef="CallActivity_Payment" targetRef="EndEvent_ClaimClosed" />
+    <bpmn:endEvent id="EndEvent_ClaimClosed" name="Siniestro Entregado y Cerrado">
+      <bpmn:incoming>Flow_EndNormal</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_ClaimReceived" targetRef="BusinessRule_FraudCheck" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="BusinessRule_FraudCheck" targetRef="Gateway_FraudDecision" />
+
+  </bpmn:process>
+
+  <bpmn:message id="Message_Claim" name="Msg_NewClaim" />
+  <bpmn:message id="Message_PoliceReport" name="Msg_PoliceReport" />
+  <bpmn:error id="Error_PaymentSync" name="Error_Payment" errorCode="ERP_PAYMENT_EXCEPTION" />
+
+  <!-- BPMN DI ommited to save space for strict backend XML execution tests -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_Claims">
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

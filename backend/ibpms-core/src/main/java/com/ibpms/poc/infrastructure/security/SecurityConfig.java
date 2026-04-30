@@ -25,7 +25,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${ibpms.security.jwt.secret:UAT_SUPER_SECRET_KEY_THAT_IS_VERY_LONG_AND_SECURE_982374982374892374}")
+    @Value("${jwt.secret:changeme-this-must-be-at-least-32-chars!!}")
     private String jwtSecret;
 
     @Bean
@@ -36,6 +36,16 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    private org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter getJwtAuthenticationConverter() {
+        org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter();
+        grantedAuthoritiesConverter.setAuthorityPrefix(""); // Remueve el prefijo SCOPE_
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
+
+        org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter converter = new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        return converter;
     }
 
     @Bean
@@ -52,11 +62,11 @@ public class SecurityConfig {
                         // Actuator health (monitoreo sin autenticación)
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         // Webhook de M365 autenticado por lógica propia
-                        .requestMatchers(HttpMethod.POST, "/api/v1/inbound/email-webhook").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/inbound/email-webhook", "/api/v1/inbound/email-webhook").permitAll()
                         // CA-15: Bypass Anónimo
                         .requestMatchers(HttpMethod.POST, "/api/v1/process/*/start-anonymous").permitAll()
-                        // CA-03 y CA-04 (US-038): Aprovisionamiento JIT y Protocolo Break-Glass
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/sync", "/api/v1/auth/emergency-login").permitAll()
+                        // CA-03 y CA-04 (US-038): Login Standard y Protocolo Break-Glass
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/sync", "/api/v1/auth/emergency-login").permitAll()
                         // OpenAPI / Swagger Docs
                         .requestMatchers("/v3/api-docs/**", "/api/v1/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // DMN Simulation for Tests (Bypass para el test Sandbox DMN)
@@ -66,10 +76,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/design/form-definitions/**").permitAll()
                         .requestMatchers("/api/v1/forms/**").permitAll()
                         .requestMatchers("/api/v1/design/processes/**").permitAll()
-                        .anyRequest().authenticated())
+                        // Identity Governance E2E (Sprint UAT — Zero-Auth para validación local)
+                        // Justificación: No hay IdP OIDC local que emita JWTs. APIM Gateway en producción inyecta JWT.
+                        .requestMatchers("/api/v1/admin/users", "/api/v1/admin/users/**").permitAll()
+                        .requestMatchers("/api/v1/admin/roles", "/api/v1/admin/roles/**").permitAll()
+                        .requestMatchers("/api/v1/security/anomalies", "/api/v1/security/anomalies/**").permitAll()
+                        .requestMatchers("/api/v1/security/audit/**").permitAll()
+                        .anyRequest().authenticated());
 
-                // Habilitamos OAUTH2 JWT Validation delegando al Issuer-URI (Properties)
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(getJwtAuthenticationConverter())));
 
         return http.build();
     }

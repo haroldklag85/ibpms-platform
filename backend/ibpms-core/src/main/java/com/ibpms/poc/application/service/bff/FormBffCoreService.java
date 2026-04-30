@@ -51,14 +51,16 @@ public class FormBffCoreService {
         // Recuperar historial de rechazos si lo hubiera
         List<Map<String, Object>> rejectionHistory = rejectionLogService.getRejectionHistory(task.getProcessInstanceId());
 
-        // Mock del ensamblaje del Mega-DTO
-        log.info("BFF Form Context (CA-01): Ensamblando Zod + Layout + Variables de DB para Tarea {}", taskId);
+        // Conectar form prefillData con las variables reales de Camunda para resolver (B-J04-02)
+        Map<String, Object> realVariables = taskService.getVariables(taskId);
+
+        log.info("BFF Form Context (CA-01): Ensamblando contexto real para Tarea {}", taskId);
         return Map.of(
             "taskId", task.getId(),
             "taskName", task.getName(),
             "schema_version", "v1.2.0", // Prevención choques generacionales
-            "layout", Map.of("type", "grid", "components", "[]"), // Zod Schema / Layout Layout
-            "prefillData", Map.of("applicantName", "Mock User"),
+            "layout", Map.of("type", "grid", "components", "[]"), // Zod Schema Placeholder (To be dynamic based on FormDefinition)
+            "prefillData", realVariables.isEmpty() ? Map.of() : realVariables,
             "rejection_history", rejectionHistory // Trazabilidad incluida para el Frontend
         );
     }
@@ -93,7 +95,7 @@ public class FormBffCoreService {
                 .userId(userId)
                 .payloadJson(payloadStr)
                 .schemaVersion("v1.2.0")
-                .createdAt(Instant.now())
+                .createdAt(java.time.ZonedDateTime.now())
                 .build();
             formEventRepository.save(event);
         } catch (Exception e) {

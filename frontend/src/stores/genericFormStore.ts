@@ -32,11 +32,32 @@ export const useGenericFormStore = defineStore('genericForm', () => {
   const syncErrorCount = ref(0)
   const isSubmitting = ref(false)
 
+  // Draft Recovery Banner (REM-039-C / Patrón CA-85)
+  const showDraftBanner = ref(false)
+  const pendingDraft = ref<GenericFormDraft | null>(null)
+
   // Initialize store for a specific task
   const init = async (id: string) => {
     taskId.value = id
     await fetchContext()
-    await checkForDraft()
+    const draft = await checkForDraft()
+    if (draft) {
+      showDraftBanner.value = true
+      pendingDraft.value = draft
+    }
+  }
+
+  const restoreDraft = () => {
+    if (pendingDraft.value) {
+      applyDraft(pendingDraft.value)
+      showDraftBanner.value = false
+      pendingDraft.value = null
+    }
+  }
+
+  const dismissDraft = () => {
+    showDraftBanner.value = false
+    pendingDraft.value = null
   }
 
   const fetchContext = async () => {
@@ -176,6 +197,7 @@ export const useGenericFormStore = defineStore('genericForm', () => {
     observations, files, result,
     showPanicModal, panicAction, panicJustification,
     syncState, isSubmitting,
+    showDraftBanner, pendingDraft, restoreDraft, dismissDraft,
     checkForDraft, applyDraft, clearDraft, submitForm
   }
 })

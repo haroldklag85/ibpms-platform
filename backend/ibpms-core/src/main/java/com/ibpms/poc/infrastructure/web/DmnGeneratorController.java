@@ -40,10 +40,10 @@ public class DmnGeneratorController {
      * US-007 CA-24: SLA timeout 15s con CompletableFuture.orTimeout().
      */
     @PostMapping("/generate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public java.util.concurrent.CompletableFuture<ResponseEntity<DmnXmlResponseDto>> generateDmn(@Valid @RequestBody GenerateDmnRequest request) {
-        NlpPromptRequestDto portRequest = new NlpPromptRequestDto(request.prompt());
-        
+        String tenantId = "tenant-alpha"; // stubbed since SecurityContextUtils is missing
+        NlpPromptRequestDto portRequest = new NlpPromptRequestDto(request.prompt(), tenantId, java.util.Collections.emptyMap());
         return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
             DmnXmlResponseDto response = aiDmnGeneratorPort.generateDmnFromPrompt(portRequest);
             return ResponseEntity.ok(response);
@@ -54,7 +54,7 @@ public class DmnGeneratorController {
      * US-007 CA-23: Rate Limiting Simulador.
      */
     @PostMapping("/simulate")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OPERADOR')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     @io.github.resilience4j.ratelimiter.annotation.RateLimiter(name = "dmnSimulator", fallbackMethod = "simulateRateLimitFallback")
     public ResponseEntity<String> simulateDmn(@RequestBody java.util.Map<String, Object> variables) {
         return ResponseEntity.ok("Simulación Exitosa"); // Stub Iteration 4

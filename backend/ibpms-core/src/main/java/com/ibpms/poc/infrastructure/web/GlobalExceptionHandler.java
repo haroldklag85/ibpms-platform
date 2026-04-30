@@ -150,6 +150,16 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /** Maneja ResponseStatusException devolviendo el status y razón específicos */
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ProblemDetail handleResponseStatusException(org.springframework.web.server.ResponseStatusException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(ex.getStatusCode());
+        problem.setType(URI.create("https://ibpms.com/errors/status"));
+        problem.setTitle(ex.getReason() != null ? ex.getReason() : "Error " + ex.getStatusCode().value());
+        problem.setDetail(ex.getReason());
+        return problem;
+    }
+
     /** 500 — Error interno genérico (CA-37) */
     @ApiResponse(responseCode = "500", description = "Error interno - Blindado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)

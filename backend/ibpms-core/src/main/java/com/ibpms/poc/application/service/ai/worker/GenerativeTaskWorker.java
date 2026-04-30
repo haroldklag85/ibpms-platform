@@ -17,6 +17,7 @@ import java.util.Map;
  */
 @Component
 @ExternalTaskSubscription(topicName = "ai-generative-task")
+@org.springframework.context.annotation.Profile("!test")
 public class GenerativeTaskWorker implements ExternalTaskHandler {
 
     private final CognitiveOrchestratorService orchestrator;

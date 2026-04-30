@@ -1,36 +1,18 @@
-# 🛡️ Solicitud de Aprobación Infra/BD: Verificación ARQ-005
+# Solicitud de Revisión: Hallazgos de Integridad Liquibase (ARQ-005)
 
-**Para:** Arquitecto Líder
-**De:** Agente Infra/BD
-**Iteración:** Remediación Arquitectónica Post-Auditoría US-005 (ARQ-005)
+**Dirigido a:** Arquitecto Líder
 
-## 1. Contexto
+He ejecutado la verificación de integridad dictada en el Handoff **ARQ-005** para las tablas de despliegue del Core Pipeline (US-005).
 
-He finalizado la verificación de integridad de las tablas relacionadas con el despliegue Core Pipeline (US-005) indicadas en el handoff `handoff_infra_bd_ARQ005.md`.
+## 🚨 Inconsistencias Detectadas
+La validación falló en dos puntos críticos dictados por la normativa arquitectónica:
 
-## 2. Resultados de la Verificación
+1. **Ausencia de IF NOT EXISTS:** Las tablas auditadas en `07-create-bpmn-design-tables.sql` y `22-us005-bpmn-design-schema.sql` no implementan la cláusula `CREATE TABLE IF NOT EXISTS`, lo que puede generar paradas súbitas en el pipeline (Checksum Errors).
+2. **Orfandad Relacional:** Las tablas `ibpms_deploy_requests` e `ibpms_data_mappings` en el script 22 utilizan la clave lógica `process_definition_key` pero **no tienen constraints FK** hacia la tabla maestra que define el proceso, violando la integridad referencial.
 
-| Tabla | Ubicación en Liquibase | Estado | Observaciones |
-|-------|-------------------------|--------|---------------|
-| `ibpms_process_locks` | `22-us005-bpmn-design-schema.sql` | 🟡 Inconsistente | No utiliza `IF NOT EXISTS` |
-| `ibpms_deploy_requests` | `22-us005-bpmn-design-schema.sql` | 🟡 Inconsistente | No utiliza `IF NOT EXISTS` |
-| `ibpms_data_mappings` | `22-us005-bpmn-design-schema.sql` | 🟡 Inconsistente | No utiliza `IF NOT EXISTS` |
-| `ibpms_external_task_topics` | `22-us005-bpmn-design-schema.sql` | 🟡 Inconsistente | No utiliza `IF NOT EXISTS` |
-| `ibpms_bpmn_design_audit_log`| `07-create-bpmn-design-tables.sql` | 🟡 Inconsistente | No utiliza `IF NOT EXISTS` |
+**Aspectos Aprobados:**
+- Los changesets poseen identificadores únicos.
+- No hay columnas huérfanas sin uso detectadas.
+- Están correctamente registrados en el `db.changelog-master.yaml`.
 
-### ✅ Aspectos Aprobados
-- Todas las tablas están declaradas correctamente y registradas dentro de `db.changelog-master.yaml`.
-- Los changesets poseen IDs únicos (`system:22-us005-bpmn-design-schema` y `hb-dev:7-create-bpmn-design-tables`).
-- Las Foreign Keys están estructuradas de manera coherente sin generar bloqueos en runtime (uso de `process_definition_key`).
-- No hay columnas huérfanas o sin uso detectadas en los scripts.
-
-### ❌ Aspectos Inconsistentes
-Ninguno de los changesets analizados emplea la directiva `IF NOT EXISTS` exigida en el checklist del handoff. 
-
-## 3. Petición al Arquitecto Líder
-
-Solicito confirmación de si debo:
-1. Proceder a aplicar el parche añadiendo `IF NOT EXISTS` en los scripts SQL (lo cual requerirá potencialmente manipulación si ya se han ejecutado previamente, o puede ser trivial si las tablas ya existen en el ambiente de base de datos final).
-2. Omitir la regla del `IF NOT EXISTS` por ser scripts iniciales que dependen de un estado limpio.
-
-Quedo a la espera de su Veredicto (✅ PASS o ❌ REJECT).
+Debido a que mi instrucción fue estrictamente **verificativa y no constructiva**, me he abstenido de modificar los archivos DDL. Quedo a la espera de su veredicto.

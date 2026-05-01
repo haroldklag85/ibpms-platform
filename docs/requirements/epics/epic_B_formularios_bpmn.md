@@ -1533,8 +1533,8 @@ Scenario: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquirido
     Given el Arquitecto selecciona un Carril o Tarea en el Lienzo
     Then puede asignarle un color personalizado desde una paleta de colores para distinguir departamentos.
 
-  Scenario: Autocompletado de Variables en Expresiones (CA-38 - Diferido a V2)
-    # NOTA: Diferido a V2.
+  Scenario: Autocompletado de Variables en Expresiones (CA-38 - Diferido a V1)
+    # NOTA: Originalmente diferido a V2. Reclasificado a V1 por decisión del PO (2026-05-01).
     Given el Arquitecto escribe una condición en una Compuerta Exclusiva (Ej: `${monto > 5000}`)
     Then el sistema ofrece autocompletado de variables disponibles basándose en los formularios asociados al proceso.
 

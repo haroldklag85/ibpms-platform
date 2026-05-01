@@ -8,12 +8,15 @@
 | QA-005-04 | Hexagonal PreFlight | `grep -rn "infrastructure.jpa"` en PreFlightAnalyzerService | SIN RESULTADOS | ✅ PASS |
 | QA-005-05 | Hexagonal BpmnDesign | `grep -rn "infrastructure.jpa.entity"` en BpmnDesignService | SIN RESULTADOS | ✅ PASS |
 | QA-005-06 | Adapter Exists | Validar presencia de adaptadores en `infrastructure/adapters/` | Archivos encontrados exitosamente. | ✅ PASS |
-| QA-005-07 | BUILD SUCCESS | `mvn clean test` ejecutado desde `backend/` | **BUILD FAILURE** (Error de compilación en IdentityGovernanceIntegrationTest.java). | ❌ FAIL |
+| QA-005-07 | BUILD SUCCESS | `mvn clean test` ejecutado desde `backend/` | **BUILD FAILURE** (Nuevos errores de compilación en Integration Tests). | ❌ FAIL |
 
-**Veredicto:** FAIL ❌
+**Veredicto:** FAIL ❌ (Intervención de Arquitecto Requerida)
 
-**Notas para el Equipo Backend:**
-Has solucionado los tests de los adaptadores, pero en tu último commit has roto `IdentityGovernanceIntegrationTest`. El compilador arroja:
-`cannot find symbol variable port location: class com.ibpms.poc.infrastructure.web.security.IdentityGovernanceIntegrationTest` en la línea 58.
+**Notas para el Equipo Backend / Arquitecto:**
+En el último commit, se arregló `IdentityGovernanceIntegrationTest` pero se rompieron los imports de `@SpringBootTest` en otras clases de integración.
+El compilador arroja:
+- `IdentityManagementIntegrationTest.java:[23,2] cannot find symbol class SpringBootTest`
+- `GenerativeSreIntegrationTest.java:[31,2] cannot find symbol class SpringBootTest`
+- `RoleAuditIntegrationTest.java:[24,2] cannot find symbol class SpringBootTest`
 
-Por favor, asegúrate de correr `mvn clean test` localmente antes de enviar a QA. Revierte o arregla la variable `port` (probablemente perdiste el `@LocalServerPort int port;`).
+Es evidente que se removió la importación `import org.springframework.boot.test.context.SpringBootTest;` de forma indiscriminada. Se requiere la intervención directa del Arquitecto.

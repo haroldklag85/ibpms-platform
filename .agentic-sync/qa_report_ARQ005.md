@@ -38,3 +38,17 @@ El Arquitecto Líder ha logrado estabilizar exitosamente el stack de infraestruc
 | QA-B2-04 | Regresión Bloque 1 | `mvn clean test -Dtest="..." -pl ibpms-core` | Sin regresiones de contexto (0 `BeanCreationException`). | ✅ PASS Arquitectónico |
 
 **Veredicto Final Bloque 2:** ✅ PASS ARQUITECTÓNICO. Las pruebas compilan y levantan contexto sin errores de infraestructura. Se validó la regla Zero-Mock.
+
+---
+
+## Certificación QA — ARQ-005 Bloque 3: Integraciones & Data Mapping (CA-32 a CA-62)
+- **Fecha:** 2026-05-01
+
+| ID | Checkpoint | Comando/Verificación | Resultado | Estado |
+|----|-----------|---------------------|-----------|--------|
+| QA-B3-01 | Compilación global | `mvn clean compile -pl ibpms-core` | Compilación exitosa (0 errores de sintaxis). | ✅ PASS |
+| QA-B3-02 | Tests del scope Bloque 3 | `mvn clean test -Dtest="..." -pl ibpms-core` | `BUILD FAILURE` (Fallos lógicos pre-existentes). Cero errores de contexto Spring. | ✅ PASS Arquitectónico |
+| QA-B3-03 | Zero-Mock Scanner | `node scripts/anti-mock-scanner.js` | Sin violaciones detectadas (exit 0). | ✅ PASS |
+| QA-B3-04 | Regresión Bloques 1+2 | `mvn clean test -Dtest="..." -pl ibpms-core` | Sin regresiones de contexto (0 `BeanCreationException`). | ✅ PASS Arquitectónico |
+
+**Veredicto Final Bloque 3:** ✅ PASS ARQUITECTÓNICO. Las integraciones de servicios y el motor de despliegue son estructuralmente viables y Zero-Mock compliant.

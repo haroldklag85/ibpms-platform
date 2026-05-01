@@ -1,12 +1,13 @@
 package com.ibpms.poc.infrastructure.web.security;
 
+import com.ibpms.poc.AbstractIntegrationTest;
+
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,12 +17,8 @@ import java.util.Arrays;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-import com.ibpms.poc.AbstractIntegrationTest;
 
 public class GenericFormIntegrationTest extends AbstractIntegrationTest {
-
-    @LocalServerPort
-    private int port;
     @BeforeEach
     void setUp() {
         RestAssured.port = port;

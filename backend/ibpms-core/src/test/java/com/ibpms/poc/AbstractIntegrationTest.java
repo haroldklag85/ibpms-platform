@@ -8,6 +8,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import org.springframework.boot.test.web.server.LocalServerPort;
+
 /**
  * Clase base para Pruebas de Integración End-to-End usando Testcontainers.
  * Instancia dinámicamente una Base de Datos MySQL efímera (Docker)
@@ -19,6 +21,9 @@ import org.testcontainers.utility.DockerImageName;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
+
+    @LocalServerPort
+    protected int port;
 
     // Patrón Singleton Testcontainer para PostgreSQL con vector support
     @SuppressWarnings("resource")

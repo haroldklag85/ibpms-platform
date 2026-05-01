@@ -1,25 +1,22 @@
 package com.ibpms.poc.infrastructure.web.bpmn;
 
+import com.ibpms.poc.AbstractIntegrationTest;
+
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.ibpms.poc.AbstractIntegrationTest;
 
 public class DeployRequestWorkflowTest extends AbstractIntegrationTest {
-
-    @LocalServerPort
-    private int port;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

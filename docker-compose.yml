@@ -85,7 +85,9 @@ services:
       - maven_data:/root/.m2
     ports:
       - "8080:8080"
-    command: mvn spring-boot:run -DskipTests
+    command: >
+      bash -c "mvn install -DskipTests -pl ibpms-dmn-engine &&
+               mvn spring-boot:run -DskipTests -pl ibpms-core"
     depends_on:
       ibpms-postgres:
         condition: service_healthy

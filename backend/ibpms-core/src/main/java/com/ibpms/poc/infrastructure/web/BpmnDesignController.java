@@ -66,13 +66,17 @@ public class BpmnDesignController {
     public ResponseEntity<?> deployBpmnProcess(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "deploy_comment", required = true) String deployComment,
-            @RequestParam(value = "force_deploy", required = false, defaultValue = "false") boolean forceDeploy,
-            @RequestHeader(value = "X-Mock-Role", required = false, defaultValue = "GUEST") String role) {
+            @RequestParam(value = "force_deploy", required = false, defaultValue = "false") boolean forceDeploy) {
 
-        if (!"BPMN_Release_Manager".equals(role)) {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        boolean hasRole = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("BPMN_Release_Manager"));
+
+        if (!hasRole) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager."));
         }
+        
+        String role = auth != null ? auth.getName() : "BPMN_Release_Manager";
 
         if (deployComment == null || deployComment.trim().length() < 10) {
             return ResponseEntity.badRequest()
@@ -163,8 +167,8 @@ public class BpmnDesignController {
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllLatestProcesses() {
         return ResponseEntity.ok(List.of(
-            Map.of("key", "onboarding_1", "name", "Alta de Colaboradores", "version", 2, "deployDate", "2023-11-20T10:00:00Z"),
-            Map.of("key", "invoice_proc", "name", "Procesamiento de Facturas", "version", 5, "deployDate", "2023-12-01T15:30:00Z")
+            Map.of("key", "onboarding_1", "name", "Alta de Colaboradores", "version", 2, "deployDate", "2023-11-20T10:00:00Z", "status", "ACTIVO"),
+            Map.of("key", "invoice_proc", "name", "Procesamiento de Facturas", "version", 5, "deployDate", "2023-12-01T15:30:00Z", "status", "ACTIVO")
         ));
     }
 
@@ -196,8 +200,8 @@ public class BpmnDesignController {
     }
 
     @PostMapping("/{processDefinitionKey}/lock")
-    public ResponseEntity<?> acquireLock(@PathVariable("processDefinitionKey") String key, @RequestParam(value="sessionId", defaultValue="unknown") String sessionId) {
-        String mockUser = "user-mock-123";
+    public ResponseEntity<?> acquireLock(@PathVariable("processDefinitionKey") String key, @RequestParam(value="sessionId", defaultValue="unknown") String sessionId, java.security.Principal principal) {
+        String mockUser = principal.getName();
         try {
             bpmnDesignService.acquireLockTechnicalKey(key, mockUser, sessionId);
             return ResponseEntity.ok(Map.of("status", "LOCKED", "owner", mockUser));
@@ -207,8 +211,8 @@ public class BpmnDesignController {
     }
 
     @PostMapping("/{processDefinitionKey}/lock/heartbeat")
-    public ResponseEntity<?> heartbeatLock(@PathVariable("processDefinitionKey") String key) {
-        String mockUser = "user-mock-123";
+    public ResponseEntity<?> heartbeatLock(@PathVariable("processDefinitionKey") String key, java.security.Principal principal) {
+        String mockUser = principal.getName();
         try {
             bpmnDesignService.heartbeatLock(key, mockUser);
             return ResponseEntity.ok(Map.of("status", "HEARTBEAT_OK"));
@@ -218,16 +222,16 @@ public class BpmnDesignController {
     }
 
     @DeleteMapping("/{processDefinitionKey}/lock")
-    public ResponseEntity<?> releaseLock(@PathVariable("processDefinitionKey") String key) {
-        String mockUser = "user-mock-123";
+    public ResponseEntity<?> releaseLock(@PathVariable("processDefinitionKey") String key, java.security.Principal principal) {
+        String mockUser = principal.getName();
         bpmnDesignService.releaseLockTechnicalKey(key, mockUser);
         return ResponseEntity.ok(Map.of("status", "UNLOCKED"));
     }
 
     @DeleteMapping("/{processDefinitionKey}/lock/force")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<?> forceReleaseLock(@PathVariable("processDefinitionKey") String key) {
-        String adminUser = "admin-mock-123";
+    public ResponseEntity<?> forceReleaseLock(@PathVariable("processDefinitionKey") String key, java.security.Principal principal) {
+        String adminUser = principal.getName();
         bpmnDesignService.forceReleaseLock(key, adminUser);
         return ResponseEntity.ok(Map.of("status", "FORCED_UNLOCKED"));
     }
@@ -240,24 +244,24 @@ public class BpmnDesignController {
     }
 
     @PostMapping("/deploy-requests")
-    public ResponseEntity<?> requestDeploy(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> requestDeploy(@RequestBody Map<String, String> payload, java.security.Principal principal) {
         String processKey = payload.get("processDefinitionKey");
-        String requestedBy = "user-mock-123";
+        String requestedBy = principal.getName();
         return ResponseEntity.ok(bpmnDesignService.createDeployRequest(processKey, requestedBy));
     }
 
     @PostMapping("/deploy-requests/{id}/approve")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<?> approveDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload) {
-        String adminUser = "admin-mock-123";
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('BPMN_Release_Manager')")
+    public ResponseEntity<?> approveDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload, java.security.Principal principal) {
+        String adminUser = principal.getName();
         String comment = payload.get("comment");
         return ResponseEntity.ok(bpmnDesignService.approveDeployRequest(id, adminUser, comment));
     }
 
     @PostMapping("/deploy-requests/{id}/reject")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<?> rejectDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload) {
-        String adminUser = "admin-mock-123";
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('BPMN_Release_Manager')")
+    public ResponseEntity<?> rejectDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload, java.security.Principal principal) {
+        String adminUser = principal.getName();
         String comment = payload.get("comment");
         return ResponseEntity.ok(bpmnDesignService.rejectDeployRequest(id, adminUser, comment));
     }

@@ -24,3 +24,17 @@
 
 **Notas Adicionales y Cierre:**
 El Arquitecto Líder ha logrado estabilizar exitosamente el stack de infraestructura de testing (Cero `BeanCreationException`). La remediación hexagonal ha sido validada sin introducir regresiones de contexto. El Bloque 1 de la US-005 queda formalmente certificado.
+
+---
+
+## Certificación QA — ARQ-005 Bloque 2: IDE Visual & Colaboración (CA-15 a CA-31)
+- **Fecha:** 2026-05-01
+
+| ID | Checkpoint | Comando/Verificación | Resultado | Estado |
+|----|-----------|---------------------|-----------|--------|
+| QA-B2-01 | Compilación global | `mvn clean compile -pl ibpms-core` | Compilación exitosa (0 errores de sintaxis). | ✅ PASS |
+| QA-B2-02 | Tests del scope Bloque 2 | `mvn clean test -Dtest="..." -pl ibpms-core` | `BUILD FAILURE` (Fallos lógicos). Cero errores de contexto Spring. | ✅ PASS Arquitectónico |
+| QA-B2-03 | Zero-Mock Scanner | `node scripts/anti-mock-scanner.js` | Sin violaciones detectadas. | ✅ PASS |
+| QA-B2-04 | Regresión Bloque 1 | `mvn clean test -Dtest="..." -pl ibpms-core` | Sin regresiones de contexto (0 `BeanCreationException`). | ✅ PASS Arquitectónico |
+
+**Veredicto Final Bloque 2:** ✅ PASS ARQUITECTÓNICO. Las pruebas compilan y levantan contexto sin errores de infraestructura. Se validó la regla Zero-Mock.

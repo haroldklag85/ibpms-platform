@@ -1630,13 +1630,15 @@ Scenario: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquirido
     And el proceso V1 que ya estaba en el motor sigue funcionando intacto con la versión vieja en caché ("Zero-Breakage Policy")
     And si el Arquitecto desea usar la nueva versión, debe entrar a la Pantalla 6, seleccionar la v2, re-mapear y desplegar una nueva versión temporal del proceso.
 
-  Scenario: Validación Lógica de Cláusulas OneOf/AnyOf (CA-53)
+  Scenario: Validación Lógica de Cláusulas OneOf/AnyOf (CA-53 - Diferido a V2)
+    # NOTA: Este escenario queda documentado pero su implementación se difiere a la Versión 2 del producto.
     Given una API que exige el dato X *o* el dato Y mediante las cláusulas Swagger (OneOf / AnyOf)
     When el Frontend despliega el `<DataMapperGrid>`
     Then agrupa visualmente las filas afectadas bajo la etiqueta `[ 🔀 Requiere mapear al menos UNO ]`
     And el Pre-Flight Analyzer verificará el grupo lógico en conjunto: Si falta al menos uno, alerta roja y aborta despliegue. Si ambos están vacíos, aborta. Si uno está lleno, autoriza el pase a Producción.
 
-  Scenario: Shift-Left Security para Datos Sensibles (PII/PHI) (CA-54)
+  Scenario: Shift-Left Security para Datos Sensibles (PII/PHI) (CA-54 - Diferido a V2)
+    # NOTA: Este escenario queda documentado pero su implementación se difiere a la Versión 2 del producto.
     Given el mapeo de una variable clasificada con el flag `[🔒 Dato Sensible PII]` desde la Pantalla 7 (Zod)
     When la Service Task dispara la integración hacia la API externa
     Then el dato crudo viaja obligatoriamente encriptado por el túnel HTTP/TLS
@@ -1648,7 +1650,8 @@ Scenario: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquirido
     And la UI aplicará severas restricciones denegando la inserción de texto libre o crudo para prevenir Header Injection.
     And obligará a mapear valores usando únicamente variables pre-validadas del formulario (Zod) o Macros seguras del Sistema.
 
-  Scenario: Delegación Transparente de Conversión Binaria (Multipart/Base64) (CA-56)
+  Scenario: Delegación Transparente de Conversión Binaria (Multipart/Base64) (CA-56 - Diferido a V2)
+    # NOTA: Este escenario queda documentado pero su implementación se difiere a la Versión 2 del producto.
     Given un componente Zod de tipo `<InputFile>` mapeado hacia un atributo del Payload destino
     When el Arquitecto despliega y llega el momento de la ejecución
     Then el flujo UI no exige que el Arquitecto indique la técnica de conversión

@@ -15,9 +15,13 @@ import java.time.LocalDateTime;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 
 public class SandboxGovernanceTest extends AbstractIntegrationTest {
+
+    @LocalServerPort
+    private int port;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

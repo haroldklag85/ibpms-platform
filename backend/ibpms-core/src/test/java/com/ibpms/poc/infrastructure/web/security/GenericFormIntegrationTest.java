@@ -16,9 +16,14 @@ import java.util.Arrays;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 
 public class GenericFormIntegrationTest extends AbstractIntegrationTest {
+
+    @LocalServerPort
+    private int port;
+
     @BeforeEach
     void setUp() {
         RestAssured.port = port;

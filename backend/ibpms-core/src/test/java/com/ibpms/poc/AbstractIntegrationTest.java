@@ -8,22 +8,21 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import org.springframework.boot.test.web.server.LocalServerPort;
-
 /**
  * Clase base para Pruebas de Integración End-to-End usando Testcontainers.
- * Instancia dinámicamente una Base de Datos MySQL efímera (Docker)
- * que sirve de backend para que Spring Boot y Camunda se levanten de forma
- * aislada.
+ * Provee la infraestructura efímera (PostgreSQL, Redis, RabbitMQ) compartida
+ * por todas las subclases.
+ * 
+ * NOTA ARQUITECTÓNICA (2026-04-30): Esta clase NO declara @LocalServerPort.
+ * Los tests que necesiten el puerto (RestAssured) deben declararlo localmente.
+ * Los tests MockMvc que heredan de esta clase pueden override @SpringBootTest
+ * a WebEnvironment.MOCK sin conflicto de inyección.
  * 
  * Uso: Hacer que tus clases de test hereden de {@link AbstractIntegrationTest}.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
-
-    @LocalServerPort
-    protected int port;
 
     // Patrón Singleton Testcontainer para PostgreSQL con vector support
     @SuppressWarnings("resource")

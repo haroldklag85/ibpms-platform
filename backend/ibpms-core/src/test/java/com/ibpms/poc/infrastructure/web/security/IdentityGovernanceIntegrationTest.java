@@ -24,6 +24,7 @@ import java.util.UUID;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 /**
  * Audit CA-20, CA-21, CA-22 - US-036
@@ -31,6 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 
 public class IdentityGovernanceIntegrationTest extends AbstractIntegrationTest {
+
+    @LocalServerPort
+    private int port;
 
     @Autowired
     private WorkdeskProjectionRepository workdeskRepository;

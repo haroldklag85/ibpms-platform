@@ -15,9 +15,13 @@ import java.time.LocalDateTime;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 
 public class BreakLockRbacTest extends AbstractIntegrationTest {
+
+    @LocalServerPort
+    private int port;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

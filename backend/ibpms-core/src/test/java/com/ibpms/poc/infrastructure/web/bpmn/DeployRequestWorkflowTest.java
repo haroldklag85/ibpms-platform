@@ -14,9 +14,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 
 public class DeployRequestWorkflowTest extends AbstractIntegrationTest {
+
+    @LocalServerPort
+    private int port;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

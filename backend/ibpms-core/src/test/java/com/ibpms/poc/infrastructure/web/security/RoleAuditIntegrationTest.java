@@ -21,7 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.AfterEach;
 import com.ibpms.poc.AbstractIntegrationTest;
 
-@SpringBootTest
 @AutoConfigureMockMvc
 @SuppressWarnings("null")
 public class RoleAuditIntegrationTest extends AbstractIntegrationTest {

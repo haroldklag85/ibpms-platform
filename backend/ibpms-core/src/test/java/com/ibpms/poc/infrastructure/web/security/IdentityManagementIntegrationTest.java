@@ -19,7 +19,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.ibpms.poc.AbstractIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest
 @AutoConfigureMockMvc
 @SuppressWarnings("null")
 public class IdentityManagementIntegrationTest extends AbstractIntegrationTest {

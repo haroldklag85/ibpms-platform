@@ -27,7 +27,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
 import com.ibpms.poc.AbstractIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles({"test", "sre-test"})
 @SuppressWarnings("null")

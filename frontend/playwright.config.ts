@@ -8,6 +8,7 @@ export default defineConfig({
   expect: {
     timeout: 45_000
   },
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 1,
@@ -33,22 +34,7 @@ export default defineConfig({
       testIgnore: /emergency-login/,
       use: {
         ...devices['Desktop Chrome'],
-        storageState: {
-          cookies: [],
-          origins: [
-            {
-              origin: process.env.E2E_BASE_URL || 'http://localhost:5176',
-              localStorage: [
-                { name: 'ibpms_token', value: E2E_JWT },
-                { name: 'ibpms_user', value: JSON.stringify({
-                  username: 'root_e2e',
-                  roles: ['ROLE_SUPER_ADMIN', 'ROLE_OPERADOR', 'ROLE_AI_ADMIN'],
-                  email: 'root@ibpms.local'
-                }) },
-              ],
-            },
-          ],
-        },
+        storageState: 'e2e/playwright/.auth/user.json',
       },
     },
   ],

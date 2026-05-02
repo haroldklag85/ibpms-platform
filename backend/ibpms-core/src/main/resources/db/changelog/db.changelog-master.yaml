@@ -78,3 +78,5 @@ databaseChangeLog:
       file: db/changelog/35-arq02804-split-certification.sql
   - include:
       file: db/changelog/36-us008-kanban-state-schema.sql
+  - include:
+      file: db/changelog/37-us002-claim-audit-log-orphans.sql

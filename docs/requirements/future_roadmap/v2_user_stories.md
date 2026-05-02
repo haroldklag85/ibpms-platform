@@ -61,6 +61,17 @@ Feature: Deuda Técnica V1 — Diseñador BPMN (US-005)
 **Trazabilidad UX:** Pantalla 6 (BPMN Designer), Pantalla 7 (Form Builder), Panel de Integraciones.
 **Estado Infraestructura V1:** Tablas `ibpms_data_mappings`, `ibpms_external_task_topics` ya existen. Puertos hexagonales (`DataMappingPort`, `BpmnAuditPort`) implementados.
 
+### US-V2-DT-002: Refactorización y Deuda Técnica de Backend (ARQ-005)
+
+**Como** Arquitecto Backend
+**Quiero** saldar la deuda técnica funcional identificada durante la auditoría ARQ-005
+**Para** garantizar la resiliencia en alta concurrencia y flexibilidad multi-tenant.
+
+**Items de Deuda Técnica:**
+- **DT-V2-001:** Migrar `@Cacheable` a Redis distribuido (GAP-003)
+- **DT-V2-002:** Hacer umbrales SLA configurables por tenant (GAP-004)
+- **DT-V2-003:** Exponer `slaCreationDate` en DTO para cálculo dinámico de ventana SLA (GAP-006)
+
 ---
 
 

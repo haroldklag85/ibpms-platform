@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ibpms.poc.application.util.SecurityContextUtils;
 
 /**
  * Endpoint responsable de canalizar las peticiones de generación de tablas de decisión 
@@ -42,7 +43,7 @@ public class DmnGeneratorController {
     @PostMapping("/generate")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public java.util.concurrent.CompletableFuture<ResponseEntity<DmnXmlResponseDto>> generateDmn(@Valid @RequestBody GenerateDmnRequest request) {
-        String tenantId = "tenant-alpha"; // stubbed since SecurityContextUtils is missing
+        String tenantId = SecurityContextUtils.getTenantId();
         NlpPromptRequestDto portRequest = new NlpPromptRequestDto(request.prompt(), tenantId, java.util.Collections.emptyMap());
         return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
             DmnXmlResponseDto response = aiDmnGeneratorPort.generateDmnFromPrompt(portRequest);

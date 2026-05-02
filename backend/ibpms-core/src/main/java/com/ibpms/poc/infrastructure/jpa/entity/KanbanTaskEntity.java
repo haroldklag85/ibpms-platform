@@ -55,6 +55,10 @@ public class KanbanTaskEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Lob
+    @Column(name = "blocked_reason", columnDefinition = "TEXT")
+    private String blockedReason;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_task_id", referencedColumnName = "id", columnDefinition = "bpchar")
     private KanbanTaskEntity parentTask;
@@ -158,5 +162,13 @@ public class KanbanTaskEntity {
 
     public void setSubTasks(List<KanbanTaskEntity> subTasks) {
         this.subTasks = subTasks;
+    }
+
+    public String getBlockedReason() {
+        return blockedReason;
+    }
+
+    public void setBlockedReason(String blockedReason) {
+        this.blockedReason = blockedReason;
     }
 }

@@ -20,7 +20,7 @@
 
     <!-- CA-12: Virtualized DOM Rendering para +10000 Tickets -->
     <div v-if="processedOrphanedItems.length === 0" class="flex-1 flex items-center justify-center text-slate-500 text-sm">
-      No hay tareas en el Backlog
+      No hay tareas activas en el Backlog
     </div>
     <div v-else class="flex-1 overflow-hidden relative">
       <RecycleScroller
@@ -31,9 +31,10 @@
         v-slot="{ item }"
       >
         <div class="px-3 py-1.5 h-full">
-           <div class="bg-white border border-slate-200 rounded shadow-sm p-3 hover:border-indigo-400 hover:shadow transition-all relative group h-[118px] flex flex-col justify-between">
+           <div class="bg-white border rounded shadow-sm p-3 hover:border-indigo-400 hover:shadow transition-all relative group h-[118px] flex flex-col justify-between"
+                :class="[isStale(item) ? 'border-l-4 border-l-amber-500 bg-amber-50/30' : 'border-slate-200']">
               <!-- CA-13: Stale Ticket Aura -->
-              <div v-if="isStale(item)" class="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full shadow-sm animate-pulse" title="Ticket Rancio (>30 días inactivo)"></div>
+              <div v-if="isStale(item)" class="absolute -top-3 right-2 px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-bold rounded-full shadow-sm">🕐 Inactivo {{ Math.ceil(Math.abs(Date.now() - new Date(item.updatedAt || Date.now()).getTime()) / (1000 * 60 * 60 * 24)) }} días</div>
               
               <div class="flex justify-between items-start mb-1">
                  <span class="text-[10px] font-bold px-1.5 rounded" :class="typeBadgeClass(item.type)">
@@ -63,20 +64,48 @@
       </RecycleScroller>
     </div>
 
-    <!-- Create Slide Panel (Dummy for Tests) -->
-    <div v-if="showCreatePanel" class="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-xl z-[10002] p-6 flex flex-col" role="complementary" aria-label="Crear Nueva Tarea">
+    <!-- CA-8: Mostrar Completadas -->
+    <div v-if="agileStore.showCompleted && agileStore.completedBacklogItems.length > 0" class="shrink-0 max-h-48 overflow-y-auto border-t border-slate-200 bg-gray-50 p-3">
+      <h4 class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Tareas Completadas</h4>
+      <div v-for="item in agileStore.completedBacklogItems" :key="item.id" class="bg-white border border-gray-200 rounded p-2 mb-2 text-sm flex justify-between items-center shadow-sm opacity-70">
+        <span class="line-through text-gray-600 truncate mr-2">{{ item.title }}</span>
+        <span class="text-[10px] bg-green-100 text-green-800 px-1 rounded font-bold shrink-0">DONE</span>
+      </div>
+    </div>
+
+    <!-- Create Slide Panel -->
+    <div v-if="showCreatePanel" class="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-xl z-[10002] p-6 flex flex-col border-l border-slate-200 overflow-y-auto" role="complementary" aria-label="Crear Nueva Tarea">
        <h2 class="text-lg font-bold mb-4">Crear Nueva Tarea</h2>
        <div class="mb-4">
          <label class="block text-sm font-semibold mb-1" for="tituloInput">Título</label>
-         <input id="tituloInput" v-model="newTask.title" class="w-full border rounded px-2 py-1 text-sm" />
+         <input id="tituloInput" v-model="newTask.title" class="w-full border rounded px-3 py-1.5 text-sm" />
        </div>
        <div class="mb-4">
          <label class="block text-sm font-semibold mb-1">Descripción</label>
-         <textarea role="textbox" v-model="newTask.description" class="w-full border rounded px-2 py-1 text-sm h-24"></textarea>
+         <textarea role="textbox" v-model="newTask.description" class="w-full border rounded px-3 py-1.5 text-sm h-20"></textarea>
+       </div>
+       <div class="mb-4">
+         <label class="block text-sm font-semibold mb-1">Esfuerzo Estimado (Puntos)</label>
+         <input type="number" v-model="newTask.effortEstimated" class="w-full border rounded px-3 py-1.5 text-sm" min="0" />
+       </div>
+       <div class="mb-4">
+         <label class="block text-sm font-semibold mb-1">Responsables</label>
+         <AssigneeMultiSelect :item-id="'new'" :current-assignees="newTask.assignees" @update:assignees="newTask.assignees = $event" />
+       </div>
+       <div class="mb-4">
+         <label class="block text-sm font-semibold mb-1">Etiquetas</label>
+         <AgileTagCreator :item-id="'new'" @tag-created="(tag) => newTask.tags.push(tag)" />
+         <div class="flex flex-wrap gap-1 mt-2">
+           <span v-for="tag in newTask.tags" :key="tag.id" class="px-2 py-0.5 rounded text-xs text-white" :style="{ backgroundColor: tag.color }">{{ tag.label }}</span>
+         </div>
+       </div>
+       <div class="mb-4">
+         <label class="block text-sm font-semibold mb-1">Notas Adicionales</label>
+         <textarea v-model="newTask.notes" class="w-full border rounded px-3 py-1.5 text-sm h-16"></textarea>
        </div>
        <div class="mt-auto flex justify-end gap-2">
-         <button @click="showCreatePanel = false" class="px-3 py-1 bg-gray-100 rounded text-sm">Cancelar</button>
-         <button @click="createTask" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm font-bold">Guardar</button>
+         <button @click="showCreatePanel = false" class="px-3 py-1.5 bg-gray-100 rounded text-sm font-medium hover:bg-gray-200 transition">Cancelar</button>
+         <button @click="createTask" class="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm font-bold hover:bg-indigo-700 transition">Guardar</button>
        </div>
     </div>
 
@@ -95,12 +124,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useAgileStore } from '@/stores/agileStore';
 import { ItemType, BacklogItem } from '@/types/agile';
 import AssigneeMultiSelect from './AssigneeMultiSelect.vue';
-import { debounce } from 'lodash-es';
+import AgileTagCreator from './AgileTagCreator.vue';
 
 const agileStore = useAgileStore();
 const searchRaw = ref('');
@@ -127,7 +156,7 @@ const isStale = (item: BacklogItem) => {
    if (!item || !item.updatedAt) return false;
    const diffTime = Math.abs(Date.now() - new Date(item.updatedAt).getTime());
    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-   return diffDays > 30;
+   return diffDays >= 15;
 };
 
 // Sustituto de Drag & Drop para dominios virtualizados (Arquitectura aceptada en Handoff)
@@ -149,20 +178,20 @@ const typeBadgeClass = (type: ItemType) => {
 
 // CRUD Dummy logic for E2E
 const showCreatePanel = ref(false);
-const newTask = ref({ title: '', description: '' });
+const newTask = ref({ title: '', description: '', effortEstimated: 0, notes: '', assignees: [], tags: [] });
 
 const createTask = async () => {
   if(!agileStore.currentProject) return;
   try {
-     const res = await axios.post(`/api/v1/projects/${agileStore.currentProject.id}/agile/tasks`, newTask.value);
+     const res = await axios.post(`/api/v1/agile/projects/${agileStore.currentProject.id}/tasks`, newTask.value);
      agileStore.backlogItems.push({
        ...res.data,
        type: 'STORY',
-       assignees: [],
-       tags: []
+       assignees: res.data.assignees || [],
+       tags: res.data.tags || []
      });
      showCreatePanel.value = false;
-     newTask.value = { title: '', description: '' };
+     newTask.value = { title: '', description: '', effortEstimated: 0, notes: '', assignees: [], tags: [] };
   } catch(e) {
      console.error(e);
   }
@@ -177,7 +206,7 @@ const confirmDelete = (id: string) => {
 const executeDelete = async () => {
   if(!agileStore.currentProject || !itemToDelete.value) return;
   try {
-    await axios.delete(`/api/v1/projects/${agileStore.currentProject.id}/agile/tasks/${itemToDelete.value}`);
+    await axios.delete(`/api/v1/agile/projects/${agileStore.currentProject.id}/tasks/${itemToDelete.value}`);
     agileStore.backlogItems = agileStore.backlogItems.filter(i => i.id !== itemToDelete.value);
     itemToDelete.value = null;
   } catch(e) {

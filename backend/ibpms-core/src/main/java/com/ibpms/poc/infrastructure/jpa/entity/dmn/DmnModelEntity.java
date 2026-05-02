@@ -33,6 +33,10 @@ public class DmnModelEntity {
     @Column(name = "chat_history_json", columnDefinition = "TEXT")
     private String chatHistoryJson;
 
+    // US-007 CA-32: Trazabilidad de modificación manual
+    @Column(name = "is_manual")
+    private Boolean isManual;
+
     public DmnModelEntity() {}
 
     public DmnModelEntity(String id, String xmlContent, String status, String tenantId, String authorJwtHash) {
@@ -64,6 +68,9 @@ public class DmnModelEntity {
 
     public String getChatHistoryJson() { return chatHistoryJson; }
     public void setChatHistoryJson(String chatHistoryJson) { this.chatHistoryJson = chatHistoryJson; }
+
+    public Boolean getIsManual() { return isManual; }
+    public void setIsManual(Boolean isManual) { this.isManual = isManual; }
 
     @PreUpdate
     public void setLastUpdate() { this.updatedAt = LocalDateTime.now(); }

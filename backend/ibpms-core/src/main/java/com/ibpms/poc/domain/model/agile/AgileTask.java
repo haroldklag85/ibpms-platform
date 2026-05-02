@@ -23,6 +23,9 @@ public class AgileTask {
     @Column(name = "project_id", nullable = false)
     private UUID projectId;
 
+    @Column(name = "team_id")
+    private String teamId;
+
     @Column(name = "title", nullable = false)
     private String title;
 
@@ -56,6 +59,9 @@ public class AgileTask {
     @Column(name = "last_activity_at", nullable = false)
     private ZonedDateTime lastActivityAt;
 
+    @Column(name = "timeout_extensions")
+    private Integer timeoutExtensions = 0;
+
     @Column(name = "created_by", nullable = false)
     private String createdBy;
 
@@ -69,6 +75,11 @@ public class AgileTask {
     @CollectionTable(name = "ibpms_agile_task_assignees", joinColumns = @JoinColumn(name = "task_id"))
     @Column(name = "user_id")
     private Set<String> assigneeIds;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "ibpms_agile_task_tags", joinColumns = @JoinColumn(name = "task_id"))
+    @Column(name = "tag")
+    private Set<String> tags;
 
     @PrePersist
     protected void onCreate() {

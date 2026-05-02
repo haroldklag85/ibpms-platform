@@ -1,7 +1,7 @@
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.domain.model.audit.ClaimAuditLog;
-import com.ibpms.poc.infrastructure.persistence.ClaimAuditLogRepository;
+import com.ibpms.poc.application.port.out.ClaimAuditPort;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -11,10 +11,24 @@ import java.util.UUID;
 @Service
 public class ClaimAuditService {
 
-    private final ClaimAuditLogRepository auditRepository;
+    private final ClaimAuditPort claimAuditPort;
 
-    public ClaimAuditService(ClaimAuditLogRepository auditRepository) {
-        this.auditRepository = auditRepository;
+    public ClaimAuditService(ClaimAuditPort claimAuditPort) {
+        this.claimAuditPort = claimAuditPort;
+    }
+
+    public void audit(UUID taskId, String userId, String actionType, String reason, String previousAssignee, String message) {
+        ClaimAuditLog log = new ClaimAuditLog(
+                taskId,
+                userId,
+                actionType,
+                "default",
+                Instant.now(),
+                previousAssignee,
+                reason,
+                message
+        );
+        claimAuditPort.save(log);
     }
 
     public void auditForceUnclaim(UUID taskId, String supervisorId, String tenantId) {
@@ -23,12 +37,15 @@ public class ClaimAuditService {
                 supervisorId,
                 "FORCE_UNCLAIM",
                 tenantId,
-                Instant.now()
+                Instant.now(),
+                null,
+                null,
+                null
         );
-        auditRepository.save(log);
+        claimAuditPort.save(log);
     }
 
     public List<ClaimAuditLog> getAuditTrail(UUID taskId) {
-        return auditRepository.findByTaskIdOrderByTimestampDesc(taskId);
+        return claimAuditPort.findByTaskId(taskId);
     }
 }

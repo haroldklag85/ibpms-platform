@@ -43,7 +43,7 @@ class PreTriageTaskCreationTest {
     void setUp() {
         WebhookProperties props = new WebhookProperties();
         props.getPreTriage().setProcessDefinitionKey(PROCESS_KEY);
-        service = new WebhookIntakeService(transactionRepo, orphanRepo, domainRepo, mock(com.ibpms.poc.domain.port.TriageTaskRepository.class), clamAvScanner, runtimeService, props);
+        service = new WebhookIntakeService(transactionRepo, orphanRepo, domainRepo, mock(com.ibpms.poc.domain.port.TriageTaskRepository.class), clamAvScanner, runtimeService, props, mock(com.ibpms.poc.application.service.IntegrationEventPublisher.class));
     }
 
     @Test

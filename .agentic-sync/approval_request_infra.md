@@ -1,28 +1,17 @@
-# 🛡️ Reporte de Verificación de Infraestructura — US-030
+# Solicitud de Revisión: Infra/BD - US-007
 
-**Rol:** Agente Infra/DB
-**Fecha:** 2026-05-02
-**Estado:** ✅ **APROBADO**
+**Rol:** Agente Infra/BD
+**Estado Actual:** PLANNING
+**Handoff de Origen:** `.agentic-sync/handoff_infra_US007_CA26_CA32.md`
 
-He completado la verificación del esquema de base de datos para el módulo Agile (US-030) según la Sección 3 del Handoff.
+## Plan Propuesto
+1. **Creación del Esquema:**
+   Crearé el archivo `backend/ibpms-core/src/main/resources/db/changelog/38-us007-dmn-manual-edit-schema.sql` con la alteración a la tabla `ibpms_dmn_definitions` para añadir la columna `is_manual BOOLEAN DEFAULT FALSE`.
+2. **Validación de `ibpms_audit_log`:**
+   Verificaré si existe algún constraint restrictivo (CHECK) en la tabla de auditoría para la columna `source` que pueda bloquear el origen `MANUAL_EDIT`. Si existiera, lo documentaré/extenderé en el mismo changelog.
+3. **Registro:**
+   Añadiré el nuevo changeset a `db.changelog-master.yaml`.
+4. **Ejecución y Push:**
+   Verificaré que las reglas de Zero-Mock y Liquibase sintácticas estén en verde antes de hacer push en `sprint-6`.
 
-## Hallazgos de la Verificación
-
-1. **Tabla `ibpms_agile_projects`:**
-   - ✅ Confirmado: Existe en el changelog `sprint3/005_create_agile_hub_tables.sql`.
-
-2. **Tabla `ibpms_agile_tasks`:**
-   - ✅ Confirmado: Existe y cuenta con todas las columnas críticas exigidas:
-     - `position` (INTEGER): Correctamente declarada (Línea 26).
-     - `sla_deadline` (TIMESTAMPTZ): Declarada (Línea 27).
-     - `last_activity_at` (TIMESTAMPTZ): Declarada (Línea 28).
-
-3. **Tabla `ibpms_agile_task_assignees`:**
-   - ✅ Confirmado: Existe como tabla pivote (Join) relacionando `task_id` (UUID) y `user_id` (VARCHAR) (Línea 34).
-
-4. **Tabla `ibpms_agile_sla_changelog`:**
-   - ✅ Confirmado: Existe y contiene las columnas `task_id`, `previous_value`, `new_value`, `changed_by` y `changed_at` (Línea 56).
-
-**Conclusión:**
-Toda la estructura DDL de Liquibase ya se encuentra correctamente provisionada en el repositorio. No fue necesario construir un nuevo changeset.
-El entorno está listo y apto para que Backend y Frontend puedan continuar sin bloqueos arquitectónicos de BD.
+Arquitecto Líder, quedo atento a su veredicto (APROBADO/DENEGADO) para poder transicionar al modo EXECUTION y consolidar los cambios en el repositorio.

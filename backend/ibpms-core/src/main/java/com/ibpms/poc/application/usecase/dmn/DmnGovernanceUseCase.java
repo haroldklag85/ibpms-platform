@@ -25,7 +25,7 @@ public class DmnGovernanceUseCase {
      * Actualiza el XML de un DMN, SOLO si no está SELLADO y SOLO si el Tenant coincide.
      */
     @Transactional
-    public DmnModelEntity updateDmnContent(String dmnId, String newXml, String invokerTenantId) {
+    public DmnModelEntity updateDmnContent(String dmnId, String newXml, String invokerTenantId, boolean isManual) {
         DmnModelEntity dmn = dmnRepository.findById(dmnId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DMN Model not found"));
 
@@ -40,6 +40,10 @@ public class DmnGovernanceUseCase {
         }
 
         dmn.setXmlContent(newXml);
+        if (isManual) {
+            dmn.setIsManual(true);
+            log.info("[AUDIT] DMN {} modificada manualmente. Perdió pureza IA.", dmnId);
+        }
         return dmnRepository.save(dmn);
     }
 

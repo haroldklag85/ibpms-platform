@@ -24,7 +24,7 @@ public class AgileProjectController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<AgileProject> createProject(
             @Valid @RequestBody CreateAgileProjectRequest request,
             Authentication authentication) {

@@ -12,4 +12,6 @@ public interface AuditLogUseCase {
      *         Javers.
      */
     String getEntityDiffHistory(String entityType, String entityId);
+
+    void commit(String author, Object object);
 }

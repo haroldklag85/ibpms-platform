@@ -42,7 +42,7 @@
 | US-039 | Formulario Genérico Base (Pantalla 7.B - El Camaleón Operativo) | ✅ Completada |
 | US-005 | Desplegar y Versionar un Modelo de Proceso (BPMN) | ✅ Completada |
 | US-006 | Diseñar la Estructura Base (WBS) de una Plantilla de Proyecto | ❌ Pendiente |
-| US-007 | Generador Cognitivo de DMN (NLP a Tablas de Decisión) | 🔨 En construcción (~48%) ⚠️ IDOR activo: tenantId hardcodeado en DmnGovernanceController |
+| US-007 | Generador Cognitivo de DMN (NLP a Tablas de Decisión) | 🔨 En construcción (~48%) ✅ IDOR remediado (Zero-Trust isolation) |
 
 ---
 
@@ -140,4 +140,4 @@
 | G — IA Cognitiva/RAG | 7 | ~110 KB | 0 | 0 | 0 | 7 |
 | **TOTAL** | **56** | **~604 KB** | **11** | **5** | **1** | **39** |
 
-> **Nota (2026-04-18):** Tabla actualizada post Auditoría Integral Sección 1.2. US-001 reclasificada a Completada (100%). US-002, US-004, US-029, US-030 detectadas como En Construcción parcial. US-008 como Scaffolding. US-007 como En Construcción con IDOR crítico. Ver detalles en `.agentic-sync/coverage_matrix.md`.
+> **Nota (2026-04-18):** Tabla actualizada post Auditoría Integral Sección 1.2. US-001 reclasificada a Completada (100%). US-002, US-004, US-029, US-030 detectadas como En Construcción parcial. US-008 como Scaffolding. US-007 con IDOR crítico remediado. Ver detalles en `.agentic-sync/coverage_matrix.md`.

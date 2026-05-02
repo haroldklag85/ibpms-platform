@@ -26,12 +26,13 @@ public class DmnGovernanceController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_PROCESS_ARCHITECT')")
-    public ResponseEntity<?> overrideDmnDraft(@PathVariable String id, @RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> overrideDmnDraft(@PathVariable String id, @RequestBody Map<String, Object> payload) {
         String invokerTenant = SecurityContextUtils.getTenantId();
         
-        String incomingXml = payload.get("xmlContent");
+        String incomingXml = (String) payload.get("xmlContent");
+        boolean isManual = payload.containsKey("isManual") ? (Boolean) payload.get("isManual") : false;
 
-        var result = dmnGovernanceUseCase.updateDmnContent(id, incomingXml, invokerTenant);
+        var result = dmnGovernanceUseCase.updateDmnContent(id, incomingXml, invokerTenant, isManual);
         return ResponseEntity.ok(result);
     }
 

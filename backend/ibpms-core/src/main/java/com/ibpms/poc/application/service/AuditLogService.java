@@ -33,4 +33,9 @@ public class AuditLogService implements AuditLogUseCase {
         // Se retorna el JSON oficial serializado de Javers
         return javers.getJsonConverter().toJson(changes);
     }
+
+    @Override
+    public void commit(String author, Object object) {
+        javers.commit(author, object);
+    }
 }

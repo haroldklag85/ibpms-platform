@@ -27,46 +27,49 @@ public class AgileTaskController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
-    public ResponseEntity<AgileTask> createTask(
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    public ResponseEntity<TaskResponse> createTask(
         @PathVariable UUID projectId,
         @Valid @RequestBody CreateTaskRequest request,
         Authentication authentication) {
         String createdBy = authentication.getName();
-        return ResponseEntity.ok(taskService.createTask(
-            projectId, request.title(), request.description(), request.effort(), createdBy));
+        AgileTask task = taskService.createTask(
+            projectId, request.title(), request.description(), request.effort(), request.assigneeIds(), request.tags(), request.notes(), createdBy);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(TaskResponse.from(task));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
-    public ResponseEntity<Page<AgileTask>> listTasks(
+    public ResponseEntity<Page<TaskResponse>> listTasks(
         @PathVariable UUID projectId,
-        @RequestParam(required = false, defaultValue = "false") boolean showCompleted,
+        @RequestParam(required = false, defaultValue = "false") boolean includeCompleted,
         Pageable pageable) {
-        return ResponseEntity.ok(taskService.listTasks(projectId, showCompleted, pageable));
+        Page<AgileTask> page = taskService.listTasks(projectId, includeCompleted, pageable);
+        return ResponseEntity.ok(page.map(TaskResponse::from));
     }
 
     @GetMapping("/{taskId}")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
-    public ResponseEntity<AgileTask> getTaskDetail(
+    public ResponseEntity<TaskResponse> getTaskDetail(
         @PathVariable UUID projectId,
         @PathVariable UUID taskId) {
-        return ResponseEntity.ok(taskService.getTask(taskId));
+        return ResponseEntity.ok(TaskResponse.from(taskService.getTask(taskId)));
     }
 
-    @PatchMapping("/{taskId}")
-    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
-    public ResponseEntity<AgileTask> updateTask(
+    @PutMapping("/{taskId}")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    public ResponseEntity<TaskResponse> updateTask(
         @PathVariable UUID projectId,
         @PathVariable UUID taskId,
         @Valid @RequestBody UpdateTaskRequest request,
         Authentication authentication) {
         String updatedBy = authentication.getName();
-        return ResponseEntity.ok(taskService.updateTask(
-            taskId, request.title(), request.description(), request.effort(), request.status(), request.slaDeadline(), updatedBy));
+        AgileTask task = taskService.updateTask(
+            taskId, request.title(), request.description(), request.effort(), request.status(), request.slaDeadline(), request.assigneeIds(), request.tags(), request.notes(), updatedBy);
+        return ResponseEntity.ok(TaskResponse.from(task));
     }
 
-    // CA-4: Eliminar con auditoría forense (Soft delete)
+    // CA-4: Eliminar con auditoría forense (Soft delete -> Hard delete)
     @DeleteMapping("/{taskId}")
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> deleteTask(
@@ -89,7 +92,7 @@ public class AgileTaskController {
     }
 
     // CA-5 + CA-14: Asignación masiva interactiva
-    @PostMapping("/bulk-assign")
+    @PatchMapping("/bulk-assign")
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> bulkAssign(
         @PathVariable UUID projectId,
@@ -103,7 +106,10 @@ public class AgileTaskController {
     public record CreateTaskRequest(
         @NotBlank(message = "El título es obligatorio") String title,
         String description,
-        BigDecimal effort
+        BigDecimal effort,
+        java.util.Set<String> assigneeIds,
+        java.util.Set<String> tags,
+        String notes
     ) {}
 
     public record UpdateTaskRequest(
@@ -111,7 +117,10 @@ public class AgileTaskController {
         String description,
         BigDecimal effort,
         String status,
-        java.time.ZonedDateTime slaDeadline
+        java.time.ZonedDateTime slaDeadline,
+        java.util.Set<String> assigneeIds,
+        java.util.Set<String> tags,
+        String notes
     ) {}
 
     public record ReorderRequest(
@@ -122,4 +131,44 @@ public class AgileTaskController {
         @NotEmpty(message = "Debe enviar tareas") List<UUID> taskIds,
         @NotBlank(message = "El usuario asignado es obligatorio") String userId
     ) {}
+
+    public record TaskResponse(
+            UUID id,
+            UUID projectId,
+            String title,
+            String description,
+            BigDecimal effortEstimated,
+            String status,
+            Integer position,
+            java.time.ZonedDateTime slaDeadline,
+            java.time.ZonedDateTime lastActivityAt,
+            String createdBy,
+            java.util.Set<String> assigneeIds,
+            java.util.Set<String> tags,
+            String notes,
+            long daysInactive
+    ) {
+        public static TaskResponse from(AgileTask task) {
+            long days = 0;
+            if (task.getLastActivityAt() != null) {
+                days = java.time.temporal.ChronoUnit.DAYS.between(task.getLastActivityAt(), java.time.ZonedDateTime.now());
+            }
+            return new TaskResponse(
+                    task.getId(),
+                    task.getProjectId(),
+                    task.getTitle(),
+                    task.getDescription(),
+                    task.getEffortEstimated(),
+                    task.getStatus(),
+                    task.getPosition(),
+                    task.getSlaDeadline(),
+                    task.getLastActivityAt(),
+                    task.getCreatedBy(),
+                    task.getAssigneeIds(),
+                    task.getTags(),
+                    task.getNotes(),
+                    days
+            );
+        }
+    }
 }

@@ -28,15 +28,19 @@
             <div class="ml-2 text-xs font-semibold text-gray-700">Portafolio</div>
           </label>
 
-          <!-- CA-8: Smart Archive Toggle -->
           <label class="flex items-center cursor-pointer border-l pl-4 border-gray-300">
             <div class="relative">
-              <input type="checkbox" v-model="agileStore.isArchiveSimulated" class="sr-only" />
+              <input type="checkbox" v-model="agileStore.showCompleted" class="sr-only" />
               <div class="block bg-gray-200 w-10 h-6 rounded-full border border-gray-300"></div>
-              <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition" :class="{'transform translate-x-4 bg-indigo-600': agileStore.isArchiveSimulated}"></div>
+              <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition" :class="{'transform translate-x-4 bg-indigo-600': agileStore.showCompleted}"></div>
             </div>
-            <div class="ml-2 text-xs font-semibold text-gray-700" title="Ocultar Inactivos">Smart Archive</div>
+            <div class="ml-2 text-xs font-semibold text-gray-700" title="Mostrar Completadas">Mostrar Completadas</div>
           </label>
+
+          <!-- CA-12: Link Saltar al Tablero -->
+          <router-link :to="'/admin/projects/kanban/' + (agileStore.currentProject?.id || 'PROJ-DEFAULT')" class="ml-2 text-indigo-600 hover:text-indigo-800 text-sm font-semibold flex items-center gap-1">
+            Saltar al Tablero <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </router-link>
 
           <button @click="initBoard" class="ml-2 px-3 py-1.5 bg-white border border-gray-300 rounded shadow-sm text-sm font-semibold hover:bg-gray-50 flex items-center gap-1 text-slate-700">
             <span class="material-symbols-outlined text-[16px]">sync</span> Refrescar
@@ -78,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 import AgileBacklogList from '@/components/agile/AgileBacklogList.vue';
@@ -128,6 +132,26 @@ const initBoard = () => {
 
 onMounted(() => {
    initBoard();
+});
+
+// CA-7: Portfolio View watcher
+watch(() => agileStore.isPortfolioMode, async (newVal) => {
+    if (newVal) {
+        try {
+            agileStore.isLoading = true;
+            const res = await axios.get('/api/v1/agile/portfolio');
+            // Simplified portfolio load logic
+            if (res.data && res.data.backlogItems) {
+                agileStore.backlogItems = res.data.backlogItems;
+            }
+        } catch (e) {
+            console.error('Error fetching portfolio view:', e);
+        } finally {
+            agileStore.isLoading = false;
+        }
+    } else {
+        initBoard();
+    }
 });
 </script>
 

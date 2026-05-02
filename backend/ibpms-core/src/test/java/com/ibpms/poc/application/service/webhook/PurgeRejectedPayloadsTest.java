@@ -33,7 +33,7 @@ class PurgeRejectedPayloadsTest {
     @BeforeEach
     void setUp() {
         WebhookProperties props = new WebhookProperties();
-        service = new WebhookIntakeService(null, orphanRepo, null, triageTaskRepository, null, null, props);
+        service = new WebhookIntakeService(null, orphanRepo, null, triageTaskRepository, null, null, props, null);
     }
 
     @Test

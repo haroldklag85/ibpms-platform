@@ -1,83 +1,183 @@
 import { defineStore } from 'pinia';
-import { api } from '@/services/apiClient';
+import axios from 'axios';
+import { Client } from '@stomp/stompjs';
 
 export interface KanbanItem {
     id: string;
+    boardId?: string;
     title: string;
+    description?: string;
     status: string;
-    createdAt: string;
-    slaHours: number;
-    hoursElapsed: number;
+    createdAt?: string;
+    slaDueDate?: string;
     assignee?: string;
-    blockReason?: string;
+    blockedReason?: string;
     processName?: string;
     priority?: string;
 }
 
 export interface KanbanColumn {
     id: string;
-    title: string;
+    boardId?: string;
+    name: string;
+    title?: string;
+    position?: number;
     items: KanbanItem[];
-    wipLimit?: number;
 }
 
 export const useKanbanStore = defineStore('kanban', {
     state: () => ({
+        boardId: '' as string,
         columns: [] as KanbanColumn[],
+        tasks: [] as KanbanItem[],
+        activeTimers: {} as Record<string, string>,
         loading: false,
-        error: null as string | null
+        error: null as string | null,
+        stompClient: null as Client | null,
+        stompConnected: false,
     }),
     actions: {
-        async fetchBoard() {
+        async fetchBoard(boardId: string) {
+            this.boardId = boardId;
             this.loading = true;
             this.error = null;
             try {
-                const { data } = await api.getKanbanBoard();
-                this.columns = data.columns || data;
+                const [colsRes, tasksRes] = await Promise.all([
+                    axios.get(`/api/v1/kanban/boards/${boardId}/columns`),
+                    axios.get(`/api/v1/kanban/boards/${boardId}/tasks`)
+                ]);
+                
+                this.columns = colsRes.data.map((c: any) => ({
+                    ...c,
+                    title: c.name,
+                    items: []
+                }));
+                
+                this.tasks = tasksRes.data;
+                for(const task of this.tasks) {
+                    const col = this.columns.find(c => c.name === task.status);
+                    if(col) col.items.push(task);
+                }
+                
+                this.initWebSocket();
             } catch (error: any) {
                 console.error("Error fetching board", error);
                 this.error = "Error al conectar con el servidor.";
-                throw error;
             } finally {
                 this.loading = false;
             }
         },
-        async moveTask(taskId: string, newStatus: string, blockReason?: string) {
+        async moveTask(taskId: string, newStatus: string, blockedReason?: string) {
+            let targetTask: KanbanItem | undefined;
+            let oldCol: KanbanColumn | undefined;
+            for(const col of this.columns) {
+                const idx = col.items.findIndex(i => i.id === taskId);
+                if (idx > -1) {
+                    targetTask = col.items[idx];
+                    oldCol = col;
+                    break;
+                }
+            }
+            if(!targetTask || !oldCol) return;
+            
+            const originalStatus = targetTask.status;
+            const originalReason = targetTask.blockedReason;
+            
+            oldCol.items = oldCol.items.filter(i => i.id !== taskId);
+            targetTask.status = newStatus;
+            if(blockedReason !== undefined) targetTask.blockedReason = blockedReason;
+            
+            const newCol = this.columns.find(c => c.name === newStatus);
+            if(newCol) newCol.items.push(targetTask);
+            
+            const payload: any = { newState: newStatus };
+            if(blockedReason) payload.blockedReason = blockedReason;
+            
             try {
-                // Find and optimistically update
-                let movedItem: KanbanItem | undefined;
-                let oldStatus = '';
-                for (const col of this.columns) {
-                    const idx = col.items.findIndex(i => i.id === taskId);
-                    if (idx > -1) {
-                        movedItem = col.items.splice(idx, 1)[0];
-                        oldStatus = col.id;
+                await axios.patch(`/api/v1/kanban/${taskId}/state`, payload);
+            } catch(error) {
+                console.warn("Fallo en Optimistic UI, revirtiendo estado...", error);
+                if(newCol) {
+                    newCol.items = newCol.items.filter(i => i.id !== taskId);
+                }
+                targetTask.status = originalStatus;
+                targetTask.blockedReason = originalReason;
+                oldCol.items.push(targetTask);
+                this.error = "Error al mover la tarjeta";
+                throw error;
+            }
+        },
+        async startTimer(taskId: string) {
+            try {
+                const res = await axios.post(`/api/v1/time-tracking/start`, { referenceId: taskId, referenceType: 'TASK_AGILE' });
+                this.activeTimers[taskId] = res.data.id;
+            } catch (e: any) {
+                console.error("Error startTimer", e);
+                throw e;
+            }
+        },
+        async stopTimer(logId: string) {
+            try {
+                await axios.post(`/api/v1/time-tracking/stop/${logId}`);
+                for(const key in this.activeTimers) {
+                    if (this.activeTimers[key] === logId) {
+                        delete this.activeTimers[key];
                         break;
                     }
                 }
-
-                if (movedItem) {
-                    movedItem.status = newStatus;
-                    if (blockReason) movedItem.blockReason = blockReason;
-                    
-                    const targetCol = this.columns.find(c => c.id === newStatus);
-                    if (targetCol) {
-                        targetCol.items.push(movedItem);
+            } catch (e: any) {
+                console.error("Error stopTimer", e);
+                throw e;
+            }
+        },
+        async addColumn(boardId: string, name: string) {
+            try {
+                const res = await axios.post(`/api/v1/kanban/boards/${boardId}/columns`, { name });
+                const newCol = res.data;
+                this.columns.push({ ...newCol, title: newCol.name, items: [] });
+            } catch (e: any) {
+                if(e.response?.status === 409) this.error = "Límite de columnas alcanzado.";
+                throw e;
+            }
+        },
+        async removeColumn(boardId: string, colId: string) {
+            try {
+                await axios.delete(`/api/v1/kanban/boards/${boardId}/columns/${colId}`);
+                this.columns = this.columns.filter(c => c.id !== colId);
+            } catch (e: any) {
+                throw e;
+            }
+        },
+        initWebSocket() {
+            if (this.stompClient && this.stompClient.active) return;
+            const socketUrl = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:8080/ws/workdesk/websocket';
+            this.stompClient = new Client({
+                brokerURL: socketUrl,
+                heartbeatIncoming: 4000,
+                heartbeatOutgoing: 4000,
+            });
+            this.stompClient.onConnect = () => {
+                this.stompConnected = true;
+                this.stompClient?.subscribe(`/topic/kanban/${this.boardId}/tasks`, (message) => {
+                    if (message.body) {
+                        try {
+                            const event = JSON.parse(message.body);
+                            if(event.action === 'TASK_STATE_CHANGED') {
+                                this.fetchBoard(this.boardId);
+                            }
+                        } catch(e){}
                     }
-                }
-
-                const payload: any = { newState: newStatus };
-                if (blockReason) payload.blockReason = blockReason;
-                
-                // UI Optimista: Fire-and-Forget
-                api.updateKanbanStatus(taskId, payload).catch(error => {
-                    console.warn("Fallo en Optimistic UI, revirtiendo estado...", error);
-                    // Rollback on failure
-                    this.fetchBoard(); // Re-sync
                 });
-            } catch (error) {
-                console.error("Error al mover la tarjeta", error);
-                throw error;
+            };
+            this.stompClient.onStompError = () => {
+                this.stompConnected = false;
+            };
+            this.stompClient.activate();
+        },
+        disconnectWebSocket() {
+            if (this.stompClient) {
+                this.stompClient.deactivate();
+                this.stompConnected = false;
             }
         }
     }

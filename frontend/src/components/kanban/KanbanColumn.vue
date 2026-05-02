@@ -15,7 +15,7 @@
         item-key="id"
         group="kanban"
         ghost-class="opacity-50"
-        :disabled="disabled || column.id === 'DONE'"
+        :disabled="disabled || column.name === 'DONE'"
         @change="onChange"
       >
         <template #item="{ element }">
@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import { PropType } from 'vue';
 import draggable from 'vuedraggable';
-import type { KanbanColumnDef, KanbanItem } from '@/types/Kanban';
+import type { KanbanColumn as KanbanColumnDef, KanbanItem } from '@/stores/kanbanStore';
 import KanbanCard from './KanbanCard.vue';
 
 const props = defineProps({
@@ -60,7 +60,7 @@ const onChange = (evt: any) => {
   // Cuando VueDraggable suelta un item de otro grupo, emite un 'added'
   if (evt.added) {
     const movedItem: KanbanItem = evt.added.element;
-    emit('itemMoved', { item: movedItem, newStatus: props.column.id });
+    emit('itemMoved', { item: movedItem, newStatus: props.column.name });
   }
 };
 </script>

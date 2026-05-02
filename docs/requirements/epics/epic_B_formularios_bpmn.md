@@ -2104,7 +2104,55 @@ Feature: NLP to DMN Translation, SRE Architecture & AppSec Governance
     And si la generación ya comenzó (al menos 1 fila recibida) pero deja de emitir filas por más de 15 segundos consecutivos (stall), el Frontend activará el mecanismo de resiliencia del CA-19 (borrador parcial + reintentar).
 
 
-```
+  # ==============================================================================
+  # G. REFINAMIENTO MODO MANUAL (AGNÓSTICO A IA)
+  # Origen: Refinamiento con el PO (2026-05-02)
+  # Propósito: Formalizar la alternativa de creación 100% humana (Sin IA).
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Coexistencia UI del Chat NLP y Grilla Visual (CA-26)
+    Given que el Arquitecto ingresa a la Pantalla 4 para crear una tabla desde cero sin IA
+    When despliega la grilla vacía para inicio manual
+    Then el panel del Chat NLP (Generador Cognitivo) permanecerá abierto y visible en la interfaz.
+    And el usuario podrá alternar entre escritura manual en la grilla y pedir sugerencias a la IA sin que un modo bloquee al otro.
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Binding Obligatorio con Diccionario Zod (CA-27)
+    Given la necesidad de definir Columnas de Entrada (Inputs) en la grilla vacía
+    When el usuario intenta agregar una nueva condición a la cabecera de la tabla
+    Then el sistema NO permitirá escribir nombres de variables libres en texto crudo.
+    And desplegará un Dropdown obligatorio que consuma el Diccionario de Datos Zod (US-003).
+    And el usuario deberá arrastrar o seleccionar las variables pre-existentes para garantizar la integridad referencial del proceso.
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Validación de Sintaxis FEEL en Tiempo Real (CA-28)
+    Given que el usuario digita reglas matemáticas o condicionales manualmente en las celdas (ej. `< 1000` o `"Aprobado"`)
+    When el usuario interactúa con la grilla
+    Then el Frontend ejecutará un motor ligero de validación de sintaxis FEEL en tiempo real.
+    And si detecta un error de sintaxis (ej. caracteres no permitidos o tipo de dato inconsistente con Zod), marcará la celda inmediatamente con un borde rojo y un tooltip explicativo.
+    And bloqueará el botón de [Guardar/Publicar] hasta que la celda sea corregida.
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Inyección Automática de Candado Catch-All (CA-29)
+    Given la regla matemática estricta de Hit Policy FIRST (CA-07)
+    When el usuario está construyendo la tabla manualmente fila por fila
+    Then el Frontend inyectará y mantendrá automáticamente una fila final inamovible (Catch-All) con el candado 🔒.
+    And el usuario NO podrá eliminar esta fila, asegurando que cualquier escenario no contemplado en las reglas superiores derive por defecto a un estado seguro (Ej: "Revisión Humana").
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Edición Posterior de Cargas XML (CA-30)
+    Given el "Modo Desarrollador" que permite cargar archivos `.dmn` nativos (CA-09, CA-22)
+    When el archivo XML es procesado, validado y cargado exitosamente en la plataforma
+    Then la tabla resultante SERÁ totalmente editable dentro de la grilla visual.
+    And el usuario podrá modificar celdas, agregar filas o corregir lógicas usando la interfaz estándar sin necesidad de resubir el XML en cada iteración.
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Límite de Capacidad Manual de SRE (CA-31)
+    Given la salud del motor de evaluación Camunda y el rendimiento del Virtual Scrolling
+    When el usuario añade filas manualmente a la tabla DMN
+    Then el Frontend impondrá un Hard-Stop paramétrico de máximo 100 filas permitidas (superior a las 50 de la IA, pero acotado).
+    And si el usuario intenta agregar la fila 101, el sistema deshabilitará el botón "+" y mostrará una advertencia de tope arquitectónico por salud de SRE.
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Trazabilidad y Versionamiento de Intervención Humana (CA-32)
+    Given una tabla V1 originaria que fue generada íntegramente por la IA
+    When un Arquitecto entra a la grilla y realiza modificaciones manuales (cambia un valor, borra una fila, etc.) y hace clic en [Publicar]
+    Then el Backend incrementará la versión a V2 obligatoriamente.
+    And en el log de auditoría y en el Catálogo DMN (CA-17), esta versión quedará etiquetada estrictamente con el badge visual "Modificada Manualmente", perdiendo el sello de pureza "100% IA".```
 **Trazabilidad UX:** Wireframes Pantalla 4 (Taller DMN) y su invocación desde Pantalla 6 (Diseñador BPMN).
 
 ---

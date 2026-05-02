@@ -22,7 +22,7 @@
 | **Total US en V1** | 56 |
 | **US Completadas** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
 | **US En Construcción (avanzadas >60%)** | 6 (US-002 ~68%, US-004 ~71%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
-| **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — bloqueada por IDOR, US-017 ~50% — 8 CAs UX/UI pendientes) |
+| **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — IDOR remediado, US-017 ~50% — 8 CAs UX/UI pendientes) |
 | **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
 | **US Pendientes** | 32 |
 | **CAs Implementados (estimado)** | ~290+ |
@@ -186,13 +186,13 @@
 **Épica:** B — Formularios/BPMN | **Estado:** 🔨 EN CONSTRUCCIÓN (~48%) | **Auditado:** 2026-04-18
 **Archivos verificados:** `DmnGovernanceController.java` · `DmnIntelligence.vue`
 
-> [!WARNING]
-> **IDOR ACTIVO:** `tenantId` hardcodeado en `DmnGovernanceController` — un tenant autenticado puede leer/modificar DMNs de otro tenant. Requiere corrección inmediata antes de cualquier despliegue.
+> [!NOTE]
+> **IDOR REMEDIADO:** El `tenantId` hardcodeado en `DmnGeneratorController` fue corregido utilizando `SecurityContextUtils.getTenantId()`. Aislamiento multitenant asegurado.
 
 | CA | Título (corto) | Back | Front | QA | Notas |
 |----|----------------|------|-------|----|-------|
 | CA-1 | Streaming SSE generación IA | ✅ | ✅ | ✅ | Endpoint SSE + reconexión automática en `DmnIntelligence.vue`, test 504 cubierto |
-| CA-2 | Caché criptográfica (anti DoW) | ⚠️ | N/A | ❌ | Caché por hash ✅; multi-tenant roto por tenantId hardcodeado |
+| CA-2 | Caché criptográfica (anti DoW) | ✅ | N/A | ❌ | Caché por hash ✅; multi-tenant remediado con SecurityContextUtils |
 | CA-3 | GC y Compresión XML borradores | ❌ | N/A | ❌ | No evidenciado `DmnDraftCleanupScheduler` |
 | CA-4 | Sandboxing Anti-RCE & XSS | ⚠️ | ⚠️ | ❌ | Validación XML estructural ✅; XSS en render DOM no verificado |
 | CA-5 | Seudonimización PII del Prompt | ❌ | N/A | ❌ | No evidenciado pre-procesamiento PII antes del LLM |
@@ -209,7 +209,7 @@
 ### Resumen US-007
 - **CAs Totales:** 25 | **CAs verificados:** 12 | **CAs cumplidos:** ~7 | **% Real:** ~48%
 - **QA:** ✅ CAs de resiliencia validados (CA-1, 19-25 parcialmente). ✅ CA-6 Aislamiento de Tenant en Front validado (Interceptor 403 Playwright).
-- **Bloqueador Crítico:** IDOR activo por tenantId hardcodeado — **no apto para producción** (Remediación back pendiente)
+- **Estado de Seguridad:** ✅ IDOR crítico por tenantId hardcodeado remediado.
 - **Pendiente auditar:** CAs 13-25 (13 CAs de remediación y refinamiento)
 
 ---
@@ -583,7 +583,7 @@
 | **Total US en V1** | 56 |
 | **US Completadas (Back+Front)** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
 | **US En Construcción (avanzadas >60%)** | 6 (US-002 ~68%, US-004 ~71%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
-| **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — bloqueada por IDOR, US-017 ~50% — 8 CAs UX/UI pendientes) |
+| **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — IDOR remediado, US-017 ~50% — 8 CAs UX/UI pendientes) |
 | **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
 | **US Pendientes** | 32 |
 | **CAs Implementados (estimado)** | ~290+ |

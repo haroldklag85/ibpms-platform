@@ -27,7 +27,7 @@ class HmacValidationTest {
         WebhookProperties props = new WebhookProperties();
         props.getSecurity().setMode("HMAC");
         props.getSecurity().setHmacSecret(SECRET);
-        service = new WebhookIntakeService(null, null, null, null, null, null, props);
+        service = new WebhookIntakeService(null, null, null, null, null, null, props, null);
     }
 
     @Test
@@ -61,7 +61,7 @@ class HmacValidationTest {
         WebhookProperties bearerProps = new WebhookProperties();
         bearerProps.getSecurity().setMode("BEARER");
         WebhookIntakeService bearerService = new WebhookIntakeService(
-                null, null, null, null, null, null, bearerProps);
+                null, null, null, null, null, null, bearerProps, null);
 
         // Even without a signature, Bearer mode passes
         assertTrue(bearerService.validateHmacSignature("{}", null));

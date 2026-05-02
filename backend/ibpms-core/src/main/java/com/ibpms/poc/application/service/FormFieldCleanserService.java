@@ -54,4 +54,9 @@ public class FormFieldCleanserService {
             }
         }
     }
+
+    public String sanitizeHtml(String input) {
+        if (input == null) return null;
+        return input.replace("<", "&lt;").replace(">", "&gt;");
+    }
 }

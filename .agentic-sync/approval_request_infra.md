@@ -1,24 +1,28 @@
-# 🛡️ Reporte de Verificación de Infraestructura — US-004
+# 🛡️ Reporte de Verificación de Infraestructura — US-030
 
 **Rol:** Agente Infra/DB
 **Fecha:** 2026-05-02
 **Estado:** ✅ **APROBADO**
 
-He completado la verificación de la infraestructura requerida para la remediación de la US-004, de acuerdo con las instrucciones de la Sección 2 del Handoff.
+He completado la verificación del esquema de base de datos para el módulo Agile (US-030) según la Sección 3 del Handoff.
 
 ## Hallazgos de la Verificación
 
-1. **Estado del Contenedor RabbitMQ:**
-   - ✅ El contenedor `ibpms-rabbitmq-uat` se encuentra levantado y en estado "healthy".
-   - ✅ El puerto `5672` está expuesto y accesible correctamente en `localhost`.
+1. **Tabla `ibpms_agile_projects`:**
+   - ✅ Confirmado: Existe en el changelog `sprint3/005_create_agile_hub_tables.sql`.
 
-2. **Topología en `RabbitMqTopologyConfig.java`:**
-   - ✅ **Exchange:** `ibpms.exchange.topic` está aprovisionado correctamente.
-   - ✅ **Cola Principal:** `ibpms.integrations.webhook` está aprovisionada e incluye configuración de DLX.
-   - ✅ **DLQ (Dead Letter Queue):** `ibpms.dlq.global` está aprovisionada con el TTL exigido de 30 días (`2592000000L`).
-   - ✅ **Bindings:** El enrutamiento `integrations.#` hacia la cola del webhook está correctamente declarado.
+2. **Tabla `ibpms_agile_tasks`:**
+   - ✅ Confirmado: Existe y cuenta con todas las columnas críticas exigidas:
+     - `position` (INTEGER): Correctamente declarada (Línea 26).
+     - `sla_deadline` (TIMESTAMPTZ): Declarada (Línea 27).
+     - `last_activity_at` (TIMESTAMPTZ): Declarada (Línea 28).
+
+3. **Tabla `ibpms_agile_task_assignees`:**
+   - ✅ Confirmado: Existe como tabla pivote (Join) relacionando `task_id` (UUID) y `user_id` (VARCHAR) (Línea 34).
+
+4. **Tabla `ibpms_agile_sla_changelog`:**
+   - ✅ Confirmado: Existe y contiene las columnas `task_id`, `previous_value`, `new_value`, `changed_by` y `changed_at` (Línea 56).
 
 **Conclusión:**
-La infraestructura subyacente de mensajería asíncrona está operativa y la topología Spring AMQP coincide con las especificaciones. No he modificado código fuente ni levantado servicios adicionales, ya que el estado actual cumple satisfactoriamente con la auditoría.
-
-El entorno se encuentra apto para que el Backend proceda con su remediación o QA con sus pruebas.
+Toda la estructura DDL de Liquibase ya se encuentra correctamente provisionada en el repositorio. No fue necesario construir un nuevo changeset.
+El entorno está listo y apto para que Backend y Frontend puedan continuar sin bloqueos arquitectónicos de BD.

@@ -36,3 +36,16 @@ export async function seedAgileProject(request: APIRequestContext): Promise<stri
     const data = await response.json();
     return data.id; // UUID
 }
+
+export async function seedDmnTable(request: APIRequestContext, dmnId: string, rowsCount: number = 1): Promise<void> {
+    const response = await request.put(`http://localhost:8080/api/v1/dmn-models/${dmnId}`, {
+        data: {
+            xmlContent: '<definitions id="definitions"></definitions>',
+            isManual: true,
+            rows: rowsCount
+        }
+    });
+    if (!response.ok()) {
+        console.warn('Failed to seed DMN: ' + response.statusText());
+    }
+}

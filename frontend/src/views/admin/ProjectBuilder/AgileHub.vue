@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full bg-white flex flex-col overflow-hidden">
+  <div class="absolute inset-0 bg-white flex flex-col overflow-hidden">
     <!-- Header -->
     <div class="h-16 shrink-0 border-b border-gray-200 bg-white flex justify-between items-center px-6">
        <div>
@@ -41,6 +41,10 @@
           <button @click="initBoard" class="ml-2 px-3 py-1.5 bg-white border border-gray-300 rounded shadow-sm text-sm font-semibold hover:bg-gray-50 flex items-center gap-1 text-slate-700">
             <span class="material-symbols-outlined text-[16px]">sync</span> Refrescar
           </button>
+          
+          <button v-if="agileStore.currentProject?.status !== 'CLOSED'" @click="showCloseDialog = true" class="ml-2 px-3 py-1.5 bg-red-50 border border-red-300 rounded shadow-sm text-sm font-semibold text-red-700 hover:bg-red-100 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px]">block</span> Cerrar Proyecto
+          </button>
        </div>
     </div>
 
@@ -57,19 +61,44 @@
        <!-- Columna Derecha: Board Kano/Sprint -->
        <AgileBoardDraggable class="flex-1" />
     </div>
+    
+    <!-- Dialog Cerrar Proyecto -->
+    <div v-if="showCloseDialog" class="fixed inset-0 bg-black/50 z-[10002] flex items-center justify-center" role="dialog" aria-modal="true">
+       <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+         <h3 class="text-lg font-bold text-gray-900 mb-2">Cerrar Proyecto</h3>
+         <p class="text-sm text-gray-600 mb-6">¿Está seguro que desea cerrar el proyecto? Las tareas pendientes serán canceladas y el proyecto pasará a modo solo lectura.</p>
+         <div class="flex justify-end gap-3">
+           <button @click="showCloseDialog = false" class="px-4 py-2 bg-white border border-gray-300 rounded text-sm font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
+           <button @click="closeProject" class="px-4 py-2 bg-red-600 rounded text-sm font-semibold text-white hover:bg-red-700">Confirmar</button>
+         </div>
+       </div>
+    </div>
 
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import axios from 'axios';
 import AgileBacklogList from '@/components/agile/AgileBacklogList.vue';
 import AgileBoardDraggable from '@/components/agile/AgileBoardDraggable.vue';
 import { useAgileStore } from '@/stores/agileStore';
 
 const route = useRoute();
 const agileStore = useAgileStore();
+const showCloseDialog = ref(false);
+
+const closeProject = async () => {
+    if(!agileStore.currentProject) return;
+    try {
+        await axios.post(`/api/v1/projects/${agileStore.currentProject.id}/close`);
+        showCloseDialog.value = false;
+        initBoard();
+    } catch(e: any) {
+        // Ignored or handled by global interceptors
+    }
+};
 
 const initBoard = () => {
     // Project ID usually parsed from route param 
@@ -77,23 +106,23 @@ const initBoard = () => {
     const currentProjectId = route.params.projectId as string || 'PROJ-DEFAULT';
     
     // In a real V1 it fetches real data, here we emulate the mocked initialization
-    // agileStore.fetchProjectBoard(currentProjectId);
-
-    // Mock Payload for Standalone mode:
-    agileStore.$patch({
-       currentProject: { id: currentProjectId, key: 'CRM', name: 'CRM Modernization' },
-       sprints: [
-         { id: 'sprint-1', projectId: currentProjectId, name: 'Sprint 1', startDate: '2026-04-18', endDate: '2026-05-02', status: 'ACTIVE' }
-       ],
-       backlogItems: [
-         { id: 'item-101', title: 'Implementar SSO via Azure AD', type: 'STORY', status: 'TO_DO',
-           storyPoints: 8, sprintId: null, tags: [], assignees: [], wbsReferenceId: undefined },
-         { id: 'item-102', title: 'Corregir Fuga de Memoria en Redis', type: 'BUG', status: 'TO_DO',
-           storyPoints: 3, sprintId: null, tags: [{id:'tg0', label:'Backend', color:'#ef4444'}], assignees: [] },
-         { id: 'item-201', title: 'Diseño Base del Agile Hub UI', type: 'STORY', status: 'IN_PROGRESS',
-           storyPoints: 5, sprintId: 'sprint-1', tags: [], assignees: [{userId:'u-1', name:'Alfonso Gómez', email:'alfonso@ibpms.corp'}] }
-       ],
-       isLoading: false
+    agileStore.fetchProjectBoard(currentProjectId).catch(() => {
+        // Mock Payload for Standalone mode fallback:
+        agileStore.$patch({
+           currentProject: { id: currentProjectId, key: 'CRM', name: 'CRM Modernization' },
+           sprints: [
+             { id: 'sprint-1', projectId: currentProjectId, name: 'Sprint 1', startDate: '2026-04-18', endDate: '2026-05-02', status: 'ACTIVE' }
+           ],
+           backlogItems: [
+             { id: 'item-101', title: 'Implementar SSO via Azure AD', type: 'STORY', status: 'TO_DO',
+               storyPoints: 8, sprintId: null, tags: [], assignees: [], wbsReferenceId: undefined },
+             { id: 'item-102', title: 'Corregir Fuga de Memoria en Redis', type: 'BUG', status: 'TO_DO',
+               storyPoints: 3, sprintId: null, tags: [{id:'tg0', label:'Backend', color:'#ef4444'}], assignees: [] },
+             { id: 'item-201', title: 'Diseño Base del Agile Hub UI', type: 'STORY', status: 'IN_PROGRESS',
+               storyPoints: 5, sprintId: 'sprint-1', tags: [], assignees: [{userId:'u-1', name:'Alfonso Gómez', email:'alfonso@ibpms.corp'}] }
+           ],
+           isLoading: false
+        });
     });
 };
 

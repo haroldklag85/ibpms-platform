@@ -8,6 +8,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+
 /**
  * Clase base para Pruebas de Integración End-to-End usando Testcontainers.
  * Provee la infraestructura efímera (PostgreSQL, Redis, RabbitMQ) compartida
@@ -21,8 +23,12 @@ import org.testcontainers.utility.DockerImageName;
  * Uso: Hacer que tus clases de test hereden de {@link AbstractIntegrationTest}.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
+
+    @org.springframework.boot.test.web.server.LocalServerPort
+    protected int port;
 
     // Patrón Singleton Testcontainer para PostgreSQL con vector support
     @SuppressWarnings("resource")

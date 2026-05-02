@@ -5,48 +5,53 @@ test.describe('US-030 Hub Ágil - Multi Asignación', () => {
   const projectId = 'PROJ-AGILE';
 
   test.beforeEach(async ({ page }) => {
-    await page.route(`**/api/v1/projects/${projectId}/agile/tasks*`, async route => {
-      await route.fulfill({ status: 200, json: { data: [{id: 'AT-200', title: 'Estructurar E2E', status: 'TO_DO', assignees: [] }] } });
+    await page.route(`**/api/v1/projects/${projectId}/board`, async route => {
+      await route.fulfill({ 
+        status: 200, 
+        json: { 
+          project: { id: projectId, name: 'Proyecto Agile' },
+          sprints: [],
+          backlogItems: [{id: 'AT-200', title: 'Estructurar E2E', type: 'STORY', status: 'TO_DO', assignees: [], tags: [] }] 
+        } 
+      });
     });
 
-    await page.route(`**/api/v1/projects/${projectId}/members`, async route => {
-      await route.fulfill({ status: 200, json: { data: [ 
-        { id: 'usr-1', name: 'Alfonso QA' }, 
-        { id: 'usr-2', name: 'Laura Dev' }
-      ] } });
+    await page.route(`**/api/v1/users*`, async route => {
+      await route.fulfill({ status: 200, json: [ 
+        { userId: 'usr-1', name: 'Alfonso QA', email: 'alfonso@qa.com' }, 
+        { userId: 'usr-2', name: 'Laura Dev', email: 'laura@dev.com' }
+      ] });
     });
 
-    await page.goto(`/projects/${projectId}/agile-hub`);
+    await page.goto(`/admin/projects/agile-hub/${projectId}`);
   });
 
   test('Permitir multi-asignación en backlogs cruzados (CA-5)', async ({ page }) => {
-    // Abrimos el panel de edición
-    await page.getByText('Estructurar E2E').click();
-
-    const slidePanel = page.getByRole('complementary', { name: /Tarea/i });
+    // Interactuar con AssigneeMultiSelect inline (dentro de la tarjeta)
+    const card = page.locator('.bg-white.border.border-slate-200.rounded').filter({ hasText: 'Estructurar E2E' });
+    await expect(card).toBeAttached();
     
-    // Interactuar con Vue-Multiselect o Element-Plus Select Multiple
-    const selectUsuarios = slidePanel.getByLabel(/Responsable/i);
-    await selectUsuarios.click();
+    // Find the "+" button (the one without img, SVG with d="M12 4v16m8-8H4")
+    const assignBtn = card.locator('button.inline-flex');
+    await assignBtn.click();
 
     // Seleccionamos ambos usuarios
-    await page.getByRole('option', { name: 'Alfonso QA' }).click();
-    await page.getByRole('option', { name: 'Laura Dev' }).click();
+    await page.getByText('Alfonso QA').click();
+    await page.getByText('Laura Dev').click();
 
-    // Dar escape o click fuera para cerrar dropdown
-    await page.keyboard.press('Escape');
-
-    // Intercept de actualización
-    await page.route(`**/api/v1/projects/${projectId}/agile/tasks/AT-200`, async route => {
-      await route.fulfill({ status: 200, json: { id: 'AT-200', assignees: ['usr-1', 'usr-2'] } });
+    await page.route(`**/api/v1/agile/items/AT-200/assignees`, async route => {
+      await route.fulfill({ status: 200, json: { assignees: [
+        { userId: 'usr-1', name: 'Alfonso QA', email: 'alfonso@qa.com' }, 
+        { userId: 'usr-2', name: 'Laura Dev', email: 'laura@dev.com' }
+      ] } });
     });
 
-    await slidePanel.getByRole('button', { name: /Guardar/i }).click();
+    await page.getByRole('button', { name: /Guardar/i }).click();
 
-    // Verificar en Grilla Visual
-    const rowContent = page.getByText('Estructurar E2E').locator('..');
-    // Ambos deben mostrarse condensados o en su avatar en la fila
-    await expect(rowContent.getByText('Alfonso QA')).toBeVisible();
-    await expect(rowContent.getByText('Laura Dev')).toBeVisible();
+    // Verificar en Grilla Visual (Avatares)
+    const imgAlfonso = card.locator('img[title="Alfonso QA"]');
+    const imgLaura = card.locator('img[title="Laura Dev"]');
+    await expect(imgAlfonso).toBeAttached();
+    await expect(imgLaura).toBeAttached();
   });
 });

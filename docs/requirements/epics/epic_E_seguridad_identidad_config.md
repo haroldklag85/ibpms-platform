@@ -648,6 +648,50 @@ Scenario: Renderizado Progresivo Estricto y FOUC Controlado (LCP Optimization)
     When un Súper Administrador revoca un rol a un usuario conectado
     Then un evento WebSocket (`[ROLE_REVOKED]`) obligará a Pinia a expulsar al usuario al `/login` en vivo.
     And en caso de que un usuario quede atrapado en un "Dead Loop" de redirecciones por fallos de permisos locales, el *Master Layout* garantizará la renderización incondicional del botón `[Cerrar Sesión / Ir al Inicio]` por fuera del `router-view` para forzar la limpieza del estado.
+  # ==============================================================================
+  # E. CIERRE DE GAPS ARQUITECTÓNICOS (2026-05-01)
+  # ==============================================================================
+  Scenario: Fallback de Desconexión y Reconexión Agresiva SSE (CA-33)
+    Given que la red se vuelve inestable
+    When la conexión SSE (EventSource) de seguridad falla consecutivamente (3 intentos)
+    Then el sistema debe desplegar un Overlay opaco de "Reconectando..." 
+    And debe impedir clics fantasma hasta que la red regrese o el token expire pasivamente.
+
+  Scenario: Revocación Quirúrgica mediante Soft-Refresh (CA-34)
+    Given que un administrador remueve o agrega un rol parcial a un usuario activo
+    When el SSE recibe la notificación con el evento `[ROLES_UPDATED]`
+    Then la pantalla no debe hacer Logout forzoso
+    And debe ejecutar una re-hidratación silenciosa (`hydrateAuth`) que actualice el Menú lateral en tiempo real.
+
+  Scenario: Persistencia Multi-Pestaña vía LocalStorage Listener (CA-35)
+    Given que el usuario tiene múltiples pestañas de la plataforma abiertas
+    When el usuario cierra sesión o es expulsado en UNA de las pestañas
+    Then el Frontend (a través del evento nativo `storage`) asegurará que todas las demás pestañas reaccionen en milisegundos
+    And redirigirá inmediatamente todas las instancias activas a la pantalla de `/login`.
+
+  Scenario: Contrato Estricto del JSON de Menú y Delegación Estética (CA-36)
+    Given que el Frontend solicita la estructura del menú al endpoint `/menu-layout`
+    When el Backend responde con los datos
+    Then el JSON debe venir pre-anidado (Padres e Hijos) evitando recursividad pesada en Vue
+    And el Frontend será el único responsable de renderizar los iconos y rutas basándose en el `menu_id`, eximiendo a la BD de guardar metadatos de UI.
+
+  Scenario: Inyección Local de Dashboards Híbridos (CA-37)
+    Given un usuario que posee múltiples roles cruzados
+    When ingresa al Home o Workdesk principal
+    Then el Frontend utilizará chequeos locales (ej. `hasAnyRole()`) contra el Token JWT para mostrar u ocultar widgets específicos
+    And no requerirá que el Backend calcule o devuelva la matriz de widgets en la API.
+
+  Scenario: Micro-Ping de Hidratación (Validación de Amnesia F5) (CA-38)
+    Given que el usuario presiona F5 o reabre el navegador
+    When el sistema hidrata el estado desde el LocalStorage
+    Then debe ejecutar obligatoriamente un chequeo síncrono (`/api/v1/users/me/effective-roles`) contra el Backend
+    And si la validación falla (401/403), el caché local debe ser ignorado purgando a Pinia y redirigiendo al Login.
+
+  Scenario: Políticas Fail-Closed en Sudo-Mode y Telemetría (CA-39)
+    Given que se requiere validar una acción destructiva o registrar la visualización de un secreto
+    When se invoca el Sudo-Mode, la validación se hará internamente sin redirigir al proveedor EntraID
+    And si un usuario intenta revelar un dato sensible y el API de auditoría falla (Error 500)
+    Then el sistema DEBE ocultar el dato (Fail-Closed) advirtiendo "No se pudo registrar la visualización por fallos de red", garantizando que nunca se exponga información sin auditoría.
 ```
 **Trazabilidad UX:** Componentes de Navegación Global Vue Router (`router/index.ts`) y Menú Lateral (`MainLayout.vue`).
 

@@ -113,6 +113,10 @@ const router = createRouter({
                     meta: { requiresAuth: true }
                 },
                 {
+                    path: 'admin/projects',
+                    redirect: '/admin/projects/manager'
+                },
+                {
                     path: 'admin/projects/manager',
                     name: 'ProjectManager',
                     component: () => import('@/views/admin/ProjectBuilder/ProjectManager.vue'),

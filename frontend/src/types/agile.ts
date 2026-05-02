@@ -54,7 +54,8 @@ export const AgileProjectSchema = z.object({
   id: z.string(),
   key: z.string().min(2).max(10),
   name: z.string().min(3),
-  description: z.string().optional()
+  description: z.string().optional(),
+  status: z.enum(['ACTIVE', 'CLOSED', 'ARCHIVED']).optional()
 });
 
 export type AgileTag = z.infer<typeof AgileTagSchema>;

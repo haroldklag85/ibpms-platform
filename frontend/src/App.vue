@@ -7,6 +7,7 @@ import ErrorStateGlobal from '@/components/common/ErrorStateGlobal.vue'
 import ConnectionToast from '@/components/common/ConnectionToast.vue'
 import { useConnectionStatus } from '@/composables/useConnectionStatus'
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { LocalStorageGarbageCollector } from '@/services/LocalStorageGarbageCollector'
 
 const authStore = useAuthStore()
@@ -15,6 +16,13 @@ useConnectionStatus()
 
 onMounted(() => {
   LocalStorageGarbageCollector.run()
+  const router = useRouter()
+  window.addEventListener('storage', (e) => {
+      if (e.key === 'ibpms_token' && !e.newValue) {
+          authStore.logout()
+          router.push('/login')
+      }
+  })
 })
 </script>
 
@@ -27,6 +35,12 @@ onMounted(() => {
          <div class="h-2 w-32 bg-gray-200 rounded-full"></div>
          <div class="mt-8 text-xs font-bold tracking-widest text-indigo-400 uppercase">Validando Identidad y Permisos IAM...</div>
      </div>
+  </div>
+  
+  <!-- CA-33: Reconexión SSE -->
+  <div v-if="authStore.isSSEDisconnected" class="h-screen w-screen bg-gray-900/90 flex flex-col items-center justify-center space-y-4 fixed inset-0 z-[9999]">
+     <div class="animate-spin h-12 w-12 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div>
+     <div class="text-white font-bold text-xl tracking-widest uppercase">Reconectando con el servidor de seguridad...</div>
   </div>
   
   <!-- CA-3: Security by Obscurity 404 Fallback -->

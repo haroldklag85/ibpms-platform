@@ -37,7 +37,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
   state: () => ({
     items: [] as WorkdeskGlobalItemDTO[],
     facets: [] as FacetCountDTO[],
-    pageInfo: { pageNumber: 0, pageSize: 50, totalElements: 0 } as PageableResponse,
+    pageInfo: { pageNumber: 0, pageSize: 15, totalElements: 0 } as PageableResponse,
     isDegraded: false,
     isLoading: false,
     isError: false,
@@ -168,7 +168,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
       }
     },
 
-    async fetchGlobalInbox(page: number = 0, size: number = 50, search?: string, delegatedToId?: string, typeFilter?: string, slaFilter?: string, statusFilter?: string) {
+    async fetchGlobalInbox(page: number = 0, size: number = 15, search?: string, delegatedToId?: string, typeFilter?: string, slaFilter?: string, statusFilter?: string) {
       this.isLoading = true;
       this.isError = false;
       this.errorMessage = '';

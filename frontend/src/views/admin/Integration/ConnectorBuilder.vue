@@ -19,7 +19,7 @@
         <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded shadow-sm text-sm font-medium hover:bg-gray-50 transition">
           💾 Guardar Borrador
         </button>
-        <button @click="approveConfig" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-medium hover:bg-indigo-700 transition">
+        <button v-if="authStore.hasAnyRole(['ROLE_AI_ADMIN'])" @click="approveConfig" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-medium hover:bg-indigo-700 transition">
           Aprobar Configuración
         </button>
       </div>
@@ -224,6 +224,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
+import { useAuthStore } from '@/stores/authStore';
+
+const authStore = useAuthStore();
 
 // Form Data
 const connectorName = ref('');
@@ -233,23 +236,13 @@ const authMode = ref('APIKEY');
 const pgpEnabled = ref(false);
 
 // CA-10: Ofuscación y Auditoría
+import { useAuditReveal } from '@/composables/useAuditReveal';
+
 const apiSecret = ref('ibpms_sk_live_9f8g7h6j...');
-const isSecretRevealed = ref(false);
-const isRevealing = ref(false);
+const { isRevealed: isSecretRevealed, isRevealing, revealWithAudit } = useAuditReveal();
 
 const revealSecret = async () => {
-    isRevealing.value = true;
-    try {
-        await apiClient.post('/api/v1/audit/events', {
-            action: 'REVEAL_INTEGRATION_SECRET',
-            connector: connectorName.value || 'UNNAMED_CONNECTOR'
-        }).catch(() => {
-           console.warn('Fallback: Auditoría asíncrona enviada a consola.');
-        });
-        isSecretRevealed.value = true;
-    } finally {
-        isRevealing.value = false;
-    }
+    await revealWithAudit(`connector_secret_${connectorName.value || 'unnamed'}`);
 };
 
 // CA-9: Sudo Modal Transversal

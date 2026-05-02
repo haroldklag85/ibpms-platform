@@ -22,15 +22,9 @@ export const useSudo = () => {
         if (!currentRequest.value) return;
         
         try {
-            // Se asume endpoint genérico de re-autenticación (sudo)
-            // Para UAT, cualquier string mayor a 3 chars pasa.
-            if(password.length >= 3) {
-                 await apiClient.post('/api/v1/auth/sudo', { password }).catch(() => true);
-                 currentRequest.value.resolve(true);
-                 closeSudo();
-            } else {
-                 throw new Error('Contraseña inválida');
-            }
+            await apiClient.post('/auth/sudo', { password });
+            currentRequest.value.resolve(true);
+            closeSudo();
         } catch (e) {
             throw e; // Modal handle rejecting the specific attempt
         }

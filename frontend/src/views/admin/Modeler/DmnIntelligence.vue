@@ -18,13 +18,13 @@
          </button>
 
          <!-- CA-12: Botón Revertir a V1 -->
-         <button v-if="dmnDraft.hasData" @click="resetToV1" class="bg-red-600 text-white px-3 py-2 rounded-md shadow text-sm font-medium hover:bg-red-700 flex gap-2 items-center transition">
+         <button v-if="dmnDraft.hasData && authStore.hasAnyRole(['ROLE_AI_ADMIN'])" @click="resetToV1" class="bg-red-600 text-white px-3 py-2 rounded-md shadow text-sm font-medium hover:bg-red-700 flex gap-2 items-center transition">
             <span class="material-symbols-outlined text-sm">history</span>
             [ ⏪ Revertir a V1 ]
          </button>
 
          <!-- CA-12: Botón Sudo Modal para Publicar V2 -->
-         <button @click="openPublishModal" :disabled="!dmnDraft.hasData" class="bg-indigo-600 text-white px-4 py-2 rounded-md shadow text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex gap-2 items-center">
+         <button v-if="authStore.hasAnyRole(['ROLE_AI_ADMIN'])" @click="openPublishModal" :disabled="!dmnDraft.hasData" class="bg-indigo-600 text-white px-4 py-2 rounded-md shadow text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex gap-2 items-center">
             <span class="material-symbols-outlined text-sm">cloud_upload</span>
             Publicar V2
          </button>
@@ -210,12 +210,15 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
+import { useAuthStore } from '@/stores/authStore'
 import { useLocalStorage } from '@vueuse/core'
 import { sanitizeDmnXml } from '@/utils/security'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import moment from 'moment' // CA-08 Math Helper
 import { RecycleScroller } from 'vue-virtual-scroller' // CA-10
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+
+const authStore = useAuthStore()
 
 /**
  * CA-08 External Math Logic

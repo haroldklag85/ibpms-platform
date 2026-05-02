@@ -67,3 +67,18 @@ El Arquitecto Líder ha logrado estabilizar exitosamente el stack de infraestruc
 
 **Veredicto Final:** 🏆 **US-005 CERTIFICADA — TODOS LOS BLOQUES (1-4) PASS**
 La remediación Hexagonal ha sido validada en todos los frentes estructurales. Cero conflictos de contexto de Spring. Compliance total con las políticas Zero-Mock y Cero Deuda Arquitectónica Crítica.
+
+---
+
+## Certificación QA — US-001 Validación Post-Remediación
+- **Fecha:** 2026-05-01
+
+| ID | Caso de Uso | Comando/Verificación | Resultado | Estado |
+|----|------------|---------------------|-----------|--------|
+| QA-001-01 | Verificar paginación default 15 | Revisión UI /workdesk, Network Tab | La grilla carga máximo 15 items, `?size=15` confirmado unificadamente en modo inicial y delegación. | ✅ PASS DEFINITIVO |
+| QA-001-02 | Verificar KeepAlive | Navegación cruzada y filtro "Vencido" | El estado de los filtros persiste correctamente al volver a la vista, gracias a `<keep-alive>`. | ✅ PASS |
+| QA-001-03 | Verificar Rate Limiting (429) | Script Node 61 requests simultáneos | Se comprobó respuesta 429 HTTP en el request #61 y mitigación limpia (sin UI crash). | ✅ PASS |
+| QA-001-04 | Verificar delegación anti-IDOR | Test con `delegatedUserId` manipulado | Backend rechaza delegación ilegítima retornando 403 Forbidden como se esperaba. | ✅ PASS |
+
+**CRITERIO DE CIERRE: ✅ 4/4 casos validados. ESTADO: PASS DEFINITIVO.**
+La US-001 cumple con todos los requisitos de estabilidad, concurrencia, retención de estado y límites arquitectónicos tras la remediación. Queda oficialmente cerrada.

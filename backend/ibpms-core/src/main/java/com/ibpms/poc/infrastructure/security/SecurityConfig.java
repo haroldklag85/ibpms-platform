@@ -82,6 +82,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/roles", "/api/v1/admin/roles/**").permitAll()
                         .requestMatchers("/api/v1/security/anomalies", "/api/v1/security/anomalies/**").permitAll()
                         .requestMatchers("/api/v1/security/audit/**").permitAll()
+                        .requestMatchers("/api/v1/security/stream").permitAll()
                         .anyRequest().authenticated());
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(getJwtAuthenticationConverter())));

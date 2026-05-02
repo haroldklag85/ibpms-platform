@@ -15,8 +15,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Sprint 0 — Smoke Tests', () => {
 
     test('S0-SMOKE-01: El backend responde con health UP', async ({ request }) => {
-        // El proxy de Vite redirige /api → localhost:8080
-        const response = await request.get('/api/v1/actuator/health');
+        // Playwright request context no usa el proxy de Vite, golpear backend directo
+        const response = await request.get('http://localhost:8080/actuator/health');
         expect(response.ok()).toBeTruthy();
 
         const body = await response.json();
@@ -120,7 +120,7 @@ test.describe('Sprint 0 — Smoke Tests', () => {
     });
 
     test('S0-SMOKE-04: El backend responde con info del servicio', async ({ request }) => {
-        const response = await request.get('/api/v1/actuator/info');
+        const response = await request.get('http://localhost:8080/actuator/info');
 
         // Puede retornar 200 o 404 si info no está configurado,
         // pero la conexión debe funcionar (no timeout, no connection refused)

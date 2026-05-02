@@ -11,7 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/workbox/tasks")
+@RequestMapping("/api/v1/workbox/bpmn-tasks")
 public class FormCompletionController {
 
     private final FormCompletionService formCompletionService;

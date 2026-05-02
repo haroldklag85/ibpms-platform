@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/services/apiClient';
+import { useMenuStore } from '@/stores/useMenuStore';
 
 export const useAuthStore = defineStore('auth', () => {
     // Estado Reactivo
@@ -10,6 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
     // CA-2 y CA-3: Estados de Gobernanza Visual
     const isHydrating = ref(false);
     const isGlobal404 = ref(false);
+    const isSSEDisconnected = ref(false);
 
     // Sprint 5 (Iteración 1) - Inicialización forzosa de ActiveRole
     const activeRole = ref<string | null>(null);
@@ -23,6 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     // CA-11: Instancia del SSE Listener
     let sseSource: EventSource | null = null;
+    let sseFailures = 0;
 
     // CA-11: Initialize SSE Listner for Security Event [ROLE_REVOKED]
     const initSecurityListener = () => {
@@ -35,16 +38,30 @@ export const useAuthStore = defineStore('auth', () => {
             const TARGET_SSE = `${baseURL}/api/v1/security/stream`;
             
             sseSource = new EventSource(TARGET_SSE);
-            sseSource.onmessage = (event) => {
+            sseSource.onmessage = async (event) => {
                 if (event.data === '[ROLE_REVOKED]') {
                     console.error("ALERTA DE SEGURIDAD (CA-11): Revocación detectada vía SSE.");
                     alert("⚠️ Sus privilegios direccionales han sido erradicados. Terminando sesión mandatoria.");
                     logout();
+                } else if (event.data === '[ROLES_UPDATED]') {
+                    await hydrateAuth();
+                    const menuStore = useMenuStore();
+                    menuStore.purgeTopology();
+                    await menuStore.fetchMenuLayout();
                 }
             };
+            sseSource.onopen = () => {
+                sseFailures = 0;
+                isSSEDisconnected.value = false;
+            };
             sseSource.onerror = () => {
-                // Silently fails to not spam console in dev mode
+                sseFailures++;
+                if (sseFailures >= 3) {
+                    isSSEDisconnected.value = true;
+                }
                 if (sseSource) sseSource.close();
+                const backoff = Math.pow(2, sseFailures - 1) * 1000;
+                setTimeout(initSecurityListener, backoff);
             };
         } catch (e) {
             console.warn("SSE EventSource Init failed", e);
@@ -121,9 +138,6 @@ export const useAuthStore = defineStore('auth', () => {
     const hydrateAuth = async () => {
         isHydrating.value = true;
         try {
-            // Emulando latencia de red para mostrar CA-2
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
             const jwt = token.value || localStorage.getItem('ibpms_token');
             if (!jwt) throw { status: 401 };
 
@@ -171,6 +185,7 @@ export const useAuthStore = defineStore('auth', () => {
         effectiveRoles,
         isHydrating,
         isGlobal404,
+        isSSEDisconnected,
         login,
         logout,
         switchRole,

@@ -1,20 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-// Utilidad para login rápido usando el backend vivo vía Break-Glass
-async function loginAsAdmin(page) {
-  await page.goto('/login');
-  await page.click('[data-testid="break-glass-toggle"]');
-  await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
-  await page.fill('[data-testid="password-input"]', 'Test123!');
-  await page.click('[data-testid="login-submit"]');
-  // Wait for navigation, but handle possible fallbacks
-  await page.waitForURL('**/workdesk*').catch(() => {});
-}
+// Eliminado loginAsAdmin ya que usamos el storageState (proyecto 'authenticated')
 
 test.describe('US-036: Identity Governance & Dynamic Menu Topology', () => {
 
   test('CA-26: shouldFallbackToWelcomePageOnEmptyMenu', async ({ page }) => {
-    // Interceptamos el endpoint de layout para simular un usuario sin menús
+    // Simular que el menú llega vacío
     await page.route('**/api/v1/users/me/menu-layout', route => {
       route.fulfill({
         status: 200,
@@ -23,11 +14,13 @@ test.describe('US-036: Identity Governance & Dynamic Menu Topology', () => {
       });
     });
 
-    await page.goto('/login');
-    await page.click('[data-testid="break-glass-toggle"]');
-    await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
-    await page.fill('[data-testid="password-input"]', 'Test123!');
-    await page.click('[data-testid="login-submit"]');
+    // Mockear /auth/me para que hydrateAuth funcione rápido
+    await page.route('**/auth/me', route => {
+      route.fulfill({ json: { username: 'root_e2e', roles: ['ROLE_SUPER_ADMIN'] } });
+    });
+
+    // Ir directo a la raíz, que debería redirigir a un fallback (WelcomePage)
+    await page.goto('/');
     
     // Esperamos a que la navegación termine
     await page.waitForLoadState('networkidle');
@@ -43,9 +36,16 @@ test.describe('US-036: Identity Governance & Dynamic Menu Topology', () => {
   });
 
   test('CA-27: shouldPreventNativeRoleModification', async ({ page }) => {
-    await loginAsAdmin(page);
+    // Mockear respuesta de roles y menú
+    await page.route('**/auth/me', route => route.fulfill({ json: { username: 'root_e2e', roles: ['ROLE_SUPER_ADMIN'] } }));
+    await page.route('**/api/v1/users/me/menu-layout', route => route.fulfill({ json: [] }));
+    
+    await page.route('**/api/v1/roles', route => route.fulfill({
+      status: 200,
+      json: [{ id: 1, name: 'SUPER_ADMIN', native: true, description: 'Admin nativo' }]
+    }));
 
-    await page.goto('/admin/roles').catch(() => {});
+    await page.goto('/admin/roles');
     await page.waitForLoadState('networkidle');
 
     // Buscar el rol SUPER_ADMIN y presionar Editar
@@ -64,8 +64,12 @@ test.describe('US-036: Identity Governance & Dynamic Menu Topology', () => {
   });
 
   test('CA-29: shouldRenderRolesModalWithTabs', async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.goto('/admin/roles').catch(() => {});
+    // Mockear respuesta de roles y menú
+    await page.route('**/auth/me', route => route.fulfill({ json: { username: 'root_e2e', roles: ['ROLE_SUPER_ADMIN'] } }));
+    await page.route('**/api/v1/users/me/menu-layout', route => route.fulfill({ json: [] }));
+    await page.route('**/api/v1/roles', route => route.fulfill({ json: [] }));
+
+    await page.goto('/admin/roles');
     await page.waitForLoadState('networkidle');
 
     const createBtn = page.locator('button', { hasText: 'Crear' }).first();
@@ -79,26 +83,42 @@ test.describe('US-036: Identity Governance & Dynamic Menu Topology', () => {
   });
 
   test('CA-30: shouldMergeRolesInclusively', async ({ page }) => {
+    await page.route('**/auth/me', route => route.fulfill({ json: { username: 'root_e2e', roles: ['ROLE_SUPER_ADMIN'] } }));
+    
+    // Mock the dynamic menu fetching to simulate inclusive merging
     await page.route('**/api/v1/users/me/menu-layout', route => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([
-          { label: 'Workdesk', icon: 'pi pi-fw pi-home', to: '/workdesk' },
-          { label: 'AdminModule', icon: 'pi pi-fw pi-cog', to: '/admin' }
+          {
+            title: 'Workdesk',
+            items: [
+              { label: 'Workdesk', icon: 'pi pi-fw pi-home', path: '/workdesk' },
+              { label: 'AdminModule', icon: 'pi pi-fw pi-cog', path: '/admin' }
+            ]
+          }
         ])
       });
     });
 
-    await loginAsAdmin(page);
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
+
+    // Expand the sidebar because labels are hidden when collapsed
+    await page.locator('button', { hasText: 'chevron_right' }).click().catch(() => {});
+    
+    // Wait for the transition
+    await page.waitForTimeout(500);
 
     await expect(page.locator('text="Workdesk"').first()).toBeVisible();
     await expect(page.locator('text="AdminModule"').first()).toBeVisible();
   });
 
   test('CA-32: shouldAutoPurgeMenuOn403', async ({ page }) => {
-    await loginAsAdmin(page);
+    await page.route('**/auth/me', route => route.fulfill({ json: { username: 'root_e2e', roles: ['ROLE_SUPER_ADMIN'] } }));
+    await page.route('**/api/v1/users/me/menu-layout', route => route.fulfill({ json: [] }));
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     await page.route('**/api/v1/some-protected-route', route => {

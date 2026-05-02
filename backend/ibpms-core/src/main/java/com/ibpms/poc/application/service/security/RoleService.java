@@ -30,15 +30,18 @@ public class RoleService {
     private final UserRepository userRepository;
     private final RoleAuditLogRepository auditLogRepository;
     private final ObjectMapper objectMapper;
+    private final SecurityStreamService securityStreamService;
 
     public RoleService(RoleRepository roleRepository,
                        UserRepository userRepository,
                        RoleAuditLogRepository auditLogRepository,
-                       ObjectMapper objectMapper) {
+                       ObjectMapper objectMapper,
+                       SecurityStreamService securityStreamService) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.auditLogRepository = auditLogRepository;
         this.objectMapper = objectMapper;
+        this.securityStreamService = securityStreamService;
     }
 
     @SuppressWarnings("null")
@@ -123,6 +126,7 @@ public class RoleService {
             );
         }
         logAuditEntry(template, "MASS_ASSIGN");
+        securityStreamService.broadcastEvent("[ROLES_UPDATED]");
         return notFound;
     }
 

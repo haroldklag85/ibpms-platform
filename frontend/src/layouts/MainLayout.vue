@@ -177,7 +177,7 @@
       </header>
       
       <!-- Lienzo donde se renderizan las vistas secundarias (Router View) -->
-      <div class="flex-1 overflow-auto bg-transparent">
+      <div class="flex-1 overflow-auto bg-transparent relative">
         <router-view v-slot="{ Component }">
           <keep-alive include="Workdesk">
             <component :is="Component" />

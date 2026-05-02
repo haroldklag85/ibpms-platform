@@ -28,12 +28,14 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final TaskRescueProducer taskRescueProducer;
+    private final SecurityStreamService securityStreamService;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TaskRescueProducer taskRescueProducer) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TaskRescueProducer taskRescueProducer, SecurityStreamService securityStreamService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.taskRescueProducer = taskRescueProducer;
+        this.securityStreamService = securityStreamService;
     }
 
     public UserResponseDTO createUser(UserCreateRequestDTO dto) {
@@ -84,6 +86,7 @@ public class UserService {
         }
         if (dto.getRoleIds() != null) {
             user.setRoles(new HashSet<>(roleRepository.findAllById(dto.getRoleIds())));
+            securityStreamService.broadcastEvent("[ROLES_UPDATED]");
         }
 
         userRepository.save(user);
@@ -91,6 +94,7 @@ public class UserService {
         if (Boolean.FALSE.equals(dto.getIsActive())) {
             // CA-08 Trigger mass unclaim if user was deactivated
             taskRescueProducer.triggerMassiveUnclaim(id.toString());
+            securityStreamService.broadcastEvent("[ROLE_REVOKED]");
         }
 
         return toDto(user);
@@ -126,6 +130,8 @@ public class UserService {
         
         // CA-08 Trigger mass unclaim since user is deactivated
         taskRescueProducer.triggerMassiveUnclaim(id.toString());
+        
+        securityStreamService.broadcastEvent("[ROLE_REVOKED]");
         
         // Nota Arquitectura: el rechazo final de los JWT activos de este usuario lo hace el JwtAuthFilter en vivo contra JPA.
     }

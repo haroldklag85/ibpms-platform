@@ -289,8 +289,22 @@
 | CA-13 | Auto-Claim Group-Level | ✅ | N/A | ❌ | `AutoClaimService.tryAutoClaim()` integrado en `FormCompletionService` |
 | CA-15 | Event Reference (EVT-XXXXXX) | ✅ | N/A | ❌ | `EventReferenceGenerator.generateFromId()` |
 | CA-16 | Draft cleanup post-completion | ✅ | N/A | ❌ | `taskDraftRepository.deleteById()` en misma transacción |
-| CA-19 a CA-24 | [REMEDIACIÓN] Resiliencia 504, regeneración de token de sesión | ❌ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
-| CA-25 a CA-34 | [REFINAMIENTO] Scroll al error, caducidad borrador, sesión duplicada, etc. | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
+| CA-19 | Reconciliación Arq US-029/US-017 | ❌ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
+| CA-20 | Feedback Visual Durante Envío | ❌ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
+| CA-21 | Confirmación Visual Post-Submit | ❌ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
+| CA-22 | Navegación Multi-Etapa (Wizard) | ❌ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
+| CA-23 | Gobernanza de Delegación | ❌ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
+| CA-24 | Contrato API Merge Commit | ❌ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
+| CA-25 | Scroll Automático y Foco en Error | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
+| CA-26 | Pre-Aviso Caducidad Borrador | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
+| CA-27 | Resiliencia Cambio Versión Esquema | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
+| CA-28 | Aduana Archivos: Tamaño y MIME | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
+| CA-29 | Feedback Visual Carga Archivos | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
+| CA-30 | Detección Sesión Duplicada | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
+| CA-31 | Indicador Estado Sincronización | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
+| CA-32 | Diálogo Anti-Envío Accidental | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
+| CA-33 | Distinción Visual Solo Lectura | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
+| CA-34 | Validación Zod Campos Condicionales | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
 
 ### Resumen US-029
 - **CAs Totales:** 34 | **CAs verificados:** 17 | **CAs cumplidos:** ~13 | **% Real:** ~72%
@@ -332,26 +346,96 @@
 ## US-003: IDE Web Low-Code para Formularios Inteligentes (iForm)
 **Épica:** 2 — IDE Formularios | **Estado:** ✅ COMPLETADA (Back+Front)
 
-| Rango CA | Back | Front | QA | Sprint | Handoff |
-|----------|------|-------|----|--------|---------|
-| CA-1 a CA-20 | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
-| CA-21 a CA-25 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA21_CA25 |
-| CA-26 a CA-30 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
-| CA-31 a CA-35 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
-| CA-36 a CA-40 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
-| CA-41 a CA-45 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA41_CA45 |
-| CA-46 a CA-50 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA46_CA50 |
-| CA-51 a CA-54 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA51_CA54 |
-| CA-55 a CA-59 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA55_CA59 |
-| CA-60 a CA-64 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA60_CA64 |
-| CA-65 a CA-69 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA65_CA69 |
-| CA-87 | ✅ | ❌ | ❌ | S-69 | handoff_backend_us003_rem_ca87 |
-| CA-88 | ✅ | ✅ | ❌ | S-69 | handoff_frontend_us003_rem_ca88 |
-| CA-90 | ✅ | ✅ | ❌ | S-69 | handoff_frontend_us003_rem_ca90 |
-| CA-91 | ✅ | ❌ | ❌ | S-69 | handoff_backend_us003_rem_ca91 |
-| CA-92 | ✅ | ✅ | ❌ | S-69 | handoff_frontend_us003_rem_ca92 |
-| CA-93 | ✅ | ✅ | ❌ | S-69 | handoff_frontend_us003_rem_ca93 |
-| CA-70+ (otros) | ❌ | ❌ | ❌ | — | — |
+| CA | Título (corto) | Back | Front | QA | Sprint | Notas / Handoff |
+|----|----------------|------|-------|----|--------|-----------------|
+| CA-1 | Seleccionar Patrón de Formulario | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-2 | Análisis Bidireccional de Código en Tiempo Real | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-3 | Iconos de Ayuda en Pestañas de Código | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-4 | Sandboxing Estricto contra XSS (AST Evaluator) | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-5 | Factoría Reactiva de Zod On-The-Fly | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-6 | Aislamiento Perimetral CSS (Shadow DOM) | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-7 | Render Functions, Teleportación y Z-Index Orchestrator | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-8 | Navegación Modular y Agrupación de Malla | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-9 | Cohabitación de Maestros en un Proceso | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-10 | Inmersión Funcional "Alt+Tab Zero" (Full-Screen Focus) | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-11 | Paleta de Componentes Base HTML5 (Formulario Simple y Maestro) | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-12 | Drag & Drop Sensorial de Process Variables | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-13 | Mapeo de Entradas y Salidas Form-To-Process | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-14 | Botones Nativos de Estado Camunda (Task Lifecycle) | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-15 | Captura Automática de Errores Core (Smart Buttons) | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-16 | Constraint de Bajo Acoplamiento Form-To-Process | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-17 | Soporte de Motores de Lenguaje (Language Servers en Web IDE) | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-18 | Tooltips de Ayuda Visual (Propiedades Avanzadas) | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-19 | Maximización de Lienzo Visual (Contracción de Mónaco IDE) | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-20 | Permisos de Sobrescritura en Campos | ⏳ | ⏳ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-21 | Enrutador de Archivos Adjuntos por TRD | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA21_CA25 |
+| CA-22 | Validación Reactiva Zod Defensiva (Debounce & Blur) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA21_CA25 |
+| CA-23 | Estilos CSS Corporativos Estandarizados V1 | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA21_CA25 |
+| CA-24 | Auto-Guardado de Borrador en Workdesk | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA21_CA25 |
+| CA-25 | Reglas de Visibilidad Condicional | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA21_CA25 |
+| CA-26 | Prevención Contra Borrado de Formularios Activos | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
+| CA-27 | Control de Versiones de Diseño de Formulario | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
+| CA-28 | Bitácora de Auditoría a Nivel de Campo | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
+| CA-29 | Dropdown Alimentado por Exportación CSV | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
+| CA-30 | Autocompletado mediante Integración API / BD Externa | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
+| CA-31 | Componente de Firma Electrónica Manuscrita | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
+| CA-32 | Validaciones Cruzadas entre Múltiples Campos | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
+| CA-33 | Exportación a PDF del Formulario Diligenciado | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
+| CA-34 | Grupos de Campos Repetibles (Data Grids / Tablas) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
+| CA-35 | Ayudantes Locales (Tooltips y Placeholders) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
+| CA-36 | Máscaras de Entrada (Input Masks) para Formatos Específicos | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
+| CA-37 | Visor Histórico Inmutable para Auditoría | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
+| CA-38 | Restricciones de Longitud Dinámicas (Zod min/max) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
+| CA-39 | Condicionamiento de Archivos Adjuntos | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
+| CA-40 | Dropdown de Búsqueda Interactiva (Searchable Select) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
+| CA-41 | Restricciones en Grillas Repetibles (Min/Max Rows) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA41_CA45 |
+| CA-43 | Data Binding (Precarga Automática desde Camunda) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA41_CA45 |
+| CA-45 | Multi-Select Visual (Pastillas/Etiquetas) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA41_CA45 |
+| CA-46 | Sello Visual de Aprobatoria con Rol | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA46_CA50 |
+| CA-47 | Campos Ocultos (Hidden Inputs) para Metadata | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA46_CA50 |
+| CA-48 | Validaciones Condicionales (Required-If) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA46_CA50 |
+| CA-49 | Restricción de Cantidad Mínima y Máxima de Adjuntos | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA46_CA50 |
+| CA-50 | Traducción Silenciosa de Formatos (Mascara Front vs Dato Back) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA46_CA50 |
+| CA-51 | Grillas Editables con Protección y Auditoría Parcial | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
+| CA-52 | Feedback Visual en Llamadas a APIs (Estado Indeterminado) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
+| CA-53 | Enmascaramiento de Inputs de Múltiple Tipo (Contraseñas / Sensibles) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
+| CA-54 | Limpieza Automática por Lógica Condicional | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
+| CA-55 | Grillas y Organización Multicolumna (Layouts) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
+| CA-56 | Vista de Imprimible y de Solo-Lectura Plana (View-Mode) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA56_CA60 |
+| CA-57 | Candado de Solo-Lectura Basado en Fórmulas | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA56_CA60 |
+| CA-58 | Cronómetro de Productividad en Formulario (Timer Component) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA56_CA60 |
+| CA-59 | Botón de Reset Dual-Verification | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA56_CA60 |
+| CA-60 | Arrastrar y Soltar (Drag & Drop) Expandido para Adjuntos | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA56_CA60 |
+| CA-61 | Captura de Geolocalización (GPS) Embebida | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA61_CA65 |
+| CA-62 | Lector Nativo de Código de Barras / QR | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA61_CA65 |
+| CA-63 | Auto-Validación de Regex Comunes (Email/URL) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA61_CA65 |
+| CA-64 | Mensajes de Ayuda / Hint Texts Multi-Estado | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA61_CA65 |
+| CA-68 | Generación Autónoma de Pruebas Unitarias QA (Auto-Vitest) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA66_CA70 |
+| CA-69 | Simulador Multi-Rol en Tiempo Real (iForm Maestro) | ✅ | ✅ | ❌ | S-2 | handoff_*_US003_CA66_CA70 |
+| CA-70 | Modo Trámite Público Perimetral (Bypass JWT Seguro) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-71 | Máquina del Tiempo JSON (Soft-Versioning Local) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-72 | Resiliencia Periférica Offline y Tolerancia a Conflictos | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-73 | El Escáner Mágico (AI Prompt-to-Form & Document-to-Form) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-74 | Diccionario Global y Fragmentos Reutilizables (Snippets) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-75 | El Peaje Analítico (Data Diet / Prevención de Campos Huérfanos) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-76 | El Sello Radiactivo de Privacidad (Data Classification PII) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-77 | Integración Autocompletado Gobernado y Escudo Anti-DDoS | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-78 | Factoría Reactiva Zod On-The-Fly y Renderizado Bidireccional | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-79 | Sandboxing Estricto y Aislamiento Perimetral (Anti-XSS/RCE) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-80 | Reactividad Controlada en Formularios Densos (Lazy Validation) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-81 | Anclaje de Versión para Procesos In-Flight (Lazy Patching) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-82 | Autoguardado Volátil, Limpieza de Fantasmas y Smart Buttons | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-83 | Sandbox de Pruebas Zod In-Browser (Shift-Left QA) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-84 | Manejo Amigable de Errores de Sintaxis en el Mónaco IDE | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-85 | Auto-Guardado y Recuperación de Sesión en el Diseñador | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-86 | Catálogo y Explorador de Formularios (Form Manager Dashboard) | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-87 | Persistencia Versionada del Diseño JSON del Formulario | ✅ | ❌ | ❌ | S-69 | handoff_backend_us003_rem_ca87 |
+| CA-88 | Separación Arquitectónica de Contextos IDE vs Workdesk | ✅ | ✅ | ❌ | S-69 | handoff_frontend_us003_rem_ca88 |
+| CA-89 | Directriz de Complementariedad QA Sandbox vs Auto-Vitest | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-90 | Límites de Rendimiento y Lazy Mount para iForm Maestro | ✅ | ✅ | ❌ | S-69 | handoff_frontend_us003_rem_ca90 |
+| CA-91 | Validación de Contrato de Integración con US-029 | ✅ | ❌ | ❌ | S-69 | handoff_backend_us003_rem_ca91 |
+| CA-92 | Política de Expiración y Limpieza de LocalStorage | ✅ | ✅ | ❌ | S-69 | handoff_frontend_us003_rem_ca92 |
+| CA-93 | Componente Unificado de Vista Solo-Lectura | ✅ | ✅ | ❌ | S-69 | handoff_frontend_us003_rem_ca93 |
 
 > ⚠️ **Nota:** Los CAs CA-1 a CA-20 fueron implementados en iteraciones tempranas antes de la formalización del protocolo de handoffs. Requieren reconciliación con `git log`.
 

@@ -13,6 +13,7 @@ export const useDmnStore = defineStore('dmnStore', () => {
     const isRateLimited = ref(false);
     let rateLimitTimer: ReturnType<typeof setInterval> | null = null;
     const requiresFallback = ref(false);
+    const isManual = ref(false);
 
     const generateFromPrompt = async (prompt: string) => {
         isGenerating.value = true;
@@ -66,6 +67,11 @@ export const useDmnStore = defineStore('dmnStore', () => {
         generationError.value = null;
     };
 
+    const saveDmn = async (dmnId: string) => {
+        const payload = { xmlContent: generatedXml.value, isManual: isManual.value };
+        await api.updateDmnModel(dmnId, payload);
+    };
+
     return {
         generatedXml,
         confidence,
@@ -74,7 +80,9 @@ export const useDmnStore = defineStore('dmnStore', () => {
         isRateLimited,
         rateLimitSeconds,
         requiresFallback,
+        isManual,
         generateFromPrompt,
-        resetState
+        resetState,
+        saveDmn
     };
 });

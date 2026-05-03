@@ -9,6 +9,7 @@
 1. **¿Quién actualiza esta matriz?** Cada agente de desarrollo (Backend/Frontend) DEBE marcar sus CAs como ✅ después de hacer `git commit` y `git push` (ver `agent_git_governance_policy.md` §2).
 2. **¿Quién la audita?** El Arquitecto Líder ejecuta `/reconciliacionCoberturaCa.md` al cierre de cada Sprint para cruzar esta matriz contra `git log` y detectar falsos positivos.
 3. **¿Cómo se lee?** Cada US tiene su tabla. Las columnas Back/Front/QA indican si esa capa fue implementada. La columna Handoff referencia el archivo de delegación.
+4. **PROHIBIDO AGRUPAR CAs:** Está estrictamente prohibido agrupar Criterios de Aceptación (ej. "CA-13 a CA-18"). Cada CA debe tener su propia fila individual para garantizar un rastreo forense preciso del estado de desarrollo y pruebas. Cualquier agrupamiento previo debe ser expandido inmediatamente.
 
 > [!CAUTION]
 > **Corrección 2026-04-10:** Se detectaron 4 Falsos Positivos en US-001 (CA-4, CA-5, CA-6, CA-8) que estaban marcados como ✅ pero NO están confirmados por el PO. Se corrigen a ❌ Pendiente. Esto valida que la sincronización automática por agentes es insuficiente y requiere auditoría manual periódica.
@@ -144,7 +145,7 @@
 | CA-14 | Contrato API Estandarizado OpenAPI | ❌ | N/A | ❌ | Sin OpenAPI annotations formales |
 | CA-21 | Rollback Optimistic UI | ✅ | ❌ | ❌ | `POST /rollback-claim` en `WorkboxTaskController` |
 | CA-22 | Separación Visual Bandeja/Cola Equipo | N/A | ❌ | ❌ | Sin tabs "Mi Bandeja" / "Cola Equipo" |
-| CA-28 | Claim-Next Atómico (SKIP LOCKED) | ✅ | ❌ | ❌ | `POST /claim-next` con `findNextAvailableTaskForUpdate()` |
+| CA-23 | Claim-Next Atómico (SKIP LOCKED) | ✅ | ❌ | ❌ | `POST /claim-next` con `findNextAvailableTaskForUpdate()` |
 
 ### Resumen US-002
 - **CAs Totales:** 23 | **CAs Back Implementados:** ~10 | **CAs Front Implementados:** ~4 | **% Real:** ~75%
@@ -172,6 +173,9 @@
 | CA-11 | ClamAV Anti-Malware (fail-secure) | ✅ | N/A | ❌ | REST adapter 5s timeout; fallo → HTTP 503 + DLQ |
 | CA-12 | CRUD Admin Whitelist dominios | ❌ | ❌ | ❌ | `AllowedDomainAdminController` stub `NOT_IMPLEMENTED` (fenced como US-045) |
 | CA-13 | Purga automática 30 días | ✅ | N/A | ❌ | `deleteByCreatedAtBefore` scheduler diario 2AM |
+| CA-14 | Experiencia Pre-visión y Rechazo (Triaje) | ❌ | ❌ | ❌ | UI Pantalla 16 y lógica de rechazo pendientes |
+| CA-15 | Canalización del Trámite Específico | ❌ | ❌ | ❌ | Instanciación selectiva de procesos pendiente en UI |
+| CA-16 | Reloj SLA de Entrada en Cola | ❌ | ❌ | ❌ | Timer SLA de pre-triaje no evidenciado |
 | CA-17 | Sub-segundo ACK al emisor | ✅ | N/A | ❌ | 202 Accepted sincrónico |
 
 ### Resumen US-004
@@ -203,11 +207,29 @@
 | CA-10 | Virtual Scrolling grilla alta densidad | N/A | ✅ | ❌ | Implementado en `DmnIntelligence.vue` |
 | CA-11 | XAI Explicabilidad + Simulador | N/A | ✅ | ❌ | Panel XAI y simulador de decisiones en `DmnIntelligence.vue` |
 | CA-12 | Contención de Pánico + Trazabilidad Chat | N/A | ✅ | ❌ | Panic modal implementado |
-| CA-13 a CA-18 | [REMEDIACIÓN] Persistencia dual borradores, endpoint simulador, invalidación caché Redis, catálogo DMN, contrato API | ❌ | ❌ | ❌ | Sin verificar — CAs de remediación pendientes de auditoría |
-| CA-19 a CA-25 | [REFINAMIENTO] Resiliencia SSE (429, 422, 403), normalización prompt | ❌ | ✅ | ✅ | Tests de resiliencia y errores semánticos cubiertos |
+| CA-13 | Persistencia Dual Borradores DMN | ❌ | ❌ | ❌ | Remedición pendiente |
+| CA-14 | Validación Pre-Flight Catch-All DMN | ❌ | ❌ | ❌ | Remedición pendiente |
+| CA-15 | Endpoint Simulador Decisiones DMN | ❌ | ❌ | ❌ | Remedición pendiente |
+| CA-16 | Invalidación Caché Redis Zod | ❌ | ❌ | ❌ | Remedición pendiente |
+| CA-17 | Catálogo DMN (DMN Library) | ❌ | ❌ | ❌ | Remedición pendiente |
+| CA-18 | Contrato API DMN | ❌ | ❌ | ❌ | Remedición pendiente |
+| CA-19 | Resiliencia SSE Desconexiones | ❌ | ✅ | ✅ | Tests de resiliencia y errores semánticos cubiertos |
+| CA-20 | Normalización Prompt Caché | ❌ | ✅ | ✅ | Tests de resiliencia y errores semánticos cubiertos |
+| CA-21 | Validación XML Post-Minificación | ❌ | ✅ | ✅ | Tests de resiliencia y errores semánticos cubiertos |
+| CA-22 | Rechazo XML Hit Policy no FIRST | ❌ | ✅ | ✅ | Tests de resiliencia y errores semánticos cubiertos |
+| CA-23 | Rate Limiting Simulador DMN | ❌ | ✅ | ✅ | Tests de resiliencia y errores semánticos cubiertos |
+| CA-24 | Buscador In-App Grilla DMN | ❌ | ✅ | ✅ | Tests de resiliencia y errores semánticos cubiertos |
+| CA-25 | Timeout/SLA Generación | ❌ | ✅ | ✅ | Tests de resiliencia y errores semánticos cubiertos |
+| CA-26 | Coexistencia Chat NLP y Grilla | ❌ | ❌ | ❌ | Pendiente de desarrollo (Modo Manual) |
+| CA-27 | Binding Dropdown Diccionario Zod | ❌ | ❌ | ❌ | Pendiente de desarrollo (Modo Manual) |
+| CA-28 | Validación FEEL Tiempo Real | ❌ | ❌ | ❌ | Pendiente de desarrollo (Modo Manual) |
+| CA-29 | Inyección Automática Catch-All 🔒 | ❌ | ❌ | ❌ | Pendiente de desarrollo (Modo Manual) |
+| CA-30 | Edición Manual Cargas XML | ❌ | ❌ | ❌ | Pendiente de desarrollo (Modo Manual) |
+| CA-31 | Límite 100 Filas (Manual SRE) | ❌ | ❌ | ❌ | Pendiente de desarrollo (Modo Manual) |
+| CA-32 | Trazabilidad "Modificada Manualmente" | ❌ | ❌ | ❌ | Pendiente de desarrollo (Modo Manual) |
 
 ### Resumen US-007
-- **CAs Totales:** 25 | **CAs verificados:** 12 | **CAs cumplidos:** ~7 | **% Real:** ~48%
+- **CAs Totales:** 32 | **CAs verificados:** 12 | **CAs cumplidos:** ~7 | **% Real:** ~40%
 - **QA:** ✅ CAs de resiliencia validados (CA-1, 19-25 parcialmente). ✅ CA-6 Aislamiento de Tenant en Front validado (Interceptor 403 Playwright).
 - **Estado de Seguridad:** ✅ IDOR crítico por tenantId hardcodeado remediado.
 - **Pendiente auditar:** CAs 13-25 (13 CAs de remediación y refinamiento)
@@ -228,13 +250,18 @@
 | CA-1 | Bloqueador Modal (columna Blocked) | ❌ | ❌ | ❌ | Sin endpoint de transición con `blockReason`; sin modal en KanbanView |
 | CA-2 | Inmutabilidad DONE (solo lectura) | ❌ | ❌ | ❌ | Sin validación de estado DONE en backend |
 | CA-3 | Timer independiente esfuerzo vs SLA | ❌ | ❌ | ❌ | Sin tabla `ibpms_time_logs`; sin `<UniversalSlaTimer>` |
+| CA-4 | Anti-Multitasking de Propiedad (1:1) | ❌ | ❌ | ❌ | Sin validación de Single-Assignee en BD |
 | CA-5 | Prohibición CMMN — JPA puro | ✅ | N/A | ❌ | `AgileTaskEntity` persiste como JPA. Correcto por diseño |
 | CA-6 | State Machine PATCH /kanban/{tid}/state | ❌ | ❌ | ❌ | Endpoint PATCH no existe; `KanbanView.vue` mock hardcodeado con `setTimeout` |
 | CA-7 | Event-Driven híbrido → Camunda async | ❌ | N/A | ❌ | Sin publisher de evento para transiciones Kanban |
 | CA-8 | Gobernanza columnas + límite 7 | ❌ | ❌ | ❌ | Sin endpoint de columnas; sin validación de rol |
+| CA-9 | Tabla Polimórfica Única `ibpms_time_logs` | ❌ | ❌ | ❌ | Sin tabla ni canalización BAM |
+| CA-10 | Componente Universal `<UniversalSlaTimer>` | N/A | ❌ | ❌ | Componente no implementado en Front |
+| CA-11 | Inmutabilidad de Costos (Append-Only) | ❌ | N/A | ❌ | Faltan logs financieros inmutables |
+| CA-12 | Propagación Tiempo Real (Websockets) | ❌ | ❌ | ❌ | Sin emisión de eventos websocket para el Drag & Drop |
 
 ### Resumen US-008
-- **CAs Totales:** 11 | **CAs cumplidos:** ~1 (CA-5 por diseño arquitectónico) | **% Real:** ~10%
+- **CAs Totales:** 12 | **CAs cumplidos:** ~1 (CA-5 por diseño arquitectónico) | **% Real:** ~8%
 - **QA:** ❌ 0%
 - **Clasificación recomendada:** Mover de "Operativa" a "Scaffolding" en `future_backlog_v3.md`
 - **Impacto:** US-030 (Hub Ágil) depende del Kanban operativo — el tablero de US-030 en Pantalla 3 no funciona
@@ -245,7 +272,7 @@
 **Épica:** B — Formularios/BPMN | **Estado:** 🔨 EN CONSTRUCCIÓN (~72%) | **Auditado:** 2026-04-18T15:25 (Reconciliación PO)
 **Archivos verificados:** `FormCompletionService.java` · `FormBffCoreService.java` · `CompletarTareaService.java` · `WorkboxTaskController.java` · `TaskDraftService.java` · `PiiEncryptionService.java`
 
-| CA | Título (corto) | Back | Front | QA | Notas |
+| CA | Tí   tulo (corto) | Back | Front | QA | Notas |
 |----|----------------|------|-------|----|-------|
 | CA-1 | Submit datos válidos (POST) | ✅ | ✅ | ✅ | `FormCompletionService` + CQRS Event Sourcing + Saga compensatoria |
 | CA-2 | Submit datos inválidos (Zod 400) | ⚠️ | ✅ | ✅ | Vitest + Playwright mapeo campo-a-campo Zod 400 HTTP |

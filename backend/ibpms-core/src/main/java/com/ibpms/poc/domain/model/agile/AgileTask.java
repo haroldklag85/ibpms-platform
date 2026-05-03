@@ -53,6 +53,9 @@ public class AgileTask {
     @Column(name = "draft_payload_hash", length = 64)
     private String draftPayloadHash;
 
+    @Column(name = "draft_expires_at")
+    private ZonedDateTime draftExpiresAt;
+
     @Column(name = "sla_deadline")
     private ZonedDateTime slaDeadline;
 

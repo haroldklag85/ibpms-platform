@@ -267,6 +267,7 @@ export const api = {
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),
     analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
     generateDmnRules: (payload: any) => apiClient.post(`/dmn/generate`, payload),
+    updateDmnModel: (id: string, payload: any) => apiClient.put(`/dmn-models/${id}`, payload),
 
     // Sprint 6.1: DMN Definitions
     getDmnDefinitions: () => apiClient.get('/dmn-models/definitions'),

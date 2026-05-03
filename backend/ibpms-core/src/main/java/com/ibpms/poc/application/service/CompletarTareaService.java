@@ -41,11 +41,36 @@ public class CompletarTareaService implements CompletarTareaUseCase {
 
         // Delegar al motor BPM. Por ser Shared Transaction Manager,
         // cualquier Exception hará rollback tanto de Camunda como de Ibpm
-        taskService.complete(taskId, variables);
+        Map<String, Object> gatewayVars = extractGatewayVariables(variables);
+        taskService.complete(taskId, gatewayVars);
 
         if (idempotencyKey != null) {
             // El resultado "OK" vacío porque devuelve 204 No Content
             idempotencyPort.registrar(idempotencyKey, "{}");
         }
+    }
+
+    private Map<String, Object> extractGatewayVariables(Map<String, Object> allVariables) {
+        if (allVariables == null) return java.util.Collections.emptyMap();
+        
+        // Filtra solo variables orientadas a routing/gateways 
+        // (excluyendo Data Grids, Arrays PII y blobs de texto largo)
+        java.util.Map<String, Object> filtered = new java.util.HashMap<>();
+        for (Map.Entry<String, Object> entry : allVariables.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            
+            // Convención de exclusión de topología (No pasar metadata UI, objects ni arrays a Camunda)
+            if (key.startsWith("_") || value instanceof java.util.Collection || value instanceof java.util.Map) {
+                continue;
+            }
+            // Mantiene booleanos, números y strings cortos/decisiones explícitas
+            if (value instanceof Boolean || value instanceof Number || key.startsWith("decision_") || key.startsWith("gw_") || key.endsWith("Action")) {
+                filtered.put(key, value);
+            } else if (value instanceof String && ((String) value).length() < 255) {
+                filtered.put(key, value);
+            }
+        }
+        return filtered;
     }
 }

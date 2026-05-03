@@ -118,7 +118,8 @@ public class WorkboxTaskController {
                 "description", task.getDescription(),
                 "slaExpiration", task.getSlaDeadline(),
                 "status", task.getStatus(),
-                "assignee", task.getAssigneeIds() != null && !task.getAssigneeIds().isEmpty() ? String.join(",", task.getAssigneeIds()) : ""
+                "assignee", task.getAssigneeIds() != null && !task.getAssigneeIds().isEmpty() ? String.join(",", task.getAssigneeIds()) : "",
+                "draftExpiresAt", task.getDraftExpiresAt() != null ? task.getDraftExpiresAt() : ""
         ));
     }
 

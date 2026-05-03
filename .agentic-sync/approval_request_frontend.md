@@ -1,41 +1,21 @@
-# 🚀 Solicitud de Aprobación — Frontend US-030
+# Solicitud de Aprobación - Frontend Agent
 
-**De:** Agente Frontend
-**Para:** Product Owner / Arquitecto Líder
+**Destinatario:** Arquitecto Líder
+**Remitente:** Agente Frontend
 **Fecha:** 2026-05-02
-**Componente:** `AgileHub.vue` y `AgileBacklogList.vue`
+**US/CA:** US-007 (CA-26 a CA-32)
 
-## Resumen de la Implementación
-Se han implementado con éxito todas las directivas especificadas en el Handoff `F-030`:
+## Resumen del Plan de Trabajo
+He estructurado un plan de implementación detallado documentado en `implementation_plan.md` para cumplir con los requerimientos de la US-007 (Modo Manual DMN).
 
-1. **F-030-01 (CA-3): Panel CRUD de Tarea**
-   - Agregado el panel lateral de creación en `AgileBacklogList.vue`.
-   - Se incluyen los campos: Título, Descripción, Esfuerzo Estimado, Responsables (`AssigneeMultiSelect.vue`), Etiquetas (`AgileTagCreator.vue`) y Notas Adicionales.
-   - Endpoint conectado: `POST /api/v1/agile/projects/{projectId}/tasks`.
+El plan abarca:
+1. **TDD-First**: Creación de `DmnGridManual.spec.ts` para cubrir los Criterios de Aceptación 26, 28, 29 y 31.
+2. **Componentes**: Creación de `DmnGridManual.vue` para la grilla manual, integrando:
+   - `<select>` para binding Zod (CA-27).
+   - Validación FEEL en tiempo real (CA-28).
+   - Fila Catch-All bloqueada (CA-29).
+   - Límite de 100 filas por SRE (CA-31).
+3. **Integración**: Ajustar `DmnIntelligence.vue` para coexistencia de Chat NLP y grilla manual en Split-View (CA-26).
+4. **Estado y Trazabilidad**: Ajustar `useDmnStore.ts` y listados para renderizar badges de trazabilidad manual (CA-32).
 
-2. **F-030-02 (CA-4): Eliminación con Confirmación**
-   - Lógica de eliminación vinculada en `AgileBacklogList.vue` con cuadro de diálogo simple de confirmación.
-   - Endpoint conectado: `DELETE /api/v1/agile/projects/{projectId}/tasks/{taskId}`.
-
-3. **F-030-03 (CA-8): Filtro de Completadas**
-   - Toggle "Mostrar Completadas" agregado en la barra superior de `AgileHub.vue`.
-   - Se agregó una sección plegable al final del `AgileBacklogList.vue` que renderiza dinámicamente las tareas `DONE` cuando el toggle está activo.
-
-4. **F-030-04 (CA-13): Badge Ticket Rancio**
-   - Lógica `isStale` ajustada a `>= 15 días` inactivos.
-   - Decorado implementado: Borde lateral izquierdo ámbar (`border-l-amber-500`), fondo cálido sutil y el badge flotante visible "🕐 Inactivo X días" calculando los días de la diferencia de fechas.
-
-5. **F-030-05 (CA-7): Selector de Vista Portafolio**
-   - Se activó el Switch de "Vista Proyecto" vs "Vista Portafolio" en el Header.
-   - Se añadió un watcher que consume la ruta `GET /api/v1/agile/portfolio` e inyecta las tareas a nivel global en el modo Portafolio.
-
-6. **F-030-06 (CA-12): Link "Saltar al Tablero"**
-   - Integrado en la esquina superior derecha del `AgileHub.vue` para navegar hacia `KanbanView` con la ID del proyecto actual o `PROJ-DEFAULT` en caso genérico.
-
-## Verificación de Compilación
-El proyecto se ha compilado utilizando `npm run build`.
-* **Exit code:** 0
-* **Status:** Sin errores de TypeScript o estructura, validando correctos imports y ciclo de vida de los componentes integrados.
-
-## Siguientes Pasos (Gate de QA)
-El frontend se encuentra listo para las pruebas de E2E o integración continua. Se cede la bandera a la fase de certificación por el Agente de QA.
+Solicito tu revisión y aprobación formal para cambiar del modo `PLANNING` al modo `EXECUTION`.

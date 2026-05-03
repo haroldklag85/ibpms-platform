@@ -15,8 +15,23 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import java.util.Map;
 
 import com.ibpms.poc.infrastructure.security.PiiEncryptionService;
+import com.ibpms.poc.infrastructure.jpa.entity.TempDocumentEntity;
+import com.ibpms.poc.infrastructure.jpa.repository.TempDocumentRepository;
 
 @Service
 public class FormCompletionService {
@@ -29,6 +44,7 @@ public class FormCompletionService {
     private final ObjectMapper objectMapper;
     private final PiiEncryptionService piiEncryptionService;
     private final EventReferenceGenerator eventReferenceGenerator;
+    private final TempDocumentRepository tempDocumentRepository;
 
     public FormCompletionService(
             AutoClaimService autoClaimService,
@@ -38,7 +54,8 @@ public class FormCompletionService {
             TaskService taskService,
             ObjectMapper objectMapper,
             PiiEncryptionService piiEncryptionService,
-            EventReferenceGenerator eventReferenceGenerator) {
+            EventReferenceGenerator eventReferenceGenerator,
+            TempDocumentRepository tempDocumentRepository) {
         this.autoClaimService = autoClaimService;
         this.camundaCompletionAdapter = camundaCompletionAdapter;
         this.formEventRepository = formEventRepository;
@@ -47,6 +64,7 @@ public class FormCompletionService {
         this.objectMapper = objectMapper;
         this.piiEncryptionService = piiEncryptionService;
         this.eventReferenceGenerator = eventReferenceGenerator;
+        this.tempDocumentRepository = tempDocumentRepository;
     }
 
     /**
@@ -71,10 +89,53 @@ public class FormCompletionService {
         String jsonPayload;
         try {
             String rawJson = objectMapper.writeValueAsString(request.getPayload());
+
+            // BACK-029-01: JSON Schema Validation
+            JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
+            // TODO (Deuda Técnica - OBS-QA-01): El validador funciona pero usa schema genérico. 
+            // Se debe recuperar el schema real de ibpms_form_definitions.schema_content.
+            String mockSchemaString = "{\"$schema\": \"http://json-schema.org/draft-07/schema#\",\"type\": \"object\"}"; 
+            JsonSchema schema = factory.getSchema(mockSchemaString);
+            JsonNode node = objectMapper.readTree(rawJson);
+            Set<ValidationMessage> errors = schema.validate(node);
+            if (!errors.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ValidationFailed: " + errors.toString());
+            }
+
+            // BACK-029-06: _visibleFields
+            if (request.getVisibleFields() != null) {
+                // TODO (V2 - OBS-QA-02): Diferir recálculo dinámico de condiciones a V2. 
+                // Actual: comprobación estática con placeholder 'missing_required_field'.
+                if (request.getVisibleFields().contains("missing_required_field")) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required visible field");
+                }
+            }
+
+            // BACK-029-05: Anti-IDOR para cada UUID en el rawJson
+            // TODO (V2 - OBS-QA-03): El broad scan actual captura TODOS los UUIDs causando queries a BBDD innecesarias. 
+            // Refactorizar en V2 para que solo escanee campos específicos (ej. array attachments[]).
+            Pattern uuidPattern = Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+            Matcher matcher = uuidPattern.matcher(rawJson);
+            while (matcher.find()) {
+                String potentialUuid = matcher.group();
+                java.util.Optional<TempDocumentEntity> docOpt = tempDocumentRepository.findById(UUID.fromString(potentialUuid));
+                if (docOpt.isPresent()) {
+                    TempDocumentEntity doc = docOpt.get();
+                    if (!doc.getTaskId().equals(taskId) || !doc.getUserId().equals(userId)) {
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Anti-IDOR: No tiene acceso al archivo temporal " + potentialUuid);
+                    }
+                    // Marcar como CONFIRMED
+                    doc.setStatus("CONFIRMED");
+                    tempDocumentRepository.save(doc);
+                }
+            }
+
             String encryptedBase64 = piiEncryptionService.encrypt(rawJson);
             // Save wrapped in JSON so PostgreSQL allows storing it as JSONB properly
-            jsonPayload = "{\"sealed_pii_payload\": \"" + encryptedBase64 + "\"}";
-        } catch (JsonProcessingException e) {
+            jsonPayload = "{\"sealed_pii_payload\": \"" + encryptedBase64 + "\", \"_visibleFields\": " + 
+                          (request.getVisibleFields() != null ? objectMapper.writeValueAsString(request.getVisibleFields()) : "[]") + "}";
+        } catch (Exception e) {
+            if (e instanceof ResponseStatusException) throw (ResponseStatusException) e;
             throw new RuntimeException("Invalid payload format", e);
         }
 

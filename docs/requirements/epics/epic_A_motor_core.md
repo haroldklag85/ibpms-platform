@@ -741,8 +741,8 @@ Feature: Secure Webhook Intake and Human Approval
 
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
-Feature: Kanban Board Task Management
-  Scenario: Propagación de Estado en Tiempo Real (Websockets)
+Feature: Kanban Board Task Management 
+  Scenario: Propagación de Estado en Tiempo Real (Websockets) (CA-12)
     Given el tablero del proyecto "Implementación ERP" con columnas "TODO", "DOING", "DONE"
     And la tarea Kanban "KT-050" está en estado "TODO"
     When el usuario realiza un PATCH a "/api/v1/projects/kanban/tasks/KT-050/status"

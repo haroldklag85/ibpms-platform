@@ -80,3 +80,9 @@ databaseChangeLog:
       file: db/changelog/37-us002-claim-audit-log-orphans.sql
   - include:
       file: db/changelog/38-us007-dmn-manual-edit-schema.sql
+  - include:
+      file: db/changelog/39-us029-form-execution-schema.sql
+  - include:
+      file: db/changelog/40-us029-draft-expiration.sql
+  - include:
+      file: db/changelog/41-us007-dmn-schema-complement.sql

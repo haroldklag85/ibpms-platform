@@ -86,3 +86,5 @@ databaseChangeLog:
       file: db/changelog/40-us029-draft-expiration.sql
   - include:
       file: db/changelog/41-us007-dmn-schema-complement.sql
+  - include:
+      file: db/changelog/changes/42-us025-menu-topology.sql

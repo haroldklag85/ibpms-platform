@@ -162,6 +162,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
+import apiClient from '@/services/apiClient'
 import { useAuthStore } from '@/stores/authStore'
 import { useLocalStorage } from '@vueuse/core'
 import { sanitizeDmnXml } from '@/utils/security'
@@ -274,11 +275,16 @@ const openPublishModal = () => {
     showPublishModal.value = true
 }
 
-const resetToV1 = () => {
+const resetToV1 = async () => {
     if(confirm("¿Seguro que desea purgar los cambios generados por la Inteligencia Artificial y revertir el modelo al estándar V1?")) {
-        dmnDraft.value = { prompt: '', hasData: false, xmlData: '' };
-        dmnMockedRows.value = [];
-        lastAction.value = "[Reversión MLOps] Modelo restaurado a versión legacy.";
+        try {
+            await apiClient.post('/dmn/current-dmn-id/rollback');
+            dmnDraft.value = { prompt: '', hasData: false, xmlData: '' };
+            dmnMockedRows.value = [];
+            lastAction.value = "[Reversión MLOps] Modelo restaurado a versión legacy.";
+        } catch(e) {
+            console.error('Error rollback', e);
+        }
     }
 }
 

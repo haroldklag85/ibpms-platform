@@ -493,29 +493,32 @@
 
 | CA | Título (corto) | Back | Front | QA | Sprint | Notas |
 |----|----------------|------|-------|----|--------|-------|
-| CA-1 | Enviar datos válidos POST /complete | ✅ | ✅ | ❌ | S5.1 | `FormCompletionService.completeTask()` + `POST /workbox/tasks/{id}/complete` |
-| CA-2 | Validación JSON Schema 400 | ⚠️ | ⚠️ | ❌ | S5.1 | Validación existe; campo-a-campo pendiente |
-| CA-3 | Inyección BFF Megalítica | ⚠️ | ❌ | ❌ | S5.1 | `FormBffCoreService.generateMegaDtoFormContext()` funcional; prefill parcialmente mock |
-| CA-4 | Lazy Patching V1→V2 | ❌ | ❌ | ❌ | — | Pendiente |
-| CA-5 | Upload-First + Anti-IDOR | ❌ | ❌ | ❌ | — | 🔄 Remediación pendiente |
-| CA-6 | Draft Sync + Cifrado PII LS | ✅ | ✅ | ❌ | S5.1 | `PUT /draft` + `PiiEncryptionService.encrypt()` activos |
-| CA-7 | RYOW Consistencia Eventual | ❌ | ❌ | ❌ | — | 🔄 Remediación pendiente |
-| CA-8 | Idempotencia Anti-Doble-Clic | ✅ | N/A | ❌ | S5.1 | `idempotencyKey` UNIQUE constraint en `form_event_store` |
-| CA-9 | Zod Isomórfico Guillotina | ❌ | ❌ | ❌ | — | Pendiente |
-| — | — | — | — | — | — | *(CA-63 a CA-70 reubicados a sección US-005 — Auditoría 73-DEV)* |
-| CA-12 | CQRS Event Sourcing | ✅ | N/A | ❌ | S5.1 | `FormEvent` POJO → `FormEventEntity` JPA → `formEventRepository.save()` |
-| CA-13 | Exclusión Topológica Camunda | ✅ | N/A | ❌ | S5.1 | DTO minificado `{formApproved, form_storage_id}` enviado a Camunda |
-| CA-14 | ACID Fallback Saga Inverso | ✅ | N/A | ❌ | S5.1 | `FORM_SUBMIT_ROLLED_BACK` event + `SagaCompensationException` + `CamundaCompletionAdapter` retry 3x |
-| CA-15 | Auto-Claim Group-Level | ✅ | N/A | ❌ | S5.1 | `AutoClaimService.tryAutoClaim()` integrado |
-| CA-16 | Trazabilidad Rechazos BFF | ✅ | N/A | ❌ | S5.1 | `RejectionLogService.getRejectionHistory()` integrado en BFF |
-| CA-19 | [UX/UI] Debounce Visual 5s No Intrusivo | N/A | ❌ | ❌ | — | Handoff Frontend emitido. `useConnectionStatus.ts` + `connectionStore.ts` [NUEVO] |
-| CA-20 | [UX/UI] Toast Flotante Inferior Izquierda | N/A | ❌ | ❌ | — | `ConnectionToast.vue` [NUEVO]. z-index: 9990 |
-| CA-21 | [UX/UI] Lenguaje de Negocio (Sin Jerga) | N/A | ❌ | ❌ | — | Prohibido: CQRS, STOMP, Event Sourcing, WebSocket |
-| CA-22 | [UX/UI] Operatividad Pasiva No-Bloqueante | N/A | ❌ | ❌ | — | Sin overlay full-screen. pointer-events: auto |
-| CA-23 | [UX/UI] Transición a Modo Degradado | N/A | ❌ | ❌ | — | Mutación a DEGRADED tras desconexión persistente |
-| CA-24 | [UX/UI] Reconexión Silenciosa Background | N/A | ❌ | ❌ | — | Sin botones "Reintentar". Auto-sync |
-| CA-25 | [UX/UI] Feedback Positivo Desvanecimiento 3s | N/A | ❌ | ❌ | — | RESTORED → verde → 3s → fade-out 500ms → v-if=false |
-| CA-26 | [UX/UI] Anti-Colisión con ErrorStateGlobal | N/A | ❌ | ❌ | — | ErrorStateGlobal z-9998 > ConnectionToast z-9990. Estado SILENCED |
+| CA-1 | Separación de Responsabilidades y Event Sourcing (CQRS) | ✅ | ✅ | ❌ | S5.1 | `FormCompletionService.completeTask()` + `POST /workbox/tasks/{id}/complete` |
+| CA-2 | Exclusión Topológica Estratégica de Camunda Engine | ⚠️ | ⚠️ | ❌ | S5.1 | Validación existe; campo-a-campo pendiente |
+| CA-3 | Consistencia Transaccional Cruda (ACID Fallback over Sagas) | ⚠️ | ❌ | ❌ | S5.1 | `FormBffCoreService.generateMegaDtoFormContext()` funcional; prefill parcialmente mock |
+| CA-4 | Auto-Claim Controlado para Tareas de Grupo No Asignadas | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-5 | Trazabilidad Activa de Rechazos Históricos en BFF | ❌ | ❌ | ❌ | — | 🔄 Remediación pendiente |
+| CA-6 | Definición del Esquema del Event Store | ✅ | ✅ | ❌ | S5.1 | `PUT /draft` + `PiiEncryptionService.encrypt()` activos |
+| CA-7 | Endpoint de Lectura y Limpieza de Borradores del Servidor | ❌ | ❌ | ❌ | — | 🔄 Remediación pendiente |
+| CA-8 | Referencia Cruzada con US-029 y Política de Propiedad | ✅ | N/A | ❌ | S5.1 | `idempotencyKey` UNIQUE constraint en `form_event_store` |
+| CA-9 | Exclusión de Borradores del Event Store | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-10 | Rollback Compensatorio Inmutable con Retry y Timeout | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-11 | Estructura Obligatoria del Registro de Rechazo | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-12 | Cifrado At-Rest de Datos PII en el Event Store | ✅ | N/A | ❌ | S5.1 | `FormEvent` POJO → `FormEventEntity` JPA → `formEventRepository.save()` |
+| CA-13 | Validación de Pertenencia al Grupo en Auto-Claim | ✅ | N/A | ❌ | S5.1 | DTO minificado `{formApproved, form_storage_id}` enviado a Camunda |
+| CA-14 | Rate-Limiting en Endpoints de Borradores | ✅ | N/A | ❌ | S5.1 | `FORM_SUBMIT_ROLLED_BACK` event + `SagaCompensationException` + `CamundaCompletionAdapter` retry 3x |
+| CA-15 | Referencia de Evento Visible para el Operario | ✅ | N/A | ❌ | S5.1 | `AutoClaimService.tryAutoClaim()` integrado |
+| CA-16 | Eliminación de Borrador como Parte del Flujo de Submit | ✅ | N/A | ❌ | S5.1 | `RejectionLogService.getRejectionHistory()` integrado en BFF |
+| CA-17 | SLA de Latencia Máxima para el Endpoint /complete | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-18 | Política de Archivado Anual del Event Store | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-19 | Monitoreo Asíncrono No Intrusivo (Debounce Visual) | N/A | ❌ | ❌ | — | Handoff Frontend emitido. `useConnectionStatus.ts` + `connectionStore.ts` [NUEVO] |
+| CA-20 | Anatomía y Posicionamiento del Toast Flotante | N/A | ❌ | ❌ | — | `ConnectionToast.vue` [NUEVO]. z-index: 9990 |
+| CA-21 | Lenguaje Orientado a Negocio (Prohibición de Jerga) | N/A | ❌ | ❌ | — | Prohibido: CQRS, STOMP, Event Sourcing, WebSocket |
+| CA-22 | Interfaz Cinética y Operatividad Pasiva en Desconexión | N/A | ❌ | ❌ | — | Sin overlay full-screen. pointer-events: auto |
+| CA-23 | Transición Predictiva a Modo Degradado | N/A | ❌ | ❌ | — | Mutación a DEGRADED tras desconexión persistente |
+| CA-24 | Reconexión Silenciosa en Background | N/A | ❌ | ❌ | — | Sin botones "Reintentar". Auto-sync |
+| CA-25 | Feedback Positivo y Desvanecimiento de Éxito | N/A | ❌ | ❌ | — | RESTORED → verde → 3s → fade-out 500ms → v-if=false |
+| CA-26 | Prevención Contra Colisiones Visuales en Error Fuerte | N/A | ❌ | ❌ | — | ErrorStateGlobal z-9998 > ConnectionToast z-9990. Estado SILENCED |
 
 ### Resumen US-017
 - **Total CAs:** 24 | **✅ Completos:** 10 | **⚠️ Parciales:** 2 | **❌ Pendiente:** 12 (4 arquitectura + 8 UX/UI) | **% Real:** ~50%

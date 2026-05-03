@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/services/apiClient';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 
 export const useAuthStore = defineStore('auth', () => {
     // Estado Reactivo
@@ -21,34 +22,48 @@ export const useAuthStore = defineStore('auth', () => {
         }
     };
 
-    // CA-11: Instancia del SSE Listener
-    let sseSource: EventSource | null = null;
+    // CA-11: AbortController para el SSE Listener (permite cierre limpio en logout)
+    let sseAbortController: AbortController | null = null;
 
-    // CA-11: Initialize SSE Listner for Security Event [ROLE_REVOKED]
+    // CA-11: Initialize SSE Listener for Security Event [ROLE_REVOKED]
+    // FIX: EventSource nativo no soporta headers → usa fetchEventSource con Authorization JWT
     const initSecurityListener = () => {
         if (!token.value) return;
-        if (sseSource) sseSource.close();
-        
-        try {
-            // Configuración segura usando el cliente HTTP Base URL o URI relativa para la Proxy de Vite
-            const baseURL = (import.meta as any).env.VITE_API_URL || '';
-            const TARGET_SSE = `${baseURL}/api/v1/security/stream`;
-            
-            sseSource = new EventSource(TARGET_SSE);
-            sseSource.onmessage = (event) => {
+
+        // Cerrar listener previo si existe
+        if (sseAbortController) {
+            sseAbortController.abort();
+            sseAbortController = null;
+        }
+
+        sseAbortController = new AbortController();
+        const jwt = token.value;
+
+        fetchEventSource('/api/v1/security/stream', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${jwt}`,
+                'Accept': 'text/event-stream',
+            },
+            signal: sseAbortController.signal,
+            onmessage(event) {
                 if (event.data === '[ROLE_REVOKED]') {
-                    console.error("ALERTA DE SEGURIDAD (CA-11): Revocación detectada vía SSE.");
-                    alert("⚠️ Sus privilegios direccionales han sido erradicados. Terminando sesión mandatoria.");
+                    console.error('ALERTA DE SEGURIDAD (CA-11): Revocación detectada vía SSE.');
+                    alert('⚠️ Sus privilegios direccionales han sido erradicados. Terminando sesión mandatoria.');
                     logout();
                 }
-            };
-            sseSource.onerror = () => {
-                // Silently fails to not spam console in dev mode
-                if (sseSource) sseSource.close();
-            };
-        } catch (e) {
-            console.warn("SSE EventSource Init failed", e);
-        }
+            },
+            onerror(_err) {
+                // Silently fails — no spam en consola dev. El AbortController cierra en logout.
+                if (sseAbortController) {
+                    sseAbortController.abort();
+                    sseAbortController = null;
+                }
+                throw _err; // fetchEventSource detiene el reintento automático
+            },
+        }).catch(() => {
+            // Absorber el error de abort/network para no propagar excepciones no manejadas
+        });
     };
 
     // CA-4011: Token Rotator Interval (Silent Auto-Renewal)
@@ -99,9 +114,10 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const logout = () => {
-        if (sseSource) {
-            sseSource.close();
-            sseSource = null;
+        // Cerrar SSE listener activo
+        if (sseAbortController) {
+            sseAbortController.abort();
+            sseAbortController = null;
         }
         stopTokenRotator();
         token.value = null;

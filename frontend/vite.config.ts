@@ -4,6 +4,11 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    // FIX: sockjs-client es CommonJS y usa `global` (Node.js). Vite no lo shima
+    // por defecto en ESM browser bundles → ReferenceError: global is not defined.
+    define: {
+        global: 'globalThis',
+    },
     plugins: [vue() as any],
     resolve: {
         alias: {
@@ -20,6 +25,14 @@ export default defineConfig({
                 changeOrigin: true,
                 secure: false,
             },
+            // FIX: Proxificar el handshake HTTP de SockJS (/ws/workdesk/info, /ws/workdesk/***)
+            // Sin este proxy, el navegador hace CORS al puerto 8080 directamente
+            '/ws': {
+                target: 'http://127.0.0.1:8080',
+                changeOrigin: true,
+                secure: false,
+                ws: true, // Habilitar upgrade WebSocket nativo en el proxy de Vite
+            },
         },
     },
     test: {
@@ -35,3 +48,4 @@ export default defineConfig({
         }
     }
 });
+

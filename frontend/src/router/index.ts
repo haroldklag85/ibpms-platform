@@ -189,6 +189,13 @@ const router = createRouter({
                     name: 'PmoSettings',
                     component: () => import('@/views/admin/PMO/PmoSettings.vue'),
                     meta: { title: 'Configuración PMO / SLA', requiresAuth: true, roles: ['Global Admin', 'ROLE_SUPER_ADMIN'] }
+                },
+                // --- Ruta Comodín (Catch-All 404) dentro del Layout ---
+                // Previene pantallazos blancos cuando el backend envía menús en desarrollo (WIP)
+                {
+                    path: ':pathMatch(.*)*',
+                    name: 'NotFoundInLayout',
+                    component: () => import('@/components/common/NotFound404.vue')
                 }
             ]
         }

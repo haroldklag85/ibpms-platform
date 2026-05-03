@@ -52,7 +52,7 @@
                
                <!-- Separador Visual / Título del Grupo -->
                <div v-if="gIdx > 0" class="h-px bg-slate-800 my-4 mx-2"></div>
-               <p v-if="!isSidebarCollapsed" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 fade-in">{{ group.title }}</p>
+               <p v-if="!isSidebarCollapsed && group.title === 'Workdesk'" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 fade-in">{{ group.title }}</p>
 
                <!-- Renderizado Plano (Si es Workdesk/Operación) o Acordeón para otros -->
                <template v-if="group.title === 'Workdesk'">

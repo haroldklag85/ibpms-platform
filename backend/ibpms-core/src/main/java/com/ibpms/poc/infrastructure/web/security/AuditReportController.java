@@ -64,4 +64,10 @@ public class AuditReportController {
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(stream);
     }
+
+    @GetMapping
+    public ResponseEntity<List<Object>> getAuditReports() {
+        // Retorna lista vacía por ahora para evitar error 404/500 en frontend y colapso de UI
+        return ResponseEntity.ok(List.of());
+    }
 }

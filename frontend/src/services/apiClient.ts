@@ -46,13 +46,18 @@ apiClient.interceptors.response.use(
         
         const config = error.config as InternalAxiosRequestConfig & { _retryCount?: number };
         
-        // J-04: Optimistic UI / Backoff Exponencial para 429 y 503
-        if (config && error.response && [429, 503].includes(error.response.status)) {
+        // Detección de Proxy de Vite fallando porque el Backend sigue iniciando
+        const isViteProxyError = error.response && error.response.status === 500 && 
+                                 typeof error.response.data === 'string' && 
+                                 (error.response.data.includes('Error occurred while trying to proxy') || error.response.data.includes('ECONNREFUSED'));
+
+        // J-04: Optimistic UI / Backoff Exponencial para 429, 503 y Errores de Proxy Vite
+        if (config && error.response && ([429, 503].includes(error.response.status) || isViteProxyError)) {
             config._retryCount = config._retryCount || 0;
-            if (config._retryCount < 3) {
+            if (config._retryCount < 5) { // Subir a 5 para tolerar el inicio largo de Spring Boot
                 config._retryCount += 1;
-                const backoff = Math.pow(2, config._retryCount) * 1000; // 2s, 4s, 8s
-                console.warn(`J-04: Reintento automático (${config._retryCount}/3) en ${backoff}ms por HTTP ${error.response.status}`);
+                const backoff = Math.pow(2, config._retryCount) * 1000; // 2s, 4s, 8s, 16s, 32s
+                console.warn(`J-04: Reintento automático (${config._retryCount}/5) en ${backoff}ms por HTTP ${error.response.status} (Backend Booting/RateLimit)`);
                 return new Promise(resolve => {
                     setTimeout(() => resolve(apiClient(config)), backoff);
                 });
@@ -63,6 +68,11 @@ apiClient.interceptors.response.use(
         if (error.response && [500, 502, 503, 504].includes(error.response.status)) {
             console.error('Fatal Level 0 Dispatching', error.response.status);
             
+            let message = `Colapso del Servidor / Integración Cíclica`;
+            if (isViteProxyError) {
+                message = `El servidor Backend se encuentra compilando o iniciando. Por favor espere.`;
+            }
+            
             // CA-37: Generic 500 Error Toast
             if (error.response.status === 500) {
                 const body = document.querySelector('body');
@@ -70,7 +80,7 @@ apiClient.interceptors.response.use(
                     const toast = document.createElement('div');
                     toast.id = 'server-error-toast';
                     toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
-                    toast.innerHTML = '❌ Error interno del servidor. Inténtelo más tarde.';
+                    toast.innerHTML = isViteProxyError ? '⏳ Esperando a que inicie el Backend...' : '❌ Error interno del servidor. Inténtelo más tarde.';
                     body.appendChild(toast);
                     setTimeout(() => {
                         toast.style.opacity = '0';
@@ -81,7 +91,7 @@ apiClient.interceptors.response.use(
             
             const event = new CustomEvent('global-error-dispatch', { detail: { 
                 code: error.response.status,
-                message: `Colapso del Servidor / Integración Cíclica`
+                message: message
             }});
             window.dispatchEvent(event);
             return Promise.reject(error);

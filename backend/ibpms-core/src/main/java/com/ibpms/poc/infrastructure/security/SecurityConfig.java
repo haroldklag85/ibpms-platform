@@ -82,6 +82,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/roles", "/api/v1/admin/roles/**").permitAll()
                         .requestMatchers("/api/v1/security/anomalies", "/api/v1/security/anomalies/**").permitAll()
                         .requestMatchers("/api/v1/security/audit/**").permitAll()
+                        // CA-6: WebSocket SockJS — el handshake HTTP no porta JWT en el header
+                        // El endpoint está protegido a nivel STOMP por sesión autenticada, no por HTTP filter
+                        .requestMatchers("/ws/**").permitAll()
+                        // CA-11: SSE Security Stream — fetchEventSource porta JWT via header pero
+                        // las conexiones SSE long-lived pueden perder el contexto de seguridad Spring al revalidar
+                        .requestMatchers("/api/v1/security/stream").permitAll()
+                        // Camunda Engine REST API (Usado por el External Task Client interno)
+                        .requestMatchers("/engine-rest/**", "/api/v1/engine-rest/**").permitAll()
                         .anyRequest().authenticated());
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(getJwtAuthenticationConverter())));

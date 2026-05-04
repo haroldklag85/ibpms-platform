@@ -148,4 +148,21 @@ describe('GlobalRolesTable.vue — US-036 CA-2 & CA-3', () => {
     expect(modal.exists()).toBe(true)
     expect(modal.text()).toContain('ROLE_ONBOARDING_TEMPLATE')
   })
+
+  // ── CA-6: Edición y Herencia ────────────────────────────────────────────────
+
+  it('CA-6 RBAC-FE-09: hacer click en btn-edit-role abre el modal de edición', async () => {
+    const rows = wrapper.findAll('tbody tr')
+    const analystRow = rows.find(r => r.text().includes('ROLE_ANALYST'))
+    const editBtn = analystRow!.find('[data-testid="btn-edit-role"]')
+
+    await editBtn!.trigger('click')
+
+    const modal = wrapper.find('[data-testid="modal-edit-role"]')
+    expect(modal.exists()).toBe(true)
+    expect(modal.text()).toContain('Editar Rol Global')
+    
+    const nameInput = modal.find('[data-testid="input-edit-role-name"]')
+    expect((nameInput.element as HTMLInputElement).value).toBe('ROLE_ANALYST')
+  })
 })

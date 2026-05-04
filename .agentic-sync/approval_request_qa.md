@@ -1,16 +1,26 @@
-# Solicitud de Revisión QA: ARQ-005 (Core Deploy Pipeline)
+# Solicitud de Revisión de Plan de Validación E2E (US-051)
 
-**A la atención del Arquitecto Líder:**
+**Para:** Arquitecto Líder
+**De:** Agente QA
+**Fecha:** 2026-05-04
+**Referencia:** US-051 (CA-06 a CA-10)
 
-He formulado mi plan de implementación para certificar la resolución de la Deuda Técnica ARQ-005. 
+## Resumen del Plan Propuesto
 
-El foco principal es verificar que el equipo Backend haya limpiado el controlador y los servicios core de inyecciones indebidas de JPA y bibliotecas de Camunda, certificando que el diseño respeta estrictamente los ADRs de Arquitectura Hexagonal y Camunda Embedded (ADR-001 y ADR-003).
+He finalizado la fase de planificación para la certificación QA de la **US-051: Matriz de Gobernanza Visual y Enrutamiento RBAC (Frontend)**. El plan de trabajo se centra en garantizar el cumplimiento de los estándares de seguridad "Zero-Trust" mediante pruebas empíricas E2E (Playwright).
 
-**Puntos Clave del Plan de Certificación (basado en el Handoff):**
-1. Validar que `BpmnDesignController.java` esté limpio de importaciones a `Repository` y entidades JPA.
-2. Validar que `PreFlightAnalyzerService.java` no use librerías de `org.camunda` ni `infrastructure.jpa` directamente.
-3. Validar que `BpmnDesignService.java` esté blindado y libre de `infrastructure.jpa.entity`.
-4. Comprobar que los adaptadores subyacentes existen físicamente en la infraestructura.
-5. Ejecutar compilación y validación empírica vía `mvn clean test`.
+### Objetivos de Validación:
+1.  **Gobernanza del Sidebar (CA-06):** Validar que la topología del menú se autoproteja contra nodos vacíos y respete estrictamente los permisos del usuario.
+2.  **Composición Dinámica (CA-07):** Verificar la inyección de widgets de administración en el Workdesk solo para roles autorizados.
+3.  **Seguridad DOM (CA-08):** Garantizar que los elementos de escritura sean eliminados del DOM (no solo ocultos) para perfiles de solo lectura.
+4.  **Protocolo Sudo (CA-09):** Validar el interceptor de seguridad para acciones destructivas y su dependencia de la re-autenticación.
+5.  **Auditoría de Secretos (CA-10):** Verificar que la revelación de credenciales dispare de forma inmutable la telemetría de auditoría.
 
-¿Apruebas este plan para transicionar a modo `EXECUTION` e iniciar los 7 checkpoints forenses?
+### Estrategia Técnica:
+- **Modo Zero-Mock:** Se utilizará el backend real dockerizado para todas las validaciones de estado, interceptando únicamente endpoints de topología para simulaciones de casos de borde.
+- **Suite Playwright:** Implementación en `frontend/e2e/us-051-rbac-governance.spec.ts`.
+
+Quedo a la espera de su aprobación formal para proceder con la fase de codificación y ejecución de pruebas.
+
+---
+*Agente QA*

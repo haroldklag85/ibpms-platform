@@ -16,9 +16,11 @@ import java.util.UUID;
 public class RoleAdminController {
 
     private final RoleService roleService;
+    private final EntraIdSyncService entraIdSyncService;
 
-    public RoleAdminController(RoleService roleService) {
+    public RoleAdminController(RoleService roleService, EntraIdSyncService entraIdSyncService) {
         this.roleService = roleService;
+        this.entraIdSyncService = entraIdSyncService;
     }
 
     @PostMapping
@@ -85,14 +87,10 @@ public class RoleAdminController {
     /**
      * CA-1 US-036 — Soporte Doble Motor (EntraID SSO).
      * GET /api/v1/admin/roles/entraid-groups
-     * Devuelve la lista de grupos sincronizados desde Microsoft Graph API (Mock).
+     * Devuelve la lista de grupos sincronizados desde Microsoft Graph API.
      */
     @GetMapping("/entraid-groups")
     public ResponseEntity<List<Map<String, String>>> getEntraIdGroups() {
-        return ResponseEntity.ok(List.of(
-                Map.of("id", "1111-2222-3333-4444", "displayName", "GG_IBPMS_Admins_Prod"),
-                Map.of("id", "5555-6666-7777-8888", "displayName", "GG_IBPMS_Compliance_Readonly"),
-                Map.of("id", "9999-0000-AAAA-BBBB", "displayName", "GG_IBPMS_Operations_Managers")
-        ));
+        return ResponseEntity.ok(entraIdSyncService.fetchAvailableGroups());
     }
 }

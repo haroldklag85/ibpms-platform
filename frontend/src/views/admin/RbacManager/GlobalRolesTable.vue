@@ -2,12 +2,18 @@
   <div class="bg-white border text-sm text-gray-700 min-h-[300px]">
 
     <!-- CA-6 US-036: Acción de creación con selector de herencia piramidal -->
-    <div class="flex justify-end px-4 py-2 border-b border-gray-100 bg-gray-50/50">
+    <div class="flex justify-end gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50/50">
+      <button
+        data-testid="btn-open-import-entraid"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors"
+        @click="openImportModal"
+      >☁️ Importar EntraID</button>
+      
       <button
         data-testid="btn-open-create-role"
         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
         @click="createModalOpen = true"
-      >+ Crear Rol</button>
+      >+ Crear Rol Local</button>
     </div>
 
     <div v-if="store.isLoading" class="p-8 text-center text-gray-500">
@@ -75,6 +81,7 @@
                 :data-role-id="rol.id"
                 class="w-7 h-7 rounded-full hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-gray-400"
                 title="Editar rol"
+                @click="onEditRole(rol)"
               >✏️</button>
 
               <!-- CA-2 US-036: Botón Borrar — PROHIBIDO para ROLE_SUPER_ADMIN (v-if defensivo) -->
@@ -172,6 +179,71 @@
       </div>
     </div>
 
+    <!-- CA-6 US-036: Modal de Edición de Rol -->
+    <div
+      v-if="editModalOpen"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      data-testid="modal-edit-role"
+    >
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-[420px] space-y-4">
+        <h3 class="text-base font-bold text-gray-900">Editar Rol Global</h3>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Nombre del Rol</label>
+          <input
+            v-model="editingRole.name"
+            type="text"
+            data-testid="input-edit-role-name"
+            class="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
+          <input
+            v-model="editingRole.description"
+            type="text"
+            data-testid="input-edit-role-description"
+            class="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">
+            Hereda permisos de (Rol Padre)
+          </label>
+          <select
+            v-model="editingRole.parentRoleId"
+            data-testid="select-edit-parent-role"
+            class="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          >
+            <option value="">— Sin herencia —</option>
+            <option v-for="rol in store.globalRoles" :key="rol.id" :value="rol.id" :disabled="rol.id === editingRole.id">
+              {{ rol.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input id="editIsTemplate" v-model="editingRole.isTemplate" type="checkbox" class="rounded" data-testid="check-edit-is-template" />
+          <label for="editIsTemplate" class="text-xs text-gray-600">Es plantilla asignable masivamente</label>
+        </div>
+
+        <div class="flex gap-2 justify-end pt-2">
+          <button
+            class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded"
+            @click="editModalOpen = false"
+          >Cancelar</button>
+          <button
+            class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 font-semibold"
+            :disabled="updatingRole"
+            data-testid="btn-confirm-edit-role"
+            @click="confirmUpdateRole"
+          >{{ updatingRole ? 'Actualizando...' : 'Guardar Cambios' }}</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal de confirmación Asignación Masiva (CA-3) -->
     <div
       v-if="massAssignTarget"
@@ -202,6 +274,45 @@
       </div>
     </div>
 
+    <!-- Modal de Importación EntraID (CA-1) -->
+    <div
+      v-if="importModalOpen"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      data-testid="modal-import-entraid"
+    >
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-[450px] space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-bold text-gray-900">Importar Grupos EntraID</h3>
+          <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold uppercase">Azure AD Sync</span>
+        </div>
+        
+        <p class="text-xs text-gray-500">Seleccione los grupos corporativos para mapearlos como roles locales en el iBPMS.</p>
+
+        <div class="max-h-60 overflow-y-auto border rounded divide-y">
+          <div v-for="group in entraIdGroups" :key="group.id" class="p-3 flex items-center justify-between hover:bg-gray-50">
+            <div>
+              <div class="text-sm font-semibold text-gray-800">{{ group.displayName }}</div>
+              <div class="text-[10px] text-gray-400 font-mono">{{ group.id }}</div>
+            </div>
+            <button
+              class="px-2 py-1 text-[11px] bg-emerald-50 text-emerald-600 border border-emerald-200 rounded hover:bg-emerald-600 hover:text-white transition-colors"
+              @click="confirmImport(group)"
+            >Importar</button>
+          </div>
+          <div v-if="entraIdGroups.length === 0" class="p-8 text-center text-gray-400 text-xs">
+            No se encontraron grupos disponibles.
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button
+            class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded"
+            @click="importModalOpen = false"
+          >Cerrar</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -219,6 +330,24 @@ const ROOT_ROLE_NAME = 'ROLE_SUPER_ADMIN'
 /** Determina si un nombre de rol es el Guardián Raíz inmutable */
 function isRootRole(name) {
   return name === ROOT_ROLE_NAME
+}
+
+// --- CA-1: EntraID Import ---
+const importModalOpen = ref(false)
+const entraIdGroups = ref([])
+
+async function openImportModal() {
+  importModalOpen.value = true
+  entraIdGroups.value = await store.fetchEntraIdGroups()
+}
+
+async function confirmImport(group) {
+  try {
+    await store.importRole(group)
+    alert(`✅ Grupo ${group.displayName} importado con éxito.`)
+  } catch (err) {
+    alert('Error al importar: ' + err.message)
+  }
 }
 
 // --- CA-2: Delete ---
@@ -253,6 +382,39 @@ async function confirmCreateRole() {
     alert(`Error al crear rol: ${err?.response?.data?.message ?? err.message}`)
   } finally {
     creatingRole.value = false
+  }
+}
+
+// --- CA-2 & CA-6: Edit Role ---
+const editModalOpen = ref(false)
+const updatingRole = ref(false)
+const editingRole = reactive({ id: null, name: '', description: '', parentRoleId: '', isTemplate: false })
+
+function onEditRole(rol) {
+  editingRole.id = rol.id
+  editingRole.name = rol.name
+  editingRole.description = rol.description
+  editingRole.parentRoleId = rol.parentRole?.id || ''
+  editingRole.isTemplate = !!rol.isTemplate
+  editModalOpen.value = true
+}
+
+async function confirmUpdateRole() {
+  if (!editingRole.name.trim()) return alert('El nombre del rol es obligatorio.')
+  updatingRole.value = true
+  try {
+    const payload = {
+      name: editingRole.name.trim(),
+      description: editingRole.description.trim(),
+      isTemplate: editingRole.isTemplate,
+      parentRole: editingRole.parentRoleId ? { id: editingRole.parentRoleId } : null,
+    }
+    await store.updateRole(editingRole.id, payload)
+    editModalOpen.value = false
+  } catch (err) {
+    alert(`Error al actualizar rol: ${err?.response?.data?.message ?? err.message}`)
+  } finally {
+    updatingRole.value = false
   }
 }
 

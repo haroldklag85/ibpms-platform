@@ -82,24 +82,79 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
-    // CA-12: Obtener anomalías del Dashboard CISO
-    async function fetchAnomalies() {
+    // CA-1: Obtener grupos de EntraID (Azure AD)
+    async function fetchEntraIdGroups() {
         isLoading.value = true
         try {
-            const response = await apiClient.get('/api/v1/security/anomalies')
-            anomalies.value = response.data
+            const response = await apiClient.get('/admin/roles/entraid-groups')
+            return response.data
         } catch (error) {
-            console.error("Error obteniendo anomalías", error)
+            console.error("Error obteniendo grupos EntraID", error)
+            return []
         } finally {
             isLoading.value = false
         }
     }
 
-    // CA-12: Resolver anomalía (Investigada/Mitigada/Ignorada)
-    async function resolveAnomaly(id, resolutionStatus) {
+    // CA-1: Importar un grupo como Rol de iBPMS
+    async function importRole(group) {
+        isLoading.value = true
         try {
-            await apiClient.patch(`/api/v1/security/anomalies/${id}/resolve?status=${resolutionStatus}`)
-            await fetchAnomalies() // Refrescar lista
+            const payload = {
+                name: group.displayName,
+                description: `Sincronizado desde EntraID: ${group.id}`,
+                source: 'ENTRA_ID',
+                isTemplate: false
+            }
+            await apiClient.post('/admin/roles/', payload)
+            await fetchRoles()
+        } catch (error) {
+            console.error("Error importando rol", error)
+            throw error
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    // CA-4: Actualizar permisos granulares de proceso
+    async function updateProcessPermission(roleId, permissionData) {
+        try {
+            await apiClient.patch(`/admin/roles/${roleId}/permissions`, permissionData)
+            await fetchRoles()
+        } catch (error) {
+            console.error("Error actualizando permisos de proceso", error)
+            throw error
+        }
+    }
+
+    // CA-06: Actualizar rol (incluyendo herencia)
+    async function updateRole(roleId, payload) {
+        isLoading.value = true
+        try {
+            await apiClient.put(`/admin/roles/${roleId}`, payload)
+            await fetchRoles()
+        } catch (error) {
+            console.error("Error actualizando rol", error)
+            throw error
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    // CA-12: Anomalías de Seguridad
+    async function fetchAnomalies() {
+        try {
+            const response = await apiClient.get('/admin/security/anomalies')
+            anomalies.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo anomalías", error)
+        }
+    }
+
+    async function resolveAnomaly(id) {
+        try {
+            await apiClient.post(`/admin/security/anomalies/${id}/resolve`)
+            await fetchAnomalies()
         } catch (error) {
             console.error("Error resolviendo anomalía", error)
             throw error
@@ -115,6 +170,10 @@ export const useRbacStore = defineStore('rbac', () => {
         processRoles,
         fetchRoles,
         fetchAnomalies,
-        resolveAnomaly
+        resolveAnomaly,
+        fetchEntraIdGroups,
+        importRole,
+        updateProcessPermission,
+        updateRole
     }
 })

@@ -10,7 +10,8 @@
       </span>
       <div class="flex flex-col">
         <span class="text-sm font-semibold tracking-wide">
-          {{ store.currentLabel }}
+          <span v-if="store.status === 'RECONNECTING'">{{ t('errors.reconnect') }}</span>
+          <span v-else>{{ store.currentLabel }}</span>
         </span>
         <span v-if="store.status === 'DEGRADED'" class="text-xs mt-1 opacity-80">
           Sus datos están seguros.
@@ -22,8 +23,19 @@
 
 <script setup lang="ts">
 import { useConnectionStore } from '@/stores/connectionStore';
+import { watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const store = useConnectionStore();
+const { t } = useI18n();
+
+watch(() => store.status, (newStatus) => {
+  if (newStatus === 'RESTORED') {
+    setTimeout(() => {
+      store.setStatus('ONLINE');
+    }, 3000);
+  }
+}, { immediate: true });
 </script>
 
 <style scoped>

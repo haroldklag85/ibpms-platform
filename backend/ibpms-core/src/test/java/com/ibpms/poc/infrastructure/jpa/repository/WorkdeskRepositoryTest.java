@@ -25,10 +25,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.mockito.ArgumentCaptor;
 
+import com.ibpms.poc.infrastructure.config.TestcontainersBaseIT;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Transactional
-public class WorkdeskRepositoryTest {
+public class WorkdeskRepositoryTest extends TestcontainersBaseIT {
 
     @Autowired
     private WorkdeskProjectionRepository workdeskRepository;

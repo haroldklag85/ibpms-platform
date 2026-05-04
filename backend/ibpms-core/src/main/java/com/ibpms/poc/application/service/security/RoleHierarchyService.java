@@ -1,16 +1,12 @@
 package com.ibpms.poc.application.service.security;
 
-import com.ibpms.poc.infrastructure.jpa.entity.security.RoleHierarchyEntity;
-import com.ibpms.poc.infrastructure.jpa.entity.security.RoleTemplateEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.security.RoleHierarchyRepository;
-import com.ibpms.poc.infrastructure.jpa.repository.security.RoleTemplateRepository;
+import com.ibpms.poc.application.ports.out.RoleHierarchyPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * US-036 CA-6: Servicio de Herencia Piramidal de Roles.
@@ -25,13 +21,10 @@ public class RoleHierarchyService {
 
     private static final Logger log = LoggerFactory.getLogger(RoleHierarchyService.class);
 
-    private final RoleHierarchyRepository hierarchyRepository;
-    private final RoleTemplateRepository roleTemplateRepository;
+    private final RoleHierarchyPort roleHierarchyPort;
 
-    public RoleHierarchyService(RoleHierarchyRepository hierarchyRepository,
-                                RoleTemplateRepository roleTemplateRepository) {
-        this.hierarchyRepository = hierarchyRepository;
-        this.roleTemplateRepository = roleTemplateRepository;
+    public RoleHierarchyService(RoleHierarchyPort roleHierarchyPort) {
+        this.roleHierarchyPort = roleHierarchyPort;
     }
 
     /**
@@ -41,7 +34,7 @@ public class RoleHierarchyService {
      * @throws IllegalStateException si la inserción generaría un ciclo.
      */
     @Transactional
-    public RoleHierarchyEntity registerHierarchy(UUID parentRoleId, UUID childRoleId) {
+    public void registerHierarchy(UUID parentRoleId, UUID childRoleId) {
         // Guardia 1: No se permite auto-referencia directa
         if (parentRoleId.equals(childRoleId)) {
             throw new IllegalStateException(
@@ -49,14 +42,14 @@ public class RoleHierarchyService {
         }
 
         // Guardia 2: Verificar que la relación inversa no existe (child → parent)
-        if (hierarchyRepository.existsByParentRoleIdAndChildRoleId(childRoleId, parentRoleId)) {
+        if (roleHierarchyPort.existsHierarchy(childRoleId, parentRoleId)) {
             throw new IllegalStateException(
                     "Ciclo detectado: Ya existe la relación inversa child=" + childRoleId 
                     + " → parent=" + parentRoleId + ". Insertar generaría un bucle.");
         }
 
         // Guardia 3: Verificar que el child propuesto no sea ya ancestro del parent (ciclo indirecto)
-        List<UUID> ancestorsOfParent = hierarchyRepository.findAllAncestorRoleIds(parentRoleId);
+        List<UUID> ancestorsOfParent = roleHierarchyPort.findAllAncestorRoleIds(parentRoleId);
         if (ancestorsOfParent.contains(childRoleId)) {
             throw new IllegalStateException(
                     "Ciclo indirecto detectado: El rol hijo (" + childRoleId 
@@ -65,26 +58,13 @@ public class RoleHierarchyService {
         }
 
         // Guardia 4: No duplicar la misma relación
-        if (hierarchyRepository.existsByParentRoleIdAndChildRoleId(parentRoleId, childRoleId)) {
+        if (roleHierarchyPort.existsHierarchy(parentRoleId, childRoleId)) {
             log.warn("Relación jerárquica ya existe: parent={} → child={}. Ignorando duplicado.", 
                      parentRoleId, childRoleId);
-            return hierarchyRepository.findByParentRoleId(parentRoleId).stream()
-                    .filter(h -> h.getChildRole().getId().equals(childRoleId))
-                    .findFirst()
-                    .orElseThrow();
+            return;
         }
 
-        RoleTemplateEntity parent = roleTemplateRepository.findById(parentRoleId)
-                .orElseThrow(() -> new IllegalArgumentException("Rol padre no encontrado: " + parentRoleId));
-        RoleTemplateEntity child = roleTemplateRepository.findById(childRoleId)
-                .orElseThrow(() -> new IllegalArgumentException("Rol hijo no encontrado: " + childRoleId));
-
-        RoleHierarchyEntity entity = new RoleHierarchyEntity();
-        entity.setParentRole(parent);
-        entity.setChildRole(child);
-
-        log.info("US-036: Registrada herencia {} → {}", parent.getRoleName(), child.getRoleName());
-        return hierarchyRepository.save(entity);
+        roleHierarchyPort.saveHierarchy(parentRoleId, childRoleId);
     }
 
     /**
@@ -97,15 +77,7 @@ public class RoleHierarchyService {
      */
     @Transactional(readOnly = true)
     public List<String> resolveInheritedRoleNames(UUID roleTemplateId) {
-        List<UUID> ancestorIds = hierarchyRepository.findAllAncestorRoleIds(roleTemplateId);
-
-        if (ancestorIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return roleTemplateRepository.findAllById(ancestorIds).stream()
-                .map(RoleTemplateEntity::getRoleName)
-                .collect(Collectors.toList());
+        return roleHierarchyPort.resolveInheritedRoleNames(roleTemplateId);
     }
 
     /**
@@ -115,15 +87,6 @@ public class RoleHierarchyService {
      */
     @Transactional(readOnly = true)
     public Set<String> resolveAllEffectiveRoles(Set<String> directRoleNames) {
-        Set<String> effectiveRoles = new LinkedHashSet<>(directRoleNames);
-
-        for (String roleName : directRoleNames) {
-            roleTemplateRepository.findByRoleName(roleName).ifPresent(template -> {
-                List<String> inherited = resolveInheritedRoleNames(template.getId());
-                effectiveRoles.addAll(inherited);
-            });
-        }
-
-        return effectiveRoles;
+        return roleHierarchyPort.resolveAllEffectiveRoles(directRoleNames);
     }
 }

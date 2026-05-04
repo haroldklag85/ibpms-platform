@@ -93,7 +93,6 @@ const handleItemMove = async ({ item, newStatus }: { item: any, newStatus: strin
 
   if (newStatus === 'BLOCKED') {
      taskToBlock.value = item;
-     blockReasonInput.value = '';
      showBlockModal.value = true;
      return;
   }

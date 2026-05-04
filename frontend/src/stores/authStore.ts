@@ -17,6 +17,11 @@ export const useAuthStore = defineStore('auth', () => {
     const activeRole = ref<string | null>(null);
     const effectiveRoles = ref<string[]>([]);
 
+    // Impersonation Props
+    const isImpersonating = ref(false);
+    const impersonatedBy = ref<string | null>(null);
+    const impersonationExpiresAt = ref<number | null>(null);
+
     const initActiveRole = () => {
         if (user.value && user.value.roles.length > 0) {
             activeRole.value = user.value.roles[0];
@@ -84,10 +89,9 @@ export const useAuthStore = defineStore('auth', () => {
                     console.info('[AuthStore] CA-4011: Token renovado silenciosamente.');
                 }
             } catch (error) {
-                console.error('[AuthStore] Falla en la Rotación del Token. Forzando expiración por seguridad (Kill-Switch / Timeout).');
-                alert('Sesión expirada o privilegios revocados. Inicie sesión nuevamente.');
+                console.error('[AuthStore] Falla en la Rotación del Token. Forzando cierre de sesión.');
                 logout();
-                window.location.href = '/login';
+                // RouteGuard detecta token=null y redirige a /login automáticamente
             }
         }, 600000); // 10 Minutos
     };
@@ -175,6 +179,39 @@ export const useAuthStore = defineStore('auth', () => {
         return rolesToCheck.some(r => user.value!.roles.includes(r));
     };
 
+    const startImpersonation = async (targetUserId: string) => {
+        const { data } = await apiClient.post(`/admin/impersonate/${targetUserId}`);
+        const originalToken = token.value;
+        localStorage.setItem('ibpms_original_token', originalToken || '');
+        login(data.token);
+        isImpersonating.value = true;
+        impersonationExpiresAt.value = Date.now() + (data.expiresIn * 1000);
+        try {
+            const payload = JSON.parse(atob(data.token.split('.')[1]));
+            impersonatedBy.value = payload.impersonatedBy || null;
+        } catch {}
+        const menuStore = useMenuStore();
+        menuStore.purgeTopology();
+        await menuStore.fetchMenuLayout();
+    };
+
+    const exitImpersonation = async () => {
+        try {
+            await apiClient.post('/admin/impersonate/exit');
+        } catch {}
+        const originalToken = localStorage.getItem('ibpms_original_token');
+        if (originalToken) {
+            login(originalToken);
+            localStorage.removeItem('ibpms_original_token');
+        }
+        isImpersonating.value = false;
+        impersonatedBy.value = null;
+        impersonationExpiresAt.value = null;
+        const menuStore = useMenuStore();
+        menuStore.purgeTopology();
+        await menuStore.fetchMenuLayout();
+    };
+
     const roles = computed(() => user.value?.roles || []);
 
     return {
@@ -190,6 +227,11 @@ export const useAuthStore = defineStore('auth', () => {
         logout,
         switchRole,
         hydrateAuth,
-        hasAnyRole
+        hasAnyRole,
+        isImpersonating,
+        impersonatedBy,
+        impersonationExpiresAt,
+        startImpersonation,
+        exitImpersonation
     };
 });

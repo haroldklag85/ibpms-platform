@@ -51,7 +51,7 @@ describe('apiClient Interceptors (CA-1 / CA-3 / CA-37)', () => {
         // Extra info: validación de payload
         const customEvent = dispatchedEvent![0] as CustomEvent;
         expect(customEvent.detail.code).toBe(500);
-        expect(customEvent.detail.message).toContain('Colapso del Servidor');
+        expect(customEvent.detail.message).toContain('Error interno del servidor');
 
         // Assert (QA-CA-1 Strict): alert() jamaś se debe invocar
         expect(window.alert).not.toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe('apiClient Interceptors (CA-1 / CA-3 / CA-37)', () => {
         // Testing CA-37: Generic Error Toast on 500
         const toast = document.getElementById('server-error-toast');
         expect(toast).toBeTruthy();
-        expect(toast?.innerHTML).toContain('Error interno del servidor. Inténtelo más tarde.');
+        expect(toast?.innerHTML).toContain('Error interno del servidor');
     });
 
     it('test_Frontend_Interceptor_OptimisticLock - Envía 409 y emite optimistic-lock-dispatch', async () => {

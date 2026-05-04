@@ -1,10 +1,12 @@
 package com.ibpms.poc.application.usecase.ui;
 
 import com.ibpms.poc.application.dto.ui.MenuItemDTO;
+import com.ibpms.poc.application.ports.out.MenuTopologyPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -12,54 +14,53 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class MenuLayoutUseCaseTest {
 
+    private MenuTopologyPortFake menuTopologyPortFake;
     private MenuLayoutUseCase menuLayoutUseCase;
+
+    // Zero-Mock: Fake in-memory port implementation sin frameworks de mock
+    private static class MenuTopologyPortFake implements MenuTopologyPort {
+        private final List<MenuItemDTO> layoutToReturn = new ArrayList<>();
+        private Set<String> capturedRoles;
+
+        @Override
+        public List<MenuItemDTO> findMenuTreeByRoles(Set<String> roles) {
+            this.capturedRoles = roles;
+            return layoutToReturn;
+        }
+
+        public void setLayoutToReturn(List<MenuItemDTO> layout) {
+            this.layoutToReturn.clear();
+            if (layout != null) {
+                this.layoutToReturn.addAll(layout);
+            }
+        }
+
+        public Set<String> getCapturedRoles() {
+            return capturedRoles;
+        }
+    }
 
     @BeforeEach
     void setUp() {
-        menuLayoutUseCase = new MenuLayoutUseCase();
+        menuTopologyPortFake = new MenuTopologyPortFake();
+        menuLayoutUseCase = new MenuLayoutUseCase(menuTopologyPortFake);
     }
 
     @Test
-    @DisplayName("Debe devolver al menos 8 elementos en la raíz cuando el rol es ROLE_SUPER_ADMIN")
-    void getBuildLayoutForUser_WithSuperAdminRole_ReturnsCompleteTopology() {
+    @DisplayName("Debe delegar la búsqueda del layout al puerto MenuTopologyPort usando Fake")
+    void getBuildLayoutForUser_DelegatesToPort() {
         // Arrange
         Set<String> roles = Set.of("ROLE_SUPER_ADMIN");
-
-        // Act
-        List<MenuItemDTO> layout = menuLayoutUseCase.getBuildLayoutForUser(roles);
-
-        // Assert
-        // Debe tener Inicio, Mi Workdesk, Administración y Gobernanza, Service Delivery, Project Builder, Analytics & BAM, Integration Hub, SGDEA, Gobernanza
-        assertThat(layout).isNotNull();
-        assertThat(layout.size()).isGreaterThanOrEqualTo(8);
-
-        // Verificar que los nodos requeridos estén presentes en la raíz
-        assertThat(layout).extracting(MenuItemDTO::getTitle)
-                .contains(
-                        "Inicio",
-                        "Mi Workdesk",
-                        "Administración y Gobernanza",
-                        "Service Delivery",
-                        "Project Builder",
-                        "Analytics & BAM",
-                        "Integration Hub",
-                        "SGDEA",
-                        "Gobernanza"
-                );
-    }
-
-    @Test
-    @DisplayName("Debe devolver un layout básico cuando el usuario no tiene roles especiales")
-    void getBuildLayoutForUser_WithBasicRole_ReturnsBasicTopology() {
-        // Arrange
-        Set<String> roles = Set.of("ROLE_USER");
+        List<MenuItemDTO> expectedLayout = List.of(new MenuItemDTO("Inicio", "mdi-home", "/home"));
+        menuTopologyPortFake.setLayoutToReturn(expectedLayout);
 
         // Act
         List<MenuItemDTO> layout = menuLayoutUseCase.getBuildLayoutForUser(roles);
 
         // Assert
         assertThat(layout).isNotNull();
-        assertThat(layout).extracting(MenuItemDTO::getTitle)
-                .containsExactly("Inicio", "Mi Workdesk");
+        assertThat(layout.size()).isEqualTo(1);
+        assertThat(layout.get(0).getTitle()).isEqualTo("Inicio");
+        assertThat(menuTopologyPortFake.getCapturedRoles()).containsExactly("ROLE_SUPER_ADMIN");
     }
 }

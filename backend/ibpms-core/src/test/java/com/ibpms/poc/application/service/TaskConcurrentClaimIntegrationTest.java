@@ -18,9 +18,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ibpms.poc.infrastructure.config.TestcontainersBaseIT;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-class TaskConcurrentClaimIntegrationTest {
+class TaskConcurrentClaimIntegrationTest extends TestcontainersBaseIT {
 
     @Autowired
     private AgileTaskService agileTaskService;

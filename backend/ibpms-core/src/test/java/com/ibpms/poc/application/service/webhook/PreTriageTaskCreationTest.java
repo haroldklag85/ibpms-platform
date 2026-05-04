@@ -81,6 +81,7 @@ class PreTriageTaskCreationTest {
         when(runtimeService.startProcessInstanceByKey(eq(PROCESS_KEY), anyString(), varsCaptor.capture()))
                 .thenReturn(mockInstance);
         when(transactionRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(clamAvScanner.scan(any(), anyString())).thenReturn(ClamAvScanner.ScanResult.CLEAN);
 
         byte[] attachment = "test-file-content".getBytes();
         WebhookPayload payload = new WebhookPayload("msg-dto", "analyst@ibm.com",

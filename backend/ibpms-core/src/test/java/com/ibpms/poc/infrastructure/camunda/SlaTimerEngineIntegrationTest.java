@@ -20,9 +20,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.springframework.test.context.ActiveProfiles;
 
+import com.ibpms.poc.infrastructure.config.TestcontainersBaseIT;
+
 @SpringBootTest
 @ActiveProfiles("test")
-public class SlaTimerEngineIntegrationTest {
+public class SlaTimerEngineIntegrationTest extends TestcontainersBaseIT {
     @Autowired
     private TaskService taskService;
 

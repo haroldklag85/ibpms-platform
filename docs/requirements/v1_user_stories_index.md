@@ -42,7 +42,7 @@
 | US-039 | Formulario Genérico Base (Pantalla 7.B - El Camaleón Operativo) | ✅ Completada |
 | US-005 | Desplegar y Versionar un Modelo de Proceso (BPMN) | ✅ Completada |
 | US-006 | Diseñar la Estructura Base (WBS) de una Plantilla de Proyecto | ❌ Pendiente |
-| US-007 | Generador Cognitivo de DMN (NLP a Tablas de Decisión) | 🔨 En construcción (~48%) ✅ IDOR remediado (Zero-Trust isolation) |
+| US-007 | Generador Cognitivo de DMN (NLP a Tablas de Decisión) | 🔨 En construcción (~94%) ✅ Auditoría Forense Sprint-6 completada (30/32 CAs) |
 
 ---
 
@@ -72,7 +72,7 @@
 | US-022 | Disparo 'Confirm-to-Create' por Correo (Plan A) | ❌ Pendiente |
 | US-023 | Correlación Continua del Hilo | ❌ Pendiente |
 | US-024 | Creación Global Restringida (Plan B) | ❌ Pendiente |
-| US-025 | Experiencia de 'Cards' Dinámicas por Rol | ❌ Pendiente |
+| US-025 | Experiencia de 'Cards' Dinámicas por Rol | 🔨 En construcción (~44%) — 8/34 CAs cumplidos. RouteGuards+DynamicRoleCards+Sidebar implementados. 12 GAPs críticos (i18n, Impersonación, Lazy Loading) |
 | US-026 | Portal del Cliente Externo (Vistas Tácticas y Estratégicas) | ❌ Pendiente |
 | US-040 | Embudo Inteligente de Intake (Pre-Triaje y Descarte IA) | ❌ Pendiente |
 | US-041 | Vista 360 del Cliente (Consolidación Global Externa) | ❌ Pendiente |
@@ -132,7 +132,7 @@
 | Épica | US | Tamaño | Completadas | En Construcción | Scaffolding | Pendientes |
 |-------|:--:|-------:|:-----------:|:---------------:|:-----------:|:----------:|
 | A — Motor Core | 8 | ~100 KB | 2 | 3 | 1 | 2 |
-| B — Formularios/BPMN | 7 | ~194 KB | 4 | 2 | 0 | 1 |
+| B — Formularios/BPMN | 7 | ~194 KB | 4 | 2 | 0 | 1 | ← US-007 subió de 48% a 94% |
 | C — IA/MLOps/SAC | 7 | ~30 KB | 0 | 0 | 0 | 7 |
 | D — CRM/Intake/Portal | 10 | ~59 KB | 0 | 0 | 0 | 10 |
 | E — Seguridad/Config | 7 | ~51 KB | 4 | 0 | 0 | 3 |
@@ -140,4 +140,4 @@
 | G — IA Cognitiva/RAG | 7 | ~110 KB | 0 | 0 | 0 | 7 |
 | **TOTAL** | **56** | **~604 KB** | **11** | **5** | **1** | **39** |
 
-> **Nota (2026-04-18):** Tabla actualizada post Auditoría Integral Sección 1.2. US-001 reclasificada a Completada (100%). US-002, US-004, US-029, US-030 detectadas como En Construcción parcial. US-008 como Scaffolding. US-007 con IDOR crítico remediado. Ver detalles en `.agentic-sync/coverage_matrix.md`.
+> **Nota (2026-05-03):** US-007 actualizada a 94% tras Auditoría Forense Sprint-6 (30/32 CAs). 4 handoffs ejecutados: Infra/BD, Backend (12 GAPs), Frontend (8 GAPs), QA (7 specs E2E + 9 validaciones cruzadas). Deuda residual: CA-14 (Pre-Flight parcial), CA-24 (buscador in-app pendiente visual). Ver detalles en `.agentic-sync/coverage_matrix.md`.

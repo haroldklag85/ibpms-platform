@@ -19,6 +19,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@ActiveProfiles("test")
+
 public class FormCompletionSagaTest extends AbstractIntegrationTest {
 
     @Autowired
@@ -52,9 +53,6 @@ public class FormCompletionSagaTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setupMock() {
-        formEventRepository.deleteAll();
-        taskDraftRepository.deleteAll();
-
         TaskQuery taskQuery = mock(TaskQuery.class);
         Task mockTask = mock(Task.class);
         when(taskService.createTaskQuery()).thenReturn(taskQuery);
@@ -65,7 +63,7 @@ public class FormCompletionSagaTest extends AbstractIntegrationTest {
 
     @Test
     void testHappyPathSaga() {
-        String taskId = "task-happy";
+        String taskId = "task-happy-" + UUID.randomUUID().toString();
         String userId = "user-1";
         
         FormSubmitRequest request = FormSubmitRequest.builder()
@@ -81,14 +79,16 @@ public class FormCompletionSagaTest extends AbstractIntegrationTest {
         assertEquals("SUCCESS", response.getStatus());
         assertTrue(response.getEventReference().startsWith("EVT-"));
 
-        List<FormEvent> events = formEventRepository.findAll();
+        List<FormEvent> events = formEventRepository.findAll().stream()
+            .filter(e -> taskId.equals(e.getTaskId()))
+            .toList();
         assertEquals(1, events.size());
         assertEquals(EventType.FORM_SUBMITTED, events.get(0).getEventType());
     }
 
     @Test
     void testRollbackSagaWhenCamundaFails() {
-        String taskId = "task-fail";
+        String taskId = "task-fail-" + UUID.randomUUID().toString();
         String userId = "user-1";
         
         FormSubmitRequest request = FormSubmitRequest.builder()
@@ -105,7 +105,9 @@ public class FormCompletionSagaTest extends AbstractIntegrationTest {
             formCompletionService.completeTask(taskId, request, userId);
         });
 
-        List<FormEvent> events = formEventRepository.findAll();
+        List<FormEvent> events = formEventRepository.findAll().stream()
+            .filter(e -> taskId.equals(e.getTaskId()))
+            .toList();
         assertEquals(2, events.size());
         assertTrue(events.stream().anyMatch(e -> e.getEventType() == EventType.FORM_SUBMITTED));
         assertTrue(events.stream().anyMatch(e -> e.getEventType() == EventType.FORM_SUBMIT_ROLLED_BACK));

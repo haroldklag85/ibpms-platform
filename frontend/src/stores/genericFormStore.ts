@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { debounce } from 'lodash-es'
 import apiClient from '@/services/apiClient'
-import { useAuthStore } from '@/stores/useAuthStore'
+import { useAuthStore } from '@/stores/authStore'
 import { encryptDraft, decryptDraft } from '@/utils/draftCrypto'
 
 export interface GenericFormDraft {

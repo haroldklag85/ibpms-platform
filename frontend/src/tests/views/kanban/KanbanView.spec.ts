@@ -13,6 +13,12 @@ vi.mock('@/services/apiClient', () => ({
     }
 }));
 
+vi.mock('vue-router', () => ({
+    useRoute: vi.fn(() => ({
+        params: { projectId: 'test-project' }
+    }))
+}));
+
 describe('KanbanView.vue', () => {
     let wrapper: any;
 
@@ -75,9 +81,8 @@ describe('KanbanView.vue', () => {
         const store = useKanbanStore();
 
         wrapper.vm.taskToBlock = { id: 'T-1', title: 'Task 1', status: 'DOING' };
-        wrapper.vm.blockReasonInput = 'Falta documentación';
         
-        await wrapper.vm.confirmBlock();
+        await wrapper.vm.confirmBlock('Falta documentación');
 
         expect(store.moveTask).toHaveBeenCalledWith('T-1', 'BLOCKED', 'Falta documentación');
         expect(wrapper.vm.showBlockModal).toBe(false);

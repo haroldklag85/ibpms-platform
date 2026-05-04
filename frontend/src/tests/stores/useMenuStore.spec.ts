@@ -17,29 +17,44 @@ describe('useMenuStore', () => {
     vi.clearAllMocks();
   });
 
-  it('CA-31: fetchMenuLayout llama al endpoint /api/v1/users/me/menu-layout', async () => {
+  it('fetch exitoso: fetchMenuLayout() llama GET /users/me/menu-layout y popula layout', async () => {
     const store = useMenuStore();
     const mockData = [{ title: 'Módulo', items: [] }];
     (apiClient.get as any).mockResolvedValue({ data: mockData });
 
     await store.fetchMenuLayout();
     
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/users/me/menu-layout');
+    expect(apiClient.get).toHaveBeenCalledWith('/users/me/menu-layout');
     expect(store.layout).toEqual(mockData);
   });
 
-  it('CA-32: purgeTopology() limpia la caché del layout dejándola en []', () => {
+  it('fetch fallido: Si el endpoint falla, layout queda como [] (Zero-Trust)', async () => {
+    const store = useMenuStore();
+    (apiClient.get as any).mockRejectedValue(new Error('Network error'));
+    
+    // We start with empty layout, fetch fails, should remain empty
+    await store.fetchMenuLayout();
+    
+    expect(apiClient.get).toHaveBeenCalledWith('/users/me/menu-layout');
+    expect(store.layout).toEqual([]); // Zero-Trust: it should remain empty on failure
+  });
+
+  it('cache hit: Si layout.length > 0, no hace segunda llamada HTTP', async () => {
+    const store = useMenuStore();
+    store.layout = [{ title: 'Workdesk', items: [] }];
+    
+    await store.fetchMenuLayout();
+    
+    expect(apiClient.get).not.toHaveBeenCalled();
+    expect(store.layout.length).toBe(1);
+  });
+
+  it('purgeTopology: Resetea layout a []', () => {
     const store = useMenuStore();
     store.layout = [{ title: 'Módulo', items: [] }];
     
     store.purgeTopology();
     
     expect(store.layout).toEqual([]);
-  });
-
-  it('CA-26: purgeTopology() no corrompe la inicialización asíncrona', async () => {
-      const store = useMenuStore();
-      store.purgeTopology();
-      expect(store.layout.length).toBe(0);
   });
 });

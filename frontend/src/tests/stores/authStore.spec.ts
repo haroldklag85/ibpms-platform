@@ -17,7 +17,7 @@ describe('Auth Store (Pinia)', () => {
 
     it('login() should mutate state and save to localStorage', () => {
         const store = useAuthStore();
-        const mockJwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+        const mockJwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYXJsb3MuYWRtaW4iLCJyb2xlcyI6WyJpYnBtc19yb2xfUk9MRV9VU0VSIiwiaWJwbXNfcm9sX1JPTEVfQVBQUk9WRVIiXX0=.signature';
 
         store.login(mockJwt);
 

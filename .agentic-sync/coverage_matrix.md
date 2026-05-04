@@ -494,18 +494,18 @@
 
 | CA | Título (corto) | Back | Front | Unitarios | Componente | Integración | E2E | UAT | Sprint | Spec File | Notas |
 |----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- |--------| ❌ Ninguno |-------|
-| CA-1 | Separación de Responsabilidades y Event Sourcing (CQRS) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `FormCompletionService.completeTask()` + `POST /workbox/tasks/{id}/complete` |
+| CA-1 | Separación de Responsabilidades y Event Sourcing (CQRS) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `FormCompletionService.completeTask()` + `POST /workbox/tasks/{id}/complete` |
 | CA-2 | Exclusión Topológica Estratégica de Camunda Engine | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | Validación existe; campo-a-campo pendiente |
 | CA-3 | Consistencia Transaccional Cruda (ACID Fallback over Sagas) | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `FormBffCoreService.generateMegaDtoFormContext()` funcional; prefill parcialmente mock |
 | CA-4 | Auto-Claim Controlado para Tareas de Grupo No Asignadas | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-5 | Trazabilidad Activa de Rechazos Históricos en BFF | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | 🔄 Remediación pendiente |
-| CA-6 | Definición del Esquema del Event Store | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `PUT /draft` + `PiiEncryptionService.encrypt()` activos |
+| CA-6 | Definición del Esquema del Event Store | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `PUT /draft` + `PiiEncryptionService.encrypt()` activos |
 | CA-7 | Endpoint de Lectura y Limpieza de Borradores del Servidor | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | 🔄 Remediación pendiente |
-| CA-8 | Referencia Cruzada con US-029 y Política de Propiedad | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `idempotencyKey` UNIQUE constraint en `form_event_store` |
+| CA-8 | Referencia Cruzada con US-029 y Política de Propiedad | ✅ | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `idempotencyKey` UNIQUE constraint en `form_event_store` |
 | CA-9 | Exclusión de Borradores del Event Store | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-10 | Rollback Compensatorio Inmutable con Retry y Timeout | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-11 | Estructura Obligatoria del Registro de Rechazo | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-12 | Cifrado At-Rest de Datos PII en el Event Store | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `FormEvent` POJO → `FormEventEntity` JPA → `formEventRepository.save()` |
+| CA-12 | Cifrado At-Rest de Datos PII en el Event Store | ✅ | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `FormEvent` POJO → `FormEventEntity` JPA → `formEventRepository.save()` |
 | CA-13 | Validación de Pertenencia al Grupo en Auto-Claim | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | DTO minificado `{formApproved, form_storage_id}` enviado a Camunda |
 | CA-14 | Rate-Limiting en Endpoints de Borradores | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `FORM_SUBMIT_ROLLED_BACK` event + `SagaCompensationException` + `CamundaCompletionAdapter` retry 3x |
 | CA-15 | Referencia de Evento Visible para el Operario | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `AutoClaimService.tryAutoClaim()` integrado |

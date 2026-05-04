@@ -30,8 +30,7 @@ import org.springframework.http.HttpStatus;
 import java.util.Map;
 
 import com.ibpms.poc.infrastructure.security.PiiEncryptionService;
-import com.ibpms.poc.infrastructure.jpa.entity.TempDocumentEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.TempDocumentRepository;
+import com.ibpms.poc.domain.port.DocumentSecurityPort;
 
 @Service
 public class FormCompletionService {
@@ -44,7 +43,7 @@ public class FormCompletionService {
     private final ObjectMapper objectMapper;
     private final PiiEncryptionService piiEncryptionService;
     private final EventReferenceGenerator eventReferenceGenerator;
-    private final TempDocumentRepository tempDocumentRepository;
+    private final DocumentSecurityPort documentSecurityPort;
 
     public FormCompletionService(
             AutoClaimService autoClaimService,
@@ -55,7 +54,7 @@ public class FormCompletionService {
             ObjectMapper objectMapper,
             PiiEncryptionService piiEncryptionService,
             EventReferenceGenerator eventReferenceGenerator,
-            TempDocumentRepository tempDocumentRepository) {
+            DocumentSecurityPort documentSecurityPort) {
         this.autoClaimService = autoClaimService;
         this.camundaCompletionAdapter = camundaCompletionAdapter;
         this.formEventRepository = formEventRepository;
@@ -64,7 +63,7 @@ public class FormCompletionService {
         this.objectMapper = objectMapper;
         this.piiEncryptionService = piiEncryptionService;
         this.eventReferenceGenerator = eventReferenceGenerator;
-        this.tempDocumentRepository = tempDocumentRepository;
+        this.documentSecurityPort = documentSecurityPort;
     }
 
     /**
@@ -75,7 +74,7 @@ public class FormCompletionService {
      * CA-15: Generar eventReference (EVT-XXXXXX)
      * CA-16: Eliminar draft
      */
-    @Transactional
+    @Transactional(noRollbackFor = SagaCompensationException.class)
     public FormSubmitResponse completeTask(String taskId, FormSubmitRequest request, String userId) {
         // 1. Auto-Claim validará y asignará la tarea si es posible y necesaria (CA-04, CA-13)
         autoClaimService.tryAutoClaim(taskId, userId);
@@ -118,16 +117,7 @@ public class FormCompletionService {
             Matcher matcher = uuidPattern.matcher(rawJson);
             while (matcher.find()) {
                 String potentialUuid = matcher.group();
-                java.util.Optional<TempDocumentEntity> docOpt = tempDocumentRepository.findById(UUID.fromString(potentialUuid));
-                if (docOpt.isPresent()) {
-                    TempDocumentEntity doc = docOpt.get();
-                    if (!doc.getTaskId().equals(taskId) || !doc.getUserId().equals(userId)) {
-                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Anti-IDOR: No tiene acceso al archivo temporal " + potentialUuid);
-                    }
-                    // Marcar como CONFIRMED
-                    doc.setStatus("CONFIRMED");
-                    tempDocumentRepository.save(doc);
-                }
+                documentSecurityPort.confirmOwnershipAndMarkConfirmed(UUID.fromString(potentialUuid), taskId, userId);
             }
 
             String encryptedBase64 = piiEncryptionService.encrypt(rawJson);

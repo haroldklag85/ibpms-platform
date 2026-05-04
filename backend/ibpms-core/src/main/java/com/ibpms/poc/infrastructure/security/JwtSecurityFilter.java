@@ -44,21 +44,24 @@ public class JwtSecurityFilter implements Filter {
 
         String authHeader = httpRequest.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-
-            // Verificación de Lista Negra (Redis)
-            if (isTokenBlacklisted(token)) {
-                httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                httpResponse.getWriter()
-                        .write("401 Unauthorized: El token EntraID suministrado ha sido revocado (Blacklisted).");
-                return;
-            }
-
-            // Aquí se delegaría la validación criptográfica de firmas RSA de EntraID (fuera
-            // del alcance del test)
-            httpRequest.setAttribute("validated_user", extractUserId(token));
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            httpResponse.getWriter().write("401 Unauthorized: Token no detectado. Zero-Trust enforcing.");
+            return;
         }
+
+        String token = authHeader.substring(7);
+
+        // Verificación de Lista Negra (Redis)
+        if (isTokenBlacklisted(token)) {
+            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            httpResponse.getWriter()
+                    .write("401 Unauthorized: El token EntraID suministrado ha sido revocado (Blacklisted).");
+            return;
+        }
+
+        // Aquí se delegaría la validación criptográfica de firmas RSA de EntraID (fuera del alcance del test)
+        httpRequest.setAttribute("validated_user", extractUserId(token));
 
         chain.doFilter(request, response);
     }

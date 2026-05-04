@@ -103,12 +103,12 @@ const addFiles = (newFiles: File[]) => {
   
   const validFiles = newFiles.filter(f => {
     if (f.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      alert(\`Archivo \${f.name} excede el límite de \${MAX_FILE_SIZE_MB}MB.\`);
+      alert(`Archivo ${f.name} excede el límite de ${MAX_FILE_SIZE_MB}MB.`);
       return false;
     }
     const ext = getExt(f.name);
     if (!ALLOWED_EXTS.includes(ext)) {
-      alert(\`Extensión \${ext} no permitida. Use \${ALLOWED_EXTS.join(', ')}.\`);
+      alert(`Extensión ${ext} no permitida. Use ${ALLOWED_EXTS.join(', ')}.`);
       return false;
     }
     return true;

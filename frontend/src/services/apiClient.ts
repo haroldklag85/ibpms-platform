@@ -59,31 +59,54 @@ apiClient.interceptors.response.use(
             }
         }
         
-        // CA-21, CA-1, CA-37: Alertas Rojas Imborrables / Captura Global 5xx
-        if (error.response && [500, 502, 503, 504].includes(error.response.status)) {
-            console.error('Fatal Level 0 Dispatching', error.response.status);
+        // ═══ ADR-014: Diferenciación Semántica de Errores 5xx ═══
+        if (error.response && error.response.status >= 500) {
+            const status = error.response.status;
+            const traceId = error.response.headers?.['x-correlation-id'] || 'N/A';
             
-            // CA-37: Generic 500 Error Toast
-            if (error.response.status === 500) {
+            if (status === 500) {
+                // Categoría 1: Bug en el backend — Toast imborrable con traceId
+                console.error(`[ADR-014] Error 500 — Trace: ${traceId}`);
+                const event = new CustomEvent('global-error-dispatch', { detail: { 
+                    code: 500,
+                    type: 'SERVER_ERROR',
+                    message: `Error interno del servidor (Trace: ${traceId}). Contacte soporte.`,
+                    dismissible: false
+                }});
+                window.dispatchEvent(event);
+                
+                // Toast DOM fallback (CA-37)
                 const body = document.querySelector('body');
                 if (body && !document.getElementById('server-error-toast')) {
                     const toast = document.createElement('div');
                     toast.id = 'server-error-toast';
-                    toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
-                    toast.innerHTML = '❌ Error interno del servidor. Inténtelo más tarde.';
+                    toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold;';
+                    toast.innerHTML = `❌ Error interno del servidor (Trace: ${traceId}). Contacte soporte.`;
                     body.appendChild(toast);
-                    setTimeout(() => {
-                        toast.style.opacity = '0';
-                        setTimeout(() => toast.remove(), 500);
-                    }, 4000);
+                    // NO auto-remove: este toast es imborrable per ADR-014
                 }
+            } else if (status === 502 || status === 503) {
+                // Categoría 2: Servidor no disponible — Toast dismissible + auto-retry ya manejado arriba (L49-60)
+                console.warn(`[ADR-014] Servidor no disponible (${status})`);
+                const event = new CustomEvent('global-error-dispatch', { detail: { 
+                    code: status,
+                    type: 'SERVICE_UNAVAILABLE',
+                    message: `El servidor no está disponible (${status}). Verificando conexión...`,
+                    dismissible: true,
+                    autoRetry: true
+                }});
+                window.dispatchEvent(event);
+            } else if (status === 504) {
+                // Categoría 3: Timeout del proxy — Toast dismissible
+                console.warn(`[ADR-014] Gateway Timeout (504)`);
+                const event = new CustomEvent('global-error-dispatch', { detail: { 
+                    code: 504,
+                    type: 'GATEWAY_TIMEOUT',
+                    message: 'Tiempo de espera agotado. Verifique que el servidor esté activo.',
+                    dismissible: true
+                }});
+                window.dispatchEvent(event);
             }
-            
-            const event = new CustomEvent('global-error-dispatch', { detail: { 
-                code: error.response.status,
-                message: `Colapso del Servidor / Integración Cíclica`
-            }});
-            window.dispatchEvent(event);
             return Promise.reject(error);
         }
 

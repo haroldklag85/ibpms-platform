@@ -40,8 +40,8 @@ public class ClaimIntegrationIT {
         RestAssured.port = port;
         repository.deleteAll(); // Limpiar
         
-        validToken = jwtTokenProvider.generateToken("user1", "user1@example.com", "ROLE_OPERARIO", "tenantA", "team-alpha");
-        supervisorToken = jwtTokenProvider.generateToken("super1", "super@example.com", "ROLE_SUPERVISOR", "tenantA", "team-beta");
+        validToken = jwtTokenProvider.generateToken("user1", java.util.Collections.singletonList("ROLE_OPERARIO"), "tenantA");
+        supervisorToken = jwtTokenProvider.generateToken("super1", java.util.Collections.singletonList("ROLE_SUPERVISOR"), "tenantA");
     }
 
     @Test
@@ -67,7 +67,7 @@ public class ClaimIntegrationIT {
             .statusCode(200);
             
         // 2. user2 hace claim (simulando token user2) -> 409
-        String user2Token = jwtTokenProvider.generateToken("user2", "user2@example.com", "ROLE_OPERARIO", "tenantA", "team-alpha");
+        String user2Token = jwtTokenProvider.generateToken("user2", java.util.Collections.singletonList("ROLE_OPERARIO"), "tenantA");
         given()
             .header("Authorization", "Bearer " + user2Token)
             .contentType(ContentType.JSON)

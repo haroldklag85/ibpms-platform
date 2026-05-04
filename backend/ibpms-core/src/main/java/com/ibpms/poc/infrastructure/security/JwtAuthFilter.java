@@ -135,9 +135,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 var auth = new UsernamePasswordAuthenticationToken(subject, null, authorities);
                 String tenantId = jwtTokenProvider.getClaim(token, "tenant_id");
+                String impersonatedBy = jwtTokenProvider.getClaim(token, "impersonatedBy");
+                
+                java.util.Map<String, String> details = new java.util.HashMap<>();
                 if (tenantId != null) {
-                    auth.setDetails(java.util.Map.of("tenant_id", tenantId));
+                    details.put("tenant_id", tenantId);
                 }
+                if (impersonatedBy != null) {
+                    details.put("impersonatedBy", impersonatedBy);
+                }
+                if (!details.isEmpty()) {
+                    auth.setDetails(details);
+                }
+                
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
             // Si el token es inválido, o usuario revocado, no se establece contexto → Spring devuelve 401

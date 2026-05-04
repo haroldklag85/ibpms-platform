@@ -32,7 +32,7 @@ describe('apiClient Interceptors', () => {
   it('CA-32: Un error 403 con código general debe invocar purgeTopology() del MenuStore', async () => {
     // Obtenemos los callbacks del interceptor que exportó apiClient
     // apiClient en vitest será la instancia ya configurada
-    const responseInterceptor = (apiClient.interceptors.response as any).handlers[0].rejected;
+    const responseInterceptor = vi.mocked(apiClient.interceptors.response.use).mock.calls[0][1] as Function;
     
     const menuStore = useMenuStore();
     const purgeSpy = vi.spyOn(menuStore, 'purgeTopology');

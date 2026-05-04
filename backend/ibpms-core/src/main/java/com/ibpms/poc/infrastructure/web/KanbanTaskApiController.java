@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/kanban")
+@RequestMapping("/api/v1/kanban-tasks")
 public class KanbanTaskApiController {
 
     private final MoveKanbanTaskUseCase moveKanbanTaskUseCase;
@@ -32,7 +32,7 @@ public class KanbanTaskApiController {
         this.kanbanColumnPort = kanbanColumnPort;
     }
 
-    @PatchMapping("/{taskId}/state")
+    @PatchMapping("/tasks/{taskId}/state")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Void> updateTaskState(@PathVariable UUID taskId, @RequestBody Map<String, String> body, Authentication authentication) {
         String newState = body.get("newState");

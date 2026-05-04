@@ -23,11 +23,12 @@ describe('AuthStore - Security & RBAC', () => {
 
     it('debería forzar autenticación fallida y purgar si un hacker inyecta un localStorage forjado con un JWT base roto', async () => {
         // Simulando un token falso o no válido inyectado manualmente
-        localStorage.setItem('ibpms_token', 'HACKED_FORGED_JWT_NO_EMERGENCY');
+        const tokenHacked = 'header.eyJzdWIiOiJjYXJsb3MuYWRtaW4ifQ==.sig';
+        localStorage.setItem('ibpms_token', tokenHacked);
         const store = useAuthStore();
 
         // Verificamos que el state inicial asume el token pero no el user
-        expect(store.token).toBe('HACKED_FORGED_JWT_NO_EMERGENCY');
+        expect(store.token).toBe(tokenHacked);
         
         // Ejecutamos hidratación, el backend mock en frontend lo validará
         await store.hydrateAuth();
@@ -39,27 +40,48 @@ describe('AuthStore - Security & RBAC', () => {
     });
 
     it('debería asignar rol administrativo solo si el JWT porta las claims validadas (EMERGENCY_LOCAL_JWT)', async () => {
-        localStorage.setItem('ibpms_token', 'valid_EMERGENCY_LOCAL_JWT_mock');
+        const tokenValid = 'header.eyJzdWIiOiJyb290QGlicG1zLmxvY2FsIiwicm9sZXMiOlsiaWJwbXNfcm9sX1JPTEVfU1VQRVJfQURNSU4iXX0=.sig';
+        localStorage.setItem('ibpms_token', tokenValid);
         const store = useAuthStore();
         
         await store.hydrateAuth();
         
-        expect(store.token).toBe('valid_EMERGENCY_LOCAL_JWT_mock');
+        expect(store.token).toBe(tokenValid);
         expect(store.hasAnyRole(['ROLE_SUPER_ADMIN'])).toBe(true);
         expect(store.user?.username).toBe('root@ibpms.local');
     });
 
-    it('debería erradicar el estado por completo al ejecutar logout (Prevención DOM Thrashing y Fugas)', () => {
+    it('debería erradicar el estado por completo al ejecutar logout (Prevención DOM Thrashing y Fugas) y limpiar recursos', () => {
+        vi.useFakeTimers();
+        const mockClose = vi.fn();
+        const MockEventSource = vi.fn(() => ({
+            close: mockClose,
+            onmessage: null,
+            onopen: null,
+            onerror: null
+        }));
+        vi.stubGlobal('EventSource', MockEventSource);
+        const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
+
         const store = useAuthStore();
-        store.login('some_valid_jwt_EMERGENCY_LOCAL_JWT');
+        store.login('header.eyJzdWIiOiJyb290QGlicG1zLmxvY2FsIiwicm9sZXMiOlsiaWJwbXNfcm9sX1JPTEVfU1VQRVJfQURNSU4iXX0=.sig');
         
         expect(store.token).not.toBeNull();
         expect(store.user).not.toBeNull();
+        expect(MockEventSource).toHaveBeenCalled(); // SSE Init
         
         store.logout();
         
         expect(store.token).toBeNull();
         expect(store.user).toBeNull();
+        expect(store.effectiveRoles.length).toBe(0);
         expect(localStorage.getItem('ibpms_token')).toBeNull();
+        
+        // Verifica la limpieza de SSE y Token Rotator
+        expect(mockClose).toHaveBeenCalled();
+        expect(clearIntervalSpy).toHaveBeenCalled();
+        
+        vi.useRealTimers();
+        vi.unstubAllGlobals();
     });
 });

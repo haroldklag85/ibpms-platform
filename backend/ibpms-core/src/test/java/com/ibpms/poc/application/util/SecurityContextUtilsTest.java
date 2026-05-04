@@ -25,7 +25,7 @@ class SecurityContextUtilsTest {
 
     @Test
     void getAssignee_shouldReturnNameFromAuthentication() {
-        var auth = new UsernamePasswordAuthenticationToken("john_doe", "password");
+        var auth = new UsernamePasswordAuthenticationToken("john_doe", "password", java.util.List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         String result = SecurityContextUtils.getAssignee();

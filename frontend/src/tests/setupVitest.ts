@@ -1,9 +1,11 @@
 import { vi } from 'vitest';
 import { config } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
+import i18n from '@/i18n';
 
 // Inicialización Global de Pinia para los Tests del Sprint 5 (Evitar caídas de montaje)
 config.global.plugins = [
+    i18n,
     createTestingPinia({
         createSpy: vi.fn,
         stubActions: false, // Permitir que las acciones originen cambios de estado

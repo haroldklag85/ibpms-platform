@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const isGlobalError = ref(false)
 const globalErrorData = ref<{code: number|string, message: string} | null>(null)
@@ -38,7 +41,7 @@ onUnmounted(() => {
       <span class="material-symbols-outlined text-[80px] text-red-500 mb-6 animate-pulse">warning</span>
       <h1 class="text-3xl font-bold text-red-500 mb-4">ALERTA DEL SISTEMA: NIVEL 0</h1>
       <p class="text-lg text-gray-200 max-w-2xl text-center mb-2">
-        {{ globalErrorData?.message || 'Colapso Crítico del Servidor. Servicio interrumpido.' }}
+        {{ globalErrorData?.message || t('errors.fatalServer') }}
       </p>
       <p class="text-sm font-mono text-gray-400 mb-8 mt-2 bg-black/50 px-4 py-2 rounded">
         Código de Error: {{ globalErrorData?.code || 'Desconocido' }}

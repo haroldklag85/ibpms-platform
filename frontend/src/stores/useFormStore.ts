@@ -75,6 +75,7 @@ export const useFormStore = defineStore('formStore', () => {
 
     const submitForm = async (taskId: string, payload: any, enableUndo: boolean = true, isRetry: boolean = false) => {
         isSubmitting.value = true;
+        const connectionStore = useConnectionStore();
         try {
             if (enableUndo && !isRetry) {
                 // Emulamos el envio retrasandolo para permitir soft-undo
@@ -83,7 +84,6 @@ export const useFormStore = defineStore('formStore', () => {
                 return;
             }
             
-            const connectionStore = useConnectionStore();
             if (!isRetry) {
                 idempotencyKey.value = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2);
                 connectionStore.retryCount = 0;

@@ -16,8 +16,9 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+
+@WebMvcTest(WorkdeskQueryController.class)
 @ActiveProfiles("test")
 public class WorkdeskQueryControllerDelegationTest {
 
@@ -26,6 +27,9 @@ public class WorkdeskQueryControllerDelegationTest {
 
     @MockBean
     private TaskDelegationService taskDelegationService;
+
+    @MockBean
+    private com.ibpms.poc.application.service.WorkdeskQueryService workdeskQueryService;
 
     @Test
     @WithMockUser(username = "usr_admin_alpha", roles = {"ADMIN"})

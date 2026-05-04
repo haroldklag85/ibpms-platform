@@ -42,7 +42,7 @@ public class AuditReportController {
                 // Escribir filas usando Stream para bajo consumo de memoria
                 for (IdentityEntity user : users) {
                     String roleName = user.getPrimaryRole() != null ? user.getPrimaryRole().getRoleName() : "N/A";
-                    String permissions = user.getPrimaryRole() != null ? user.getPrimaryRole().getGranularPermissions()
+                    String permissions = user.getPrimaryRole() != null && user.getPrimaryRole().getGranularPermissions() != null ? user.getPrimaryRole().getGranularPermissions()
                             : "[]";
                     String status = user.getActive() ? "ACTIVE" : "INACTIVE";
 

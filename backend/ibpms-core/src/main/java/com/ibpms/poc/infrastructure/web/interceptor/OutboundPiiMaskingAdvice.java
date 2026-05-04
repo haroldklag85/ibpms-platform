@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @ControllerAdvice
 @RequiredArgsConstructor
 @Slf4j
+// @Traceability: US-000 - CA-4
 public class OutboundPiiMaskingAdvice implements ResponseBodyAdvice<Object> {
     
     private final ObjectMapper objectMapper;

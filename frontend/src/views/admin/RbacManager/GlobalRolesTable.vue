@@ -56,6 +56,7 @@
           <td class="p-4 align-top text-center">
             <div class="flex items-center justify-center gap-1">
 
+              <!-- @Traceability: US-036 - CA-03 Clonación de Perfiles por Plantilla (Botón UI) -->
               <!-- CA-3 US-036: Botón de Asignación Masiva — visible solo en roles plantilla -->
               <button
                 v-if="rol.isTemplate"
@@ -172,6 +173,7 @@
       </div>
     </div>
 
+    <!-- @Traceability: US-036 - CA-03 Clonación de Perfiles por Plantilla (Modal UI) -->
     <!-- Modal de confirmación Asignación Masiva (CA-3) -->
     <div
       v-if="massAssignTarget"
@@ -256,6 +258,7 @@ async function confirmCreateRole() {
   }
 }
 
+// @Traceability: US-036 - CA-03 Clonación de Perfiles por Plantilla (Script logic)
 // --- CA-3: Mass Assign ---
 const massAssignTarget = ref(null)
 const massAssigning = ref(false)

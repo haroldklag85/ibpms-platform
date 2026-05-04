@@ -25,6 +25,7 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        // @Traceability: US-036 - CA-02 El Guardián Absoluto (Día Cero Bootstrap)
         // CA-2: Forzar inyección del Super_Administrador si no existe
         RoleEntity rootRole = roleRepository.findByName("ROLE_SUPER_ADMIN")
                 .orElseGet(() -> roleRepository.save(new RoleEntity("ROLE_SUPER_ADMIN", "Permisos Totales Root")));

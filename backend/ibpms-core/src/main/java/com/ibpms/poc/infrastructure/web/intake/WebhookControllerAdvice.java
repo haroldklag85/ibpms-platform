@@ -11,7 +11,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+
 @ControllerAdvice(assignableTypes = WebhookIntakeController.class)
+@ConditionalOnBean(OrphanPayloadRepository.class)
 public class WebhookControllerAdvice {
     
     private final OrphanPayloadRepository orphanRepo;

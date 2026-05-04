@@ -41,7 +41,7 @@ describe('apiClient Interceptors (CA-1 / CA-3 / CA-37)', () => {
             // Se espera que falle y caiga al catch
         }
 
-        // Assert (QA-CA-1): Aseguramos que dispare el CustomEvent
+        // @Traceability: US-000 - CA-1
         expect(window.dispatchEvent).toHaveBeenCalled();
         const dispatchedEvent = vi.mocked(window.dispatchEvent).mock.calls.find(
             call => call[0].type === 'global-error-dispatch'
@@ -73,7 +73,7 @@ describe('apiClient Interceptors (CA-1 / CA-3 / CA-37)', () => {
             // ...
         }
 
-        // Assert (QA-CA-3)
+        // @Traceability: US-000 - CA-3
         expect(window.dispatchEvent).toHaveBeenCalled();
         const dispatchedEvent = vi.mocked(window.dispatchEvent).mock.calls.find(
             call => call[0].type === 'optimistic-lock-dispatch'

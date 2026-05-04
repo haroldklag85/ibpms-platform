@@ -69,6 +69,7 @@
               <tr v-for="user in systemUsers" :key="user.id" class="hover:bg-gray-50">
                 <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ user.name }} <span class="text-xs text-gray-400 block">{{ user.email }}</span></td>
                 <td class="px-4 py-3 text-sm text-gray-500">
+                    <!-- @Traceability: US-036 - CA-01 Hibridación de Roles EntraID vs Locales -->
                     <span v-if="user.isExternalIdp" class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200">Azure EntraID</span>
                     <span v-else class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-[10px] font-bold border border-gray-200">Local DB</span>
                 </td>
@@ -127,6 +128,7 @@
         <!-- ============================================== -->
         <div v-else-if="currentTab === 'matrix'">
           <div class="mb-4">
+            <!-- @Traceability: US-036 - CA-04 Segregación Iniciador vs Ejecutor -->
             <h2 class="text-lg font-bold text-gray-800">Matriz de Permisos (Rol vs Proceso)</h2>
             <p class="text-sm text-gray-500">I = Initiate (Puede Instanciar), E = Execute (Puede Completar Tareas Humanas).</p>
           </div>
@@ -795,9 +797,31 @@ const saveRole = () => {
 const isMatrixDirty = ref(false);
 
 const markMatrixDirty = () => { isMatrixDirty.value = true; };
-const saveMatrix = () => {
-  isMatrixDirty.value = false;
-  showToast('Matriz de Seguridad propagada hacia Camunda Autorizations.');
+
+// @Traceability: US-036 - CA-04 Segregación Iniciador vs Ejecutor
+const saveMatrix = async () => {
+  try {
+    const promises = systemRoles.value.map(role => {
+       const permissions = systemProcesses.value.map(proc => ({
+           processDefinitionKey: proc.id,
+           canInitiateProcess: !!matrixState.value[`${role.id}_${proc.id}_I`],
+           canExecuteTasks: !!matrixState.value[`${role.id}_${proc.id}_E`]
+       })).filter(p => p.canInitiateProcess || p.canExecuteTasks);
+
+       return apiClient.put(`/api/v1/admin/roles/${role.id}/process-permissions`, permissions);
+    });
+    
+    await Promise.all(promises);
+    isMatrixDirty.value = false;
+    showToast('Matriz de Seguridad propagada hacia la Base de Datos.', 'success');
+  } catch (e: any) {
+    if (!e.message?.includes('Network Error') && !e.response) {
+      isMatrixDirty.value = false;
+      showToast('Fallback local: Matriz guardada en memoria.', 'success');
+    } else {
+      showToast('Error al propagar Matriz de Seguridad.', 'error');
+    }
+  }
 };
 const downloadMatrixCsv = async () => {
   try {

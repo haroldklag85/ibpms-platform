@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class RoleService {
 
+    // @Traceability: US-036 - CA-02 El Guardián Absoluto (Rol Inmutable)
     // CA-2 US-036: Identificador canónico del Rol Guardián — INMUTABLE por diseño de seguridad
     static final String ROOT_ROLE = "ROLE_SUPER_ADMIN";
 
@@ -61,15 +62,18 @@ public class RoleService {
         return saved;
     }
 
+    // @Traceability: US-036 - CA-07 Inmutabilidad por Desactivación Suave (Soft-Delete)
     public List<RoleEntity> getAllRoles() {
-        return roleRepository.findAll();
+        return roleRepository.findByIsActiveTrue();
     }
 
     /**
+     * @Traceability: US-036 - CA-02 El Guardián Absoluto (Blindaje de Borrado)
      * CA-2 US-036 — Inmutabilidad del Guardián.
      * Aborta la transacción con AccessDeniedException si el rol objetivo
      * es ROLE_SUPER_ADMIN. Ningún camino de código puede eludir este blindaje.
      */
+    // @Traceability: US-036 - CA-07 Inmutabilidad por Desactivación Suave (Soft-Delete)
     @SuppressWarnings("null")
     public void deleteRole(UUID id) {
         RoleEntity role = roleRepository.findById(id)
@@ -78,11 +82,16 @@ public class RoleService {
             throw new AccessDeniedException(
                     "Mutación/Borrado de Rol Root prohibido por diseño de seguridad.");
         }
-        logAuditEntry(role, "DELETE");
-        roleRepository.delete(role);
+        
+        // CA-07: Inmutabilidad forense (Soft-Delete)
+        role.setIsActive(false);
+        roleRepository.save(role);
+        
+        logAuditEntry(role, "SOFT_DELETE");
     }
 
     /**
+     * @Traceability: US-036 - CA-02 El Guardián Absoluto (Blindaje de Mutación)
      * CA-2 US-036 — Blindaje de mutación.
      * Impide modificar nombre/descripción/permisos del Rol Root.
      */
@@ -103,6 +112,7 @@ public class RoleService {
     }
 
     /**
+     * @Traceability: US-036 - CA-03 Clonación de Perfiles por Plantilla
      * CA-3 US-036 — Asignación Masiva desde Plantilla.
      * Itera sobre los userIds e inyecta el rol plantilla en una única
      * transacción @Transactional. Devuelve los IDs que no se encontraron.
@@ -148,6 +158,28 @@ public class RoleService {
         return roleRepository.findAllById(treeIds).stream()
                 .flatMap(r -> r.getProcessPermissions().stream())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * @Traceability: US-036 - CA-04 Segregación Iniciador vs Ejecutor
+     * Actualiza la matriz de permisos de proceso (I = Initiate, E = Execute) de un rol.
+     */
+    @Transactional
+    public RoleEntity updateProcessPermissions(UUID roleId, List<ProcessPermissionEntity> newPermissions) {
+        RoleEntity role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+        
+        // Limpiar y recrear
+        role.getProcessPermissions().clear();
+        for (ProcessPermissionEntity p : newPermissions) {
+            p.setRole(role);
+            role.getProcessPermissions().add(p);
+        }
+        
+        RoleEntity savedRole = roleRepository.save(role);
+        logAuditEntry(savedRole, "UPDATE_PROCESS_PERMISSIONS");
+        securityStreamService.broadcastEvent("[PERMISSIONS_UPDATED]");
+        return savedRole;
     }
 
     private void logAuditEntry(RoleEntity role, String action) {

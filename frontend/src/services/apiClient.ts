@@ -59,6 +59,7 @@ apiClient.interceptors.response.use(
             }
         }
         
+        // @Traceability: US-000 - CA-01 (Degradación Grácil HTTP 500/503)
         // ═══ ADR-014: Diferenciación Semántica de Errores 5xx ═══
         if (error.response && error.response.status >= 500) {
             const status = error.response.status;
@@ -110,6 +111,7 @@ apiClient.interceptors.response.use(
             return Promise.reject(error);
         }
 
+        // @Traceability: US-000 - CA-03 (Bloqueo de Concurrencia Optimista)
         // Interceptar CA-3: Bloqueo de Concurrencia Optimista
         if (error.response && error.response.status === 409) {
             if(error.response.data?.type?.includes("optimistic-lock")) {

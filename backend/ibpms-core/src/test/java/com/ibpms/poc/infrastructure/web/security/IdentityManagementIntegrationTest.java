@@ -17,6 +17,11 @@ import java.util.List;
 import static org.hamcrest.Matchers.*;
 
 
+
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
 import org.junit.jupiter.api.AfterEach;
 
 import java.util.UUID;
@@ -47,6 +52,7 @@ public class IdentityManagementIntegrationTest extends AbstractIntegrationTest {
         RestAssured.port = port;
         adminToken = jwtTokenProvider.generateToken("test-admin", List.of("ROLE_SUPER_ADMIN"), "tenant1");
 
+        RestAssured.port = port;
         // Prepare a user for testing
         UserEntity user = new UserEntity();
         user.setUsername("test_operator");

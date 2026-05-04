@@ -33,6 +33,10 @@ public class AgileTaskRepositoryJpa {
         repository.delete(task);
     }
 
+    public void deleteAll() {
+        repository.deleteAll();
+    }
+
     public long countByProjectIdAndStatusNotIn(UUID projectId, java.util.List<String> statuses) {
         return repository.countByProjectIdAndStatusNotIn(projectId, statuses);
     }

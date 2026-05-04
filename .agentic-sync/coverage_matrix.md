@@ -629,45 +629,49 @@
 ---
 
 ## US-036: RBAC, Zero-Trust y Gobernanza de Seguridad (ISO 27001)
-**Épica:** 13 — Seguridad/RBAC | **Estado:** ✅ COMPLETADA
+**Épica:** 13 — Seguridad/RBAC | **Estado:** 🔶 EN PROGRESO (~40%)
 
 | CA | Título (corto) | Back | Front | Unitarios | Componente | Integración | E2E | UAT | Sprint | Spec File | Notas |
-|----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- |--------| ❌ Ninguno |-------|
-| CA-1 | Hibridación de Roles EntraID vs Locales | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-2 | El Guardián Absoluto (Root Super Admin) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-3 | Clonación de Perfiles por Plantilla | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-4 | Segregación Iniciador vs Ejecutor | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-5 | Privacidad Visual de Colas (Data Segregation Local) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-6 | Herencia de Roles Piramidal | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | S-3 | ❌ Ninguno | Backend OK / Frontend UI Insignias Integrado |
-| CA-7 | Inmutabilidad por Desactivación Suave (Soft-Delete) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-8 | Aprovisionamiento de Transeúntes (Ciudadano Interno) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-9 | Módulo de Delegación Autónoma Temporal | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-10 | Creación de Robots de Integración (API Keys / Service Accounts) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-11 | Respeto ciego al Autenticador Perimetral (EntraID MFA) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-12 | Exclusión de Ocultamiento de Campos (Scope Limit) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-13 | Desacoplamiento de Roles Estáticos vs Dinámicos (BPMN Lanes) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-14 | El Botón Táctico de Exorcismo (Kill-Session) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-15 | Bypass Anónimo de Procesos (URLs Públicas) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-16 | Informes Densos de Fiscalización (Auditoría CISO) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-17 | Traza Indeleble de Otorgamiento | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-18 | Omisión Estricta de Segregación de Funciones Automática (SoD) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-19 | Modelo de Datos Relacional para la Matriz RBAC | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | S-3 | ❌ Ninguno | handoff_backend_DEF02_DEF03 / Backend OK |
-| CA-20 | Estrategia de Row-Level Security para Privacidad de Colas | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | S-3 | ❌ Ninguno | Backend OK |
-| CA-20b | Superposición Inclusiva Multirrol (Unión Matemática) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-21 | Infraestructura de Blacklist JWT para Kill-Session | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | S-3 | ❌ Ninguno | Backend OK |
-| CA-22 | Política de Seguridad para API Keys de Service Accounts | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | S-3 | ❌ Ninguno | Backend OK / UI Modal Integrado |
-| CA-23 | Comportamiento de Delegación sobre Tareas In-Flight | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | S-3 | ❌ Ninguno | Backend OK |
-| CA-24 | Alcance Explícito del Reporte ISO 27001 en V1 | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | S-3 | ❌ Ninguno | Backend OK / Botón Descarga CSV Integrado |
-| CA-25 | Directriz de Coordinación US-036 vs US-038 | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | S-3 | ❌ Ninguno | Backend completado implícitamente mediante logs sudoers |
+|----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- |--------| ---------- |-------|
+| CA-1 | Hibridación de Roles EntraID vs Locales | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | Implementación validada en JwtAuthFilter (SSO JIT), AuthSyncController (Local Fallback) e IdentityGovernance.vue |
+| CA-2 | El Guardián Absoluto (Root Super Admin) | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | S-3 | GlobalRolesTable.spec.ts | Back: RoleService L74-103. Front: badge+v-if defensivo. Tests: 5 Vitest (FE-01→FE-05). Trazabilidad inyectada. |
+| CA-3 | Clonación de Perfiles por Plantilla | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | S-3 | GlobalRolesTable.spec.ts | Back: assignTemplateToUsers(). Front: GlobalRolesTable.vue (btn-mass-assign+modal). Tests: 3 Vitest (FE-06→FE-08). Trazabilidad inyectada. |
+| CA-4 | Segregación Iniciador vs Ejecutor | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | Back: Endpoint PUT process-permissions agregado. Front: IdentityGovernance.vue saveMatrix() enlazado. Trazabilidad inyectada. Faltan Tests. |
+| CA-5 | Privacidad Visual de Colas (Data Segregation Local) | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | DataSegregationService + RowLevelSecurityAspect + JwtAuthFilter kill-switch. Query migrada a JPQL para habilitar @Filter. |
+| CA-6 | Herencia de Roles Piramidal | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | Back: RoleHierarchyService refactorizado a CTE Unificada sobre ibpms_security_role. Front: Modal con selector de padre ok. Faltan Tests |
+| CA-7 | Inmutabilidad por Desactivación Suave (Soft-Delete) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | Back: RoleEntity(isActive), RoleService(deleteRole=soft, getAllRoles=activeOnly) + Liquibase changeset 44. Trazabilidad inyectada. Faltan Tests |
+| CA-8 | Aprovisionamiento de Transeúntes (Ciudadano Interno) | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | JwtAuthFilter JIT Provisioning + ROLE_CIUDADANO_INTERNO auto-assign |
+| CA-9 | Módulo de Delegación Autónoma Temporal | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-3 | RbacDelegationLog.spec.ts | Back completo. Front: formulario+validación. Tests unitarios rehabilitados (6/6). Faltan tests de Integración y E2E. |
+| CA-10 | Creación de Robots de Integración (API Keys / Service Accounts) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ServiceAccountManager SHA-256 + ApiKeyAuthFilter M2M + ServiceAccountsTable.vue |
+| CA-11 | Respeto ciego al Autenticador Perimetral (EntraID MFA) | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | SecurityAnomalyListener @Async REQUIRES_NEW, falta detección MFA |
+| CA-12 | Exclusión de Ocultamiento de Campos (Scope Limit) | N/A | N/A | N/A | N/A | N/A | N/A | N/A | — | N/A | Fuera de alcance — pertenece al Form Builder |
+| CA-13 | Desacoplamiento de Roles Estáticos vs Dinámicos (BPMN Lanes) | N/A | N/A | N/A | N/A | N/A | N/A | N/A | — | N/A | Fuera de alcance — resolución interna Camunda |
+| CA-14 | El Botón Táctico de Exorcismo (Kill-Session) | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ | ❌ | S-3 | JwtSecurityFilterTest.java | Back: JwtAuthFilter SHA-256 blacklist. Test opera sobre filtro LEGACY |
+| CA-15 | Bypass Anónimo de Procesos (URLs Públicas) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | SecurityConfig.java:67 .permitAll() + JwtSecurityFilter public bypass |
+| CA-16 | Informes Densos de Fiscalización (Auditoría CISO) | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | exportRoleMatrixToCsv() + SecurityAnomalyTable.vue (pendiente verificar descarga) |
+| CA-17 | Traza Indeleble de Otorgamiento | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | logAuditEntry() delta JSON + SecurityAuditLog.vue (posible esqueleto) |
+| CA-18 | Omisión Estricta de Segregación de Funciones Automática (SoD) | N/A | N/A | N/A | N/A | N/A | N/A | N/A | — | N/A | Diferido a V2 por diseño |
+| CA-19 | Modelo de Datos Relacional para la Matriz RBAC | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | 14 entidades JPA + 12 repositorios Spring Data completos |
+| CA-20 | Estrategia de Row-Level Security para Privacidad de Colas | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | RowLevelSecurityAspect AOP + Hibernate assigneeSecurityFilter |
+| CA-20b | Superposición Inclusiva Multirrol (Unión Matemática) | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | DataSegregationService OR query existe, falta integración global |
+| CA-21 | Infraestructura de Blacklist JWT para Kill-Session | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | JwtBlacklistService usa HashMap dummy + JwtAuthFilter usa JPA real = duplicación |
+| CA-22 | Política de Seguridad para API Keys de Service Accounts | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ServiceAccountManager SHA-256 + ApiKeyAuthFilter + ServiceAccountsTable.vue modal |
+| CA-23 | Comportamiento de Delegación sobre Tareas In-Flight | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ⚠️ revertAssignee() COMENTADO en TaskDelegationService L44 |
+| CA-24 | Alcance Explícito del Reporte ISO 27001 en V1 | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | exportRoleMatrixToCsv() descarga bajo demanda (V1) |
+| CA-25 | Directriz de Coordinación US-036 vs US-038 | ⚠️ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ⚠️ DEUDA: coexisten JwtAuthFilter + JwtSecurityFilter (duplicación) |
 | CA-26 | Experiencia de Caída Segura (UX Fallback) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-27 | Inmutabilidad de Roles Nativos del Sistema | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-28 | Granularidad Macro de la Topología Visual | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-29 | Diseño Limpio del Modal de Roles (Tablas/Tabs) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
+| CA-29 | Diseño Limpio del Modal de Roles (Tablas/Tabs) | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | RbacTabs.vue existe con 5 tabs funcionales, falta pulido |
 | CA-31 | Arquitectura Endpoint Dinámico (Anti-JWT Bloat) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-32 | Caché Híbrida y Auto-Curación Zero-Trust | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 
-### Resumen US-036
-- **Total CAs auditados:** 32 | **Back:** ✅ 8/32 (~25%) | **Front:** ✅ 3/32 (~9%) | **QA:** ✅ 8/32 (~25%)
+### Resumen US-036 (Auditoría Forense V2 — 2026-05-04)
+- **Total CAs:** 32 (29 activos + 3 N/A)
+- **Back:** ✅ 13/29 + ⚠️ 7/29 + ❌ 9/29 = **69% con cobertura parcial**
+- **Front:** ✅ 5/29 + ⚠️ 2/29 + ❌ 22/29 = **24% con cobertura parcial**
+- **QA Unitarios:** ✅ 2/29 (CA-2, CA-3) + ⚠️ 2/29 (CA-9 skip, CA-14 legacy) = **14%**
+- **Hallazgos Críticos:** CA-7 DELETE físico, CA-23 código comentado, CA-25 filtros duplicados, CA-9 tests .skip
 
 ---
 
@@ -693,29 +697,30 @@
 ---
 
 ## US-038: Asignación Multi-Rol y Sincronización EntraID
-**Épica:** 13 — Seguridad/RBAC | **Estado:** ✅ COMPLETADA (Back+Front)
+**Épica:** 13 — Seguridad/RBAC | **Estado:** 🔶 EN PROGRESO (~55%) (Auditoría Forense — 2026-05-04)
 
 | CA | Título (corto) | Back | Front | Unitarios | Componente | Integración | E2E | UAT | Sprint | Spec File | Notas |
-|----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- |--------| ❌ Ninguno |-------|
-| CA-1 | Tolerancia a Fallos del Kill-Switch (Redis Fail-Open Policy) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-2 | Filtro de la Mochila Pesada (Anti-Token Bloat) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-3 | Aprovisionamiento Just-In-Time (JIT) con Guardrail de Claims Mínimos Vitales | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-4 | Protocolo Break-Glass con Cierre de Ciclo Obligatorio | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-5 | Resolución Aditiva de Permisos (RBAC Simple) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-6 | Detección y Contención de Segregación de Funciones (Juez y Parte) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-7 | Proxy Temporal de Autoridad y Exorcismo de Tareas Garantizado | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-8 | El Exorcismo de Tareas por Despido | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-9 | Trazabilidad Quirúrgica (Distributed Tracing V2 Ready) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-10 | Consolidación Transversal e Insignia de Procedencia | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-11 | Indicador Tipográfico de Dominio en Cabecera | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-12 | Tablero de Resolución de Anomalías de Seguridad | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
-| CA-13 | Postergación de Reset de Password para V2 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts | Dashboard/BAM / Multi-Rol assignment / EntraID Sync |
+|----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- |--------| ---- |-------|
+| CA-1 | Tolerancia a Fallos del Kill-Switch (Redis Fail-Open Policy) | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: JwtAuthFilter:63-78 Fail-Open. Front: toggleUserStatus fallback local, no reacciona a Redis caído |
+| CA-2 | Filtro de la Mochila Pesada (Anti-Token Bloat) | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: JwtAuthFilter:104-109 ibpms_rol_ filter. Front: sin indicador visual de bloat |
+| CA-3 | Aprovisionamiento JIT con Guardrail Claims Mínimos | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: JwtAuthFilter:83-96 + AuthSyncController:51-77 (428). Front: no Modal Incompletitud para 428 |
+| CA-4 | Protocolo Break-Glass con Cierre de Ciclo | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | 🐛 Back: /emergency-login funcional. FALTA cierre de ciclo (invalidación post-contingencia). Front: sin formulario Break-Glass |
+| CA-5 | Resolución Aditiva de Permisos (RBAC Simple) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: JwtAuthFilter:104-130 fusión aditiva. Front: IdentityGovernance.vue:380-384 multi-select |
+| CA-6 | Detección y Contención SoD (Juez y Parte) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: BpmTaskService:155-160 + SecurityAnomalyListener. Front: SecurityAnomalyTable.vue 207 líneas |
+| CA-7 | Proxy Temporal de Autoridad y Exorcismo de Tareas | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: TaskRescueProducer + JwtAuthFilter:111-120 delegaciones. Front: IdentityGovernance.vue:174-222 |
+| CA-8 | El Exorcismo de Tareas por Despido | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: TaskRescueConsumer:28-53 UNCLAIM_ALL. Front: reacciona WS pero **falta botón admin trigger** |
+| CA-9 | Trazabilidad Quirúrgica (Distributed Tracing V2 Ready) | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: CorrelationIdFilter.java completo. Front: **Axios no propaga X-Correlation-ID** |
+| CA-10 | Consolidación Transversal e Insignia de Procedencia | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: useWorkdeskStore DTO tiene candidateGroup. Front: sin badge visual de procedencia |
+| CA-11 | Indicador Tipográfico de Dominio en Cabecera | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Front: MainLayout.vue:349-356 topRolesTipText computed |
+| CA-12 | Tablero de Resolución de Anomalías de Seguridad | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: Entity+Repo+Listener. Front: SecurityAnomalyTable.vue + IdentityGovernance Tab Anomalías |
+| CA-13 | Postergación de Reset de Password para V2 | N/A | N/A | N/A | N/A | N/A | N/A | N/A | — | N/A | Diferido explícitamente a US-048 (ver us038_functional_analysis.md § 6) |
 
-### Resumen US-038
-- **Total CAs auditados:** 13 | **Back:** ✅ 100% | **Front:** ✅ 100% | **QA:** ❌ 0%
-
-### Resumen US-038
-- **Back+Front:** ✅ 100% | **QA:** ❌ 0% Pendiente
+### Resumen US-038 (Auditoría Forense — 2026-05-04)
+- **Total CAs:** 13 (11 activos + 1 N/A-Front + 1 N/A-Global)
+- **Back:** ✅ 10/11 + N/A 1 = **91% funcional**
+- **Front:** ✅ 5/11 + ⚠️ 6/11 = **45% con parciales**
+- **QA E2E:** ❌ 0/11 (13 tests todos bajo `test.skip(true)` — 0 ejecutables)
+- **Hallazgos Críticos:** CA-4 sin cierre de ciclo Break-Glass, CA-8 sin trigger admin, CA-9 sin propagación Axios Correlation-ID
 
 ---
 

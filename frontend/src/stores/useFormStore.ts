@@ -104,7 +104,7 @@ export const useFormStore = defineStore('formStore', () => {
         } catch (e: any) {
             console.error('Failed to submit form', e);
             if (e.response && e.response.status === 400 && e.response.data && Array.isArray(e.response.data.errors)) {
-                // CA-2 Validation Field-by-Field
+                // @Traceability: US-000 - CA-2
                 const backendErrors: Record<string, string> = {};
                 e.response.data.errors.forEach((err: any) => {
                     backendErrors[err.field] = err.message;

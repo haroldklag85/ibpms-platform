@@ -173,6 +173,7 @@ describe('useFormStore', () => {
     });
 
     it('Test CA-2: HTTP 400 Backend mapea errores de Zod en validationErrors', async () => {
+        // @Traceability: US-000 - CA-2
         (api.completeTask as any).mockRejectedValue({
             response: {
                 status: 400,

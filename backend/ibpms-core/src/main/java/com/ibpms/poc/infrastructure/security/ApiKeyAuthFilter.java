@@ -20,7 +20,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Optional;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+
 @Component
+@ConditionalOnBean(ServiceAccountRepository.class)
 public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
     private static final String API_KEY_HEADER = "X-API-KEY";

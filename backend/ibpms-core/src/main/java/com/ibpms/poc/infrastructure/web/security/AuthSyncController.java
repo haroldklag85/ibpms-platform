@@ -77,6 +77,7 @@ public class AuthSyncController {
     }
 
     /**
+     * @Traceability: US-036 - CA-01 Hibridación de Roles EntraID vs Locales (Fallback Interno Local)
      * Protocolo Emergency Login para Sprint 6.2 (Valida contra BCrypt y retorna JWT)
      */
     @PostMapping("/emergency-login")

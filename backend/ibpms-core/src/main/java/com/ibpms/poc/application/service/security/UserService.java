@@ -68,6 +68,7 @@ public class UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
+        // @Traceability: US-036 - CA-02 El Guardián Absoluto (Inmutabilidad de Mutación)
         if ("[Super_Administrador]".equals(user.getUsername())) {
              throw new org.springframework.security.access.AccessDeniedException("Imposible modificar al Super Administrador Root.");
         }
@@ -121,6 +122,7 @@ public class UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
+        // @Traceability: US-036 - CA-02 El Guardián Absoluto (Inmutabilidad de Soft-Delete)
         if ("[Super_Administrador]".equals(user.getUsername())) {
              throw new org.springframework.security.access.AccessDeniedException("El usuario Root no puede ser desactivado (Inmutabilidad).");
         }

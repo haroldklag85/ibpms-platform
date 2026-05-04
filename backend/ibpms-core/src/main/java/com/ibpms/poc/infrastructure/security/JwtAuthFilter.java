@@ -17,12 +17,15 @@ import java.security.MessageDigest;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+
 /**
  * Filtro JWT stateless — se ejecuta una sola vez por request.
  * Lee la cabecera Authorization: Bearer <token>, lo valida con JwtTokenProvider
  * y puebla el SecurityContextHolder con el principal y los roles del token.
  */
 @Component
+@ConditionalOnBean(JwtTokenProvider.class)
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
@@ -80,6 +83,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (jwtTokenProvider.isValid(token)) {
                 String subject = jwtTokenProvider.getSubject(token);
                 
+                // @Traceability: US-036 - CA-01 Hibridación de Roles EntraID vs Locales (SSO a BD Local)
+                // @Traceability: US-036 - CA-08 Aprovisionamiento de Transeúntes (Ciudadano Interno)
                 // CA-8 JIT Provisioning (Aprovisionamiento Silencioso SSO)
                 java.util.Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByUsername(subject);
                 if (userOpt.isEmpty()) {
@@ -95,7 +100,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     userOpt = java.util.Optional.of(newUser);
                 }
                 
-                // CA-5 Kill Switch: Interceptamos Token Vivo si el Usuario fue Desactivado
+                // @Traceability: US-036 - CA-05 Privacidad Visual de Colas (Data Segregation Local) Kill-Switch
+                // Interceptamos Token Vivo si el Usuario fue Desactivado
                 if (!userOpt.get().getIsActive()) {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Usuario inactivo o revocado localmente (Kill-Switch).");
                     return;

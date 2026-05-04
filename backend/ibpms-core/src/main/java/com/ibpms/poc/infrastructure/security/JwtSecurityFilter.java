@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.stereotype.Component;
 
 /**
  * Filtro perimetral que intercepta peticiones HTTP para asegurar la capa de API
@@ -21,6 +23,7 @@ import java.util.Set;
  * para revocar tokens comprometidos de inmediato (Token Revocation List - TRL).
  */
 @Component
+@ConditionalOnBean(JwtTokenProvider.class)
 public class JwtSecurityFilter implements Filter {
 
     // En producción esto sería un RedisTemplate o un Cache Manager

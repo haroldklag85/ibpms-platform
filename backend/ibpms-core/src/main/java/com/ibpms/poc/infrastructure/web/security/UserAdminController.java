@@ -68,6 +68,7 @@ public class UserAdminController {
         return ResponseEntity.noContent().build();
     }
 
+    // @Traceability: US-036 - CA-02 El Guardián Absoluto (Prohibición Global de Delete Físico)
     // US-036 p2: Soft-Delete Guard Enforced
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteUser(@PathVariable UUID id) {

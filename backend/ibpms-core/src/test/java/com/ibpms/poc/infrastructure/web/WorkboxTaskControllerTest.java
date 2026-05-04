@@ -31,6 +31,12 @@ class WorkboxTaskControllerTest {
     @MockBean
     private TaskDraftService draftService;
 
+    @MockBean
+    private com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService workdeskNotificationService;
+
+    @MockBean
+    private com.ibpms.poc.application.service.ClaimAuditService claimAuditService;
+
     @Test
     @WithMockUser(username = "operador1", roles = {"OPERADOR"})
     void shouldRollbackClaimSuccessfully() throws Exception {

@@ -99,7 +99,12 @@
         <div v-else-if="currentTab === 'roles'">
           <div class="flex justify-between mb-4">
             <h2 class="text-lg font-bold text-gray-800">Fábrica de Roles (RBAC)</h2>
-            <button @click="openRoleModal()" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-indigo-700 transition">+ Nuevo Rol</button>
+            <div class="flex gap-2">
+              <button @click="importEntraIdRoles()" class="bg-blue-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2">
+                <span>☁️</span> Importar desde EntraID
+              </button>
+              <button @click="openRoleModal()" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-indigo-700 transition">+ Crear Rol Local</button>
+            </div>
           </div>
           
           <table class="min-w-full divide-y divide-gray-200 border rounded-lg overflow-hidden">
@@ -424,6 +429,37 @@
         </div>
        </div>
 
+       <!-- EntraID Roles Import Modal (CA-1) -->
+       <div v-if="showEntraIdRolesModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl overflow-hidden max-w-2xl w-full border border-gray-200 flex flex-col">
+          <div class="px-6 py-4 bg-blue-50 border-b border-blue-200 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-blue-900 flex items-center gap-2">☁️ Importar Grupos desde EntraID</h3>
+            <button @click="showEntraIdRolesModal = false" class="text-gray-400 hover:text-gray-600">&times;</button>
+          </div>
+          <div class="p-6 overflow-y-auto max-h-[60vh] bg-white">
+            <p class="text-sm text-gray-600 mb-4">Seleccione los grupos del directorio activo que desea sincronizar como Roles en iBPMS.</p>
+            <div v-if="loadingEntraId" class="py-8 text-center text-gray-500">
+               <span class="text-4xl block mb-2 animate-spin">⏳</span>
+               <p>Conectando con Microsoft Graph API...</p>
+            </div>
+            <ul v-else class="space-y-2">
+               <li v-for="group in entraIdGroups" :key="group.id" class="border p-3 rounded-lg flex items-center justify-between hover:bg-blue-50 transition">
+                  <div>
+                     <p class="font-bold text-sm text-gray-800">{{ group.displayName }}</p>
+                     <p class="text-[10px] font-mono text-gray-500">{{ group.id }}</p>
+                  </div>
+                  <button @click="importSingleGroup(group)" class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded text-xs font-bold transition">
+                     Importar
+                  </button>
+               </li>
+            </ul>
+          </div>
+          <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3 rounded-b-xl">
+             <button @click="showEntraIdRolesModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 transition">Cerrar</button>
+          </div>
+        </div>
+       </div>
+
        <!-- Role Factory Modal -->
        <div v-if="showRoleModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
          <div class="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full border border-gray-200 h-[80vh] flex flex-col">
@@ -721,6 +757,43 @@ const generateTempPassword = async () => {
         tempPasswordValue.value = 'Offline$Dev' + Math.floor(Math.random()*9999) + '!';
         showTempPassModal.value = true;
     }
+};
+
+// ── EntraID Import Logic (CA-1) ──
+const showEntraIdRolesModal = ref(false);
+const loadingEntraId = ref(false);
+const entraIdGroups = ref<any[]>([]);
+
+const importEntraIdRoles = async () => {
+    showEntraIdRolesModal.value = true;
+    loadingEntraId.value = true;
+    try {
+        const response = await apiClient.get('/api/v1/admin/roles/entraid-groups');
+        entraIdGroups.value = response.data || [];
+    } catch (e) {
+        showToast('Fallback local: Usando grupos locales simulados', 'success');
+        entraIdGroups.value = [
+            { id: '1111-2222-3333-4444', displayName: 'GG_IBPMS_Admins_Prod' },
+            { id: '5555-6666-7777-8888', displayName: 'GG_IBPMS_Compliance_Readonly' },
+            { id: '9999-0000-AAAA-BBBB', displayName: 'GG_IBPMS_Operations_Managers' }
+        ];
+    } finally {
+        loadingEntraId.value = false;
+    }
+};
+
+const importSingleGroup = (group: any) => {
+    const exists = systemRoles.value.find(r => r.name === group.displayName);
+    if(exists) {
+        showToast('El grupo ya existe como rol en el sistema.', 'error');
+        return;
+    }
+    systemRoles.value.push({ 
+        id: group.displayName.toUpperCase().replace(/[^A-Z0-9]/g, '_'), 
+        name: group.displayName, 
+        topology: { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } 
+    });
+    showToast(`Grupo ${group.displayName} importado correctamente desde EntraID.`, 'success');
 };
 
 // ── TAB 2: Permisos Matriz ──

@@ -14,7 +14,37 @@ const apiClient: AxiosInstance = axios.create({
 
 // Interceptor de Request para anexar el Bearer Token corporativo si existe
 apiClient.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
+    async (config: InternalAxiosRequestConfig) => {
+        // CA-09: Sudo-Mode Interceptor for Critical POST/PUT/DELETE/PATCH
+        const criticalMethods = ['post', 'put', 'delete', 'patch'];
+        const method = config.method?.toLowerCase() || '';
+        const isCriticalRoute = config.url && (
+            config.url.includes('/admin/') || 
+            config.url.includes('/security/') || 
+            config.url.includes('/kill-session')
+        ) && !config.url.includes('/auth/sudo');
+
+        if (criticalMethods.includes(method) && isCriticalRoute) {
+            const authorized = await new Promise<boolean>((resolve) => {
+                 const handler = (e: Event) => {
+                     const customEvent = e as CustomEvent;
+                     resolve(customEvent.detail.authorized);
+                     window.removeEventListener('sudo-resolved', handler);
+                 };
+                 window.addEventListener('sudo-resolved', handler);
+                 window.dispatchEvent(new CustomEvent('sudo-required', { 
+                     detail: { actionName: `Autorización crítica para: ${config.url}` } 
+                 }));
+            });
+
+            if (!authorized) {
+                return Promise.reject(new axios.Cancel('Operación cancelada por el usuario (Fallo de Sudo Mode).'));
+            }
+            if (config.headers) {
+                config.headers['X-Sudo-Token'] = 'true';
+            }
+        }
+
         // CA-19: La detección offline se maneja en el interceptor de response.
         const authStore = useAuthStore();
         if (authStore.token && config.headers) {
@@ -300,8 +330,8 @@ export const api = {
     // CA-04: Limpieza de contexto IA al abandonar Sesión (Purga RAG)
     destroyCopilotSession: () => fetch('/api/v1/ai/copilot/session', { method: 'DELETE', keepalive: true, headers: { 'Authorization': `Bearer ${localStorage.getItem('ibpms_token')}` } }),
 
-    // CA-09: Trazador Forense de Descartes ISO (Override)
-    reportIsoOverride: (payload: any) => apiClient.post('/forensics/iso-override', payload),
+    // CA-10: Endpoint Oficial de Telemetría para Auditoría de Secretos
+    telemetryAudit: (payload: any) => apiClient.post('/admin/security/audit/telemetry', payload),
 
     // Sprint 5 - Iteración 2: Timebox & SLA
     getSlaLogs: (taskId: string, page = 0, size = 20) => 

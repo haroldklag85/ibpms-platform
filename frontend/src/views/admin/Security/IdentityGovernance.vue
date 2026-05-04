@@ -49,9 +49,9 @@
           <div class="flex justify-between mb-4">
             <h2 class="text-lg font-bold text-gray-800">Directorio Activo (Sincronizado)</h2>
             <div class="flex gap-3">
-               <button @click="globalKillSession()" class="bg-red-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-red-700 transition flex items-center gap-1 shadow-red-500/30" title="Botón P0 (CA-14)"><span class="material-symbols-outlined text-[14px]">warning</span> Revocar Todo y Matar Sesión</button>
+               <button v-if="authStore.hasWritePermission" @click="globalKillSession()" class="bg-red-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-red-700 transition flex items-center gap-1 shadow-red-500/30" title="Botón P0 (CA-14)"><span class="material-symbols-outlined text-[14px]">warning</span> Revocar Todo y Matar Sesión</button>
                <input type="text" placeholder="Buscar usuario..." class="border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
-               <button @click="openUserModal()" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-indigo-700 transition">+ Nuevo Usuario</button>
+               <button v-if="authStore.hasWritePermission" @click="openUserModal()" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-indigo-700 transition">+ Nuevo Usuario</button>
             </div>
           </div>
           
@@ -85,8 +85,8 @@
                   <div class="text-[10px] font-bold mt-1" :class="user.active ? 'text-emerald-600' : 'text-gray-400'">{{ user.active ? 'ACTIVO' : 'INACTIVO' }}</div>
                 </td>
                 <td class="px-4 py-3 text-right text-sm">
-                  <button @click="openUserModal(user)" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase mr-3">Editar</button>
-                  <button @click="killSession(user)" :disabled="!user.active" class="text-red-500 disabled:text-gray-300 font-bold text-xs uppercase" title="Purge JWT">Kill</button>
+                  <button v-if="authStore.hasWritePermission" @click="openUserModal(user)" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase mr-3">Editar</button>
+                  <button v-if="authStore.hasWritePermission" @click="killSession(user)" :disabled="!user.active" class="text-red-500 disabled:text-gray-300 font-bold text-xs uppercase" title="Purge JWT">Kill</button>
                 </td>
               </tr>
             </tbody>
@@ -100,10 +100,10 @@
           <div class="flex justify-between mb-4">
             <h2 class="text-lg font-bold text-gray-800">Fábrica de Roles (RBAC)</h2>
             <div class="flex gap-2">
-              <button @click="importEntraIdRoles()" class="bg-blue-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2">
+              <button v-if="authStore.hasWritePermission" @click="importEntraIdRoles()" class="bg-blue-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2">
                 <span>☁️</span> Importar desde EntraID
               </button>
-              <button @click="openRoleModal()" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-indigo-700 transition">+ Crear Rol Local</button>
+              <button v-if="authStore.hasWritePermission" @click="openRoleModal()" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-bold hover:bg-indigo-700 transition">+ Crear Rol Local</button>
             </div>
           </div>
           
@@ -120,7 +120,7 @@
                 <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ role.id }}</td>
                 <td class="px-4 py-3 text-sm font-bold text-gray-900">{{ role.name }}</td>
                 <td class="px-4 py-3 text-right text-sm">
-                  <button @click="openRoleModal(role)" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase">Editar</button>
+                  <button v-if="authStore.hasWritePermission" @click="openRoleModal(role)" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase">Editar</button>
                 </td>
               </tr>
             </tbody>
@@ -152,11 +152,11 @@
                    <td v-for="proc in systemProcesses" :key="proc.id" class="px-2 py-3 text-center border-l bg-white">
                       <div class="flex justify-center items-center gap-3">
                         <label class="flex items-center gap-1 cursor-pointer" title="Puede Iniciar el Proceso">
-                          <input type="checkbox" v-model="matrixState[`${role.id}_${proc.id}_I`]" class="w-3.5 h-3.5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300" @change="markMatrixDirty">
+                          <input type="checkbox" :disabled="!authStore.hasWritePermission" v-model="matrixState[`${role.id}_${proc.id}_I`]" class="w-3.5 h-3.5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300" @change="markMatrixDirty">
                           <span class="text-[10px] font-bold text-gray-500">I</span>
                         </label>
                         <label class="flex items-center gap-1 cursor-pointer" title="Puede Ejecutar Tareas del Proceso">
-                          <input type="checkbox" v-model="matrixState[`${role.id}_${proc.id}_E`]" class="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500 rounded border-gray-300" @change="markMatrixDirty">
+                          <input type="checkbox" :disabled="!authStore.hasWritePermission" v-model="matrixState[`${role.id}_${proc.id}_E`]" class="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500 rounded border-gray-300" @change="markMatrixDirty">
                           <span class="text-[10px] font-bold text-gray-500">E</span>
                         </label>
                       </div>
@@ -167,7 +167,7 @@
           </div>
           
           <div class="mt-4 flex justify-end">
-             <button :disabled="!isMatrixDirty" @click="saveMatrix" class="bg-indigo-600 text-white px-5 py-2 rounded shadow text-sm font-bold disabled:opacity-50 transition">
+             <button v-if="authStore.hasWritePermission" :disabled="!isMatrixDirty" @click="saveMatrix" class="bg-indigo-600 text-white px-5 py-2 rounded shadow text-sm font-bold disabled:opacity-50 transition">
                Guardar Cambios de Matriz
              </button>
           </div>
@@ -201,7 +201,7 @@
               </div>
             </div>
             
-            <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded shadow text-sm font-bold hover:bg-purple-700 transition w-full">
+            <button v-if="authStore.hasWritePermission" type="submit" class="bg-purple-600 text-white px-4 py-2 rounded shadow text-sm font-bold hover:bg-purple-700 transition w-full">
               Crear Regla de Delegación
             </button>
           </form>
@@ -216,7 +216,7 @@
                 <p class="text-xs text-gray-500">Vigencia: {{ d.start }} al {{ d.end }}</p>
               </div>
               <!-- CA-7 Soft-Delete Freeze Icon -->
-              <button @click="revokeDelegation(d.id)" class="text-sky-600 hover:text-sky-800 text-xs font-bold bg-sky-50 px-3 py-1.5 rounded transition flex items-center gap-1 border border-sky-200">
+              <button v-if="authStore.hasWritePermission" @click="revokeDelegation(d.id)" class="text-sky-600 hover:text-sky-800 text-xs font-bold bg-sky-50 px-3 py-1.5 rounded transition flex items-center gap-1 border border-sky-200">
                   <span class="material-symbols-outlined text-[14px]">ac_unit</span> Congelar/Revocar
               </button>
             </li>
@@ -235,7 +235,7 @@
               <h2 class="text-lg font-bold text-gray-800">Cuentas de Servicio (M2M)</h2>
               <p class="text-xs text-red-600 font-bold mt-1">⚠️ ATENCIÓN: Por seguridad, el Secret Key solo se mostrará una vez.</p>
             </div>
-            <button @click="generateApiKey" class="bg-emerald-600 text-white px-4 py-2 rounded shadow-sm text-sm font-bold hover:bg-emerald-700 transition">
+            <button v-if="authStore.hasWritePermission" @click="generateApiKey" class="bg-emerald-600 text-white px-4 py-2 rounded shadow-sm text-sm font-bold hover:bg-emerald-700 transition">
               + Generar Nueva API Key
             </button>
           </div>
@@ -245,8 +245,12 @@
              <h3 class="text-sm font-bold text-yellow-800 mb-2">¡API Key Generada Exitosamente!</h3>
              <p class="text-xs text-yellow-700 mb-4">Copia este secreto inmediatamente. Una vez cierres este mensaje, no podrás volver a verlo.</p>
              <div class="flex items-center gap-2">
-                <input type="text" :value="newlyCreatedSecret" readonly class="flex-1 bg-white border border-yellow-300 font-mono text-sm px-3 py-2 rounded focus:outline-none" />
-                <button @click="copySecret" class="bg-yellow-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-yellow-700 transition">Copiar</button>
+                <input type="text" :value="isSecretRevealed ? newlyCreatedSecret : '********************************'" readonly class="flex-1 bg-white border border-yellow-300 font-mono text-sm px-3 py-2 rounded focus:outline-none" />
+                <button v-if="!isSecretRevealed" @click="revealSecret" class="bg-indigo-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-1" :disabled="isRevealingSecret">
+                    <span v-if="isRevealingSecret" class="material-symbols-outlined text-[14px] animate-spin">sync</span>
+                    Mostrar
+                </button>
+                <button v-else @click="copySecret" class="bg-yellow-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-yellow-700 transition">Copiar</button>
              </div>
              <button @click="newlyCreatedSecret = null" class="mt-4 text-xs font-bold text-gray-500 hover:text-gray-800 underline">Ya lo he copiado pacientemente, cerrar aviso.</button>
           </div>
@@ -343,7 +347,7 @@
                     <span v-else class="text-emerald-600 font-bold flex flex-col items-center uppercase tracking-widest text-[10px]"><span class="material-symbols-outlined text-[16px]">verified</span> SUBSANADA</span>
                  </td>
                  <td class="px-4 py-3 text-right">
-                    <button v-if="anomaly.status === 'OPEN'" @click="resolveAnomaly(anomaly)" class="bg-white border-2 border-emerald-500 text-emerald-600 font-bold px-3 py-1.5 rounded text-xs hover:bg-emerald-50 transition shadow-sm flex items-center justify-end gap-1 ml-auto">
+                    <button v-if="anomaly.status === 'OPEN' && authStore.hasWritePermission" @click="resolveAnomaly(anomaly)" class="bg-white border-2 border-emerald-500 text-emerald-600 font-bold px-3 py-1.5 rounded text-xs hover:bg-emerald-50 transition shadow-sm flex items-center justify-end gap-1 ml-auto">
                         ✅ Marcar Subsanado
                     </button>
                     <span v-else class="text-gray-400 text-xs font-medium italic">Acción Cerrada</span>
@@ -630,6 +634,9 @@
 import { ref, computed, onMounted } from 'vue';
 import { z } from 'zod';
 import apiClient from '@/services/apiClient';
+import { useAuthStore } from '@/stores/authStore';
+
+const authStore = useAuthStore();
 
 // ── Navegación Tabs ──
 const tabs = [
@@ -922,8 +929,26 @@ const apiKeys = ref([
   { appName: 'ERP Oracle NetSuite Adapter', clientId: 'cli_9x8a7s6d5f4g3h2j1k', createdAt: '2026-01-15 08:30' }
 ]);
 const newlyCreatedSecret = ref<string | null>(null);
+const isSecretRevealed = ref(false);
+const isRevealingSecret = ref(false);
+
+const revealSecret = async () => {
+    isRevealingSecret.value = true;
+    try {
+        await apiClient.telemetryAudit({ 
+            action: 'REVEAL_API_KEY', 
+            timestamp: new Date().toISOString() 
+        });
+        isSecretRevealed.value = true;
+    } catch (e) {
+        showToast('Error reportando auditoría de seguridad. No se puede revelar.', 'error');
+    } finally {
+        isRevealingSecret.value = false;
+    }
+};
 
 const generateApiKey = () => {
+  isSecretRevealed.value = false;
   const name = prompt('Nombre de la aplicación externa a autorizar:');
   if (!name) return;
   

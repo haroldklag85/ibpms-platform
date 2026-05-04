@@ -73,18 +73,21 @@ export const useMenuStore = defineStore('menu', () => {
              
              if (Array.isArray(data)) {
                  for (const item of data) {
-                     if (item.children && item.children.length > 0) {
-                         // Es una carpeta / acordeón
-                         mappedLayout.push({
-                             title: item.title,
-                             items: item.children.map((c: any) => ({
-                                 label: c.title,
-                                 icon: mapIcon(c.icon),
-                                 path: c.path
-                             }))
-                         });
-                     } else {
-                         // Es un link directo
+                     // CA-06: Si es explícitamente un contenedor (tiene propiedad children)
+                     if (item.children !== undefined) {
+                         // Solo si tiene hijos autorizados lo agregamos (Auto-Collapse)
+                         if (item.children.length > 0) {
+                             mappedLayout.push({
+                                 title: item.title,
+                                 items: item.children.map((c: any) => ({
+                                     label: c.title,
+                                     icon: mapIcon(c.icon),
+                                     path: c.path
+                                 }))
+                             });
+                         }
+                     } else if (item.path) {
+                         // Es un link directo (no tiene children y tiene path válido)
                          rootItems.push({
                              label: item.title,
                              icon: mapIcon(item.icon),

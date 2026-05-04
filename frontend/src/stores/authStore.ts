@@ -177,6 +177,15 @@ export const useAuthStore = defineStore('auth', () => {
         return rolesToCheck.some(r => user.value!.roles.includes(r));
     };
 
+    const hasWritePermission = computed(() => {
+        if (!user.value || !user.value.roles) return false;
+        // Si el único rol que tiene el usuario contiene "READONLY" o "GUEST", no tiene permisos de escritura.
+        // O si explicitamente es ADMIN, si tiene permiso.
+        // Para ser más seguros, si ALGÚN rol del usuario NO es read-only, entonces tiene permiso.
+        const writeRoles = user.value.roles.filter(r => !r.toUpperCase().includes('READONLY') && !r.toUpperCase().includes('READ_ONLY') && r !== 'ROLE_AUDITOR');
+        return writeRoles.length > 0;
+    });
+
     const roles = computed(() => user.value?.roles || []);
 
     return {
@@ -191,6 +200,7 @@ export const useAuthStore = defineStore('auth', () => {
         logout,
         switchRole,
         hydrateAuth,
-        hasAnyRole
+        hasAnyRole,
+        hasWritePermission
     };
 });

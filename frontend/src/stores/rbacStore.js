@@ -116,10 +116,12 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
-    // CA-4: Actualizar permisos granulares de proceso
+    // CA-4: Actualizar permisos granulares de proceso (Alineado al contrato PUT del Backend)
     async function updateProcessPermission(roleId, permissionData) {
         try {
-            await apiClient.patch(`/admin/roles/${roleId}/permissions`, permissionData)
+            await apiClient.put(`/admin/roles/${roleId}`, {
+                processPermissions: [permissionData]
+            })
             await fetchRoles()
         } catch (error) {
             console.error("Error actualizando permisos de proceso", error)

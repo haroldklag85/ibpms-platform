@@ -31,22 +31,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository userRepository;
     private final com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository roleRepository;
-    private final com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository delegationRepository;
     private final com.ibpms.poc.infrastructure.jpa.repository.security.TokenBlacklistRepository tokenBlacklistRepository;
     private final com.ibpms.poc.application.service.security.RoleHierarchyService roleHierarchyService;
+    private final com.ibpms.poc.application.service.security.EntraIdSyncService entraIdSyncService;
+    private final com.ibpms.poc.infrastructure.jpa.repository.security.RoleDelegationRepository roleDelegationRepository;
 
     public JwtAuthFilter(JwtTokenProvider jwtTokenProvider, 
                          com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository userRepository,
                          com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository roleRepository,
-                         com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository delegationRepository,
                          com.ibpms.poc.infrastructure.jpa.repository.security.TokenBlacklistRepository tokenBlacklistRepository,
-                         com.ibpms.poc.application.service.security.RoleHierarchyService roleHierarchyService) {
+                         com.ibpms.poc.application.service.security.RoleHierarchyService roleHierarchyService,
+                         com.ibpms.poc.application.service.security.EntraIdSyncService entraIdSyncService,
+                         com.ibpms.poc.infrastructure.jpa.repository.security.RoleDelegationRepository roleDelegationRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.delegationRepository = delegationRepository;
         this.tokenBlacklistRepository = tokenBlacklistRepository;
         this.roleHierarchyService = roleHierarchyService;
+        this.entraIdSyncService = entraIdSyncService;
+        this.roleDelegationRepository = roleDelegationRepository;
     }
 
     @Override
@@ -80,24 +83,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (jwtTokenProvider.isValid(token)) {
                 String subject = jwtTokenProvider.getSubject(token);
                 
-                // CA-8 JIT Provisioning (Aprovisionamiento Silencioso SSO)
+                // CA-8 JIT Provisioning (Aprovisionamiento Silencioso SSO desacoplado)
                 java.util.Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByUsername(subject);
                 if (userOpt.isEmpty()) {
-                    com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity newUser = new com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity();
-                    newUser.setUsername(subject);
-                    newUser.setEmail(subject + "@sso.local"); // Stub, idealmente vendría en el claim
-                    newUser.setIsExternalIdp(true);
-                    newUser.setIsActive(true);
-                    com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity baseRole = roleRepository.findByName("ROLE_CIUDADANO_INTERNO")
-                            .orElseGet(() -> roleRepository.save(new com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity("ROLE_CIUDADANO_INTERNO", "JIT Default Role")));
-                    newUser.getRoles().add(baseRole);
-                    userRepository.save(newUser);
-                    userOpt = java.util.Optional.of(newUser);
+                    try {
+                        com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity newUser = 
+                            entraIdSyncService.provisionUser(subject, subject + "@sso.local", subject);
+                        userOpt = java.util.Optional.of(newUser);
+                    } catch (Exception e) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Error en aprovisionamiento JIT: " + e.getMessage());
+                        return;
+                    }
                 }
                 
-                // CA-5 Kill Switch: Interceptamos Token Vivo si el Usuario fue Desactivado
-                if (!userOpt.get().getIsActive()) {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Usuario inactivo o revocado localmente (Kill-Switch).");
+                // CA-07 Soft-Delete: Interceptamos Token Vivo si el Usuario fue Desactivado
+                if (com.ibpms.poc.infrastructure.jpa.entity.security.UserStatus.INACTIVE.equals(userOpt.get().getStatus())) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Usuario inactivo o revocado localmente (Soft-Delete).");
                     return;
                 }
 
@@ -109,13 +110,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .collect(Collectors.toList());
                 
                 // CA-9 Inyección Dinámica de Delegaciones (Sustituciones Temporales)
-                java.util.List<com.ibpms.poc.infrastructure.jpa.entity.security.DelegationEntity> activeDelegations = 
-                        delegationRepository.findActiveDelegationsForSubstitute(userOpt.get().getId(), java.time.LocalDateTime.now());
+                java.util.List<com.ibpms.poc.infrastructure.jpa.entity.security.RoleDelegationEntity> activeDelegations = 
+                        roleDelegationRepository.findActiveDelegationsForDelegate(userOpt.get().getId(), java.time.LocalDateTime.now());
                 
-                for (com.ibpms.poc.infrastructure.jpa.entity.security.DelegationEntity delegation : activeDelegations) {
-                    for (com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity r : delegation.getDelegator().getRoles()) {
-                        String rName = r.getName().replace("ROLE_", "");
-                        if (!roles.contains(rName)) roles.add(rName);
+                for (com.ibpms.poc.infrastructure.jpa.entity.security.RoleDelegationEntity delegation : activeDelegations) {
+                    if (delegation.getOwner() != null) {
+                        for (com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity r : delegation.getOwner().getRoles()) {
+                            String rName = r.getName().replace("ROLE_", "");
+                            if (!roles.contains(rName)) roles.add(rName);
+                        }
                     }
                 }
 

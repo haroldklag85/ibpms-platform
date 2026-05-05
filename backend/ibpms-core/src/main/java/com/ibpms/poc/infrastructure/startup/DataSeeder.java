@@ -2,6 +2,7 @@ package com.ibpms.poc.infrastructure.startup;
 
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.security.UserStatus;
 import com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -33,7 +34,7 @@ public class DataSeeder implements CommandLineRunner {
             UserEntity rootUser = new UserEntity();
             rootUser.setUsername("[Super_Administrador]");
             rootUser.setEmail("root@ibpms.local");
-            rootUser.setIsActive(true);
+            rootUser.setStatus(UserStatus.ACTIVE);
             rootUser.setIsExternalIdp(false);
             
             // Password hardcodeado temporalmente en CA-2 para bootstrap 
@@ -43,6 +44,12 @@ public class DataSeeder implements CommandLineRunner {
             rootUser.getRoles().add(rootRole);
             userRepository.save(rootUser);
             System.out.println("====== ROOT ADMIN SEED COMPLETED ======");
+        }
+
+        // CA-08: Seed ROLE_USER_INTERNAL
+        if (roleRepository.findByName("ROLE_USER_INTERNAL").isEmpty()) {
+            roleRepository.save(new RoleEntity("ROLE_USER_INTERNAL", "Ciudadano Interno - SSO Default"));
+            System.out.println("====== ROLE_USER_INTERNAL SEED COMPLETED ======");
         }
     }
 }

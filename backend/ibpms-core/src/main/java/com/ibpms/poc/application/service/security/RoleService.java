@@ -91,6 +91,13 @@ public class RoleService {
             throw new AccessDeniedException(
                     "Mutación/Borrado de Rol Root prohibido por diseño de seguridad.");
         }
+        
+        // CA-2 US-036: Blindaje adicional contra suplantación del nombre Root
+        if (patch.getName() != null && ROOT_ROLE.equals(patch.getName()) && !ROOT_ROLE.equals(existing.getName())) {
+            throw new AccessDeniedException("No se puede renombrar un rol a " + ROOT_ROLE);
+        }
+
+        if (patch.getName() != null) existing.setName(patch.getName());
         existing.setDescription(patch.getDescription());
         existing.setIsTemplate(patch.getIsTemplate());
         existing.setSource(patch.getSource());

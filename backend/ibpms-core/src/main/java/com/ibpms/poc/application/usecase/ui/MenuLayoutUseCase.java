@@ -38,13 +38,14 @@ public class MenuLayoutUseCase {
         // RAMA 3: Configuración y Gobernanza
         MenuItemDTO settingsFolder = new MenuItemDTO("Administración y Gobernanza", "mdi-cog-box", null);
 
-        if (userRoles.contains("ROLE_SUPER_ADMIN")) {
+        if (userRoles.contains("ROLE_SUPER_ADMIN") || userRoles.contains("ibpms_rol_SUPER_ADMIN")) {
             settingsFolder.addChild(new MenuItemDTO("Generador de Entidades MDE", "mdi-database-plus", "/config/mde"));
             settingsFolder.addChild(new MenuItemDTO("Centro de IA (MLOps)", "mdi-brain", "/config/ai-center"));
             settingsFolder.addChild(new MenuItemDTO("Gestor de Festivos", "mdi-calendar-alert", "/config/holidays"));
         }
 
-        if (userRoles.contains("ROLE_CISO") || userRoles.contains("ROLE_SUPER_ADMIN")) {
+        if (userRoles.contains("ROLE_CISO") || userRoles.contains("ibpms_rol_CISO") || 
+            userRoles.contains("ROLE_SUPER_ADMIN") || userRoles.contains("ibpms_rol_SUPER_ADMIN")) {
             settingsFolder.addChild(new MenuItemDTO("Tablero de Anomalías de Seguridad", "mdi-shield-alert", "/security/anomalies"));
             settingsFolder.addChild(new MenuItemDTO("Matriz Transaccional SoD", "mdi-file-tree", "/security/sod-matrix"));
         }
@@ -54,7 +55,8 @@ public class MenuLayoutUseCase {
             layout.add(settingsFolder);
         }
 
-        if (userRoles.contains("ROLE_SUPER_ADMIN") || userRoles.contains("Global Admin")) {
+        if (userRoles.contains("ROLE_SUPER_ADMIN") || userRoles.contains("ibpms_rol_SUPER_ADMIN") || 
+            userRoles.contains("Global Admin") || userRoles.contains("ibpms_rol_Global Admin")) {
             
             // RAMA: Service Delivery
             MenuItemDTO serviceDelivery = new MenuItemDTO("Service Delivery", "mdi-account-group", null);

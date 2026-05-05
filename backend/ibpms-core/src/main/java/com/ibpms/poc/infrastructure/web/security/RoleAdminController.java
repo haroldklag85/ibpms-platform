@@ -3,6 +3,7 @@ package com.ibpms.poc.infrastructure.web.security;
 import com.ibpms.poc.infrastructure.jpa.entity.security.ProcessPermissionEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import com.ibpms.poc.application.service.security.RoleService;
+import com.ibpms.poc.application.service.security.EntraIdSyncService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

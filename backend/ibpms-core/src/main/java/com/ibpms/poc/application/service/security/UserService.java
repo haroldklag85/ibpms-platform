@@ -9,6 +9,7 @@ import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
 import com.ibpms.poc.infrastructure.mq.producer.TaskRescueProducer;
+import com.ibpms.poc.infrastructure.jpa.entity.security.UserStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +49,7 @@ public class UserService {
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setIsExternalIdp(dto.getIsExternalIdp());
-        user.setIsActive(true);
+        user.setStatus(UserStatus.ACTIVE);
 
         if (!dto.getIsExternalIdp()) {
             user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
@@ -74,7 +75,10 @@ public class UserService {
             user.setEmail(dto.getEmail());
         }
         if (dto.getIsActive() != null) {
-            user.setIsActive(dto.getIsActive());
+            user.setStatus(Boolean.TRUE.equals(dto.getIsActive()) ? UserStatus.ACTIVE : UserStatus.INACTIVE);
+        }
+        if (dto.getStatus() != null) {
+            user.setStatus(UserStatus.valueOf(dto.getStatus()));
         }
         if (dto.getIsExternalIdp() != null) {
             user.setIsExternalIdp(dto.getIsExternalIdp());
@@ -88,7 +92,7 @@ public class UserService {
 
         userRepository.save(user);
 
-        if (Boolean.FALSE.equals(dto.getIsActive())) {
+        if (UserStatus.INACTIVE.equals(user.getStatus())) {
             // CA-08 Trigger mass unclaim if user was deactivated
             taskRescueProducer.triggerMassiveUnclaim(id.toString());
         }
@@ -121,13 +125,21 @@ public class UserService {
              throw new org.springframework.security.access.AccessDeniedException("El usuario Root no puede ser desactivado (Inmutabilidad).");
         }
 
-        user.setIsActive(false);
+        user.setStatus(UserStatus.INACTIVE);
         userRepository.save(user);
         
         // CA-08 Trigger mass unclaim since user is deactivated
         taskRescueProducer.triggerMassiveUnclaim(id.toString());
         
         // Nota Arquitectura: el rechazo final de los JWT activos de este usuario lo hace el JwtAuthFilter en vivo contra JPA.
+    }
+
+    /**
+     * CA-07 US-036: Soft-Delete.
+     * Prohibido el borrado físico de registros de usuario por trazabilidad.
+     */
+    public void deleteUser(UUID id) {
+        deactivateUser(id);
     }
 
     public List<UserResponseDTO> listAll() {
@@ -169,7 +181,8 @@ public class UserService {
         dto.setId(entity.getId());
         dto.setUsername(entity.getUsername());
         dto.setEmail(entity.getEmail());
-        dto.setIsActive(entity.getIsActive());
+        dto.setIsActive(UserStatus.ACTIVE.equals(entity.getStatus()));
+        dto.setStatus(entity.getStatus().name());
         dto.setIsExternalIdp(entity.getIsExternalIdp());
         
         if (entity.getRoles() != null) {

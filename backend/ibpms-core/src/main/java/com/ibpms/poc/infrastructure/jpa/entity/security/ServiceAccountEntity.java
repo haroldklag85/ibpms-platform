@@ -1,6 +1,7 @@
 package com.ibpms.poc.infrastructure.jpa.entity.security;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -23,17 +24,21 @@ public class ServiceAccountEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private RoleEntity role;
 
     public ServiceAccountEntity() {}
 
-    public ServiceAccountEntity(String name, String description, String apiKeyHash, RoleEntity role) {
+    public ServiceAccountEntity(String name, String description, String apiKeyHash, RoleEntity role, LocalDateTime expiresAt) {
         this.name = name;
         this.description = description;
         this.apiKeyHash = apiKeyHash;
         this.role = role;
+        this.expiresAt = expiresAt;
     }
 
     // Getters y Setters
@@ -49,4 +54,6 @@ public class ServiceAccountEntity {
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
     public RoleEntity getRole() { return role; }
     public void setRole(RoleEntity role) { this.role = role; }
+    public LocalDateTime getExpiresAt() { return expiresAt; }
+    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
 }

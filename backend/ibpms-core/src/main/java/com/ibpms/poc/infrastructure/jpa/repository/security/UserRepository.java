@@ -13,6 +13,6 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     Optional<UserEntity> findByEmail(String email);
     
     // Optimizador para Kill-Switch sin traer toda la entidad
-    @org.springframework.data.jpa.repository.Query("SELECT u.isActive FROM UserEntity u WHERE u.username = :username")
+    @org.springframework.data.jpa.repository.Query("SELECT (u.status = 'ACTIVE') FROM UserEntity u WHERE u.username = :username")
     Optional<Boolean> isUserActive(String username);
 }

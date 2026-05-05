@@ -55,7 +55,14 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
                 if (optAcc.isPresent()) {
                     ServiceAccountEntity acc = optAcc.get();
-                    // Conceder Sesión Sintética M2M
+                    
+                    // CA-10 US-036: Validación de Expiración de M2M
+                    if (acc.getExpiresAt() != null && acc.getExpiresAt().isBefore(java.time.LocalDateTime.now())) {
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "API Key expirada.");
+                        return;
+                    }
+
+                    // CA-10: Conceder Sesión Sintética M2M
                     var authorities = Collections.singletonList(new SimpleGrantedAuthority(acc.getRole().getName()));
                     var auth = new UsernamePasswordAuthenticationToken(acc.getName() + "_M2M", null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(auth);

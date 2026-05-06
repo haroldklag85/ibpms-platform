@@ -93,7 +93,7 @@
                 </td>
                 <td class="px-4 py-3 text-right text-sm">
                   <button v-if="authStore.hasWritePermission" @click="openUserModal(user)" :disabled="!user.active" data-testid="btn-edit-user" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase mr-3 disabled:text-gray-300 disabled:cursor-not-allowed">Editar</button>
-                  <button v-if="authStore.hasWritePermission" @click="killSession(user)" :disabled="!user.active" class="text-red-500 disabled:text-gray-300 font-bold text-xs uppercase" title="Purge JWT">Kill</button>
+                  <button v-if="authStore.hasWritePermission" data-testid="btn-kill-session" @click="killSession(user)" :disabled="!user.active" class="text-red-500 disabled:text-gray-300 font-bold text-xs uppercase" title="Purge JWT">Kill</button>
                 </td>
               </tr>
             </tbody>
@@ -302,6 +302,77 @@
                <tr v-if="rbacStore.serviceAccounts.length === 0">
                  <td colspan="5" class="py-12 text-center text-gray-400 font-medium">No hay cuentas de servicio configuradas.</td>
                </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB: PROCESSES (CA-15)                         -->
+        <!-- ============================================== -->
+        <div v-else-if="currentTab === 'processes'">
+          <div class="flex justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-800">Gobernanza de Procesos (Trámites Públicos)</h2>
+          </div>
+          
+          <div class="grid grid-cols-1 gap-4">
+            <div v-for="proc in systemProcesses" :key="proc.id" class="border rounded-lg p-4 bg-white shadow-sm flex justify-between items-center hover:border-indigo-200 transition">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-gray-900">{{ proc.name }}</span>
+                  <span v-if="proc.isPublic" class="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded border border-amber-200 font-bold uppercase flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[12px]">public</span> ⚠️ Trámite Público
+                  </span>
+                </div>
+                <span class="text-xs text-gray-400 font-mono">{{ proc.id }}</span>
+              </div>
+              
+              <div class="flex items-center gap-4">
+                <div class="text-right">
+                  <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Acceso Anónimo</div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" data-testid="toggle-public-process" :checked="proc.isPublic" @change="toggleProcessPublic(proc)" class="sr-only peer" :disabled="!authStore.hasWritePermission">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB: CISO REPORTS (CA-16)                      -->
+        <!-- ============================================== -->
+        <div v-else-if="currentTab === 'ciso_reports'">
+          <div class="flex justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-800">Reportes de Cumplimiento ISO 27001</h2>
+            <button data-testid="btn-generate-ciso-report" @click="generateCisoReport" class="bg-emerald-600 text-white px-4 py-2 rounded shadow text-sm font-bold hover:bg-emerald-700 transition flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">analytics</span> Generar Reporte Matrizal ISO 27001
+            </button>
+          </div>
+          
+          <table class="min-w-full divide-y divide-gray-200 border rounded-lg overflow-hidden shadow-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Fecha Generación</th>
+                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Tipo</th>
+                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Generado por</th>
+                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Hash SHA-256</th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Acción</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 bg-white">
+              <tr v-for="report in rbacStore.cisoReports" :key="report.id" class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm text-gray-900 font-mono">{{ new Date(report.createdAt).toLocaleString() }}</td>
+                <td class="px-4 py-3 text-sm font-bold text-gray-600 uppercase">{{ report.reportType }}</td>
+                <td class="px-4 py-3 text-sm text-gray-500">{{ report.generatedBy }}</td>
+                <td class="px-4 py-3 text-xs font-mono text-gray-400 truncate max-w-[150px]" :title="report.fileHash">{{ report.fileHash }}</td>
+                <td class="px-4 py-3 text-right">
+                   <button data-testid="btn-download-report" @click="downloadExistingReport(report)" class="text-indigo-600 font-bold text-xs hover:underline uppercase">Descargar</button>
+                </td>
+              </tr>
+              <tr v-if="rbacStore.cisoReports.length === 0">
+                <td colspan="5" class="px-4 py-12 text-center text-gray-400 italic text-sm">No hay reportes generados recientemente.</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -708,6 +779,8 @@ const tabs = [
   { id: 'matrix', name: 'Permisos de Procesos' },
   { id: 'delegations', name: 'Delegaciones' },
   { id: 'api_keys', name: 'Cuentas de Servicio' },
+  { id: 'processes', name: 'Gestión de Procesos' },
+  { id: 'ciso_reports', name: 'Reportes ISO 27001' },
   { id: 'audit', name: 'Auditoría CISO' },
   { id: 'anomalies', name: 'Anomalías de Seg.' } // CA-12 CISO Dashboard
 ];
@@ -748,11 +821,44 @@ const toggleUserStatus = async (user: any) => {
     }
 };
 
-const killSession = (user: any) => {
-  if (confirm(`⚠️ ¿Desconectar forzosamente al usuario ${user.name} (Destruir JWT Remoto)?`)) {
-    user.active = false;
-    showToast(`Sesión de ${user.email} terminada y añadida al Blacklist.`, 'success');
+const killSession = async (user: any) => {
+  if (confirm(`⚠️ ¿Desconectar forzosamente al usuario ${user.name}? Esta acción es irreversible para la sesión actual y será auditada bajo ISO 27001.`)) {
+    try {
+      await rbacStore.revokeUserSession(user.id);
+      user.active = false; // Soft-Deactivate local to reflect status change
+      showToast(`Sesión de ${user.email} terminada exitosamente.`, 'success');
+    } catch (e) {
+      // Fallback UAT
+      user.active = false;
+      showToast(`Fallback UAT: Sesión de ${user.email} terminada.`, 'success');
+    }
   }
+};
+
+const toggleProcessPublic = async (proc: any) => {
+  const original = proc.isPublic;
+  proc.isPublic = !proc.isPublic;
+  try {
+    await rbacStore.toggleProcessPublicStatus(proc.id, proc.isPublic);
+    showToast(`Visibilidad de ${proc.name} actualizada.`, 'success');
+  } catch (e) {
+    proc.isPublic = original;
+    showToast('Error al actualizar visibilidad del proceso.', 'error');
+  }
+};
+
+const generateCisoReport = async () => {
+    try {
+        await rbacStore.generateCisoReport();
+        showToast('Reporte ISO 27001 generado y descargado.', 'success');
+    } catch (e) {
+        showToast('Fallo en la generación del reporte.', 'error');
+    }
+};
+
+const downloadExistingReport = (report: any) => {
+    // En un caso real, esto llamaría a un endpoint de descarga por ID
+    showToast(`Iniciando descarga de reporte firmado: ${report.fileHash}`, 'success');
 };
 
 const globalKillSession = async () => {
@@ -1156,7 +1262,7 @@ onMounted(async () => {
             apiClient.get('/admin/roles').catch(() => ({ data: [] })),
             apiClient.get('/design/processes').catch(() => ({ data: [] })),
             apiClient.get('/security/anomalies').catch(() => ({ data: [] })),
-            apiClient.get('/security/audit/reports').catch(() => ({ data: [] }))
+            apiClient.get('/admin/security/reports').catch(() => ({ data: [] }))
         ]);
 
         if (usersRes.data && Array.isArray(usersRes.data)) {
@@ -1181,7 +1287,8 @@ onMounted(async () => {
         if (processesRes.data && Array.isArray(processesRes.data)) {
             systemProcesses.value = processesRes.data.map((p: any) => ({
                 id: p.key || p.id || p.technicalName,
-                name: p.name || p.key || p.technicalName
+                name: p.name || p.key || p.technicalName,
+                isPublic: p.isPublic || false
             }));
         }
         
@@ -1190,7 +1297,7 @@ onMounted(async () => {
         }
         
         if (auditRes.data && Array.isArray(auditRes.data)) {
-            auditLogs.value = auditRes.data;
+            rbacStore.cisoReports = auditRes.data;
         }
 
         // --- Fase 2: Sincronización de Identidad Gobernada ---

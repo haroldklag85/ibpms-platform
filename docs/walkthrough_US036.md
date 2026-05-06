@@ -19,22 +19,26 @@ He completado la implementación de los criterios de aceptación **CA-12 a CA-16
 - **Integridad SHA-256**: Cada reporte generado incluye un sellado de integridad SHA-256 almacenado en la tabla `ibpms_audit_reports`.
 - **Telemetría Forense**: Registro de quién generó el reporte y cuándo.
 
-### 4. Estabilización y Calidad
-- **Saneamiento de Código**: Corregidos errores de compilación en `AuthSyncController` y `ServiceAccountController`.
-- **Arquitectura Modular**: Refactorización de `JpaConfig` para facilitar pruebas unitarias desacopladas.
-- **Compilación Exitosa**: El módulo `ibpms-core` compila limpiamente (`BUILD SUCCESS`).
+### 5. Interfaz de Usuario (Frontend)
+- **Nuevas Pestañas**: Añadidas 'Gestión de Procesos' y 'Reportes ISO 27001' al módulo de Identidad Gobernada.
+- **Visual Safety**: Implementado sello naranja `[Trámite Público]` para alertar sobre procesos expuestos.
+- **Kill-Session UI**: Botón de acción inmediata con modal de confirmación destacado y auditoría ISO 27001.
+- **Gestión de Reportes**: Integración de descarga de streams binarios (Blob) para reportes CSV firmados.
 
 ## Verificación Realizada
 
-### Pruebas Unitarias
-- **JwtBlacklistServiceTest**: 4/4 PASSED (validando Redis y Fail-Open).
-- **AuditReportController**: Verificado flujo de generación de CSV e integridad.
+### Pruebas Unitarias y de Store
+- **rbacStore.spec.ts**: 3/3 PASSED (Revocación, Toggle Público, Generación Reporte).
+- **JwtBlacklistServiceTest**: 4/4 PASSED (Backend).
 
-### Auditoría SRE
-- Ejecutado `mvn compile` con éxito.
-- Validado cumplimiento de ADR-011 (Seguridad Perimetral).
+### Auditoría y Build
+- **npm run build**: EXIT SUCCESS (Cero regresiones en empaquetado).
+- **mvn compile**: EXIT SUCCESS (Backend).
 
 ## Evidencia Técnica
 - **Rama**: `DevDavid`
 - **Tablas Afectadas**: `ibpms_audit_reports`, `ibpms_bpmn_process_design`.
-- **Endpoints Protegidos**: `/api/v1/admin/**`, `/api/v1/security/audit/**`.
+- **Endpoints Integrados**: 
+  - `POST /api/v1/admin/security/users/{userId}/revoke-session`
+  - `PUT /api/v1/design/processes/{id}/public`
+  - `GET /api/v1/admin/security/reports/iso27001`

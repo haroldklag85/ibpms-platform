@@ -166,6 +166,8 @@ export const useRbacStore = defineStore('rbac', () => {
     // --- Fase 2: Delegaciones y M2M ---
     const serviceAccounts = ref([])
     const delegations = ref([])
+    const cisoReports = ref([])
+    const systemProcesses = ref([])
 
     async function fetchServiceAccounts() {
         try {
@@ -216,6 +218,68 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
+    // --- CA-14: Kill-Session ---
+    async function revokeUserSession(userId) {
+        try {
+            await apiClient.post(`/admin/security/users/${userId}/revoke-session`)
+        } catch (error) {
+            console.error("Error revocando sesión de usuario", error)
+            throw error
+        }
+    }
+
+    // --- CA-15: Public Process Management ---
+    async function fetchSystemProcesses() {
+        try {
+            const response = await apiClient.get('/design/processes')
+            systemProcesses.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo procesos del sistema", error)
+        }
+    }
+
+    async function toggleProcessPublicStatus(processId, isPublic) {
+        try {
+            await apiClient.put(`/design/processes/${processId}/public`, { isPublic })
+            await fetchSystemProcesses()
+        } catch (error) {
+            console.error("Error cambiando estado público del proceso", error)
+            throw error
+        }
+    }
+
+    // --- CA-16: ISO 27001 Reporting ---
+    async function fetchCisoReports() {
+        try {
+            const response = await apiClient.get('/admin/security/reports')
+            cisoReports.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo reportes CISO", error)
+        }
+    }
+
+    async function generateCisoReport() {
+        try {
+            const response = await apiClient.get('/admin/security/reports/iso27001', {
+                responseType: 'blob'
+            })
+            
+            // Descarga automática del blob
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', `ibpms_iso27001_report_${new Date().getTime()}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            
+            await fetchCisoReports()
+        } catch (error) {
+            console.error("Error generando reporte CISO", error)
+            throw error
+        }
+    }
+
     return {
         roles,
         anomalies,
@@ -236,6 +300,13 @@ export const useRbacStore = defineStore('rbac', () => {
         createServiceAccount,
         fetchDelegations,
         createDelegation,
-        revokeDelegation
+        revokeDelegation,
+        revokeUserSession,
+        fetchSystemProcesses,
+        toggleProcessPublicStatus,
+        fetchCisoReports,
+        generateCisoReport,
+        cisoReports,
+        systemProcesses
     }
 })

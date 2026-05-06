@@ -1,17 +1,22 @@
-# Solicitud de Aprobación - Plan Frontend (US-051 CA-06 a CA-10)
+# Solicitud de Revisión: US-036 Identity Governance (Fase 2)
 
-**Para:** Arquitecto Líder
-**De:** Agente Frontend (DevDavid)
+He finalizado el **PLANNING** para la implementación de la Fase 2 de la historia de usuario **US-036**. A continuación, presento el resumen del plan técnico para su validación por parte del Arquitecto Líder.
 
-He completado el análisis y elaborado el plan de implementación detallado para cubrir los requerimientos funcionales CA-06, CA-07, CA-08, CA-09 y CA-10 asociados a la US-051.
+## Resumen del Plan
+1.  **CA-07: Soft-Delete Visual**: Implementación de sellos de inactividad y bloqueo de edición para usuarios con estado `INACTIVE`.
+2.  **CA-09: Delegación Autónoma**: Finalización de la pestaña de delegaciones con validación de rangos de fecha y selección de suplentes.
+3.  **CA-10: Cuentas de Servicio (M2M)**: Implementación de un flujo robusto de generación de API Keys mediante modales, garantizando la visualización única del secreto (Secret Key) y la asociación a roles específicos.
+4.  **Alineación Técnica**: 
+    *   Uso estricto de **TDD** con Vitest.
+    *   Mantenimiento de los estándares de **Clean Code** y **Zero-Trust UI**.
+    *   Migración de lógica local a `rbacStore.js` para persistencia y escalabilidad.
 
-**Resumen del Plan:**
-1. **CA-06 (Auto-Collapse Sidebar):** Se modificará `useMenuStore.ts` y `MainLayout.vue` para que evalúen los roles y oculten los grupos (acordeones) cuando no contengan elementos hijos autorizados.
-2. **CA-07 (Composición de Workdesk):** Confirmado y adaptado en `Workdesk.vue` vía la lógica dinámica de `<component :is="Comp">`.
-3. **CA-08 (Ocultar botones destructivos):** Se introducirá `hasWritePermission` en `authStore.ts` y se aplicará `v-if` a todos los botones que alteren estado (ej. "Revocar Todo", "Crear Nuevo Usuario", etc.) en `IdentityGovernance.vue`.
-4. **CA-09 (Interceptor Sudo-Mode):** Se modificará `apiClient.ts` para capturar asíncronamente las peticiones POST/DELETE mediante una promesa suspendida. Invoca el modal centralizado `SudoModal.vue` y, tras validar con éxito, retoma la transmisión de red agregando la cabecera `X-Sudo-Token`.
-5. **CA-10 (Telemetría de API Keys):** En `IdentityGovernance.vue`, la `Secret Key` aparecerá ofuscada inicialmente. Al pulsar "Mostrar", se dispara una llamada silenciosa al backend (`/forensics/iso-override`) como auditoría forense y, al resolver, remueve el ofuscamiento visual.
+## Detalles Técnicos
+- **Componente**: `IdentityGovernance.vue` (Refactorización de pestañas Delegación y API Keys).
+- **Store**: `rbacStore.js` (Nuevas acciones para M2M y Delegaciones).
+- **Validación**: Nueva suite de pruebas unitarias cubriendo casos de borde (fechas inválidas, inmutabilidad de secretos).
 
-El plan no requiere añadir librerías y respeta las normativas C4 y TDD documentadas.
+El plan detallado se encuentra en `implementation_plan.md`.
 
-Solicito su **Aprobación Formal** para pasar al estado `EXECUTION` y consolidar el código.
+---
+**Humano**, he dejado mi solicitud de revisión en `.agentic-sync/approval_request_frontend.md`. Por favor, ve al chat del Arquitecto Líder, entrégale el mensaje y regrésame su respuesta formal.

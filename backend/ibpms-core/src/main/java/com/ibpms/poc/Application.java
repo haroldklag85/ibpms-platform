@@ -12,8 +12,6 @@ import org.springframework.retry.annotation.EnableRetry;
 @EnableScheduling
 @EnableAsync
 @EnableRetry
-@EntityScan(basePackages = {"com.ibpms.poc", "com.ibpms.dmn"})
-@EnableJpaRepositories(basePackages = {"com.ibpms.poc", "com.ibpms.dmn"})
 public class Application {
 
     public static void main(String[] args) {

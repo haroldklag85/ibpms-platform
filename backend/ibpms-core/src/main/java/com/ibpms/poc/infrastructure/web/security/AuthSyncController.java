@@ -109,7 +109,7 @@ public class AuthSyncController {
             ));
         }
 
-        if (!user.getIsActive()) {
+        if (user.getStatus() != com.ibpms.poc.infrastructure.jpa.entity.security.UserStatus.ACTIVE) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                 "code", "ACCOUNT_DISABLED",
                 "message", "La cuenta existe pero se encuentra deshabilitada. Contacte al administrador."

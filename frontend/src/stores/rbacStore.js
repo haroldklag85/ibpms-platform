@@ -163,6 +163,59 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
+    // --- Fase 2: Delegaciones y M2M ---
+    const serviceAccounts = ref([])
+    const delegations = ref([])
+
+    async function fetchServiceAccounts() {
+        try {
+            const response = await apiClient.get('/admin/security/m2m')
+            serviceAccounts.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo cuentas de servicio", error)
+        }
+    }
+
+    async function createServiceAccount(payload) {
+        try {
+            const response = await apiClient.post('/admin/security/m2m', payload)
+            await fetchServiceAccounts()
+            return response.data // Debe incluir el secret_key generado solo esta vez
+        } catch (error) {
+            console.error("Error creando cuenta de servicio", error)
+            throw error
+        }
+    }
+
+    async function fetchDelegations() {
+        try {
+            const response = await apiClient.get('/admin/security/delegations')
+            delegations.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo delegaciones", error)
+        }
+    }
+
+    async function createDelegation(payload) {
+        try {
+            await apiClient.post('/admin/security/delegations', payload)
+            await fetchDelegations()
+        } catch (error) {
+            console.error("Error creando delegación", error)
+            throw error
+        }
+    }
+
+    async function revokeDelegation(id) {
+        try {
+            await apiClient.delete(`/admin/security/delegations/${id}`)
+            await fetchDelegations()
+        } catch (error) {
+            console.error("Error revocando delegación", error)
+            throw error
+        }
+    }
+
     return {
         roles,
         anomalies,
@@ -170,12 +223,19 @@ export const useRbacStore = defineStore('rbac', () => {
         isLoading,
         globalRoles,
         processRoles,
+        serviceAccounts,
+        delegations,
         fetchRoles,
         fetchAnomalies,
         resolveAnomaly,
         fetchEntraIdGroups,
         importRole,
         updateProcessPermission,
-        updateRole
+        updateRole,
+        fetchServiceAccounts,
+        createServiceAccount,
+        fetchDelegations,
+        createDelegation,
+        revokeDelegation
     }
 })

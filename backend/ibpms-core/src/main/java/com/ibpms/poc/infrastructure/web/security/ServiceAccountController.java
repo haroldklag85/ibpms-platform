@@ -53,7 +53,7 @@ public class ServiceAccountController {
         }
         String hashedKey = hexString.toString();
 
-        ServiceAccountEntity account = new ServiceAccountEntity(name, request.get("description"), hashedKey, role);
+        ServiceAccountEntity account = new ServiceAccountEntity(name, request.get("description"), hashedKey, role, null);
         serviceAccountRepository.save(account);
 
         Map<String, Object> response = new HashMap<>();

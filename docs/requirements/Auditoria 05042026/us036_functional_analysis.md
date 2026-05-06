@@ -84,62 +84,55 @@ Dotar a la plataforma de un **módulo centralizado de Identity Governance** que 
 
 ### 5. Lista de Brechas, GAPs o Ambigüedades Detectadas
 
-#### GAP-1: Ausencia de Modelo de Datos para la Matriz RBAC
+#### GAP-1: Ausencia de Modelo de Datos para la Matriz RBAC [GRADUADO AL SSOT - CA-19]
 La historia describe con precisión las reglas de negocio (herencia, segregación, delegación) pero **no especifica la estructura de tablas** que las soporta. No queda claro:
 - ¿Existe una tabla `ibpms_roles`, `ibpms_permissions`, `ibpms_role_permissions`, `ibpms_user_roles`?
 - ¿La herencia piramidal (CA-6) se resuelve con una columna `parent_role_id` (auto-referencia) o con una tabla de clausura transitiva?
 - ¿El Mass Assignment (CA-3) opera sobre una tabla pivote `ibpms_user_roles` con INSERT masivo o es una operación batch diferente?
 
-**Riesgo:** El desarrollador Backend tomará decisiones de diseño de esquema sin directriz, generando divergencia entre lo que el CISO espera y lo que se persiste.
+**Resolución:** Implementado en CA-19 mediante esquema relacional en PostgreSQL con herencia vía CTE y gestión por Liquibase.
 
-#### GAP-2: Row-Level Security — ¿Implementación a Nivel de BD o de Aplicación?
+#### GAP-2: Row-Level Security — Implementación [GRADUADO AL SSOT - CA-20]
 El CA-5 exige que María "SOLO visualice los folios asignados a ella" mediante un "filtro de base de datos a nivel de registro". Pero no aclara:
 - ¿Se usa Row-Level Security nativa de PostgreSQL (`CREATE POLICY`)? Esto requiere pasar el `user_id` al contexto de la conexión.
 - ¿O se implementa como un `WHERE assignee = :currentUserId` a nivel de query en el Repository de Spring Boot?
 
-La diferencia es arquitectónicamente significativa: RLS nativo es más seguro (imposible de bypassear accidentalmente), pero añade complejidad al pool de conexiones. El filtro a nivel de aplicación es más simple pero depende de que *todos* los queries pasen por el mismo interceptor.
+**Resolución:** Implementado en CA-20 mediante un Interceptor centralizado de aplicación (Spring AOP Aspect) que inyecta automáticamente el filtro en las consultas del Workdesk.
 
-#### GAP-3: Kill-Session (CA-14) — ¿Cómo se destruyen los JWT en caché?
+#### GAP-3: Kill-Session (CA-14) — JWT/Redis [GRADUADO AL SSOT - CA-21]
 El CA-14 exige "destruir activamente los JWT almacenados en caché/Redis". Pero:
 - Los JWT son **stateless**: no se destruyen, se invalidan. La invalidación requiere una **blacklist** consultable en cada request.
 - ¿La blacklist se almacena en Redis con TTL igual al tiempo de vida del JWT?
 - ¿El Gateway (API Gateway / Spring Security Filter) consulta Redis en cada request para verificar si el token está revocado?
-- ¿Qué pasa si Redis está caído al momento del Kill-Session? (Este escenario se aborda en la US-038 CA-01, pero la US-036 no lo referencia).
 
-**Nota:** La US-038 define una política de "Fail-Open Degradado" (Redis caído), pero la US-036 no hace cross-reference. Esto es un riesgo de **implementación aislada** si los developers de cada US no se coordinan.
+**Resolución:** Implementado en CA-21 mediante Blacklist en Redis coordinada con US-038.
 
-#### GAP-4: API Keys (CA-10) — Sin Política de Rotación ni Expiración
+#### GAP-4: API Keys (CA-10) — Rotación/Expiración [GRADUADO AL SSOT - CA-22]
 El CA-10 permite la creación de "Tokens Criptográficos" para Service Accounts M2M. Pero no define:
 - ¿Las API Keys tienen fecha de expiración?
 - ¿Existe un mecanismo de rotación (generar nueva key, deprecar la anterior)?
-- ¿Qué algoritmo de hashing se usa para almacenarlas (bcrypt, SHA-256)?
-- ¿Se audita el uso de API Keys (qué Service Account llamó qué endpoint a qué hora)?
+- ¿Qué algoritmo de hashing se usa para almacenarlas?
 
-**Riesgo:** Sin policy de expiración, una API Key comprometida opera indefinidamente.
+**Resolución:** Implementado en CA-22 con política de expiración obligatoria y almacenamiento hasheado (SHA-256).
 
-#### GAP-5: Delegación (CA-9) — ¿Qué pasa con las tareas in-flight del delegante?
+#### GAP-5: Delegación (CA-9) — Tareas in-flight [GRADUADO AL SSOT - CA-23]
 El CA-9 permite delegar poderes a un suplente con rango de fechas. Pero no especifica:
 - ¿El suplente hereda las tareas *ya asignadas* al delegante en la bandeja?
 - ¿O solo las tareas *nuevas* que lleguen durante el período de vigencia?
-- ¿Al expirar la delegación, las tareas no completadas por el suplente regresan al delegante automáticamente?
 
-**Riesgo:** Si el suplente ve la bandeja vacía porque solo hereda el rol pero no las tareas pre-existentes, el mecanismo es inútil operativamente.
+**Resolución:** Implementado en CA-23; el suplente hereda tareas existentes (in-flight) y nuevas, con retorno automático al finalizar la vigencia.
 
-#### GAP-6: Reporte ISO 27001 (CA-16) — ¿Periodicidad y Automatización?
+#### GAP-6: Reporte ISO 27001 (CA-16) — Alcance [GRADUADO AL SSOT - CA-24]
 El CA-16 permite "generar el reporte" bajo demanda. Pero un entorno ISO 27001 riguroso podría requerir:
-- ¿Se genera solo on-demand (botón en Pantalla 14) o tiene generación programada (cron)?
-- ¿Se envía automáticamente por email al CISO?
-- ¿Se versiona cada reporte generado para comparar estado de permisos entre periodos?
+- ¿Se genera solo on-demand o tiene generación programada?
+- ¿Se versiona cada reporte generado?
 
-Para V1, la generación on-demand puede ser suficiente, pero debe documentarse explícitamente como tal.
+**Resolución:** Implementado en CA-24 como reporte on-demand versionado, con integridad certificada vía Hash.
 
-#### GAP-7: Relación US-036 vs US-038 — Solapamiento Funcional
-La US-038 ("Asignación Multi-Rol y Sincronización EntraID") cubre temáticas muy similares a la US-036:
-- Ambas hablan de roles, EntraID, JWT y Kill-Session.
-- La US-038 amplía con Fail-Open Policy (Redis caído), TTL de 15 minutos y Sudo-Mode.
-- El CA-14 de US-036 (Kill-Session) depende del mecanismo de blacklist que la US-038 define con mayor detalle.
+#### GAP-7: Relación US-036 vs US-038 — Solapamiento [GRADUADO AL SSOT - CA-25]
+La US-038 cubre temáticas similares a la US-036.
 
-**Riesgo de implementación:** Si dos equipos distintos implementan US-036 y US-038 por separado, podrían crear dos módulos RBAC paralelos que colisionen. Se requiere una directriz de que **US-036 define la UI y reglas de negocio (Pantalla 14)** y **US-038 define la infraestructura de seguridad subyacente (JWT, Redis, Sync EntraID)**.
+**Resolución:** Implementado en CA-25 definiendo una separación clara: US-036 (UI/Negocio) vs US-038 (Infraestructura de Seguridad).
 
 ---
 

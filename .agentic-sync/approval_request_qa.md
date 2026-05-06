@@ -1,26 +1,37 @@
-# Solicitud de Revisión de Plan de Validación E2E (US-051)
+# Solicitud de Aprobación QA - US-036 Identity Governance (RBAC)
 
-**Para:** Arquitecto Líder
-**De:** Agente QA
+## 📌 Resumen de la Certificación
+Se ha ejecutado el protocolo `/pruebasUatVisiblesAutomatizadas` sobre los componentes de Identidad Gobernada, enfocándose en los vectores de riesgo identificados por la Arquitectura Líder.
+
+## 🧪 Resultados de Escenarios Críticos
+
+### Escenario A: Ciclo de Vida M2M (CA-10)
+- **Estado:** ✅ **PASS**
+- **Evidencia:** 
+    - Creación de Cuenta de Servicio exitosa.
+    - El Secreto se muestra únicamente tras validación de auditoría (`REVEAL_API_KEY`).
+    - El mecanismo de destrucción de vista elimina el secreto del DOM tras confirmación del usuario.
+- **Observación:** Se verificó que el Client ID persiste en la tabla pero el Secret es irrecuperable desde la UI tras el cierre.
+
+### Escenario B: Soft-Delete y Control de Acceso (CA-07)
+- **Estado:** ✅ **PASS**
+- **Evidencia:**
+    - La acción de desactivación ("Kill") marca al usuario con el sello `[Usuario Inactivo]`.
+    - El botón "Editar" se bloquea dinámicamente (`disabled`) para registros inactivos.
+    - Intento de login con credenciales de usuario inactivo retorna error de autenticación (Capa de Seguridad).
+
+### Escenario C: Validación de Delegaciones (CA-09)
+- **Estado:** ✅ **PASS**
+- **Evidencia:**
+    - El formulario de delegación bloquea el envío si la Fecha Fin es anterior a la Fecha Inicio.
+    - Se dispara Toast de error descriptivo: *"La fecha de inicio no puede ser posterior a la de fin"*.
+
+## 🛠️ Hallazgos Técnicos & Ajustes
+1.  **Refuerzo de DOM:** Se añadieron `data-testid` a los módulos de M2M y Delegación para estabilizar la automatización.
+2.  **Sincronización:** Se sincronizó el `rbacStore.js` con los endpoints reales del backend modular.
+
+## 🏁 Conclusión
+La US-036 se encuentra **CERTIFICADA PARA PRODUCCIÓN** en los criterios de gobernanza de identidad y RBAC.
+
+**Firma:** QA-Inspector (Antigravity Agent)
 **Fecha:** 2026-05-04
-**Referencia:** US-051 (CA-06 a CA-10)
-
-## Resumen del Plan Propuesto
-
-He finalizado la fase de planificación para la certificación QA de la **US-051: Matriz de Gobernanza Visual y Enrutamiento RBAC (Frontend)**. El plan de trabajo se centra en garantizar el cumplimiento de los estándares de seguridad "Zero-Trust" mediante pruebas empíricas E2E (Playwright).
-
-### Objetivos de Validación:
-1.  **Gobernanza del Sidebar (CA-06):** Validar que la topología del menú se autoproteja contra nodos vacíos y respete estrictamente los permisos del usuario.
-2.  **Composición Dinámica (CA-07):** Verificar la inyección de widgets de administración en el Workdesk solo para roles autorizados.
-3.  **Seguridad DOM (CA-08):** Garantizar que los elementos de escritura sean eliminados del DOM (no solo ocultos) para perfiles de solo lectura.
-4.  **Protocolo Sudo (CA-09):** Validar el interceptor de seguridad para acciones destructivas y su dependencia de la re-autenticación.
-5.  **Auditoría de Secretos (CA-10):** Verificar que la revelación de credenciales dispare de forma inmutable la telemetría de auditoría.
-
-### Estrategia Técnica:
-- **Modo Zero-Mock:** Se utilizará el backend real dockerizado para todas las validaciones de estado, interceptando únicamente endpoints de topología para simulaciones de casos de borde.
-- **Suite Playwright:** Implementación en `frontend/e2e/us-051-rbac-governance.spec.ts`.
-
-Quedo a la espera de su aprobación formal para proceder con la fase de codificación y ejecución de pruebas.
-
----
-*Agente QA*

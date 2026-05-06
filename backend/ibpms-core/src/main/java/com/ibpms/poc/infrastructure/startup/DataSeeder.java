@@ -9,9 +9,11 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Order(1)
+@Slf4j
 public class DataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
@@ -43,13 +45,13 @@ public class DataSeeder implements CommandLineRunner {
             
             rootUser.getRoles().add(rootRole);
             userRepository.save(rootUser);
-            System.out.println("====== ROOT ADMIN SEED COMPLETED ======");
+            log.info("====== ROOT ADMIN SEED COMPLETED ======");
         }
 
         // CA-08: Seed ROLE_USER_INTERNAL
         if (roleRepository.findByName("ROLE_USER_INTERNAL").isEmpty()) {
             roleRepository.save(new RoleEntity("ROLE_USER_INTERNAL", "Ciudadano Interno - SSO Default"));
-            System.out.println("====== ROLE_USER_INTERNAL SEED COMPLETED ======");
+            log.info("====== ROLE_USER_INTERNAL SEED COMPLETED ======");
         }
     }
 }

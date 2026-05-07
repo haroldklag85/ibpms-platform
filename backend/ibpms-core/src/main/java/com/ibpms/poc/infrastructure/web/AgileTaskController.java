@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,6 +29,7 @@ public class AgileTaskController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-03"})
     public ResponseEntity<TaskResponse> createTask(
         @PathVariable UUID projectId,
         @Valid @RequestBody CreateTaskRequest request,
@@ -40,6 +42,7 @@ public class AgileTaskController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-08"})
     public ResponseEntity<Page<TaskResponse>> listTasks(
         @PathVariable UUID projectId,
         @RequestParam(required = false, defaultValue = "false") boolean includeCompleted,
@@ -50,6 +53,7 @@ public class AgileTaskController {
 
     @GetMapping("/{taskId}")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-03"})
     public ResponseEntity<TaskResponse> getTaskDetail(
         @PathVariable UUID projectId,
         @PathVariable UUID taskId) {
@@ -58,6 +62,7 @@ public class AgileTaskController {
 
     @PutMapping("/{taskId}")
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-03"})
     public ResponseEntity<TaskResponse> updateTask(
         @PathVariable UUID projectId,
         @PathVariable UUID taskId,
@@ -72,6 +77,7 @@ public class AgileTaskController {
     // CA-4: Eliminar con auditoría forense (Soft delete -> Hard delete)
     @DeleteMapping("/{taskId}")
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-04"})
     public ResponseEntity<Void> deleteTask(
         @PathVariable UUID projectId,
         @PathVariable UUID taskId,
@@ -84,6 +90,7 @@ public class AgileTaskController {
     // CA-6: Reordenar por drag & drop
     @PatchMapping("/reorder")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-06"})
     public ResponseEntity<Void> reorderTasks(
         @PathVariable UUID projectId,
         @Valid @RequestBody ReorderRequest request) {
@@ -94,6 +101,7 @@ public class AgileTaskController {
     // CA-5 + CA-14: Asignación masiva interactiva
     @PatchMapping("/bulk-assign")
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-05", "CA-14"})
     public ResponseEntity<Void> bulkAssign(
         @PathVariable UUID projectId,
         @Valid @RequestBody BulkAssignRequest request) {

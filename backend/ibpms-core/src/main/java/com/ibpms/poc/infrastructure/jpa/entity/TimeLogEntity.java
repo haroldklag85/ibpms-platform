@@ -8,19 +8,22 @@ import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 @Entity
 @Table(name = "ibpms_time_logs")
+@Traceability(US = "US-008", CA = {"CA-09", "CA-11"})
 public class TimeLogEntity {
     @Id
     private UUID id;
 
-    @Column(name = "reference_id", nullable = false)
+    @Column(name = "reference_id", nullable = false, updatable = false)
     private UUID referenceId;
 
-    @Column(name = "reference_type", nullable = false)
+    @Column(name = "reference_type", nullable = false, updatable = false)
     private String referenceType;
 
-    @Column(name = "started_at", nullable = false)
+    @Column(name = "started_at", nullable = false, updatable = false)
     private ZonedDateTime startedAt;
 
     @Column(name = "stopped_at")
@@ -29,10 +32,10 @@ public class TimeLogEntity {
     @Column(name = "duration_minutes")
     private Integer durationMinutes;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id", nullable = false, updatable = false)
     private String userId;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private ZonedDateTime createdAt;
 
     // Getters and Setters

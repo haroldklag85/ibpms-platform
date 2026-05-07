@@ -1,3 +1,4 @@
+<!-- @Traceability(US="US-008", CA={"CA-10"}) -->
 <template>
   <div v-if="currentState !== 'TODO'" class="flex items-center gap-2 p-1.5 rounded text-xs font-semibold shadow-sm border" :class="containerClass">
     
@@ -24,17 +25,19 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue';
-import { useKanbanStore } from '@/stores/kanbanStore';
 
 const props = defineProps<{
   taskId: string;
   referenceType: string;
   currentState: string;
   slaDueDate?: string;
+  activeTimerId?: string | null;
 }>();
 
-const store = useKanbanStore();
-const activeTimerId = computed(() => store.activeTimers[props.taskId]);
+const emit = defineEmits<{
+  (e: 'start', taskId: string): void;
+  (e: 'stop', timerId: string): void;
+}>();
 
 const now = ref(new Date().getTime());
 let interval: any = null;
@@ -86,13 +89,13 @@ const borderClass = computed(() => {
   return 'border-red-200';
 });
 
-const handleStart = async () => {
-  await store.startTimer(props.taskId);
+const handleStart = () => {
+  emit('start', props.taskId);
 };
 
-const handleStop = async () => {
-  if (activeTimerId.value) {
-    await store.stopTimer(activeTimerId.value);
+const handleStop = () => {
+  if (props.activeTimerId) {
+    emit('stop', props.activeTimerId);
   }
 };
 </script>

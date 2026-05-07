@@ -1,0 +1,6 @@
+Line 24: | **US Completadas** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
+Line 213: | CA-16 | Invalidación Caché Redis Zod | ✅ | N/A | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ Ninguno | `FormSchemaChangedRabbitListener` consumer ✅; publicador US-003 pendiente (TODO documentado) |
+Line 347: ## US-003: IDE Web Low-Code para Formularios Inteligentes (iForm)
+Line 443: ### Resumen US-003
+Line 785: | **US Completadas (Back+Front)** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
+Line 810: | 🟡 P2 | QA al 0% en US completadas | US-003, US-005, US-038, US-043, US-048 | Sprint de QA dedicado | ❌ Pendiente |

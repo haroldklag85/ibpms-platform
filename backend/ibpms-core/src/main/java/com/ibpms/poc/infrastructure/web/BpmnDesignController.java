@@ -19,12 +19,14 @@ import com.ibpms.poc.infrastructure.web.annotation.SandboxOperation;
 import com.ibpms.poc.application.port.out.ExternalTaskTopicPort;
 import com.ibpms.poc.application.port.out.DataMappingPort;
 import com.ibpms.poc.domain.model.DataMapping;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 /**
  * REST Controller for BPMN Design operations (Integration Gaps Mock).
  */
 @RestController
 @RequestMapping("/api/v1/design/processes")
+@Traceability(US = "US-001", CA = {"CA-01"})
 public class BpmnDesignController {
 
     private final PreFlightAnalyzerService preFlightAnalyzerService;
@@ -272,11 +274,13 @@ public class BpmnDesignController {
     }
 
     @GetMapping("/{processDefinitionKey}/data-mappings")
+    @Traceability(US = "US-005", CA = {"CA-68"})
     public ResponseEntity<?> getDataMappings(@PathVariable("processDefinitionKey") String key) {
         return ResponseEntity.ok(dataMappingPort.findByProcessDefinitionKey(key));
     }
 
     @PostMapping("/{processDefinitionKey}/data-mappings")
+    @Traceability(US = "US-005", CA = {"CA-68"})
     public ResponseEntity<?> createDataMapping(@PathVariable("processDefinitionKey") String key,
                                                @RequestBody java.util.Map<String, String> payload) {
         DataMapping dataMapping = new DataMapping();

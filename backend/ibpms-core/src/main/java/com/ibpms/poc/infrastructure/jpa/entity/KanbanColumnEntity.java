@@ -7,8 +7,11 @@ import jakarta.persistence.Table;
 
 import java.util.UUID;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 @Entity
 @Table(name = "ibpms_kanban_columns")
+@Traceability(US = "US-008", CA = {"CA-08"})
 public class KanbanColumnEntity {
     @Id
     private UUID id;

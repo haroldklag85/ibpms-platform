@@ -40,6 +40,7 @@ public class GenericFormService {
         this.processDesignRepository = processDesignRepository;
     }
 
+    // @Traceability: US-039 - CA-2, CA-5
     @Transactional(readOnly = true)
     public GenericFormContextResponse getGenericFormContext(String taskId) {
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
@@ -83,6 +84,7 @@ public class GenericFormService {
         return new GenericFormContextResponse(schema, prefillData, allowedResults);
     }
 
+    // @Traceability: US-039 - CA-8
     @Transactional
     public void submitGenericForm(String taskId, GenericFormSubmitRequest request, String userId) {
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();

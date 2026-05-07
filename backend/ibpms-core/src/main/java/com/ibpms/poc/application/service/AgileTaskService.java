@@ -92,8 +92,14 @@ public class AgileTaskService {
     }
 
     @Transactional
+    @com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-008", CA = {"CA-02"})
     public AgileTask updateTask(UUID taskId, String title, String description, BigDecimal effort, String status, java.time.ZonedDateTime slaDeadline, java.util.Set<String> assigneeIds, java.util.Set<String> tags, String notes, String updatedBy) {
         AgileTask task = getTaskForUpdate(taskId);
+        
+        if ("DONE".equals(task.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CA-02 Violación de Inmutabilidad: Una tarea en estado DONE es estrictamente de solo lectura (Historial forense sellado).");
+        }
+        
         if (title != null) task.setTitle(title);
         if (description != null) task.setDescription(formFieldCleanserService.sanitizeHtml(description));
         if (notes != null) task.setNotes(formFieldCleanserService.sanitizeHtml(notes));
@@ -116,6 +122,10 @@ public class AgileTaskService {
     @Transactional
     public void deleteTask(UUID taskId, String deletedBy) {
         AgileTask task = getTaskForUpdate(taskId);
+        
+        if ("DONE".equals(task.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CA-02 Violación de Inmutabilidad: No se permite eliminar una tarea en estado DONE (Historial forense sellado).");
+        }
         
         // GAP 1: Auditoría inmutable antes de borrado (taskId, title, deletedBy, deletedAt implícito en entity)
         com.ibpms.poc.infrastructure.jpa.entity.TaskAuditLogEntity auditLog = 
@@ -151,6 +161,9 @@ public class AgileTaskService {
         for (UUID taskId : sortedTaskIds) {
             try {
                 AgileTask task = getTaskForUpdate(taskId);
+                if ("DONE".equals(task.getStatus())) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CA-02 Violación de Inmutabilidad: No se permite re-asignar una tarea en estado DONE.");
+                }
                 if (task.getAssigneeIds() == null) {
                     task.setAssigneeIds(new java.util.HashSet<>());
                 }
@@ -165,7 +178,8 @@ public class AgileTaskService {
     }
 
     /**
-     * US-002: Reclama una tarea y emite un evento WebSocket a la UI.
+     * @Traceability: US-002 - CA-1
+     * Reclama una tarea y emite un evento WebSocket a la UI.
      */
     @Transactional
     public void claimTask(UUID taskId, String claimedBy) {
@@ -192,7 +206,8 @@ public class AgileTaskService {
     }
 
     /**
-     * US-002 CA-28: claim-next con SKIP LOCKED. Reclama la siguiente tarea más urgente de forma atómica.
+     * @Traceability: US-002 - CA-23
+     * claim-next con SKIP LOCKED. Reclama la siguiente tarea más urgente de forma atómica.
      */
     @Transactional
     public AgileTask claimNextTask(String claimedBy) {
@@ -225,7 +240,8 @@ public class AgileTaskService {
     }
 
     /**
-     * US-002 CA-21: Rollback Optimistic UI. Libera la tarea SOLO si el asignado actual
+     * @Traceability: US-002 - CA-21
+     * Rollback Optimistic UI. Libera la tarea SOLO si el asignado actual
      * concuerda con el solicitante (el fallback timeout).
      */
     @Transactional
@@ -249,7 +265,8 @@ public class AgileTaskService {
     }
 
     /**
-     * US-002: Libera una tarea y emite un evento WebSocket a la UI.
+     * @Traceability: US-002 - CA-4
+     * Libera una tarea y emite un evento WebSocket a la UI.
      */
     @Transactional
     public void unclaimTask(UUID taskId, String unclaimedBy) {
@@ -270,7 +287,8 @@ public class AgileTaskService {
     }
 
     /**
-     * US-002 CA-8: Force Unclaim de un Supervisor
+     * @Traceability: US-002 - CA-8
+     * Force Unclaim de un Supervisor
      * Libera la tarea anulando las validaciones de ownership y notifica.
      */
     @Transactional
@@ -290,7 +308,8 @@ public class AgileTaskService {
     }
 
     /**
-     * GAP-004: bulk-claim
+     * @Traceability: US-002 - CA-2
+     * bulk-claim
      */
     @Transactional
     public java.util.Map<String, Object> bulkClaim(List<String> taskIds, String assignee) {

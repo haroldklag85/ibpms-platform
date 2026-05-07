@@ -10,17 +10,19 @@ Garantizar la trazabilidad del código, auditar el cumplimiento arquitectónico 
 ## ⚙️ FASE 1: Inicialización y Contexto Estricto
 1. **Reglas Base:** Leer y acatar obligatoriamente `.cursorrules` para definir lo permitido y prohibido.
 2. **Arquitectura:** Cargar contexto estructural leyendo exclusivamente el directorio `docs/architecture/`.
-3. **Fuente de la Verdad (SSOT):** Leer la US y el CA objetivo **únicamente** desde `docs/requirements/v1_user_stories_index.md`. Queda prohibido confiar en documentos de "Handoff" históricos de `.agentic-sync` para validar requerimientos.
+3. **Fuente de la Verdad (SSOT):** Leer la US y el CA objetivo **únicamente** desde `docs/requirements/v1_user_stories_index.md`. **REGLA TÉCNICA:** Al leer el índice de requerimientos y este mismo archivo workflow, debes usar obligatoriamente la herramienta `view_file` con el parámetro `IsSkillFile: true` para internalizar las instrucciones de forma neuronal. Está estrictamente prohibido usar `IsSkillFile: true` para leer código fuente.
 
 ## 🧭 FASE 2: Navegación Estructural (Top-Down)
-1. **Cero Búsqueda Semántica:** Queda estrictamente prohibido usar búsquedas por palabras clave para localizar lógica.
-2. **Rastreo Manual:** La navegación debe partir de las capas externas hacia las internas:
+1. **SECUENCIA DE ARRANQUE OBLIGATORIA (ANTI-ALUCINACIÓN):** Tu primerísimo llamado a una herramienta (Tool Call) al iniciar la auditoría **TIENE QUE SER** obligatoriamente `list_dir` apuntando a las carpetas raíz (`backend/ibpms-core/src/main/java/` o `frontend/src/`).
+2. **PENALIZACIÓN AUTOMÁTICA (HARD-FAIL):** Queda ESTRICTAMENTE PROHIBIDO utilizar herramientas como `grep_search`, búsquedas semánticas del IDE, o cualquier comando de búsqueda global. Si detectas que tú o algún sub-agente intentan usar una herramienta de búsqueda para encontrar el código, debes **ABORTAR LA EJECUCIÓN INMEDIATAMENTE** y registrar una "Violación Crítica de Protocolo" en el `task.md`.
+3. **NAVEGACIÓN ESTRUCTURAL PURA:** Tu única forma autorizada para encontrar código es usar `list_dir` y `view_file` (sin IsSkillFile). Debes abrir los directorios y leer los archivos manualmente de capas externas a internas. Tienes un **límite máximo de 10 archivos analizados por capa** para evitar desviaciones.
    - **Backend:** `Controller` → `Service/UseCase` → `Repository/Port` → `Entity/DTO`.
    - **Frontend:** `Router` → `View` → `Component` → `Store/Composable` → `API Client`.
 
 ## 🔍 FASE 3: Lectura Profunda y Validación
 1. **Evaluación de Completitud:** Leer el código para determinar si el CA está implementado totalmente, parcialmente o si está ausente.
-2. **Evaluación Arquitectónica:** Validar si el código cumple con las reglas de arquitectura.
+2. **Pausa de Comprensión (Micro-Summary):** Antes de pasar a leer el siguiente archivo, estás obligado a generar internamente un resumen detallado (mínimo 3 a 5 líneas) explicando la lógica profunda de la clase que acabas de leer y cómo se vincula arquitectónicamente al CA evaluado.
+3. **Evaluación Arquitectónica:** Validar si el código cumple con las reglas de arquitectura.
 3. **Regla de Solo-Lectura (No Programar):** 
    - Si falta código, **NO PROGRAMARLO**.
    - Si hay violaciones arquitectónicas, **NO REFACTORIZAR**. 
@@ -36,7 +38,10 @@ Garantizar la trazabilidad del código, auditar el cumplimiento arquitectónico 
 
 ## 📝 FASE 5: Ejecución y Entregables (Autonomía)
 1. **Autonomía Total:** El agente construirá su plan de acción interno y lo ejecutará **de principio a fin sin pedir permiso** para cada modificación.
-2. **Generación de Reporte:** Al finalizar, generar obligatoriamente un reporte Markdown llamado `Reporte_Auditoria_US_XXX.md` que contenga:
+2. **Protección de la Matriz de Cobertura:** Al actualizar `.agentic-sync/coverage_matrix.md`, queda ESTRICTAMENTE PROHIBIDO borrar o eliminar filas existentes. Solo estás autorizado a **añadir o actualizar** el estado de la fila correspondiente al Criterio de Aceptación (CA) que estás evaluando en esa iteración.
+3. **Generación de Reporte:** Al finalizar, generar obligatoriamente un reporte Markdown llamado `Reporte_Auditoria_US_XXX.md` que contenga:
+   - 🗺️ **Ruta Estructural Navegada:** Documentar explícitamente el árbol de carpetas exacto que se navegó usando `list_dir` para localizar las clases (evidencia de rastreo manual).
    - Archivos de producción y tests etiquetados con éxito.
    - 🚨 **Brechas de Implementación:** Código faltante o parcial, indicando la clase/ubicación donde se interrumpió el rastro.
    - ⚠️ **Violaciones de Arquitectura:** Código que cumple el CA pero rompe las reglas técnicas.
+4. **Actualización de Tareas (task.md):** Además de generar el reporte individual, el agente debe **escribir todos los hallazgos pendientes en el `task.md`** local de la conversación actual, para garantizar que el trabajo pendiente quede registrado en la pila de tareas.

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "ibpms_security_role_audit_log")
+@com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-036", CA = {"CA-17"})
 public class RoleAuditLogEntity {
 
     @Id

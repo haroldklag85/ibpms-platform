@@ -14,7 +14,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 @Service
+@Traceability(US = "US-008", CA = {"CA-09"})
 public class TimeTrackingService implements TrackTimeUseCase {
 
     private final TimeLogPort timeLogPort;
@@ -28,9 +31,11 @@ public class TimeTrackingService implements TrackTimeUseCase {
     @Override
     @Transactional
     public TimeLogEntry startTimer(UUID referenceId, String referenceType, String userId) {
-        if ("TASK_AGILE".equals(referenceType) || "TASK_BPMN".equals(referenceType) || "TASK_GANTT".equals(referenceType)) {
-            // Asumiremos TASK_AGILE usa KanbanTask para verificar estado en este sprint
-            // (Si usa otra, se podría extender)
+        if (!"TASK_AGILE".equals(referenceType) && !"TASK_BPMN".equals(referenceType) && !"TASK_GANTT".equals(referenceType)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "referenceType no válido. Solo se permiten TASK_BPMN, TASK_AGILE, TASK_GANTT");
+        }
+
+        if ("TASK_AGILE".equals(referenceType)) {
             KanbanTask task = kanbanTaskPort.findById(referenceId).orElse(null);
             if (task != null) {
                 if (task.getStatus() == KanbanState.TODO || task.getStatus() == KanbanState.DONE) {

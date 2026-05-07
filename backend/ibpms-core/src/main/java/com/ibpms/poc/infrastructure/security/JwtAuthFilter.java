@@ -63,7 +63,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith(BEARER_PREFIX)) {
             String token = header.substring(BEARER_PREFIX.length()).trim();
 
-            // CA-14 y CA-01: Exorcismo JWT con Tolerancia a Fallos (Fail-Open)
+            // @Traceability: US-036 - CA-14 y CA-01
+            // @Traceability: US-036 - CA-21 Infraestructura de Blacklist JWT para Kill-Session
             try {
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");
                 byte[] hash = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -80,6 +81,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 logger.error("[SRE RESILIENCE] Redis Fail-Open CATCH: Lista Negra inaccesible. Confiando en la criptografía del Token. Causa: " + e.getMessage());
             }
 
+            // @Traceability: US-036 - CA-11 Respeto ciego al Autenticador Perimetral (EntraID MFA). Se confía ciegamente en el token sin requerir un doble factor local.
             if (jwtTokenProvider.isValid(token)) {
                 String subject = jwtTokenProvider.getSubject(token);
                 

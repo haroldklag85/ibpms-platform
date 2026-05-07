@@ -11,6 +11,7 @@
         <p class="text-sm text-gray-500 mt-1">Configuración de Seguridad Dual: Roles manuales e infiriendo del BPMN.</p>
       </div>
       <div class="flex gap-3">
+        <!-- @Traceability: US-036 - CA-24 -->
         <button 
           @click="generateIsoReport" 
           :disabled="isGeneratingReport"
@@ -54,6 +55,7 @@ onMounted(() => {
 })
 
 const generateIsoReport = async () => {
+    // @Traceability(US = "US-036", CA = {"CA-24"})
     isGeneratingReport.value = true
     try {
         const response = await apiClient.post('/admin/reports/iso27001/generate', {}, {

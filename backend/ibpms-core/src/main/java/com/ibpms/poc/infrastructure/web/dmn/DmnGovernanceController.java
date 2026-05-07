@@ -30,6 +30,7 @@ public class DmnGovernanceController {
     @Operation(summary = "Sobreescribe Borrador DMN", description = "CA-06: Restringe la edición a ROLE_PROCESS_ARCHITECT")
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_PROCESS_ARCHITECT')")
+    @com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-007", CA = {"CA-32", "CA-06"})
     public ResponseEntity<?> overrideDmnDraft(@PathVariable String id, @RequestBody Map<String, Object> payload) {
         String invokerTenant = SecurityContextUtils.getTenantId();
         

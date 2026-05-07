@@ -6,11 +6,13 @@ import com.ibpms.poc.infrastructure.jpa.repository.InboundWebhookRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.OutboundConfigRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin/integrations")
+@Traceability(US = "US-023", CA = {"CA-01"})
 public class IntegrationAdminController {
 
     private final InboundWebhookRepository inboundRepository;

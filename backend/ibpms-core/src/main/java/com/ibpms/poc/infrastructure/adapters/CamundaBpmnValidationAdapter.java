@@ -106,6 +106,7 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
                 if (formKey == null || formKey.isBlank()) {
                     response.addError(ut.getId(), "UserTask carece de camunda:formKey obligatorio");
                 } else if ("sys_generic_form".equals(formKey)) {
+                    // @Traceability: US-039 - CA-1
                     for (Lane lane : lanes) {
                         if (lane.getFlowNodeRefs().contains(ut)) {
                             String laneNameUpper = lane.getName() != null ? lane.getName().toUpperCase() : "";

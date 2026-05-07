@@ -8,6 +8,7 @@ import com.ibpms.poc.infrastructure.jpa.repository.IdpGroupMappingRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.ProfileBpmnAssignmentRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/admin/security")
+@Traceability(US = "US-036", CA = {"CA-01"})
 public class RbacAdminController {
 
     private final IbpmsProfileRepository profileRepository;

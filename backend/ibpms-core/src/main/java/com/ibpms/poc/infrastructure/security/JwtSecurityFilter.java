@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
  * in-flight
  * para revocar tokens comprometidos de inmediato (Token Revocation List - TRL).
  */
+// @Traceability: US-036 - CA-25
 @Component
 @ConditionalOnBean(JwtTokenProvider.class)
 public class JwtSecurityFilter implements Filter {

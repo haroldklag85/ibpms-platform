@@ -116,7 +116,11 @@ public class KanbanTaskEntity {
         return assignee;
     }
 
+    @com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-008", CA = {"CA-04"})
     public void setAssignee(String assignee) {
+        if (assignee != null && (assignee.contains(",") || assignee.contains(";") || assignee.trim().split("\\s+").length > 1)) {
+            throw new IllegalArgumentException("CA-04 Violación Anti-Multitasking: Una tarea Kanban solo puede tener un único dueño (Single-Assignee).");
+        }
         this.assignee = assignee;
     }
 
@@ -146,6 +150,19 @@ public class KanbanTaskEntity {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @jakarta.persistence.PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        this.updatedAt = this.createdAt;
+    }
+
+    @jakarta.persistence.PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 
     public KanbanTaskEntity getParentTask() {

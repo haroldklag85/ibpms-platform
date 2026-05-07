@@ -26,12 +26,15 @@
     </div>
     
     <!-- SLA Timer -->
-    <div class="mt-2">
+    <div class="mt-2" style="pointer-events: auto;">
       <UniversalSlaTimer 
         :taskId="item.id" 
         :currentState="item.status" 
         :slaDueDate="item.slaDueDate" 
-        referenceType="TASK_AGILE" 
+        referenceType="TASK_AGILE"
+        :activeTimerId="activeTimerId"
+        @start="handleStartTimer"
+        @stop="handleStopTimer"
       />
     </div>
   </div>
@@ -40,7 +43,10 @@
 <script setup lang="ts">
 import { computed, PropType } from 'vue';
 import type { KanbanItem } from '@/stores/kanbanStore';
+import { useKanbanStore } from '@/stores/kanbanStore';
 import UniversalSlaTimer from '@/components/common/UniversalSlaTimer.vue';
+
+const store = useKanbanStore();
 
 const props = defineProps({
   item: {
@@ -58,6 +64,16 @@ const priorityLabel = computed(() => {
   if (!props.item.priority) return 'NORM';
   return props.item.priority > 50 ? 'URG' : 'NORM';
 });
+
+const activeTimerId = computed(() => store.activeTimers[props.item.id]);
+
+const handleStartTimer = async (taskId: string) => {
+  await store.startTimer(taskId);
+};
+
+const handleStopTimer = async (timerId: string) => {
+  await store.stopTimer(timerId);
+};
 </script>
 
 <style scoped>

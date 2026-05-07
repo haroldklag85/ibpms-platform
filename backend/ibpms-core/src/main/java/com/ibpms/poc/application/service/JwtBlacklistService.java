@@ -10,6 +10,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Servicio Dummy para Invalidación de Sesiones (Blacklisting).
  * Atiende a la US-036 bajo la condición de que la US-038 es dueña de la integración final con Redis.
  */
+// @Traceability: US-036 - CA-25
+// @Traceability: US-036 - CA-21 Infraestructura de Blacklist JWT para Kill-Session
+@com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-036", CA = {"CA-21", "CA-25"})
 @Service
 public class JwtBlacklistService {
 

@@ -1,4 +1,5 @@
 <template>
+  <!-- @Traceability: US-039 - CA-4, CA-7 -->
   <div class="relative bg-white p-6 rounded-lg shadow-sm border border-gray-200">
     <!-- FRONT-029-11: Detección Sesión Duplicada -->
     <div v-if="isLocked" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md text-blue-800 flex items-center gap-3">
@@ -61,7 +62,7 @@
       </button>
     </div>
     <div v-if="showInlineError" class="mt-2 text-right text-xs text-red-600 font-bold">
-      Error: El formulario es inválido. Verifique las observaciones (mín. 10 caracteres) y seleccione un resultado.
+      {{ validationErrorText }}
     </div>
     <div v-if="feedback.phase.value === 'error'" class="mt-2 text-right text-xs text-red-600 font-bold">
       {{ feedback.errorMessage }}
@@ -144,7 +145,20 @@ onUnmounted(() => {
 })
 
 
-const obsSchema = z.string().min(10).max(2000)
+// @Traceability: US-039 - CA-32 (Validación cruzada Zod) - REMEDIATED
+const formSchema = z.object({
+  result: z.string().min(1, "El resultado de gestión es obligatorio."),
+  observations: z.string().min(10, "Las observaciones deben tener al menos 10 caracteres.").max(2000, "Máximo 2000 caracteres.")
+}).superRefine((data, ctx) => {
+  if (data.result === 'RECHAZADO' && data.observations.length < 50) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Para rechazar la tarea se requiere una justificación detallada (mínimo 50 caracteres).',
+      path: ['observations']
+    });
+  }
+});
+
 const showInlineError = ref(false)
 const showSchemaConflictModal = ref(false)
 
@@ -168,8 +182,22 @@ const missingRequiredFields = computed(() => {
     return missing;
 })
 
+const validationResult = computed(() => {
+  return formSchema.safeParse({
+    result: store.result,
+    observations: store.observations
+  })
+})
+
 const isValid = computed(() => {
-  return obsSchema.safeParse(store.observations).success && store.result !== ''
+  return validationResult.value.success
+})
+
+const validationErrorText = computed(() => {
+  if (!validationResult.value.success && validationResult.value.error) {
+    return 'Error: ' + validationResult.value.error.errors[0].message;
+  }
+  return 'Error: El formulario es inválido.';
 })
 
 const onConfirmClick = async () => {

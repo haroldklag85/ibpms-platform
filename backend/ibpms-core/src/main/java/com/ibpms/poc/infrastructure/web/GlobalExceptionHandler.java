@@ -6,6 +6,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.net.URI;
 import java.util.List;
@@ -21,6 +22,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
  */
 @RestControllerAdvice
 @Slf4j
+@Traceability(US = "US-000", CA = {"CA-01", "CA-02", "CA-03", "CA-04", "CA-37"})
 public class GlobalExceptionHandler {
 
     /** 400 — Error de validación de campos (@Valid) */

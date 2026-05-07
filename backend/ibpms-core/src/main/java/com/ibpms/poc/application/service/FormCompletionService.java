@@ -67,16 +67,17 @@ public class FormCompletionService {
     }
 
     /**
-     * CA-01: Persistir evento inmutable
-     * CA-02: DTO minificado a Camunda (SOLO variables de gateway)
-     * CA-03 + CA-10: Rollback Saga 
-     * CA-04 + CA-13: Auto-Claim
+     * @Traceability: US-029
+     * CA-1: Persistir evento inmutable
+     * CA-2: DTO minificado a Camunda (SOLO variables de gateway)
+     * CA-4, CA-10: Rollback Saga 
+     * CA-13: Auto-Claim
      * CA-15: Generar eventReference (EVT-XXXXXX)
      * CA-16: Eliminar draft
      */
     @Transactional(noRollbackFor = SagaCompensationException.class)
     public FormSubmitResponse completeTask(String taskId, FormSubmitRequest request, String userId) {
-        // 1. Auto-Claim validará y asignará la tarea si es posible y necesaria (CA-04, CA-13)
+        // @Traceability: US-029 - CA-13: Auto-Claim validará y asignará la tarea si es posible y necesaria
         autoClaimService.tryAutoClaim(taskId, userId);
 
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
@@ -84,7 +85,7 @@ public class FormCompletionService {
             throw new IllegalArgumentException("Task not found: " + taskId);
         }
 
-        // CA-12 Cifrar campos PII en payload
+        // @Traceability: US-029 - CA-3: Cifrar campos PII en payload
         String jsonPayload;
         try {
             String rawJson = objectMapper.writeValueAsString(request.getPayload());
@@ -129,7 +130,7 @@ public class FormCompletionService {
             throw new RuntimeException("Invalid payload format", e);
         }
 
-        // 4. Bóveda Inmutable (CA-01)
+        // @Traceability: US-029 - CA-1: Bóveda Inmutable
         UUID eventId = UUID.randomUUID();
         FormEvent submittedEvent = FormEvent.builder()
                 .eventId(eventId)
@@ -166,11 +167,11 @@ public class FormCompletionService {
             throw new SagaCompensationException("SAGA_COMPENSATION_EXECUTED", e);
         }
 
-        // 7. Cleanup draft de forma atómica en la misma transacción (CA-16)
+        // @Traceability: US-029 - CA-16: Cleanup draft de forma atómica en la misma transacción
         taskDraftRepository.findByTaskIdAndUserId(taskId, userId)
                 .ifPresent(draft -> taskDraftRepository.deleteById(draft.getId()));
 
-        // 8. Event Reference
+        // @Traceability: US-029 - CA-15: Event Reference
         String eventReference = eventReferenceGenerator.generateFromId(eventId);
         
         return FormSubmitResponse.builder()

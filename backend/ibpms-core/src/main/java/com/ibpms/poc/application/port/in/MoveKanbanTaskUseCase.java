@@ -2,6 +2,8 @@ package com.ibpms.poc.application.port.in;
 
 import java.util.UUID;
 
+import com.ibpms.poc.domain.model.kanban.KanbanTask;
+
 public interface MoveKanbanTaskUseCase {
-    void moveTask(UUID taskId, String newState, String blockedReason, String userId);
+    KanbanTask moveTask(UUID taskId, String newState, String blockedReason, String userId);
 }

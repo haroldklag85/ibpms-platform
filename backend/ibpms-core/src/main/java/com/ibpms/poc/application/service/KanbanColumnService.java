@@ -10,7 +10,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 @Service
+@Traceability(US = "US-008", CA = {"CA-08"})
 public class KanbanColumnService {
 
     private final KanbanColumnPort kanbanColumnPort;

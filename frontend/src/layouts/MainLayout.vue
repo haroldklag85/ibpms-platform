@@ -57,6 +57,7 @@
             </div>
          </div>
          
+         <!-- @Traceability: US-036 - CA-26 -->
          <!-- Fallback Visual CA-26: Sin topología de menús -->
          <template v-else-if="menuStore.layout.length === 0">
             <div class="flex flex-col items-center justify-center p-4 mt-8 text-center fade-in" v-if="!isSidebarCollapsed">

@@ -8,12 +8,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/agile/portfolio")
+@Traceability(US = "US-030", CA = {"CA-07"})
 public class AgilePortfolioController {
 
     private final AgileTaskService taskService;

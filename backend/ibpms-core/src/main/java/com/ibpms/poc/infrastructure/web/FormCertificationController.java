@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 /**
  * REST Controller for QA Certification operations (US-028 CA-12/CA-13/CA-16).
@@ -21,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @RestController
 @RequestMapping("/api/v1/design/forms")
 @Tag(name = "Form Certification", description = "QA Certification endpoints for form definitions (US-028)")
+@Traceability(US = "US-028", CA = {"CA-11", "CA-12", "CA-13", "CA-16"})
 public class FormCertificationController {
 
     private final FormCertificationService certificationService;

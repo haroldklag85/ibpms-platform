@@ -7,6 +7,7 @@ import com.ibpms.poc.infrastructure.jpa.repository.KanbanTaskRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/kanban")
+@Traceability(US = "US-008", CA = {"CA-01"})
 public class KanbanController {
 
     private final KanbanBoardRepository boardRepository;

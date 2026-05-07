@@ -182,6 +182,8 @@ public class RoleService {
         return savedRole;
     }
 
+    // @Traceability: US-036 - CA-17 Traza Indeleble de Otorgamiento (Role Delta)
+    @com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-036", CA = {"CA-17"})
     private void logAuditEntry(RoleEntity role, String action) {
         try {
             String adminId = SecurityContextHolder.getContext().getAuthentication() != null ? 
@@ -196,6 +198,7 @@ public class RoleService {
     }
 
     // CA-16: Exportación de Matriz Segura CISO en nativo Crudo CSV
+    @com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-036", CA = {"CA-16"})
     public byte[] exportRoleMatrixToCsv() {
         List<RoleEntity> roles = roleRepository.findAll();
         StringBuilder csvBuilder = new StringBuilder();

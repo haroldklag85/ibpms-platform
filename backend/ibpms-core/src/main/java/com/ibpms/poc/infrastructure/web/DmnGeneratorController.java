@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.ibpms.poc.application.util.SecurityContextUtils;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 /**
  * Endpoint responsable de canalizar las peticiones de generación de tablas de decisión 
@@ -20,6 +21,7 @@ import com.ibpms.poc.application.util.SecurityContextUtils;
  */
 @RestController
 @RequestMapping("/api/v1/dmn")
+@Traceability(US = "US-007", CA = {"CA-19", "CA-20", "CA-23", "CA-24"})
 public class DmnGeneratorController {
 
     private final AiDmnGeneratorPort aiDmnGeneratorPort;

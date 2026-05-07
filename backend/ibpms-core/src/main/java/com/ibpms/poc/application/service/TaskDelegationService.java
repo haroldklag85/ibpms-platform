@@ -34,6 +34,7 @@ public class TaskDelegationService {
      * @param taskId          ID de la tarea
      * @return El assignee efectivo. Puede haber revertido On-the-fly.
      */
+    // @Traceability: US-036 - CA-23
     public String evaluateAndRevertTaskIfNeeded(String originalOwner, String currentAssignee, LocalDateTime expiryDate, String taskId) {
         // En una implementación real, esto también verificaría el estado de la BD.
         if (expiryDate != null && LocalDateTime.now().isAfter(expiryDate)) {

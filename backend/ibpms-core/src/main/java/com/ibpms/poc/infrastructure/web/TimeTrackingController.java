@@ -12,8 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 @RestController
 @RequestMapping("/api/v1/time-tracking")
+@Traceability(US = "US-008", CA = {"CA-03", "CA-09", "CA-11"})
 public class TimeTrackingController {
 
     private final TrackTimeUseCase trackTimeUseCase;

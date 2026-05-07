@@ -173,8 +173,8 @@
 | CA-11 | ClamAV Anti-Malware (fail-secure) | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | REST adapter 5s timeout; fallo → HTTP 503 + DLQ |
 | CA-12 | CRUD Admin Whitelist dominios | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | `AllowedDomainAdminController` stub `NOT_IMPLEMENTED` (fenced como US-045) |
 | CA-13 | Purga automática 30 días | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | `deleteByCreatedAtBefore` scheduler diario 2AM |
-| CA-14 | Experiencia Pre-visión y Rechazo (Triaje) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | UI Pantalla 16 y lógica de rechazo pendientes |
-| CA-15 | Canalización del Trámite Específico | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Instanciación selectiva de procesos pendiente en UI |
+| CA-14 | Experiencia Pre-visión y Rechazo (Triaje) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Backend OK (TriageTaskController.rejectTask). UI Pantalla 16 pendiente |
+| CA-15 | Canalización del Trámite Específico | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Backend OK (TriageTaskController.approveTask). Instanciación selectiva de procesos pendiente en UI |
 | CA-16 | Reloj SLA de Entrada en Cola | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Timer SLA de pre-triaje no evidenciado |
 | CA-17 | Sub-segundo ACK al emisor | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | 202 Accepted sincrónico |
 
@@ -248,21 +248,21 @@
 
 | CA | Título (corto) | Back | Front | Unitarios | Componente | Integración | E2E | UAT | Spec File | Notas |
 |----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- | ❌ Ninguno |-------|
-| CA-1 | Bloqueador Modal (columna Blocked) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Sin endpoint de transición con `blockReason`; sin modal en KanbanView |
-| CA-2 | Inmutabilidad DONE (solo lectura) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Sin validación de estado DONE en backend |
-| CA-3 | Timer independiente esfuerzo vs SLA | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Sin tabla `ibpms_time_logs`; sin `<UniversalSlaTimer>` |
-| CA-4 | Anti-Multitasking de Propiedad (1:1) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Sin validación de Single-Assignee en BD |
+| CA-1 | Bloqueador Modal (columna Blocked) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Endpoint PATCH con `blockReason` ✅; Modal y Store implementados ✅ |
+| CA-2 | Inmutabilidad DONE (solo lectura) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ AgileTaskService, KanbanTaskService | Validación de Inmutabilidad para POST/PUT (solo lectura histórica) inyectada |
+| CA-3 | Timer independiente esfuerzo vs SLA | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Auditado y Trazado. Trazabilidad inyectada en TimeTrackingController |
+| CA-4 | Anti-Multitasking de Propiedad (1:1) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ KanbanTaskEntity | Validación fail-fast estricta inyectada en el setter de la entidad (Single-Assignee) |
 | CA-5 | Prohibición CMMN — JPA puro | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | `AgileTaskEntity` persiste como JPA. Correcto por diseño |
 | CA-6 | State Machine PATCH /kanban/{tid}/state | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Endpoint PATCH no existe; `KanbanView.vue` mock hardcodeado con `setTimeout` |
-| CA-7 | Event-Driven híbrido → Camunda async | ❌ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Sin publisher de evento para transiciones Kanban |
-| CA-8 | Gobernanza columnas + límite 7 | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Sin endpoint de columnas; sin validación de rol |
-| CA-9 | Tabla Polimórfica Única `ibpms_time_logs` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Sin tabla ni canalización BAM |
-| CA-10 | Componente Universal `<UniversalSlaTimer>` | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Componente no implementado en Front |
-| CA-11 | Inmutabilidad de Costos (Append-Only) | ❌ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Faltan logs financieros inmutables |
-| CA-12 | Propagación Tiempo Real (Websockets) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Sin emisión de eventos websocket para el Drag & Drop |
+| CA-7 | Event-Driven híbrido → Camunda async | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ KanbanTaskService, KanbanToCamundaEventListener, CamundaToKanbanPublisherDelegate | Instanciación asíncrona de Camunda y retorno delegado a Kanban implementado (Salto Híbrido) |
+| CA-8 | Gobernanza columnas + límite 7 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ KanbanTaskApiController, KanbanColumnService, KanbanColumnEntity | Hard-limit de 7 columnas verificado; validación de roles Scrum_Master / Lider_Proyecto implementada y trazada |
+| CA-9 | Tabla Polimórfica Única `ibpms_time_logs` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ TimeLogEntity, TimeTrackingService | Canalización estricta polimórfica validada en backend con fail-fast 400 Bad Request |
+| CA-10 | Componente Universal `<UniversalSlaTimer>` | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | Componente implementado como Dumb Component y Trazado |
+| CA-11 | Inmutabilidad de Costos (Append-Only) | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Ninguno | JPA persistencia updatable=false + TimeTrackingController deniega PUT/DELETE |
+| CA-12 | Propagación Tiempo Real (Websockets) | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ KanbanTaskApiController, KanbanTaskService, KanbanTaskEntity, kanbanStore | Emisión WS implementada con payload completo y manejador de store sin polling. updatedAt auditado nativamente |
 
 ### Resumen US-008
-- **CAs Totales:** 12 | **CAs cumplidos:** ~1 (CA-5 por diseño arquitectónico) | **% Real:** ~8%
+- **CAs Totales:** 12 | **CAs auditados y trazados:** CA-01, CA-02, CA-03, CA-04, CA-07, CA-08, CA-09, CA-10, CA-11, CA-12 | **Estado Global:** En progreso (Scaffolding mitigado por módulos desacoplados)
 - **QA:** ❌ 0%
 - **Clasificación recomendada:** Mover de "Operativa" a "Scaffolding" en `future_backlog_v3.md`
 - **Impacto:** US-030 (Hub Ágil) depende del Kanban operativo — el tablero de US-030 en Pantalla 3 no funciona
@@ -293,7 +293,7 @@
 | CA-19 | Reconciliación Arq US-029/US-017 | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
 | CA-20 | Feedback Visual Durante Envío | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
 | CA-21 | Confirmación Visual Post-Submit | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
-| CA-22 | Navegación Multi-Etapa (Wizard) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
+| CA-22 | Navegación Multi-Etapa (Wizard) | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | Brecha Crítica: Componente UI ausente, solo existe useWizardValidation.ts huérfano |
 | CA-23 | Gobernanza de Delegación | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
 | CA-24 | Contrato API Merge Commit | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Tests cubiertos para recuperación 504 y Session Conflict |
 | CA-25 | Scroll Automático y Foco en Error | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | CAs de refinamiento pendientes |
@@ -349,7 +349,7 @@
 
 | CA | Título (corto) | Back | Front | Unitarios | Componente | Integración | E2E | UAT | Sprint | Notas / Handoff |
 |----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- |--------|-----------------|
-| CA-1 | Seleccionar Patrón de Formulario | ⏳ | ⏳ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Sin handoff formal (pre-protocolo) |
+| CA-1 | Seleccionar Patrón de Formulario | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Auditado y Trazado. Trazabilidad inyectada |
 | CA-2 | Análisis Bidireccional de Código en Tiempo Real | ⏳ | ⏳ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Sin handoff formal (pre-protocolo) |
 | CA-3 | Iconos de Ayuda en Pestañas de Código | ⏳ | ⏳ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Sin handoff formal (pre-protocolo) |
 | CA-4 | Sandboxing Estricto contra XSS (AST Evaluator) | ⏳ | ⏳ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Sin handoff formal (pre-protocolo) |
@@ -496,18 +496,18 @@
 |----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- |--------| ❌ Ninguno |-------|
 | CA-1 | Separación de Responsabilidades y Event Sourcing (CQRS) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `FormCompletionService.completeTask()` + `POST /workbox/tasks/{id}/complete` |
 | CA-2 | Exclusión Topológica Estratégica de Camunda Engine | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | Validación existe; campo-a-campo pendiente |
-| CA-3 | Consistencia Transaccional Cruda (ACID Fallback over Sagas) | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `FormBffCoreService.generateMegaDtoFormContext()` funcional; prefill parcialmente mock |
+| CA-3 | Consistencia Transaccional Cruda (ACID Fallback over Sagas) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `@ExceptionHandler(SagaCompensationException.class)` en FormCompletionController |
 | CA-4 | Auto-Claim Controlado para Tareas de Grupo No Asignadas | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-5 | Trazabilidad Activa de Rechazos Históricos en BFF | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | 🔄 Remediación pendiente |
 | CA-6 | Definición del Esquema del Event Store | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `PUT /draft` + `PiiEncryptionService.encrypt()` activos |
-| CA-7 | Endpoint de Lectura y Limpieza de Borradores del Servidor | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | 🔄 Remediación pendiente |
+| CA-7 | Endpoint de Lectura y Limpieza de Borradores del Servidor | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | Endpoints implementados en `TaskDraftController.java` |
 | CA-8 | Referencia Cruzada con US-029 y Política de Propiedad | ✅ | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `idempotencyKey` UNIQUE constraint en `form_event_store` |
 | CA-9 | Exclusión de Borradores del Event Store | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-10 | Rollback Compensatorio Inmutable con Retry y Timeout | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-11 | Estructura Obligatoria del Registro de Rechazo | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-12 | Cifrado At-Rest de Datos PII en el Event Store | ✅ | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `FormEvent` POJO → `FormEventEntity` JPA → `formEventRepository.save()` |
 | CA-13 | Validación de Pertenencia al Grupo en Auto-Claim | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | DTO minificado `{formApproved, form_storage_id}` enviado a Camunda |
-| CA-14 | Rate-Limiting en Endpoints de Borradores | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `FORM_SUBMIT_ROLLED_BACK` event + `SagaCompensationException` + `CamundaCompletionAdapter` retry 3x |
+| CA-14 | Rate-Limiting en Endpoints de Borradores | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `draftRateLimiterBucket` integrado en `TaskDraftController` |
 | CA-15 | Referencia de Evento Visible para el Operario | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `AutoClaimService.tryAutoClaim()` integrado |
 | CA-16 | Eliminación de Borrador como Parte del Flujo de Submit | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S5.1 | ❌ Ninguno | `RejectionLogService.getRejectionHistory()` integrado en BFF |
 | CA-17 | SLA de Latencia Máxima para el Endpoint /complete | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
@@ -643,26 +643,27 @@
 | CA-8 | Aprovisionamiento de Transeúntes (Ciudadano Interno) | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | JwtAuthFilter JIT Provisioning + ROLE_CIUDADANO_INTERNO auto-assign |
 | CA-9 | Módulo de Delegación Autónoma Temporal | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-3 | RbacDelegationLog.spec.ts | Back completo. Front: formulario+validación. Tests unitarios rehabilitados (6/6). Faltan tests de Integración y E2E. |
 | CA-10 | Creación de Robots de Integración (API Keys / Service Accounts) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ServiceAccountManager SHA-256 + ApiKeyAuthFilter M2M + ServiceAccountsTable.vue |
-| CA-11 | Respeto ciego al Autenticador Perimetral (EntraID MFA) | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | SecurityAnomalyListener @Async REQUIRES_NEW, falta detección MFA |
+| CA-11 | Respeto ciego al Autenticador Perimetral (EntraID MFA) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ✅ Validado. No hay MFA en UI (Login.vue). JwtAuthFilter confía en la firma del token sin segunda validación. Falso positivo corregido. |
 | CA-12 | Exclusión de Ocultamiento de Campos (Scope Limit) | N/A | N/A | N/A | N/A | N/A | N/A | N/A | — | N/A | Fuera de alcance — pertenece al Form Builder |
 | CA-13 | Desacoplamiento de Roles Estáticos vs Dinámicos (BPMN Lanes) | N/A | N/A | N/A | N/A | N/A | N/A | N/A | — | N/A | Fuera de alcance — resolución interna Camunda |
 | CA-14 | El Botón Táctico de Exorcismo (Kill-Session) | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ | ❌ | S-3 | JwtSecurityFilterTest.java | Back: JwtAuthFilter SHA-256 blacklist. Test opera sobre filtro LEGACY |
 | CA-15 | Bypass Anónimo de Procesos (URLs Públicas) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | SecurityConfig.java:67 .permitAll() + JwtSecurityFilter public bypass |
-| CA-16 | Informes Densos de Fiscalización (Auditoría CISO) | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | exportRoleMatrixToCsv() + SecurityAnomalyTable.vue (pendiente verificar descarga) |
-| CA-17 | Traza Indeleble de Otorgamiento | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | logAuditEntry() delta JSON + SecurityAuditLog.vue (posible esqueleto) |
+| CA-16 | Informes Densos de Fiscalización (Auditoría CISO) | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | DEUDA: Genera CSV on-the-fly pero falta persistir en `ibpms_audit_reports` y testear. |
+| CA-17 | Traza Indeleble de Otorgamiento | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | DEUDA: Falla arquitectónica parcial. `UserService.updateUser` no audita otorgamientos. Frontend usa mocks duros. |
 | CA-18 | Omisión Estricta de Segregación de Funciones Automática (SoD) | N/A | N/A | N/A | N/A | N/A | N/A | N/A | — | N/A | Diferido a V2 por diseño |
 | CA-19 | Modelo de Datos Relacional para la Matriz RBAC | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | 14 entidades JPA + 12 repositorios Spring Data completos |
 | CA-20 | Estrategia de Row-Level Security para Privacidad de Colas | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | RowLevelSecurityAspect AOP + Hibernate assigneeSecurityFilter |
 | CA-20b | Superposición Inclusiva Multirrol (Unión Matemática) | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | DataSegregationService OR query existe, falta integración global |
-| CA-21 | Infraestructura de Blacklist JWT para Kill-Session | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | JwtBlacklistService usa HashMap dummy + JwtAuthFilter usa JPA real = duplicación |
+| CA-21 | Infraestructura de Blacklist JWT para Kill-Session | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | DEUDA ARQ: `JwtAuthFilter` consulta JPA síncrono violando 5ms. `JwtBlacklistService` usa HashMap dummy. |
 | CA-22 | Política de Seguridad para API Keys de Service Accounts | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ServiceAccountManager SHA-256 + ApiKeyAuthFilter + ServiceAccountsTable.vue modal |
-| CA-23 | Comportamiento de Delegación sobre Tareas In-Flight | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ⚠️ revertAssignee() COMENTADO en TaskDelegationService L44 |
-| CA-24 | Alcance Explícito del Reporte ISO 27001 en V1 | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | exportRoleMatrixToCsv() descarga bajo demanda (V1) |
-| CA-25 | Directriz de Coordinación US-036 vs US-038 | ⚠️ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ⚠️ DEUDA: coexisten JwtAuthFilter + JwtSecurityFilter (duplicación) |
-| CA-26 | Experiencia de Caída Segura (UX Fallback) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-27 | Inmutabilidad de Roles Nativos del Sistema | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-28 | Granularidad Macro de la Topología Visual | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-29 | Diseño Limpio del Modal de Roles (Tablas/Tabs) | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | RbacTabs.vue existe con 5 tabs funcionales, falta pulido |
+| CA-23 | Comportamiento de Delegación sobre Tareas In-Flight | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ⚠️ revertAssignee() COMENTADO, falta inyectar Repository y Audit Log en TaskDelegationService |
+| CA-24 | Alcance Explícito del Reporte ISO 27001 en V1 | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ❌ DEUDA: Falla Integración (POST vs GET 405). Backend no calcula SHA-256 ni guarda en ibpms_audit_reports (entidad no existe). |
+| CA-25 | Directriz de Coordinación US-036 vs US-038 | ⚠️ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ⚠️ VIOLACIÓN ARQ: JwtBlacklistService y JwtSecurityFilter duplican la seguridad de US-038 (JwtAuthFilter) |
+| CA-26 | Experiencia de Caída Segura (UX Fallback) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | MainLayout.vue fallback sidebar message + Portal.vue routing |
+| CA-27 | Inmutabilidad de Roles Nativos del Sistema | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | ❌ DEUDA: Falta modal de edición de permisos de menú (checkboxes) en GlobalRolesTable.vue |
+| CA-28 | Granularidad Macro de la Topología Visual | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | ❌ DEUDA: Faltan controles UI para los 7 Módulos Macro |
+| CA-29 | Diseño Limpio del Modal de Roles (Tablas/Tabs) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | ❌ FALSO POSITIVO: Modal en GlobalRolesTable.vue no tiene Tabs. RbacTabs.vue es otra pantalla. |
+| CA-30 | Superposición Inclusiva Multirrol (Unión Matemática) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | ❌ DEUDA: Faltan entidades y lógica backend para realizar unión de menús multirrol. |
 | CA-31 | Arquitectura Endpoint Dinámico (Anti-JWT Bloat) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 | CA-32 | Caché Híbrida y Auto-Curación Zero-Trust | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
 
@@ -671,7 +672,7 @@
 - **Back:** ✅ 13/29 + ⚠️ 7/29 + ❌ 9/29 = **69% con cobertura parcial**
 - **Front:** ✅ 5/29 + ⚠️ 2/29 + ❌ 22/29 = **24% con cobertura parcial**
 - **QA Unitarios:** ✅ 2/29 (CA-2, CA-3) + ⚠️ 2/29 (CA-9 skip, CA-14 legacy) = **14%**
-- **Hallazgos Críticos:** CA-7 DELETE físico, CA-23 código comentado, CA-25 filtros duplicados, CA-9 tests .skip
+- **Hallazgos Críticos:** CA-7 DELETE físico, CA-23 código comentado, CA-25 filtros duplicados, CA-9 tests .skip. CA-01 y CA-02 auditados (ok y trazables, faltan tests integrales/E2E).
 
 ---
 
@@ -709,7 +710,7 @@
 | CA-6 | Detección y Contención SoD (Juez y Parte) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: BpmTaskService:155-160 + SecurityAnomalyListener. Front: SecurityAnomalyTable.vue 207 líneas |
 | CA-7 | Proxy Temporal de Autoridad y Exorcismo de Tareas | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: TaskRescueProducer + JwtAuthFilter:111-120 delegaciones. Front: IdentityGovernance.vue:174-222 |
 | CA-8 | El Exorcismo de Tareas por Despido | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: TaskRescueConsumer:28-53 UNCLAIM_ALL. Front: reacciona WS pero **falta botón admin trigger** |
-| CA-9 | Trazabilidad Quirúrgica (Distributed Tracing V2 Ready) | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: CorrelationIdFilter.java completo. Front: **Axios no propaga X-Correlation-ID** |
+| CA-9 | Trazabilidad Quirúrgica (Distributed Tracing V2 Ready) | ⚠️ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | DEUDA Back: Faltan columnas correlation_id y active_roles_json en SystemAuditLogEntity. Front: X-Correlation-ID mitigado en Axios. |
 | CA-10 | Consolidación Transversal e Insignia de Procedencia | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: useWorkdeskStore DTO tiene candidateGroup. Front: sin badge visual de procedencia |
 | CA-11 | Indicador Tipográfico de Dominio en Cabecera | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Front: MainLayout.vue:349-356 topRolesTipText computed |
 | CA-12 | Tablero de Resolución de Anomalías de Seguridad | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | us038-multi-rol-entraid.spec.ts (skip) | Back: Entity+Repo+Listener. Front: SecurityAnomalyTable.vue + IdentityGovernance Tab Anomalías |
@@ -728,18 +729,17 @@
 **Épica:** 2 — IDE Formularios | **Estado:** ✅ COMPLETADA
 
 | CA | Título (corto) | Back | Front | Unitarios | Componente | Integración | E2E | UAT | Sprint | Spec File | Notas |
-|----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- |--------| ❌ Ninguno |-------|
-| CA-1 | Inyección Explícita (Anti-Bypass) y Restricción VIP (Pre-Flight) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-2 | Prevención de Context Bleeding (Filtro Anti-Basura BFF) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-3 | Mutación Camaleónica de Interfaz y Botón de Pánico (Error Event) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
+|----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- |--------| ---------- |-------|
+| CA-1 | Inyección Explícita (Anti-Bypass) y Restricción VIP (Pre-Flight) | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S-6 | ❌ Ninguno | Auditado: CamundaBpmnValidationAdapter |
+| CA-2 | Prevención de Context Bleeding (Filtro Anti-Basura BFF) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-6 | ❌ Ninguno | Auditado: GenericFormService, GenericFormController, MetadataGrid.vue |
+| CA-3 | Mutación Camaleónica de Interfaz y Botón de Pánico (Error Event) | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-6 | ❌ Ninguno | Auditado: PanicButtonBar.vue |
 | CA-4 | Definición del Cuerpo Editable del Formulario Genérico | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | S-72 | ❌ Ninguno | Hardening OBS-1, OBS-2 Frontend OK. QA Gatekeeper Red Stage Activo |
 | CA-5 | Configuración de Whitelist Regex por Proceso | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | S-72 | ❌ Ninguno | Hardening OBS-1, OBS-2 Frontend OK. QA Gatekeeper Red Stage Activo |
 | CA-6 | Catálogo Configurable de Roles VIP para Bloqueo Pre-Flight | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | S-72 | ❌ Ninguno | Hardening OBS-1, OBS-2 Frontend OK. QA Gatekeeper Red Stage Activo |
 | CA-7 | Persistencia y Auto-Guardado del Formulario Genérico | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | S-72 | ❌ Ninguno | Hardening OBS-1, OBS-2 Frontend OK. QA Gatekeeper Red Stage Activo |
 | CA-8 | Mapeo Explícito de Botones de Pánico a Eventos BPMN | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | S-72 | ❌ Ninguno | Hardening OBS-1, OBS-2 Frontend OK. QA Gatekeeper Red Stage Activo |
-
 ### Resumen US-039
-- **Total CAs auditados:** 8 | **Back:** ✅ 5/8 (~62%) | **Front:** ✅ 5/8 (~62%) | **QA:** ✅ 5/8 (~62%)
+- **Total CAs auditados:** 8 | **Back:** ✅ 7/8 | **Front:** ✅ 7/8 | **QA:** ✅ 5/8
 
 ---
 
@@ -823,3 +823,5 @@
 > 3. **🟠 P1 CONECTIVIDAD:** Conectar `FormBffCoreService.generateMegaDtoFormContext()` a datos reales de BD.
 > 4. **🟠 P1 KANBAN:** Implementar state machine real US-008 + endpoint PATCH.
 > 5. Re-ejecutar suite E2E completa para alcanzar 7/7 PASS (100%).
+
+---

@@ -51,6 +51,8 @@ Al terminar todos los CAs de una `US-XXX`, debes ejecutar dos acciones de guarda
    - [ ] CA-01: [Descripción de lo que falta en el back]
    
    **Frontend:**
+   - [ ] CA-02: [Descripción de lo que falta en la UI o componentes Vue]
+
    **Infra/DB:**
    - [ ] CA-03: [Descripción de tareas de bases de datos, migraciones Liquibase o CI/CD]
    ```

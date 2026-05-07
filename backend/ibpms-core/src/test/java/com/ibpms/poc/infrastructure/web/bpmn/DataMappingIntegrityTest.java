@@ -17,6 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
+@Traceability(US = "US-005", CA = {"CA-68"})
 public class DataMappingIntegrityTest extends AbstractIntegrationTest {
 
     @LocalServerPort

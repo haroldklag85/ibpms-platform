@@ -25,6 +25,9 @@ export interface KanbanColumn {
     items: KanbanItem[];
 }
 
+/**
+ * @Traceability(US = "US-008", CA = {"CA-11", "CA-12"})
+ */
 export const useKanbanStore = defineStore('kanban', {
     state: () => ({
         boardId: '' as string,
@@ -161,11 +164,21 @@ export const useKanbanStore = defineStore('kanban', {
                 this.stompClient?.subscribe(`/topic/kanban/${this.boardId}/tasks`, (message) => {
                     if (message.body) {
                         try {
-                            const event = JSON.parse(message.body);
-                            if(event.action === 'TASK_STATE_CHANGED') {
-                                this.fetchBoard(this.boardId);
+                            const eventTask = JSON.parse(message.body);
+                            if (eventTask && eventTask.id && eventTask.status) {
+                                // Eliminar de la columna vieja si existe
+                                for(const col of this.columns) {
+                                    col.items = col.items.filter(i => i.id !== eventTask.id);
+                                }
+                                // Añadir a la nueva columna
+                                const newCol = this.columns.find(c => c.name === eventTask.status);
+                                if (newCol) {
+                                    newCol.items.push(eventTask);
+                                }
                             }
-                        } catch(e){}
+                        } catch(e) {
+                            console.error("Error procesando evento WS Kanban", e);
+                        }
                     }
                 });
             };

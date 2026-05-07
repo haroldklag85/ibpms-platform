@@ -1,3 +1,4 @@
+<!-- @Traceability: US-039 - CA-2 -->
 <template>
   <div class="mb-6">
     <h3 class="text-sm font-semibold text-gray-800 mb-3 border-b pb-1">Metadatos de la Tarea</h3>

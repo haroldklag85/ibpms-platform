@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
@@ -19,12 +20,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Endpoint para gestión inmutable de versiones JSONB de Formularios (US-003, CA-87).
+ * Endpoint para gestión inmutable de versiones JSONB de Formularios.
  * Integrado con FormCertificationService para CA-12 (revocación automática al mutar esquema).
  */
 @RestController
 @RequestMapping("/api/v1/design/form-definitions")
 @Tag(name = "Form Definitions", description = "Endpoints para la gestión de versiones inmutables del esquema JSONB de formularios")
+@Traceability(US = "US-003", CA = {"CA-87"})
 public class FormDefinitionController {
 
     private final FormDefinitionPort formDefinitionPort;

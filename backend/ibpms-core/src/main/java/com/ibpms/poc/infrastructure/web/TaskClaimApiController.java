@@ -12,12 +12,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
 @CrossOrigin(origins = "*")
+@Traceability(US = "US-004", CA = {"CA-01"})
 public class TaskClaimApiController {
 
     private final AgileTaskService taskService;

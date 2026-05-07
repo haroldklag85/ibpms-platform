@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/v1/auth")
+@Traceability(US = "US-025", CA = {"CA-09"})
 public class AuthBffController {
 
     private final RoleHierarchyService roleHierarchyService;

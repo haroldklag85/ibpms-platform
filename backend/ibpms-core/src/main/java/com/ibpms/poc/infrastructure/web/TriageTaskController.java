@@ -8,12 +8,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/intake/triage/tasks")
+@Traceability(US = "US-004", CA = {"CA-08", "CA-09", "CA-14", "CA-15"})
 public class TriageTaskController {
 
     private final TriageTaskService triageTaskService;

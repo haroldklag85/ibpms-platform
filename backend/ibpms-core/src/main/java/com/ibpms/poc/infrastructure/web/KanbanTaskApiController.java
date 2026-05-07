@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/kanban-tasks")
+@Traceability(US = "US-008", CA = {"CA-01", "CA-06", "CA-08", "CA-12"})
 public class KanbanTaskApiController {
 
     private final MoveKanbanTaskUseCase moveKanbanTaskUseCase;
@@ -34,13 +36,13 @@ public class KanbanTaskApiController {
 
     @PatchMapping("/tasks/{taskId}/state")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
-    public ResponseEntity<Void> updateTaskState(@PathVariable UUID taskId, @RequestBody Map<String, String> body, Authentication authentication) {
+    public ResponseEntity<KanbanTask> updateTaskState(@PathVariable UUID taskId, @RequestBody Map<String, String> body, Authentication authentication) {
         String newState = body.get("newState");
         String blockedReason = body.get("blockedReason");
         String userId = authentication.getName();
 
-        moveKanbanTaskUseCase.moveTask(taskId, newState, blockedReason, userId);
-        return ResponseEntity.ok().build();
+        KanbanTask updatedTask = moveKanbanTaskUseCase.moveTask(taskId, newState, blockedReason, userId);
+        return ResponseEntity.ok(updatedTask);
     }
 
     @GetMapping("/boards/{boardId}/tasks")
@@ -54,7 +56,7 @@ public class KanbanTaskApiController {
     }
 
     @PostMapping("/boards/{boardId}/columns")
-    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SCRUM_MASTER', 'LIDER_PROYECTO')")
     public ResponseEntity<KanbanColumn> createColumn(@PathVariable UUID boardId, @RequestBody Map<String, String> body) {
         String name = body.get("name");
         KanbanColumn column = kanbanColumnService.createColumn(boardId, name);
@@ -62,7 +64,7 @@ public class KanbanTaskApiController {
     }
 
     @DeleteMapping("/boards/{boardId}/columns/{colId}")
-    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SCRUM_MASTER', 'LIDER_PROYECTO')")
     public ResponseEntity<Void> deleteColumn(@PathVariable UUID boardId, @PathVariable UUID colId) {
         kanbanColumnService.deleteColumn(colId);
         return ResponseEntity.noContent().build();

@@ -20,6 +20,10 @@ apiClient.interceptors.request.use(
         if (authStore.token && config.headers) {
             config.headers.Authorization = `Bearer ${authStore.token}`;
         }
+        // @Traceability: US-038 - CA-09 (Trazabilidad Quirúrgica)
+        if (config.headers && !config.headers['X-Correlation-ID']) {
+            config.headers['X-Correlation-ID'] = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
         return config;
     },
     (error) => {

@@ -13,11 +13,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.UUID;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 /**
  * CA-09: Trazabilidad Extrema (Correlation-ID / Claims Snapshot).
  * Inyecta un UUID en cada transacción HTTP para SRE Tracing.
  */
 @Component
+@Traceability(US = "US-038", CA = {"CA-09"})
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorrelationIdFilter extends OncePerRequestFilter {
 

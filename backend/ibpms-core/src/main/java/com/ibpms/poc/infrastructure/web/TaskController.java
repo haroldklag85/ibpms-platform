@@ -16,6 +16,7 @@ import org.camunda.bpm.engine.task.Task;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import com.ibpms.poc.application.dto.TaskCompleteRequest;
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/tasks")
+@Traceability(US = "US-004", CA = {"CA-12", "CA-31", "CA-47", "CA-50", "CA-72"})
 public class TaskController {
 
     private final ListarTareasUseCase listarTareasUseCase;

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
@@ -20,6 +21,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/security/audit/reports")
+@Traceability(US = "US-036", CA = {"CA-16", "CA-17", "CA-24"})
 public class AuditReportController {
 
     private final IdentityRepository identityRepository;

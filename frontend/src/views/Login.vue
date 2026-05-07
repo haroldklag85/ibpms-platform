@@ -236,6 +236,7 @@ const disableBreakGlass = () => {
 // VISTA 1: FLUJO AZURE SSO (OIDC / SAML) CA-3
 // ===============================================
 const triggerAzureSSO = async () => {
+    // @Traceability: US-036 - CA-11 Respeto ciego al Autenticador Perimetral (EntraID MFA)
     // Simulamos el Callback de Azure redirigiendo a nuestro Backend (/api/v1/auth/callback)
     console.log('[SSO EntraID] - Invocando Federation Flow...');
     

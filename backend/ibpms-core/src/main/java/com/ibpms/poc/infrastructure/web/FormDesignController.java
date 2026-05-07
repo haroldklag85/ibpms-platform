@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +23,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/forms")
+@Traceability(US = "US-003", CA = {"CA-01", "CA-26", "CA-27"})
 public class FormDesignController {
 
     private final FormDesignService formDesignService;

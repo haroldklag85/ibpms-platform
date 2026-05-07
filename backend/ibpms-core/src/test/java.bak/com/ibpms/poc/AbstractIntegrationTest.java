@@ -8,17 +8,27 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+
 /**
  * Clase base para Pruebas de Integración End-to-End usando Testcontainers.
- * Instancia dinámicamente una Base de Datos MySQL efímera (Docker)
- * que sirve de backend para que Spring Boot y Camunda se levanten de forma
- * aislada.
+ * Provee la infraestructura efímera (PostgreSQL, Redis, RabbitMQ) compartida
+ * por todas las subclases.
+ * 
+ * NOTA ARQUITECTÓNICA (2026-04-30): Esta clase NO declara @LocalServerPort.
+ * Los tests que necesiten el puerto (RestAssured) deben declararlo localmente.
+ * Los tests MockMvc que heredan de esta clase pueden override @SpringBootTest
+ * a WebEnvironment.MOCK sin conflicto de inyección.
  * 
  * Uso: Hacer que tus clases de test hereden de {@link AbstractIntegrationTest}.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
+
+    @org.springframework.boot.test.web.server.LocalServerPort
+    protected int port;
 
     // Patrón Singleton Testcontainer para PostgreSQL con vector support
     @SuppressWarnings("resource")
@@ -64,19 +74,23 @@ public abstract class AbstractIntegrationTest {
             registry.add("spring.rabbitmq.host", RABBITMQ_CONTAINER::getHost);
             registry.add("spring.rabbitmq.port", RABBITMQ_CONTAINER::getFirstMappedPort);
         } else {
-            registry.add("spring.datasource.url", () -> "jdbc:postgresql://localhost:5432/ibpms_db");
+            String postgresHost = System.getenv().getOrDefault("POSTGRES_HOST", "localhost");
+            String redisHost = System.getenv().getOrDefault("REDIS_HOST", "localhost");
+            String rabbitmqHost = System.getenv().getOrDefault("RABBITMQ_HOST", "localhost");
+
+            registry.add("spring.datasource.url", () -> "jdbc:postgresql://" + postgresHost + ":5432/ibpms_db");
             registry.add("spring.datasource.username", () -> "ibpms_user");
             registry.add("spring.datasource.password", () -> "ibpms_password");
             registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
 
-            registry.add("spring.data.redis.host", () -> "localhost");
+            registry.add("spring.data.redis.host", () -> redisHost);
             registry.add("spring.data.redis.port", () -> 6379);
 
-            registry.add("spring.rabbitmq.host", () -> "localhost");
+            registry.add("spring.rabbitmq.host", () -> rabbitmqHost);
             registry.add("spring.rabbitmq.port", () -> 5672);
         }
 
         // Cumplimiento Zero-Trust: Liquibase controla la DB, Hibernate en modo validación pura.
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     }
 }

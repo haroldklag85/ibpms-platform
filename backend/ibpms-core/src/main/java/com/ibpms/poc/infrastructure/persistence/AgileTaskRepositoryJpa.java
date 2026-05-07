@@ -29,6 +29,26 @@ public class AgileTaskRepositoryJpa {
         return repository.save(task);
     }
 
+    public void delete(AgileTask task) {
+        repository.delete(task);
+    }
+
+    public void deleteAll() {
+        repository.deleteAll();
+    }
+
+    public long countByProjectIdAndStatusNotIn(UUID projectId, java.util.List<String> statuses) {
+        return repository.countByProjectIdAndStatusNotIn(projectId, statuses);
+    }
+
+    public java.util.List<AgileTask> findPortfolioByOwner(String owner) {
+        return repository.findPortfolioByOwner(owner);
+    }
+
+    public java.util.List<AgileTask> findByStatus(String status) {
+        return repository.findByStatus(status);
+    }
+
     public Optional<AgileTask> findById(UUID id) {
         return repository.findById(id);
     }
@@ -39,6 +59,10 @@ public class AgileTaskRepositoryJpa {
 
     public Page<AgileTask> findByProjectIdAndStatusNot(UUID projectId, String excludeStatus, Pageable pageable) {
         return repository.findByProjectIdAndStatusNot(projectId, excludeStatus, pageable);
+    }
+
+    public Page<AgileTask> findByProjectIdAndStatusNotIn(UUID projectId, java.util.List<String> statuses, Pageable pageable) {
+        return repository.findByProjectIdAndStatusNotIn(projectId, statuses, pageable);
     }
 
     public Optional<AgileTask> findNextAvailableTaskForUpdate() {
@@ -61,6 +85,18 @@ public class AgileTaskRepositoryJpa {
 
 interface SpringDataAgileTaskRepository extends JpaRepository<AgileTask, UUID> {
     Page<AgileTask> findByProjectIdAndStatusNot(UUID projectId, String excludeStatus, Pageable pageable);
+    
+    Page<AgileTask> findByProjectIdAndStatusNotIn(UUID projectId, java.util.List<String> statuses, Pageable pageable);
+    
+    Page<AgileTask> findByProjectId(UUID projectId, Pageable pageable);
+
+    long countByProjectIdAndStatusNotIn(UUID projectId, java.util.List<String> statuses);
+
+    java.util.List<AgileTask> findByStatus(String status);
+
+    // Mock query para el portafolio (CA-7)
+    @Query("SELECT t FROM AgileTask t WHERE t.status NOT IN ('DONE', 'DELETED', 'CANCELLED')")
+    java.util.List<AgileTask> findPortfolioByOwner(@Param("owner") String owner);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")})

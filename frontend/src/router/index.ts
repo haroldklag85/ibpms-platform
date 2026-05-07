@@ -113,6 +113,10 @@ const router = createRouter({
                     meta: { requiresAuth: true }
                 },
                 {
+                    path: 'admin/projects',
+                    redirect: '/admin/projects/manager'
+                },
+                {
                     path: 'admin/projects/manager',
                     name: 'ProjectManager',
                     component: () => import('@/views/admin/ProjectBuilder/ProjectManager.vue'),
@@ -191,7 +195,6 @@ const router = createRouter({
                     meta: { title: 'Configuración PMO / SLA', requiresAuth: true, roles: ['Global Admin', 'ROLE_SUPER_ADMIN'] }
                 },
                 // --- Ruta Comodín (Catch-All 404) dentro del Layout ---
-                // Previene pantallazos blancos cuando el backend envía menús en desarrollo (WIP)
                 {
                     path: ':pathMatch(.*)*',
                     name: 'NotFoundInLayout',

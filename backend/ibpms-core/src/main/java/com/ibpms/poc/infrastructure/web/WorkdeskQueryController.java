@@ -37,7 +37,7 @@ public class WorkdeskQueryController {
     public WorkdeskQueryController(WorkdeskQueryService workdeskQueryService, TaskDelegationService taskDelegationService) {
         this.workdeskQueryService = workdeskQueryService;
         this.taskDelegationService = taskDelegationService;
-        // CA-30: Rate Limiting
+        // @Traceability: US-001 - CA-30
         Bandwidth limit = Bandwidth.builder().capacity(60).refillGreedy(60, Duration.ofMinutes(1)).build();
         this.bucket = Bucket.builder().addLimit(limit).build();
     }
@@ -56,13 +56,13 @@ public class WorkdeskQueryController {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
         }
 
-        // CA-09, CA-10: Max 100 limit, default to 15 (pageable usually defaults to 20, but limit to 100)
+        // @Traceability: US-001 - CA-9, CA-10
         if (pageable.getPageSize() > 100) {
             throw new IllegalArgumentException("Pagina solicitada excede el limite maximo de 100 registros (CA-10).");
         }
 
         try {
-            // CA-14 Strict Isolation mapping
+            // @Traceability: US-001 - CA-14
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
             String currentUserId = (auth != null && auth.getName() != null) ? auth.getName() : "default";
             String tenantId = currentUserId; // Mapeo simple de POC
@@ -71,7 +71,7 @@ public class WorkdeskQueryController {
             String effectiveAssignee = currentUserId; 
 
             if (delegatedUserId != null && !delegatedUserId.isBlank()) {
-                // CA-15: Validar jerarquía ANTES de ejecutar cualquier query
+                // @Traceability: US-001 - CA-15
                 String assistantDisplayName = taskDelegationService
                     .validateDelegationHierarchy(currentUserId, delegatedUserId, tenantId);
 
@@ -94,13 +94,13 @@ public class WorkdeskQueryController {
                 dto.setAssignee(e.getAssignee());
                 dto.setImpactLevel(e.getImpactLevel());
                 
-                // CA-23: Inyección del avance calculado
+                // @Traceability: US-001 - CA-23
                 dto.setProgressPercent(e.getProgressPercent());
                 
-                // CA-03: Badge visual de tipo
+                // @Traceability: US-001 - CA-3
                 dto.setTypeBadge("BPMN".equals(e.getSourceSystem()) ? "⚡ Flujo" : "📅 Proyecto");
                 
-                // CA-17: Flag de impacto financiero alto (umbral >= 8)
+                // @Traceability: US-001 - CA-17
                 dto.setFinancialImpactHigh(e.getImpactLevel() != null && e.getImpactLevel() >= 8);
                 
                 return dto;
@@ -116,7 +116,7 @@ public class WorkdeskQueryController {
             // Rethrow 403 para que llegue al cliente
             throw rse;
         } catch (Exception e) {
-            // CA-07/CA-18: Degradación Elegante Multi-Motor
+            // @Traceability: US-001 - CA-7, CA-18
             boolean isCamundaFailure = e.getMessage() != null && 
                 (e.getMessage().contains("Camunda") || e.getMessage().contains("ProcessEngine") || e.getCause() instanceof org.springframework.web.client.ResourceAccessException);
             
@@ -133,7 +133,7 @@ public class WorkdeskQueryController {
         }
     }
 
-    // CA-22, CA-29: Faceted Filters & Counters
+    // @Traceability: US-001 - CA-22, CA-29
     @GetMapping("/global-inbox/facets")
     public ResponseEntity<?> getFacets() {
         if (!bucket.tryConsume(1)) {

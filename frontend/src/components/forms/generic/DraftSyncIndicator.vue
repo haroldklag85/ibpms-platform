@@ -1,4 +1,5 @@
 <template>
+  <!-- @Traceability: US-039 - CA-7 -->
   <div class="flex items-center text-xs font-medium space-x-2">
     <!-- Local Draft Exists -->
     <template v-if="store.syncState === 'LOCAL_ONLY'">

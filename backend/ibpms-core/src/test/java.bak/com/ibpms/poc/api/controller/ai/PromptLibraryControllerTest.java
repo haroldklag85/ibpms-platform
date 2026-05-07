@@ -12,16 +12,28 @@ import java.util.UUID;
 
 import org.springframework.boot.test.mock.mockito.MockBean;
 import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
-import com.ibpms.poc.infrastructure.security.JwtSecurityFilter;
-import com.ibpms.poc.infrastructure.security.JwtAuthFilter;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(PromptLibraryController.class)
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+
+@WebMvcTest(
+    controllers = PromptLibraryController.class,
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = {
+            com.ibpms.poc.infrastructure.security.JwtAuthFilter.class,
+            com.ibpms.poc.infrastructure.security.JwtSecurityFilter.class,
+            com.ibpms.poc.infrastructure.security.ApiKeyAuthFilter.class
+        }
+    )
+)
 @Import(com.ibpms.poc.infrastructure.security.SecurityConfig.class)
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 class PromptLibraryControllerTest {
 
     @Autowired
@@ -31,10 +43,10 @@ class PromptLibraryControllerTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @MockBean
-    private JwtAuthFilter jwtAuthFilter;
+    private com.ibpms.poc.infrastructure.jpa.repository.security.ServiceAccountRepository serviceAccountRepository;
 
     @MockBean
-    private JwtSecurityFilter jwtSecurityFilter;
+    private com.ibpms.poc.domain.port.OrphanPayloadRepository orphanPayloadRepository;
 
     @Test
     @WithMockUser
@@ -49,6 +61,7 @@ class PromptLibraryControllerTest {
     @DisplayName("Debe rechazar con 403 Forbidden modificaciones PUT sin el rol de ingeniero de prompts")
     void cannotModifyPrompts_WithoutPromptEngineerRole() throws Exception {
         mockMvc.perform(put("/api/v1/prompts/" + UUID.randomUUID())
+                .contentType(org.springframework.http.MediaType.TEXT_PLAIN)
                 .content("Nuevo prompt malicioso")
                 .with(java.util.Objects.requireNonNull(csrf()))) // CSRF requerido en operaciones mutating de Spring Security
                 .andExpect(status().isForbidden());
@@ -59,6 +72,7 @@ class PromptLibraryControllerTest {
     @DisplayName("Debe permitir 200 OK modificaciones PUT cuando el rol es prompt_engineer")
     void canModifyPrompts_WithPromptEngineerRole() throws Exception {
         mockMvc.perform(put("/api/v1/prompts/" + UUID.randomUUID())
+                .contentType(org.springframework.http.MediaType.TEXT_PLAIN)
                 .content("Nuevo prompt optimizado")
                 .with(java.util.Objects.requireNonNull(csrf())))
                 .andExpect(status().isOk());

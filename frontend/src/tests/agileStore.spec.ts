@@ -86,7 +86,7 @@ describe('AgileStore - TDD Zero-Trust Validation (Standalone)', () => {
     }
     store.backlogItems = massivePayload as any;
 
-    expect(store.filteredBacklogItems.length).toBe(10000);
+    expect(store.filteredBacklogItems.length).toBe(5000);
 
     // Toggle Smart Archive (Hides DONE items, which are 50%)
     store.isArchiveSimulated = true;

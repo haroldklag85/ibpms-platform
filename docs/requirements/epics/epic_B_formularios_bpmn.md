@@ -1533,8 +1533,8 @@ Scenario: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquirido
     Given el Arquitecto selecciona un Carril o Tarea en el Lienzo
     Then puede asignarle un color personalizado desde una paleta de colores para distinguir departamentos.
 
-  Scenario: Autocompletado de Variables en Expresiones (CA-38 - Diferido a V2)
-    # NOTA: Diferido a V2.
+  Scenario: Autocompletado de Variables en Expresiones (CA-38 - Diferido a V1)
+    # NOTA: Originalmente diferido a V2. Reclasificado a V1 por decisión del PO (2026-05-01).
     Given el Arquitecto escribe una condición en una Compuerta Exclusiva (Ej: `${monto > 5000}`)
     Then el sistema ofrece autocompletado de variables disponibles basándose en los formularios asociados al proceso.
 
@@ -1630,13 +1630,15 @@ Scenario: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquirido
     And el proceso V1 que ya estaba en el motor sigue funcionando intacto con la versión vieja en caché ("Zero-Breakage Policy")
     And si el Arquitecto desea usar la nueva versión, debe entrar a la Pantalla 6, seleccionar la v2, re-mapear y desplegar una nueva versión temporal del proceso.
 
-  Scenario: Validación Lógica de Cláusulas OneOf/AnyOf (CA-53)
+  Scenario: Validación Lógica de Cláusulas OneOf/AnyOf (CA-53 - Diferido a V2)
+    # NOTA: Este escenario queda documentado pero su implementación se difiere a la Versión 2 del producto.
     Given una API que exige el dato X *o* el dato Y mediante las cláusulas Swagger (OneOf / AnyOf)
     When el Frontend despliega el `<DataMapperGrid>`
     Then agrupa visualmente las filas afectadas bajo la etiqueta `[ 🔀 Requiere mapear al menos UNO ]`
     And el Pre-Flight Analyzer verificará el grupo lógico en conjunto: Si falta al menos uno, alerta roja y aborta despliegue. Si ambos están vacíos, aborta. Si uno está lleno, autoriza el pase a Producción.
 
-  Scenario: Shift-Left Security para Datos Sensibles (PII/PHI) (CA-54)
+  Scenario: Shift-Left Security para Datos Sensibles (PII/PHI) (CA-54 - Diferido a V2)
+    # NOTA: Este escenario queda documentado pero su implementación se difiere a la Versión 2 del producto.
     Given el mapeo de una variable clasificada con el flag `[🔒 Dato Sensible PII]` desde la Pantalla 7 (Zod)
     When la Service Task dispara la integración hacia la API externa
     Then el dato crudo viaja obligatoriamente encriptado por el túnel HTTP/TLS
@@ -1648,7 +1650,8 @@ Scenario: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquirido
     And la UI aplicará severas restricciones denegando la inserción de texto libre o crudo para prevenir Header Injection.
     And obligará a mapear valores usando únicamente variables pre-validadas del formulario (Zod) o Macros seguras del Sistema.
 
-  Scenario: Delegación Transparente de Conversión Binaria (Multipart/Base64) (CA-56)
+  Scenario: Delegación Transparente de Conversión Binaria (Multipart/Base64) (CA-56 - Diferido a V2)
+    # NOTA: Este escenario queda documentado pero su implementación se difiere a la Versión 2 del producto.
     Given un componente Zod de tipo `<InputFile>` mapeado hacia un atributo del Payload destino
     When el Arquitecto despliega y llega el momento de la ejecución
     Then el flujo UI no exige que el Arquitecto indique la técnica de conversión
@@ -2101,7 +2104,55 @@ Feature: NLP to DMN Translation, SRE Architecture & AppSec Governance
     And si la generación ya comenzó (al menos 1 fila recibida) pero deja de emitir filas por más de 15 segundos consecutivos (stall), el Frontend activará el mecanismo de resiliencia del CA-19 (borrador parcial + reintentar).
 
 
-```
+  # ==============================================================================
+  # G. REFINAMIENTO MODO MANUAL (AGNÓSTICO A IA)
+  # Origen: Refinamiento con el PO (2026-05-02)
+  # Propósito: Formalizar la alternativa de creación 100% humana (Sin IA).
+  # ==============================================================================
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Coexistencia UI del Chat NLP y Grilla Visual (CA-26)
+    Given que el Arquitecto ingresa a la Pantalla 4 para crear una tabla desde cero sin IA
+    When despliega la grilla vacía para inicio manual
+    Then el panel del Chat NLP (Generador Cognitivo) permanecerá abierto y visible en la interfaz.
+    And el usuario podrá alternar entre escritura manual en la grilla y pedir sugerencias a la IA sin que un modo bloquee al otro.
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Binding Obligatorio con Diccionario Zod (CA-27)
+    Given la necesidad de definir Columnas de Entrada (Inputs) en la grilla vacía
+    When el usuario intenta agregar una nueva condición a la cabecera de la tabla
+    Then el sistema NO permitirá escribir nombres de variables libres en texto crudo.
+    And desplegará un Dropdown obligatorio que consuma el Diccionario de Datos Zod (US-003).
+    And el usuario deberá arrastrar o seleccionar las variables pre-existentes para garantizar la integridad referencial del proceso.
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Validación de Sintaxis FEEL en Tiempo Real (CA-28)
+    Given que el usuario digita reglas matemáticas o condicionales manualmente en las celdas (ej. `< 1000` o `"Aprobado"`)
+    When el usuario interactúa con la grilla
+    Then el Frontend ejecutará un motor ligero de validación de sintaxis FEEL en tiempo real.
+    And si detecta un error de sintaxis (ej. caracteres no permitidos o tipo de dato inconsistente con Zod), marcará la celda inmediatamente con un borde rojo y un tooltip explicativo.
+    And bloqueará el botón de [Guardar/Publicar] hasta que la celda sea corregida.
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Inyección Automática de Candado Catch-All (CA-29)
+    Given la regla matemática estricta de Hit Policy FIRST (CA-07)
+    When el usuario está construyendo la tabla manualmente fila por fila
+    Then el Frontend inyectará y mantendrá automáticamente una fila final inamovible (Catch-All) con el candado 🔒.
+    And el usuario NO podrá eliminar esta fila, asegurando que cualquier escenario no contemplado en las reglas superiores derive por defecto a un estado seguro (Ej: "Revisión Humana").
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Edición Posterior de Cargas XML (CA-30)
+    Given el "Modo Desarrollador" que permite cargar archivos `.dmn` nativos (CA-09, CA-22)
+    When el archivo XML es procesado, validado y cargado exitosamente en la plataforma
+    Then la tabla resultante SERÁ totalmente editable dentro de la grilla visual.
+    And el usuario podrá modificar celdas, agregar filas o corregir lógicas usando la interfaz estándar sin necesidad de resubir el XML en cada iteración.
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Límite de Capacidad Manual de SRE (CA-31)
+    Given la salud del motor de evaluación Camunda y el rendimiento del Virtual Scrolling
+    When el usuario añade filas manualmente a la tabla DMN
+    Then el Frontend impondrá un Hard-Stop paramétrico de máximo 100 filas permitidas (superior a las 50 de la IA, pero acotado).
+    And si el usuario intenta agregar la fila 101, el sistema deshabilitará el botón "+" y mostrará una advertencia de tope arquitectónico por salud de SRE.
+
+  Scenario: [REFINAMIENTO MODO MANUAL] Trazabilidad y Versionamiento de Intervención Humana (CA-32)
+    Given una tabla V1 originaria que fue generada íntegramente por la IA
+    When un Arquitecto entra a la grilla y realiza modificaciones manuales (cambia un valor, borra una fila, etc.) y hace clic en [Publicar]
+    Then el Backend incrementará la versión a V2 obligatoriamente.
+    And en el log de auditoría y en el Catálogo DMN (CA-17), esta versión quedará etiquetada estrictamente con el badge visual "Modificada Manualmente", perdiendo el sello de pureza "100% IA".```
 **Trazabilidad UX:** Wireframes Pantalla 4 (Taller DMN) y su invocación desde Pantalla 6 (Diseñador BPMN).
 
 ---

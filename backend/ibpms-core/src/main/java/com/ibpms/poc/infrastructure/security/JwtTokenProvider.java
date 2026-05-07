@@ -48,6 +48,23 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generateImpersonationToken(String subject, List<String> roles, String tenantId, String impersonatedBy) {
+        Date now = new Date();
+        long expiryTime = impersonatedBy != null ? Math.min(expirationSeconds, 1800) : expirationSeconds;
+        Date actualExpiry = new Date(now.getTime() + expiryTime * 1000L);
+        JwtBuilder builder = Jwts.builder()
+                .subject(subject)
+                .claim("roles", roles)
+                .claim("tenant_id", tenantId)
+                .issuedAt(now)
+                .expiration(actualExpiry)
+                .signWith(secretKey, Jwts.SIG.HS256);
+        if (impersonatedBy != null) {
+            builder.claim("impersonatedBy", impersonatedBy);
+        }
+        return builder.compact();
+    }
+
     // ── Validación y Parsing ───────────────────────────────────────────────────
     public Claims parseClaims(String token) {
         return Jwts.parser()

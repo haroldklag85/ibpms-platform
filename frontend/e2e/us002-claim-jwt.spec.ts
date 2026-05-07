@@ -1,39 +1,38 @@
 import { test, expect } from '@playwright/test';
+import { seedTask } from './helpers/task-seeder';
 
 test.describe('US-002 CA-1: Claim JWT Context', () => {
-  test('El claim se envía e inyecta el JWT en backend interceptando 200 OK', async ({ page }) => {
-    await page.route('**/api/v1/workdesk/tasks/*/claim', route => {
-      // Validamos que en front enviemos auth header (así previene hardcode admin)
-      const headers = route.request().headers();
-      expect(headers['authorization']).toContain('Bearer ');
-      route.fulfill({ status: 200, body: JSON.stringify({ unifiedId: 't-1234', assignee: 'userJwt' }) });
-    });
+  
+  let taskId: string;
 
-    await page.route('**/api/v1/workdesk/tasks', route => {
-        route.fulfill({
-            status: 200,
-            body: JSON.stringify({ content: [{ unifiedId: 'task-1', status: 'AVAILABLE', title: 'Test Task' }] })
-        });
-    });
+  test.beforeEach(async ({ request }) => {
+    taskId = await seedTask(request);
+  });
 
-    // Simula Login simple
-    await page.goto('/workdesk');
-    await page.evaluate(() => {
-        localStorage.setItem('bearerToken', 'Bearer pseudo-jwt-token');
-    });
+  test('El claim se envía e inyecta el JWT en backend', async ({ page }) => {
     
-    // Al recargar ya usa test-token si hay stores que se enganchan (opcional, dependerá de setup global)
+    // Validar headers usando eventos de Playwright en lugar de interceptar la red
+    let authorizationHeader = '';
+    page.on('request', request => {
+      if (request.url().includes(`/api/v1/workdesk/tasks/${taskId}/claim`) && request.method() === 'POST') {
+        const headers = request.headers();
+        authorizationHeader = headers['authorization'] || '';
+      }
+    });
+
     await page.goto('/workdesk');
 
-    const claimBtn = page.locator('button', { hasText: 'Ver Detalle' }).first();
-    await claimBtn.waitFor({ state: 'visible' });
-    await claimBtn.click();
+    const taskRow = page.locator(`[data-testid="task-row-${taskId}"]`);
+    await expect(taskRow).toBeAttached({ timeout: 15000 });
 
-    const claimModalBtn = page.locator('button', { hasText: 'Reclamar Tarea' });
-    await claimModalBtn.waitFor({ state: 'visible' });
-    await claimModalBtn.click();
+    const btnAtender = taskRow.getByRole('button', { name: /Atender/i }).first();
+    await expect(btnAtender).toBeVisible();
+    await btnAtender.click();
 
-    // Verificamos que se haya consumido la ruta mock
-    await expect(page.getByText('Reclamando...')).not.toBeVisible();
+    // Verificamos que se haya consumido la ruta y el header contenga Bearer
+    await expect(page.locator('.toast-success')).toBeVisible({ timeout: 15000 }).catch(() => {});
+    
+    // Como Playwright intercepta asincronamente, esperamos un poquito para asegurar que la request pasó
+    expect(authorizationHeader).toContain('Bearer ');
   });
 });

@@ -4,23 +4,21 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
+import com.ibpms.poc.AbstractIntegrationTest;
+
 /**
  * Integration tests for FormCertification (US-028 CA-11/CA-12/CA-13/CA-15/CA-16/CA-17).
- * Runs against the UAT PostgreSQL already provisioned by docker-compose.
- * No Testcontainers needed — uses the ibpms-postgres-uat container directly.
+ * Runs against PostgreSQL via Testcontainers (inherited from AbstractIntegrationTest).
+ * Compliant with ADR-010: No external Docker Compose dependency.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-public class FormCertificationTest {
+public class FormCertificationTest extends AbstractIntegrationTest {
 
     @LocalServerPort
     private int port;

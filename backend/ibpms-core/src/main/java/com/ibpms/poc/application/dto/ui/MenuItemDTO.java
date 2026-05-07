@@ -1,5 +1,6 @@
 package com.ibpms.poc.application.dto.ui;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +8,8 @@ public class MenuItemDTO {
     private String title;
     private String icon;
     private String path;
+    
+    @JsonProperty("items")
     private List<MenuItemDTO> children;
 
     public MenuItemDTO(String title, String icon, String path) {
@@ -18,6 +21,9 @@ public class MenuItemDTO {
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    @JsonProperty("label")
+    public String getLabel() { return title; }
 
     public String getIcon() { return icon; }
     public void setIcon(String icon) { this.icon = icon; }

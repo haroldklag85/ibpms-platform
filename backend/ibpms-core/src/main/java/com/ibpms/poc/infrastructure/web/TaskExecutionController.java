@@ -5,11 +5,13 @@ import com.ibpms.poc.application.util.SecurityContextUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
+@Traceability(US = "US-004", CA = {"CA-01"})
 public class TaskExecutionController {
 
     private final TaskExecutionService taskExecutionService;

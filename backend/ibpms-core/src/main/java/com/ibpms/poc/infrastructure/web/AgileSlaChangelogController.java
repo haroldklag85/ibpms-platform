@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/agile/tasks/{taskId}/sla-log")
+@Traceability(US = "US-030", CA = {"CA-09"})
 public class AgileSlaChangelogController {
 
     private final SlaChangeLogService changeLogService;

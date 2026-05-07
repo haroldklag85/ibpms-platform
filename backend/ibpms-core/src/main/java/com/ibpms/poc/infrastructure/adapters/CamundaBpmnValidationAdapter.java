@@ -29,6 +29,7 @@ import org.xml.sax.InputSource;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.InputStream;
 import java.io.StringReader;
+import org.springframework.web.client.RestTemplate;
 import java.util.Collection;
 import java.util.List;
 
@@ -105,6 +106,7 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
                 if (formKey == null || formKey.isBlank()) {
                     response.addError(ut.getId(), "UserTask carece de camunda:formKey obligatorio");
                 } else if ("sys_generic_form".equals(formKey)) {
+                    // @Traceability: US-039 - CA-1
                     for (Lane lane : lanes) {
                         if (lane.getFlowNodeRefs().contains(ut)) {
                             String laneNameUpper = lane.getName() != null ? lane.getName().toUpperCase() : "";
@@ -154,6 +156,25 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
                             "ℹ️ BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
                             "' usa Late Binding (LATEST). Los casos en vuelo se evaluarán con la última versión DMN publicada. " +
                             "Confirme que este comportamiento es intencional y no viola compromisos contractuales.");
+                    }
+                    
+                    // GAP-12: Validación de Catch-All en DMN
+                    try {
+                        RestTemplate restTemplate = new RestTemplate();
+                        String dmnJson = restTemplate.getForObject("http://localhost:8080/api/v1/dmn/" + decisionRef, String.class);
+                        boolean hasCatchAll = dmnJson != null && (dmnJson.contains("<text>-</text>") || dmnJson.toLowerCase().contains("catch-all"));
+                        
+                        if (hasCatchAll) {
+                            boolean validNextNode = brt.getOutgoing().stream()
+                                .map(org.camunda.bpm.model.bpmn.instance.SequenceFlow::getTarget)
+                                .anyMatch(node -> node instanceof ExclusiveGateway || node instanceof UserTask);
+                                
+                            if (!validNextNode) {
+                                response.addError(brt.getId(), "GAP-12: La DMN referenciada (" + decisionRef + ") posee una regla Catch-All. El BPMN debe obligatoriamente canalizar la salida hacia un ExclusiveGateway o un UserTask de revisión humana.");
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("Pre-Flight: No se pudo verificar si DMN {} posee Catch-All para GAP-12 ({}).", decisionRef, e.getMessage());
                     }
                 }
             }

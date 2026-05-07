@@ -15,8 +15,9 @@ import RbacDelegationLog from '../RbacDelegationLog.vue'
 // ── Helpers de fecha ─────────────────────────────────────────────────────────
 
 function toDatetimeLocal(date: Date): string {
-  // Formato que acepta <input type="datetime-local">: "YYYY-MM-DDTHH:mm"
-  return date.toISOString().slice(0, 16)
+  // Formato local en lugar de UTC para evitar desfases de zona horaria
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 function futureDate(offsetMinutes: number): string {
@@ -43,7 +44,7 @@ vi.mock('@/services/apiClient', () => ({
 
 // ── Suite ────────────────────────────────────────────────────────────────────
 
-describe.skip('RbacDelegationLog.vue — US-036 CA-9 Validación de Fechas', () => {
+describe('RbacDelegationLog.vue — US-036 CA-9 Validación de Fechas', () => {
   let wrapper: VueWrapper<any>;
   let rbacStore: ReturnType<typeof useRbacStore>;
 
@@ -61,7 +62,7 @@ describe.skip('RbacDelegationLog.vue — US-036 CA-9 Validación de Fechas', () 
     await wrapper.find('[data-testid="input-start-date"]').setValue(futureDate(30))
     await wrapper.find('[data-testid="input-end-date"]').setValue(futureDate(120))
 
-    await wrapper.find('[data-testid="btn-submit-delegation"]').trigger('click')
+    await wrapper.find('form').trigger('submit')
 
     const error = wrapper.find('[data-testid="error-recipient"]')
     expect(error.exists()).toBe(true)
@@ -79,7 +80,7 @@ describe.skip('RbacDelegationLog.vue — US-036 CA-9 Validación de Fechas', () 
     await wrapper.find('[data-testid="input-start-date"]').setValue(pastDate(5))    // 5 min atrás
     await wrapper.find('[data-testid="input-end-date"]').setValue(futureDate(60))
 
-    await wrapper.find('[data-testid="btn-submit-delegation"]').trigger('click')
+    await wrapper.find('form').trigger('submit')
 
     const error = wrapper.find('[data-testid="error-start-date"]')
     expect(error.exists()).toBe(true)
@@ -96,7 +97,7 @@ describe.skip('RbacDelegationLog.vue — US-036 CA-9 Validación de Fechas', () 
     await wrapper.find('[data-testid="input-start-date"]').setValue(futureDate(120)) // start: +2h
     await wrapper.find('[data-testid="input-end-date"]').setValue(futureDate(30))    // end:   +30min (ANTES)
 
-    await wrapper.find('[data-testid="btn-submit-delegation"]').trigger('click')
+    await wrapper.find('form').trigger('submit')
 
     const error = wrapper.find('[data-testid="error-end-date"]')
     expect(error.exists()).toBe(true)
@@ -113,7 +114,7 @@ describe.skip('RbacDelegationLog.vue — US-036 CA-9 Validación de Fechas', () 
     await wrapper.find('[data-testid="input-start-date"]').setValue(sameDate)
     await wrapper.find('[data-testid="input-end-date"]').setValue(sameDate)
 
-    await wrapper.find('[data-testid="btn-submit-delegation"]').trigger('click')
+    await wrapper.find('form').trigger('submit')
 
     const error = wrapper.find('[data-testid="error-end-date"]')
     expect(error.exists()).toBe(true)
@@ -130,7 +131,7 @@ describe.skip('RbacDelegationLog.vue — US-036 CA-9 Validación de Fechas', () 
     await wrapper.find('[data-testid="input-end-date"]').setValue(futureDate(24 * 60))
     await wrapper.find('[data-testid="input-reason"]').setValue('Ausencia por capacitación')
 
-    await wrapper.find('[data-testid="btn-submit-delegation"]').trigger('click')
+    await wrapper.find('form').trigger('submit')
 
     // Esperar respuesta async
     await wrapper.vm.$nextTick()
@@ -151,7 +152,7 @@ describe.skip('RbacDelegationLog.vue — US-036 CA-9 Validación de Fechas', () 
     await wrapper.find('[data-testid="select-recipient"]').setValue('user-uuid-0001')
     // No se llenan fechas
 
-    await wrapper.find('[data-testid="btn-submit-delegation"]').trigger('click')
+    await wrapper.find('form').trigger('submit')
 
     expect(wrapper.find('[data-testid="error-start-date"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="error-end-date"]').exists()).toBe(true)

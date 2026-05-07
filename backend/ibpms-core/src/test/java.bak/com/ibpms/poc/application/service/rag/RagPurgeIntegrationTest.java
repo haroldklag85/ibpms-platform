@@ -13,10 +13,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.springframework.test.context.ActiveProfiles;
 
+import com.ibpms.poc.infrastructure.config.TestcontainersBaseIT;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class RagPurgeIntegrationTest {
+public class RagPurgeIntegrationTest extends TestcontainersBaseIT {
 
     @Autowired
     private MockMvc mockMvc;

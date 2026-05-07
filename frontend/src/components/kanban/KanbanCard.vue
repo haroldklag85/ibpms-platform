@@ -14,17 +14,39 @@
     <h4 class="text-sm font-bold text-gray-800 mb-2">{{ item.title }}</h4>
     <p class="text-xs text-gray-500 font-mono">ID: {{ item.id }}</p>
 
+    <!-- Blocked Reason Chip -->
+    <div v-if="item.status === 'BLOCKED' && item.blockedReason" class="mt-2 text-xs bg-red-50 text-red-700 p-1.5 rounded border border-red-200">
+      <span class="font-bold">Motivo:</span> {{ item.blockedReason }}
+    </div>
+
     <!-- Acciones Ocultas mostradas al hover -->
     <div class="mt-3 pt-2 border-t flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
       <button class="text-xs text-ibpms-brand hover:underline font-medium">✏️ Abrir</button>
       <button class="text-xs text-red-500 hover:underline font-medium">🗑️ Descartar</button>
+    </div>
+    
+    <!-- SLA Timer -->
+    <div class="mt-2" style="pointer-events: auto;">
+      <UniversalSlaTimer 
+        :taskId="item.id" 
+        :currentState="item.status" 
+        :slaDueDate="item.slaDueDate" 
+        referenceType="TASK_AGILE"
+        :activeTimerId="activeTimerId"
+        @start="handleStartTimer"
+        @stop="handleStopTimer"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, PropType } from 'vue';
-import type { KanbanItem } from '@/types/Kanban';
+import type { KanbanItem } from '@/stores/kanbanStore';
+import { useKanbanStore } from '@/stores/kanbanStore';
+import UniversalSlaTimer from '@/components/common/UniversalSlaTimer.vue';
+
+const store = useKanbanStore();
 
 const props = defineProps({
   item: {
@@ -42,6 +64,16 @@ const priorityLabel = computed(() => {
   if (!props.item.priority) return 'NORM';
   return props.item.priority > 50 ? 'URG' : 'NORM';
 });
+
+const activeTimerId = computed(() => store.activeTimers[props.item.id]);
+
+const handleStartTimer = async (taskId: string) => {
+  await store.startTimer(taskId);
+};
+
+const handleStopTimer = async (timerId: string) => {
+  await store.stopTimer(timerId);
+};
 </script>
 
 <style scoped>

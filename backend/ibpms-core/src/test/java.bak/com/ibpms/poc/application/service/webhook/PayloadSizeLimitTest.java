@@ -38,7 +38,7 @@ class PayloadSizeLimitTest {
     void setUp() {
         WebhookProperties props = new WebhookProperties();
         props.getPayload().setMaxSizeBytes(1024); // 1KB limit for testing
-        service = new WebhookIntakeService(transactionRepo, orphanRepo, domainRepo, mock(com.ibpms.poc.domain.port.TriageTaskRepository.class), clamAvScanner, runtimeService, props);
+        service = new WebhookIntakeService(transactionRepo, orphanRepo, domainRepo, mock(com.ibpms.poc.domain.port.TriageTaskRepository.class), clamAvScanner, runtimeService, props, mock(com.ibpms.poc.application.service.IntegrationEventPublisher.class));
     }
 
     @Test

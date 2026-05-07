@@ -19,7 +19,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.springframework.context.annotation.Import;
+import com.ibpms.poc.infrastructure.security.SecurityConfig;
+
 @WebMvcTest(controllers = ServiceDeliveryController.class)
+@Import(SecurityConfig.class)
 public class ServiceDeliveryControllerTest {
 
     @Autowired
@@ -45,7 +49,7 @@ public class ServiceDeliveryControllerTest {
                     }
                 """;
 
-        mockMvc.perform(post("/service-delivery/manual-start")
+        mockMvc.perform(post("/api/v1/manual-start")
                 .with(java.util.Objects.requireNonNull(csrf()))
                 .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .content(payload))
@@ -57,9 +61,10 @@ public class ServiceDeliveryControllerTest {
     @Test
     @WithMockUser(username = "asesor", roles = { "Funcionario" })
     void shouldForbidManualStartWithoutAdminRole() throws Exception {
+        when(iniciarServicioManualUseCase.iniciarServicio(any(ManualStartDTO.class))).thenReturn(UUID.randomUUID());
         String payload = "{\"definitionKey\": \"flujo-pqr\"}";
 
-        mockMvc.perform(post("/service-delivery/manual-start")
+        mockMvc.perform(post("/api/v1/manual-start")
                 .with(java.util.Objects.requireNonNull(csrf()))
                 .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .content(payload))

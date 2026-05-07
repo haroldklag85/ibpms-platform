@@ -13,6 +13,9 @@ import java.util.concurrent.TimeUnit;
  * Integra Redis para revocación inmediata y persistente.
  * Implementa política Fail-Open en caso de caída de la infraestructura de caché.
  */
+// @Traceability: US-036 - CA-25
+// @Traceability: US-036 - CA-21 Infraestructura de Blacklist JWT para Kill-Session
+@com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-036", CA = {"CA-21", "CA-25"})
 @Service
 public class JwtBlacklistService {
 

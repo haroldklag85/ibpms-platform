@@ -3,7 +3,7 @@ import { unref, MaybeRef } from 'vue';
 export enum UrgencyType {
     GREEN = 'GREEN',
     YELLOW = 'YELLOW',
-    ORANGE = 'ORANGE', // Prevención (Early Warning CA-6 backend matching)
+    ORANGE = 'ORANGE', // @Traceability: US-001 - CA-6
     RED = 'RED',
     BLACK = 'BLACK' // Expirado (SLA Ruptured)
 }
@@ -11,7 +11,7 @@ export enum UrgencyType {
 export function useSlaEngine() {
     /**
      * Calcula la urgencia de acuerdo al tiempo actual y la fecha de expiración SLA.
-     * US-001/043: Shift-left TDD Architecture.
+     * @Traceability: US-001 - CA-5, CA-11, CA-24
      * 
      * @param slaExpirationDate ISO string de resolución target
      * @param creationDate ISO string de inicio de tarea

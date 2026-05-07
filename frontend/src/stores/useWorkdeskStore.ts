@@ -38,7 +38,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
   state: () => ({
     items: [] as WorkdeskGlobalItemDTO[],
     facets: [] as FacetCountDTO[],
-    pageInfo: { pageNumber: 0, pageSize: 50, totalElements: 0 } as PageableResponse,
+    pageInfo: { pageNumber: 0, pageSize: 15, totalElements: 0 } as PageableResponse,
     isDegraded: false,
     isLoading: false,
     isError: false,
@@ -118,30 +118,49 @@ export const useWorkdeskStore = defineStore('workdesk', {
     async claimTask(taskId: string) {
         // Snapshot
         const snapshot = structuredClone(this.items);
-        // Mutar Optimistically
-        this.items = this.items.filter(i => i.unifiedId !== taskId && i.originalTaskId !== taskId);
+        const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
+        let claimedTask: any = null;
         
-        try {
-            const { data } = await apiClient.post(`/tasks/${taskId}/claim`);
-            return data;
-        } catch (err: any) {
-            // Rollback
-            this.items = snapshot;
-            
-            // CA-21 Toast error explícito
-            const body = document.querySelector('body');
-            if (body && !document.getElementById('optimistic-rollback-toast')) {
-                const toast = document.createElement('div');
-                toast.id = 'optimistic-rollback-toast';
-                toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; transition:opacity 0.5s;';
-                toast.innerHTML = '❌ No se pudo reclamar. La tarea ha sido devuelta al pool.';
-                body.appendChild(toast);
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                    setTimeout(() => toast.remove(), 500);
-                }, 4000);
+        // Mutar Optimistically
+        if (taskIdx !== -1) {
+            claimedTask = this.items.splice(taskIdx, 1)[0];
+            claimedTask._isConfirming = true; // Flag for UI "Confirmando con el servidor..."
+            if (this.activeView === 'PERSONAL') {
+                this.items.unshift(claimedTask);
             }
-            throw err;
+        }
+        
+        const delays = [2000, 4000, 8000];
+        for (let attempt = 0; attempt <= 3; attempt++) {
+            try {
+                const { data } = await apiClient.post(`/tasks/${taskId}/claim`);
+                if (claimedTask) {
+                    claimedTask._isConfirming = false;
+                }
+                return data;
+            } catch (err: any) {
+                if (attempt < 3) {
+                    // Backoff
+                    await new Promise(res => setTimeout(res, delays[attempt]));
+                } else {
+                    // Rollback
+                    this.items = snapshot;
+                    // Mostrar Modal / Alerta CA-21
+                    const body = document.querySelector('body');
+                    if (body && !document.getElementById('claim-rollback-toast')) {
+                        const toast = document.createElement('div');
+                        toast.id = 'claim-rollback-toast';
+                        toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; transition:opacity 0.5s;';
+                        toast.innerHTML = '❌ No pudimos confirmar tu reclamo porque la conexión con el servidor no se restableció. La tarea sigue disponible en la cola del equipo.';
+                        body.appendChild(toast);
+                        setTimeout(() => {
+                            toast.style.opacity = '0';
+                            setTimeout(() => toast.remove(), 500);
+                        }, 6000);
+                    }
+                    throw err;
+                }
+            }
         }
     },
 
@@ -169,7 +188,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
       }
     },
 
-    async fetchGlobalInbox(page: number = 0, size: number = 50, search?: string, delegatedToId?: string, typeFilter?: string, slaFilter?: string, statusFilter?: string) {
+    async fetchGlobalInbox(page: number = 0, size: number = 15, search?: string, delegatedToId?: string, typeFilter?: string, slaFilter?: string, statusFilter?: string) {
       this.isLoading = true;
       this.isError = false;
       this.errorMessage = '';
@@ -220,10 +239,15 @@ export const useWorkdeskStore = defineStore('workdesk', {
     initWebSocket() {
       if (this.stompClient && this.stompClient.active) return;
 
+<<<<<<< HEAD
       // URL SockJS relativa al origen del frontend — el proxy Vite (/ws → http://127.0.0.1:8080)
       // la reenvía al backend sin CORS. En producción usar VITE_WS_HTTP_URL absoluta.
       const httpUrl = (import.meta as any).env?.VITE_WS_HTTP_URL
         || `${window.location.origin}/ws/workdesk`;
+=======
+      // URL base nativa para WebSockets STOMP hacia el backend
+      const socketUrl = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:8080/ws/workdesk/websocket';
+>>>>>>> sprint-6
 
       this.stompClient = new Client({
         // webSocketFactory reemplaza brokerURL cuando el servidor usa SockJS

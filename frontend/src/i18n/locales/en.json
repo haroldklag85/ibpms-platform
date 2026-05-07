@@ -1,0 +1,60 @@
+{
+  "sidebar": {
+    "home": "Home",
+    "workdesk": "Workdesk",
+    "administration": "Administration & Governance",
+    "serviceDelivery": "Service Delivery",
+    "projectBuilder": "Project Builder",
+    "analytics": "Analytics",
+    "integrationHub": "Integration Hub",
+    "sgdea": "Document Management",
+    "collapse": "Collapse menu",
+    "expand": "Expand menu"
+  },
+  "header": {
+    "search": "Search cases...",
+    "compact": "Compact",
+    "standard": "Standard",
+    "logout": "Log out",
+    "viewAs": "View as...",
+    "language": "Language"
+  },
+  "roles": {
+    "title": "Active role",
+    "switchSuccess": "Role switched successfully"
+  },
+  "impersonation": {
+    "banner": "You are viewing the system as",
+    "exit": "Return to my session",
+    "selectUser": "Select user",
+    "searchUsers": "Search user by name...",
+    "notImpersonable": "Administrators cannot be impersonated"
+  },
+  "errors": {
+    "fatalServer": "Critical server error",
+    "sessionExpired": "Your session has expired",
+    "sessionExpiredDesc": "For your security, we have locked your session. Enter your password to continue.",
+    "reconnect": "Reconnect",
+    "invalidCredentials": "Invalid credentials. Session closed.",
+    "notFound": "Page not found",
+    "notFoundDesc": "The page you are looking for does not exist or was moved."
+  },
+  "emptyState": {
+    "noTasks": "No pending tasks",
+    "noTasksDesc": "Great job! You have no assigned tasks.",
+    "noAccess": "No access",
+    "noAccessDesc": "You do not have permission to view this content.",
+    "noResults": "No results",
+    "noResultsDesc": "No records found with the applied filters.",
+    "errorTitle": "Something went wrong",
+    "errorDesc": "An unexpected error occurred. Please try again."
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "undo": "Undo",
+    "password": "Password"
+  }
+}

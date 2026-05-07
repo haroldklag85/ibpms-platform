@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.Map;
 import java.util.UUID;
@@ -41,6 +42,7 @@ public class WorkboxTaskController {
      */
     @PostMapping("/{id}/claim")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-002", CA = {"CA-01"})
     public ResponseEntity<Void> claimTask(@PathVariable UUID id, Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
         taskService.claimTask(id, username);
@@ -52,6 +54,7 @@ public class WorkboxTaskController {
      */
     @PostMapping("/claim-next")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-002", CA = {"CA-23"})
     public ResponseEntity<com.ibpms.poc.domain.model.agile.AgileTask> claimNextTask(Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
         com.ibpms.poc.domain.model.agile.AgileTask task = taskService.claimNextTask(username);
@@ -63,6 +66,7 @@ public class WorkboxTaskController {
      */
     @PostMapping("/{id}/rollback-claim")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-002", CA = {"CA-21"})
     public ResponseEntity<Void> rollbackClaim(@PathVariable UUID id, Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
         taskService.rollbackClaim(id, username);
@@ -74,6 +78,7 @@ public class WorkboxTaskController {
      */
     @PostMapping("/{id}/unclaim")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-002", CA = {"CA-04", "CA-07"})
     public ResponseEntity<Void> unclaimTask(@PathVariable UUID id, Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
         taskService.unclaimTask(id, username);
@@ -85,6 +90,7 @@ public class WorkboxTaskController {
      */
     @PutMapping("/{id}/draft")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-029", CA = {"CA-11"})
     public ResponseEntity<Void> saveDraft(@PathVariable UUID id, 
                                           @RequestBody Map<String, Object> payload, 
                                           Authentication auth) {
@@ -98,6 +104,7 @@ public class WorkboxTaskController {
      */
     @PostMapping("/{id}/complete")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-029", CA = {"CA-01", "CA-16"})
     public ResponseEntity<Void> completeTask(@PathVariable UUID id, 
                                              @RequestBody Map<String, Object> payload, 
                                              Authentication auth) {
@@ -110,6 +117,7 @@ public class WorkboxTaskController {
      * US-002 CA-5: Preview Read-Only sin Lock (No requiere estar asignado).
      */
     @GetMapping("/{id}/preview")
+    @Traceability(US = "US-002", CA = {"CA-05"})
     public ResponseEntity<Map<String, Object>> previewTask(@PathVariable UUID id) {
         com.ibpms.poc.domain.model.agile.AgileTask task = taskService.getTask(id);
         // Exponer solo datos genéricos sin estados alterables:
@@ -118,7 +126,8 @@ public class WorkboxTaskController {
                 "description", task.getDescription(),
                 "slaExpiration", task.getSlaDeadline(),
                 "status", task.getStatus(),
-                "assignee", task.getAssigneeIds() != null && !task.getAssigneeIds().isEmpty() ? String.join(",", task.getAssigneeIds()) : ""
+                "assignee", task.getAssigneeIds() != null && !task.getAssigneeIds().isEmpty() ? String.join(",", task.getAssigneeIds()) : "",
+                "draftExpiresAt", task.getDraftExpiresAt() != null ? task.getDraftExpiresAt() : ""
         ));
     }
 
@@ -127,6 +136,7 @@ public class WorkboxTaskController {
      */
     @PostMapping("/{id}/force-unclaim")
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-002", CA = {"CA-08"})
     public ResponseEntity<Void> forceUnclaim(@PathVariable UUID id) {
         String supervisor = SecurityContextUtils.getAssignee();
         String tenantId = SecurityContextUtils.getTenantId();
@@ -145,6 +155,7 @@ public class WorkboxTaskController {
      * US-002 CA-9: Historial de reclamos (Audit Trail).
      */
     @GetMapping("/{id}/audit-trail")
+    @Traceability(US = "US-002", CA = {"CA-09"})
     public ResponseEntity<java.util.List<com.ibpms.poc.domain.model.audit.ClaimAuditLog>> auditTrail(@PathVariable UUID id) {
         return ResponseEntity.ok(claimAuditService.getAuditTrail(id));
     }

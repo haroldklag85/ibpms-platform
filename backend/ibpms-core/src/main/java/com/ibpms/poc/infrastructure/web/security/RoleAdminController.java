@@ -49,6 +49,7 @@ public class RoleAdminController {
     }
 
     /**
+     * @Traceability: US-036 - CA-03 Clonación de Perfiles por Plantilla
      * CA-3 US-036 — Asignación Masiva desde Plantilla.
      * POST /api/v1/admin/roles/{templateId}/assign-massively
      * Body: ["uuid-1", "uuid-2", ...]
@@ -74,6 +75,18 @@ public class RoleAdminController {
     @GetMapping("/{id}/effective-permissions")
     public ResponseEntity<List<ProcessPermissionEntity>> getEffectivePermissions(@PathVariable UUID id) {
         return ResponseEntity.ok(roleService.getEffectiveProcessPermissions(id));
+    }
+
+    /**
+     * @Traceability: US-036 - CA-04 Segregación Iniciador vs Ejecutor
+     * PUT /api/v1/admin/roles/{id}/process-permissions
+     * Reemplaza todos los permisos de proceso para el rol específico.
+     */
+    @PutMapping("/{id}/process-permissions")
+    public ResponseEntity<RoleEntity> updateProcessPermissions(
+            @PathVariable UUID id,
+            @RequestBody List<ProcessPermissionEntity> permissions) {
+        return ResponseEntity.ok(roleService.updateProcessPermissions(id, permissions));
     }
 
     // CA-16: Exportador de Informe Denso

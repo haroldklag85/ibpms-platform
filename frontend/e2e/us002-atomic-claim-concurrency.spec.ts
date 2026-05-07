@@ -1,42 +1,46 @@
 import { test, expect } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
 
 test.describe('US-002 Concurrencia Atómica - SELECT FOR UPDATE', () => {
 
-  test('Colisión de Operadores (Multi-Context): Operador B recibe 403 al intentar reclamar tarea simultánea', async ({ browser }) => {
+  let dynamicTaskId: string;
+
+  test.beforeEach(async ({ request }) => {
+    // Generar un task efímero via invocación al backend Process Engine
+    const response = await request.post('http://localhost:8080/api/v1/process/generic-approval/start-anonymous', {
+      data: {
+        payload: 'concurrency_payload_' + Date.now(),
+        priority: 'high'
+      }
+    });
+
+    expect(response.ok()).toBeTruthy();
+    const data = await response.json();
+    dynamicTaskId = data.processInstanceId;
+  });
+
+  test('Colisión de Operadores (Multi-Context): Operador B recibe 403/409 al intentar reclamar tarea simultánea', async ({ browser }) => {
     
-    // 1. Instanciar los contextos completamente aislados (Modo Incógnito)
-    const contextOperadorA = await browser.newContext();
-    const contextOperadorB = await browser.newContext();
+    const storageStatePath = path.join(__dirname, 'playwright/.auth/user.json');
+    const storageState = JSON.parse(fs.readFileSync(storageStatePath, 'utf8'));
+
+    // 1. Instanciar los contextos
+    const contextOperadorA = await browser.newContext({ storageState });
+    const contextOperadorB = await browser.newContext({ storageState });
 
     const pageOperadorA = await contextOperadorA.newPage();
     const pageOperadorB = await contextOperadorB.newPage();
 
-    // 2. Mockear la API para Operador A (Éxito = 200 OK)
-    await pageOperadorA.route('**/api/v1/workbox/tasks/*/claim', async (route) => {
-        // Simulamos un delay intencional de 500ms para atrapar la colisión
-        await new Promise(resolve => setTimeout(resolve, 500));
-        await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({ message: 'Tarea asignada exitosamente' })
-        });
-    });
+    // 4. Preparamos pre-condiciones, operarios navegan a la bandeja real
+    await pageOperadorA.goto('/workdesk');
+    await pageOperadorB.goto('/workdesk');
 
-    // 3. Mockear la API para Operador B (Fallo por Bloqueo Transaccional = 403)
-    await pageOperadorB.route('**/api/v1/workbox/tasks/*/claim', async (route) => {
-        // Operador B llega tarde pero en el mismo milisegundo transaccional
-        await new Promise(resolve => setTimeout(resolve, 800));
-        await route.fulfill({
-            status: 403, // HTTP 423 Locked o 403 Forbidden
-            contentType: 'application/json',
-            body: JSON.stringify({ error: 'La tarea ya fue asignada por otro usuario.' })
-        });
-    });
+    const taskRowA = pageOperadorA.locator(`[data-testid="task-row-${dynamicTaskId}"]`);
+    const taskRowB = pageOperadorB.locator(`[data-testid="task-row-${dynamicTaskId}"]`);
 
-    // 4. Preparamos pre-condiciones, operarios navegan a la bandeja simulada
-    // Aquí pondremos los .goto() reales cuando el componente esté integrado
-    // await pageOperadorA.goto('/workdesk/pool');
-    // await pageOperadorB.goto('/workdesk/pool');
+    await expect(taskRowA).toBeAttached({ timeout: 15000 });
+    await expect(taskRowB).toBeAttached({ timeout: 15000 });
 
     /* 
     ===============================================================
@@ -44,19 +48,25 @@ test.describe('US-002 Concurrencia Atómica - SELECT FOR UPDATE', () => {
     ===============================================================
     */
 
-    /*
+    const btnA = taskRowA.getByRole('button', { name: /Atender/i }).first();
+    const btnB = taskRowB.getByRole('button', { name: /Atender/i }).first();
+
     await Promise.all([
-        pageOperadorA.getByRole('button', { name: /Atender/i }).first().click(),
-        pageOperadorB.getByRole('button', { name: /Atender/i }).first().click()
+        btnA.click(),
+        btnB.click()
     ]);
-    */
 
-    // 5. Verificamos que el Operador A navegó exitosamente al formulario
-    // await expect(pageOperadorA).toHaveURL(/.*\/task-viewer\/.*/);
+    // Al menos uno de los dos debe fallar (toast de error)
+    // El otro debe tener éxito.
+    // Como el framework o la latencia pueden variar quién gana, buscamos el mensaje de error en cualquiera de los dos.
+    const errorMsgA = pageOperadorA.locator('.p-toast-message-error');
+    const errorMsgB = pageOperadorB.locator('.p-toast-message-error');
 
-    // 6. Verificamos que el Operador B se mantiene en la bandeja y recibe Tostada de Error
-    // const toastError = pageOperadorB.getByText('La tarea ya fue asignada por otro usuario');
-    // await expect(toastError).toBeVisible();
+    // Esperamos a que el Toast de error aparezca en al menos uno de los dos navegadores.
+    const errorInA = await errorMsgA.isVisible({ timeout: 5000 }).catch(() => false);
+    const errorInB = await errorMsgB.isVisible({ timeout: 5000 }).catch(() => false);
+
+    expect(errorInA || errorInB).toBeTruthy();
 
     // Clean up
     await contextOperadorA.close();

@@ -6,6 +6,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.net.URI;
 import java.util.List;
@@ -21,9 +22,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
  */
 @RestControllerAdvice
 @Slf4j
+@Traceability(US = "US-000", CA = {"CA-01", "CA-02", "CA-03", "CA-04", "CA-37"})
 public class GlobalExceptionHandler {
 
     /** 400 — Error de validación de campos (@Valid) */
+    // @Traceability: US-000 - CA-2
     @ApiResponse(responseCode = "400", description = "Error de validación de campos en el Payload", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationError(MethodArgumentNotValidException ex) {
@@ -118,6 +121,7 @@ public class GlobalExceptionHandler {
     }
 
     // CA-3: Bloqueo de Concurrencia Optimista (409)
+    // @Traceability: US-000 - CA-3
     @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
     public ProblemDetail handleConcurrency(org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
@@ -150,7 +154,19 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /** Maneja ResponseStatusException devolviendo el status y razón específicos */
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ProblemDetail handleResponseStatusException(org.springframework.web.server.ResponseStatusException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(ex.getStatusCode());
+        problem.setType(URI.create("https://ibpms.com/errors/status"));
+        problem.setTitle(ex.getReason() != null ? ex.getReason() : "Error " + ex.getStatusCode().value());
+        problem.setDetail(ex.getReason());
+        return problem;
+    }
+
     /** 500 — Error interno genérico (CA-37) */
+    // @Traceability: US-000 - CA-1
+    // @Traceability: US-000 - CA-4
     @ApiResponse(responseCode = "500", description = "Error interno - Blindado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {

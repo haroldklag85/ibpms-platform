@@ -1,5 +1,8 @@
 package com.ibpms.poc.infrastructure.web.security;
 
+import com.ibpms.poc.AbstractIntegrationTest;
+
+
 import com.ibpms.poc.application.service.JwtBlacklistService;
 import com.ibpms.poc.application.service.ServiceAccountManager;
 import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
@@ -13,15 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Date;
 import java.util.UUID;
@@ -29,37 +24,17 @@ import java.util.UUID;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 /**
  * Audit CA-20, CA-21, CA-22 - US-036
  * Zero-Trust & Fail-Fast Integration Tests.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-public class IdentityGovernanceIntegrationTest {
+
+public class IdentityGovernanceIntegrationTest extends AbstractIntegrationTest {
 
     @LocalServerPort
     private int port;
-
-    @Container
-    public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("ibpms_test")
-            .withUsername("testuser")
-            .withPassword("testpass");
-
-    @Container
-    public static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
-            .withExposedPorts(6379);
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", redis::getFirstMappedPort);
-    }
 
     @Autowired
     private WorkdeskProjectionRepository workdeskRepository;

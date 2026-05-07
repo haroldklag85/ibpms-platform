@@ -42,6 +42,12 @@ public class TriageTask {
     @Column(name = "sla_deadline", nullable = false)
     private ZonedDateTime slaDeadline;
 
+    @Column(name = "scan_status")
+    private String scanStatus;
+
+    @Column(name = "file_sha256_hash")
+    private String fileSha256Hash;
+
     @Column(name = "created_at", nullable = false)
     private ZonedDateTime createdAt;
 

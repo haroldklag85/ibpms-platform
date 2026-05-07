@@ -20,37 +20,65 @@ public class AgileTaskService {
     private final SlaChangeLogService slaChangeLogService;
     private final AuditLogService auditLogService;
     private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+    private final com.ibpms.poc.infrastructure.jpa.repository.TaskAuditLogRepository taskAuditLogRepository;
+    private final FormFieldCleanserService formFieldCleanserService;
+    private final ClaimAuditService claimAuditService;
 
     public AgileTaskService(AgileTaskRepositoryJpa taskRepository, 
                             SlaChangeLogService slaChangeLogService, 
                             AuditLogService auditLogService,
-                            org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate) {
+                            org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate,
+                            com.ibpms.poc.infrastructure.jpa.repository.TaskAuditLogRepository taskAuditLogRepository,
+                            FormFieldCleanserService formFieldCleanserService,
+                            ClaimAuditService claimAuditService) {
         this.taskRepository = taskRepository;
         this.slaChangeLogService = slaChangeLogService;
         this.auditLogService = auditLogService;
         this.messagingTemplate = messagingTemplate;
+        this.taskAuditLogRepository = taskAuditLogRepository;
+        this.formFieldCleanserService = formFieldCleanserService;
+        this.claimAuditService = claimAuditService;
     }
 
     @Transactional
-    public AgileTask createTask(UUID projectId, String title, String description, BigDecimal effort, String createdBy) {
+    public AgileTask createTask(UUID projectId, String title, String description, BigDecimal effort, java.util.Set<String> assigneeIds, java.util.Set<String> tags, String notes, String createdBy) {
         if (title == null || title.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Título obligatorio");
         }
+        
+        long activeCount = taskRepository.countByProjectIdAndStatusNotIn(projectId, java.util.List.of("DONE", "DELETED"));
+        if (activeCount >= 500) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Límite de 500 tareas activas superado para este proyecto");
+        }
+
+        String safeDescription = formFieldCleanserService.sanitizeHtml(description);
+        String safeNotes = formFieldCleanserService.sanitizeHtml(notes);
 
         AgileTask task = AgileTask.builder()
                 .id(UUID.randomUUID())
                 .projectId(projectId)
                 .title(title)
-                .description(description)
+                .description(safeDescription)
+                .notes(safeNotes)
                 .effortEstimated(effort)
+                .assigneeIds(assigneeIds)
+                .tags(tags)
                 .createdBy(createdBy)
                 .build();
 
         return taskRepository.save(task);
     }
 
-    public Page<AgileTask> listTasks(UUID projectId, boolean showCompleted, Pageable pageable) {
-        return taskRepository.findByProjectIdAndStatusNot(projectId, "DELETED", pageable);
+    public Page<AgileTask> listTasks(UUID projectId, boolean includeCompleted, Pageable pageable) {
+        if (includeCompleted) {
+            return taskRepository.findByProjectIdAndStatusNot(projectId, "DELETED", pageable);
+        } else {
+            return taskRepository.findByProjectIdAndStatusNotIn(projectId, java.util.List.of("DELETED", "DONE"), pageable);
+        }
+    }
+
+    public List<AgileTask> getPortfolio(String owner) {
+        return taskRepository.findPortfolioByOwner(owner);
     }
 
     public AgileTask getTask(UUID taskId) {
@@ -64,12 +92,21 @@ public class AgileTaskService {
     }
 
     @Transactional
-    public AgileTask updateTask(UUID taskId, String title, String description, BigDecimal effort, String status, java.time.ZonedDateTime slaDeadline, String updatedBy) {
+    @com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-008", CA = {"CA-02"})
+    public AgileTask updateTask(UUID taskId, String title, String description, BigDecimal effort, String status, java.time.ZonedDateTime slaDeadline, java.util.Set<String> assigneeIds, java.util.Set<String> tags, String notes, String updatedBy) {
         AgileTask task = getTaskForUpdate(taskId);
+        
+        if ("DONE".equals(task.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CA-02 Violación de Inmutabilidad: Una tarea en estado DONE es estrictamente de solo lectura (Historial forense sellado).");
+        }
+        
         if (title != null) task.setTitle(title);
-        if (description != null) task.setDescription(description);
+        if (description != null) task.setDescription(formFieldCleanserService.sanitizeHtml(description));
+        if (notes != null) task.setNotes(formFieldCleanserService.sanitizeHtml(notes));
         if (effort != null) task.setEffortEstimated(effort);
         if (status != null) task.setStatus(status);
+        if (assigneeIds != null) task.setAssigneeIds(assigneeIds);
+        if (tags != null) task.setTags(tags);
         
         if (slaDeadline != null && !slaDeadline.equals(task.getSlaDeadline())) {
             slaChangeLogService.logSlaModification(taskId, task.getSlaDeadline(), slaDeadline, updatedBy);
@@ -80,14 +117,28 @@ public class AgileTaskService {
     }
 
     /**
-     * CA-4: Eliminar con auditoría forense (Soft Delete)
-     * Utiliza save en vez de Query manual para forzar el Audit Log de Javers automáticamente.
+     * CA-4: Hard delete con auditoría forense antes de borrado.
      */
     @Transactional
     public void deleteTask(UUID taskId, String deletedBy) {
         AgileTask task = getTaskForUpdate(taskId);
-        task.setStatus("DELETED");
-        taskRepository.save(task);
+        
+        if ("DONE".equals(task.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CA-02 Violación de Inmutabilidad: No se permite eliminar una tarea en estado DONE (Historial forense sellado).");
+        }
+        
+        // GAP 1: Auditoría inmutable antes de borrado (taskId, title, deletedBy, deletedAt implícito en entity)
+        com.ibpms.poc.infrastructure.jpa.entity.TaskAuditLogEntity auditLog = 
+            new com.ibpms.poc.infrastructure.jpa.entity.TaskAuditLogEntity(
+                task.getId().toString(),
+                "HARD_DELETE",
+                deletedBy,
+                null,
+                "Deleted task title: " + task.getTitle()
+            );
+        taskAuditLogRepository.save(auditLog);
+
+        taskRepository.delete(task);
     }
 
     /**
@@ -110,6 +161,9 @@ public class AgileTaskService {
         for (UUID taskId : sortedTaskIds) {
             try {
                 AgileTask task = getTaskForUpdate(taskId);
+                if ("DONE".equals(task.getStatus())) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CA-02 Violación de Inmutabilidad: No se permite re-asignar una tarea en estado DONE.");
+                }
                 if (task.getAssigneeIds() == null) {
                     task.setAssigneeIds(new java.util.HashSet<>());
                 }
@@ -124,7 +178,8 @@ public class AgileTaskService {
     }
 
     /**
-     * US-002: Reclama una tarea y emite un evento WebSocket a la UI.
+     * @Traceability: US-002 - CA-1
+     * Reclama una tarea y emite un evento WebSocket a la UI.
      */
     @Transactional
     public void claimTask(UUID taskId, String claimedBy) {
@@ -151,7 +206,8 @@ public class AgileTaskService {
     }
 
     /**
-     * US-002 CA-28: claim-next con SKIP LOCKED. Reclama la siguiente tarea más urgente de forma atómica.
+     * @Traceability: US-002 - CA-23
+     * claim-next con SKIP LOCKED. Reclama la siguiente tarea más urgente de forma atómica.
      */
     @Transactional
     public AgileTask claimNextTask(String claimedBy) {
@@ -184,7 +240,8 @@ public class AgileTaskService {
     }
 
     /**
-     * US-002 CA-21: Rollback Optimistic UI. Libera la tarea SOLO si el asignado actual
+     * @Traceability: US-002 - CA-21
+     * Rollback Optimistic UI. Libera la tarea SOLO si el asignado actual
      * concuerda con el solicitante (el fallback timeout).
      */
     @Transactional
@@ -208,7 +265,8 @@ public class AgileTaskService {
     }
 
     /**
-     * US-002: Libera una tarea y emite un evento WebSocket a la UI.
+     * @Traceability: US-002 - CA-4
+     * Libera una tarea y emite un evento WebSocket a la UI.
      */
     @Transactional
     public void unclaimTask(UUID taskId, String unclaimedBy) {
@@ -229,7 +287,8 @@ public class AgileTaskService {
     }
 
     /**
-     * US-002 CA-8: Force Unclaim de un Supervisor
+     * @Traceability: US-002 - CA-8
+     * Force Unclaim de un Supervisor
      * Libera la tarea anulando las validaciones de ownership y notifica.
      */
     @Transactional
@@ -246,5 +305,125 @@ public class AgileTaskService {
                 "taskId", taskId,
                 "timestamp", java.time.Instant.now()
         ));
+    }
+
+    /**
+     * @Traceability: US-002 - CA-2
+     * bulk-claim
+     */
+    @Transactional
+    public java.util.Map<String, Object> bulkClaim(List<String> taskIds, String assignee) {
+        List<String> claimed = new java.util.ArrayList<>();
+        List<java.util.Map<String, String>> conflicts = new java.util.ArrayList<>();
+
+        for (String idStr : taskIds) {
+            UUID taskId = UUID.fromString(idStr);
+            try {
+                AgileTask task = getTaskForUpdate(taskId);
+                if (!"OPEN".equals(task.getStatus()) && !"AVAILABLE".equals(task.getStatus())) {
+                    conflicts.add(java.util.Map.of("taskId", idStr, "reason", "Task is not AVAILABLE"));
+                    continue;
+                }
+                task.setStatus("CLAIMED");
+                if (task.getAssigneeIds() == null) {
+                    task.setAssigneeIds(new java.util.HashSet<>());
+                }
+                task.getAssigneeIds().add(assignee);
+                taskRepository.save(task);
+
+                claimAuditService.audit(taskId, assignee, "BULK_CLAIMED", null, null, null);
+                claimed.add(idStr);
+
+            } catch (Exception e) {
+                conflicts.add(java.util.Map.of("taskId", idStr, "reason", "Concurrency conflict or not found"));
+            }
+        }
+
+        if (!claimed.isEmpty()) {
+            messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
+                    "event", "BULK_REMOVE",
+                    "taskIds", claimed,
+                    "claimedBy", assignee
+            ));
+        }
+
+        return java.util.Map.of("claimed", claimed, "conflicts", conflicts);
+    }
+
+    /**
+     * GAP-005: releaseTask
+     */
+    @Transactional
+    public void releaseTask(UUID taskId, String assignee, String message) {
+        AgileTask task = getTaskForUpdate(taskId);
+        if (task.getAssigneeIds() == null || !task.getAssigneeIds().contains(assignee)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot release unowned task");
+        }
+        task.getAssigneeIds().remove(assignee);
+        task.setStatus("AVAILABLE");
+        taskRepository.save(task);
+
+        claimAuditService.audit(taskId, assignee, "RELEASED", null, null, message);
+
+        messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
+                "event", "ADD",
+                "taskId", taskId
+        ));
+    }
+
+    /**
+     * GAP-006: forceUnclaimWithValidation
+     */
+    @Transactional
+    public java.util.Map<String, String> forceUnclaimWithValidation(UUID taskId, String supervisorId, String supervisorTeamId) {
+        AgileTask task = getTaskForUpdate(taskId);
+        
+        if (task.getTeamId() != null && !task.getTeamId().equals(supervisorTeamId)) {
+            claimAuditService.audit(taskId, supervisorId, "DENIED", "Team mismatch", null, null);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos para gestionar tareas de este equipo");
+        }
+
+        String previousAssignee = task.getAssigneeIds() != null && !task.getAssigneeIds().isEmpty() 
+            ? task.getAssigneeIds().iterator().next() : null;
+
+        task.setStatus("AVAILABLE");
+        if (task.getAssigneeIds() != null) {
+            task.getAssigneeIds().clear();
+        }
+        taskRepository.save(task);
+
+        claimAuditService.audit(taskId, supervisorId, "FORCE_UNCLAIMED", null, previousAssignee, null);
+
+        messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
+                "event", "TASK_FORCE_UNCLAIMED",
+                "taskId", taskId,
+                "timestamp", java.time.Instant.now()
+        ));
+
+        return java.util.Map.of(
+            "taskId", taskId.toString(),
+            "previousAssignee", previousAssignee != null ? previousAssignee : "none",
+            "forcedBy", supervisorId,
+            "timestamp", java.time.Instant.now().toString()
+        );
+    }
+
+    /**
+     * GAP-008: extendTimeout
+     */
+    @Transactional
+    public void extendTimeout(UUID taskId, String assignee) {
+        AgileTask task = getTaskForUpdate(taskId);
+        if (task.getAssigneeIds() == null || !task.getAssigneeIds().contains(assignee)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No eres el asignado de esta tarea");
+        }
+        if (task.getTimeoutExtensions() != null && task.getTimeoutExtensions() >= 2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Maximum extensions reached");
+        }
+        task.setTimeoutExtensions((task.getTimeoutExtensions() == null ? 0 : task.getTimeoutExtensions()) + 1);
+        task.setLastActivityAt(java.time.ZonedDateTime.now());
+        taskRepository.save(task);
+
+        claimAuditService.audit(taskId, assignee, "TIMEOUT_EXTENDED", null, null, null);
     }
 }

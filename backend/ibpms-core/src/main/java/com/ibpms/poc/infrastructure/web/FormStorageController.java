@@ -6,12 +6,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/forms")
+@Traceability(US = "US-008", CA = {"CA-24", "CA-39"})
 public class FormStorageController {
 
     private final FormStorageService formStorageService;

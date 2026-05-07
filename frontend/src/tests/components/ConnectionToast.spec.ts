@@ -6,31 +6,39 @@ import { useConnectionStore } from '@/stores/connectionStore';
 
 describe('ConnectionToast.vue', () => {
     let store: ReturnType<typeof useConnectionStore>;
+    let pinia: ReturnType<typeof createPinia>;
 
     beforeEach(() => {
-        setActivePinia(createPinia());
+        pinia = createPinia();
+        setActivePinia(pinia);
         store = useConnectionStore();
         vi.useFakeTimers();
     });
 
     it('CA-20: verifies positioning properties', async () => {
         store.setStatus('OFFLINE');
-        const wrapper = mount(ConnectionToast);
+        const wrapper = mount(ConnectionToast, {
+            global: { plugins: [pinia] }
+        });
         
-        // Use nextTick or await wrapper.vm.$nextTick() if needed, but synchronous mount should render based on store
-        const toastEl = wrapper.find('.connection-toast').element as HTMLElement;
+        await wrapper.vm.$nextTick();
+        const toastEl = wrapper.find('.connection-toast');
+        expect(toastEl.exists()).toBe(true);
         
-        // Normally we check classes or inline styles
-        expect(toastEl.style.position).toBe('fixed');
-        expect(toastEl.style.bottom).toBe('1.5rem');
-        expect(toastEl.style.left).toBe('1.5rem');
-        expect(toastEl.style.zIndex).toBe('9990');
-        expect(toastEl.style.maxWidth).toBe('320px');
+        const classes = toastEl.classes();
+        expect(classes).toContain('fixed');
+        expect(classes).toContain('bottom-6');
+        expect(classes).toContain('left-6');
+        expect(classes).toContain('z-[9990]');
+        expect(classes).toContain('max-w-[320px]');
     });
 
-    it('CA-21: validates plain business text without technical jargon', () => {
+    it('CA-21: validates plain business text without technical jargon', async () => {
         store.setStatus('OFFLINE');
-        const wrapper = mount(ConnectionToast);
+        const wrapper = mount(ConnectionToast, {
+            global: { plugins: [pinia] }
+        });
+        await wrapper.vm.$nextTick();
         
         const text = wrapper.text();
         expect(text).toContain('Trabajando sin conexión');
@@ -41,9 +49,12 @@ describe('ConnectionToast.vue', () => {
         });
     });
 
-    it('CA-22: ensures no full-screen blocking overlay is present', () => {
+    it('CA-22: ensures no full-screen blocking overlay is present', async () => {
         store.setStatus('OFFLINE');
-        const wrapper = mount(ConnectionToast);
+        const wrapper = mount(ConnectionToast, {
+            global: { plugins: [pinia] }
+        });
+        await wrapper.vm.$nextTick();
         
         const overlay = wrapper.find('.overlay');
         expect(overlay.exists()).toBe(false);
@@ -51,12 +62,16 @@ describe('ConnectionToast.vue', () => {
 
     it('CA-25: fades out 3 seconds after RESTORED', async () => {
         store.setStatus('RESTORED');
-        const wrapper = mount(ConnectionToast);
+        const wrapper = mount(ConnectionToast, {
+            global: { plugins: [pinia] }
+        });
+        await wrapper.vm.$nextTick();
         
         expect(wrapper.text()).toContain('Conexión restaurada');
         
         // After 3 seconds, store should reset to ONLINE and toast disappears
         vi.advanceTimersByTime(3000);
+        await wrapper.vm.$nextTick();
         
         expect(store.status).toBe('ONLINE');
         // Since store is ONLINE, toast should not be visible

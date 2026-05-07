@@ -3,6 +3,7 @@ package com.ibpms.poc.infrastructure.web;
 import com.ibpms.poc.application.dto.DocumentoDTO;
 import com.ibpms.poc.application.port.in.ListarDocumentosUseCase;
 import com.ibpms.poc.application.port.in.GenerarPdfOficialUseCase;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +18,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/cases")
+@Traceability(US = "US-035", CA = {"CA-01"})
 public class DocumentController {
 
     private final ListarDocumentosUseCase listarDocumentosUseCase;

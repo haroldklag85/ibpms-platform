@@ -35,6 +35,21 @@ public class TaskControllerTest {
     @MockBean
     private ReclamarTareaUseCase reclamarTareaUseCase;
 
+    @MockBean
+    private com.ibpms.poc.application.port.in.LiberarTareaUseCase liberarTareaUseCase;
+
+    @MockBean
+    private com.ibpms.poc.application.port.in.ReasignarTareaUseCase reasignarTareaUseCase;
+
+    @MockBean
+    private com.ibpms.poc.application.service.FormFieldCleanserService formFieldCleanserService;
+
+    @MockBean
+    private org.camunda.bpm.engine.TaskService taskService;
+
+    @MockBean
+    private com.ibpms.poc.infrastructure.jpa.repository.FormFieldValueAuditRepository formFieldValueAuditRepository;
+
     @BeforeEach
     void setUp() {
         // Nada específico por ahora

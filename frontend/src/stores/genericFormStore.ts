@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { debounce } from 'lodash-es'
 import apiClient from '@/services/apiClient'
+import { useAuthStore } from '@/stores/authStore'
+import { encryptDraft, decryptDraft } from '@/utils/draftCrypto'
 
 export interface GenericFormDraft {
   observations: string;
@@ -87,8 +89,11 @@ export const useGenericFormStore = defineStore('genericForm', () => {
     }
     
     try {
-      // LocalStorage first
-      localStorage.setItem(`generic_draft_${taskId.value}`, JSON.stringify(payload))
+      // LocalStorage first — encrypt PII with AES-GCM (CA-11, GAP-05)
+      const authStore = useAuthStore()
+      const sessionKey = authStore.userId || 'fallback-key'
+      const encrypted = await encryptDraft(JSON.stringify(payload), sessionKey)
+      localStorage.setItem(`generic_draft_${taskId.value}`, encrypted)
       
       // Remote Save
       await apiClient.put(`/drafts/${taskId.value}`, payload)
@@ -130,7 +135,16 @@ export const useGenericFormStore = defineStore('genericForm', () => {
 
       const localStr = localStorage.getItem(`generic_draft_${taskId.value}`)
       if (localStr) {
-        return JSON.parse(localStr) as GenericFormDraft
+        try {
+          // Decrypt PII from AES-GCM (CA-11, GAP-05)
+          const authStore = useAuthStore()
+          const sessionKey = authStore.userId || 'fallback-key'
+          const decrypted = await decryptDraft(localStr, sessionKey)
+          return JSON.parse(decrypted) as GenericFormDraft
+        } catch {
+          // Fallback: try parsing as plain JSON (legacy drafts)
+          return JSON.parse(localStr) as GenericFormDraft
+        }
       }
     } catch (e) {
         console.error("Error checking draft", e)
@@ -155,29 +169,36 @@ export const useGenericFormStore = defineStore('genericForm', () => {
     syncState.value = "SYNCED"
   }
 
-  // --- Submit ---
+  // --- Submit (Upload-First: ADR-004 / CA-09) ---
   const submitForm = async () => {
     isSubmitting.value = true
     try {
-      const formData = new FormData()
-      formData.append('observations', observations.value)
-      formData.append('result', result.value)
+      // Guard: Ensure all files finished uploading before submit
+      if (files.value.some(f => f.status === 'UPLOADING')) {
+        console.error('Cannot submit: files still uploading')
+        return false
+      }
+
+      // Panic action validation
       if (panicAction.value) {
         if (!panicJustification.value || panicJustification.value.length < 20) {
           console.error('Panic justification must be >= 20 characters')
           return false
         }
-        formData.append('panicAction', panicAction.value)
-        formData.append('panicJustification', panicJustification.value)
       }
-      
-      // Append files
-      files.value.forEach((f) => {
-        formData.append('evidenceFiles', f)
-      })
 
-      await apiClient.post(`/workbox/tasks/${taskId.value}/generic-form-complete`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      // Collect temp_ids from successfully uploaded files (Upload-First pattern)
+      const attachmentIds = files.value
+        .filter(f => f.status === 'SUCCESS' && f.temp_id)
+        .map(f => f.temp_id)
+
+      // Send JSON payload — NO FormData, NO multipart/form-data
+      await apiClient.post(`/workbox/tasks/${taskId.value}/generic-form-complete`, {
+        observations: observations.value,
+        result: result.value,
+        panicAction: panicAction.value || undefined,
+        panicJustification: panicJustification.value || undefined,
+        attachments: attachmentIds
       })
 
       // On success, clear drafts
@@ -185,7 +206,7 @@ export const useGenericFormStore = defineStore('genericForm', () => {
       return true
     } catch (e) {
       console.error("Submit error", e)
-      return false
+      throw e // Re-throw so GenericFormBody.vue catch can handle 409
     } finally {
       isSubmitting.value = false
     }

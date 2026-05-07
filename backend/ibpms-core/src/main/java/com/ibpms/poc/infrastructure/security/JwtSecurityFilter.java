@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.stereotype.Component;
 
 /**
  * Filtro perimetral que intercepta peticiones HTTP para asegurar la capa de API
@@ -20,7 +22,9 @@ import java.util.Set;
  * in-flight
  * para revocar tokens comprometidos de inmediato (Token Revocation List - TRL).
  */
+// @Traceability: US-036 - CA-25
 @Component
+@ConditionalOnBean(JwtTokenProvider.class)
 public class JwtSecurityFilter implements Filter {
 
     // En producción esto sería un RedisTemplate o un Cache Manager
@@ -44,21 +48,24 @@ public class JwtSecurityFilter implements Filter {
 
         String authHeader = httpRequest.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-
-            // Verificación de Lista Negra (Redis)
-            if (isTokenBlacklisted(token)) {
-                httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                httpResponse.getWriter()
-                        .write("401 Unauthorized: El token EntraID suministrado ha sido revocado (Blacklisted).");
-                return;
-            }
-
-            // Aquí se delegaría la validación criptográfica de firmas RSA de EntraID (fuera
-            // del alcance del test)
-            httpRequest.setAttribute("validated_user", extractUserId(token));
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            httpResponse.getWriter().write("401 Unauthorized: Token no detectado. Zero-Trust enforcing.");
+            return;
         }
+
+        String token = authHeader.substring(7);
+
+        // Verificación de Lista Negra (Redis)
+        if (isTokenBlacklisted(token)) {
+            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            httpResponse.getWriter()
+                    .write("401 Unauthorized: El token EntraID suministrado ha sido revocado (Blacklisted).");
+            return;
+        }
+
+        // Aquí se delegaría la validación criptográfica de firmas RSA de EntraID (fuera del alcance del test)
+        httpRequest.setAttribute("validated_user", extractUserId(token));
 
         chain.doFilter(request, response);
     }

@@ -8,26 +8,30 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+
+import io.restassured.RestAssured;
+import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
+import io.restassured.http.ContentType;
+import static io.restassured.RestAssured.given;
+import java.util.List;
+import static org.hamcrest.Matchers.*;
+
+
+
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
 import org.junit.jupiter.api.AfterEach;
 
 import java.util.UUID;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.ibpms.poc.AbstractIntegrationTest;
 
-@SpringBootTest
-@AutoConfigureMockMvc
 @SuppressWarnings("null")
 public class IdentityManagementIntegrationTest extends AbstractIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -35,10 +39,20 @@ public class IdentityManagementIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    private String adminToken;
+
+
     private UUID existingUserId;
 
     @BeforeEach
     void setUp() {
+        RestAssured.port = port;
+        adminToken = jwtTokenProvider.generateToken("test-admin", List.of("ROLE_SUPER_ADMIN"), "tenant1");
+
+        RestAssured.port = port;
         // Prepare a user for testing
         UserEntity user = new UserEntity();
         user.setUsername("test_operator");
@@ -62,22 +76,29 @@ public class IdentityManagementIntegrationTest extends AbstractIntegrationTest {
         request.setEmail("hacker@malicious.com");
         request.setPassword("123456"); // Missing upper, special, and length
 
-        mockMvc.perform(post("/api/v1/admin/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").exists())
-                .andExpect(jsonPath("$.fields[0].field").value("password"));
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(request))
+                .when()
+                .post("/api/v1/admin/users")
+                .then()
+                .statusCode(400)
+                .body("error", notNullValue())
+                .body("fields[0].field", equalTo("password"));
     }
 
     @Test
     @DisplayName("CA-5: Kill Switch - Desactivar usuario invalida sesión (HTTP 200 OK con payload de expulsión)")
     void testKillSwitchIsolation() throws Exception {
         // Enviar petición de kill-session asumiendo que el admin presiona el botón
-        mockMvc.perform(post("/api/v1/admin/users/" + existingUserId + "/kill-session")
-                .header("Authorization", "Bearer mock-jwt-token-12345"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("SUCCESS"));
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .when()
+                .post("/api/v1/admin/users/" + existingUserId + "/kill-session")
+                .then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"));
 
         // Verificamos que el usuario quedó inactivo en BD
         UserEntity user = userRepository.findById(existingUserId).orElseThrow();
@@ -87,7 +108,11 @@ public class IdentityManagementIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("US-036 p2: Soft-Delete Guard - Un DELETE físico debe ser repudiado con HTTP 405")
     void testSoftDeleteGuardReturns405() throws Exception {
-        mockMvc.perform(delete("/api/v1/admin/users/" + existingUserId))
-                .andExpect(status().isMethodNotAllowed()); // The backend must repudiate this verb to protect DB integrity
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .when()
+                .delete("/api/v1/admin/users/" + existingUserId)
+                .then()
+                .statusCode(405);
     }
 }

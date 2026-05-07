@@ -43,7 +43,7 @@ class PreTriageTaskCreationTest {
     void setUp() {
         WebhookProperties props = new WebhookProperties();
         props.getPreTriage().setProcessDefinitionKey(PROCESS_KEY);
-        service = new WebhookIntakeService(transactionRepo, orphanRepo, domainRepo, mock(com.ibpms.poc.domain.port.TriageTaskRepository.class), clamAvScanner, runtimeService, props);
+        service = new WebhookIntakeService(transactionRepo, orphanRepo, domainRepo, mock(com.ibpms.poc.domain.port.TriageTaskRepository.class), clamAvScanner, runtimeService, props, mock(com.ibpms.poc.application.service.IntegrationEventPublisher.class));
     }
 
     @Test
@@ -81,6 +81,7 @@ class PreTriageTaskCreationTest {
         when(runtimeService.startProcessInstanceByKey(eq(PROCESS_KEY), anyString(), varsCaptor.capture()))
                 .thenReturn(mockInstance);
         when(transactionRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(clamAvScanner.scan(any(), anyString())).thenReturn(ClamAvScanner.ScanResult.CLEAN);
 
         byte[] attachment = "test-file-content".getBytes();
         WebhookPayload payload = new WebhookPayload("msg-dto", "analyst@ibm.com",

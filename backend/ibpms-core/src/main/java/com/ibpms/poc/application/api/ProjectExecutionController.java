@@ -1,5 +1,6 @@
 package com.ibpms.poc.application.api;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/v1/execution/projects")
 @RequiredArgsConstructor
 @Slf4j
+@Traceability(US = "US-031", CA = {"CA-04"})
 public class ProjectExecutionController {
 
 

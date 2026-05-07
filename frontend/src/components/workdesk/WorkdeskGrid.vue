@@ -32,7 +32,7 @@
           <tr v-if="tasks.length === 0">
              <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No hay tareas disponibles</td>
           </tr>
-          <tr v-for="task in tasks" :key="task.unifiedId" class="hover:bg-gray-50 transition-colors">
+          <tr v-for="task in tasks" :key="task.unifiedId" class="hover:bg-gray-50 transition-colors cursor-pointer" @dblclick="selectedPreviewId = task.unifiedId">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ task.title }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -69,6 +69,7 @@
     <!-- CA-5 Task Preview Modal -->
     <TaskPreviewModal 
       :taskId="selectedPreviewId" 
+      :readOnly="workdeskStore.activeView === 'POOL'"
       @close="selectedPreviewId = null" 
     />
 

@@ -2,7 +2,7 @@ package com.ibpms.poc.infrastructure.web;
 
 import com.ibpms.poc.application.dto.WorkdeskResponseDTO;
 import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository;
+import com.ibpms.poc.application.service.WorkdeskQueryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 class WorkdeskQueryPerformanceTest {
 
     @Mock
-    private WorkdeskProjectionRepository repository;
+    private WorkdeskQueryService workdeskQueryService;
 
     @InjectMocks
     private WorkdeskQueryController controller;
@@ -58,7 +58,7 @@ class WorkdeskQueryPerformanceTest {
         // Arrange: Mock the JPA page response
         PageRequest pageRequest = PageRequest.of(0, 50);
         Page<WorkdeskProjectionEntity> pagedResponse = new PageImpl<>(mockLargeDataset.subList(0, 50), pageRequest, mockLargeDataset.size());
-        when(repository.findWorkdeskTasks(any(), any(), any(), any())).thenReturn(pagedResponse);
+        when(workdeskQueryService.getWorkdeskTasks(any(), any(), any(), any())).thenReturn(pagedResponse);
 
         // Act & Measure Latency
         long startTime = System.currentTimeMillis();

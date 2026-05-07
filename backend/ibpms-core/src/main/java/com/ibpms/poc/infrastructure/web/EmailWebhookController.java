@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.Map;
 
@@ -14,6 +15,7 @@ import java.util.Map;
 @Deprecated(since = "v1.0.0", forRemoval = true)
 @RestController
 @RequestMapping("/inbound/email-webhook")
+@Traceability(US = "US-013", CA = {"CA-01"})
 public class EmailWebhookController {
 
     private final ProcesarEmailWebhookUseCase webhookUseCase;

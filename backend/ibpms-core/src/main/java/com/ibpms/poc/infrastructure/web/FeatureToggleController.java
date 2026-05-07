@@ -9,12 +9,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/workdesk/feature-toggles")
+@Traceability(US = "US-001", CA = {"CA-15"})
 public class FeatureToggleController {
 
     private final FeatureToggleRepository featureToggleRepository;

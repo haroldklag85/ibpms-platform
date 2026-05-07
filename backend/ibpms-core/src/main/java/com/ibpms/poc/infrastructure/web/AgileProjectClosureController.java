@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 @RestController
 @RequestMapping("/api/v1/agile/projects")
+@Traceability(US = "US-030", CA = {"CA-10"})
 public class AgileProjectClosureController {
 
     private final AgileProjectClosureService closureService;

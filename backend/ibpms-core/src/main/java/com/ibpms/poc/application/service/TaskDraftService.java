@@ -3,7 +3,7 @@ package com.ibpms.poc.application.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibpms.poc.domain.model.agile.AgileTask;
-import com.ibpms.poc.infrastructure.persistence.AgileTaskRepositoryJpa;
+import com.ibpms.poc.application.port.out.AgileTaskPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 import java.util.UUID;
+import java.time.ZonedDateTime;
 
 /**
  * US-029: Persistencia progresiva de Borradores y Validación de Completitud.
@@ -19,12 +20,12 @@ import java.util.UUID;
 @Service
 public class TaskDraftService {
 
-    private final AgileTaskRepositoryJpa taskRepository;
+    private final AgileTaskPort taskRepository;
     private final ObjectMapper objectMapper;
     // Asumimos un puerto o invocación directa a CamundaTaskService para completar.
     // Omito la inyección real de Camunda por abstracción, pero preparo la firma.
 
-    public TaskDraftService(AgileTaskRepositoryJpa taskRepository, ObjectMapper objectMapper) {
+    public TaskDraftService(AgileTaskPort taskRepository, ObjectMapper objectMapper) {
         this.taskRepository = taskRepository;
         this.objectMapper = objectMapper;
     }
@@ -50,6 +51,11 @@ public class TaskDraftService {
             task.setDraftPayload(jsonPayload);
             task.setDraftPayloadHash(currentHash);
             task.setStatus("DRAFT");
+            
+            // BACK-029-08: Draft TTL Auto-Calculation (GAP-16, CA-26)
+            ZonedDateTime draftExpiresAt = ZonedDateTime.now().plusHours(72);
+            task.setDraftExpiresAt(draftExpiresAt);
+            
             taskRepository.save(task);
 
         } catch (JsonProcessingException e) {

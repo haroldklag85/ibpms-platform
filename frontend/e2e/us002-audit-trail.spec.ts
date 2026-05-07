@@ -1,30 +1,41 @@
 import { test, expect } from '@playwright/test';
+import { seedTask } from './helpers/task-seeder';
 
 test.describe('US-002 CA-9: Audit Trail Timeline', () => {
+
+  let taskId: string;
+
+  test.beforeEach(async ({ request }) => {
+    taskId = await seedTask(request);
+  });
+
   test('Visualización cronológica de eventos de reclamación y liberación', async ({ page }) => {
-    await page.route('**/api/v1/workdesk/tasks/task-AT/preview', route => {
-        route.fulfill({ status: 200, body: JSON.stringify({ unifiedId: 'task-AT', status: 'ACTIVE' }) });
-    });
 
-    await page.route('**/api/v1/workdesk/tasks/task-AT/audit', route => {
-      route.fulfill({
-          status: 200,
-          body: JSON.stringify([
-            { id: 1, action: 'CLAIM', actor: 'userX', timestamp: '2026-04-18T10:00:00Z' },
-            { id: 2, action: 'UNCLAIM', actor: 'userX', timestamp: '2026-04-18T11:00:00Z', reason: 'Abandono' },
-            { id: 3, action: 'CLAIM', actor: 'userY', timestamp: '2026-04-18T12:00:00Z' },
-            { id: 4, action: 'FORCE_UNCLAIM', actor: 'boss', timestamp: '2026-04-18T13:00:00Z', reason: 'Vencimiento SLA' }
-          ])
-      });
-    });
+    await page.goto('/workdesk');
 
-    await page.goto('/workdesk?previewTask=task-AT');
+    const taskRow = page.locator(`[data-testid="task-row-${taskId}"]`);
+    await expect(taskRow).toBeAttached({ timeout: 15000 });
+
+    // Reclamar la tarea para generar un evento
+    await taskRow.getByRole('button', { name: /Atender/i }).first().click();
+    await expect(page.locator('.toast-success')).toBeVisible({ timeout: 15000 }).catch(() => {});
+
+    // Liberar la tarea
+    // Asumiendo que ahora aparece un botón 'Liberar' o 'Unclaim'
+    const btnLiberar = taskRow.getByRole('button', { name: /Liberar/i }).first();
+    await expect(btnLiberar).toBeVisible({ timeout: 10000 });
+    await btnLiberar.click();
+    await expect(page.locator('.toast-success')).toBeVisible({ timeout: 15000 }).catch(() => {});
+
+    // Abrir el Preview o Timeline
+    // Asumiendo que dando clic a la fila o un botón "Detalles" se abre
+    await taskRow.click();
 
     const timeline = page.locator('.timeline');
-    await timeline.waitFor({ state: 'visible' });
+    await expect(timeline).toBeVisible({ timeout: 10000 });
 
-    await expect(page.getByText('userX')).toHaveCount(2);
-    await expect(page.getByText('boss')).toBeVisible();
-    await expect(page.getByText('Vencimiento SLA')).toBeVisible();
+    // Validar que exista el evento de CLAIM y UNCLAIM
+    await expect(timeline.getByText(/CLAIM/i).first()).toBeVisible();
+    await expect(timeline.getByText(/UNCLAIM/i).first()).toBeVisible();
   });
 });

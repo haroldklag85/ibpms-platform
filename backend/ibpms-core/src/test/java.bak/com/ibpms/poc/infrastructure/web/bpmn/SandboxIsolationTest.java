@@ -1,20 +1,20 @@
 package com.ibpms.poc.infrastructure.web.bpmn;
 
+import com.ibpms.poc.AbstractIntegrationTest;
+
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-public class SandboxIsolationTest {
+
+public class SandboxIsolationTest extends AbstractIntegrationTest {
 
     @LocalServerPort
     private int port;

@@ -1,3 +1,4 @@
+// @Traceability: US-017 - CA-01, CA-03
 package com.ibpms.poc.api.controller;
 
 import com.ibpms.poc.application.dto.FormSubmitRequest;
@@ -11,7 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/workbox/tasks")
+@RequestMapping("/api/v1/workbox/bpmn-tasks")
 public class FormCompletionController {
 
     private final FormCompletionService formCompletionService;

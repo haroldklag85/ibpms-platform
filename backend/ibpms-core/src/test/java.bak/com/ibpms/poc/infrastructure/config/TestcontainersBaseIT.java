@@ -59,5 +59,5 @@ public abstract class TestcontainersBaseIT {
     @Container
     @ServiceConnection
     static RabbitMQContainer rabbit =
-            new RabbitMQContainer("rabbitmq:3-management");
+            new RabbitMQContainer("rabbitmq:3-management-alpine");
 }

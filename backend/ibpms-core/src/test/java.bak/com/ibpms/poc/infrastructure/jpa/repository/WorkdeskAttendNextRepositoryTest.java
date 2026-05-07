@@ -21,10 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+import com.ibpms.poc.infrastructure.config.TestcontainersBaseIT;
+
+@SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class WorkdeskAttendNextRepositoryTest {
+public class WorkdeskAttendNextRepositoryTest extends TestcontainersBaseIT {
 
     @Autowired
     private WorkdeskProjectionRepository workdeskRepository;

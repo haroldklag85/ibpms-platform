@@ -23,7 +23,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
+import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
+import com.ibpms.poc.infrastructure.security.JwtSecurityFilter;
+import com.ibpms.poc.infrastructure.security.JwtAuthFilter;
+
 @WebMvcTest(controllers = ProjectTemplateController.class)
+@Import(com.ibpms.poc.infrastructure.security.SecurityConfig.class)
+@ActiveProfiles("test")
 public class ProjectTemplateControllerTest {
 
     @Autowired
@@ -34,6 +42,21 @@ public class ProjectTemplateControllerTest {
 
     @MockBean
     private CrearProjectTemplateUseCase crearProjectTemplateUseCase;
+
+    @MockBean
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private JwtAuthFilter jwtAuthFilter;
+
+    @MockBean
+    private JwtSecurityFilter jwtSecurityFilter;
+
+    @MockBean
+    private com.ibpms.poc.infrastructure.security.ApiKeyAuthFilter apiKeyAuthFilter;
+
+    @MockBean
+    private com.ibpms.poc.infrastructure.jpa.repository.security.ServiceAccountRepository serviceAccountRepository;
 
     @Test
     @WithMockUser(username = "architect_user", roles = { "Architect" })

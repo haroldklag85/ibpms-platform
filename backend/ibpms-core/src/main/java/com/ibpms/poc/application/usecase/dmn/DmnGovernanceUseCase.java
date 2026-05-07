@@ -25,7 +25,7 @@ public class DmnGovernanceUseCase {
      * Actualiza el XML de un DMN, SOLO si no está SELLADO y SOLO si el Tenant coincide.
      */
     @Transactional
-    public DmnModelEntity updateDmnContent(String dmnId, String newXml, String invokerTenantId) {
+    public DmnModelEntity updateDmnContent(String dmnId, String newXml, String invokerTenantId, boolean isManual) {
         DmnModelEntity dmn = dmnRepository.findById(dmnId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DMN Model not found"));
 
@@ -39,7 +39,29 @@ public class DmnGovernanceUseCase {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El DMN se encuentra Aprobado (SEALED). Es técnicamente inmutable. Para aplicar cambios, emita una Versión 2.");
         }
 
-        dmn.setXmlContent(newXml);
+        // GAP-19: Validar Hit Policy (Solo FIRST o vacío)
+        if (newXml.contains("hitPolicy=\"COLLECT\"") || newXml.contains("hitPolicy=\"ANY\"") || newXml.contains("hitPolicy=\"UNIQUE\"")) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "GAP-19: Solo se permite Hit Policy FIRST para mantener el determinismo del motor.");
+        }
+        if (!newXml.contains("hitPolicy=")) {
+            newXml = newXml.replace("<decisionTable id=", "<decisionTable hitPolicy=\"FIRST\" id=");
+        }
+
+        // GAP-18: Minificación de XML con Fallback
+        String minifiedXml = newXml.replaceAll(">\\s+<", "><");
+        if (minifiedXml.length() < 100) {
+            log.warn("[GAP-18] Minificación fallida o sospechosa, aplicando Fallback al XML Original.");
+            minifiedXml = newXml;
+        }
+
+        if (isManual) {
+            dmn.setIsManual(true);
+            // GAP-26: Badge V2 y NLP_MODIFIED
+            minifiedXml = minifiedXml.replace("<definitions", "<definitions version=\"2.0\" exporter=\"NLP_MODIFIED\"");
+            log.info("[AUDIT] GAP-26: DMN {} modificada manualmente. Version 2.0, NLP_MODIFIED.", dmnId);
+        }
+
+        dmn.setXmlContent(minifiedXml);
         return dmnRepository.save(dmn);
     }
 

@@ -20,6 +20,7 @@ public class AgileProjectService {
         this.repository = repository;
     }
 
+    // @Traceability: US-030 - CA-2: Arranque vacío
     @Transactional
     public AgileProject createProject(String name, String description, String createdBy) {
         if (name == null || name.isBlank()) {
@@ -36,6 +37,7 @@ public class AgileProjectService {
         return repository.save(project);
     }
 
+    // @Traceability: US-030 - CA-7: Vista Proyecto + Vista Portafolio
     public Page<AgileProject> listProjects(Pageable pageable) {
         return repository.findAll(pageable);
     }

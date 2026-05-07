@@ -22,6 +22,9 @@ export const useAgileStore = defineStore('agile', () => {
   // CA-8: Smart Archive (Ocultar DONE antíguos y Rancios inactivos)
   const isArchiveSimulated = ref<boolean>(false);
 
+  // CA-8: Toggle "Mostrar Completadas"
+  const showCompleted = ref<boolean>(false);
+
   const fetchProjectBoard = async (projectId: string) => {
     isLoading.value = true;
     error.value = null;
@@ -106,16 +109,13 @@ export const useAgileStore = defineStore('agile', () => {
   const filteredBacklogItems = computed(() => {
     let items = backlogItems.value;
     
-    // CA-7: Portfolio mode could technically merge this, but locally implies bypassing project filter 
-    // Usually handled by Backend API changing context, but from local perspective we expose everything loaded.
-    
+    // Default: Excluir DONE. Si showCompleted es true, se devuelven en otra lista, pero para el flujo normal los ocultamos.
+    items = items.filter(item => item.status !== 'DONE');
+
     // CA-8: Smart Archive Rules
     if (isArchiveSimulated.value) {
       items = items.filter(item => {
-        if (item.status === 'DONE') return false; // Hide all Done
-        
         // Hide Stale tickets gracefully (older than 30 days without updates) if explicitly required.
-        // Let's hide items in DONE. Unused ones will just get Stale BADGE, not hidden.
         return true;
       });
     }
@@ -123,15 +123,21 @@ export const useAgileStore = defineStore('agile', () => {
     return items;
   });
 
+  const completedBacklogItems = computed(() => {
+    return backlogItems.value.filter(item => item.status === 'DONE');
+  });
+
   return {
     currentProject,
     sprints,
     backlogItems, // raw access
     filteredBacklogItems, // dynamic UI access
+    completedBacklogItems,
     isLoading,
     error,
     isPortfolioMode,
     isArchiveSimulated,
+    showCompleted,
     fetchProjectBoard,
     moveItemToSprint,
     assignUsersToItem,

@@ -8,12 +8,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.ibpms.poc.application.util.SecurityContextUtils;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/kanban")
+@Traceability(US = "US-008", CA = {"CA-06"})
 public class KanbanStateController {
 
     private final KanbanBoardService boardService;

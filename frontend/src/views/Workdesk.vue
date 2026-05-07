@@ -566,7 +566,7 @@ const switchDelegationMode = async (mode: 'SELF' | 'DELEGATED') => {
 
     try {
       // CA-15: El Backend valida la jerarquía y retorna 403 si es IDOR
-      await store.fetchGlobalInbox(0, 50, searchQuery.value, assistantId, typeFilter.value, slaFilter.value, statusFilter.value);
+      await store.fetchGlobalInbox(0, 15, searchQuery.value, assistantId, typeFilter.value, slaFilter.value, statusFilter.value);
 
       // Si la respuesta incluye delegationContext, extraer nombre
       delegatedUserName.value = store.lastDelegationContext?.delegatedUserDisplayName || assistantId;
@@ -611,7 +611,7 @@ const applyFacetFilter = (status: string) => {
 
 const loadData = async () => {
     const delegatedId = delegationMode.value === 'DELEGATED' ? delegatedUserId.value : undefined;
-    await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 50, searchQuery.value, delegatedId || undefined, typeFilter.value, slaFilter.value, statusFilter.value);
+    await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 15, searchQuery.value, delegatedId || undefined, typeFilter.value, slaFilter.value, statusFilter.value);
 };
 
 // ==========================================

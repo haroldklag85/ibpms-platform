@@ -55,8 +55,6 @@ databaseChangeLog:
       file: db/changelog/sprint3/005_create_agile_hub_tables.sql
   - include:
       file: db/changelog/sprint3/006_create_mq_resilience_tables.sql
-
-
   - include:
       file: db/changelog/sprint5/001_create_claim_audit_log.sql
   # HO-02 Sprint 6.2: Consolidación de delegación (3 tablas → 1)
@@ -82,3 +80,21 @@ databaseChangeLog:
       file: db/changelog/36-us036-ca12-ca16-reports.sql
   - include:
       file: db/changelog/37-us036-ca17-ca22-tables.sql
+  - include:
+      file: db/changelog/36-us008-kanban-state-schema.sql
+  - include:
+      file: db/changelog/37-us002-claim-audit-log-orphans.sql
+  - include:
+      file: db/changelog/38-us007-dmn-manual-edit-schema.sql
+  - include:
+      file: db/changelog/39-us029-form-execution-schema.sql
+  - include:
+      file: db/changelog/40-us029-draft-expiration.sql
+  - include:
+      file: db/changelog/41-us007-dmn-schema-complement.sql
+  - include:
+      file: db/changelog/changes/42-us025-menu-topology.sql
+  - include:
+      file: db/changelog/changes/43-us025-impersonation-audit.sql
+  - include:
+      file: db/changelog/changes/44-us036-role-soft-delete.sql

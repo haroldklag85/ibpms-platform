@@ -26,6 +26,9 @@ class DlqAdminControllerTest {
     @Mock
     private RabbitAdmin rabbitAdmin;
 
+    @Mock
+    private com.ibpms.poc.infrastructure.jpa.repository.SystemAuditLogRepository auditRepository;
+
     @InjectMocks
     private DlqAdminController controller;
 

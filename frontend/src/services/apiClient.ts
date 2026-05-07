@@ -14,41 +14,15 @@ const apiClient: AxiosInstance = axios.create({
 
 // Interceptor de Request para anexar el Bearer Token corporativo si existe
 apiClient.interceptors.request.use(
-    async (config: InternalAxiosRequestConfig) => {
-        // CA-09: Sudo-Mode Interceptor for Critical POST/PUT/DELETE/PATCH
-        const criticalMethods = ['post', 'put', 'delete', 'patch'];
-        const method = config.method?.toLowerCase() || '';
-        const isCriticalRoute = config.url && (
-            config.url.includes('/admin/') || 
-            config.url.includes('/security/') || 
-            config.url.includes('/kill-session')
-        ) && !config.url.includes('/auth/sudo');
-
-        if (criticalMethods.includes(method) && isCriticalRoute) {
-            const authorized = await new Promise<boolean>((resolve) => {
-                 const handler = (e: Event) => {
-                     const customEvent = e as CustomEvent;
-                     resolve(customEvent.detail.authorized);
-                     window.removeEventListener('sudo-resolved', handler);
-                 };
-                 window.addEventListener('sudo-resolved', handler);
-                 window.dispatchEvent(new CustomEvent('sudo-required', { 
-                     detail: { actionName: `Autorización crítica para: ${config.url}` } 
-                 }));
-            });
-
-            if (!authorized) {
-                return Promise.reject(new axios.Cancel('Operación cancelada por el usuario (Fallo de Sudo Mode).'));
-            }
-            if (config.headers) {
-                config.headers['X-Sudo-Token'] = 'true';
-            }
-        }
-
+    (config: InternalAxiosRequestConfig) => {
         // CA-19: La detección offline se maneja en el interceptor de response.
         const authStore = useAuthStore();
         if (authStore.token && config.headers) {
             config.headers.Authorization = `Bearer ${authStore.token}`;
+        }
+        // @Traceability: US-038 - CA-09 (Trazabilidad Quirúrgica)
+        if (config.headers && !config.headers['X-Correlation-ID']) {
+            config.headers['X-Correlation-ID'] = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
         }
         return config;
     },
@@ -76,57 +50,72 @@ apiClient.interceptors.response.use(
         
         const config = error.config as InternalAxiosRequestConfig & { _retryCount?: number };
         
-        // Detección de Proxy de Vite fallando porque el Backend sigue iniciando
-        const isViteProxyError = error.response && error.response.status === 500 && 
-                                 typeof error.response.data === 'string' && 
-                                 (error.response.data.includes('Error occurred while trying to proxy') || error.response.data.includes('ECONNREFUSED'));
-
-        // J-04: Optimistic UI / Backoff Exponencial para 429, 503 y Errores de Proxy Vite
-        if (config && error.response && ([429, 503].includes(error.response.status) || isViteProxyError)) {
+        // J-04: Optimistic UI / Backoff Exponencial para 429 y 503
+        if (config && error.response && [429, 503].includes(error.response.status)) {
             config._retryCount = config._retryCount || 0;
-            if (config._retryCount < 5) { // Subir a 5 para tolerar el inicio largo de Spring Boot
+            if (config._retryCount < 3) {
                 config._retryCount += 1;
-                const backoff = Math.pow(2, config._retryCount) * 1000; // 2s, 4s, 8s, 16s, 32s
-                console.warn(`J-04: Reintento automático (${config._retryCount}/5) en ${backoff}ms por HTTP ${error.response.status} (Backend Booting/RateLimit)`);
+                const backoff = Math.pow(2, config._retryCount) * 1000; // 2s, 4s, 8s
+                console.warn(`J-04: Reintento automático (${config._retryCount}/3) en ${backoff}ms por HTTP ${error.response.status}`);
                 return new Promise(resolve => {
                     setTimeout(() => resolve(apiClient(config)), backoff);
                 });
             }
         }
         
-        // CA-21, CA-1, CA-37: Alertas Rojas Imborrables / Captura Global 5xx
-        if (error.response && [500, 502, 503, 504].includes(error.response.status)) {
-            console.error('Fatal Level 0 Dispatching', error.response.status);
+        // @Traceability: US-000 - CA-01 (Degradación Grácil HTTP 500/503)
+        // ═══ ADR-014: Diferenciación Semántica de Errores 5xx ═══
+        if (error.response && error.response.status >= 500) {
+            const status = error.response.status;
+            const traceId = error.response.headers?.['x-correlation-id'] || 'N/A';
             
-            let message = `Colapso del Servidor / Integración Cíclica`;
-            if (isViteProxyError) {
-                message = `El servidor Backend se encuentra compilando o iniciando. Por favor espere.`;
-            }
-            
-            // CA-37: Generic 500 Error Toast
-            if (error.response.status === 500) {
+            if (status === 500) {
+                // Categoría 1: Bug en el backend — Toast imborrable con traceId
+                console.error(`[ADR-014] Error 500 — Trace: ${traceId}`);
+                const event = new CustomEvent('global-error-dispatch', { detail: { 
+                    code: 500,
+                    type: 'SERVER_ERROR',
+                    message: `Error interno del servidor (Trace: ${traceId}). Contacte soporte.`,
+                    dismissible: false
+                }});
+                window.dispatchEvent(event);
+                
+                // Toast DOM fallback (CA-37)
                 const body = document.querySelector('body');
                 if (body && !document.getElementById('server-error-toast')) {
                     const toast = document.createElement('div');
                     toast.id = 'server-error-toast';
-                    toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
-                    toast.innerHTML = isViteProxyError ? '⏳ Esperando a que inicie el Backend...' : '❌ Error interno del servidor. Inténtelo más tarde.';
+                    toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold;';
+                    toast.innerHTML = `❌ Error interno del servidor (Trace: ${traceId}). Contacte soporte.`;
                     body.appendChild(toast);
-                    setTimeout(() => {
-                        toast.style.opacity = '0';
-                        setTimeout(() => toast.remove(), 500);
-                    }, 4000);
+                    // NO auto-remove: este toast es imborrable per ADR-014
                 }
+            } else if (status === 502 || status === 503) {
+                // Categoría 2: Servidor no disponible — Toast dismissible + auto-retry ya manejado arriba (L49-60)
+                console.warn(`[ADR-014] Servidor no disponible (${status})`);
+                const event = new CustomEvent('global-error-dispatch', { detail: { 
+                    code: status,
+                    type: 'SERVICE_UNAVAILABLE',
+                    message: `El servidor no está disponible (${status}). Verificando conexión...`,
+                    dismissible: true,
+                    autoRetry: true
+                }});
+                window.dispatchEvent(event);
+            } else if (status === 504) {
+                // Categoría 3: Timeout del proxy — Toast dismissible
+                console.warn(`[ADR-014] Gateway Timeout (504)`);
+                const event = new CustomEvent('global-error-dispatch', { detail: { 
+                    code: 504,
+                    type: 'GATEWAY_TIMEOUT',
+                    message: 'Tiempo de espera agotado. Verifique que el servidor esté activo.',
+                    dismissible: true
+                }});
+                window.dispatchEvent(event);
             }
-            
-            const event = new CustomEvent('global-error-dispatch', { detail: { 
-                code: error.response.status,
-                message: message
-            }});
-            window.dispatchEvent(event);
             return Promise.reject(error);
         }
 
+        // @Traceability: US-000 - CA-03 (Bloqueo de Concurrencia Optimista)
         // Interceptar CA-3: Bloqueo de Concurrencia Optimista
         if (error.response && error.response.status === 409) {
             if(error.response.data?.type?.includes("optimistic-lock")) {
@@ -307,6 +296,7 @@ export const api = {
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),
     analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
     generateDmnRules: (payload: any) => apiClient.post(`/dmn/generate`, payload),
+    updateDmnModel: (id: string, payload: any) => apiClient.put(`/dmn-models/${id}`, payload),
 
     // Sprint 6.1: DMN Definitions
     getDmnDefinitions: () => apiClient.get('/dmn-models/definitions'),
@@ -330,8 +320,8 @@ export const api = {
     // CA-04: Limpieza de contexto IA al abandonar Sesión (Purga RAG)
     destroyCopilotSession: () => fetch('/api/v1/ai/copilot/session', { method: 'DELETE', keepalive: true, headers: { 'Authorization': `Bearer ${localStorage.getItem('ibpms_token')}` } }),
 
-    // CA-10: Endpoint Oficial de Telemetría para Auditoría de Secretos
-    telemetryAudit: (payload: any) => apiClient.post('/admin/security/audit/telemetry', payload),
+    // CA-09: Trazador Forense de Descartes ISO (Override)
+    reportIsoOverride: (payload: any) => apiClient.post('/forensics/iso-override', payload),
 
     // Sprint 5 - Iteración 2: Timebox & SLA
     getSlaLogs: (taskId: string, page = 0, size = 20) => 

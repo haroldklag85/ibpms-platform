@@ -12,13 +12,13 @@ import org.springframework.data.repository.query.Param;
 @Repository
 public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProjectionEntity, String> {
     
+    // @Traceability: US-036 - CA-05 Privacidad Visual de Colas (Data Segregation Local)
     // CA-14, CA-19, CA-17: Strict Tenant Isolation + GIN Index ILike + Impact/SLA Sorting
-    @Query(value = "SELECT * FROM ibpms_workdesk_projection w WHERE " +
-           "w.tenant_id = :tenantId AND " +
-           "(:search IS NULL OR w.title ILIKE CONCAT('%', :search, '%')) AND " +
+    @Query(value = "SELECT w FROM WorkdeskProjectionEntity w WHERE " +
+           "w.tenantId = :tenantId AND " +
+           "(:search IS NULL OR LOWER(w.title) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
            "(:assignee IS NULL OR w.assignee = :assignee) " +
-           "ORDER BY w.impact_level DESC, w.sla_expiration_date ASC NULLS LAST", 
-           nativeQuery = true)
+           "ORDER BY w.impactLevel DESC, w.slaExpirationDate ASC NULLS LAST")
     Page<WorkdeskProjectionEntity> findWorkdeskTasks(
            @Param("tenantId") String tenantId, 
            @Param("search") String search, 

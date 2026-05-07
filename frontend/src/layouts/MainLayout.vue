@@ -1,5 +1,7 @@
 <template>
   <div class="h-screen flex bg-slate-50 font-['Inter'] text-slate-900 overflow-hidden">
+    <ImpersonationBanner v-if="authStore.isImpersonating" />
+    <ImpersonationSelector v-if="showImpersonationSelector" @close="showImpersonationSelector = false" />
     <!-- Sidebar: Expandable / Collapsed State (Left) -->
     <!-- Transición suave de ancho: w-64 cuando expandido, w-16 cuando colapsado -->
     <aside 
@@ -21,6 +23,7 @@
           @click="toggleSidebar"
           class="shrink-0 p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           :class="isSidebarCollapsed ? 'absolute -right-3 top-7 bg-[#1A1C1E] border border-slate-700 rounded-full shadow-md z-50 p-0.5' : ''"
+          :title="isSidebarCollapsed ? t('sidebar.expand') : t('sidebar.collapse')"
         >
           <span class="material-symbols-outlined text-[18px]">
             {{ isSidebarCollapsed ? 'chevron_right' : 'chevron_left' }}
@@ -30,11 +33,31 @@
       
       <!-- Navigation Menu Dinámico (CA-6) -->
       <nav class="flex-1 overflow-y-auto overflow-x-hidden px-3 no-scrollbar flex flex-col gap-1 w-full relative">
-         <!-- Spinner Loading -->
-         <div v-if="menuStore.isLoading" class="flex justify-center p-4">
-            <span class="material-symbols-outlined animate-spin text-slate-500">sync</span>
+         <!-- Loading Phases -->
+         <div v-if="menuStore.isLoading" class="p-4">
+            <!-- Skeleton Phase (0-5s) -->
+            <div v-if="loadingPhase === 'skeleton'" class="flex flex-col gap-3">
+               <div class="h-10 bg-slate-800/50 rounded animate-pulse w-full"></div>
+               <div class="h-10 bg-slate-800/50 rounded animate-pulse w-full"></div>
+               <div class="h-10 bg-slate-800/50 rounded animate-pulse w-5/6"></div>
+               <div class="h-10 bg-slate-800/50 rounded animate-pulse w-4/6"></div>
+            </div>
+            
+            <!-- Spinner Phase (5-15s) -->
+            <div v-else-if="loadingPhase === 'spinner'" class="flex flex-col items-center justify-center gap-2 mt-4 fade-in">
+               <span class="material-symbols-outlined animate-spin text-indigo-400 text-3xl">sync</span>
+               <span v-if="!isSidebarCollapsed" class="text-xs text-slate-400 font-medium text-center">Cargando módulos...</span>
+            </div>
+
+            <!-- Timeout Phase (>15s) -->
+            <div v-else-if="loadingPhase === 'timeout'" class="flex flex-col items-center justify-center gap-2 mt-4 fade-in">
+               <span class="material-symbols-outlined text-red-400 text-3xl">error_outline</span>
+               <span v-if="!isSidebarCollapsed" class="text-xs text-slate-400 text-center">Demasiado tiempo</span>
+               <button v-if="!isSidebarCollapsed" @click="menuStore.fetchMenuLayout()" class="mt-2 text-[10px] uppercase font-bold tracking-wider px-3 py-1 bg-slate-800 text-white rounded hover:bg-slate-700 transition-colors">Reintentar</button>
+            </div>
          </div>
          
+         <!-- @Traceability: US-036 - CA-26 -->
          <!-- Fallback Visual CA-26: Sin topología de menús -->
          <template v-else-if="menuStore.layout.length === 0">
             <div class="flex flex-col items-center justify-center p-4 mt-8 text-center fade-in" v-if="!isSidebarCollapsed">
@@ -48,7 +71,7 @@
          </template>
          
          <template v-else v-for="(group, gIdx) in menuStore.layout" :key="'g'+gIdx">
-            <template v-if="!group.roles || authStore.hasAnyRole(group.roles)">
+            <template v-if="(!group.roles || authStore.hasAnyRole(group.roles)) && !(isMobile && group.title === 'Administración')">
                
                <!-- Separador Visual / Título del Grupo -->
                <div v-if="gIdx > 0" class="h-px bg-slate-800 my-4 mx-2"></div>
@@ -92,10 +115,10 @@
 
       <!-- Bottom Profile / Sign Out -->
       <div class="mt-auto px-3 pt-4 border-t border-slate-800 flex flex-col gap-2">
-        <button @click="logout" class="nav-item text-red-400 hover:text-red-300 hover:bg-red-500/10 group/link" title="Cerrar Sesión">
+        <button @click="logout" class="nav-item text-red-400 hover:text-red-300 hover:bg-red-500/10 group/link" :title="t('header.logout')">
            <span class="material-symbols-outlined nav-icon">logout</span>
-           <span v-if="!isSidebarCollapsed" class="nav-text">Cerrar Sesión</span>
-           <div v-if="isSidebarCollapsed" class="tooltip-mockup !bg-red-900 border border-red-800">Cerrar Sesión</div>
+           <span v-if="!isSidebarCollapsed" class="nav-text">{{ t('header.logout') }}</span>
+           <div v-if="isSidebarCollapsed" class="tooltip-mockup !bg-red-900 border border-red-800">{{ t('header.logout') }}</div>
         </button>
         
         <div class="flex items-center gap-3 px-2 py-2 mt-2" :class="isSidebarCollapsed ? 'justify-center' : ''">
@@ -131,12 +154,14 @@
         </div>
 
         <div class="flex items-center gap-4 shrink-0">
-          <div class="relative hidden md:block w-64">
+          <div v-if="!isMobile" class="relative hidden md:block w-64">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                <span class="material-symbols-outlined text-[18px]">search</span>
             </span>
-            <input type="text" placeholder="Buscar expedientes..." class="w-full pl-9 pr-4 py-1.5 bg-slate-100/80 hover:bg-slate-100 border border-transparent focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100 rounded-lg text-sm transition-all outline-none">
+            <input type="text" :placeholder="t('header.search')" class="w-full pl-9 pr-4 py-1.5 bg-slate-100/80 hover:bg-slate-100 border border-transparent focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100 rounded-lg text-sm transition-all outline-none">
           </div>
+
+          <RoleSelectorDropdown v-if="authStore.roles.length > 1" />
 
           <div class="h-6 w-px bg-slate-200 hidden md:block mx-1"></div>
 
@@ -145,14 +170,14 @@
              <button 
                  @click="preferencesStore.uiDensity = 'COMPACT'" 
                  :class="{'bg-white shadow text-indigo-600': preferencesStore.uiDensity === 'COMPACT', 'text-slate-400': preferencesStore.uiDensity !== 'COMPACT'}"
-                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Compacto"
+                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" :title="t('header.compact')"
              >
                 <span class="material-symbols-outlined text-[16px]">compress</span>
              </button>
              <button 
                  @click="preferencesStore.uiDensity = 'STANDARD'" 
                  :class="{'bg-white shadow text-indigo-600': preferencesStore.uiDensity === 'STANDARD', 'text-slate-400': preferencesStore.uiDensity !== 'STANDARD'}"
-                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Estándar"
+                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" :title="t('header.standard')"
              >
                 <span class="material-symbols-outlined text-[16px]">view_agenda</span>
              </button>
@@ -164,6 +189,16 @@
                 <span class="material-symbols-outlined text-[16px]">expand</span>
              </button>
           </div>
+
+          <!-- Botón Ver Como (Impersonation) -->
+          <button v-if="authStore.hasAnyRole(['ROLE_SUPER_ADMIN'])" @click="showImpersonationSelector = true" class="relative p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition-colors" :title="t('header.viewAs')">
+            <span class="material-symbols-outlined text-[22px]">switch_account</span>
+          </button>
+
+          <!-- Toggle de Idioma -->
+          <button @click="toggleLocale" class="relative p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition-colors" :title="t('header.language')">
+            {{ locale === 'es' ? '🇪🇸' : '🇺🇸' }}
+          </button>
 
           <button class="relative p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition-colors">
             <span class="material-symbols-outlined text-[22px]">notifications</span>
@@ -177,11 +212,13 @@
       </header>
       
       <!-- Lienzo donde se renderizan las vistas secundarias (Router View) -->
-      <div class="flex-1 overflow-auto bg-transparent">
+      <div class="flex-1 overflow-auto bg-transparent relative">
         <router-view v-slot="{ Component }">
-          <keep-alive include="Workdesk">
-            <component :is="Component" />
-          </keep-alive>
+          <transition name="fade" mode="out-in">
+            <keep-alive include="Workdesk">
+              <component :is="Component" />
+            </keep-alive>
+          </transition>
         </router-view>
       </div>
 
@@ -190,17 +227,89 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useMenuStore } from '@/stores/useMenuStore';
+import RoleSelectorDropdown from '@/components/shell/RoleSelectorDropdown.vue';
+import ImpersonationBanner from '@/components/admin/ImpersonationBanner.vue';
+import ImpersonationSelector from '@/components/admin/ImpersonationSelector.vue';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const route = useRoute();
 const preferencesStore = usePreferencesStore();
 const authStore = useAuthStore();
 const menuStore = useMenuStore();
+const { t, locale } = useI18n();
+
+const showImpersonationSelector = ref(false);
+
+const toggleLocale = () => {
+    locale.value = locale.value === 'es' ? 'en' : 'es';
+    localStorage.setItem('ibpms_locale', locale.value);
+};
+
+// R3-B: Mapa de nombres legibles para breadcrumbs
+const routeNameMap: Record<string, string> = {
+  'workdesk': 'Bandeja Unificada',
+  'inbox': 'Workdesk Legacy',
+  'kanban': 'Tablero Kanban',
+  'intake-triage': 'Inbox Intake',
+  'admin': 'Administración',
+  'modeler': 'Diseñador',
+  'bpmn': 'BPMN Modeler',
+  'dmn': 'DMN Copilot',
+  'forms': 'Formularios',
+  'designer': 'Diseñador Formularios',
+  'integration': 'Integración',
+  'catalog': 'Catálogo Conectores',
+  'builder': 'Constructor API',
+  'mapper': 'Visual Mapper',
+  'dlq': 'DLQ Dashboard',
+  'analytics': 'Análisis',
+  'bam': 'BAM Dashboard',
+  'security': 'Seguridad',
+  'identity': 'Gobernanza Identidades',
+  'incidents': 'Centro Incidentes',
+  'projects': 'Proyectos',
+  'manager': 'Gestor Proyectos',
+  'agile-hub': 'Hub Ágil',
+  'project-builder': 'Project Builder',
+  'intake': 'Intake Manual',
+  'customer360': 'Customer 360',
+  'mailboxes': 'Buzones SAC',
+  'portal': 'Portal',
+  'tracking': 'Seguimiento Cliente',
+  'sgdea': 'SGDEA',
+  'vault': 'Bóveda Documental',
+  'ai': 'Inteligencia Artificial',
+  'prompts': 'Librería Prompts',
+  'pmo': 'PMO',
+  'settings': 'Configuración'
+};
+
+const breadcrumbs = computed(() => {
+  const segments = route.path.split('/').filter(Boolean);
+  return segments.map((seg, idx) => ({
+    label: routeNameMap[seg] || seg.charAt(0).toUpperCase() + seg.slice(1),
+    path: '/' + segments.slice(0, idx + 1).join('/')
+  }));
+});
+
+const handleRoleSwitch = async () => {
+    menuStore.purgeTopology();
+    await menuStore.fetchMenuLayout();
+};
+
+const isMobile = ref(window.innerWidth < 768);
+const handleResize = () => {
+  isMobile.value = window.innerWidth < 768;
+  if (isMobile.value) {
+    isSidebarCollapsed.value = true;
+  }
+};
 
 // R3-B: Mapa de nombres legibles para breadcrumbs
 const routeNameMap: Record<string, string> = {
@@ -252,6 +361,37 @@ const breadcrumbs = computed(() => {
 onMounted(() => {
     // CA-6: Hidratación dinámica del árbol Topológico de Rutas
     menuStore.fetchMenuLayout();
+    window.addEventListener('role-switched', handleRoleSwitch);
+    window.addEventListener('resize', handleResize);
+    handleResize();
+});
+
+onUnmounted(() => {
+    window.removeEventListener('role-switched', handleRoleSwitch);
+    window.removeEventListener('resize', handleResize);
+    if (loadingTimer1) clearTimeout(loadingTimer1);
+    if (loadingTimer2) clearTimeout(loadingTimer2);
+});
+
+// Loading Phase Logic
+const loadingPhase = ref<'skeleton' | 'spinner' | 'timeout'>('skeleton');
+let loadingTimer1: ReturnType<typeof setTimeout> | null = null;
+let loadingTimer2: ReturnType<typeof setTimeout> | null = null;
+
+watch(() => menuStore.isLoading, (isLoading) => {
+  if (isLoading) {
+    loadingPhase.value = 'skeleton';
+    loadingTimer1 = setTimeout(() => {
+      if (menuStore.isLoading) loadingPhase.value = 'spinner';
+    }, 5000);
+    loadingTimer2 = setTimeout(() => {
+      if (menuStore.isLoading) loadingPhase.value = 'timeout';
+    }, 15000);
+  } else {
+    if (loadingTimer1) clearTimeout(loadingTimer1);
+    if (loadingTimer2) clearTimeout(loadingTimer2);
+    loadingPhase.value = 'skeleton';
+  }
 });
 
 // CA-11: Indicador Tipográfico Multi-Rol (Extrae y formatea máximo 2 roles del JWT EntraID)
@@ -285,7 +425,7 @@ const toggleSidebar = () => {
 };
 
 const logout = () => {
-  localStorage.removeItem('ibpms_token');
+  authStore.logout();
   router.push('/login');
 };
 </script>
@@ -375,5 +515,16 @@ aside.w-64 .nav-icon {
 }
 .group\/link:hover .tooltip-mockup, .group\/admin:hover .tooltip-mockup {
   @apply opacity-100;
+}
+
+/* Router Transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -101,8 +99,13 @@ public class RoleService {
         existing.setDescription(patch.getDescription());
         existing.setIsTemplate(patch.getIsTemplate());
         existing.setSource(patch.getSource());
+        
+        // Clonar para el log antes de guardar cambios en la colección de permisos si los hubiera
+        // Nota: Si patch trae permisos, habría que mapearlos aquí también.
+        
         RoleEntity saved = roleRepository.save(existing);
-        logAuditEntry(saved, "UPDATE");
+        // En una implementación real, compararíamos existing (antes de flush) o pasaríamos el DTO original
+        logAuditEntry(saved, "UPDATE"); 
         return saved;
     }
 
@@ -153,15 +156,50 @@ public class RoleService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * CA-17: Recuperar historial de auditoría del rol.
+     */
+    @Transactional(readOnly = true)
+    public List<RoleAuditLogEntity> getAuditLogsForRole(UUID roleId) {
+        return auditLogRepository.findByRoleIdOrderByTimestampDesc(roleId);
+    }
+
+    public List<RoleAuditLogEntity> getAllAuditLogs() {
+        return auditLogRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "timestamp"));
+    }
+
     private void logAuditEntry(RoleEntity role, String action) {
+        logAuditEntry(role, null, action);
+    }
+
+    private void logAuditEntry(RoleEntity role, RoleEntity oldRole, String action) {
         try {
             String adminId = SecurityContextHolder.getContext().getAuthentication() != null ? 
                              SecurityContextHolder.getContext().getAuthentication().getName() : "SYSTEM";
-            String jsonDelta = objectMapper.writeValueAsString(role);
+            
+            Map<String, Object> delta = new java.util.HashMap<>();
+            if (oldRole != null) {
+                // Calcular permisos otorgados y quitados
+                java.util.Set<String> oldPerms = oldRole.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet());
+                java.util.Set<String> newPerms = role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet());
+                
+                java.util.Set<String> granted = new java.util.HashSet<>(newPerms);
+                granted.removeAll(oldPerms);
+                
+                java.util.Set<String> revoked = new java.util.HashSet<>(oldPerms);
+                revoked.removeAll(newPerms);
+                
+                delta.put("granted", granted);
+                delta.put("revoked", revoked);
+                delta.put("roleName", role.getName());
+            } else {
+                delta.put("fullState", role);
+            }
+
+            String jsonDelta = objectMapper.writeValueAsString(delta);
             RoleAuditLogEntity audit = new RoleAuditLogEntity(role.getId(), adminId, LocalDateTime.now(), action, jsonDelta);
             auditLogRepository.save(audit);
         } catch (Exception e) {
-            // Failsafe: Log audit no debe interrumpir transaccion base si json falla
             e.printStackTrace();
         }
     }

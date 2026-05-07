@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn --version)",
+      "Bash(docker exec *)",
+      "Bash(docker-compose up *)",
+      "Bash(docker-compose stop *)"
+    ]
+  }
+}

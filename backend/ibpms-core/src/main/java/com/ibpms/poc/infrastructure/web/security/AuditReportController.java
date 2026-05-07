@@ -40,6 +40,12 @@ public class AuditReportController {
         this.auditReportRepository = auditReportRepository;
     }
 
+    @GetMapping
+    public ResponseEntity<List<AuditReportEntity>> getAllReports() {
+        log.info("Fetching all audit reports");
+        return ResponseEntity.ok(auditReportRepository.findAll());
+    }
+
     @GetMapping("/iso27001")
     public ResponseEntity<StreamingResponseBody> downloadIso27001Report() {
         log.info("CA-16: Iniciando generación de reporte ISO 27001.");

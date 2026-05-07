@@ -261,15 +261,15 @@
              <h3 class="text-sm font-bold text-yellow-800 mb-2">¡API Key Generada Exitosamente!</h3>
              <p class="text-xs text-yellow-700 mb-4">Copia este secreto inmediatamente. Una vez cierres este mensaje, no podrás volver a verlo.</p>
              <div class="flex items-center gap-2">
-                <div data-testid="secret-value-display" class="flex-1 bg-white border border-yellow-300 font-mono text-sm px-3 py-2 rounded flex justify-between items-center">
-                    <span>{{ isSecretRevealed ? newlyCreatedSecret : '********************************' }}</span>
-                    <span v-if="isSecretRevealed" class="text-[10px] bg-red-100 text-red-600 px-1 rounded">VISIBLE</span>
+                <div data-testid="secret-value-display" class="flex-1 bg-white border border-yellow-300 font-mono text-sm px-3 py-2 rounded flex justify-between items-center overflow-hidden">
+                    <span class="truncate">{{ isSecretRevealed ? newlyCreatedSecret : '********************************' }}</span>
+                    <span v-if="isSecretRevealed" class="text-[10px] bg-red-100 text-red-600 px-1 rounded flex-shrink-0 ml-2">VISIBLE</span>
                 </div>
-                <button v-if="!isSecretRevealed" data-testid="btn-reveal-secret" @click="revealSecret" class="bg-indigo-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-1" :disabled="isRevealingSecret">
+                <button v-if="!isSecretRevealed" data-testid="btn-reveal-secret" @click="revealSecret" class="bg-indigo-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-1 shrink-0" :disabled="isRevealingSecret">
                     <span v-if="isRevealingSecret" class="material-symbols-outlined text-[14px] animate-spin">sync</span>
                     Revelar
                 </button>
-                <button v-else data-testid="btn-copy-secret" @click="copySecret" class="bg-yellow-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-yellow-700 transition">Copiar</button>
+                <button v-else data-testid="btn-copy-secret" @click="copySecret" class="bg-yellow-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-yellow-700 transition shrink-0">Copiar</button>
              </div>
              <div class="flex justify-between items-center mt-4">
                 <p class="text-[10px] text-gray-500 font-bold uppercase">Client ID: {{ newlyCreatedClientId }}</p>
@@ -288,17 +288,24 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
-               <tr v-for="key in rbacStore.serviceAccounts" :key="key.clientId" class="hover:bg-gray-50">
-                 <td class="px-4 py-3 text-sm font-bold text-gray-800">{{ key.appName }}</td>
-                 <td class="px-4 py-3 text-xs font-mono text-gray-500">{{ key.clientId }}</td>
-                 <td class="px-4 py-3 text-xs">
-                    <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold border border-indigo-100 uppercase">{{ getRoleName(key.roleId) }}</span>
-                 </td>
-                 <td class="px-4 py-3 text-xs text-gray-500">{{ key.expirationDate || 'Sin Expiración' }}</td>
-                 <td class="px-4 py-3 text-right">
-                    <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px] font-bold">M2M_ACTIVE</span>
-                 </td>
-               </tr>
+                <tr v-for="key in rbacStore.serviceAccounts" :key="key.clientId" class="hover:bg-gray-50">
+                  <td class="px-4 py-3 text-sm font-bold text-gray-800">{{ key.appName }}</td>
+                  <td class="px-4 py-3 text-xs font-mono text-gray-500">{{ key.clientId }}</td>
+                  <td class="px-4 py-3 text-xs">
+                     <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold border border-indigo-100 uppercase">{{ getRoleName(key.roleId) }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-xs">
+                    <div class="flex flex-col">
+                      <span :class="getExpirationClass(key.expirationDate)">{{ key.expirationDate || 'Sin Expiración' }}</span>
+                      <span v-if="getExpirationDays(key.expirationDate) !== null" class="text-[10px] font-bold" :class="getExpirationClass(key.expirationDate)">
+                        {{ getExpirationDays(key.expirationDate) <= 0 ? 'EXPIRADO' : `Expira en ${getExpirationDays(key.expirationDate)} días` }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                     <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px] font-bold">M2M_ACTIVE</span>
+                  </td>
+                </tr>
                <tr v-if="rbacStore.serviceAccounts.length === 0">
                  <td colspan="5" class="py-12 text-center text-gray-400 font-medium">No hay cuentas de servicio configuradas.</td>
                </tr>
@@ -398,7 +405,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 bg-white">
-               <tr v-for="log in auditLogs" :key="log.id" class="hover:bg-gray-50">
+               <tr v-for="log in rbacStore.auditLogs" :key="log.id" class="hover:bg-gray-50">
                  <td class="px-4 py-3 text-xs whitespace-nowrap text-gray-500 font-mono">{{ new Date(log.timestamp).toLocaleString() }}</td>
                  <td class="px-4 py-3 text-sm font-bold text-indigo-700">{{ log.adminId }}</td>
                  <td class="px-4 py-3 text-xs">
@@ -795,7 +802,6 @@ const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
 const systemRoles = ref<any[]>([]);
 const systemUsers = ref<any[]>([]);
 const systemProcesses = ref<any[]>([]);
-const auditLogs = ref<any[]>([]);
 const securityAnomalies = ref<any[]>([]);
 
 const getRoleName = (roleId: string) => {
@@ -1170,6 +1176,22 @@ const openApiKeyModal = () => {
     showApiKeyModal.value = true;
 };
 
+const getExpirationDays = (date: string | null) => {
+  if (!date) return null;
+  const exp = new Date(date);
+  const now = new Date();
+  const diffTime = exp.getTime() - now.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
+const getExpirationClass = (date: string | null) => {
+  const days = getExpirationDays(date);
+  if (days === null) return 'text-gray-500';
+  if (days <= 0) return 'text-red-600 font-bold';
+  if (days < 30) return 'text-amber-500 font-bold';
+  return 'text-emerald-600';
+};
+
 const generateApiKey = async () => {
     if (!apiKeyForm.value.appName || !apiKeyForm.value.roleId) {
         showToast('Nombre y Rol son obligatorios.', 'error');
@@ -1178,8 +1200,8 @@ const generateApiKey = async () => {
 
     try {
         const result = await rbacStore.createServiceAccount(apiKeyForm.value);
-        newlyCreatedClientId.value = result.clientId;
-        newlyCreatedSecret.value = result.secretKey;
+        newlyCreatedClientId.value = result.id;
+        newlyCreatedSecret.value = result.plainApiKey;
         showApiKeyModal.value = false;
         showToast('Cuenta de Servicio generada.', 'success');
     } catch (e) {
@@ -1303,7 +1325,8 @@ onMounted(async () => {
         // --- Fase 2: Sincronización de Identidad Gobernada ---
         await Promise.all([
             rbacStore.fetchDelegations(),
-            rbacStore.fetchServiceAccounts()
+            rbacStore.fetchServiceAccounts(),
+            rbacStore.fetchAuditLogs()
         ]);
 
         // Load persisted matrix from localStorage

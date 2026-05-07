@@ -2,7 +2,7 @@ spring:
   main:
     allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:ibpms-postgres}:${POSTGRES_PORT:5432}/${POSTGRES_DB:ibpms_db}
+    url: jdbc:postgresql://${POSTGRES_HOST:127.0.0.1}:${POSTGRES_PORT:5432}/${POSTGRES_DB:ibpms_db}
     username: ${POSTGRES_USER:ibpms_user}
     password: ${POSTGRES_PASSWORD:ibpms_password}
     driver-class-name: org.postgresql.Driver
@@ -17,13 +17,13 @@ spring:
     enabled: true
     change-log: classpath:/db/changelog/db.changelog-master.yaml
   rabbitmq:
-    host: ${RABBITMQ_HOST:ibpms-rabbitmq}
+    host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
   data:
     redis:
-      host: ${REDIS_HOST:ibpms-redis}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
 # Disable context-path for integration tests (tests use full absolute paths)

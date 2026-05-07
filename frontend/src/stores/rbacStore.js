@@ -9,14 +9,11 @@ export const useRbacStore = defineStore('rbac', () => {
     // CA-12: Anomalías de Seguridad (Tablero CISO)
     const anomalies = ref([])
 
-    const auditLogs = ref([
-        { timestamp: '10:45am', message: 'Administrador añadió a @Pedro al rol VPE_Finanzas' },
-        { timestamp: '09:30am', message: 'Al desplegar BPMN_Crédito, el sistema autogeneró el rol PROCESS:Credito:Analista_Riesgos' }
-    ])
+    const auditLogs = ref([])
 
     // Getters computados
-    const globalRoles = computed(() => roles.value.filter(r => r.type === 'GLOBAL'))
-    const processRoles = computed(() => roles.value.filter(r => r.type === 'PROCESS_GENERATED'))
+    const globalRoles = computed(() => roles.value)
+    const processRoles = computed(() => roles.value.filter(r => r.processDefinitionId))
 
     // Acciones
     async function fetchRoles() {
@@ -180,7 +177,13 @@ export const useRbacStore = defineStore('rbac', () => {
 
     async function createServiceAccount(payload) {
         try {
-            const response = await apiClient.post('/admin/security/m2m', payload)
+            const apiPayload = {
+                name: payload.appName,
+                description: payload.description,
+                roleId: payload.roleId,
+                daysToExpire: 365
+            };
+            const response = await apiClient.post('/admin/service-accounts', apiPayload)
             await fetchServiceAccounts()
             return response.data // Debe incluir el secret_key generado solo esta vez
         } catch (error) {
@@ -280,6 +283,16 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
+    // --- CA-17: Audit Logs ---
+    async function fetchAuditLogs() {
+        try {
+            const response = await apiClient.get('/admin/roles/audit-logs')
+            auditLogs.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo logs de auditoría", error)
+        }
+    }
+
     return {
         roles,
         anomalies,
@@ -306,6 +319,7 @@ export const useRbacStore = defineStore('rbac', () => {
         toggleProcessPublicStatus,
         fetchCisoReports,
         generateCisoReport,
+        fetchAuditLogs,
         cisoReports,
         systemProcesses
     }

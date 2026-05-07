@@ -66,4 +66,27 @@ describe('rbacStore', () => {
         expect(document.createElement).toHaveBeenCalledWith('a')
         expect(mockLink.click).toHaveBeenCalled()
     })
+
+    it('should fetch audit logs (CA-17)', async () => {
+        const store = useRbacStore()
+        const mockLogs = [{ id: 1, action: 'TEST_ACTION', adminId: 'admin1', timestamp: '2026-05-06T10:00:00Z' }]
+        vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockLogs })
+
+        await store.fetchAuditLogs()
+
+        expect(apiClient.get).toHaveBeenCalledWith('/admin/security/audit-logs')
+        expect(store.auditLogs).toEqual(mockLogs)
+    })
+
+    it('should create service account and return secret (CA-22)', async () => {
+        const store = useRbacStore()
+        const payload = { appName: 'SAP', roleId: 'ADMIN', expirationDate: '2027-01-01' }
+        const mockRes = { clientId: 'cli-123', secretKey: 'sk-secret' }
+        vi.mocked(apiClient.post).mockResolvedValueOnce({ data: mockRes })
+
+        const result = await store.createServiceAccount(payload)
+
+        expect(apiClient.post).toHaveBeenCalledWith('/admin/security/m2m', payload)
+        expect(result).toEqual(mockRes)
+    })
 })

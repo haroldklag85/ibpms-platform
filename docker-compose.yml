@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: ibpms_password
       POSTGRES_DB: ibpms_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -85,9 +85,7 @@ services:
       - maven_data:/root/.m2
     ports:
       - "8080:8080"
-    command: >
-      bash -c "mvn install -DskipTests -pl ibpms-dmn-engine &&
-               mvn spring-boot:run -DskipTests -pl ibpms-core"
+    command: bash -c "mvn spring-boot:run -DskipTests -pl ibpms-core"
     depends_on:
       ibpms-postgres:
         condition: service_healthy

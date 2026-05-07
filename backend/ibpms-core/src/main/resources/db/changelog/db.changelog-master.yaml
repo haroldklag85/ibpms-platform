@@ -80,3 +80,5 @@ databaseChangeLog:
       file: db/changelog/36-us036-ca07-ca11-updates.sql
   - include:
       file: db/changelog/36-us036-ca12-ca16-reports.sql
+  - include:
+      file: db/changelog/37-us036-ca17-ca22-tables.sql

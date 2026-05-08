@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * Genera matrices de accesos con sellado de integridad SHA-256.
  */
 @RestController
-@RequestMapping("/api/v1/admin/security/reports")
+@RequestMapping("/api/v1/admin/roles/reports")
 public class AuditReportController {
 
     private static final Logger log = LoggerFactory.getLogger(AuditReportController.class);
@@ -46,7 +46,7 @@ public class AuditReportController {
         return ResponseEntity.ok(auditReportRepository.findAll());
     }
 
-    @GetMapping("/iso27001")
+    @org.springframework.web.bind.annotation.PostMapping("/iso27001")
     public ResponseEntity<StreamingResponseBody> downloadIso27001Report() {
         log.info("CA-16: Iniciando generación de reporte ISO 27001.");
 

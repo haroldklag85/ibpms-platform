@@ -12,15 +12,32 @@ import org.springframework.transaction.annotation.Transactional;
 public class WorkdeskQueryService {
 
     private final WorkdeskProjectionRepository projectionRepository;
+    private final com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository delegationRepository;
 
-    public WorkdeskQueryService(WorkdeskProjectionRepository projectionRepository) {
+    public WorkdeskQueryService(WorkdeskProjectionRepository projectionRepository, com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository delegationRepository) {
         this.projectionRepository = projectionRepository;
+        this.delegationRepository = delegationRepository;
     }
 
     @Cacheable(value = "workdesk_tasks", key = "#tenantId + '_' + (#effectiveAssignee != null ? #effectiveAssignee : '') + '_' + (#search != null ? #search : '') + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public Page<WorkdeskProjectionEntity> getWorkdeskTasks(String tenantId, String search, String effectiveAssignee, Pageable pageable) {
-        return projectionRepository.findWorkdeskTasks(tenantId, search, effectiveAssignee, pageable);
+        java.util.List<String> assignees = null;
+        if (effectiveAssignee != null) {
+            assignees = new java.util.ArrayList<>();
+            assignees.add(effectiveAssignee);
+            try {
+                java.util.UUID substituteId = java.util.UUID.fromString(effectiveAssignee);
+                java.util.List<com.ibpms.poc.infrastructure.jpa.entity.security.DelegationEntity> delegations = 
+                    delegationRepository.findActiveDelegationsForSubstitute(substituteId, java.time.LocalDateTime.now());
+                for (com.ibpms.poc.infrastructure.jpa.entity.security.DelegationEntity d : delegations) {
+                    assignees.add(d.getDelegator().getId().toString());
+                }
+            } catch (Exception e) {
+                // Ignore if not a UUID
+            }
+        }
+        return projectionRepository.findWorkdeskTasks(tenantId, search, assignees, pageable);
     }
 
     @Cacheable(value = "workdesk_tasks", key = "'facets_' + #tenantId")

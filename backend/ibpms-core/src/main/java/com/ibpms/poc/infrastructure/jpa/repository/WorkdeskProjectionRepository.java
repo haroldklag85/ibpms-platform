@@ -12,17 +12,16 @@ import org.springframework.data.repository.query.Param;
 @Repository
 public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProjectionEntity, String> {
     
-    // @Traceability: US-036 - CA-05 Privacidad Visual de Colas (Data Segregation Local)
-    // CA-14, CA-19, CA-17: Strict Tenant Isolation + GIN Index ILike + Impact/SLA Sorting
+    // @Traceability: US-036 - CA-23 Delegación In-Flight
     @Query(value = "SELECT w FROM WorkdeskProjectionEntity w WHERE " +
            "w.tenantId = :tenantId AND " +
            "(:search IS NULL OR LOWER(w.title) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
-           "(:assignee IS NULL OR w.assignee = :assignee) " +
+           "(COALESCE(:assignees, NULL) IS NULL OR w.assignee IN :assignees) " +
            "ORDER BY w.impactLevel DESC, w.slaExpirationDate ASC NULLS LAST")
     Page<WorkdeskProjectionEntity> findWorkdeskTasks(
            @Param("tenantId") String tenantId, 
            @Param("search") String search, 
-           @Param("assignee") String assignee, 
+           @Param("assignees") java.util.List<String> assignees, 
            Pageable pageable);
 
     // CA-22, CA-29: Faceted Filters & Counters

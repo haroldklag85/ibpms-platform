@@ -22,7 +22,13 @@ import java.util.stream.Collectors;
 public class RoleService {
 
     // CA-2 US-036: Identificador canónico del Rol Guardián — INMUTABLE por diseño de seguridad
-    static final String ROOT_ROLE = "ROLE_SUPER_ADMIN";
+    static final String ROOT_ROLE = "SUPER_ADMIN";
+    static final String SYS_ADMIN_ROLE = "SYSTEM_ADMIN";
+
+    private boolean isImmutableRole(String roleName) {
+        return ROOT_ROLE.equals(roleName) || SYS_ADMIN_ROLE.equals(roleName) || 
+               "ROLE_SUPER_ADMIN".equals(roleName) || "ROLE_SYSTEM_ADMIN".equals(roleName);
+    }
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
@@ -69,9 +75,9 @@ public class RoleService {
     public void deleteRole(UUID id) {
         RoleEntity role = roleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado: " + id));
-        if (ROOT_ROLE.equals(role.getName())) {
+        if (isImmutableRole(role.getName())) {
             throw new AccessDeniedException(
-                    "Mutación/Borrado de Rol Root prohibido por diseño de seguridad.");
+                    "Mutación/Borrado de Roles del Sistema (SUPER_ADMIN / SYSTEM_ADMIN) prohibido por diseño de seguridad.");
         }
         logAuditEntry(role, "DELETE");
         roleRepository.delete(role);
@@ -85,14 +91,14 @@ public class RoleService {
     public RoleEntity updateRole(UUID id, RoleEntity patch) {
         RoleEntity existing = roleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado: " + id));
-        if (ROOT_ROLE.equals(existing.getName())) {
+        if (isImmutableRole(existing.getName())) {
             throw new AccessDeniedException(
-                    "Mutación/Borrado de Rol Root prohibido por diseño de seguridad.");
+                    "Mutación/Borrado de Roles del Sistema prohibido por diseño de seguridad.");
         }
         
         // CA-2 US-036: Blindaje adicional contra suplantación del nombre Root
-        if (patch.getName() != null && ROOT_ROLE.equals(patch.getName()) && !ROOT_ROLE.equals(existing.getName())) {
-            throw new AccessDeniedException("No se puede renombrar un rol a " + ROOT_ROLE);
+        if (patch.getName() != null && isImmutableRole(patch.getName()) && !isImmutableRole(existing.getName())) {
+            throw new AccessDeniedException("No se puede renombrar un rol a roles del sistema nativos.");
         }
 
         if (patch.getName() != null) existing.setName(patch.getName());
@@ -134,6 +140,29 @@ public class RoleService {
         }
         logAuditEntry(template, "MASS_ASSIGN");
         return notFound;
+    }
+
+    /**
+     * CA-4 US-036 — Segregación Iniciador vs Ejecutor.
+     * Reemplaza la colección completa de ProcessPermissions de un rol.
+     * orphanRemoval=true en RoleEntity elimina las entradas huérfanas de la BD.
+     */
+    @SuppressWarnings("null")
+    public RoleEntity updateProcessPermissions(UUID roleId, List<ProcessPermissionEntity> permissions) {
+        RoleEntity role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado: " + roleId));
+        if (isImmutableRole(role.getName())) {
+            throw new AccessDeniedException(
+                    "Mutación de permisos de Roles del Sistema prohibida por diseño de seguridad.");
+        }
+        role.getProcessPermissions().clear();
+        for (ProcessPermissionEntity perm : permissions) {
+            perm.setRole(role);
+            role.getProcessPermissions().add(perm);
+        }
+        RoleEntity saved = roleRepository.save(role);
+        logAuditEntry(saved, "UPDATE_PERMISSIONS");
+        return saved;
     }
 
     /**

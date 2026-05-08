@@ -14,16 +14,16 @@ public class AuditReportEntity {
     @Column(name = "report_type", nullable = false, length = 50)
     private String reportType;
 
-    @Column(name = "generated_by", nullable = false, length = 100)
+    @Column(name = "generated_by_user_id", nullable = false, length = 100)
     private String generatedBy;
 
     @Column(name = "generated_at", nullable = false)
     private LocalDateTime generatedAt;
 
-    @Column(name = "file_hash", nullable = false, length = 64)
+    @Column(name = "sha256_hash", nullable = false, length = 64)
     private String fileHash;
 
-    @Column(name = "metadata_json", columnDefinition = "jsonb")
+    @Column(name = "file_path_or_blob", columnDefinition = "jsonb")
     private String metadataJson;
 
     public AuditReportEntity() {

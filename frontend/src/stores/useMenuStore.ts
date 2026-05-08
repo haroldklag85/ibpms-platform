@@ -126,10 +126,15 @@ export const useMenuStore = defineStore('menu', () => {
         }
     };
 
-    // CA-32: Auto-Curación. Purga la topología del cliente
-    const purgeTopology = () => {
+    // CA-32: Auto-Curación Zero-Trust. Reset del estado al inicial
+    const $reset = () => {
         layout.value = [];
+        isLoading.value = false;
     };
 
-    return { layout, isLoading, fetchMenuLayout, purgeTopology };
+    const purgeTopology = () => {
+        $reset();
+    };
+
+    return { layout, isLoading, fetchMenuLayout, purgeTopology, $reset };
 });

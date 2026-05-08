@@ -207,14 +207,14 @@ apiClient.interceptors.response.use(
                // CA-32: Auto-Curación Zero-Trust
                console.warn('CA-32: Revocación de acceso detectada (403). Purgando topología local.');
                const menuStore = useMenuStore();
-               menuStore.purgeTopology();
+               menuStore.$reset();
                
                const body = document.querySelector('body');
                if (body && !document.getElementById('privilege-update-toast')) {
                    const toast = document.createElement('div');
                    toast.id = 'privilege-update-toast';
                    toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
-                   toast.innerHTML = '🔄 Sus accesos han sido actualizados por el Administrador';
+                   toast.innerHTML = 'Sus accesos han sido actualizados por el Administrador';
                    body.appendChild(toast);
                    setTimeout(() => {
                        toast.style.opacity = '0';

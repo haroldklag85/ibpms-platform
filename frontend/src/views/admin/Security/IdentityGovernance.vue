@@ -575,8 +575,8 @@
              
              <!-- Pestañas del Modal (CA-29) -->
              <div class="flex border-b border-gray-200 mb-4">
-                 <button type="button" @click="roleModalTab = 'basic'" :class="roleModalTab === 'basic' ? 'border-indigo-600 text-indigo-700 font-bold border-b-2' : 'text-gray-500 hover:text-gray-700 font-medium'" class="px-4 py-2 text-sm transition-colors">Información Básica</button>
-                 <button type="button" @click="roleModalTab = 'topology'" :class="roleModalTab === 'topology' ? 'border-indigo-600 text-indigo-700 font-bold border-b-2' : 'text-gray-500 hover:text-gray-700 font-medium'" class="px-4 py-2 text-sm transition-colors">Topología de Menús</button>
+                 <button type="button" @click="roleModalTab = 'basic'" :class="roleModalTab === 'basic' ? 'border-indigo-600 text-indigo-700 font-bold border-b-2' : 'text-gray-500 hover:text-gray-700 font-medium'" class="px-4 py-2 text-sm transition-colors">Tab 1: Información Básica</button>
+                 <button type="button" @click="roleModalTab = 'topology'" :class="roleModalTab === 'topology' ? 'border-indigo-600 text-indigo-700 font-bold border-b-2' : 'text-gray-500 hover:text-gray-700 font-medium'" class="px-4 py-2 text-sm transition-colors">Tab 2: Topología de Menús</button>
              </div>
 
              <div class="flex-1 overflow-y-auto space-y-4 pr-2">

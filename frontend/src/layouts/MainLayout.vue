@@ -71,7 +71,7 @@
          </template>
          
          <template v-else v-for="(group, gIdx) in menuStore.layout" :key="'g'+gIdx">
-            <template v-if="(!group.roles || authStore.hasAnyRole(group.roles)) && !(isMobile && group.title === 'Administración')">
+            <template v-if="true">
                
                <!-- Separador Visual / Título del Grupo -->
                <div v-if="gIdx > 0" class="h-px bg-slate-800 my-4 mx-2"></div>

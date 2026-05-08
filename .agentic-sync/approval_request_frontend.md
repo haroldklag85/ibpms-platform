@@ -1,24 +1,18 @@
-# SOLICITUD DE REVISIÓN: US-036 Identity Governance (Fase Final)
+# 🛡️ Solicitud de Aprobación: US-036 (CA-29 a CA-32)
 
-**Para**: Arquitecto Líder / Product Owner
-**De**: DevDavid (Frontend Specialist)
-**Asunto**: Cierre Técnico de Criterios de Aceptación CA-23 al CA-28
+**Agente:** David (Frontend Developer)
+**Rama:** `DevDavid`
+**Objetivo:** Finalizar la UI de Gobernanza y la dinámica del Menú Maestro.
 
-Hola, he finalizado el diseño técnico para la fase final de la US-036. A continuación, los puntos clave de la solución propuesta:
+## Resumen del Plan Propuesto
 
-### 🛠️ Resumen de la Solución
-1. **Auditoría ISO 27001 (CA-24)**: Implementación de descarga on-demand de la matriz de accesos consumiendo el endpoint centralizado del backend.
-2. **Resiliencia de Interfaz (CA-26)**: Mecanismo de redirección automática al Portal en caso de degradación de la topología de menús (Zero-Trust Fallback).
-3. **Inmutabilidad de Seguridad (CA-27)**: Bloqueo quirúrgico de edición para roles fundacionales (`SUPER_ADMIN`, `SYSTEM_ADMIN`) en el modal de RBAC.
-4. **Validación Macro (CA-28)**: Alineación estricta de los 7 módulos core del sistema en la gestión de topologías.
+1.  **Rediseño de Modal (CA-29)**: Se añadirán los prefijos numéricos ("Tab 1", "Tab 2") a las pestañas del modal de gestión de roles en `IdentityGovernance.vue` para mayor claridad administrativa.
+2.  **Sidebar 100% Dinámico (CA-31)**: Se purificará `MainLayout.vue` para que la navegación lateral se base exclusivamente en el `menuStore`, eliminando validaciones redundantes de roles en el cliente.
+3.  **Gobernanza de Caché (CA-32)**: Se integrará en `apiClient.ts` la purga automática del `menuStore` mediante `$reset()` cuando el backend emita un 403, garantizando que el usuario visualice sus permisos actualizados instantáneamente.
 
-### 📋 Estado del Plan
-El plan detallado se encuentra en: `C:\Users\USER\.gemini\antigravity\brain\cce1c9f6-b655-483a-b7cf-ac971ca0a1e4/implementation_plan.md`
+## Puntos de Control de Arquitectura
+- **Anti-JWT Bloat**: No se lee información de menús desde el token.
+- **Zero-Trust**: El fallo de red o permisos bloquea la UI (CA-26/32).
+- **Clean Code**: Se implementará `$reset` manual en el store para mantener el estándar Pinia.
 
-### 🚀 Siguientes Pasos
-Una vez aprobado, procederé con:
-- Ejecución de las modificaciones en Vue 3 / Vite.
-- Validación con `frontend_build_audit`.
-- Pruebas de integración E2E (Zero-Mock).
-
-Quedo a la espera de su veredicto para iniciar la fase de EXECUTION.
+**Humano, por favor entrega este mensaje al Arquitecto Líder y regrésame su veredicto.**

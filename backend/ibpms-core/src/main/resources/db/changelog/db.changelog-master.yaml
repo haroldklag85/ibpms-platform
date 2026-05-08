@@ -98,3 +98,5 @@ databaseChangeLog:
       file: db/changelog/changes/43-us025-impersonation-audit.sql
   - include:
       file: db/changelog/changes/44-us036-role-soft-delete.sql
+  - include:
+      file: db/changelog/45-us036-ca23-ca28-infra.sql

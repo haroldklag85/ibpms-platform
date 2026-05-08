@@ -1,36 +1,50 @@
-# 🛡️ Solicitud de Aprobación Infra/BD: Verificación ARQ-005
+# Solicitud de Revisión — Agente Infra/BD
 
-**Para:** Arquitecto Líder
-**De:** Agente Infra/BD
-**Iteración:** Remediación Arquitectónica Post-Auditoría US-005 (ARQ-005)
+**Fecha:** 2026-05-08T08:50:00-05:00  
+**Agente:** Infra/BD  
+**US:** US-036 (Identity Governance)  
+**CAs:** CA-23, CA-24, CA-25, CA-26, CA-27, CA-28  
+**Rama:** DevDavid  
 
-## 1. Contexto
+---
 
-He finalizado la verificación de integridad de las tablas relacionadas con el despliegue Core Pipeline (US-005) indicadas en el handoff `handoff_infra_bd_ARQ005.md`.
+## Resumen del Plan
 
-## 2. Resultados de la Verificación
+### Diagnóstico Ejecutado
 
-| Tabla | Ubicación en Liquibase | Estado | Observaciones |
-|-------|-------------------------|--------|---------------|
-| `ibpms_process_locks` | `22-us005-bpmn-design-schema.sql` | 🟡 Inconsistente | No utiliza `IF NOT EXISTS` |
-| `ibpms_deploy_requests` | `22-us005-bpmn-design-schema.sql` | 🟡 Inconsistente | No utiliza `IF NOT EXISTS` |
-| `ibpms_data_mappings` | `22-us005-bpmn-design-schema.sql` | 🟡 Inconsistente | No utiliza `IF NOT EXISTS` |
-| `ibpms_external_task_topics` | `22-us005-bpmn-design-schema.sql` | 🟡 Inconsistente | No utiliza `IF NOT EXISTS` |
-| `ibpms_bpmn_design_audit_log`| `07-create-bpmn-design-tables.sql` | 🟡 Inconsistente | No utiliza `IF NOT EXISTS` |
+He realizado una auditoría completa del esquema de base de datos PostgreSQL contra los changesets Liquibase y las entidades JPA, verificando empíricamente contra la BD en ejecución (`ibpms-postgres-uat`).
 
-### ✅ Aspectos Aprobados
-- Todas las tablas están declaradas correctamente y registradas dentro de `db.changelog-master.yaml`.
-- Los changesets poseen IDs únicos (`system:22-us005-bpmn-design-schema` y `hb-dev:7-create-bpmn-design-tables`).
-- Las Foreign Keys están estructuradas de manera coherente sin generar bloqueos en runtime (uso de `process_definition_key`).
-- No hay columnas huérfanas o sin uso detectadas en los scripts.
+### Hallazgos
 
-### ❌ Aspectos Inconsistentes
-Ninguno de los changesets analizados emplea la directiva `IF NOT EXISTS` exigida en el checklist del handoff. 
+| Tabla | Estado | Acción |
+|-------|--------|--------|
+| `ibpms_audit_reports` (CA-24) | ✅ Existe. Entidad JPA alineada. | ⚠️ Limpiar 2 columnas legacy orphan (`requested_by`, `content_hash`) no mapeadas por JPA. Añadir índices de rendimiento. |
+| `ibpms_security_delegation` (CA-23) | ✅ Existe con `start_date` + `end_date`. Entidad JPA alineada. FK correctas. | ✅ Sin cambios necesarios. |
 
-## 3. Petición al Arquitecto Líder
+### Cambio Propuesto
 
-Solicito confirmación de si debo:
-1. Proceder a aplicar el parche añadiendo `IF NOT EXISTS` en los scripts SQL (lo cual requerirá potencialmente manipulación si ya se han ejecutado previamente, o puede ser trivial si las tablas ya existen en el ambiente de base de datos final).
-2. Omitir la regla del `IF NOT EXISTS` por ser scripts iniciales que dependen de un estado limpio.
+**Un único changeset idempotente:** `45-us036-ca23-ca28-infra.sql`
 
-Quedo a la espera de su Veredicto (✅ PASS o ❌ REJECT).
+Operaciones:
+1. `ALTER TABLE ibpms_audit_reports DROP COLUMN IF EXISTS requested_by;`
+2. `ALTER TABLE ibpms_audit_reports DROP COLUMN IF EXISTS content_hash;`
+3. `CREATE INDEX IF NOT EXISTS idx_audit_reports_generated_at ON ibpms_audit_reports(generated_at);`
+4. `CREATE INDEX IF NOT EXISTS idx_audit_reports_file_hash ON ibpms_audit_reports(file_hash);`
+
+### Justificación
+- Las columnas `requested_by` y `content_hash` fueron creadas por el changeset original `20-us036-rbac-schema.sql`, pero la entidad JPA `AuditReportEntity.java` mapea `generated_by` y `file_hash` (del changeset `36-us036-ca12-ca16-reports.sql`).
+- Ningún código Java referencia estas columnas legacy.
+- Los índices optimizan las consultas de comparativa entre periodos (requisito explícito de CA-24).
+
+### Impacto en funcionalidades existentes
+**CERO.** Solo se eliminan columnas huérfanas y se añaden índices.
+
+---
+
+## Solicitud Formal
+
+Arquitecto Líder: solicito su **aprobación** para proceder con la ejecución del changeset descrito. El cambio es quirúrgico, idempotente y no impacta ninguna funcionalidad existente.
+
+**Responda con:**
+- ✅ **APROBADO** — para que proceda a modo EXECUTION
+- ❌ **RECHAZADO + motivo** — para corregir antes de ejecutar

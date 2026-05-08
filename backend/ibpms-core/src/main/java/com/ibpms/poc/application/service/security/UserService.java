@@ -31,13 +31,15 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final TaskRescueProducer taskRescueProducer;
     private final MenuLayoutService menuLayoutService;
+    private final com.ibpms.poc.application.port.out.AuditLogPort auditLogPort;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TaskRescueProducer taskRescueProducer, MenuLayoutService menuLayoutService) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TaskRescueProducer taskRescueProducer, MenuLayoutService menuLayoutService, com.ibpms.poc.application.port.out.AuditLogPort auditLogPort) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.taskRescueProducer = taskRescueProducer;
         this.menuLayoutService = menuLayoutService;
+        this.auditLogPort = auditLogPort;
     }
 
     public UserResponseDTO createUser(UserCreateRequestDTO dto) {
@@ -95,6 +97,26 @@ public class UserService {
 
         userRepository.save(user);
 
+        // CA-17: Traza Indeleble de Auditoría
+        String adminUser = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null ? 
+                           org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName() : "SYSTEM";
+        
+        String details = String.format("{\"email\":\"%s\",\"status\":\"%s\",\"roles\":[%s]}",
+            user.getEmail(), user.getStatus(), user.getRoles().stream().map(r -> "\"" + r.getName() + "\"").collect(Collectors.joining(",")));
+
+        auditLogPort.saveAuditLog(
+            UUID.randomUUID().toString(),
+            "USER",
+            user.getId().toString(),
+            "UPDATE_USER",
+            adminUser,
+            java.time.LocalDateTime.now(),
+            null,
+            false,
+            false,
+            details
+        );
+
         if (UserStatus.INACTIVE.equals(user.getStatus())) {
             // CA-08 Trigger mass unclaim if user was deactivated
             taskRescueProducer.triggerMassiveUnclaim(id.toString());
@@ -134,6 +156,22 @@ public class UserService {
         user.setStatus(UserStatus.INACTIVE);
         userRepository.save(user);
         
+        // CA-17: Traza Indeleble
+        String adminUser = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null ? 
+                           org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName() : "SYSTEM";
+        auditLogPort.saveAuditLog(
+            UUID.randomUUID().toString(),
+            "USER",
+            user.getId().toString(),
+            "DEACTIVATE_USER",
+            adminUser,
+            java.time.LocalDateTime.now(),
+            null,
+            false,
+            false,
+            "{\"status\":\"INACTIVE\"}"
+        );
+
         // CA-08 Trigger mass unclaim since user is deactivated
         taskRescueProducer.triggerMassiveUnclaim(id.toString());
         

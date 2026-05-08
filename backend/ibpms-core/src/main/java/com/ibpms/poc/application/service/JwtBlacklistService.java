@@ -20,13 +20,11 @@ import java.util.concurrent.TimeUnit;
 public class JwtBlacklistService {
 
     private static final Logger log = LoggerFactory.getLogger(JwtBlacklistService.class);
-    private static final String KEY_PREFIX = "blacklist:user:";
+    private static final String USER_KEY_PREFIX = "blacklist:user:";
+    private static final String TOKEN_KEY_PREFIX = "blacklist:token:";
     
     private final StringRedisTemplate redisTemplate;
     
-    // Fallback Local en memoria (HashMap) para redundancia ante fallos de red
-    private final ConcurrentHashMap<String, Boolean> localFallback = new ConcurrentHashMap<>();
-
     public JwtBlacklistService(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
@@ -36,44 +34,61 @@ public class JwtBlacklistService {
      * @param userId El identificador del usuario a revocar.
      */
     public void revokeSession(String userId) {
-        log.warn("SUDO Action: Revocando sesión del usuario [{}] en Redis Blacklist.", userId);
+        log.warn("SUDO Action: Revocando sesión completa del usuario [{}] en Redis Blacklist.", userId);
         try {
             redisTemplate.opsForValue().set(
-                    KEY_PREFIX + userId, 
+                    USER_KEY_PREFIX + userId, 
                     "revoked", 
                     24, 
                     TimeUnit.HOURS
             );
-            localFallback.put(userId, true);
         } catch (Exception e) {
-            log.error("Error al persistir revocación en Redis. Usando fallback local para usuario [{}].", userId, e);
-            localFallback.put(userId, true);
+            log.error("Error al persistir revocación de usuario en Redis para [{}].", userId, e);
         }
     }
 
     /**
-     * Valida si el usuario ha sido revocado.
-     * Implementa FAIL-OPEN: Si Redis falla, se consulta el fallback local. Si ambos fallan o son negativos,
-     * se permite el paso basado en la integridad criptográfica del JWT (US-038).
+     * Inserta la firma de un token específico en la lista negra.
+     * @param tokenSignature La firma SHA-256 del token a revocar.
      */
-    public boolean isRevoked(String userId) {
-        if (userId == null) return false;
-
-        // 1. Verificar Fallback Local (Acceso ultra rápido)
-        if (localFallback.getOrDefault(userId, false)) {
-            return true;
-        }
-
-        // 2. Verificar Redis
+    public void revokeToken(String tokenSignature) {
+        log.warn("SUDO Action: Revocando token específico en Redis Blacklist.");
         try {
-            String val = redisTemplate.opsForValue().get(KEY_PREFIX + userId);
-            boolean isRevoked = "revoked".equals(val);
-            if (isRevoked) {
-                localFallback.put(userId, true); // Sincronizar localmente para el siguiente request
-            }
-            return isRevoked;
+            redisTemplate.opsForValue().set(
+                    TOKEN_KEY_PREFIX + tokenSignature, 
+                    "revoked", 
+                    24, 
+                    TimeUnit.HOURS
+            );
         } catch (Exception e) {
-            log.warn("Capa de Blacklist (Redis) inaccesible para usuario [{}]. Aplicando política FAIL-OPEN.", userId);
+            log.error("Error al persistir revocación de token en Redis.", e);
+        }
+    }
+
+    /**
+     * Valida si la sesión del usuario ha sido revocada.
+     * Implementa FAIL-OPEN: Si Redis falla, se permite el paso.
+     */
+    public boolean isUserRevoked(String userId) {
+        if (userId == null) return false;
+        try {
+            return "revoked".equals(redisTemplate.opsForValue().get(USER_KEY_PREFIX + userId));
+        } catch (Exception e) {
+            log.warn("Capa de Blacklist (Redis) inaccesible al verificar usuario [{}]. Aplicando política FAIL-OPEN.", userId);
+            return false;
+        }
+    }
+
+    /**
+     * Valida si un token específico ha sido revocado.
+     * Implementa FAIL-OPEN: Si Redis falla, se permite el paso.
+     */
+    public boolean isTokenRevoked(String tokenSignature) {
+        if (tokenSignature == null) return false;
+        try {
+            return "revoked".equals(redisTemplate.opsForValue().get(TOKEN_KEY_PREFIX + tokenSignature));
+        } catch (Exception e) {
+            log.warn("Capa de Blacklist (Redis) inaccesible al verificar token. Aplicando política FAIL-OPEN.");
             return false;
         }
     }

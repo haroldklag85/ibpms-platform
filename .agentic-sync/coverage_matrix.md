@@ -664,17 +664,17 @@
 | CA-26 | Experiencia de Caída Segura (UX Fallback) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | MainLayout.vue fallback sidebar message + Portal.vue routing |
 | CA-27 | Inmutabilidad de Roles Nativos del Sistema | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | ❌ DEUDA: Falta modal de edición de permisos de menú (checkboxes) en GlobalRolesTable.vue |
 | CA-28 | Granularidad Macro de la Topología Visual | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | ❌ DEUDA: Faltan controles UI para los 7 Módulos Macro |
-| CA-29 | Diseño Limpio del Modal de Roles (Tablas/Tabs) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | ❌ FALSO POSITIVO: Modal en GlobalRolesTable.vue no tiene Tabs. RbacTabs.vue es otra pantalla. |
-| CA-30 | Superposición Inclusiva Multirrol (Unión Matemática) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | ❌ DEUDA: Faltan entidades y lógica backend para realizar unión de menús multirrol. |
-| CA-31 | Arquitectura Endpoint Dinámico (Anti-JWT Bloat) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
-| CA-32 | Caché Híbrida y Auto-Curación Zero-Trust | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ Ninguno | Pendiente |
+| CA-29 | Diseño Limpio del Modal de Roles (Tablas/Tabs) | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Frontend: Modal rediseñado con Tabs (Info Básica / Topología). Auditado en DevDavid. |
+| CA-30 | Superposición Inclusiva Multirrol (Unión Matemática) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Back: Retorna array plano de módulos macro sin duplicados. Front: MenuStore unificado. |
+| CA-31 | Arquitectura Endpoint Dinámico (Anti-JWT Bloat) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Back: `GET /api/v1/users/me/menu-layout`. Front: Sidebar 100% dinámico. |
+| CA-32 | Caché Híbrida y Auto-Curación Zero-Trust | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Infra: TTL 30m. Back: `@CacheEvict`. Front: `$reset()` + Toast en HTTP 403. |
 
-### Resumen US-036 (Auditoría Forense V2 — 2026-05-04)
+### Resumen US-036 (Actualizado 2026-05-08 Iteración 08-DEV-DAVID)
 - **Total CAs:** 32 (29 activos + 3 N/A)
-- **Back:** ✅ 13/29 + ⚠️ 7/29 + ❌ 9/29 = **69% con cobertura parcial**
-- **Front:** ✅ 5/29 + ⚠️ 2/29 + ❌ 22/29 = **24% con cobertura parcial**
-- **QA Unitarios:** ✅ 2/29 (CA-2, CA-3) + ⚠️ 2/29 (CA-9 skip, CA-14 legacy) = **14%**
-- **Hallazgos Críticos:** CA-7 DELETE físico, CA-23 código comentado, CA-25 filtros duplicados, CA-9 tests .skip. CA-01 y CA-02 auditados (ok y trazables, faltan tests integrales/E2E).
+- **Back:** ✅ 16/29 + ⚠️ 7/29 + ❌ 6/29 = **79% con cobertura parcial**
+- **Front:** ✅ 8/29 + ⚠️ 2/29 + ❌ 19/29 = **34% con cobertura parcial**
+- **QA Unitarios:** ✅ 2/29 (CA-2, CA-3) + ⚠️ 2/29 (CA-9 skip, CA-14 legacy) = **14%** (QA omitido en iteración 08-DEV-DAVID)
+- **Logros Sprint 08-DEV-DAVID:** CA-29 a CA-32 completados con caché híbrida, TTL y endpoint dinámico.
 
 ---
 

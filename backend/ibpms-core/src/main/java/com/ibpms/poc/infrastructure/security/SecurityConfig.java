@@ -39,10 +39,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public JwtSecurityFilter jwtSecurityFilter() {
-        return new JwtSecurityFilter();
-    }
+
 
     private org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter getJwtAuthenticationConverter() {
         org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter();
@@ -91,7 +88,8 @@ public class SecurityConfig {
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(getJwtAuthenticationConverter())));
 
         // CA-25: Inyectar Filtro Zero-Trust JWT en el Pipeline de Spring Security
-        http.addFilterBefore(jwtSecurityFilter(), UsernamePasswordAuthenticationFilter.class);
+        // JwtAuthFilter is automatically registered as a bean and acts per request.
+        // We can explicitly wire it if needed, but since it extends OncePerRequestFilter and is @Component, Spring boot auto-registers it.
 
         return http.build();
     }

@@ -1,29 +1,28 @@
-# Solicitud de Aprobación de Arquitectura
+# Solicitud de Revisión Arquitectónica - Backend (DevDavid)
+
+**Iteración:** 09-DEV-REMEDIATION (US-036 Remediación)
 **Agente:** Backend
-**Historia de Usuario:** US-036 (Identity Governance)
-**Criterios de Aceptación:** CA-29 a CA-32
+**Criterios:** CA-14, CA-16, CA-17, CA-20b, CA-21, CA-23, CA-24, CA-25
 
-Estimado Arquitecto Líder, he finalizado el diagnóstico para la fase de topología dinámica y gobernanza de caché, y he diseñado el siguiente plan técnico. 
+## Resumen del Plan de Implementación (implementation_plan.md)
 
-## Plan de Ejecución Propuesto
+1. **Refactor de Seguridad:**
+   - Eliminaremos `JwtSecurityFilter.java` y su inyección en `SecurityConfig.java` para prevenir duplicación de filtros.
+   - Refactorizaremos `JwtBlacklistService.java` para conectarlo exclusivamente a Redis (removiendo el `ConcurrentHashMap`) con política Fail-Open.
+   - Conectaremos `JwtAuthFilter` con `JwtBlacklistService` unificando la TRL (Token Revocation List) sobre Redis.
 
-### 1. CA-30 (Superposición Inclusiva) y CA-31 (Endpoint de Layout)
-El endpoint `GET /api/v1/users/me/menu-layout` ya fue creado parcialmente en la iteración previa (`UserController`). 
-El servicio `MenuLayoutService` actualmente recorre todos los roles del usuario e inserta los permisos en un `Set<String>`, lo cual matemáticamente genera una unión (Superposición Inclusiva) resolviendo **CA-30**. 
-**Acción a realizar:** Mapearemos las nomenclaturas de los permisos brutos para asegurar que devuelva explícitamente los 7 Módulos Macro requeridos: `["WORKDESK", "SERVICE_DELIVERY", "BAM", "MODELER", "INTEGRATION", "PROJECTS", "ADMINISTRATION"]`.
+2. **Reportes de Auditoría (CA-16, CA-24):**
+   - Crearemos `AuditReportService.java` para centralizar la generación CSV y el cálculo del SHA-256.
+   - Expondremos el servicio correctamente bajo el endpoint `POST /api/v1/security/audit/reports` en `AuditReportController.java`.
 
-### 2. CA-32 (Caché Híbrida y Auto-Curación Zero-Trust)
-Actualmente `MenuLayoutService` usa `@Cacheable("menuTopology")` para optimizar la carga del menú. Sin embargo, no se está purgando automáticamente cuando los roles o permisos mutan.
-**Acciones a realizar:**
-1. Añadir `@CacheEvict(value = "menuTopology", key = "#result.username")` en `UserService.updateUser` y `deactivateUser`.
-2. Añadir `@CacheEvict(value = "menuTopology", allEntries = true)` en los métodos mutables de `RoleService` (`updateRole`, `updateProcessPermissions`, `deleteRole`, `assignTemplateToUsers`) para forzar una purga total (Zero-Trust) y evitar accesos residuales al modificar un rol que puede pertenecer a N usuarios concurrentes.
-3. Verificar la presencia de `@EnableCaching` en el proyecto.
+3. **Traza Indeleble (CA-17):**
+   - Inyectaremos la interfaz `AuditLogPort` en `UserService.java`. Se escribirán logs explícitos de auditoría en la tabla `ibpms_audit_log` tras cualquier mutación de status o asignación de roles de un usuario.
 
----
+4. **Delegación In-Flight (CA-23):**
+   - Habilitaremos el método `.revertAssignee()` (usando `TaskService`) dentro del bloque `evaluateAndRevertTaskIfNeeded` de `TaskDelegationService`.
+   - Se inyectará `AuditLogPort` para registrar explícitamente en base de datos la reversión on-the-fly.
 
-### Solicitud de Confirmación
-Solicito su autorización formal (`MODO EXECUTION`) para proceder con la implementación estricta mediante TDD y el protocolo SRE de auto-compilación. 
+5. **Unión Multirrol RLS (CA-20b):**
+   - Integraremos globalmente `DataSegregationService` en `BpmTaskService.java` (y otros extractores si aplica), reemplazando las consultas hardcodeadas (`taskAssignee().or().taskCandidateGroupIn()`) para unificar y blindar contra ataques IDOR/BOLA.
 
-Por favor confirmar si aprueba:
-1. El mapeo propuesto a un array de strings para la UI (`["WORKDESK", ...]`).
-2. El uso de `allEntries = true` en la evicción de caché para modificaciones de Roles (para garantizar Zero-Trust sin queries complejos de invalidación selectiva).
+Solicito su aprobación formal para proceder al modo `EXECUTION`.

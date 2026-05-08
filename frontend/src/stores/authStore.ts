@@ -142,6 +142,7 @@ export const useAuthStore = defineStore('auth', () => {
             
             const jwt = token.value || localStorage.getItem('ibpms_token');
             if (!jwt) throw { status: 401 };
+            token.value = jwt; // CA-19: Sincronización de estado antes de API calls
 
             try {
                 const payload = JSON.parse(atob(jwt.split('.')[1]));

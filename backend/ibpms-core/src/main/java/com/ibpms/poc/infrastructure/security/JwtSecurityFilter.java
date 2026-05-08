@@ -1,73 +1,60 @@
 package com.ibpms.poc.infrastructure.security;
 
-import org.springframework.stereotype.Component;
-
-import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.lang.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Filtro perimetral que intercepta peticiones HTTP para asegurar la capa de API
- * (Pantalla 14).
- * Valida formatos JWT de EntraID y consulta una Lista Negra (Redis/Mock)
- * in-flight
+ * Filtro perimetral que intercepta peticiones HTTP para asegurar la capa de API (Pantalla 14).
+ * Valida formatos JWT de EntraID y consulta una Lista Negra (Redis/Mock) in-flight
  * para revocar tokens comprometidos de inmediato (Token Revocation List - TRL).
+ * 
+ * @Traceability: US-036 - CA-25
  */
-// @Traceability: US-036 - CA-25
-@Component
-@ConditionalOnBean(JwtTokenProvider.class)
-public class JwtSecurityFilter implements Filter {
+@Slf4j
+public class JwtSecurityFilter extends OncePerRequestFilter {
 
-    // En producción esto sería un RedisTemplate o un Cache Manager
     private final Set<String> redisBlacklistMock = new HashSet<>();
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+    protected void doFilterInternal(@NonNull HttpServletRequest httpRequest, 
+                                    @NonNull HttpServletResponse httpResponse, 
+                                    @NonNull FilterChain chain)
+            throws ServletException, IOException {
 
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        try {
+            String authHeader = httpRequest.getHeader("Authorization");
+            String token = null;
 
-        String path = httpRequest.getRequestURI();
+            if (authHeader != null && authHeader.length() > 7 && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7);
+            }
 
-        // Public Bypass (CA-15): Ignore HTTP filters for endpoints prefixed with
-        // /api/v1/public/forms/**
-        if (path.startsWith("/api/v1/public/forms/")) {
-            chain.doFilter(request, response);
-            return;
+            // Si hay un token, validamos revocación inmediata (TRL)
+            if (token != null) {
+                if (isTokenBlacklisted(token)) {
+                    httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    httpResponse.getWriter().write("401 Unauthorized: Token revocado por seguridad (TRL).");
+                    return;
+                }
+                // Enriquecemos el request con el ID del usuario para logs perimetrales
+                httpRequest.setAttribute("validated_user", extractUserId(token));
+            }
+        } catch (Exception e) {
+            // CA-25: Fail-Safe. Si falla el parsing o la auditoría perimetral, 
+            // dejamos pasar a la SecurityFilterChain de Spring para que ella decida (Zero-Trust Layer 2).
+            log.error("Error en JwtSecurityFilter (bypass preventivo): {}", e.getMessage());
         }
 
-        String authHeader = httpRequest.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            httpResponse.getWriter().write("401 Unauthorized: Token no detectado. Zero-Trust enforcing.");
-            return;
-        }
-
-        String token = authHeader.substring(7);
-
-        // Verificación de Lista Negra (Redis)
-        if (isTokenBlacklisted(token)) {
-            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            httpResponse.getWriter()
-                    .write("401 Unauthorized: El token EntraID suministrado ha sido revocado (Blacklisted).");
-            return;
-        }
-
-        // Aquí se delegaría la validación criptográfica de firmas RSA de EntraID (fuera del alcance del test)
-        httpRequest.setAttribute("validated_user", extractUserId(token));
-
-        chain.doFilter(request, response);
+        // Delegamos el resto de la seguridad (Authn/Authz) a la SecurityFilterChain de Spring
+        chain.doFilter(httpRequest, httpResponse);
     }
 
     /**
@@ -85,11 +72,14 @@ public class JwtSecurityFilter implements Filter {
     }
 
     private String extractUserId(String token) {
+        if (token == null) return "Unknown";
         // Mock parsing
-        if (token.contains("user_a"))
-            return "User_A";
-        if (token.contains("user_b"))
-            return "User_B";
+        try {
+            if (token.contains("user_a")) return "User_A";
+            if (token.contains("user_b")) return "User_B";
+        } catch (Exception e) {
+            return "Malformed_Token";
+        }
         return "Unknown";
     }
 }

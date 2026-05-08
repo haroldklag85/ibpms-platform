@@ -1,49 +1,52 @@
-# Solicitud de Revisión — Agente Infra/BD
+# Solicitud de Revisión — Agente Infra/BD (Iteración 08)
 
-**Fecha:** 2026-05-08T08:50:00-05:00  
+**Fecha:** 2026-05-08T11:03:00-05:00  
 **Agente:** Infra/BD  
 **US:** US-036 (Identity Governance)  
-**CAs:** CA-23, CA-24, CA-25, CA-26, CA-27, CA-28  
+**CAs:** CA-29, CA-30, CA-31, CA-32  
 **Rama:** DevDavid  
 
 ---
 
-## Resumen del Plan
+## Resumen del Diagnóstico
 
-### Diagnóstico Ejecutado
+He realizado una auditoría empírica completa del stack Redis para soportar la Caché Híbrida (CA-32).
 
-He realizado una auditoría completa del esquema de base de datos PostgreSQL contra los changesets Liquibase y las entidades JPA, verificando empíricamente contra la BD en ejecución (`ibpms-postgres-uat`).
+### Estado de Infraestructura Redis
 
-### Hallazgos
+| Componente | Estado |
+|------------|--------|
+| Contenedor `ibpms-redis-uat` | ✅ Up 16h, healthy, Redis 7.4.8 |
+| Puerto 6379 expuesto | ✅ |
+| PING/PONG | ✅ |
+| Backend conectado a Redis | ✅ 2 clientes conectados |
+| `spring.cache.type: redis` | ✅ |
+| `@EnableCaching` | ✅ |
+| `@Cacheable("menuTopology")` | ✅ en MenuLayoutService |
+| `@CacheEvict("menuTopology")` | ✅ en MenuLayoutService |
+| Backend health | ✅ `{"status":"UP"}` |
 
-| Tabla | Estado | Acción |
-|-------|--------|--------|
-| `ibpms_audit_reports` (CA-24) | ✅ Existe. Entidad JPA alineada. | ⚠️ Limpiar 2 columnas legacy orphan (`requested_by`, `content_hash`) no mapeadas por JPA. Añadir índices de rendimiento. |
-| `ibpms_security_delegation` (CA-23) | ✅ Existe con `start_date` + `end_date`. Entidad JPA alineada. FK correctas. | ✅ Sin cambios necesarios. |
+### Hallazgo y Propuesta
 
-### Cambio Propuesto
+**Problema detectado:** El cache `menuTopology` no tiene TTL explícito (usa Redis default = ∞). Si `@CacheEvict` no se invoca por un bug, la caché queda stale indefinidamente.
 
-**Un único changeset idempotente:** `45-us036-ca23-ca28-infra.sql`
+**Solución propuesta:** Añadir TTL de 30 minutos para `menuTopology` en `CacheConfig.java`:
 
-Operaciones:
-1. `ALTER TABLE ibpms_audit_reports DROP COLUMN IF EXISTS requested_by;`
-2. `ALTER TABLE ibpms_audit_reports DROP COLUMN IF EXISTS content_hash;`
-3. `CREATE INDEX IF NOT EXISTS idx_audit_reports_generated_at ON ibpms_audit_reports(generated_at);`
-4. `CREATE INDEX IF NOT EXISTS idx_audit_reports_file_hash ON ibpms_audit_reports(file_hash);`
+```java
+.withCacheConfiguration("menuTopology",
+    RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(30)))
+```
 
-### Justificación
-- Las columnas `requested_by` y `content_hash` fueron creadas por el changeset original `20-us036-rbac-schema.sql`, pero la entidad JPA `AuditReportEntity.java` mapea `generated_by` y `file_hash` (del changeset `36-us036-ca12-ca16-reports.sql`).
-- Ningún código Java referencia estas columnas legacy.
-- Los índices optimizan las consultas de comparativa entre periodos (requisito explícito de CA-24).
-
-### Impacto en funcionalidades existentes
-**CERO.** Solo se eliminan columnas huérfanas y se añaden índices.
+### Impacto
+- **CERO regresión** — Solo se modifica la configuración del cache `menuTopology`.
+- **Ningún changeset Liquibase** — No se requiere (confirmado por el handoff).
+- **Ningún cambio en docker-compose.yml** — Redis ya está operativo.
 
 ---
 
 ## Solicitud Formal
 
-Arquitecto Líder: solicito su **aprobación** para proceder con la ejecución del changeset descrito. El cambio es quirúrgico, idempotente y no impacta ninguna funcionalidad existente.
+Arquitecto Líder: solicito su **aprobación** para proceder con la adición del TTL de seguridad en `CacheConfig.java`.
 
 **Responda con:**
 - ✅ **APROBADO** — para que proceda a modo EXECUTION

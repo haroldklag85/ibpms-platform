@@ -239,15 +239,10 @@ export const useWorkdeskStore = defineStore('workdesk', {
     initWebSocket() {
       if (this.stompClient && this.stompClient.active) return;
 
-<<<<<<< HEAD
       // URL SockJS relativa al origen del frontend — el proxy Vite (/ws → http://127.0.0.1:8080)
       // la reenvía al backend sin CORS. En producción usar VITE_WS_HTTP_URL absoluta.
       const httpUrl = (import.meta as any).env?.VITE_WS_HTTP_URL
         || `${window.location.origin}/ws/workdesk`;
-=======
-      // URL base nativa para WebSockets STOMP hacia el backend
-      const socketUrl = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:8080/ws/workdesk/websocket';
->>>>>>> sprint-6
 
       this.stompClient = new Client({
         // webSocketFactory reemplaza brokerURL cuando el servidor usa SockJS

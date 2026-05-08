@@ -18,8 +18,8 @@
       </div>
       
       <div class="flex gap-2">
-         <button @click="downloadMatrixCsv" class="bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-md shadow-sm text-sm font-bold hover:bg-indigo-100 transition flex items-center gap-2">
-            ⬇️ Download Access Matrix CSV
+         <button @click="generateCisoReport" class="bg-indigo-600 text-white px-4 py-2 rounded-md shadow-sm text-sm font-bold hover:bg-indigo-700 transition flex items-center gap-2">
+             <span class="material-symbols-outlined text-[18px]">analytics</span> Generar Reporte Matrizal ISO 27001
          </button>
       </div>
     </header>
@@ -129,14 +129,14 @@
                 <td class="px-4 py-3 text-right text-sm">
                   <button v-if="authStore.hasWritePermission" @click="openRoleModal(role)" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase mr-2">Editar</button>
                   <button 
-                    v-if="authStore.hasWritePermission && role.id !== 'ROLE_SUPER_ADMIN'" 
+                    v-if="authStore.hasWritePermission && !isCoreRole(role.id)" 
                     data-testid="btn-delete-role" 
                     @click="deleteRole(role)" 
                     class="text-red-500 hover:text-red-700 font-bold text-xs uppercase"
                   >
                     Eliminar
                   </button>
-                  <span v-else-if="role.id === 'ROLE_SUPER_ADMIN'" class="text-gray-400 text-[10px] font-bold italic">PROTEGER</span>
+                  <span v-else class="text-gray-400 text-[10px] font-bold italic">PROTEGER</span>
                 </td>
               </tr>
             </tbody>
@@ -352,9 +352,6 @@
         <div v-else-if="currentTab === 'ciso_reports'">
           <div class="flex justify-between mb-4">
             <h2 class="text-lg font-bold text-gray-800">Reportes de Cumplimiento ISO 27001</h2>
-            <button data-testid="btn-generate-ciso-report" @click="generateCisoReport" class="bg-emerald-600 text-white px-4 py-2 rounded shadow text-sm font-bold hover:bg-emerald-700 transition flex items-center gap-2">
-              <span class="material-symbols-outlined text-[18px]">analytics</span> Generar Reporte Matrizal ISO 27001
-            </button>
           </div>
           
           <table class="min-w-full divide-y divide-gray-200 border rounded-lg overflow-hidden shadow-sm">
@@ -593,13 +590,13 @@
                          </div>
                          <div>
                             <label class="block text-[11px] font-bold text-gray-700 mb-1">Etiqueta Lógica y Administrativa</label>
-                            <input type="text" data-testid="input-role-name" v-model="roleForm.name" class="w-full text-sm border-gray-300 rounded focus:ring-indigo-500 border p-2" placeholder="Gestor Funcional..." required :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" />
+                            <input type="text" data-testid="input-role-name" v-model="roleForm.name" class="w-full text-sm border-gray-300 rounded focus:ring-indigo-500 border p-2" placeholder="Gestor Funcional..." required :disabled="isCoreRole(roleForm.id)" />
                          </div>
                      </div>
                      <!-- CA-6 Herencia Visual -->
                      <div>
                         <label class="block text-[11px] font-bold text-indigo-700 mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_tree</span> Heredar Políticas de Rol Padre</label>
-                        <select data-testid="select-parent-role" v-model="roleForm.parentRole" @change="onParentRoleChange" class="w-full text-sm border-indigo-200 rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-indigo-50 text-indigo-900 font-semibold cursor-pointer" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)">
+                        <select data-testid="select-parent-role" v-model="roleForm.parentRole" @change="onParentRoleChange" class="w-full text-sm border-indigo-200 rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-indigo-50 text-indigo-900 font-semibold cursor-pointer" :disabled="isCoreRole(roleForm.id)">
                            <option value="">-- Sin Herencia (Desde Cero) --</option>
                            <option v-for="r in systemRoles" :key="r.id" :value="r.id" :disabled="r.id === roleForm.id">{{ r.name }} ({{ r.id }})</option>
                         </select>
@@ -619,10 +616,10 @@
                                   <tr v-for="proc in systemProcesses" :key="proc.id" class="hover:bg-gray-50">
                                       <td class="px-3 py-2 text-xs font-medium text-gray-700">{{ proc.name }}</td>
                                       <td class="px-3 py-2 text-center">
-                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].initiate" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="text-indigo-600 focus:ring-indigo-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
+                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].initiate" :disabled="isCoreRole(roleForm.id)" class="text-indigo-600 focus:ring-indigo-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
                                       </td>
                                       <td class="px-3 py-2 text-center">
-                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].execute" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="text-emerald-600 focus:ring-emerald-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
+                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].execute" :disabled="isCoreRole(roleForm.id)" class="text-emerald-600 focus:ring-emerald-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
                                       </td>
                                   </tr>
                              </tbody>
@@ -642,45 +639,45 @@
                  <div v-else-if="roleModalTab === 'topology'" class="space-y-4">
                      <p class="text-sm text-gray-500 mb-2">Configure qué módulos estarán visibles para este Rol en el Sidebar principal. (CA-28)</p>
                      
-                     <div v-if="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="bg-blue-50 border border-blue-200 p-3 rounded-lg flex gap-2 items-center mb-4">
+                     <div v-if="isCoreRole(roleForm.id)" class="bg-blue-50 border border-blue-200 p-3 rounded-lg flex gap-2 items-center mb-4">
                          <span class="material-symbols-outlined text-blue-500">lock</span>
-                         <span class="text-xs font-bold text-blue-800">Inmutabilidad (CA-27): Los Roles Fundacionales no pueden ser restringidos visualmente.</span>
+                         <span class="text-xs font-bold text-blue-800">Inmutabilidad (CA-27): Los Roles Fundacionales no pueden ser restringidos visualmente ni modificados por diseño de seguridad.</span>
                      </div>
 
                      <div class="grid grid-cols-2 gap-3">
                          <!-- Módulos Macro -->
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.WORKDESK" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.WORKDESK" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Operativo / Workdesk</span><br/><span class="text-[10px] text-gray-500">Bandeja Unificada y Kanban</span></div>
                          </label>
                          
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.SERVICE_DELIVERY" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.SERVICE_DELIVERY" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Service Delivery</span><br/><span class="text-[10px] text-gray-500">Intake, Customer 360, Portal</span></div>
                          </label>
                          
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.BAM" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.BAM" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Directivo (BAM)</span><br/><span class="text-[10px] text-gray-500">Analytics y PMO Settings</span></div>
                          </label>
                          
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.MODELER" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.MODELER" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Configuración Modeler</span><br/><span class="text-[10px] text-gray-500">BPMN, DMN, Forms</span></div>
                          </label>
 
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.INTEGRATION" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.INTEGRATION" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Integración</span><br/><span class="text-[10px] text-gray-500">API Builder, Mapper, DLQ</span></div>
                          </label>
 
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.PROJECTS" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.PROJECTS" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Proyectos</span><br/><span class="text-[10px] text-gray-500">Gestor Ágil, PMO</span></div>
                          </label>
 
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.ADMINISTRATION" :disabled="['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
+                             <input type="checkbox" v-model="roleForm.topology.ADMINISTRATION" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Administración</span><br/><span class="text-[10px] text-gray-500">Identity, Buzones, Incidentes</span></div>
                          </label>
                      </div>
@@ -797,6 +794,13 @@ const toast = ref<{ msg: string; type: 'success' | 'error' }>({ msg: '', type: '
 const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
   toast.value = { msg, type };
   setTimeout(() => { toast.value.msg = ''; }, 4000);
+};
+
+// CA-27: Helper para detectar Roles Core Fundacionales
+const isCoreRole = (roleId: string) => {
+    if (!roleId) return false;
+    const coreRoles = ['SUPER_ADMIN', 'SYSTEM_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_SYSTEM_ADMIN'];
+    return coreRoles.includes(roleId.toUpperCase());
 };
 
 const systemRoles = ref<any[]>([]);
@@ -1136,7 +1140,15 @@ const createDelegation = async () => {
     }
 
     try {
-        await rbacStore.createDelegation(delForm.value);
+        // @Traceability: US-036 - CA-09 (Cesión de Poder)
+        // El donante es el usuario actual, el receptor es el seleccionado en el combo
+        const payload = {
+            recipientId: delForm.value.targetUser,
+            startDate: delForm.value.start + "T00:00:00",
+            endDate: delForm.value.end + "T23:59:59",
+            reason: "Delegación administrativa vía Panel de Gobernanza"
+        };
+        await rbacStore.createDelegation(authStore.user.id, payload);
         showToast('Delegación temporal activada con éxito.', 'success');
         delForm.value = { targetUser: '', start: '', end: '' };
     } catch (e) {

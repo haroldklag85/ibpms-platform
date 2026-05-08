@@ -106,6 +106,18 @@ export const useMenuStore = defineStore('menu', () => {
              }
 
              layout.value = mappedLayout;
+
+             // @Traceability: US-036 - CA-26 (UX Fallback)
+             // Si tras la hidratación el menú sigue vacío, redirigimos a una zona neutral
+             if (layout.value.length === 0) {
+                 console.warn("CA-26: Sin topología de menús detectada. Activando fallback de seguridad.");
+                 // Usamos un pequeño delay para asegurar que el ruteador esté listo
+                 setTimeout(() => {
+                     if (window.location.pathname !== '/') {
+                         window.location.href = '/';
+                     }
+                 }, 500);
+             }
         } catch (e) {
              console.error('No se pudo hidratar el Menú Dinámico', e);
              layout.value = [];

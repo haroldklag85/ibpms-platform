@@ -1,6 +1,5 @@
 package com.ibpms.poc.application.service.ui;
 
-import com.ibpms.poc.application.dto.MenuTopologyDTO;
 import com.ibpms.poc.infrastructure.jpa.entity.security.PermissionEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
@@ -13,9 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
 
 @Service
 public class MenuLayoutService {
+
+    private static final List<String> MACRO_MODULES = List.of(
+            "WORKDESK", "SERVICE_DELIVERY", "BAM", "MODELER", "INTEGRATION", "PROJECTS", "ADMINISTRATION"
+    );
 
     private final UserRepository userRepository;
 
@@ -25,7 +29,7 @@ public class MenuLayoutService {
 
     @Cacheable(value = "menuTopology", key = "#username")
     @Transactional(readOnly = true)
-    public MenuTopologyDTO computeTopologyForUser(String username) {
+    public Set<String> computeTopologyForUser(String username) {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -33,11 +37,16 @@ public class MenuLayoutService {
 
         for (RoleEntity role : user.getRoles()) {
             for (PermissionEntity permission : role.getPermissions()) {
-                activeMenus.add(permission.getName());
+                String permName = permission.getName().toUpperCase();
+                for (String module : MACRO_MODULES) {
+                    if (permName.contains(module)) {
+                        activeMenus.add(module);
+                    }
+                }
             }
         }
 
-        return new MenuTopologyDTO(activeMenus);
+        return activeMenus;
     }
 
     @CacheEvict(value = "menuTopology", key = "#username")

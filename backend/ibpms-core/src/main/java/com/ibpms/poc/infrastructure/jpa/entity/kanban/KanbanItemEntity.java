@@ -2,14 +2,15 @@ package com.ibpms.poc.infrastructure.jpa.entity.kanban;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "ibpms_kanban_item")
 public class KanbanItemEntity {
 
     @Id
-    @Column(name = "id", length = 50)
-    private String id;
+    @Column(name = "id")
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
@@ -34,8 +35,8 @@ public class KanbanItemEntity {
     private Integer slaHours;
 
     // Getters and Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     public KanbanV2BoardEntity getBoard() { return board; }
     public void setBoard(KanbanV2BoardEntity board) { this.board = board; }
     public String getTitle() { return title; }

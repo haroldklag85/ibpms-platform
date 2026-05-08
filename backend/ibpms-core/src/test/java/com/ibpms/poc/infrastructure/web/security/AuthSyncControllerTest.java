@@ -48,7 +48,7 @@ public class AuthSyncControllerTest {
         noRoleUser.setUsername("admin");
         noRoleUser.setEmail(defaultEmail);
         noRoleUser.setPasswordHash(encodedPassword);
-        noRoleUser.setIsActive(true);
+        noRoleUser.setStatus(com.ibpms.poc.infrastructure.jpa.entity.security.UserStatus.ACTIVE);
         noRoleUser.setRoles(new HashSet<>()); // No roles assigned
 
         when(userRepository.findByEmail(defaultEmail)).thenReturn(Optional.of(noRoleUser));
@@ -97,7 +97,7 @@ public class AuthSyncControllerTest {
     public void testEmergencyLoginAccountDisabled() {
         UserEntity user = new UserEntity();
         user.setPasswordHash("hash");
-        user.setIsActive(false);
+        user.setStatus(com.ibpms.poc.infrastructure.jpa.entity.security.UserStatus.INACTIVE);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
 

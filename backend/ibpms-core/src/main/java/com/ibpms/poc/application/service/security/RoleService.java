@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -72,6 +73,7 @@ public class RoleService {
      * es ROLE_SUPER_ADMIN. Ningún camino de código puede eludir este blindaje.
      */
     @SuppressWarnings("null")
+    @CacheEvict(value = "menuTopology", allEntries = true)
     public void deleteRole(UUID id) {
         RoleEntity role = roleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado: " + id));
@@ -88,6 +90,7 @@ public class RoleService {
      * Impide modificar nombre/descripción/permisos del Rol Root.
      */
     @SuppressWarnings("null")
+    @CacheEvict(value = "menuTopology", allEntries = true)
     public RoleEntity updateRole(UUID id, RoleEntity patch) {
         RoleEntity existing = roleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado: " + id));
@@ -121,6 +124,7 @@ public class RoleService {
      * transacción @Transactional. Devuelve los IDs que no se encontraron.
      */
     @SuppressWarnings("null")
+    @CacheEvict(value = "menuTopology", allEntries = true)
     public List<UUID> assignTemplateToUsers(UUID templateId, List<UUID> userIds) {
         RoleEntity template = roleRepository.findById(templateId)
                 .orElseThrow(() -> new IllegalArgumentException("Rol plantilla no encontrado: " + templateId));
@@ -148,6 +152,7 @@ public class RoleService {
      * orphanRemoval=true en RoleEntity elimina las entradas huérfanas de la BD.
      */
     @SuppressWarnings("null")
+    @CacheEvict(value = "menuTopology", allEntries = true)
     public RoleEntity updateProcessPermissions(UUID roleId, List<ProcessPermissionEntity> permissions) {
         RoleEntity role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado: " + roleId));

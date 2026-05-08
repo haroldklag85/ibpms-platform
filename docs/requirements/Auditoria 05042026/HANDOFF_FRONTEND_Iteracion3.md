@@ -18,52 +18,19 @@ Este handoff consolida **todas las tareas de frontend** derivadas de la auditor�
 
 ### ✅ REM-003-04: MAX_FORM_FIELDS Performance Lock
 
-**Severidad:** 🟡 Media | **US:** US-003  
-**Estado:** ✅ IMPLEMENTADO por Arquitecto
-
-**Archivo:** `frontend/src/views/admin/Modeler/FormDesigner.vue`
-
-**Qué se hizo:**
-Se implementó la constante `MAX_FORM_FIELDS = 200` y un `computed` reactivo `isHighDensityForm` que emite una alerta visual cuando el formulario supera el 80% de capacidad.
-
-**Verificación requerida por el equipo:**
-- [ ] Crear un formulario de prueba con 170+ campos y validar que aparece el banner de advertencia.
-- [ ] Verificar que con 200+ campos el botón de agregar se deshabilita.
+> **[GRADUADO AL SSOT]** Este hallazgo fue consolidado como CA-90 en [epic_B_formularios_bpmn.md](../epics/epic_B_formularios_bpmn.md)
 
 ---
 
 ### ✅ REM-003-06: LocalStorageGarbageCollector
 
-**Severidad:** 🟢 Baja | **US:** US-003  
-**Estado:** ✅ IMPLEMENTADO por Arquitecto
-
-**Archivos:**
-- `frontend/src/services/LocalStorageGarbageCollector.ts` (NUEVO)
-- `frontend/src/App.vue` (MODIFICADO — onMounted hook)
-
-**Qué se hizo:**
-Servicio que purga automáticamente borradores expirados (>7 días) o cuando el bucket total supera 50MB. Se ejecuta al arrancar la SPA.
-
-**Verificación requerida por el equipo:**
-- [ ] En DevTools → Application → LocalStorage, insertar manualmente una clave `ibpms_draft_test` con timestamp viejo (>7 días). Recargar la app. Debe desaparecer.
-- [ ] Verificar en consola el log `[GC] Purged N stale drafts`.
+> **[GRADUADO AL SSOT]** Este hallazgo fue consolidado como CA-92 en [epic_B_formularios_bpmn.md](../epics/epic_B_formularios_bpmn.md)
 
 ---
 
 ### ✅ REM-039-C: Banner de Restauración de Borrador
 
-**Severidad:** 🟢 Baja | **US:** US-039  
-**Estado:** ✅ IMPLEMENTADO por Arquitecto
-
-**Archivos modificados:**
-- `frontend/src/stores/genericFormStore.ts` — Agregados: `showDraftBanner`, `pendingDraft`, `restoreDraft()`, `dismissDraft()`
-- `frontend/src/views/admin/GenericForm/GenericFormView.vue` — Agregado: banner visual amber con botones Restaurar/Descartar
-
-**Verificación requerida por el equipo:**
-- [ ] Abrir una tarea genérica, escribir observaciones, cerrar la pestaña sin enviar.
-- [ ] Reabrir la misma tarea. Debe aparecer el banner amber: _"Se detectó un borrador no enviado. ¿Desea restaurarlo?"_
-- [ ] Clic en "Restaurar" → Los campos se rellenan con el borrador. Banner desaparece.
-- [ ] Repetir y clic en "Descartar" → Los campos quedan vacíos. Banner desaparece.
+> **[GRADUADO AL SSOT]** Este hallazgo fue consolidado como CA-7 en [epic_B_formularios_bpmn.md](../epics/epic_B_formularios_bpmn.md)
 
 ---
 

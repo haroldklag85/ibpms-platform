@@ -72,6 +72,18 @@ apiClient.interceptors.response.use(
             if (status === 500) {
                 // Categoría 1: Bug en el backend — Toast imborrable con traceId
                 console.error(`[ADR-014] Error 500 — Trace: ${traceId}`);
+                
+                // CA-25: Fail-Safe Session Recovery
+                // Si el error 500 ocurre en un endpoint crítico de hidratación/auth, purgamos el token malformado
+                const url = error.config?.url || '';
+                if (url.includes('/auth/') || url.includes('/users/me/')) {
+                    console.warn('CA-25: Detectada anomalía crítica en Auth (500). Purgando sesión local para auto-recuperación.');
+                    localStorage.removeItem('ibpms_token');
+                    localStorage.removeItem('ibpms_user');
+                    // No redirigimos inmediatamente para permitir que el usuario vea el traceId si es necesario, 
+                    // pero el "REINICIAR CONTEXTO" ahora funcionará limpio.
+                }
+
                 const event = new CustomEvent('global-error-dispatch', { detail: { 
                     code: 500,
                     type: 'SERVER_ERROR',

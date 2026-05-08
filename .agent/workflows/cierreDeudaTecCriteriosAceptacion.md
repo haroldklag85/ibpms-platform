@@ -6,6 +6,7 @@ params:
   cas: "Lista de CAs a ejecutar (ej. CA-08, CA-16, CA-21, CA-28)"
   rama: "Rama de git activa (ej. sprint-3/informe_auditoriaSprint1y2)"
   exclusiones: "Filtro de exclusión semántica (ej. V2, funcionalidades futuras)"
+  necesita_qa: "Indica si se requiere ejecución inmediata de QA (si/no)"
   nfr_qa_strategy: "Estrategia NFR/QA específica (ej. Pruebas unitarias al Repository Data Layer)"
 ---
 
@@ -30,6 +31,7 @@ Antes de cualquier análisis, confirma que el usuario proporcionó los siguiente
 | **CAs** | `CA-08, CA-16, CA-21, CA-28` | ✅ |
 | **Rama Git** | `sprint-3/informe_auditoriaSprint1y2` | ✅ |
 | **Exclusiones** | `V2, funcionalidades futuras` | Opcional |
+| **Necesita QA** | `si` / `no` | ✅ |
 | **NFR/QA Strategy** | `Pruebas unitarias al Repository Data Layer` | Opcional |
 
 **Si se proporcionó un filtro de exclusión** (ej. "excluyendo V2"), al leer los CAs en el archivo de Épica, descarta cualquier CA cuya redacción haga referencia semántica a versiones futuras (V2, V3), funcionalidades no contempladas en el MVP V1, o tecnologías no listadas en el stack aprobado. Justifica cada exclusión con una línea en el Handoff.
@@ -74,11 +76,19 @@ Antes de cualquier análisis, confirma que el usuario proporcionó los siguiente
    * **Para Infra/BD:** Crea `.agentic-sync/handoff_infra_US[X]_CA[Y].md`. Define esquemas DDL en Liquibase y topologías de RabbitMQ/Docker alineadas al ADR-009 y la arquitectura V1 de 3 VMs.
    * **Para el Backend:** Crea `.agentic-sync/handoff_backend_US[X]_CA[Y].md`. Escribe en ese archivo el contexto técnico, DTOs esperados y reglas de negocio. (No debe crear changelogs SQL si existe un agente Infra/BD designado para la tarea).
    * **Para el Frontend:** Crea `.agentic-sync/handoff_frontend_US[X]_CA[Y].md`. Detalla los endpoints reales que debe consumir, estado global Pinia a tocar y componentes Vue.
-   * **Para QA:** Crea `.agentic-sync/handoff_qa_US[X]_CA[Y].md`. Incluye:
-     - Los CAs exactos a validar con sus Scenarios Gherkin de referencia.
-     - Los endpoints Backend y vistas Frontend que el QA debe verificar en integración.
-     - La estrategia NFR/QA parametrizada (si fue proporcionada).
-     - Referencia obligatoria: *"Aplica el skill `.agents/skills/qa_e2e_validation_audit/SKILL.md` para garantizar la Ley de Correspondencia Gherkin (Test vs User Story). Todo CA sin test correspondiente debe reportarse como Cobertura Faltante."*
+   * **Para QA:** 
+     - **Si `necesita_qa == si`**: Crea `.agentic-sync/handoff_qa_US[X]_CA[Y].md`.
+     - **Si `necesita_qa == no`**: Crea `QA pending/handoff_qa_US[X]_CA[Y].md` (crea la carpeta si no existe).
+     - En ambos casos, incluye:
+       - Los CAs exactos a validar con sus Scenarios Gherkin de referencia.
+       - Los endpoints Backend y vistas Frontend que el QA debe verificar en integración.
+       - La estrategia NFR/QA parametrizada (si fue proporcionada).
+       - Referencia obligatoria: *"Aplica el skill `.agents/skills/qa_e2e_validation_audit/SKILL.md` para garantizar la Ley de Correspondencia Gherkin (Test vs User Story). Todo CA sin test correspondiente debe reportarse como Cobertura Faltante."*
+
+**Directiva de Documentación y Precisión Quirúrgica (OBLIGATORIA):**
+Debes añadir la siguiente instrucción en los Handoffs de Backend, Frontend e Infra/BD:
+> ⚠️ **IMPORTANTE:** Todo desarrollo o configuración debe quedar exhaustivamente documentado. Se exige **PRECISIÓN QUIRÚRGICA** en cada cambio para evitar efectos colaterales en funcionalidades existentes. Se han detectado regresiones en iteraciones previas; cualquier daño a funcionalidades adyacentes será motivo de rechazo inmediato. 
+
 
 **Regla Mandatoria para los Handoffs:**
 Al final de TODO archivo `handoff` que crees, DEBES INCLUIR obligatoriamente el siguiente párrafo de instrucciones operativas para el subagente:
@@ -117,7 +127,7 @@ Una vez asegurada la creación de los Handoffs en `.agentic-sync/`, envíale est
 > | 1️⃣ | **Infra/BD** | Crear esquemas Liquibase y topologías | Ninguna — arranca primero |
 > | 2️⃣ | **Backend** | Implementar endpoints, servicios y persistencia | ✅ Infra/BD terminado y pusheado |
 > | 3️⃣ | **Frontend** | Consumir endpoints reales del Backend | ✅ Backend terminado y pusheado |
-> | 4️⃣ | **QA** | Ejecutar pruebas E2E sobre Backend + Frontend integrados | ✅ Frontend terminado y pusheado |
+> | 4️⃣ | **QA** (Si aplica) | Ejecutar pruebas E2E (Omitir si `necesita_qa=no`) | ✅ Frontend terminado y pusheado |
 >
 > **Instrucciones por rol (copia y pega en cada chat nuevo):**
 >
@@ -136,7 +146,7 @@ Una vez asegurada la creación de los Handoffs en `.agentic-sync/`, envíale est
 > Actúa como Desarrollador Frontend. Rama de trabajo: [RAMA]. Lee y ejecuta estrictamente el archivo .agentic-sync/handoff_frontend_US[X]_CA[Y].md
 > ```
 >
-> **Chat 4 — QA** *(solo cuando Frontend haya hecho push):*
+> **Chat 4 — QA (SOLO SI `necesita_qa == si`)** *(solo cuando Frontend haya hecho push):*
 > ```
 > Actúa como Agente QA. Rama de trabajo: [RAMA]. Lee y ejecuta estrictamente el archivo .agentic-sync/handoff_qa_US[X]_CA[Y].md
 > ```

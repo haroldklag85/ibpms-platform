@@ -201,9 +201,10 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
-    async function createDelegation(payload) {
+    async function createDelegation(userId, payload) {
         try {
-            await apiClient.post('/admin/security/delegations', payload)
+            // CA-9: Endpoint real de delegación por usuario
+            await apiClient.post(`/api/v1/admin/users/${userId}/delegate`, payload)
             await fetchDelegations()
         } catch (error) {
             console.error("Error creando delegación", error)
@@ -224,7 +225,8 @@ export const useRbacStore = defineStore('rbac', () => {
     // --- CA-14: Kill-Session ---
     async function revokeUserSession(userId) {
         try {
-            await apiClient.post(`/admin/security/users/${userId}/revoke-session`)
+            // CA-14: Exorcismo JWT (Kill Session Extremo)
+            await apiClient.post(`/api/v1/admin/users/${userId}/kill-session`)
         } catch (error) {
             console.error("Error revocando sesión de usuario", error)
             throw error
@@ -263,18 +265,20 @@ export const useRbacStore = defineStore('rbac', () => {
 
     async function generateCisoReport() {
         try {
-            const response = await apiClient.get('/admin/security/reports/iso27001', {
+            // CA-16/CA-24: Consumir endpoint real POST para generación on-demand
+            const response = await apiClient.post('/api/v1/admin/roles/reports/iso27001', {}, {
                 responseType: 'blob'
             })
             
-            // Descarga automática del blob
-            const url = window.URL.createObjectURL(new Blob([response.data]))
+            // Descarga automática del blob (ISO 27001 Compliance)
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
             const link = document.createElement('a')
             link.href = url
-            link.setAttribute('download', `ibpms_iso27001_report_${new Date().getTime()}.csv`)
+            link.setAttribute('download', `ibpms_iso27001_report_${new Date().toISOString().split('T')[0]}.csv`)
             document.body.appendChild(link)
             link.click()
             link.remove()
+            window.URL.revokeObjectURL(url)
             
             await fetchCisoReports()
         } catch (error) {

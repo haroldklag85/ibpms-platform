@@ -12,6 +12,7 @@ import com.ibpms.poc.infrastructure.mq.producer.TaskRescueProducer;
 import com.ibpms.poc.infrastructure.jpa.entity.security.UserStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.ibpms.poc.application.service.ui.MenuLayoutService;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -29,12 +30,14 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final TaskRescueProducer taskRescueProducer;
+    private final MenuLayoutService menuLayoutService;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TaskRescueProducer taskRescueProducer) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TaskRescueProducer taskRescueProducer, MenuLayoutService menuLayoutService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.taskRescueProducer = taskRescueProducer;
+        this.menuLayoutService = menuLayoutService;
     }
 
     public UserResponseDTO createUser(UserCreateRequestDTO dto) {
@@ -97,6 +100,9 @@ public class UserService {
             taskRescueProducer.triggerMassiveUnclaim(id.toString());
         }
 
+        // CA-32: Auto-curación del menú cacheado cuando los roles del usuario cambian
+        menuLayoutService.invalidateMenuTopology(user.getUsername());
+
         return toDto(user);
     }
 
@@ -130,6 +136,9 @@ public class UserService {
         
         // CA-08 Trigger mass unclaim since user is deactivated
         taskRescueProducer.triggerMassiveUnclaim(id.toString());
+        
+        // CA-32: Auto-curación del menú cacheado
+        menuLayoutService.invalidateMenuTopology(user.getUsername());
         
         // Nota Arquitectura: el rechazo final de los JWT activos de este usuario lo hace el JwtAuthFilter en vivo contra JPA.
     }

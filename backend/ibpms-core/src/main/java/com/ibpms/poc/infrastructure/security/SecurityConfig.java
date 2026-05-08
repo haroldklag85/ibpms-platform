@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 /**
  * Configuración de Spring Security OIDC (OAuth2 Resource Server).
  * Delega la validación de tokens al IdP corporativo (Ej. Entra ID).
@@ -36,6 +37,11 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public JwtSecurityFilter jwtSecurityFilter() {
+        return new JwtSecurityFilter();
     }
 
     private org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter getJwtAuthenticationConverter() {
@@ -67,15 +73,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/process/*/start-anonymous").permitAll()
                         // CA-03 y CA-04 (US-038): Login Standard y Protocolo Break-Glass
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/sync", "/api/v1/auth/emergency-login").permitAll()
+                        // Apertura Temporal para desbloquear catálogo
+                        .requestMatchers(HttpMethod.GET, "/api/v1/design/processes/catalog").permitAll()
                         // OpenAPI / Swagger Docs
                         .requestMatchers("/v3/api-docs/**", "/api/v1/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // DMN Simulation for Tests (Bypass para el test Sandbox DMN)
                         .requestMatchers(HttpMethod.POST, "/api/v1/dmn-models/simulate").permitAll()
                         // US-028: Form Certification & Definition endpoints (QA Integration Tests)
-                        .requestMatchers("/api/v1/design/forms/**").permitAll()
-                        .requestMatchers("/api/v1/design/form-definitions/**").permitAll()
+                        .requestMatchers("/api/v1/design/forms/**", "/api/v1/design/form-definitions/**").permitAll()
                         .requestMatchers("/api/v1/forms/**").permitAll()
-                        .requestMatchers("/api/v1/design/processes/**").permitAll()
                         // CA-11: SSE Security Stream
                         .requestMatchers("/api/v1/security/stream").permitAll()
                         // Camunda Engine REST API
@@ -83,6 +89,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated());
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(getJwtAuthenticationConverter())));
+
+        // CA-25: Inyectar Filtro Zero-Trust JWT en el Pipeline de Spring Security
+        http.addFilterBefore(jwtSecurityFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

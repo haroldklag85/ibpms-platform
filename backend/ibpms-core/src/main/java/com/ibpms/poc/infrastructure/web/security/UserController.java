@@ -6,17 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.context.SecurityContextHolder;
-import com.ibpms.poc.application.dto.MenuTopologyDTO;
 import com.ibpms.poc.application.service.ui.MenuLayoutService;
-
+import java.util.Set;
 import java.util.List;
 
-/**
- * Endpoint público/operacional para el catálogo de usuarios.
- * Sigue el principio de Mínimo Privilegio (Zero-Trust), exponiendo únicamente
- * los datos necesarios (ID, Nombre, Email, Roles) para las asignaciones y delegaciones
- * en el Workdesk y los dropdowns del frontend, sin comprometer hashes o parámetros críticos.
- */
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserController {
@@ -35,7 +28,7 @@ public class UserController {
     }
 
     @GetMapping("/me/menu-layout")
-    public org.springframework.http.ResponseEntity<MenuTopologyDTO> getMyMenuLayout() {
+    public org.springframework.http.ResponseEntity<Set<String>> getMyMenuLayout() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return org.springframework.http.ResponseEntity.ok(menuLayoutService.computeTopologyForUser(username));
     }

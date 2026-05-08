@@ -20,6 +20,12 @@ import com.ibpms.poc.application.port.out.ExternalTaskTopicPort;
 import com.ibpms.poc.application.port.out.DataMappingPort;
 import com.ibpms.poc.domain.model.DataMapping;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
+import com.ibpms.poc.application.rest.dto.GenericFormConfigUpdateRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * REST Controller for BPMN Design operations (Integration Gaps Mock).
@@ -34,17 +40,20 @@ public class BpmnDesignController {
     private final BpmnDesignService bpmnDesignService;
     private final ExternalTaskTopicPort externalTaskTopicPort;
     private final DataMappingPort dataMappingPort;
+    private final ObjectMapper objectMapper;
 
     public BpmnDesignController(PreFlightAnalyzerService preFlightAnalyzerService, 
                                 ProcessMigrationService processMigrationService,
                                 BpmnDesignService bpmnDesignService,
                                 ExternalTaskTopicPort externalTaskTopicPort,
-                                DataMappingPort dataMappingPort) {
+                                DataMappingPort dataMappingPort,
+                                ObjectMapper objectMapper) {
         this.preFlightAnalyzerService = preFlightAnalyzerService;
         this.processMigrationService = processMigrationService;
         this.bpmnDesignService = bpmnDesignService;
         this.externalTaskTopicPort = externalTaskTopicPort;
         this.dataMappingPort = dataMappingPort;
+        this.objectMapper = objectMapper;
     }
 
     @PutMapping("/{id}/draft")
@@ -166,12 +175,47 @@ public class BpmnDesignController {
         ));
     }
 
-    @GetMapping
+    @GetMapping("/catalog")
     public ResponseEntity<List<Map<String, Object>>> getAllLatestProcesses() {
-        return ResponseEntity.ok(List.of(
-            Map.of("key", "onboarding_1", "name", "Alta de Colaboradores", "version", 2, "deployDate", "2023-11-20T10:00:00Z", "status", "ACTIVO"),
-            Map.of("key", "invoice_proc", "name", "Procesamiento de Facturas", "version", 5, "deployDate", "2023-12-01T15:30:00Z", "status", "ACTIVO")
-        ));
+        List<Map<String, Object>> processes = new java.util.ArrayList<>();
+        
+        Map<String, Object> process1 = new java.util.HashMap<>();
+        process1.put("key", "onboarding_1");
+        process1.put("name", "Alta de Colaboradores");
+        process1.put("version", 2);
+        process1.put("deployDate", "2023-11-20T10:00:00Z");
+        process1.put("status", "ACTIVO");
+        processes.add(process1);
+
+        Map<String, Object> process2 = new java.util.HashMap<>();
+        process2.put("key", "invoice_proc");
+        process2.put("name", "Procesamiento de Facturas");
+        process2.put("version", 5);
+        process2.put("deployDate", "2023-12-01T15:30:00Z");
+        process2.put("status", "ACTIVO");
+        processes.add(process2);
+
+        return ResponseEntity.ok(processes);
+    }
+
+    @PutMapping("/{processKey}/generic-form-config")
+    @Operation(summary = "Update Generic Form Config", description = "Configures the whitelist in ibpms_bpmn_process_design (Merged from application layer)")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> updateGenericFormConfig(
+            @PathVariable("processKey") String processKey,
+            @Valid @RequestBody GenericFormConfigUpdateRequest request,
+            Authentication authentication) {
+
+        String userId = authentication != null ? authentication.getName() : "anonymous";
+        String whitelistJson;
+        try {
+            whitelistJson = objectMapper.writeValueAsString(request.getWhitelist());
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        bpmnDesignService.updateGenericFormConfig(processKey, whitelistJson, userId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{processDefinitionKey}/xml")

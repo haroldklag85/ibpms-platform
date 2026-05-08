@@ -387,8 +387,13 @@
         <div v-else-if="currentTab === 'audit'" class="h-full flex flex-col">
           <div class="flex justify-between mb-4">
             <h2 class="text-lg font-bold text-gray-800">Trazas de Auditoría CISO (Solo Lectura)</h2>
-            <div class="bg-yellow-50 text-yellow-800 text-xs font-bold px-3 py-1.5 rounded border border-yellow-200 flex items-center gap-2">
-               🛡️ Inmutabilidad Garantizada (CA-17)
+            <div class="flex gap-2 items-center">
+              <button @click="generateCisoReport" class="bg-emerald-600 text-white px-3 py-1.5 rounded shadow-sm text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">download</span> Generar Reporte CISO
+              </button>
+              <div class="bg-yellow-50 text-yellow-800 text-xs font-bold px-3 py-1.5 rounded border border-yellow-200 flex items-center gap-2">
+                 🛡️ Inmutabilidad Garantizada (CA-17)
+              </div>
             </div>
           </div>
           
@@ -797,10 +802,12 @@ const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
 };
 
 // CA-27: Helper para detectar Roles Core Fundacionales
-const isCoreRole = (roleId: string) => {
-    if (!roleId) return false;
-    const coreRoles = ['SUPER_ADMIN', 'SYSTEM_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_SYSTEM_ADMIN'];
-    return coreRoles.includes(roleId.toUpperCase());
+const isCoreRole = (role: any) => {
+    if (!role) return false;
+    const nameStr = String(role.name || '').toUpperCase();
+    const idStr = String(role.id || (typeof role === 'string' ? role : '')).toUpperCase();
+    const coreRoles = ['SUPER_ADMIN', 'SYSTEM_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_SYSTEM_ADMIN', 'NATIVE_ADMIN'];
+    return coreRoles.includes(nameStr) || coreRoles.includes(idStr);
 };
 
 const systemRoles = ref<any[]>([]);
@@ -1049,6 +1056,12 @@ const deleteRole = async (role: any) => {
 const saveRole = async () => {
     if(!roleMatrixValidation.value) return; 
     
+    // CA-27: Guardrail de Seguridad - Prevención de mutación de roles core
+    if (isCoreRole(roleForm.value)) {
+        showToast('Acción denegada: Los roles fundacionales son inmutables por diseño de seguridad.', 'error');
+        return;
+    }
+    
     try {
         if(editingRole.value) {
             await rbacStore.updateRole(editingRole.value.id, {
@@ -1077,15 +1090,8 @@ const saveRole = async () => {
         showRoleModal.value = false;
         showToast('Roles de sistema sincronizados con Backend.', 'success');
     } catch (e) {
-        // Fallback local
-        if(editingRole.value) {
-            const r = systemRoles.value.find(x => x.id === editingRole.value.id);
-            if(r) Object.assign(r, { id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology });
-        } else {
-            systemRoles.value.push({ id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology } as any);
-        }
-        showRoleModal.value = false;
-        showToast('Guardado localmente (Backend no disponible)', 'success');
+        console.error('Error guardando rol:', e);
+        showToast('Error de servidor al guardar el rol.', 'error');
     }
 };
 
@@ -1099,7 +1105,7 @@ const saveMatrix = () => {
 };
 const downloadMatrixCsv = async () => {
   try {
-    const response = await apiClient.get('/api/v1/admin/security/matrix/export', { responseType: 'blob' });
+    const response = await apiClient.get('/admin/roles/export', { responseType: 'blob' });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -1110,15 +1116,8 @@ const downloadMatrixCsv = async () => {
     window.URL.revokeObjectURL(url);
     showToast('Auditoría CISO descargada con éxito.', 'success');
   } catch (e) {
-    showToast('Fallback local: Generando Blob Simulado CISO.', 'success');
-    const fallbackBlob = new Blob(["PROCESS,ROLE,INITIATE,EXECUTE\nKYC_P,R_GLOBAL,TRUE,TRUE"], { type: 'text/csv' });
-    const fallbackUrl = window.URL.createObjectURL(fallbackBlob);
-    const fallbackLink = document.createElement('a');
-    fallbackLink.href = fallbackUrl;
-    fallbackLink.setAttribute('download', `MOCK_CISO_Access_Matrix.csv`);
-    document.body.appendChild(fallbackLink);
-    fallbackLink.click();
-    window.URL.revokeObjectURL(fallbackUrl);
+    console.error('Error exportando matriz:', e);
+    showToast('Error de servidor al exportar matriz.', 'error');
   }
 };
 
@@ -1290,16 +1289,26 @@ const openAuditModal = (log: any) => {
 
 onMounted(async () => {
     try {
-        // Fetch all necessary data for E2E validation without mocks
-        const [usersRes, rolesRes, processesRes, anomaliesRes, auditRes] = await Promise.all([
-            apiClient.get('/admin/users').catch(() => ({ data: [] })),
-            apiClient.get('/admin/roles').catch(() => ({ data: [] })),
-            apiClient.get('/design/processes').catch(() => ({ data: [] })),
-            apiClient.get('/security/anomalies').catch(() => ({ data: [] })),
-            apiClient.get('/admin/security/reports').catch(() => ({ data: [] }))
+        // Fetch all necessary data using stores (Zero-Mocks Enforcement)
+        await Promise.all([
+            rbacStore.fetchRoles(),
+            rbacStore.fetchSystemProcesses(),
+            rbacStore.fetchAnomalies(),
+            rbacStore.fetchCisoReports(),
+            rbacStore.fetchDelegations(),
+            rbacStore.fetchServiceAccounts(),
+            rbacStore.fetchAuditLogs()
         ]);
 
-        if (usersRes.data && Array.isArray(usersRes.data)) {
+        // Sync local refs with store state
+        systemRoles.value = rbacStore.roles;
+        systemProcesses.value = rbacStore.systemProcesses;
+        securityAnomalies.value = rbacStore.anomalies;
+        
+        // Mocking system users for now as there is no specific store for them yet
+        // but consuming from real endpoint
+        const usersRes = await apiClient.get('/users').catch(() => ({ data: [] }));
+        if (usersRes.data) {
             systemUsers.value = usersRes.data.map((u: any) => ({
                 id: u.id,
                 name: u.username || 'Desconocido',
@@ -1310,51 +1319,11 @@ onMounted(async () => {
                 isExternalIdp: u.isExternalIdp
             }));
         }
-        
-        if (rolesRes.data && Array.isArray(rolesRes.data)) {
-            systemRoles.value = rolesRes.data.map((r: any) => ({
-                id: r.id || r.name,
-                name: r.name || r.id
-            }));
-        }
-        
-        if (processesRes.data && Array.isArray(processesRes.data)) {
-            systemProcesses.value = processesRes.data.map((p: any) => ({
-                id: p.key || p.id || p.technicalName,
-                name: p.name || p.key || p.technicalName,
-                isPublic: p.isPublic || false
-            }));
-        }
-        
-        if (anomaliesRes.data && Array.isArray(anomaliesRes.data)) {
-            securityAnomalies.value = anomaliesRes.data;
-        }
-        
-        if (auditRes.data && Array.isArray(auditRes.data)) {
-            rbacStore.cisoReports = auditRes.data;
-        }
-
-        // --- Fase 2: Sincronización de Identidad Gobernada ---
-        await Promise.all([
-            rbacStore.fetchDelegations(),
-            rbacStore.fetchServiceAccounts(),
-            rbacStore.fetchAuditLogs()
-        ]);
-
-        // Load persisted matrix from localStorage
-        const savedMatrix = localStorage.getItem('ibpms_rbac_matrix');
-        if (savedMatrix) {
-            try {
-                matrixState.value = JSON.parse(savedMatrix);
-            } catch(e) {
-                console.error('Error parsing RBAC matrix from localStorage');
-            }
-        }
 
         showToast('Identidad Gobernada sincronizada con éxito.', 'success');
     } catch(e) {
-        console.error('Error fetching data from backend for E2E validation:', e);
-        showToast('Error cargando datos del backend.', 'error');
+        console.error('Error synchronizing Identity Governance:', e);
+        showToast('Error sincronizando datos con el servidor.', 'error');
     }
 });
 </script>

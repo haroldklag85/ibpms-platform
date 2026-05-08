@@ -256,7 +256,7 @@ export const useRbacStore = defineStore('rbac', () => {
     // --- CA-16: ISO 27001 Reporting ---
     async function fetchCisoReports() {
         try {
-            const response = await apiClient.get('/admin/security/reports')
+            const response = await apiClient.get('/security/audit/reports')
             cisoReports.value = response.data
         } catch (error) {
             console.error("Error obteniendo reportes CISO", error)
@@ -266,7 +266,7 @@ export const useRbacStore = defineStore('rbac', () => {
     async function generateCisoReport() {
         try {
             // CA-16/CA-24: Consumir endpoint real POST para generación on-demand
-            const response = await apiClient.post('/api/v1/admin/roles/reports/iso27001', {}, {
+            const response = await apiClient.post('/security/audit/reports/iso27001', {}, {
                 responseType: 'blob'
             })
             

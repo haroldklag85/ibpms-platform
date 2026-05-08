@@ -81,7 +81,7 @@ describe('IdentityGovernance.vue - Phase 2 (US-036)', () => {
     
     // Mock successful creation
     const rbacStore = useRbacStore()
-    vi.spyOn(rbacStore, 'createServiceAccount').mockResolvedValue({ clientId: 'cli-1', secretKey: 'sk-1' })
+    vi.spyOn(rbacStore, 'createServiceAccount').mockResolvedValue({ id: 'cli-1', plainApiKey: 'sk-1' })
     
     await wrapper.vm.generateApiKey()
     
@@ -91,5 +91,32 @@ describe('IdentityGovernance.vue - Phase 2 (US-036)', () => {
     wrapper.vm.closeSecretNotification()
     
     expect(wrapper.vm.newlyCreatedSecret).toBeNull()
+  })
+
+  it('CA-27: valida la inmutabilidad de roles CORE (SUPER_ADMIN, NATIVE_ADMIN)', async () => {
+    const wrapper = mount(IdentityGovernance, {
+      global: { plugins: [pinia], stubs: { Teleport: true } }
+    })
+    
+    // Validar helper isCoreRole
+    expect(wrapper.vm.isCoreRole('SUPER_ADMIN')).toBe(true)
+    expect(wrapper.vm.isCoreRole('NATIVE_ADMIN')).toBe(true)
+    expect(wrapper.vm.isCoreRole('SYSTEM_ADMIN')).toBe(true)
+    expect(wrapper.vm.isCoreRole('ANALYST')).toBe(false)
+
+    // Abrir modal con rol fundacional
+    wrapper.vm.openRoleModal({ id: 'SUPER_ADMIN', name: 'Super Administrador', topology: {} })
+    await wrapper.vm.$nextTick()
+    
+    expect(wrapper.vm.showRoleModal).toBe(true)
+    
+    // Cambiar a pestaña de topología
+    wrapper.vm.roleModalTab = 'topology'
+    await wrapper.vm.$nextTick()
+
+    // Intentar disparar guardado
+    await wrapper.vm.saveRole()
+    // El toast de error debe haberse disparado si el guardado se bloqueó (validación reactiva en saveRole)
+    expect(wrapper.vm.toast.msg).toContain('inmutables')
   })
 })

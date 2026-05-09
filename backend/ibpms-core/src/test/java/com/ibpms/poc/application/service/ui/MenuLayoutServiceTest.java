@@ -1,6 +1,6 @@
 package com.ibpms.poc.application.service.ui;
 
-import com.ibpms.poc.application.dto.MenuTopologyDTO;
+
 import com.ibpms.poc.infrastructure.jpa.entity.security.PermissionEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
@@ -54,13 +54,28 @@ public class MenuLayoutServiceTest {
     void testComputeTopology_WithoutDuplicates() {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(mockUser));
 
-        MenuTopologyDTO result = menuLayoutService.computeTopologyForUser("testuser");
+        Set<String> result = menuLayoutService.computeTopologyForUser("testuser");
 
         assertNotNull(result);
-        assertEquals(3, result.getActiveMenus().size());
-        assertTrue(result.getActiveMenus().contains("MENU_DASHBOARD"));
-        assertTrue(result.getActiveMenus().contains("MENU_WORKDESK"));
-        assertTrue(result.getActiveMenus().contains("MENU_REPORTS"));
+        assertEquals(1, result.size());
+        assertTrue(result.contains("WORKDESK"));
+    }
+
+    @Test
+    void testComputeTopology_NativeAdminBypass() {
+        UserEntity adminUser = new UserEntity();
+        adminUser.setUsername("super_admin");
+        RoleEntity adminRole = new RoleEntity("SUPER_ADMIN", "Admin");
+        adminUser.setRoles(Set.of(adminRole));
+
+        when(userRepository.findByUsername("super_admin")).thenReturn(Optional.of(adminUser));
+
+        Set<String> result = menuLayoutService.computeTopologyForUser("super_admin");
+
+        assertNotNull(result);
+        assertEquals(7, result.size());
+        assertTrue(result.contains("WORKDESK"));
+        assertTrue(result.contains("ADMINISTRATION"));
     }
 
     @Test

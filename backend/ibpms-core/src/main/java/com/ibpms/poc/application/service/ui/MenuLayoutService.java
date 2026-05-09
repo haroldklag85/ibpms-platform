@@ -33,14 +33,27 @@ public class MenuLayoutService {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        // Early Return: Bypass para roles nativos (SUPER_ADMIN, SYSTEM_ADMIN)
+        boolean isNativeAdmin = user.getRoles().stream()
+                .anyMatch(role -> "SUPER_ADMIN".equalsIgnoreCase(role.getName()) || 
+                                  "SYSTEM_ADMIN".equalsIgnoreCase(role.getName()) ||
+                                  "ROLE_SUPER_ADMIN".equalsIgnoreCase(role.getName()) ||
+                                  "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(role.getName()));
+                                  
+        if (isNativeAdmin) {
+            return java.util.Collections.unmodifiableSet(new HashSet<>(MACRO_MODULES));
+        }
+
         Set<String> activeMenus = new HashSet<>();
 
         for (RoleEntity role : user.getRoles()) {
-            for (PermissionEntity permission : role.getPermissions()) {
-                String permName = permission.getName().toUpperCase();
-                for (String module : MACRO_MODULES) {
-                    if (permName.contains(module)) {
-                        activeMenus.add(module);
+            if (role.getPermissions() != null) {
+                for (PermissionEntity permission : role.getPermissions()) {
+                    String permName = permission.getName().toUpperCase();
+                    for (String module : MACRO_MODULES) {
+                        if (permName.contains(module)) {
+                            activeMenus.add(module);
+                        }
                     }
                 }
             }

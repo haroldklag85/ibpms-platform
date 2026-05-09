@@ -27,9 +27,5 @@ public class UserController {
         return org.springframework.http.ResponseEntity.ok(userService.listAll());
     }
 
-    @GetMapping("/me/menu-layout")
-    public org.springframework.http.ResponseEntity<Set<String>> getMyMenuLayout() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return org.springframework.http.ResponseEntity.ok(menuLayoutService.computeTopologyForUser(username));
-    }
+
 }

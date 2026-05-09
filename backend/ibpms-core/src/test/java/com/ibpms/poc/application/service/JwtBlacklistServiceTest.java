@@ -48,7 +48,7 @@ class JwtBlacklistServiceTest {
         String userId = "user-123";
         when(valueOperations.get("blacklist:user:" + userId)).thenReturn("revoked");
         
-        boolean isRevoked = blacklistService.isRevoked(userId);
+        boolean isRevoked = blacklistService.isUserRevoked(userId);
         
         assertTrue(isRevoked);
         verify(valueOperations).get("blacklist:user:" + userId);
@@ -59,7 +59,7 @@ class JwtBlacklistServiceTest {
         String userId = "user-active";
         when(valueOperations.get("blacklist:user:" + userId)).thenReturn(null);
         
-        boolean isRevoked = blacklistService.isRevoked(userId);
+        boolean isRevoked = blacklistService.isUserRevoked(userId);
         
         assertFalse(isRevoked);
     }
@@ -71,7 +71,7 @@ class JwtBlacklistServiceTest {
         
         // CA-14 Policy: Fail-Open. If Redis fails, we should not block the user.
         // Unless we have local cache, but for now we expect no exception.
-        boolean isRevoked = blacklistService.isRevoked(userId);
+        boolean isRevoked = blacklistService.isUserRevoked(userId);
         
         assertFalse(isRevoked, "Should fail-open and allow access if Redis is down");
     }

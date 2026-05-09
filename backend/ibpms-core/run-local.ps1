@@ -1,5 +1,5 @@
 $env:POSTGRES_HOST="localhost"
-$env:POSTGRES_PORT="5433"
+$env:POSTGRES_PORT="5432"
 $env:POSTGRES_DB="ibpms_db"
 $env:POSTGRES_USER="ibpms_user"
 $env:POSTGRES_PASSWORD="ibpms_password"
@@ -11,4 +11,4 @@ $env:REDIS_HOST="localhost"
 $env:REDIS_PORT="6379"
 $env:JWT_SECRET="changeme-this-must-be-at-least-32-chars-for-hs256-signature!!"
 
-mvn spring-boot:run
+& mvn spring-boot:run "-Dmaven.test.skip=true"

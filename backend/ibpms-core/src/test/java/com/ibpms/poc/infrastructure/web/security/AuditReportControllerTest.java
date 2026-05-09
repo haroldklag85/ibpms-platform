@@ -1,8 +1,6 @@
 package com.ibpms.poc.infrastructure.web.security;
 
-import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.security.AuditReportRepository;
-import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
+import com.ibpms.poc.application.service.security.AuditReportService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -25,10 +24,7 @@ class AuditReportControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private UserRepository userRepository;
-
-    @MockBean
-    private AuditReportRepository auditReportRepository;
+    private AuditReportService auditReportService;
 
     @MockBean
     private JwtDecoder jwtDecoder;
@@ -37,25 +33,25 @@ class AuditReportControllerTest {
     private ServiceAccountRepository serviceAccountRepository;
 
     @Test
-    @WithMockUser(roles = "SUPER_ADMIN")
+    @WithMockUser(roles = "SUPER_ADMIN", username = "testuser")
     void shouldDownloadCsvReport() throws Exception {
-        UserEntity user = new UserEntity();
-        user.setUsername("testuser");
-        user.setEmail("test@example.com");
-        
-        when(userRepository.findAll()).thenReturn(List.of(user));
+        AuditReportService.ReportResult mockResult = new AuditReportService.ReportResult(
+            "dummy csv".getBytes(), "hash123", null
+        );
+        when(auditReportService.generateIso27001Report("testuser")).thenReturn(mockResult);
 
-        mockMvc.perform(get("/api/v1/admin/security/reports/iso27001"))
+        mockMvc.perform(post("/api/v1/security/audit/reports/iso27001"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"ibpms_iso27001_report.csv\""))
+                .andExpect(header().string("X-Report-Hash", "sha256:hash123"))
                 .andExpect(content().contentType("text/csv"));
     }
 
     @Test
     @WithMockUser(roles = "USER")
     void shouldDenyAccessToNonAdmin() throws Exception {
-        // En SecurityConfig restringimos /api/v1/admin/**
-        mockMvc.perform(get("/api/v1/admin/security/reports/iso27001"))
+        // En SecurityConfig restringimos /api/v1/security/audit/** a admin
+        mockMvc.perform(post("/api/v1/security/audit/reports/iso27001"))
                 .andExpect(status().isForbidden());
     }
 }

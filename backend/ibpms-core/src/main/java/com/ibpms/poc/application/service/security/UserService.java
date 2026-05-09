@@ -112,6 +112,7 @@ public class UserService {
 
         String tempPassword = generateComplexRandomPassword();
         user.setPasswordHash(passwordEncoder.encode(tempPassword));
+        user.setMustChangePassword(true);
         userRepository.save(user);
 
         return new PasswordResetResponseDTO(tempPassword, "La contraseña temporal se ha generado con éxito. Cópiela ahora; no podrá visualizarse nuevamente.");

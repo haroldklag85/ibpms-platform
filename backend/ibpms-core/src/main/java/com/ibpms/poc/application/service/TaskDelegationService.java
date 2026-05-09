@@ -67,6 +67,7 @@ public class TaskDelegationService {
         boolean isAuthorized = checkDelegationAuthority(executiveUserId, assistantUserId, tenantId);
 
         if (!isAuthorized) {
+            // @Traceability(US = "US-001", CA = {"CA-15"}) Acierto Backend: Protección IDOR mitigada vía chequeo en BD.
             log.error("CA-15 IDOR BLOCKED: User {} attempted unauthorized delegation view of {} in tenant {}. " +
                       "SUDO Action [Audit Trail]: Potential IDOR attack vector detected.",
                       executiveUserId, assistantUserId, tenantId);

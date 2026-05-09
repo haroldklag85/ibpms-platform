@@ -13,17 +13,23 @@ async function globalSetup(config: FullConfig) {
     baseURL: 'http://localhost:8080'
   });
 
-  const response = await requestContext.post('/api/v1/auth/login', {
-    data: {
-      email: 'root@ibpms.local',
-      password: 'admin'
-    }
-  });
+  let response;
+  try {
+      response = await requestContext.post('/api/v1/auth/login', {
+        data: {
+          email: 'root@ibpms.local',
+          password: 'admin'
+        }
+      });
 
-  if (!response.ok()) {
-    console.warn('Failed to login in global setup: ' + response.statusText());
-    // Evitamos lanzar throw si la bd no tiene a root para no bloquear las demás suites
-    return;
+      if (!response.ok()) {
+        console.warn('Failed to login in global setup: ' + response.statusText());
+        // Evitamos lanzar throw si la bd no tiene a root para no bloquear las demás suites
+        return;
+      }
+  } catch(e: any) {
+      console.warn('Backend unreachable in global setup. Continuing without global login. ' + e.message);
+      return;
   }
 
   const { token, tenantId } = await response.json();

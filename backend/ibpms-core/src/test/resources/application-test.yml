@@ -2,9 +2,10 @@ spring:
   main:
     allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:ibpms-postgres}:${POSTGRES_PORT:5432}/${POSTGRES_DB:ibpms_db}
-    username: ${POSTGRES_USER:ibpms_user}
-    password: ${POSTGRES_PASSWORD:ibpms_password}
+    # Apuntando al entorno estático E2E (ADR-010 Enfoque E2E Estático)
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:ibpms_e2e}
+    username: ${POSTGRES_USER:ibpms}
+    password: ${POSTGRES_PASSWORD:ibpms_e2e_pass}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -17,14 +18,14 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
   rabbitmq:
-    host: ${RABBITMQ_HOST:ibpms-rabbitmq}
-    port: ${RABBITMQ_PORT:5672}
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5673}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
   data:
     redis:
-      host: ${REDIS_HOST:ibpms-redis}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}
 
 # Disable context-path for integration tests (tests use full absolute paths)
 server:

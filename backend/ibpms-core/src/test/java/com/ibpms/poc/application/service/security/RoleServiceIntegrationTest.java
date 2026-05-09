@@ -83,11 +83,12 @@ class RoleServiceIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("CA-2 RBAC-BE-02: deleteRole elimina correctamente un rol no-Root")
+    @DisplayName("CA-2 RBAC-BE-02: deleteRole elimina correctamente un rol no-Root (Soft Delete)")
     void testDeleteNonRootRoleSucceeds() {
         roleService.deleteRole(regularRoleId);
 
-        assertThat(roleRepository.findById(regularRoleId)).isEmpty();
+        RoleEntity deletedRole = roleRepository.findById(regularRoleId).orElseThrow();
+        assertThat(deletedRole.getIsActive()).isFalse();
     }
 
     @Test

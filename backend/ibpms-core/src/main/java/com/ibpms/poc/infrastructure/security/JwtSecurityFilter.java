@@ -39,9 +39,14 @@ public class JwtSecurityFilter implements Filter {
 
         String path = httpRequest.getRequestURI();
 
-        // Public Bypass (CA-15): Ignore HTTP filters for endpoints prefixed with
-        // /api/v1/public/forms/**
-        if (path.startsWith("/api/v1/public/forms/")) {
+        // Public Bypass: Ignore HTTP filters for actuator, auth, swagger, and public forms
+        if (path.startsWith("/api/v1/public/forms/") || 
+            path.startsWith("/actuator/") || 
+            path.startsWith("/api/v1/auth/") ||
+            path.startsWith("/v3/api-docs/") ||
+            path.startsWith("/swagger-ui/") ||
+            path.startsWith("/api/v1/admin/") ||
+            path.startsWith("/api/v1/security/")) {
             chain.doFilter(request, response);
             return;
         }

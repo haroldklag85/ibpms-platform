@@ -23,6 +23,7 @@ public class WorkdeskQueryService {
         return projectionRepository.findWorkdeskTasks(tenantId, search, effectiveAssignee, pageable);
     }
 
+    // @Traceability(US = "US-001", CA = {"CA-29"})
     @Cacheable(value = "workdesk_tasks", key = "'facets_' + #tenantId")
     @Transactional(readOnly = true)
     public java.util.List<com.ibpms.poc.application.dto.FacetCountDto> getFacets(String tenantId) {

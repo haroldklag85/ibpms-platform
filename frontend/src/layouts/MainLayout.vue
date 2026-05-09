@@ -215,6 +215,7 @@
       <div class="flex-1 overflow-auto bg-transparent relative">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
+            <!-- @Traceability(US = "US-001", CA = {"CA-12"}) Acierto UX: Keep-Alive retiene scroll y filtros en RAM para 0ms de carga en regresos -->
             <keep-alive include="Workdesk">
               <component :is="Component" />
             </keep-alive>

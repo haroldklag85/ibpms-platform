@@ -1,5 +1,8 @@
 import { ref, computed, onUnmounted } from 'vue';
 
+// @Traceability(US = "US-001", CA = {"CA-11"})
+// ⚠️ VIOLACIÓN DE ARQUITECTURA (Deuda Técnica): Este composable viola la CA-11 al instanciar múltiples `setInterval`
+// en lugar de consumir pasivamente el `useTimeStore` que maneja un único requestAnimationFrame global (Anti DOM-Thrashing).
 export const useSlaTrafficLight = (expirationDateIso: string | null) => {
     const timeRemainingMs = ref(0);
     const isValid = computed(() => expirationDateIso !== null && expirationDateIso !== '');

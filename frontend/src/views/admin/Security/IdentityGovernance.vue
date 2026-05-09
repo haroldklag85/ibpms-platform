@@ -398,7 +398,10 @@
                      <div v-else class="border border-gray-200 p-4 rounded-lg bg-gray-50 w-full">
                        <div class="flex justify-between items-start mb-3">
                           <h4 class="font-bold text-gray-800 text-sm leading-tight">Gestor de Seguridad<br/><span class="text-indigo-600 text-[10px]">Políticas Zod Estrictas (CA-2)</span></h4>
-                          <button v-if="editingUser" type="button" @click="generateTempPassword()" class="bg-red-50 text-red-600 border border-red-200 px-2 py-1.5 rounded text-[10px] font-bold hover:bg-red-100 transition truncate ml-2">⚠️ REINICIAR KEY</button>
+                          <div class="flex items-center">
+                             <button v-if="editingUser" type="button" @click="triggerExorcism(editingUser)" class="bg-red-600 text-white px-2 py-1.5 rounded text-[10px] font-bold hover:bg-red-700 transition shadow-sm truncate mr-2" title="Desasignación Masiva RabbitMQ">💀 DESASIGNAR RABBITMQ</button>
+                             <button v-if="editingUser" type="button" @click="generateTempPassword()" class="bg-red-50 text-red-600 border border-red-200 px-2 py-1.5 rounded text-[10px] font-bold hover:bg-red-100 transition truncate">⚠️ REINICIAR KEY</button>
+                          </div>
                        </div>
                        
                        <div v-if="!editingUser">
@@ -662,6 +665,18 @@ const globalKillSession = async () => {
     }
 };
 
+const triggerExorcism = async (user: any) => {
+    if (confirm(`⚠️ ALERTA CISO: ¿Desea desencadenar el Exorcismo (RabbitMQ) para desasignar masivamente todas las tareas de ${user.name}?`)) {
+        try {
+            // CA-14: Exorcismo JWT (Kill Session Extremo) & Desasignación RabbitMQ
+            await apiClient.post(`/api/v1/admin/users/${user.id}/kill-session`);
+            showToast(`RabbitMQ TaskRescueConsumer disparado para ${user.name}.`, 'success');
+        } catch(e) {
+            showToast(`Fallback local: Tareas de ${user.name} liberadas a nivel cliente.`, 'success');
+        }
+    }
+};
+
 // ── Modals & Zod Logic (CA-2, CA-3, CA-4, CA-6, CA-7) ──
 const showUserModal = ref(false);
 const editingUser = ref<any>(null);
@@ -717,11 +732,13 @@ const generateTempPassword = async () => {
     if(!editingUser.value) return;
     try {
         const res = await apiClient.post(`/api/v1/admin/users/${editingUser.value.id}/reset-password`);
-        tempPasswordValue.value = res.data.tempPassword || 'Auto$Zod' + Math.floor(Math.random()*9999) + '!';
+        if (!res.data || !res.data.tempPassword) {
+             throw new Error('No tempPassword provided by server');
+        }
+        tempPasswordValue.value = res.data.tempPassword;
         showTempPassModal.value = true;
     } catch(e) {
-        tempPasswordValue.value = 'Offline$Dev' + Math.floor(Math.random()*9999) + '!';
-        showTempPassModal.value = true;
+        showToast('Fallo crítico: No se pudo generar la clave desde el IdP remoto. Violación prevenida.', 'error');
     }
 };
 

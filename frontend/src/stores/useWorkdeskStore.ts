@@ -59,6 +59,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
   }),
 
   actions: {
+    // @Traceability(US = "US-001", CA = {"CA-08"})
     // CA-08: Verificar si el Feature Toggle está activado
     async checkForceRouting() {
       try {
@@ -211,6 +212,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
         if (response.data && Array.isArray(response.data.content)) {
             this.items = response.data.content;
             this.pageInfo = response.data.pageable || { pageNumber: page, pageSize: size, totalElements: response.data.totalElements || this.items.length };
+            // @Traceability(US = "US-001", CA = {"CA-07"})
             this.isDegraded = response.data?.degraded === true;
             this.facets = response.data.facets || [];
             this.lastDelegationContext = response.data.delegationContext || null;
@@ -260,6 +262,10 @@ export const useWorkdeskStore = defineStore('workdesk', {
                const event = JSON.parse(message.body);
                const currentUser = useAuthStore().user?.username;
                if (event.status === 'CLAIMED' && event.assignee !== currentUser) {
+                   // @Traceability(US = "US-001", CA = {"CA-06", "CA-13"}) 
+                   // TODO: Brecha Arquitectónica (CA-06, CA-14, CA-27). Esta suscripción global evoca 
+                   // eventos de todos los tenants, violando aislamiento de datos. Brecha UX: Falta inyectar 
+                   // el Toast discreto de CA-13 "Tarea reclamada por otro equipo".
                    this.removeTaskWithGhostAnimation(event.taskId);
                }
            } catch(e) {
@@ -267,7 +273,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
            }
         });
 
-        // CA-27: Suscripción segregada por Tenant
+        // @Traceability(US = "US-001", CA = {"CA-27"}) Suscripción segregada por Tenant
         const tenantId = (useAuthStore() as any).tenantId || 'default';
         this.stompClient?.subscribe(`/topic/workdesk/${tenantId}`, (message) => {
           if (message.body) {
@@ -275,6 +281,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
                  const event = JSON.parse(message.body);
                  switch (event.action) {
                      case 'REMOVE':
+                         // @Traceability(US = "US-001", CA = {"CA-13"}) Acierto Throttling: Payload atómico {action, id} y buffering visual con opacity 0 (_isGhost)
                          this._handleWsRemove(event.taskId);
                          break;
                      case 'ADD':
@@ -288,6 +295,8 @@ export const useWorkdeskStore = defineStore('workdesk', {
                          if (event.payload) {
                              this._handleWsAdd(event.payload); 
                          } else {
+                             // @Traceability(US = "US-001", CA = {"CA-09"}) 
+                             // TODO: Brecha CA-09. El límite visual estricto es de 15 tarjetas por página (CA-09, CA-19). Aquí se solicita forzosamente '50', violando el contrato de paginación canónica.
                              // Force global fetch si no hay payload en el websocket
                              this.fetchGlobalInbox(this.currentPage, 50, '', '', '', '', 'AVAILABLE');
                          }
@@ -330,6 +339,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
     },
 
     // CA-13: Throttling & Auto-refill helpers
+    // @Traceability(US = "US-001", CA = {"CA-26", "CA-13"})
     _handleWsRemove(taskId: string) {
         this._pendingRemovals.push(taskId);
         if (this._removalTimer) return;
@@ -374,6 +384,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
         this._checkAutoRefill();
     },
 
+    // @Traceability(US = "US-001", CA = {"CA-26", "CA-12"})
     async _checkAutoRefill() {
         if (this.items.length < 15 && this.pageInfo.totalElements > this.items.length) {
             if (this._refillDebounce) clearTimeout(this._refillDebounce);
@@ -383,6 +394,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
             }, 5000);
         }
         
+        // @Traceability(US = "US-001", CA = {"CA-12"}) Acierto UX: Auto-Redirect a Pagina 1 si se vacía la bandeja
         if (this.items.length === 0 && this.currentPage > 0) {
             await this.fetchGlobalInbox(0, 15);
         }

@@ -92,3 +92,8 @@ databaseChangeLog:
       file: db/changelog/changes/43-us025-impersonation-audit.sql
   - include:
       file: db/changelog/changes/44-us036-role-soft-delete.sql
+  - include:
+      file: db/changelog/changes/45-us001-workdesk-seed.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/46-us038-audit-columns.sql

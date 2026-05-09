@@ -127,9 +127,18 @@ apiClient.interceptors.response.use(
 
         if (error.response && error.response.status === 401) {
             const authStore = useAuthStore();
+            // @Traceability(US = "US-001", CA = {"CA-14"}) Acierto UX: Expulsión local destructiva (authStore.logout()) al recibir 401, mitigando acceso con cachés obsoletos.
             console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
             authStore.logout();
             // Ya no redirigimos ni hacemos logout destructivo
+        }
+        
+        // CA-3: Interceptar HTTP 428 (Perfil Incompleto)
+        if (error.response && error.response.status === 428) {
+            console.warn('[HTTP 428 Interceptor] Perfil incompleto detectado. Abriendo Guardrail JIT.');
+            const event = new CustomEvent('jit-428-dispatch', { detail: error.response.data });
+            window.dispatchEvent(event);
+            return new Promise(() => {}); // Suspend forever
         }
         
         // CA-30: Rate Limiting Preventivo (429)

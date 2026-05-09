@@ -20,11 +20,19 @@ public class AuthSyncController {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final com.ibpms.poc.application.service.JwtBlacklistService jwtBlacklistService;
+    private final com.ibpms.poc.infrastructure.jpa.repository.SystemAuditLogRepository systemAuditLogRepository;
 
-    public AuthSyncController(JwtTokenProvider jwtTokenProvider, UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
+    public AuthSyncController(JwtTokenProvider jwtTokenProvider, 
+                              UserRepository userRepository, 
+                              org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
+                              com.ibpms.poc.application.service.JwtBlacklistService jwtBlacklistService,
+                              com.ibpms.poc.infrastructure.jpa.repository.SystemAuditLogRepository systemAuditLogRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtBlacklistService = jwtBlacklistService;
+        this.systemAuditLogRepository = systemAuditLogRepository;
     }
 
     /**
@@ -131,9 +139,58 @@ public class AuthSyncController {
             throw new org.springframework.security.access.AccessDeniedException("User has no roles assigned in ibpms_security_user_roles");
         }
 
+        if (Boolean.TRUE.equals(user.getMustChangePassword())) {
+            return ResponseEntity.status(HttpStatus.PRECONDITION_REQUIRED).body(Map.of(
+                "code", "PASSWORD_CHANGE_REQUIRED",
+                "message", "Debe cambiar su contraseña antes de iniciar sesión. Por favor, actualice sus credenciales."
+            ));
+        }
+
         String overrideToken = jwtTokenProvider.generateToken(sub, roles, tenantId);
         
         return ResponseEntity.ok(Map.of("token", overrideToken, "message", "Emergency login successful"));
+    }
+
+    /**
+     * CA-3: Cambio forzado de clave en primer login
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> creds) {
+        String email = creds.get("email");
+        String currentPassword = creds.get("currentPassword");
+        String newPassword = creds.get("newPassword");
+
+        if (email == null || currentPassword == null || newPassword == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "code", "MISSING_FIELDS",
+                "message", "Los campos 'email', 'currentPassword' y 'newPassword' son obligatorios."
+            ));
+        }
+
+        Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByEmail(email);
+        
+        if (userOpt.isEmpty() || !passwordEncoder.matches(currentPassword, userOpt.get().getPasswordHash())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "code", "INVALID_CREDENTIALS",
+                "message", "Credenciales inválidas."
+            ));
+        }
+
+        com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity user = userOpt.get();
+        
+        // Zod validation on backend for CA-2
+        if (!newPassword.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "code", "WEAK_PASSWORD",
+                "message", "La contraseña debe tener mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo."
+            ));
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setMustChangePassword(false);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of("message", "Contraseña actualizada exitosamente."));
     }
 
     /**
@@ -173,6 +230,35 @@ public class AuthSyncController {
             return ResponseEntity.ok(Map.of("token", freshToken, "message", "Renovado Transaccionalmente"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Token Defectuoso o Rechazado"));
+        }
+    }
+
+    /**
+     * CA-4: Cierre manual de Break-Glass. Blacklista el token activo y registra auditoría.
+     */
+    @PostMapping("/emergency-logout")
+    public ResponseEntity<?> emergencyLogout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Token Ausente o Malformado"));
+        }
+        
+        String currentToken = authHeader.substring(7);
+        
+        try {
+            String username = jwtTokenProvider.getUsernameFromTokenIgnoreExpiration(currentToken);
+            if (username == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Token Inválido"));
+            }
+
+            // Revocación (Kill Switch)
+            jwtBlacklistService.revokeSession(username);
+
+            // CA-4: Auditoría de cierre Break-Glass
+            systemAuditLogRepository.save(new com.ibpms.poc.infrastructure.jpa.entity.SystemAuditLogEntity(username, "EMERGENCY_OVERRIDE_TERMINATED", 0, null, null));
+
+            return ResponseEntity.ok(Map.of("message", "Emergency session terminated successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Error procesando el token"));
         }
     }
 }

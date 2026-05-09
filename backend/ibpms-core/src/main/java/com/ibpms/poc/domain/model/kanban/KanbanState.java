@@ -4,12 +4,13 @@ import java.util.EnumSet;
 import java.util.Map;
 
 public enum KanbanState {
-    TODO, IN_PROGRESS, BLOCKED, DONE;
+    TODO, IN_PROGRESS, BLOCKED, QA_APPROVAL, DONE;
 
     private static final Map<KanbanState, EnumSet<KanbanState>> TRANSITIONS = Map.of(
         TODO, EnumSet.of(IN_PROGRESS),
-        IN_PROGRESS, EnumSet.of(BLOCKED, DONE),
+        IN_PROGRESS, EnumSet.of(BLOCKED, QA_APPROVAL, DONE),
         BLOCKED, EnumSet.of(IN_PROGRESS),
+        QA_APPROVAL, EnumSet.of(IN_PROGRESS, DONE),
         DONE, EnumSet.noneOf(KanbanState.class)
     );
 

@@ -38,8 +38,8 @@ El Sprint 6 se centrará únicamente en los componentes y APIs que impactan la v
 - **Paso 2:** ✅ Asegurar que el **ADR-010** (Prohibición absoluta de H2 en memoria) se mantenga intacto utilizando el "Enfoque E2E Estático".
 
 ### Iteración 6.2: Fixtures y Data Seed (Preparación E2E)
-- **Paso 1:** Crear scripts vía Liquibase (`test-data.sql`) o un `SeedService` para poblar el estado predecible exigido por `casos_uso_uat_j04.md`.
-- **Paso 2:** Inyectar perfiles de autenticación (`perito_a`, `director_1`), tareas BPMN en estado `TODO`, grupos RBAC y definiciones de formularios en la base de datos real.
+- **Paso 1:** ✅ Crear scripts vía Liquibase (`test-data.sql`) o un `SeedService` para poblar el estado predecible exigido por `casos_uso_uat_j04.md`.
+- **Paso 2:** ✅ Inyectar perfiles de autenticación (`perito_a`, `director_1`), tareas BPMN en estado `TODO`, grupos RBAC y definiciones de formularios en la base de datos real.
 
 ### Iteración 6.3: Certificación UAT J-04 (Playwright)
 - **Paso 1:** Activar `docker-compose.e2e.yml` para aislar el ambiente de UAT.

@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Configuration
-@Profile({"dev", "e2e", "Zero-Mock-E2E"})
+@Profile({ "dev", "e2e", "Zero-Mock-E2E" })
 @RequiredArgsConstructor
 public class E2EDataSeedConfig implements CommandLineRunner {
 
@@ -37,7 +37,8 @@ public class E2EDataSeedConfig implements CommandLineRunner {
 
         log.info("⚙️ Generando proceso BPMN Dummy programáticamente...");
 
-        // Construir proceso dinámicamente con tareas para diferentes roles y sys_generic_form
+        // Construir proceso dinámicamente con tareas para diferentes roles y
+        // sys_generic_form
         BpmnModelInstance modelInstance = Bpmn.createExecutableProcess("e2e_dummy_process")
                 .name("E2E Dummy Process")
                 .startEvent("startEvent")
@@ -53,6 +54,13 @@ public class E2EDataSeedConfig implements CommandLineRunner {
                 .moveToNode("fork")
                 .userTask("task_perito_a").name("Evaluar Daños Dinámicamente")
                 .camundaAssignee("perito_a")
+                .camundaFormKey("sys_generic_form")
+                .endEvent()
+
+                // Rama 2b: Tarea para Perito B (Multi-instance behavior simulada)
+                .moveToNode("fork")
+                .userTask("task_perito_b").name("Evaluar Daños Dinámicamente")
+                .camundaAssignee("perito_b")
                 .camundaFormKey("sys_generic_form")
                 .endEvent()
 

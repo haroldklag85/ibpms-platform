@@ -34,6 +34,9 @@ public class UserEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "must_change_password", nullable = false, columnDefinition = "boolean default false")
+    private Boolean mustChangePassword = false;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "ibpms_security_user_roles",
@@ -66,6 +69,8 @@ public class UserEntity {
     public void setIsExternalIdp(Boolean isExternalIdp) { this.isExternalIdp = isExternalIdp; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Boolean getMustChangePassword() { return mustChangePassword; }
+    public void setMustChangePassword(Boolean mustChangePassword) { this.mustChangePassword = mustChangePassword; }
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "skills", columnDefinition = "JSON")
     private String skills;

@@ -16,7 +16,8 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/workdesk/feature-toggles")
-@Traceability(US = "US-001", CA = {"CA-15"})
+@Traceability(US = "US-001", CA = {"CA-08"})
+// TODO: Brecha CA-08. El controlador expone la consulta (GET) del Feature Toggle, pero carece de un endpoint POST/PUT (con RBAC) para que el Administrador lo active/desactive en tiempo real.
 public class FeatureToggleController {
 
     private final FeatureToggleRepository featureToggleRepository;

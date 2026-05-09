@@ -38,7 +38,7 @@ public class BulkClaimIT {
         RestAssured.port = port;
         repository.deleteAll();
         
-        validToken = jwtTokenProvider.generateToken("user1", "user1@example.com", "ROLE_OPERARIO", "tenantA", "team-alpha");
+        validToken = jwtTokenProvider.generateToken("user1", Collections.singletonList("ROLE_OPERARIO"), "tenantA");
     }
 
     @Test

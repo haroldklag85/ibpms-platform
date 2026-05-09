@@ -1,5 +1,6 @@
 <template>
   <div class="h-full flex flex-col relative bg-gray-50 font-['Inter']" v-cloak>
+    <!-- @Traceability(US = "US-001", CA = {"CA-10"}) TODO: Brecha CA-10. El requerimiento prohíbe explícitamente Spinners globales bloqueantes y exige un Skeleton Loader transicional. -->
     <!-- Overlay Cargando Global -->
     <div v-if="store.isLoading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-50 rounded-xl">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -24,6 +25,7 @@
         
         <!-- Contenedor general de Filtros -->
         <div class="flex items-center gap-2">
+           <!-- @Traceability(US = "US-001", CA = {"CA-04"}) -->
            <!-- CA-04: Toggle de Delegación con contextos separados -->
            <div class="inline-flex rounded-lg border border-gray-200/80 bg-white/50 backdrop-blur-sm p-0.5 shadow-sm">
              <button
@@ -51,7 +53,7 @@
              </button>
            </div>
 
-           <!-- Filtro Tipo (Procesos vs Proyectos) -->
+           <!-- @Traceability(US = "US-001", CA = {"CA-22"}) Filtro Tipo (Procesos vs Proyectos) -->
            <select 
               v-model="typeFilter"
               @change="loadData"
@@ -62,7 +64,7 @@
              <option value="KANBAN">Proyectos (Kanban)</option>
            </select>
 
-           <!-- Filtro Nivel de SLA -->
+           <!-- @Traceability(US = "US-001", CA = {"CA-22"}) Filtro Nivel de SLA -->
            <select 
               v-model="slaFilter"
               @change="loadData"
@@ -77,7 +79,8 @@
       </div>
 
       <div class="flex-1 max-w-2xl px-2 xl:px-8 flex items-center gap-3">
-        <!-- Búsqueda (Gap CA-2) -->
+        <!-- @Traceability(US = "US-001", CA = {"CA-02"}) -->
+        <!-- Búsqueda Estratégica Híbrida -->
         <div class="relative flex-1 group">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl font-light">search</span>
           <input 
@@ -105,8 +108,9 @@
     </div>
 
     <!-- CA-15: Banner de Delegación Activa (solo visible en modo DELEGATED) -->
-    <Transition name="slide-down">
-      <div
+    <!-- @Traceability(US = "US-001", CA = {"CA-15"}) Acierto UX: Banner persistente de delegación mitigando errores operativos -->
+    <Transition name="banner-slide">
+      <div 
         v-if="delegationMode === 'DELEGATED' && delegatedUserName"
         data-testid="delegation-banner"
         class="w-full px-6 py-2.5 flex items-center gap-3 border-b border-amber-200/60 bg-amber-50 shadow-sm shrink-0"
@@ -126,6 +130,10 @@
       </div>
     </Transition>
 
+    <!-- @Traceability(US = "US-001", CA = {"CA-18"})
+    TODO: Brecha UX CA-18. Se implementó como Banner estático que desplaza el DOM, cuando
+    el SSOT exige un "Toast" flotante que no altere el layout principal del Workdesk. -->
+    <!-- @Traceability(US = "US-001", CA = {"CA-07", "CA-18"}) -->
     <!-- CA-07/CA-18: Banner de Degradación BPMN -->
     <Transition name="toast-slide">
       <div v-if="store.isDegraded" class="bg-amber-50 border-b border-amber-300 p-3 shadow-sm flex items-center flex-shrink-0 gap-3" data-testid="degradation-banner">
@@ -163,7 +171,7 @@
            </div>
         </div>
 
-        <!-- CA-22/CA-29: Filtros Facetados (Chips) -->
+        <!-- @Traceability(US = "US-001", CA = {"CA-22", "CA-29"}) Filtros Facetados (Chips) -->
         <div v-if="store.facets && store.facets.length > 0" class="flex flex-wrap items-center gap-2 px-6 py-3 bg-white border-b border-gray-200 shadow-sm z-10 shrink-0">
           <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-2 flex items-center gap-1">
             <span class="material-symbols-outlined text-[14px]">category</span> Facetas
@@ -212,6 +220,7 @@
 
         <div class="flex-1 overflow-y-auto p-card-p no-scrollbar relative min-h-0">
            
+           <!-- @Traceability(US = "US-001", CA = {"CA-08"}) -->
            <!-- CA-08: Modo Atender Siguiente Oculta Grilla -->
            <div v-if="store.forceRoutingEnabled" class="absolute inset-0 flex flex-col items-center justify-center p-8 bg-white/90 backdrop-blur z-30">
                <div class="max-w-md w-full text-center">
@@ -232,7 +241,7 @@
                </div>
            </div>
 
-           <!-- CA-12: Empty State Gamificado -->
+           <!-- @Traceability(US = "US-001", CA = {"CA-12"}) Acierto UX: Empty State Gamificado pasivo (Celebration SVG) -->
            <div v-else-if="filteredItems.length === 0 && !store.isLoading" class="absolute inset-0 flex flex-col items-center justify-center" data-testid="empty-state">
              <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-green-50 border-2 border-emerald-200 shadow-lg">
                <span class="material-symbols-outlined text-emerald-500 text-5xl">celebration</span>
@@ -244,6 +253,7 @@
              <p class="mt-1 text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Última sincronización: {{ new Date().toLocaleTimeString() }}</p>
            </div>
            
+           <!-- @Traceability(US = "US-001", CA = {"CA-03"}) Acierto UX: Data Grid Universal de 5 columnas cumplido -->
            <!-- CA-03: Data Grid Universal 5 Columnas -->
            <div v-else class="overflow-x-auto">
              <table class="w-full text-sm text-left" data-testid="task-list">
@@ -265,6 +275,7 @@
                    :class="[{ 'is-ghost': (task as any)._isGhost, 'is-new': (task as any)._isNew }, 'workdesk-row border-b border-gray-100 hover:bg-indigo-50/30 cursor-pointer transition-colors group']"
                    :data-testid="'task-row-' + (task.unifiedId || task.originalTaskId)"
                  >
+                   <!-- @Traceability(US = "US-001", CA = {"CA-03"}) Acierto UX: Uso de SVGs dinámicos sobrepasando la especificación inicial de Emojis -->
                    <!-- Col 1: Nombre + Badge Tipo + Badge Impacto -->
                    <td class="px-4 py-3">
                      <div class="flex items-center gap-2">
@@ -272,6 +283,7 @@
                          {{ task.sourceSystem === 'BPMN' ? 'bolt' : 'account_tree' }}
                        </span>
                        <div class="flex flex-col min-w-0">
+                         <!-- @Traceability(US = "US-001", CA = {"CA-12"}) TODO: Brecha Ergonomía. Falta tooltip (title) para proveer Zero-Click Context del truncamiento. -->
                          <span class="font-semibold text-[#1e1b4b] truncate max-w-[280px] group-hover:text-indigo-600 transition-colors">{{ task.title }}</span>
                          <span class="text-[10px] font-mono text-gray-400">{{ task.originalTaskId }}</span>
                        </div>
@@ -279,10 +291,12 @@
                        <span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold border border-indigo-200 shrink-0">{{ task.targetRole || 'Rol Operativo' }}</span>
                        
                        <span v-if="task.variables?.isSlaAtRisk === true && getSlaStatus(task.slaExpirationDate) !== 'EXPIRED'" class="px-1.5 py-0.5 bg-amber-500 text-white rounded text-[9px] font-bold border border-amber-600 shrink-0" title="SLA en Riesgo (<20% restante)">⚠️ SLA en Riesgo</span>
+                       <!-- @Traceability(US = "US-001", CA = {"CA-17"}) Acierto UX: Renderizado dinámico de impacto masivo -->
                        <span v-if="task.financialImpactHigh" class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[9px] font-black border border-red-200 shrink-0">🔥 Impacto</span>
                      </div>
                    </td>
-                   <!-- Col 2: SLA Semáforo Vivo con Iconografía Accesible (CA-11) -->
+                   <!-- @Traceability(US = "US-001", CA = {"CA-11"}) Col 2: SLA Semáforo Vivo con Iconografía Accesible -->
+                   <!-- ⚠️ BRECHA CA-11: Falta interruptor [Mute] sonoro en la UI -->
                    <td class="px-4 py-3">
                      <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 w-fit', getSlaPillClass(task.slaExpirationDate)]" :data-testid="'sla-pill-' + (task.unifiedId || task.originalTaskId)">
                        <span class="text-xs">{{ getSlaIcon(task.slaExpirationDate) }}</span>
@@ -293,7 +307,7 @@
                    <td class="px-4 py-3">
                      <span class="px-2 py-1 bg-gray-100/80 text-gray-600 rounded text-[10px] font-bold uppercase border border-gray-200 border-dashed">{{ task.status }}</span>
                    </td>
-                   <!-- Col 4: Avance (CA-23) - Oculta en móvil -->
+                   <!-- @Traceability(US = "US-001", CA = {"CA-23"}) Col 4: Avance - Oculta en móvil -->
                    <td class="px-4 py-3 hidden md:table-cell">
                      <div v-if="task.progressPercent != null" class="flex items-center gap-2">
                        <div class="flex-1 bg-gray-200 rounded-full h-2 max-w-[120px]">
@@ -309,6 +323,7 @@
                        <div v-if="task.assignee" class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[9px] ring-1 ring-indigo-100 uppercase shrink-0">
                          {{ task.assignee.substring(0,2) }}
                        </div>
+                       <!-- @Traceability(US = "US-001", CA = {"CA-13"}) TODO: Brecha de Privacidad Operativa. No se está ofuscando la identidad de terceros a "En gestión por otro Agente". -->
                        <span class="text-xs text-gray-600 truncate max-w-[100px]">{{ task.assignee || 'Sin Asignar' }}</span>
                      </div>
                    </td>
@@ -326,6 +341,7 @@
            </div>
         </div>
 
+        <!-- @Traceability(US = "US-001", CA = {"CA-12"}) TODO: Brecha Ergonomía. Falta botonera de paginación clonada (Sticky) en la parte superior de la tabla. Falta botón [Mute] sonoro. -->
         <!-- Pagination Stitch Footer -->
         <div v-if="store.pageInfo.totalElements > store.pageInfo.pageSize" class="h-14 bg-white border-t border-gray-200 px-6 flex items-center justify-between flex-shrink-0">
           <p class="text-[11px] text-gray-500 font-medium tracking-wide">Página {{ store.pageInfo.pageNumber + 1 }}</p>
@@ -442,7 +458,7 @@
       </div>
     </Transition>
 
-    <!-- CA-21: Modal para Skipeo Justificado -->
+    <!-- @Traceability(US = "US-001", CA = {"CA-21"}) Modal para Skipeo Justificado -->
     <Transition name="toast-slide">
       <div v-if="showSkipModal" class="fixed inset-0 z-[110] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border border-gray-200">
@@ -543,7 +559,11 @@ const statusFilter = ref('');
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
-// CA-04/CA-15: Cambiar modo de delegación
+// @Traceability(US = "US-001", CA = {"CA-04", "CA-15"})
+// TODO: Brecha Arquitectónica (CA-04 y CA-15). El CA-04 exige un Dropdown o Toggle para poder seleccionar 
+// qué bandeja delegada observar (ya que múltiples asistentes pueden delegarle a Juan). 
+// La implementación actual asume un único `delegatedAssistantId` estático o quema un UUID ('101edfe'), 
+// forzando un esquema estático 1:1 y fallando en proveer un API dinámico de selección de delegaciones activas.
 const switchDelegationMode = async (mode: 'SELF' | 'DELEGATED') => {
   if (mode === delegationMode.value) return;
 
@@ -588,16 +608,32 @@ const switchDelegationMode = async (mode: 'SELF' | 'DELEGATED') => {
   }
 };
 
-// Reactivity CA-5 Zero Frontend Filtering logic - Direct pass-through
+// @Traceability(US = "US-001", CA = {"CA-02"})
+// REMEDIACIÓN CA-02: Búsqueda Estratégica Híbrida implementada.
+// Paso 1: Filtrar inmediatamente en memoria sobre los items locales (respuesta visual instantánea).
+// Paso 2: Paralelamente, el debouncer dispara una petición asíncrona al backend para reconciliar páginas ocultas.
 const filteredItems = computed(() => {
-    return store.items;
+    if (!searchQuery.value || searchQuery.value.trim().length === 0) {
+        return store.items;
+    }
+    const query = searchQuery.value.toLowerCase().trim();
+    return store.items.filter(item => 
+        item.title?.toLowerCase().includes(query) ||
+        item.assignee?.toLowerCase().includes(query) ||
+        item.status?.toLowerCase().includes(query) ||
+        item.originalTaskId?.toLowerCase().includes(query)
+    );
 });
 
 const onSearchInput = () => {
     if(searchTimeout) clearTimeout(searchTimeout);
+    // @Traceability(US = "US-001", CA = {"CA-10", "CA-19", "CA-02"})
+    // REMEDIACIÓN CA-10: Debounce corregido a 300ms según contrato de negocio.
+    // El filtro local (filteredItems) ya reacciona inmediatamente vía computed.
+    // Esta petición al servidor reconcilia resultados de páginas ocultas.
     searchTimeout = setTimeout(() => {
         loadData();
-    }, 500); // 500ms Debouncer
+    }, 300); // 300ms Debouncer (contrato canónico CA-10)
 };
 
 const attendNextTask = () => {
@@ -709,6 +745,7 @@ const clearToasts = () => {
 // ==========================================
 // CA-24: Umbrales deterministas basados en % del tiempo restante
 // ==========================================
+// @Traceability(US = "US-001", CA = {"CA-24", "CA-20", "CA-36"})
 const SLA_THRESHOLDS = {
     GREEN_ABOVE: 0.50,   // > 50% restante → Verde
     YELLOW_ABOVE: 0.15,  // > 15% restante → Amarillo
@@ -716,6 +753,11 @@ const SLA_THRESHOLDS = {
     // 0% → Vencida
 };
 
+// @Traceability(US = "US-001", CA = {"CA-05", "CA-11"})
+// TODO: Brecha Arquitectónica (CA-05). La lógica del "Semáforo SLA" fue inyectada duramente en la vista principal 
+// (Workdesk.vue) rompiendo Single Source of Truth. Convive con un componente huérfano (`useSlaTrafficLight.ts`) 
+// que además viola CA-11 por fugas de `setInterval`. El Tick-Tock reactivo sí funciona apoyado en `timeStore.currentTick`,
+// pero carece de encapsulamiento.
 const getSlaStatus = (isoString?: string): 'OK' | 'WARNING' | 'EXPIRED' | 'CRITICAL' => {
     if (!isoString) return 'OK'; // Sin SLA = no hay presión
 
@@ -742,7 +784,8 @@ const getSlaPillClass = (isoString?: string) => {
     return 'bg-emerald-50 text-emerald-700 border-emerald-200/60';                    // 🟢
 };
 
-// CA-11: Iconografía accesible para daltónicos (SVG inline / Emojis)
+// @Traceability(US = "US-001", CA = {"CA-12", "CA-11"}) 
+// ⚠️ BRECHA CA-11: La historia exige el uso de "SVGs in-line", pero la implementación actual retorna Emojis (⚫, ⚡, ⏳, ✔️)
 const getSlaIcon = (isoString?: string): string => {
     const st = getSlaStatus(isoString);
     if (st === 'EXPIRED') return '⚫';  // Vencida
@@ -785,13 +828,18 @@ onMounted(async () => {
     // CA-05/CA-11: Arrancar Heartbeat Store en vez de setInterval
     timeStore.startEngine();
 
-    // CA-31: Listener de visibilitychange para auto-refresco pasivo
+    // @Traceability(US = "US-001", CA = {"CA-25", "CA-31"})
+    // CA-31/CA-25: Listener de visibilitychange para auto-refresco pasivo
     const onVisibilityReturn = async () => {
         if (document.visibilityState === 'visible') {
             // CA-25: El timeStore ya recalcula `currentTick` inmediatamente
             // CA-31: Si inactividad > 5 min → refresco silencioso de datos
             if (timeStore.getInactivityMs() > INACTIVITY_THRESHOLD_MS) {
-                await loadData();
+                try {
+                    await loadData();
+                } catch (e) {
+                    // Brecha de implementación: falta el Toast discreto.
+                }
             }
         }
     };

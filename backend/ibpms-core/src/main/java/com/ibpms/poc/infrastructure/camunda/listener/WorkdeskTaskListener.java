@@ -16,6 +16,10 @@ public class WorkdeskTaskListener implements TaskListener {
         this.messagingTemplate = messagingTemplate;
     }
 
+    // @Traceability(US = "US-001", CA = {"CA-06"})
+    // TODO: Brecha CA-06, CA-14 y CA-27. Este publicador emite a un canal global ("/topic/workdesk/ghost-deletes") 
+    // sin aislar por Tenant, exponiendo eventos de asignación a empresas cruzadas. Además, incumple el 
+    // vocabulario atómico del CA-27 (debería emitir { action: 'REMOVE' }).
     @Override
     public void notify(DelegateTask delegateTask) {
         // Ignora eventos que no son de asignación

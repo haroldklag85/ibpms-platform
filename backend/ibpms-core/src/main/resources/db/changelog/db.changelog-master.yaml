@@ -102,4 +102,9 @@ databaseChangeLog:
       file: db/changelog/45-us036-ca23-ca28-infra.sql
   - include:
       file: db/changelog/46-us036-audit-reports.sql
+  - include:
+      file: db/changelog/changes/45-us001-workdesk-seed.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/46-us038-audit-columns.sql
 

@@ -56,7 +56,7 @@ public class TimeTrackingIT {
         boardRepository.deleteAll();
 
         KanbanBoardEntity board = new KanbanBoardEntity();
-        board.setName("Board IT");
+        board.setProjectName("Board IT");
         board.setOwnerId("tenant1");
         board = boardRepository.save(board);
 

@@ -56,6 +56,10 @@ public class KanbanTaskSyncListener {
             projection.setCandidateGroup(null); // Kanban simple no maneja grupos aquí
             projection.setSlaExpirationDate(task.getSlaDueDate());
             projection.setStatus(task.getStatus());
+
+            // @Traceability(US = "US-001", CA = {"CA-23"})
+            // TODO: Brecha de implementación CA-23. Falta calcular `progressPercent` en base a (Columna actual / Total Columnas Tablero).
+            projection.setProgressPercent(null);
             
             projectionRepository.save(projection);
             log.debug("Kanban CQRS Sync exitoso para tarea {}", task.getId());

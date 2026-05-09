@@ -143,47 +143,7 @@
       </div>
     </div>
 
-    <!-- MODAL JIT 428 (CA-3 - Perfil Incompleto) -->
-    <Teleport to="body">
-       <div v-if="showJitModal" class="fixed inset-0 bg-gray-900/90 flex flex-col items-center justify-center z-[500] p-4 backdrop-blur-md">
-          <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-200 flex flex-col items-center relative overflow-hidden">
-             
-             <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-5 border-4 border-amber-50">
-                 <span class="material-symbols-outlined text-amber-500 text-3xl">how_to_reg</span>
-             </div>
 
-             <h2 class="text-2xl font-black text-gray-800 tracking-tight text-center mb-2">Completar Perfil</h2>
-             <p class="text-sm text-gray-500 text-center mb-8 font-medium">Hemos recibido tus credenciales de Azure AD, pero tu cuenta carece de información obligatoria para operar la bandeja iBPMS.</p>
-
-             <form @submit.prevent="submitJitProfile" class="w-full space-y-5">
-                 <div v-if="missingClaims.includes('Sucursal_ID')">
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Sucursal de Origen <span class="text-red-500">*</span></label>
-                    <select v-model="jitData.branchId" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-3 border font-medium text-gray-700 bg-gray-50">
-                       <option value="" disabled>Seleccione Oficina Matriz...</option>
-                       <option value="BOG_101">Bogotá Principal</option>
-                       <option value="MED_201">Medellín Operaciones</option>
-                       <option value="CAL_301">Cali Administrativa</option>
-                    </select>
-                 </div>
-
-                 <div v-if="missingClaims.includes('Telefono')">
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Teléfono Corporativo <span class="text-red-500">*</span></label>
-                    <input v-model="jitData.phone" type="tel" required placeholder="+57 320 000 0000" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-3 border font-medium bg-gray-50" />
-                 </div>
-
-                 <div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex gap-3 items-start mt-6">
-                     <span class="material-symbols-outlined text-blue-500 text-[18px] mt-0.5">info</span>
-                     <p class="text-[11px] text-blue-800 font-medium leading-tight">Al completar estos datos, se insertarán en tu expediente de Identidad para futuras sesiones.</p>
-                 </div>
-
-                 <button type="submit" class="w-full bg-gray-900 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-black transition uppercase tracking-widest text-sm mt-4 flex justify-center items-center gap-2">
-                     Sincronizar Perfil y Continuar <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-                 </button>
-             </form>
-
-          </div>
-       </div>
-    </Teleport>
 
   </div>
 </template>
@@ -203,12 +163,6 @@ const isBreakGlass = ref(false);
 const email = ref('');
 const password = ref('');
 const loginError = ref<{ code: string; message: string } | null>(null);
-
-// JIT CA-3 States
-const showJitModal = ref(false);
-const missingClaims = ref<string[]>([]);
-const jitData = ref({ branchId: '', phone: '' });
-const federatedTempToken = ref('');
 
 // ===============================================
 // INICIALIZACIÓN (Comprobación de Rutas de Emergencia)
@@ -237,43 +191,16 @@ const disableBreakGlass = () => {
 // ===============================================
 const triggerAzureSSO = async () => {
     // @Traceability: US-036 - CA-11 Respeto ciego al Autenticador Perimetral (EntraID MFA)
-    // Simulamos el Callback de Azure redirigiendo a nuestro Backend (/api/v1/auth/callback)
-    console.log('[SSO EntraID] - Invocando Federation Flow...');
-    
-    // MOCK DEL BACKEND RESPONDIENDO HTTP 428 PRECONDITION REQUIRED
-    // Usualmente esto se da si el AuthStore emite la advertencia post-redirección
-    const isProfileIncomplete = true; // Forzamos el Fallback JIT para auditoría // zero-mock-ignore
-    
-    if (isProfileIncomplete) {
-        console.warn('[HTTP 428 Interceptor] - Perfil incompleto detectado. Abriendo Guardrail JIT.');
-        federatedTempToken.value = 'TEMP_JWT_123';
-        missingClaims.value = ['Sucursal_ID', 'Telefono'];
-        showJitModal.value = true;
-    } else {
-        // Flujo Feliz
-        authStore.login('VALID_AZURE_JWT_999');
-        router.push('/');
-    }
-};
-
-const submitJitProfile = async () => {
-    try {
-        // Simulamos PUT /api/v1/auth/sync
-        /* 
-        await apiClient.put('/api/v1/auth/sync', { 
-            tempToken: federatedTempToken.value, 
-            claims: jitData.value 
-        });
-        */
-        console.log('[JIT SYNC OK] - Datos inyectados: ', jitData.value);
+    // Simular latencia de redirección
+    setTimeout(() => {
+        console.log('Redirigiendo a https://login.microsoftonline.com/...');
         
-        // El Servidor responde con un JWT validado y full-claims.
-        showJitModal.value = false;
-        authStore.login('VALID_AZURE_JWT_REPAIRED_999');
+        // Simulación de un token válido inyectado (US-025 FASE 3B)
+        const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI... (mock SSO JWT)";
+        
+        authStore.login(mockToken);
         router.push('/');
-    } catch (e) {
-        alert('Error sincronizando perfil.');
-    }
+    }, 800);
 };
 
 // ===============================================

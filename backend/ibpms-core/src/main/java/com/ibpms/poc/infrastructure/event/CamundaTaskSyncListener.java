@@ -58,6 +58,10 @@ public class CamundaTaskSyncListener implements TaskListener {
                 projection.setSlaExpirationDate(LocalDateTime.ofInstant(dueDate.toInstant(), ZoneId.systemDefault()));
             }
 
+            // @Traceability(US = "US-001", CA = {"CA-23"})
+            // TODO: Brecha de implementación CA-23. Falta calcular `progressPercent` en base a (UserTask actual / Total UserTasks).
+            projection.setProgressPercent(null);
+
             // Mapeamos el ciclo de vida de Camunda al status de vista
             if (EVENTNAME_COMPLETE.equals(eventName)) {
                 projection.setStatus("COMPLETED");

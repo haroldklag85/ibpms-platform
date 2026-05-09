@@ -22,7 +22,7 @@ async function globalSetup(config: FullConfig) {
          throw new Error(`HTTP ${response.status()}`);
       }
       break; // Success!
-    } catch (err) {
+    } catch (err: any) {
       console.warn(`[global-setup] Login attempt ${attempt}/90 failed (${err.message}), retrying in 10s...`);
       if (attempt === 90) {
         console.error('[global-setup] Backend not reachable after 15 minutes. Skipping auth setup.');
@@ -33,11 +33,11 @@ async function globalSetup(config: FullConfig) {
   }
   if (!response) return;
 
-  if (!response.ok()) {
-    console.warn('Failed to login in global setup: ' + response.statusText());
-    // Evitamos lanzar throw si la bd no tiene a root para no bloquear las demás suites
-    return;
-  }
+      if (!response.ok()) {
+        console.warn('Failed to login in global setup: ' + response.statusText());
+        // Evitamos lanzar throw si la bd no tiene a root para no bloquear las demás suites
+        return;
+      }
 
   const { token, tenantId } = await response.json();
 

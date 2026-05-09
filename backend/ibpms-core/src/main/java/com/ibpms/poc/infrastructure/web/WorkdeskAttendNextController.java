@@ -57,6 +57,7 @@ public class WorkdeskAttendNextController {
         this.objectMapper = objectMapper;
     }
 
+    // @Traceability(US = "US-001", CA = {"CA-28"})
     @PostMapping("/attend-next")
     @PreAuthorize("isAuthenticated()")
     @Transactional
@@ -64,6 +65,10 @@ public class WorkdeskAttendNextController {
         String currentUserId = authentication.getName();
         String tenantId = currentUserId; // Mapeo POC
 
+        // @Traceability(US = "US-001", CA = {"CA-16"})
+        // TODO: Brecha CA-16 (Gobernanza Administrativa Rota). Se lee el Toggle de Base de Datos, pero
+        // no existe un endpoint Administrativo (PUT/POST) protegido para encender/apagar esta directiva,
+        // violando la obligación de "dejar huella inmutable en el Audit Log Central" en los encendidos de madrugada.
         FeatureToggleEntity toggle = featureToggleRepository.findByTenantIdAndToggleKey(tenantId, "FORCE_ROUTING")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "FORCE_ROUTING toggle is OFF or missing"));
         if (!toggle.getEnabled()) {
@@ -88,6 +93,8 @@ public class WorkdeskAttendNextController {
         Optional<WorkdeskProjectionEntity> taskOpt = projectionRepository.findNextAvailableTask(tenantId, skills);
         
         if (taskOpt.isEmpty()) {
+            // @Traceability(US = "US-001", CA = {"CA-21"})
+            // TODO: Brecha CA-21. El "Audit Log" exigido es de negocio (Base de datos), no un log de consola. Debe llamar a AuditLogService.
             log.warn("CA-21: NO_SKILL_MATCH for user {}. Attempting Universal Fallback.", currentUserId);
             taskOpt = projectionRepository.findNextAvailableTask(tenantId, null);
             if (taskOpt.isEmpty()) {
@@ -125,6 +132,8 @@ public class WorkdeskAttendNextController {
         String currentUserId = authentication.getName();
         String tenantId = currentUserId;
         
+        // @Traceability(US = "US-001", CA = {"CA-21"})
+        // TODO: Brecha CA-21. Mismatch de Enum. Frontend envía "OTHER" pero backend valida "OTRO", inutilizando la regla de 10 chars.
         if ("OTRO".equalsIgnoreCase(skipReason.skipReason()) && 
             (skipReason.skipReasonDetail() == null || skipReason.skipReasonDetail().length() < 10)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El detalle debe tener al menos 10 caracteres");
@@ -138,6 +147,8 @@ public class WorkdeskAttendNextController {
         skipEntity.setSkipReasonDetail(skipReason.skipReasonDetail());
         taskSkipRepository.save(skipEntity);
 
+        // @Traceability(US = "US-001", CA = {"CA-21"})
+        // TODO: Brecha CA-21. Esto cuenta todos los skips de la hora, NO los consecutivos. Además, el log.warn no es una "Alerta al Supervisor".
         LocalDateTime since = LocalDateTime.now().minusHours(1);
         int recentSkips = taskSkipRepository.countRecentSkips(tenantId, currentUserId, since);
         if (recentSkips >= 3) {

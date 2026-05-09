@@ -4,6 +4,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
+// @Traceability(US = "US-001", CA = {"CA-14"}) Acierto Backend: DTO Rígido y Sanitizado. Purga contraseñas, PII y variables internas Camunda.
 public class WorkdeskGlobalItemDTO {
     private String unifiedId;
     private String sourceSystem;

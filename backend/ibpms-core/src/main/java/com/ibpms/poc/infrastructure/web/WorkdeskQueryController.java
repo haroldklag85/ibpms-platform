@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,33 +34,50 @@ public class WorkdeskQueryController {
 
     private final WorkdeskQueryService workdeskQueryService;
     private final TaskDelegationService taskDelegationService;
-    private final Bucket bucket;
+    // @Traceability(US = "US-001", CA = {"CA-30"})
+    // REMEDIACIÓN CA-30: Rate Limiter migrado de Singleton global a per-user para evitar DoS falso entre usuarios concurrentes.
+    private final java.util.concurrent.ConcurrentHashMap<String, Bucket> userBuckets = new java.util.concurrent.ConcurrentHashMap<>();
 
     public WorkdeskQueryController(WorkdeskQueryService workdeskQueryService, TaskDelegationService taskDelegationService) {
         this.workdeskQueryService = workdeskQueryService;
         this.taskDelegationService = taskDelegationService;
-        // @Traceability: US-001 - CA-30
-        Bandwidth limit = Bandwidth.builder().capacity(60).refillGreedy(60, Duration.ofMinutes(1)).build();
-        this.bucket = Bucket.builder().addLimit(limit).build();
+    }
+
+    private Bucket resolveBucket(String userId) {
+        return userBuckets.computeIfAbsent(userId, k -> {
+            Bandwidth limit = Bandwidth.builder().capacity(60).refillGreedy(60, Duration.ofMinutes(1)).build();
+            return Bucket.builder().addLimit(limit).build();
+        });
     }
 
     /**
      * CQRS Facade. Endpoints puramente de lectura unificada (Camunda + Kanban).
      */
+    // @Traceability(US = "US-001", CA = {"CA-20"})
+    // TODO: Brecha CA-20. La URI debe ser /api/v1/workdesk/tasks. Falta documentación OpenAPI.
+    // Faltan query params: origin, status explícitos.
+    // El DTO de respuesta no cumple el wrapper { data: [], pagination: {} } canónico.
     @GetMapping("/global-inbox")
     public ResponseEntity<WorkdeskResponseDTO> getGlobalInbox(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String delegatedUserId,
-            Pageable pageable) {
+            // @Traceability(US = "US-001", CA = {"CA-09"}) 
+            // REMEDIACIÓN CA-09: Se añadió @PageableDefault(size = 15) para alinear con el contrato canónico del Workdesk.
+            @PageableDefault(size = 15) Pageable pageable) {
         
-        // CA-30: Aplicar Rate Limiting (60 rev/min)
-        if (!bucket.tryConsume(1)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        // @Traceability(US = "US-001", CA = {"CA-30"})
+        // CA-30: Rate Limiting per-user (60 rq/min por usuario autenticado)
+        org.springframework.security.core.Authentication authForRateLimit = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        String rateLimitKey = (authForRateLimit != null && authForRateLimit.getName() != null) ? authForRateLimit.getName() : "anonymous";
+        if (!resolveBucket(rateLimitKey).tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(null); // CA-30: El frontend muestra el toast 'Has realizado demasiadas consultas'
         }
 
-        // @Traceability: US-001 - CA-9, CA-10
+        // @Traceability(US = "US-001", CA = {"CA-09", "CA-10"})
+        // REMEDIACIÓN CA-10: Se reemplazó IllegalArgumentException por ResponseStatusException(400) para emitir HTTP 400 semántico.
         if (pageable.getPageSize() > 100) {
-            throw new IllegalArgumentException("Pagina solicitada excede el limite maximo de 100 registros (CA-10).");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Página solicitada excede el límite máximo de 100 registros (CA-10).");
         }
 
         try {
@@ -126,7 +145,10 @@ public class WorkdeskQueryController {
                 log.error("Error crítico completo en bandeja CQRS Workdesk.", e);
             }
             
-            // Retornar vacío con bandera de degradación
+            // @Traceability(US = "US-001", CA = {"CA-07", "CA-18"})
+            // TODO: Brecha CA-07 y CA-18 (Fail-Open Crítico). El requerimiento exige Degradación Elegante
+            // retornando las tareas Kanban que sigan vivas en BD. Aquí se retorna una lista vacía 
+            // destruyendo el Workdesk por completo si Camunda falla.
             @SuppressWarnings("null")
             Page<WorkdeskGlobalItemDTO> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
             return ResponseEntity.ok(new WorkdeskResponseDTO(true, emptyPage));
@@ -136,7 +158,9 @@ public class WorkdeskQueryController {
     // @Traceability: US-001 - CA-22, CA-29
     @GetMapping("/global-inbox/facets")
     public ResponseEntity<?> getFacets() {
-        if (!bucket.tryConsume(1)) {
+        org.springframework.security.core.Authentication authFacet = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        String facetRateLimitKey = (authFacet != null && authFacet.getName() != null) ? authFacet.getName() : "anonymous";
+        if (!resolveBucket(facetRateLimitKey).tryConsume(1)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
         }
         

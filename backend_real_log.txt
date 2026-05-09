@@ -1,0 +1,567 @@
+
+ ____                                 _         ____  _       _    __                      
+/ ___| __ _ _ __ ___  _   _ _ __   __| | __ _  |  _ \| | __ _| |_ / _| ___  _ __ _ __ ___  
+| |   / _` | '_ ` _ \| | | | '_ \ / _` |/ _` | | |_) | |/ _` | __| |_ / _ \| '__| '_ ` _ \ 
+| |__| (_| | | | | | | |_| | | | | (_| | (_| | |  __/| | (_| | |_|  _| (_) | |  | | | | | |
+\____/\__,_|_| |_| |_|\__,_|_| |_|\__,_|\__,_| |_|   |_|\__,_|\__|_|  \___/|_|  |_| |_| |_|
+
+  Spring-Boot:  (v3.2.3)
+  Camunda Platform: (v7.21.0)
+  Camunda Platform Spring Boot Starter: (v7.21.0)
+
+2026-05-07T23:57:44.316-05:00  INFO 39784 --- [ibpms-core] [           main] com.ibpms.poc.Application                : Starting Application v0.0.1-SNAPSHOT using Java 21.0.10 with PID 39784 (C:\Users\HaroltAndr茅sG贸mezAgu\ProyectoAntigravity\ibpms-platform\backend\ibpms-core\target\ibpms-poc-0.0.1-SNAPSHOT.jar started by HaroltAndr茅sG贸mezAgu in C:\Users\HaroltAndr茅sG贸mezAgu\ProyectoAntigravity\ibpms-platform)
+2026-05-07T23:57:44.330-05:00  INFO 39784 --- [ibpms-core] [           main] com.ibpms.poc.Application                : The following 1 profile is active: "e2e"
+2026-05-07T23:57:47.222-05:00  INFO 39784 --- [ibpms-core] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-05-07T23:57:47.222-05:00  INFO 39784 --- [ibpms-core] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-07T23:57:47.652-05:00  INFO 39784 --- [ibpms-core] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 418 ms. Found 70 JPA repository interfaces.
+2026-05-07T23:57:49.331-05:00  INFO 39784 --- [ibpms-core] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-05-07T23:57:49.333-05:00  INFO 39784 --- [ibpms-core] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-05-07T23:57:49.383-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ai.AiAuditLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.383-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ai.AiKnowledgeVectorRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.385-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ai.ForensicIsoOverrideRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.386-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ai.PromptTemplateRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.386-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.bpm.BusinessHoursRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.386-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.bpm.GenericTaskLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.386-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.bpm.HolidayRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.386-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.BpmnDesignAuditLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.386-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.BpmnProcessDesignRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.388-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.CatalogCacheRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.388-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ClaimAuditLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.388-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.DataMappingRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.390-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.DeployRequestRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.390-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.DlqArchiveRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.390-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.dmn.DmnModelRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.390-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.DocumentoJpaRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.394-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ExpedienteRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.394-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ExternalTaskTopicRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.395-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.FeatureToggleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.395-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.FormCertificationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.395-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.FormDefinitionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.395-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.FormDesignAuditLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.396-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.FormDesignRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.396-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.FormFieldValueAuditRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.397-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.IbpmsProfileRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.397-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.IdempotencyKeyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.397-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.IdpGroupMappingRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.398-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.InboundWebhookRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.398-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.integration.ApiConnectorRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.398-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.KanbanBoardRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.398-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.KanbanColumnRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.400-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.KanbanTaskRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.400-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.OutboundConfigRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.400-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ProcessedMessageRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.400-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ProcessLockRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.400-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ProfileBpmnAssignmentRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.400-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.ProjectTemplateRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.402-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.QueueFallbackRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.402-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.ApiKeyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.402-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.DelegationLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.402-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.405-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.IdentityRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.407-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.RoleAuditLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.407-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.RoleHierarchyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.407-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.407-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.RoleTemplateRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.413-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.SecurityAnomalyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.413-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.ServiceAccountRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.414-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.TokenBlacklistRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.415-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.415-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.sgdea.DocumentReferenceRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.415-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.SkipAuditRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.415-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.SystemAuditLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.417-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.TaskAuditLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.417-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.TaskSkipRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.417-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.TempDocumentRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.417-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.TimeLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.417-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.UiTemplateRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.419-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.UserDelegationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.427-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.429-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.persistence.AgileTimeboxRepositoryJpa; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.433-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.persistence.SpringDataAgileProjectRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.434-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.persistence.SpringDataAgileSlaChangelogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.434-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.persistence.SpringDataAgileTaskRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.435-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.persistence.SpringDataAllowedDomainRepo; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.435-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.persistence.SpringDataFormEventRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.435-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.persistence.SpringDataOrphanPayloadRepo; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.435-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.persistence.SpringDataTaskDraftRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.435-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.persistence.SpringDataTriageTaskRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.435-05:00  INFO 39784 --- [ibpms-core] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ibpms.poc.infrastructure.persistence.SpringDataWebhookTransactionRepo; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-07T23:57:49.436-05:00  INFO 39784 --- [ibpms-core] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 84 ms. Found 0 Redis repository interfaces.
+2026-05-07T23:57:50.660-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=8b765ce7-45a0-3481-b63b-edfa8d353a45
+2026-05-07T23:57:53.599-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-05-07T23:57:53.647-05:00  INFO 39784 --- [ibpms-core] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-05-07T23:57:53.647-05:00  INFO 39784 --- [ibpms-core] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.19]
+2026-05-07T23:57:53.765-05:00  INFO 39784 --- [ibpms-core] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-05-07T23:57:53.767-05:00  INFO 39784 --- [ibpms-core] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 9247 ms
+2026-05-07T23:57:53.938-05:00  INFO 39784 --- [ibpms-core] [           main] .c.b.s.b.s.r.CamundaJerseyResourceConfig : Configuring camunda rest api.
+2026-05-07T23:57:54.022-05:00  INFO 39784 --- [ibpms-core] [           main] .c.b.s.b.s.r.CamundaJerseyResourceConfig : Finished configuring camunda rest api.
+2026-05-07T23:57:57.854-05:00  INFO 39784 --- [ibpms-core] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-05-07T23:57:58.445-05:00  INFO 39784 --- [ibpms-core] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@35b70f9d
+2026-05-07T23:57:58.447-05:00  INFO 39784 --- [ibpms-core] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-05-07T23:57:58.892-05:00  INFO 39784 --- [ibpms-core] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-05-07T23:57:59.135-05:00  INFO 39784 --- [ibpms-core] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.4.Final
+2026-05-07T23:57:59.254-05:00  INFO 39784 --- [ibpms-core] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-05-07T23:57:59.987-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-07T23:58:00.352-05:00  WARN 39784 --- [ibpms-core] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-05-07T23:58:05.702-05:00  INFO 39784 --- [ibpms-core] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    create table ai_knowledge_vectors (
+        id uuid not null,
+        context_email_body TEXT,
+        created_at timestamp(6) not null,
+        embedding vector(1536),
+        human_approved_reply TEXT,
+        primary key (id)
+    )
+2026-05-07T23:58:05.859-05:00  WARN 39784 --- [ibpms-core] [           main] o.h.t.s.i.ExceptionHandlerLoggedImpl     : GenerationTarget encountered exception accepting command : Error executing DDL "
+    create table ai_knowledge_vectors (
+        id uuid not null,
+        context_email_body TEXT,
+        created_at timestamp(6) not null,
+        embedding vector(1536),
+        human_approved_reply TEXT,
+        primary key (id)
+    )" via JDBC [ERROR: type "vector" does not exist
+  Position: 166]
+
+org.hibernate.tool.schema.spi.CommandAcceptanceException: Error executing DDL "
+    create table ai_knowledge_vectors (
+        id uuid not null,
+        context_email_body TEXT,
+        created_at timestamp(6) not null,
+        embedding vector(1536),
+        human_approved_reply TEXT,
+        primary key (id)
+    )" via JDBC [ERROR: type "vector" does not exist
+  Position: 166]
+	at org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.accept(GenerationTargetToDatabase.java:94) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.tool.schema.internal.AbstractSchemaMigrator.applySqlString(AbstractSchemaMigrator.java:574) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.tool.schema.internal.AbstractSchemaMigrator.applySqlStrings(AbstractSchemaMigrator.java:514) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.tool.schema.internal.AbstractSchemaMigrator.createTable(AbstractSchemaMigrator.java:315) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.tool.schema.internal.GroupedSchemaMigratorImpl.performTablesMigration(GroupedSchemaMigratorImpl.java:80) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.tool.schema.internal.AbstractSchemaMigrator.performMigration(AbstractSchemaMigrator.java:232) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.tool.schema.internal.AbstractSchemaMigrator.doMigration(AbstractSchemaMigrator.java:117) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.performDatabaseAction(SchemaManagementToolCoordinator.java:286) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.lambda$process$5(SchemaManagementToolCoordinator.java:145) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at java.base/java.util.HashMap.forEach(HashMap.java:1429) ~[na:na]
+	at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.process(SchemaManagementToolCoordinator.java:142) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.boot.internal.SessionFactoryObserverForSchemaExport.sessionFactoryCreated(SessionFactoryObserverForSchemaExport.java:37) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.internal.SessionFactoryObserverChain.sessionFactoryCreated(SessionFactoryObserverChain.java:35) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:315) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.boot.internal.SessionFactoryBuilderImpl.build(SessionFactoryBuilderImpl.java:450) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.build(EntityManagerFactoryBuilderImpl.java:1507) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	at org.springframework.orm.jpa.vendor.SpringHibernateJpaPersistenceProvider.createContainerEntityManagerFactory(SpringHibernateJpaPersistenceProvider.java:75) ~[spring-orm-6.1.4.jar!/:6.1.4]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.createNativeEntityManagerFactory(LocalContainerEntityManagerFactoryBean.java:388) ~[spring-orm-6.1.4.jar!/:6.1.4]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.buildNativeEntityManagerFactory(AbstractEntityManagerFactoryBean.java:409) ~[spring-orm-6.1.4.jar!/:6.1.4]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.afterPropertiesSet(AbstractEntityManagerFactoryBean.java:396) ~[spring-orm-6.1.4.jar!/:6.1.4]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.afterPropertiesSet(LocalContainerEntityManagerFactoryBean.java:364) ~[spring-orm-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1833) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1782) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:600) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveReference(BeanDefinitionValueResolver.java:365) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveValueIfNecessary(BeanDefinitionValueResolver.java:135) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveConstructorArguments(ConstructorResolver.java:685) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:509) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1335) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1165) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveReference(BeanDefinitionValueResolver.java:365) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveValueIfNecessary(BeanDefinitionValueResolver.java:135) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyPropertyValues(AbstractAutowireCapableBeanFactory.java:1685) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1434) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:599) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:907) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:785) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1192) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:204) ~[spring-beans-6.1.4.jar!/:6.1.4]
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.getOrderedBeansOfType(ServletContextInitializerBeans.java:210) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAsRegistrationBean(ServletContextInitializerBeans.java:173) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAsRegistrationBean(ServletContextInitializerBeans.java:168) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAdaptableBeans(ServletContextInitializerBeans.java:153) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.<init>(ServletContextInitializerBeans.java:86) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.getServletContextInitializerBeans(ServletWebServerApplicationContext.java:266) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.selfInitialize(ServletWebServerApplicationContext.java:240) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.embedded.tomcat.TomcatStarter.onStartup(TomcatStarter.java:52) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.apache.catalina.core.StandardContext.startInternal(StandardContext.java:4866) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:171) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1332) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1322) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[na:na]
+	at org.apache.tomcat.util.threads.InlineExecutorService.execute(InlineExecutorService.java:75) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at java.base/java.util.concurrent.AbstractExecutorService.submit(AbstractExecutorService.java:145) ~[na:na]
+	at org.apache.catalina.core.ContainerBase.startInternal(ContainerBase.java:866) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.core.StandardHost.startInternal(StandardHost.java:845) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:171) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1332) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1322) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[na:na]
+	at org.apache.tomcat.util.threads.InlineExecutorService.execute(InlineExecutorService.java:75) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at java.base/java.util.concurrent.AbstractExecutorService.submit(AbstractExecutorService.java:145) ~[na:na]
+	at org.apache.catalina.core.ContainerBase.startInternal(ContainerBase.java:866) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.core.StandardEngine.startInternal(StandardEngine.java:240) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:171) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.core.StandardService.startInternal(StandardService.java:433) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:171) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.core.StandardServer.startInternal(StandardServer.java:921) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:171) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.apache.catalina.startup.Tomcat.start(Tomcat.java:437) ~[tomcat-embed-core-10.1.19.jar!/:na]
+	at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.initialize(TomcatWebServer.java:126) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.<init>(TomcatWebServer.java:105) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory.getTomcatWebServer(TomcatServletWebServerFactory.java:499) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory.getWebServer(TomcatServletWebServerFactory.java:218) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.createWebServer(ServletWebServerApplicationContext.java:188) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.onRefresh(ServletWebServerApplicationContext.java:162) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:618) ~[spring-context-6.1.4.jar!/:6.1.4]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:334) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1354) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1343) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at com.ibpms.poc.Application.main(Application.java:19) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:91) ~[ibpms-poc-0.0.1-SNAPSHOT.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:53) ~[ibpms-poc-0.0.1-SNAPSHOT.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:58) ~[ibpms-poc-0.0.1-SNAPSHOT.jar:0.0.1-SNAPSHOT]
+Caused by: org.postgresql.util.PSQLException: ERROR: type "vector" does not exist
+  Position: 166
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713) ~[postgresql-42.6.1.jar!/:42.6.1]
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401) ~[postgresql-42.6.1.jar!/:42.6.1]
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:368) ~[postgresql-42.6.1.jar!/:42.6.1]
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:498) ~[postgresql-42.6.1.jar!/:42.6.1]
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:415) ~[postgresql-42.6.1.jar!/:42.6.1]
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:335) ~[postgresql-42.6.1.jar!/:42.6.1]
+	at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:321) ~[postgresql-42.6.1.jar!/:42.6.1]
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:297) ~[postgresql-42.6.1.jar!/:42.6.1]
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:292) ~[postgresql-42.6.1.jar!/:42.6.1]
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94) ~[HikariCP-5.0.1.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java) ~[HikariCP-5.0.1.jar!/:na]
+	at org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.accept(GenerationTargetToDatabase.java:80) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+	... 114 common frames omitted
+
+2026-05-07T23:58:06.366-05:00  INFO 39784 --- [ibpms-core] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-07T23:58:07.395-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-05-07T23:58:08.964-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.spring.boot              : STARTER-SB040 Setting up jobExecutor with corePoolSize=3, maxPoolSize:10
+2026-05-07T23:58:09.300-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.engine.cfg               : ENGINE-12003 Plugin 'CompositeProcessEnginePlugin[genericPropertiesConfiguration, camundaEngineConfiguration, camundaEngineConfig, camundaProcessEngineConfiguration, camundaDatasourceConfiguration, camundaJobConfiguration, camundaHistoryConfiguration, camundaMetricsConfiguration, camundaAuthorizationConfiguration, camundaDeploymentConfiguration, failedJobConfiguration, eventPublisherPlugin, ApplicationContextClassloaderSwitchPlugin]' activated on process engine 'default'
+2026-05-07T23:58:09.302-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.spring.boot              : STARTER-SB021 Auto-Deploying resources: []
+2026-05-07T23:58:09.311-05:00  INFO 39784 --- [ibpms-core] [           main] o.c.b.s.b.s.event.EventPublisherPlugin   : EVENTING-001: Initialized Camunda Spring Boot Eventing Engine Plugin.
+2026-05-07T23:58:09.311-05:00  INFO 39784 --- [ibpms-core] [           main] o.c.b.s.b.s.event.EventPublisherPlugin   : EVENTING-003: Task events will be published as Spring Events.
+2026-05-07T23:58:09.311-05:00  INFO 39784 --- [ibpms-core] [           main] o.c.b.s.b.s.event.EventPublisherPlugin   : EVENTING-005: Execution events will be published as Spring Events.
+2026-05-07T23:58:09.311-05:00  INFO 39784 --- [ibpms-core] [           main] o.c.b.s.b.s.event.EventPublisherPlugin   : EVENTING-009: Listeners will not be invoked if a skipCustomListeners API parameter is set to true by user.
+2026-05-07T23:58:09.322-05:00  INFO 39784 --- [ibpms-core] [           main] o.c.b.s.b.s.event.EventPublisherPlugin   : EVENTING-007: History events will be published as Spring events.
+2026-05-07T23:58:09.686-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.feel.FeelEngine              : Engine created. [value-mapper: CompositeValueMapper(List(org.camunda.feel.impl.JavaValueMapper@2daa7bf3)), function-provider: org.camunda.bpm.dmn.feel.impl.scala.function.CustomFunctionTransformer@10a2cb97, clock: SystemClock, configuration: Configuration(false)]
+Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+2026-05-07T23:58:13.376-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.connect                  : CNCT-01004 Discovered provider for connector id 'http-connector' and class 'org.camunda.connect.httpclient.impl.HttpConnectorImpl': 'org.camunda.connect.httpclient.impl.HttpConnectorProviderImpl'
+2026-05-07T23:58:13.384-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.connect                  : CNCT-01004 Discovered provider for connector id 'soap-http-connector' and class 'org.camunda.connect.httpclient.soap.impl.SoapHttpConnectorImpl': 'org.camunda.connect.httpclient.soap.impl.SoapHttpConnectorProviderImpl'
+2026-05-07T23:58:13.708-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.engine                   : ENGINE-00001 Process Engine default created.
+2026-05-07T23:58:15.466-05:00  INFO 39784 --- [ibpms-core] [           main] o.j.s.b.sql.JaversSqlAutoConfiguration   : detected Hibernate dialect: PostgreSQLDialect
+2026-05-07T23:58:15.493-05:00  INFO 39784 --- [ibpms-core] [           main] o.j.repository.sql.SqlRepositoryBuilder  : starting SqlRepository...
+2026-05-07T23:58:15.493-05:00  INFO 39784 --- [ibpms-core] [           main] o.j.repository.sql.SqlRepositoryBuilder  :   dialect:                  POSTGRES
+2026-05-07T23:58:15.493-05:00  INFO 39784 --- [ibpms-core] [           main] o.j.repository.sql.SqlRepositoryBuilder  :   schemaManagementEnabled:  true
+2026-05-07T23:58:15.493-05:00  INFO 39784 --- [ibpms-core] [           main] o.j.repository.sql.SqlRepositoryBuilder  :   schema name:              null
+2026-05-07T23:58:15.759-05:00  INFO 39784 --- [ibpms-core] [           main] o.j.r.sql.schema.TableNameProvider       : Commit table:           jv_commit
+2026-05-07T23:58:15.759-05:00  INFO 39784 --- [ibpms-core] [           main] o.j.r.sql.schema.TableNameProvider       : CommitProperty table:   jv_commit_property
+2026-05-07T23:58:15.759-05:00  INFO 39784 --- [ibpms-core] [           main] o.j.r.sql.schema.TableNameProvider       : GlobalId table:         jv_global_id
+2026-05-07T23:58:15.759-05:00  INFO 39784 --- [ibpms-core] [           main] o.j.r.sql.schema.TableNameProvider       : Snapshot table:         jv_snapshot
+2026-05-07T23:58:15.972-05:00  INFO 39784 --- [ibpms-core] [           main] org.javers.core.JaversBuilder            : mappingStyle: FIELD
+2026-05-07T23:58:15.986-05:00  INFO 39784 --- [ibpms-core] [           main] org.javers.core.JaversBuilder            : loading GuavaAddOns ...
+2026-05-07T23:58:25.121-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.feel.FeelEngine              : Engine created. [value-mapper: CompositeValueMapper(List(org.camunda.feel.impl.JavaValueMapper@72188b01)), function-provider: org.camunda.bpm.dmn.feel.impl.scala.function.CustomFunctionTransformer@3d573851, clock: SystemClock, configuration: Configuration(false)]
+2026-05-07T23:58:25.346-05:00  INFO 39784 --- [ibpms-core] [           main] c.i.p.i.bpm.config.DmnFeelSandboxConfig  : [APPSEC-SANDBOX] Forzando restricciones Anti-RCE en el compilador FeelEngine...
+2026-05-07T23:58:25.346-05:00  INFO 39784 --- [ibpms-core] [           main] c.i.p.i.bpm.config.DmnFeelSandboxConfig  : [APPSEC-SANDBOX] Motor DMN exitosamente encarcelado. Inyecci贸n de c贸digo (Prompt Injection RCE) neutralizada.
+2026-05-07T23:58:28.476-05:00  WARN 39784 --- [ibpms-core] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-07T23:58:32.559-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoint(s) beneath base path '/actuator'
+2026-05-07T23:58:32.865-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@6a64fdc3, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@1d5c9e52, org.springframework.security.web.context.SecurityContextHolderFilter@556218e7, org.springframework.security.web.header.HeaderWriterFilter@439b6a78, org.springframework.web.filter.CorsFilter@7781d5cc, org.springframework.security.web.authentication.logout.LogoutFilter@34486fe, org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter@64211a94, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@599bf881, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@41badf59, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@76e44262, org.springframework.security.web.session.SessionManagementFilter@6adcccc7, org.springframework.security.web.access.ExceptionTranslationFilter@20c71, org.springframework.security.web.access.intercept.AuthorizationFilter@29c41af2]
+2026-05-07T23:58:37.881-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.client                   : TASK/CLIENT-01026 Discovered data format provider: org.camunda.bpm.client.variable.impl.format.json.JacksonJsonDataFormatProvider[name = application/json]
+2026-05-07T23:58:37.888-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.client                   : TASK/CLIENT-01025 Discovered data format: org.camunda.bpm.client.variable.impl.format.json.JacksonJsonDataFormat[name = application/json]
+2026-05-07T23:58:37.889-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.client                   : TASK/CLIENT-01026 Discovered data format provider: org.camunda.bpm.client.variable.impl.format.serializable.SerializableDataFormatProvider[name = application/x-java-serialized-object]
+2026-05-07T23:58:37.891-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.client                   : TASK/CLIENT-01025 Discovered data format: org.camunda.bpm.client.variable.impl.format.serializable.SerializableDataFormat[name = application/x-java-serialized-object]
+2026-05-07T23:58:37.893-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.client                   : TASK/CLIENT-01026 Discovered data format provider: org.camunda.bpm.client.variable.impl.format.xml.DomXmlDataFormatProvider[name = application/xml]
+2026-05-07T23:58:37.918-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.client                   : TASK/CLIENT-01025 Discovered data format: org.camunda.bpm.client.variable.impl.format.xml.DomXmlDataFormat[name = application/xml]
+2026-05-07T23:58:38.217-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+2026-05-07T23:58:38.308-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-05-07T23:58:38.311-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@786ff4d0]]
+2026-05-07T23:58:38.311-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-05-07T23:58:38.315-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.a.r.c.CachingConnectionFactory       : Attempting to connect to: [localhost:5673]
+2026-05-07T23:58:38.491-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.a.r.c.CachingConnectionFactory       : Created new connection: rabbitConnectionFactory#ed09135:0/SimpleConnection@57fa97ea [delegate=amqp://guest@127.0.0.1:5673/, localPort=49990]
+2026-05-07T23:58:38.797-05:00  INFO 39784 --- [ibpms-core] [           main] com.ibpms.poc.Application                : Started Application in 55.483 seconds (process running for 57.047)
+2026-05-07T23:58:38.821-05:00  INFO 39784 --- [ibpms-core] [MessageBroker-2] c.i.p.i.b.s.SlaEarlyWarningScheduler     : [SLA_SCHEDULER] Iniciando escaneo de tareas activas para evaluar riesgos SLA al 80%
+2026-05-07T23:58:38.822-05:00  INFO 39784 --- [ibpms-core] [MessageBroker-6] c.i.p.i.mq.job.MqMaintenanceJob          : Iniciando purga de llaves de idempotencia > 72 horas
+2026-05-07T23:58:38.822-05:00  INFO 39784 --- [ibpms-core] [MessageBroker-3] c.i.p.i.mq.job.MqMaintenanceJob          : Iniciando purga de archivo de DLQ > 180 d铆as
+Hibernate: 
+    delete 
+    from
+        ibpms_dlq_archive 
+    where
+        archived_at<?
+Hibernate: 
+    delete 
+    from
+        ibpms_processed_messages 
+    where
+        processed_at<?
+2026-05-07T23:58:39.480-05:00  INFO 39784 --- [ibpms-core] [MessageBroker-2] c.i.p.i.b.s.SlaEarlyWarningScheduler     : [SLA_SCHEDULER] Escaneo de riesgos finalizado.
+Hibernate: 
+    select
+        ace1_0.id,
+        ace1_0.auth_config,
+        ace1_0.base_url,
+        ace1_0.cache_ttl_minutes,
+        ace1_0.created_at,
+        ace1_0.default_headers,
+        ace1_0.http_method,
+        ace1_0.is_cached,
+        ace1_0.name,
+        ace1_0.pgp_public_key,
+        ace1_0.system_code,
+        ace1_0.updated_at,
+        ace1_0.version 
+    from
+        ibpms_api_connector ace1_0
+Hibernate: 
+    select
+        re1_0.id,
+        re1_0.description,
+        re1_0.is_active,
+        re1_0.is_template,
+        re1_0.is_vip_restricted,
+        re1_0.lane_id,
+        re1_0.name,
+        re1_0.parent_role_id,
+        re1_0.process_definition_id,
+        re1_0.source 
+    from
+        ibpms_security_role re1_0 
+    where
+        re1_0.name=?
+Hibernate: 
+    select
+        at1_0.id,
+        at1_0.created_at,
+        at1_0.created_by,
+        at1_0.description,
+        at1_0.draft_expires_at,
+        at1_0.draft_payload,
+        at1_0.draft_payload_hash,
+        at1_0.effort_actual,
+        at1_0.effort_estimated,
+        at1_0.last_activity_at,
+        at1_0.notes,
+        at1_0.position,
+        at1_0.project_id,
+        at1_0.sla_deadline,
+        at1_0.status,
+        at1_0.team_id,
+        at1_0.timeout_extensions,
+        at1_0.title,
+        at1_0.updated_at 
+    from
+        ibpms_agile_tasks at1_0 
+    where
+        at1_0.status=?
+2026-05-07T23:58:39.688-05:00  INFO 39784 --- [ibpms-core] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-07T23:58:39.689-05:00  INFO 39784 --- [ibpms-core] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-05-07T23:58:39.699-05:00  INFO 39784 --- [ibpms-core] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 10 ms
+Hibernate: 
+    select
+        p1_0.role_id,
+        p1_1.id,
+        p1_1.description,
+        p1_1.name 
+    from
+        ibpms_security_role_permissions p1_0 
+    join
+        ibpms_security_permission p1_1 
+            on p1_1.id=p1_0.permission_id 
+    where
+        p1_0.role_id=?
+Hibernate: 
+    select
+        ue1_0.id,
+        ue1_0.created_at,
+        ue1_0.email,
+        ue1_0.is_active,
+        ue1_0.is_external_idp,
+        ue1_0.manager_id,
+        ue1_0.password_hash,
+        ue1_0.skills,
+        ue1_0.username 
+    from
+        ibpms_security_user ue1_0 
+    where
+        ue1_0.username=?
+Hibernate: 
+    select
+        r1_0.user_id,
+        r1_1.id,
+        r1_1.description,
+        r1_1.is_active,
+        r1_1.is_template,
+        r1_1.is_vip_restricted,
+        r1_1.lane_id,
+        r1_1.name,
+        r1_1.parent_role_id,
+        p1_0.role_id,
+        p1_1.id,
+        p1_1.description,
+        p1_1.name,
+        r1_1.process_definition_id,
+        r1_1.source 
+    from
+        ibpms_security_user_roles r1_0 
+    join
+        ibpms_security_role r1_1 
+            on r1_1.id=r1_0.role_id 
+    left join
+        ibpms_security_role_permissions p1_0 
+            on r1_1.id=p1_0.role_id 
+    left join
+        ibpms_security_permission p1_1 
+            on p1_1.id=p1_0.permission_id 
+    where
+        r1_0.user_id=?
+2026-05-07T23:58:39.820-05:00  INFO 39784 --- [ibpms-core] [           main] c.i.p.i.config.E2EDataSeedConfig         : 馃殌 Inicializando E2E Data Seed para motor Camunda...
+2026-05-07T23:58:39.842-05:00  INFO 39784 --- [ibpms-core] [           main] c.i.p.i.config.E2EDataSeedConfig         : 鈿欙笍 Generando proceso BPMN Dummy program谩ticamente...
+2026-05-07T23:58:40.041-05:00  INFO 39784 --- [ibpms-core] [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-05-07T23:58:40.106-05:00 ERROR 39784 --- [ibpms-core] [           main] o.s.boot.SpringApplication               : Application run failed
+
+java.lang.ExceptionInInitializerError: null
+	at com.ibpms.poc.infrastructure.config.E2EDataSeedConfig.run(E2EDataSeedConfig.java:41) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:351) ~[spring-aop-6.1.4.jar!/:6.1.4]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.1.4.jar!/:6.1.4]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.1.4.jar!/:6.1.4]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765) ~[spring-aop-6.1.4.jar!/:6.1.4]
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123) ~[spring-tx-6.1.4.jar!/:6.1.4]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385) ~[spring-tx-6.1.4.jar!/:6.1.4]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.4.jar!/:6.1.4]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.4.jar!/:6.1.4]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765) ~[spring-aop-6.1.4.jar!/:6.1.4]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717) ~[spring-aop-6.1.4.jar!/:6.1.4]
+	at com.ibpms.poc.infrastructure.config.E2EDataSeedConfig$$SpringCGLIB$$1.run(<generated>) ~[!/:0.0.1-SNAPSHOT]
+	at org.springframework.boot.SpringApplication.lambda$callRunner$5(SpringApplication.java:790) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.util.function.ThrowingConsumer$1.acceptWithException(ThrowingConsumer.java:83) ~[spring-core-6.1.4.jar!/:6.1.4]
+	at org.springframework.util.function.ThrowingConsumer.accept(ThrowingConsumer.java:60) ~[spring-core-6.1.4.jar!/:6.1.4]
+	at org.springframework.util.function.ThrowingConsumer$1.accept(ThrowingConsumer.java:88) ~[spring-core-6.1.4.jar!/:6.1.4]
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:798) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:789) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.SpringApplication.lambda$callRunners$3(SpringApplication.java:774) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184) ~[na:na]
+	at java.base/java.util.stream.SortedOps$SizedRefSortingSink.end(SortedOps.java:357) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:510) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[na:na]
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151) ~[na:na]
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234) ~[na:na]
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596) ~[na:na]
+	at org.springframework.boot.SpringApplication.callRunners(SpringApplication.java:774) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:341) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1354) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1343) ~[spring-boot-3.2.3.jar!/:3.2.3]
+	at com.ibpms.poc.Application.main(Application.java:19) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:91) ~[ibpms-poc-0.0.1-SNAPSHOT.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:53) ~[ibpms-poc-0.0.1-SNAPSHOT.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:58) ~[ibpms-poc-0.0.1-SNAPSHOT.jar:0.0.1-SNAPSHOT]
+Caused by: org.camunda.bpm.model.xml.ModelValidationException: Unable to parse schema:jar:nested:/C:/Users/HaroltAndr茅sG贸mezAgu/ProyectoAntigravity/ibpms-platform/backend/ibpms-core/target/ibpms-poc-0.0.1-SNAPSHOT.jar/!BOOT-INF/lib/camunda-bpmn-model-7.21.0.jar!/org/camunda/bpm/model/bpmn/schema/BPMN20.xsd
+	at org.camunda.bpm.model.xml.impl.parser.AbstractModelParser.createSchema(AbstractModelParser.java:189) ~[camunda-xml-model-7.20.0.jar!/:7.20.0]
+	at org.camunda.bpm.model.bpmn.impl.BpmnParser.<init>(BpmnParser.java:48) ~[camunda-bpmn-model-7.21.0.jar!/:7.21.0]
+	at org.camunda.bpm.model.bpmn.Bpmn.<init>(Bpmn.java:274) ~[camunda-bpmn-model-7.21.0.jar!/:7.21.0]
+	at org.camunda.bpm.model.bpmn.Bpmn.<clinit>(Bpmn.java:271) ~[camunda-bpmn-model-7.21.0.jar!/:7.21.0]
+	... 39 common frames omitted
+
+2026-05-07T23:58:40.126-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopping...
+2026-05-07T23:58:40.126-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@786ff4d0]]
+2026-05-07T23:58:40.126-05:00  INFO 39784 --- [ibpms-core] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2026-05-07T23:58:40.142-05:00  INFO 39784 --- [ibpms-core] [ntContainer#0-2] o.s.a.r.l.SimpleMessageListenerContainer : Waiting for workers to finish.
+2026-05-07T23:58:40.144-05:00  INFO 39784 --- [ibpms-core] [ntContainer#1-2] o.s.a.r.l.SimpleMessageListenerContainer : Waiting for workers to finish.
+2026-05-07T23:58:40.148-05:00  INFO 39784 --- [ibpms-core] [ntContainer#2-2] o.s.a.r.l.SimpleMessageListenerContainer : Waiting for workers to finish.
+2026-05-07T23:58:40.734-05:00  INFO 39784 --- [ibpms-core] [ntContainer#0-2] o.s.a.r.l.SimpleMessageListenerContainer : Successfully waited for workers to finish.
+2026-05-07T23:58:40.754-05:00  INFO 39784 --- [ibpms-core] [ntContainer#1-2] o.s.a.r.l.SimpleMessageListenerContainer : Successfully waited for workers to finish.
+2026-05-07T23:58:40.765-05:00  INFO 39784 --- [ibpms-core] [ntContainer#2-2] o.s.a.r.l.SimpleMessageListenerContainer : Successfully waited for workers to finish.
+2026-05-07T23:58:50.241-05:00  INFO 39784 --- [ibpms-core] [           main] org.camunda.bpm.engine                   : ENGINE-00007 Process Engine default closed
+2026-05-07T23:58:50.249-05:00  INFO 39784 --- [ibpms-core] [           main] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-05-07T23:58:50.251-05:00  INFO 39784 --- [ibpms-core] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-05-07T23:58:50.261-05:00  INFO 39784 --- [ibpms-core] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+Exception in thread "main" java.lang.reflect.InvocationTargetException
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:118)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:91)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:53)
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:58)
+Caused by: java.lang.IllegalStateException: java.lang.ExceptionInInitializerError
+	at org.springframework.boot.SpringApplication.handleRunFailure(SpringApplication.java:825)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:344)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1354)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1343)
+	at com.ibpms.poc.Application.main(Application.java:19)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	... 4 more
+Caused by: java.lang.ExceptionInInitializerError
+	at com.ibpms.poc.infrastructure.config.E2EDataSeedConfig.run(E2EDataSeedConfig.java:41)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:351)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.ibpms.poc.infrastructure.config.E2EDataSeedConfig$$SpringCGLIB$$1.run(<generated>)
+	at org.springframework.boot.SpringApplication.lambda$callRunner$5(SpringApplication.java:790)
+	at org.springframework.util.function.ThrowingConsumer$1.acceptWithException(ThrowingConsumer.java:83)
+	at org.springframework.util.function.ThrowingConsumer.accept(ThrowingConsumer.java:60)
+	at org.springframework.util.function.ThrowingConsumer$1.accept(ThrowingConsumer.java:88)
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:798)
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:789)
+	at org.springframework.boot.SpringApplication.lambda$callRunners$3(SpringApplication.java:774)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.SortedOps$SizedRefSortingSink.end(SortedOps.java:357)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:510)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at org.springframework.boot.SpringApplication.callRunners(SpringApplication.java:774)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:341)
+	... 8 more
+Caused by: org.camunda.bpm.model.xml.ModelValidationException: Unable to parse schema:jar:nested:/C:/Users/HaroltAndr閟G髆ezAgu/ProyectoAntigravity/ibpms-platform/backend/ibpms-core/target/ibpms-poc-0.0.1-SNAPSHOT.jar/!BOOT-INF/lib/camunda-bpmn-model-7.21.0.jar!/org/camunda/bpm/model/bpmn/schema/BPMN20.xsd
+	at org.camunda.bpm.model.xml.impl.parser.AbstractModelParser.createSchema(AbstractModelParser.java:189)
+	at org.camunda.bpm.model.bpmn.impl.BpmnParser.<init>(BpmnParser.java:48)
+	at org.camunda.bpm.model.bpmn.Bpmn.<init>(Bpmn.java:274)
+	at org.camunda.bpm.model.bpmn.Bpmn.<clinit>(Bpmn.java:271)
+	... 39 more

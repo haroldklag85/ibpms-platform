@@ -71,7 +71,7 @@ public class DlqAdminController {
         Integer count = getQueueCount();
         
         // CA-8: Rastro Forense Persistido
-        auditRepository.save(new SystemAuditLogEntity(actor, "Retry", count));
+        auditRepository.save(new SystemAuditLogEntity(actor, "Retry", count, null, null));
         
         log.warn("SUDO INVOKE [Audit Trail]: Ejecución de reintentos masivos de la DLQ solicitada por usuario: {}", actor);
         return ResponseEntity.ok("Requeue process triggered.");
@@ -84,7 +84,7 @@ public class DlqAdminController {
         Integer count = getQueueCount();
         
         // CA-8: Rastro Forense Persistido
-        auditRepository.save(new SystemAuditLogEntity(actor, "Purge", count));
+        auditRepository.save(new SystemAuditLogEntity(actor, "Purge", count, null, null));
         
         log.warn("SUDO INVOKE [Audit Trail]: Purgando totalmente ibpms.dlq.global. Datos no archivables perdidos permanentemente. Acción ejecutada por usuario: {}", actor);
         rabbitAdmin.purgeQueue("ibpms.dlq.global", false);

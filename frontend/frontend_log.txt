@@ -1,0 +1,10 @@
+
+> ibpms-frontend@1.0.0 dev:e2e
+> vite --port 5174 --strictPort
+
+[31merror when starting dev server:
+Error: Port 5174 is already in use
+    at Server.onError (file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:45596:18)
+    at Server.emit (node:events:508:28)
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)[39m

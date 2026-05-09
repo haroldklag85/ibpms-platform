@@ -1,7 +1,7 @@
 # Sprint 6.V2 — Estabilización Táctica y Certificación J-04 (Hard Reset)
 
 > **Objetivo Central:** Sanear la compilación del Backend (Deuda Técnica), restaurar la credibilidad de la Matriz de Cobertura, y garantizar un pipeline de pruebas (Unitarias → Integración Local → E2E Playwright) 100% libre de mocks, enfocado **única y exclusivamente en el Journey J-04 (El Operario MVP)**.
-> **Rama:** `sprint-6/uat-certification-v2`
+> **Rama:** `sprint-6`
 > **Estrategia RAM/Docker:** Uso de `docker-compose.yml` (Dev) para integración local para evitar colapso de RAM. Cambio a `docker-compose.e2e.yml` solo para certificación UAT final.
 > **Gobernanza:** Zero-Mock, Arquitectura Hexagonal estricta, DDD, Patrón Estrangulador (V1).
 
@@ -29,13 +29,13 @@ El Sprint 6 se centrará únicamente en los componentes y APIs que impactan la v
 ## 3. Hoja de Ruta (Iteraciones)
 
 ### Iteración 6.0: Saneamiento Documental y Compilación Base
-- **Paso 1:** Reconstruir `.agentic-sync/coverage_matrix.md` ejecutando una re-auditoría automatizada y manual contra las Épicas Gherkin del SSOT.
-- **Paso 2:** Solucionar el Bloqueante P0 (Evasión de compilación): Restaurar y corregir el código alojado en `test_broken_files` (`RoleHierarchyServiceTest`, `RoleServiceIntegrationTest` de la US-036).
-- **Gate 6.0:** `mvn clean verify` debe pasar en verde al 100% sin exclusiones silenciosas de carpetas.
+- **Paso 1:** ✅ Reconstruir `.agentic-sync/coverage_matrix.md` ejecutando una re-auditoría automatizada y manual contra las Épicas Gherkin del SSOT.
+- **Paso 2:** ✅ Solucionar el Bloqueante P0 (Evasión de compilación): Restaurar y corregir el código alojado en `test_broken_files` (`RoleHierarchyServiceTest`, `RoleServiceIntegrationTest` de la US-036).
+- **Gate 6.0:** ✅ `mvn clean verify` debe pasar en verde al 100% sin exclusiones silenciosas de carpetas.
 
 ### Iteración 6.1: Infraestructura de Integración Local (Zero-OOM)
-- **Paso 1:** Re-configurar `AbstractIntegrationTest` para perfiles locales (`@Profile("local-dev")`). En lugar de levantar Testcontainers efímeros (que provocan colapso en máquinas con <3GB RAM libres), los tests apuntarán dinámicamente al contenedor persistente `ibpms-postgres` levantado en el `docker-compose.yml` del ambiente Dev.
-- **Paso 2:** Asegurar que el **ADR-010** (Prohibición absoluta de H2 en memoria) se mantenga intacto.
+- **Paso 1:** ✅ Re-configurar `AbstractIntegrationTest` para usar infraestructura estática. En lugar de levantar Testcontainers efímeros (que provocan colapso de RAM), los tests apuntarán dinámicamente al entorno persistente levantado en el `docker-compose.e2e.yml`.
+- **Paso 2:** ✅ Asegurar que el **ADR-010** (Prohibición absoluta de H2 en memoria) se mantenga intacto utilizando el "Enfoque E2E Estático".
 
 ### Iteración 6.2: Fixtures y Data Seed (Preparación E2E)
 - **Paso 1:** Crear scripts vía Liquibase (`test-data.sql`) o un `SeedService` para poblar el estado predecible exigido por `casos_uso_uat_j04.md`.

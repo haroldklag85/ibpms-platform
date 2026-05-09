@@ -26,7 +26,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * - CA-3: assignTemplateToUsers asigna el rol a los usuarios en una sola transacción
  * - CA-3: assignTemplateToUsers rechaza roles que no son plantilla
  */
-@DisplayName("US-036 RBAC — RoleService Guard & Mass Assignment (Testcontainers)")
+@DisplayName("US-036 RBAC — RoleService Guard & Mass Assignment (Static DB)")
+@org.springframework.transaction.annotation.Transactional
 class RoleServiceIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
@@ -44,24 +45,35 @@ class RoleServiceIntegrationTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Limpiar estado previo (orden inverso para respetar FK)
-        userRepository.deleteAll();
-        roleRepository.deleteAll();
+        // En un entorno de BD E2E estático no borramos toda la base de datos
+        // Usamos transacciones (@Transactional) para revertir los datos de prueba
+        
+        // Seed: Rol Guardián Root (buscar si existe o crearlo)
+        RoleEntity root = null;
+        for (RoleEntity r : roleRepository.findAll()) {
+            if (RoleService.ROOT_ROLE.equals(r.getName())) {
+                root = r;
+                break;
+            }
+        }
+        if (root == null) {
+            root = new RoleEntity(RoleService.ROOT_ROLE, "Guardián de seguridad — inmutable");
+            root.setIsTemplate(false);
+            root.setSource("LOCAL");
+            root = roleRepository.save(root);
+        }
+        rootRoleId = root.getId();
 
-        // Seed: Rol Guardián Root
-        RoleEntity root = new RoleEntity(RoleService.ROOT_ROLE, "Guardián de seguridad — inmutable");
-        root.setIsTemplate(false);
-        root.setSource("LOCAL");
-        rootRoleId = roleRepository.save(root).getId();
+        String suffix = "_" + UUID.randomUUID().toString().substring(0, 6);
 
         // Seed: Rol regular eliminable
-        RoleEntity regular = new RoleEntity("ROLE_ANALYST", "Analista operativo");
+        RoleEntity regular = new RoleEntity("ROLE_ANALYST" + suffix, "Analista operativo");
         regular.setIsTemplate(false);
         regular.setSource("LOCAL");
         regularRoleId = roleRepository.save(regular).getId();
 
         // Seed: Rol plantilla para mass assign
-        RoleEntity template = new RoleEntity("ROLE_ONBOARDING_TEMPLATE", "Plantilla para nuevos empleados");
+        RoleEntity template = new RoleEntity("ROLE_ONBOARDING_TEMPLATE" + suffix, "Plantilla para nuevos empleados");
         template.setIsTemplate(true);
         template.setSource("LOCAL");
         templateRoleId = roleRepository.save(template).getId();
@@ -94,6 +106,10 @@ class RoleServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("CA-2 RBAC-BE-03: updateRole lanza AccessDeniedException para ROLE_SUPER_ADMIN")
     void testPreventSuperAdminRoleUpdate() {
+        // Leer descripción original (puede variar si ya existía en BD E2E)
+        RoleEntity original = roleRepository.findById(rootRoleId).orElseThrow();
+        String originalDescription = original.getDescription();
+
         RoleEntity patch = new RoleEntity();
         patch.setDescription("Intento malicioso de modificar el Root");
 
@@ -103,7 +119,7 @@ class RoleServiceIntegrationTest extends AbstractIntegrationTest {
 
         // Descripción original debe permanecer sin cambios
         RoleEntity unchanged = roleRepository.findById(rootRoleId).orElseThrow();
-        assertThat(unchanged.getDescription()).isEqualTo("Guardián de seguridad — inmutable");
+        assertThat(unchanged.getDescription()).isEqualTo(originalDescription);
     }
 
     @Test
@@ -135,8 +151,8 @@ class RoleServiceIntegrationTest extends AbstractIntegrationTest {
         // Verificar que ambos usuarios tienen el rol plantilla asignado
         UserEntity saved1 = userRepository.findById(u1Id).orElseThrow();
         UserEntity saved2 = userRepository.findById(u2Id).orElseThrow();
-        assertThat(saved1.getRoles()).anyMatch(r -> "ROLE_ONBOARDING_TEMPLATE".equals(r.getName()));
-        assertThat(saved2.getRoles()).anyMatch(r -> "ROLE_ONBOARDING_TEMPLATE".equals(r.getName()));
+        assertThat(saved1.getRoles()).anyMatch(r -> r.getName().startsWith("ROLE_ONBOARDING_TEMPLATE"));
+        assertThat(saved2.getRoles()).anyMatch(r -> r.getName().startsWith("ROLE_ONBOARDING_TEMPLATE"));
     }
 
     @Test
@@ -151,7 +167,7 @@ class RoleServiceIntegrationTest extends AbstractIntegrationTest {
         assertThat(notFound).containsExactly(phantomId);
         // El usuario válido sí recibió el rol
         UserEntity saved = userRepository.findById(u1Id).orElseThrow();
-        assertThat(saved.getRoles()).anyMatch(r -> "ROLE_ONBOARDING_TEMPLATE".equals(r.getName()));
+        assertThat(saved.getRoles()).anyMatch(r -> r.getName().startsWith("ROLE_ONBOARDING_TEMPLATE"));
     }
 
     @Test
@@ -163,6 +179,43 @@ class RoleServiceIntegrationTest extends AbstractIntegrationTest {
         assertThatThrownBy(() -> roleService.assignTemplateToUsers(regularRoleId, List.of(u1Id)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("no es una plantilla asignable");
+    }
+
+    // ─────────────────────────────────────────────
+    // CA-6: Herencia de Roles Piramidal (WITH RECURSIVE)
+    // ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("CA-6 RBAC-BE-08: CTE recursiva extrae nombres de la cadena de herencia hacia arriba")
+    void testRoleHierarchyRecursiveCTE() {
+        String suffix = "_" + UUID.randomUUID().toString().substring(0, 6);
+
+        RoleEntity gerente = new RoleEntity("ROLE_GERENTE" + suffix, "Gerencia");
+        gerente.setIsTemplate(false);
+        gerente.setSource("LOCAL");
+        gerente.setParentRole(roleRepository.findById(rootRoleId).orElseThrow());
+        gerente = roleRepository.save(gerente);
+
+        RoleEntity coordinador = new RoleEntity("ROLE_COORDINADOR" + suffix, "Coordinación");
+        coordinador.setIsTemplate(false);
+        coordinador.setSource("LOCAL");
+        coordinador.setParentRole(gerente);
+        coordinador = roleRepository.save(coordinador);
+
+        RoleEntity analista = new RoleEntity("ROLE_ANALISTA" + suffix, "Análisis");
+        analista.setIsTemplate(false);
+        analista.setSource("LOCAL");
+        analista.setParentRole(coordinador);
+        analista = roleRepository.save(analista);
+
+        List<String> treeNames = roleRepository.findInheritedRoleNamesByName("ROLE_ANALISTA" + suffix);
+
+        assertThat(treeNames).containsExactlyInAnyOrder(
+                "ROLE_ANALISTA" + suffix,
+                "ROLE_COORDINADOR" + suffix,
+                "ROLE_GERENTE" + suffix,
+                RoleService.ROOT_ROLE
+        );
     }
 
     // ─────────────────────────────────────────────

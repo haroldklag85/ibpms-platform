@@ -23,6 +23,7 @@ public class AuditReportEntity {
     @Column(name = "sha256_hash", nullable = false, length = 64)
     private String fileHash;
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "file_path_or_blob", columnDefinition = "jsonb")
     private String metadataJson;
 

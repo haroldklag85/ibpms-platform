@@ -57,19 +57,21 @@
              </select>
            </div>
 
-           <!-- @Traceability: US-002 - CA-10, CA-22 -->
+           <!-- @Traceability: US-002, CA-22 (Separación Visual con Contadores) -->
            <div class="inline-flex rounded-lg border border-gray-200/80 bg-white/50 backdrop-blur-sm p-0.5 shadow-sm" data-testid="filter-pool-tabs">
              <button
-               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200', store.activeView === 'PERSONAL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 flex items-center gap-1.5', store.activeView === 'PERSONAL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
                @click="store.setActiveView('PERSONAL')"
+               data-testid="tab-personal"
              >
-               👤 Mis Tareas
+               👤 Mi Bandeja <span class="bg-black/20 px-1.5 py-0.5 rounded text-[10px]">{{ store.personalTaskCount || 0 }}</span>
              </button>
              <button
-               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200', store.activeView === 'POOL' ? 'bg-teal-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 flex items-center gap-1.5', store.activeView === 'POOL' ? 'bg-teal-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
                @click="store.setActiveView('POOL')"
+               data-testid="tab-pool"
              >
-               👥 Pool Disponible
+               👥 Cola del Equipo <span class="bg-black/20 px-1.5 py-0.5 rounded text-[10px]">{{ store.poolTaskCount || 0 }}</span>
              </button>
            </div>
 
@@ -381,12 +383,29 @@
                      </div>
                    </td>
                    <!-- Col 6: Acciones (US-002 Task Claim) -->
+                   <!-- @Traceability: US-002, CA-22 (Botonera Condicional según Tab Activa) -->
                    <td class="px-4 py-3 text-center" @click.stop>
-                     <button @click="onClaimTask(task)" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:transform active:scale-95 text-white font-bold rounded-lg shadow-sm transition-all text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 mx-auto disabled:opacity-50 min-w-[90px]" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)" :data-testid="'claim-button-' + (task.unifiedId || task.originalTaskId)">
-                       <span v-if="isClaiming === (task.unifiedId || task.originalTaskId)" class="material-symbols-outlined text-[14px] animate-spin">refresh</span>
-                       <span v-else class="material-symbols-outlined text-[14px]">pan_tool</span>
-                       {{ isClaiming === (task.unifiedId || task.originalTaskId) ? 'Cargando' : 'Atender' }}
-                     </button>
+                     <!-- TAB: MI BANDEJA -->
+                     <div v-if="store.activeView === 'PERSONAL'" class="flex items-center justify-center gap-2">
+                       <button @click="openTaskDetails(task)" class="px-2 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-open-task">
+                         <span class="material-symbols-outlined text-[14px]">open_in_new</span> Abrir
+                       </button>
+                       <button @click="onReleaseTask(task)" class="px-2 py-1.5 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-release-task">
+                         <span class="material-symbols-outlined text-[14px]">undo</span> Liberar
+                       </button>
+                     </div>
+                     
+                     <!-- TAB: COLA DEL EQUIPO -->
+                     <div v-if="store.activeView === 'POOL'" class="flex items-center justify-center gap-2">
+                       <button @click="openTaskDetails(task)" class="px-2 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-explore-task">
+                         <span class="material-symbols-outlined text-[14px]">visibility</span> Explorar
+                       </button>
+                       <button @click="onClaimTask(task)" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)" class="px-2 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" :data-testid="'claim-button-' + (task.unifiedId || task.originalTaskId)">
+                         <span v-if="isClaiming === (task.unifiedId || task.originalTaskId)" class="material-symbols-outlined text-[14px] animate-spin">refresh</span>
+                         <span v-else class="material-symbols-outlined text-[14px]">pan_tool</span>
+                         Reclamar
+                       </button>
+                     </div>
                    </td>
                  </tr>
                </tbody>
@@ -769,6 +788,19 @@ const onClaimTask = async (task: any) => {
 
 const openTaskDetails = (task: any) => {
     openedTask.value = task;
+}
+
+// @Traceability: US-002, CA-22
+const onReleaseTask = async (task: any) => {
+    try {
+        const taskIdString = task.unifiedId || task.originalTaskId;
+        await store.unclaimTask(taskIdString);
+        toastSuccess.value = 'Tarea liberada al pool del equipo.';
+        setTimeout(() => { toastSuccess.value = ''; }, 3000);
+    } catch (err: any) {
+        store.errorMessage = err.response?.data?.message || 'Error al intentar liberar la tarea.';
+        store.isError = true;
+    }
 }
 
 // ==========================================

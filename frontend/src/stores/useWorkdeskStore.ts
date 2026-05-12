@@ -58,6 +58,12 @@ export const useWorkdeskStore = defineStore('workdesk', {
     _bulkDebounce: null as ReturnType<typeof setTimeout> | null
   }),
 
+  // @Traceability: US-002, CA-22 (Contadores N y M en store)
+  getters: {
+    personalTaskCount: (state) => state.items.filter((t: any) => t.assignee).length,
+    poolTaskCount: (state) => state.items.filter((t: any) => !t.assignee).length,
+  },
+
   actions: {
     // @Traceability(US = "US-001", CA = {"CA-08"})
     // CA-08: Verificar si el Feature Toggle está activado

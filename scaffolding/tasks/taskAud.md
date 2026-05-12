@@ -111,7 +111,8 @@
     - **Auditoría V2 (CA-11): ✅ REMEDIADO (2026-05-10).** Se validó la certificación QA del contrato Zod. El agente Frontend implementó exitosamente la conexión al backend (`certifyForm`) y el botón habilitado condicionalmente en la interfaz del Fuzzer. El agente QA verificó el flujo en `FormDesignerQACert.spec.ts` usando la arquitectura Zero-Mock V2 y aislando correctamente los tests con `Teleport: true`. Trazabilidad (`@Traceability`) y `Green Build` logrados al 100%.
 - [ ] **US-029 CA-01 a CA-34 (Ejecución y Envío de Formulario):** Trazabilidad inyectada en `FormCompletionService`. Madurez actual ~72%.
     - **QA Validado:** CAs defensivos (CA-1, CA-12, CA-19 a CA-24).
-    - **Deuda Residual:** BFF prefill usa mock parcial (CA-5). CA-25 a CA-34 pendientes de refinamiento UI.
+    - **Auditoría V2 (CA-05): ✅ CERTIFICADO (2026-05-12) (T-21).** Se completó la hidratación determinista de Liquibase (`ibpms_task_drafts`) para los simulacros de Prefill Zero-Mock. Trazabilidad inyectada.
+    - **Deuda Residual:** CA-25 a CA-34 pendientes de refinamiento UI.
 - [ ] **US-030 CA-01 a CA-14 (Proyecto Ágil y Kanban):** Trazabilidad inyectada en `AgileProjectService`. Madurez actual ~85%.
     - **QA Validado:** 0%. Carece de pruebas Testcontainers (0%).
     - **Deuda Residual:** CA-2 (Plantilla WBS) bloqueado por US-006. CA-13 carece de insignia visual de tareas rancias. Integración pendiente con la UI en Vue.

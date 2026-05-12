@@ -82,10 +82,12 @@ public class AutoClaimService {
         taskService.claim(taskId, userId);
 
         FormEvent autoClaimEvent = FormEvent.builder()
+                .eventId(java.util.UUID.randomUUID())
                 .taskId(taskId)
                 .eventType(EventType.TASK_AUTO_CLAIMED)
                 .payloadJson("{\"action\": \"auto-claim\", \"userId\": \"" + userId + "\"}")
                 .userId(userId)
+                .schemaVersion("v1.0")
                 .createdAt(java.time.ZonedDateTime.now())
                 .build();
         formEventRepository.save(autoClaimEvent);

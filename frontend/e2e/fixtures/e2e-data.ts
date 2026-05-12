@@ -46,5 +46,9 @@ export const USERS = {
 export const API = {
   BASE_URL: 'http://localhost:8080',
   COPILOT_SESSION: '/api/v1/ai/copilot/session',
-  WEBHOOK_LEGACY: '/inbound/email-webhook'
-};
+  WEBHOOK_LEGACY: '/inbound/email-webhook',
+  WEBHOOK_NEW: '/intake/webhook',
+  KANBAN_BOARDS: '/api/v1/kanban-tasks/boards',
+  KANBAN_TASK_STATE: '/api/v1/kanban-tasks/tasks', // + /{id}/state
+  KILL_SWITCH: '/api/v1/admin/users', // + /{userId}/revoke-session
+} as const;

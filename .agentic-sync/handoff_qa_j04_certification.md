@@ -1,52 +1,116 @@
-# Handoff: Certificación E2E de J-04 (Kanban, Break-Glass, Webhook)
+# Handoff: Certificación E2E de J-04 — Iteración 2 (Post-Corrección Arquitecto)
 
 **Destinatario:** [🕵️ QA - E2E]
 **Emitido por:** [🧠 ARQUITECTO LÍDER]
-**Fecha:** 2026-05-11
-**Contexto:** Pruebas finales para sellar el Sprint J-04.
+**Fecha:** 2026-05-11 (Iteración 2)
+**Contexto:** Re-ejecución post-corrección del `@PreAuthorize` en `SessionRevocationController.java`.
 
-## 🎯 Objetivo Principal (Misión)
-El Backend y Frontend han cerrado la deuda técnica arquitectónica. Tu misión es certificar estas implementaciones ejecutando pruebas automatizadas que garanticen la funcionalidad bajo infraestructura real y validar que la LEY GLOBAL 2 (Zero-Mock Compilation) y el ADR-011 se cumplen rigurosamente.
+---
 
-## 🛠️ Especificaciones Técnicas a Certificar
+## 🔄 Contexto de esta Iteración
 
-### 1. Tablero Kanban (US-008)
-- **Validación E2E:** Asegúrate de probar el Drag & Drop en el tablero interactivo. Verifica que mover una tarea a la columna `BLOCKED` despliegue correctamente un modal pidiendo la justificación.
-- **Validación de Persistencia:** Verifica que el Frontend ahora consume el endpoint real `PATCH /api/v1/kanban-tasks/tasks/{id}/state` y no usa simuladores locales.
+El Arquitecto Líder **ya resolvió las 3 decisiones pendientes** de tu reporte anterior. Los cambios aplicados son:
 
-### 2. Kill-Switch / Mass Deallocation (US-036 / US-038)
-- **Validación E2E:** El equipo Frontend ha implementado (o está por integrar) un botón "Kill-Switch" o "Exorcización" dentro de la consola administrativa. Debes crear un script en Playwright que ingrese como `SUPER_ADMIN`, ubique a un usuario específico y lance la acción destructiva de revocación de sesión.
-- **Comprobación:** Asegúrate de que, una vez ejecutado, los requests subsecuentes de ese usuario reciban un error HTTP 401 (debido a la revocación efectiva de sus JWTs a través de Redis en el backend).
+### Correcciones Aplicadas
+1. **D-RBAC (RESUELTO):** Se amplió el `@PreAuthorize` del controlador de revocación:
+   ```java
+   // SessionRevocationController.java, línea 17
+   // ANTES: @PreAuthorize("hasRole('ADMIN_IT')")
+   // AHORA:
+   @PreAuthorize("hasAnyRole('ADMIN_IT', 'SUPER_ADMIN')")
+   ```
+   → Esto desbloquea los tests `CU-KS-01`, `CU-KS-02`, `CU-KS-03` para el usuario `admin@alpha.com` (`ROLE_SUPER_ADMIN`).
 
-### 3. Webhook Intake de Seguridad (US-004)
-- **Validación E2E:** Asegura que enviar datos a `POST /inbound/email-webhook` retorne `HTTP 410 GONE`. Verifica que el sistema nuevo basado en RabbitMQ (`POST /api/v1/intake/webhook`) esté operando y el payload de prueba sea encolado y consumido correctamente por el `WebhookIntakeListener`.
+2. **D-HMAC (RESUELTO):** Tu estrategia tolerante (aceptar 202 o 401) fue aprobada. Sin cambios requeridos.
+
+3. **D-MOCK-PURGE (APROBADO):** Queda autorizado deprecar `us008-kanban-hub.spec.ts`. Renómbralo a `us008-kanban-hub.spec.ts.deprecated` o elimínalo.
+
+---
+
+## 🎯 Objetivo de esta Iteración
+
+1. **Compilar el Backend** para certificar que la corrección del `@PreAuthorize` no introduce errores.
+2. **Deprecar** el spec legacy con mocks (`us008-kanban-hub.spec.ts`).
+3. **Re-ejecutar los 18 tests** de certificación J-04 contra infraestructura real.
+4. **Reportar resultados** con evidencia de logs de ejecución.
 
 ---
 
 ## 🛑 REGLAS DE GOBERNANZA Y SKILLS (OBLIGATORIAS)
 
-### 0. Skills de Ejecución (OBLIGATORIO LEER ANTES DE CODIFICAR)
-Para asegurar que tu ejecución se adhiera a las directrices de la plataforma, **debes leer y aplicar estrictamente** el siguiente skill de QA:
+### 0. Skill de Ejecución (OBLIGATORIO LEER ANTES DE CODIFICAR)
+Para asegurar que tu ejecución se adhiera a las directrices de la plataforma, **debes leer y aplicar estrictamente** el siguiente skill:
 - **`cat .agents/skills/qa_e2e_validation_audit/SKILL.md`** (Auditoría y Validación E2E con Playwright)
 
+Este skill obliga a:
+- Correr Playwright contra los contenedores reales (PostgreSQL, RabbitMQ, Redis) levantados por `docker-compose.e2e.yml`.
+- **Prohibir terminantemente** el uso de `route.fulfill()` o cualquier interceptor de red que simule respuestas del backend.
+- Validar que los datos de prueba provienen exclusivamente del `seed-e2e.sql`, no de arrays estáticos inyectados en el DOM.
+
 ### 1. ADR-011: Gobernanza de Pirámide de Testing
-Tienes **estrictamente prohibido certificar validez con tests basados en bases de datos en memoria (H2) o infraestructuras mockeadas.** 
+Tienes **estrictamente prohibido certificar validez con tests basados en bases de datos en memoria (H2) o infraestructuras mockeadas.**
 - Los tests de Playwright deben correr contra la instancia de base de datos aprovisionada mediante tu orquestador en `docker-compose.e2e.yml`.
 - Usa el `seed-e2e.sql` disponible (ubicado en `src/main/resources/seed-e2e.sql`) para inicializar el estado del ambiente antes de ejecutar los tests de interfaz de usuario.
 
-### 2. Trazabilidad Inversa y Documentación
+### 2. LEY GLOBAL 3: Trazabilidad Inversa / Anti-Amnesia Institucional (.cursorrules)
 Recuerda documentar tus scripts con los trazadores correctos.
 ```typescript
 // @Traceability: US-036, US-008
 test('US-036: Un SUPER_ADMIN puede expulsar a un operario usando el Mass Deallocation', async ({ page }) => { ... });
 ```
-Además, deberás reportar si todos los criterios de aceptación Gherkin han sido satisfechos al pie de la letra, consultando siempre los documentos SSOT.
+
+### 3. LEY GLOBAL 2: Zero-Trust Compilation
+- **Backend:** Antes de ejecutar tests, compila el backend con `mvn compile -f backend/ibpms-core/pom.xml` para validar que el cambio en `@PreAuthorize` no generó errores.
+- **Frontend:** Si modificas specs, ejecuta `npx tsc --noEmit` en la carpeta `frontend/` para validar tipos.
 
 ---
-## 📋 Tareas Puntuales para QA
-1. Revisar los scripts de E2E Playwright actuales e integrar las pruebas para `BLOCKED` Kanban y la nueva UI del *Break-Glass*.
-2. Asegurar que las dependencias de RabbitMQ y Postgres (vía `docker-compose.e2e.yml`) levantan satisfactoriamente y corren el `seed-e2e.sql`.
-3. Ejecutar los scripts localmente y corroborar que devuelvan `PASS` sin intervención de mocks de red (`route.fulfill()`).
-4. Documentar los resultados y dar cierre final a esta certificación.
 
-¡Confío en tu rigor! Recuerda empezar tu respuesta asumiendo tu rol [🕵️ QA - E2E] y confirmar tu plan de pruebas.
+## 📋 Secuencia de Ejecución (Paso a Paso)
+
+```bash
+# PASO 1: Compilar Backend (validar corrección @PreAuthorize)
+cd backend/ibpms-core
+mvn compile -DskipTests
+# Esperar: BUILD SUCCESS
+
+# PASO 2: Deprecar spec legacy con mocks
+mv frontend/e2e/certification/us008-kanban-hub.spec.ts frontend/e2e/certification/us008-kanban-hub.spec.ts.deprecated
+
+# PASO 3: Levantar infraestructura E2E
+docker compose -f docker-compose.e2e.yml up -d
+
+# PASO 4: Backend nativo (PROHIBIDO docker compose up ibpms-core)
+.\start-e2e.bat
+# Esperar: "Started Application" + "Tomcat started on port 8080"
+
+# PASO 5: Verificar Data Seed
+docker exec ibpms-postgres-uat psql -U ibpms -d ibpms -c "SELECT COUNT(*) FROM ibpms_workdesk_projection;"
+# Esperado: count >= 5
+
+# PASO 6: Frontend
+cd frontend && npm run dev
+# Esperar: "Local: http://localhost:5173"
+
+# PASO 7: Ejecutar specs de certificación J-04
+npx playwright test \
+  certification/us036-kill-switch-break-glass.e2e.spec.ts \
+  certification/us008-kanban-zeromock.e2e.spec.ts \
+  certification/us004-webhook-intake-pipeline.e2e.spec.ts \
+  --reporter=html,list
+```
+
+---
+
+## ✅ Criterios de Éxito (Definition of Done)
+
+| # | Criterio | Evidencia Esperada |
+|---|----------|-------------------|
+| 1 | Backend compila sin errores post-corrección | Log de `BUILD SUCCESS` |
+| 2 | Spec legacy `us008-kanban-hub.spec.ts` deprecado | Archivo renombrado a `.deprecated` |
+| 3 | 18 tests ejecutados sin `route.fulfill()` | Log de Playwright sin warnings de mock |
+| 4 | Tests `CU-KS-01/02/03` pasan con HTTP 200 | Evidencia de que `ROLE_SUPER_ADMIN` es aceptado |
+| 5 | Trazabilidad `@Traceability` presente en cada spec | Revisión de headers en los 3 archivos |
+
+---
+
+**Recuerda:** Empezar tu respuesta asumiendo tu rol `[🕵️ QA - E2E]` y confirmar la recepción del handoff.

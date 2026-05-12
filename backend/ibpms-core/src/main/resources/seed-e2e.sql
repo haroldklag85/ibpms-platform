@@ -15,11 +15,13 @@ CREATE TABLE IF NOT EXISTS ibpms_feature_toggles (
     toggle_key VARCHAR(100) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT false,
     changed_by VARCHAR(100) NOT NULL,
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    description VARCHAR(255)
 );
-INSERT INTO ibpms_feature_toggles (tenant_id, toggle_key, enabled, changed_by) VALUES
-  ('tenant_alpha', 'forceRouting', false, 'admin')
-ON CONFLICT DO NOTHING;
+-- @Traceability: US-001, CA-08 (Feature Toggles)
+INSERT INTO ibpms_feature_toggles (id, tenant_id, toggle_key, enabled, changed_by, description)
+VALUES (gen_random_uuid(), 'default', 'FORCE_ROUTING', false, 'admin', 'Toggle CA-08')
+ON CONFLICT (tenant_id, toggle_key) DO NOTHING;
 
 
 
@@ -121,6 +123,7 @@ ON CONFLICT DO NOTHING;
 -- La tabla 'user_delegation' (línea 26) es LEGACY/DEPRECATED.
 -- El backend (TaskDelegationService + DelegationEntity) usa esta tabla.
 -- ====================================================================
+-- @Traceability: US-001, CA-04 (Múltiples Delegantes)
 INSERT INTO ibpms_security_delegation (id, delegator_id, substitute_id, start_date, end_date, is_active, reason)
 SELECT gen_random_uuid(), d.id, a.id,
        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '365 days',

@@ -12,12 +12,13 @@ El Backend ya implementó exitosamente el servicio `JwtBlacklistService` conecta
 ## 🛠️ Especificaciones Técnicas
 
 ### 1. Endpoint a Consumir
-- **Ruta:** `POST /api/v1/admin/auth/revoke/{userId}`
+- **Ruta:** `POST /api/v1/admin/users/{userId}/revoke-session`
 - **Descripción:** Revoca todas las sesiones y tokens JWT activos de un usuario específico, inyectándolos en la Blacklist global de Redis.
-- **Autorización:** Requiere rol `ROLE_SUPER_ADMIN` o `ROLE_CISO`.
+- **Autorización:** Requiere rol `ROLE_ADMIN_IT` o `ROLE_SUPER_ADMIN` (class-level `@PreAuthorize` en `SessionRevocationController.java`).
+- **⚠️ IMPORTANTE:** La ruta corregida fue validada forense por el Arquitecto Líder contra el código fuente real (línea 15 y 32 de `SessionRevocationController.java`). NO usar la ruta antigua `/admin/auth/revoke/`.
 
 ### 2. Diseño del Componente y UX
-- El botón de acción ("Revocar Sesiones", "Exorcizar" o "Kill-Switch") debe ser **visible solo** para administradores.
+- El botón de acción ("Revocar Sesiones", "Exorcizar" o "Kill-Switch") debe ser **visible solo** para usuarios con rol `ROLE_ADMIN_IT` o `ROLE_SUPER_ADMIN`.
 - **Alerta de Interacción (Zero-Trust UI):** Según las políticas del proyecto, *QUEDA ESTRICTAMENTE PROHIBIDO* usar `alert()` o `confirm()` nativos. Debes crear/utilizar un **Modal de Vue 3** para la confirmación de esta acción destructiva.
 - **Manejo de Errores (Fail-Fast):** Implementa bloques `try/catch` reales usando Axios. Muestra notificaciones (Toasts) apropiadas para casos de éxito o error (ej: Error HTTP 403, 500).
 

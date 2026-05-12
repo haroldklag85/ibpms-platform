@@ -2,6 +2,7 @@
   <div class="h-screen flex bg-slate-50 font-['Inter'] text-slate-900 overflow-hidden">
     <ImpersonationBanner v-if="authStore.isImpersonating" />
     <ImpersonationSelector v-if="showImpersonationSelector" @close="showImpersonationSelector = false" />
+    <CQRSConnectionToast />
     <!-- Sidebar: Expandable / Collapsed State (Left) -->
     <!-- Transición suave de ancho: w-64 cuando expandido, w-16 cuando colapsado -->
     <aside 
@@ -236,6 +237,7 @@ import { useMenuStore } from '@/stores/useMenuStore';
 import RoleSelectorDropdown from '@/components/shell/RoleSelectorDropdown.vue';
 import ImpersonationBanner from '@/components/admin/ImpersonationBanner.vue';
 import ImpersonationSelector from '@/components/admin/ImpersonationSelector.vue';
+import CQRSConnectionToast from '@/components/common/CQRSConnectionToast.vue';
 import { useI18n } from 'vue-i18n';
 
 const router = useRouter();

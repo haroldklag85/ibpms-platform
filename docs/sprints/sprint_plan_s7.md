@@ -21,8 +21,8 @@ Dadas las lecciones aprendidas del Sprint 6, este sprint se dividirá en etapas,
 
 *   ✅ **Infraestructura Frontend (Bloqueante S6):** Resolver la inestabilidad del servidor Vite (`Vite pre-transform error: Failed to load url /src/main.ts`) que interfiere con Playwright. Resuelto mediante optimización de dependencias y timeout de 7 mins E2E (ADR-014).
 *   **Brechas de Seguridad Críticas:**
-    *   **US-027 (Copiloto IA):** Remediar el vulnerabilidad IDOR en el destructor de sesión RAG (`tenantId` hardcodeado).
-    *   **US-004 (Webhooks):** Parchear el by-pass de seguridad heredado y habilitar el pipeline completo (HMAC, ClamAV, Whitelist).
+    *   ✅ **US-027 (Copiloto IA):** Vulnerabilidad IDOR mitigada, aplicando RLS estricto en borrado de sesiones vectoriales.
+    *   ✅ **US-004 (Webhooks):** Implementación de infraestructura segura y abstracción de tenencia vía `TenantConfigEntity`. Pipeline protegido.
 *   **Arquitectura CQRS (US-017):** Retomar y finalizar la implementación del patrón CQRS (Event Sourcing) para la ejecución y guardado de formularios.
 *   **Mecanismo de Data Seed (Liquibase):** Implementar la hidratación determinista de la base de datos utilizando scripts de Liquibase (Data Seeder). **Nota para Construcción:** El seeder deberá incluir:
     *   Usuarios base con sus perfiles (ej. Arquitecto, Peritos A/B, Supervisor).
@@ -33,7 +33,7 @@ Dadas las lecciones aprendidas del Sprint 6, este sprint se dividirá en etapas,
     *   Tareas simuladas en estado vivo para estabilizar las pruebas de Workdesk.
 *   **Cumplimiento ADR-001 (Pureza Hexagonal):** Refactorizar `WorkdeskAttendNextController` para extraer la lógica `@Transactional` y de base de datos hacia un Caso de Uso (Application Service).
 *   **Cumplimiento ADR-006 (Performance Vue3):** Migrar la lógica reactiva y los `setInterval` de SLA desde `Workdesk.vue` hacia un store centralizado de Pinia (`timeStore.ts`).
-*   **Purga de Hardcodes (Zero-Trust):** Eliminar IDORs potenciales (ej. `assistantId` = `101edfe`), parametrizar SLA fijos (48h) según el Tenant, y asegurar segregación Multi-Tenant en eventos WebSocket.
+*   ✅ **Purga de Hardcodes (Zero-Trust):** Eliminados strings de tenants quemados, llaves estáticas (HMAC), y se parametrizó el SLA (48h) de forma dinámica usando BD Postgres (`ibpms_tenant_config`).
 *   **Gobernanza Testing (ADR-010):** Refactorizar el test de integración de BPMN (US-005) para consumir el esquema real de Liquibase, eliminando los Mocks DDL estáticos.
 *   **Deuda Funcional DMN (US-007):** Implementar el buscador visual en las grillas DMN (CA-24) y completar la validación del Pre-Flight execution (CA-14).
 *   **Deuda Funcional IDE Formularios (US-003):** Ejecutar y certificar en el entorno E2E estático la persistencia y carga dinámica del `FormDesigner` (reactivando o creando los tests necesarios).
@@ -83,3 +83,4 @@ Para garantizar la política Zero-Mock (ADR-010) y prevenir errores `404/500` po
 | 2026-05-11 | **Estabilización Vite (Bloqueante S6)** | Implementación de ADR-014 con X-Correlation-ID en Backend/MDC, Toast silencioso para 502/503 en Frontend, optimizeDeps y timeouts E2E (7 mins). | ✅ APROBADO |
 | 2026-05-11 | **Implementación US-036 / US-038 (Kill-Switch)** | Se implementó Modal Vue 3 con política Fail-Fast (Zero-Mock) para la funcionalidad Break-Glass, integrando axios para consumir el endpoint real de revocación. | ✅ APROBADO |
 | 2026-05-12 | **Certificación US-001 (Arquitectura Hexagonal)** | Se cerró la brecha arquitectónica (ADR-001) extrayendo lógicas transaccionales y de red (`WorkdeskAttendNextController`, Feature Toggles, Delegación) hacia Capa de Aplicación. El agente QA validó T-04, T-05 y T-06 en esquema Zero-Mock E2E. | ✅ CERTIFICADO |
+| 2026-05-12 | **Auditoría de Seguridad (T-01 a T-03)** | Remediación de IDOR (RAG), protección HMAC/Webhook y configuración dinámica de SLAs por Tenant en DB (`TenantConfigEntity`). Todo purgado de hardcodes. | ✅ CERTIFICADO |

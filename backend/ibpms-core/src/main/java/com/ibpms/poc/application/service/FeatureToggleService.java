@@ -21,9 +21,12 @@ import java.util.Optional;
 public class FeatureToggleService implements UpdateFeatureToggleUseCase {
 
     private final FeatureTogglePort featureTogglePort;
+    private final com.ibpms.poc.application.port.out.AuditLogPort auditLogPort;
 
-    public FeatureToggleService(FeatureTogglePort featureTogglePort) {
+    public FeatureToggleService(FeatureTogglePort featureTogglePort,
+                                com.ibpms.poc.application.port.out.AuditLogPort auditLogPort) {
         this.featureTogglePort = featureTogglePort;
+        this.auditLogPort = auditLogPort;
     }
 
     @Transactional(readOnly = true)
@@ -52,6 +55,7 @@ public class FeatureToggleService implements UpdateFeatureToggleUseCase {
 
     @Override
     @Transactional
+    @Traceability(US = "US-001", CA = {"CA-08", "CA-16"})
     public boolean updateFeatureToggle(String tenantId, String toggleKey, Boolean enabled) {
         FeatureToggleEntity toggle = featureTogglePort.findByTenantIdAndToggleKey(tenantId, toggleKey)
                 .orElseGet(() -> {
@@ -61,8 +65,30 @@ public class FeatureToggleService implements UpdateFeatureToggleUseCase {
                     return newToggle;
                 });
         
-        toggle.setEnabled(enabled != null ? enabled : false);
+        boolean previousValue = toggle.getEnabled() != null ? toggle.getEnabled() : false;
+        boolean newValue = enabled != null ? enabled : false;
+        
+        toggle.setEnabled(newValue);
         featureTogglePort.save(toggle);
+        
+        if (auditLogPort != null) {
+            String detailsJson = String.format("{\"key\": \"%s\", \"previousValue\": %b, \"newValue\": %b, \"changedBy\": \"SYSTEM\", \"timestamp\": \"%s\"}",
+                    toggleKey, previousValue, newValue, LocalDateTime.now().toString());
+            
+            auditLogPort.saveAuditLog(
+                    java.util.UUID.randomUUID().toString(),
+                    "FEATURE_TOGGLE",
+                    toggleKey,
+                    "FEATURE_TOGGLE_CHANGED",
+                    "SYSTEM",
+                    LocalDateTime.now(),
+                    null,
+                    false,
+                    false,
+                    detailsJson
+            );
+        }
+        
         return toggle.getEnabled();
     }
 }

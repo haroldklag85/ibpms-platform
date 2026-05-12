@@ -54,10 +54,15 @@ public class FeatureToggleController {
     @org.springframework.web.bind.annotation.PutMapping("/{key}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "Actualizar Feature Toggle", description = "Permite a un SUPER_ADMIN activar/desactivar features globalmente.")
+    @Traceability(US = "US-001", CA = {"CA-08", "CA-16"})
     public ResponseEntity<?> updateFeatureToggle(@PathVariable String key, @org.springframework.web.bind.annotation.RequestBody Map<String, Boolean> body, Authentication authentication) {
+        if (body == null || !body.containsKey("enabled")) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Body must contain 'enabled' key");
+        }
+        
         String tenantId = resolveTenantId(authentication);
         
-        Boolean reqEnabled = body.getOrDefault("enabled", false);
+        Boolean reqEnabled = body.get("enabled");
         boolean enabled = updateFeatureToggleUseCase.updateFeatureToggle(tenantId, key, reqEnabled);
         
         return ResponseEntity.ok(Map.of("key", key, "enabled", enabled, "tenantId", tenantId));

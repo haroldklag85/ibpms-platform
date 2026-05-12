@@ -28,6 +28,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doReturn;
 
+/**
+ * Test de Integración para el servicio de Auto-Reclamación (AutoClaimService).
+ * 
+ * <p><strong>Ley Global 3 - Traceability Inversa:</strong></p>
+ * <ul>
+ *   <li><strong>Epic:</strong> Epic A (Motor Core & Task Management)</li>
+ *   <li><strong>User Story:</strong> US-002 (Gestión de Tareas)</li>
+ *   <li><strong>Criterio de Aceptación:</strong> CA-06 (Despojo de Tareas) / T-12</li>
+ *   <li><strong>Descripción:</strong> Valida el aislamiento multi-tenant y la lógica de negocio para auto-reclamar tareas, garantizando que un usuario no pueda robar tareas de otros tenants. Cumple la política Zero-Mock utilizando contenedores reales para la base de datos (PostgreSQL) y el Engine de Camunda.</li>
+ * </ul>
+ */
 // @Traceability: US-002, CA-06
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")

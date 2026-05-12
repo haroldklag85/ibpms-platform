@@ -15,6 +15,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Collection;
 
+/**
+ * Servicio encargado de la lógica de Auto-Reclamación (AutoClaim) de tareas.
+ * 
+ * <p><strong>Ley Global 3 - Traceability Inversa:</strong></p>
+ * <ul>
+ *   <li><strong>Epic:</strong> Epic A (Motor Core & Task Management)</li>
+ *   <li><strong>User Story:</strong> US-002 (Gestión de Tareas)</li>
+ *   <li><strong>Criterio de Aceptación:</strong> CA-06 (Despojo de Tareas) / T-12</li>
+ *   <li><strong>Descripción:</strong> Provee los mecanismos seguros para que los usuarios autorizados puedan auto-reclamar tareas huérfanas, verificando estrictamente los roles y el aislamiento multi-tenant.</li>
+ * </ul>
+ */
 // @Traceability: US-002, CA-06
 @Service
 public class AutoClaimService {

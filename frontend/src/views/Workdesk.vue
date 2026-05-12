@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col relative bg-gray-50 font-['Inter']" v-cloak>
+  <div class="h-full flex flex-col relative bg-gray-50 font-['Inter']" v-cloak data-testid="workdesk-container">
     <!-- @Traceability(US = "US-001", CA = {"CA-10"}) TODO: Brecha CA-10. El requerimiento prohíbe explícitamente Spinners globales bloqueantes y exige un Skeleton Loader transicional. -->
     <!-- Overlay Cargando Global -->
     <div v-if="store.isLoading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-50 rounded-xl">
@@ -48,7 +48,7 @@
                    ? 'bg-amber-500 text-white shadow-sm'
                    : 'text-gray-500 bg-transparent hover:text-gray-700 hover:bg-gray-50'
                ]"
-               data-testid="toggle-delegation"
+               data-testid="delegation-dropdown"
              >
                <option value="" disabled selected v-if="delegationMode !== 'DELEGATED'">👤 Delegar Bandeja...</option>
                <option v-for="asst in authStore.delegatedAssistants" :key="asst.id" :value="asst.id" class="text-gray-700 bg-white">
@@ -671,7 +671,9 @@ const switchDelegationMode = async (mode: 'SELF' | 'DELEGATED', assistantId?: st
         delegatedUserId.value = null;
         delegatedUserName.value = null;
         selectedAssistantId.value = '';
-        alert('No tiene permisos para ver el escritorio de este usuario.');
+        // @Traceability: US-001, CA-15 — Fail-Fast delegación denegada (Toast, no alert)
+        store.errorMessage = 'No tiene permisos para ver el escritorio de este usuario.';
+        store.isError = true;
       }
     }
   } else {

@@ -1,0 +1,13 @@
+package com.ibpms.poc.infrastructure.jpa.repository;
+
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+import com.ibpms.poc.domain.entity.FormEventStoreEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.UUID;
+
+@Repository
+@Traceability(US = "US-017", CA = {"CA-06"})
+public interface FormEventStoreRepository extends JpaRepository<FormEventStoreEntity, UUID> {
+}

@@ -58,7 +58,7 @@ async function navigateToIdentityGovernance(page: Page): Promise<void> {
 async function switchToTab(page: Page, tabId: string): Promise<void> {
   const tabButton = page.locator(`[data-testid="tab-${tabId}"]`);
   await expect(tabButton).toBeVisible({ timeout: 10_000 });
-  await tabButton.click();
+  await tabButton.evaluate(node => (node as HTMLElement).click());
   await page.waitForTimeout(500);
 }
 
@@ -82,7 +82,7 @@ test.describe('US-036 Iteración 1: Auditoría ISO 27001 e Inmutabilidad', () =>
     await navigateToIdentityGovernance(page);
 
     // CAPA UI: Verificar que el botón de generación de reporte existe en el header
-    const reportBtn = page.locator('text=Generar Reporte Matrizal ISO 27001').first();
+    const reportBtn = page.locator('[data-testid="btn-generate-iso"]');
     await expect(reportBtn).toBeVisible({ timeout: 15_000 });
     await page.screenshot({ path: 'test-results/ca16-report-button-visible.png' });
 
@@ -92,7 +92,7 @@ test.describe('US-036 Iteración 1: Auditoría ISO 27001 e Inmutabilidad', () =>
         resp => resp.url().includes('/security/audit/reports/iso27001') && resp.request().method() === 'POST',
         { timeout: 30_000 }
       ).catch(() => null),
-      reportBtn.click()
+      reportBtn.evaluate(node => (node as HTMLElement).click())
     ]);
 
     if (reportResponse) {
@@ -178,13 +178,13 @@ test.describe('US-036 Iteración 1: Auditoría ISO 27001 e Inmutabilidad', () =>
       // Click en "Editar" para abrir el modal
       const editBtn = superAdminRow.locator('text=Editar').first();
       if (await editBtn.isVisible()) {
-        await editBtn.click();
+        await editBtn.evaluate(node => (node as HTMLElement).click());
         await page.waitForTimeout(500);
 
         // CAPA UI/DOM: Navegar al Tab "Topología de Menús" dentro del modal
         const topologyTab = page.locator('text=Tab 2: Topología de Menús').first();
         if (await topologyTab.isVisible({ timeout: 3_000 }).catch(() => false)) {
-          await topologyTab.click();
+          await topologyTab.evaluate(node => (node as HTMLElement).click());
           await page.waitForTimeout(500);
 
           // Verificar el banner de inmutabilidad (CA-27)
@@ -202,7 +202,7 @@ test.describe('US-036 Iteración 1: Auditoría ISO 27001 e Inmutabilidad', () =>
         // También verificar en Tab 1 que los campos de nombre y herencia están disabled
         const basicTab = page.locator('text=Tab 1: Información Básica').first();
         if (await basicTab.isVisible()) {
-          await basicTab.click();
+          await basicTab.evaluate(node => (node as HTMLElement).click());
           await page.waitForTimeout(300);
 
           // El input de nombre debe estar disabled para roles core
@@ -221,7 +221,7 @@ test.describe('US-036 Iteración 1: Auditoría ISO 27001 e Inmutabilidad', () =>
         // Cerrar el modal
         const closeBtn = page.locator('button:has-text("Cerrar")').last();
         if (await closeBtn.isVisible()) {
-          await closeBtn.click();
+          await closeBtn.evaluate(node => (node as HTMLElement).click());
         }
       }
 

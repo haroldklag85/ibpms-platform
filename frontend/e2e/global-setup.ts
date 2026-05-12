@@ -3,10 +3,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 async function globalSetup(config: FullConfig) {
-  const baseURL = process.env.E2E_BASE_URL || 'http://localhost:5176';
+  const baseURL = process.env.E2E_BASE_URL || 'http://localhost:5173';
   
   const requestContext = await request.newContext({
-    baseURL: 'http://localhost:8080'
+    baseURL: 'http://127.0.0.1:8080'
   });
 
   // Retry login up to 90 times waiting for the backend to be ready (15 minutes total wait)
@@ -15,7 +15,10 @@ async function globalSetup(config: FullConfig) {
     try {
       response = await requestContext.post('/api/v1/auth/emergency-login', {
         headers: { 'Content-Type': 'application/json' },
-        data: '{"email":"root@ibpms.local","password":"Root#Temp4Sys"}',
+        data: {
+          email: 'root@ibpms.local',
+          password: 'Root#Temp4Sys'
+        },
         timeout: 10_000
       });
       if (!response.ok()) {

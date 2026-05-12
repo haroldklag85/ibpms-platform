@@ -18,7 +18,7 @@
       </div>
       
       <div class="flex gap-2">
-         <button @click="generateCisoReport" class="bg-indigo-600 text-white px-4 py-2 rounded-md shadow-sm text-sm font-bold hover:bg-indigo-700 transition flex items-center gap-2">
+         <button data-testid="btn-generate-iso" @click="generateCisoReport" class="bg-indigo-600 text-white px-4 py-2 rounded-md shadow-sm text-sm font-bold hover:bg-indigo-700 transition flex items-center gap-2">
              <span class="material-symbols-outlined text-[18px]">analytics</span> Generar Reporte Matrizal ISO 27001
          </button>
       </div>
@@ -129,7 +129,7 @@
                 <td class="px-4 py-3 text-right text-sm">
                   <button v-if="authStore.hasWritePermission" @click="openRoleModal(role)" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase mr-2">Editar</button>
                   <button 
-                    v-if="authStore.hasWritePermission && !isCoreRole(role.id)" 
+                    v-if="authStore.hasWritePermission && !isCoreRole(role)" 
                     data-testid="btn-delete-role" 
                     @click="deleteRole(role)" 
                     class="text-red-500 hover:text-red-700 font-bold text-xs uppercase"
@@ -598,13 +598,13 @@
                          </div>
                          <div>
                             <label class="block text-[11px] font-bold text-gray-700 mb-1">Etiqueta Lógica y Administrativa</label>
-                            <input type="text" data-testid="input-role-name" v-model="roleForm.name" class="w-full text-sm border-gray-300 rounded focus:ring-indigo-500 border p-2" placeholder="Gestor Funcional..." required :disabled="isCoreRole(roleForm.id)" />
+                            <input type="text" data-testid="input-role-name" v-model="roleForm.name" class="w-full text-sm border-gray-300 rounded focus:ring-indigo-500 border p-2" placeholder="Gestor Funcional..." required :disabled="isCoreRole(roleForm)" />
                          </div>
                      </div>
                      <!-- CA-6 Herencia Visual -->
                      <div>
                         <label class="block text-[11px] font-bold text-indigo-700 mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_tree</span> Heredar Políticas de Rol Padre</label>
-                        <select data-testid="select-parent-role" v-model="roleForm.parentRole" @change="onParentRoleChange" class="w-full text-sm border-indigo-200 rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-indigo-50 text-indigo-900 font-semibold cursor-pointer" :disabled="isCoreRole(roleForm.id)">
+                        <select data-testid="select-parent-role" v-model="roleForm.parentRole" @change="onParentRoleChange" class="w-full text-sm border-indigo-200 rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-indigo-50 text-indigo-900 font-semibold cursor-pointer" :disabled="isCoreRole(roleForm)">
                            <option value="">-- Sin Herencia (Desde Cero) --</option>
                            <option v-for="r in systemRoles" :key="r.id" :value="r.id" :disabled="r.id === roleForm.id">{{ r.name }} ({{ r.id }})</option>
                         </select>
@@ -624,10 +624,10 @@
                                   <tr v-for="proc in systemProcesses" :key="proc.id" class="hover:bg-gray-50">
                                       <td class="px-3 py-2 text-xs font-medium text-gray-700">{{ proc.name }}</td>
                                       <td class="px-3 py-2 text-center">
-                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].initiate" :disabled="isCoreRole(roleForm.id)" class="text-indigo-600 focus:ring-indigo-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
+                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].initiate" :disabled="isCoreRole(roleForm)" class="text-indigo-600 focus:ring-indigo-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
                                       </td>
                                       <td class="px-3 py-2 text-center">
-                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].execute" :disabled="isCoreRole(roleForm.id)" class="text-emerald-600 focus:ring-emerald-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
+                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].execute" :disabled="isCoreRole(roleForm)" class="text-emerald-600 focus:ring-emerald-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
                                       </td>
                                   </tr>
                              </tbody>
@@ -647,45 +647,45 @@
                  <div v-else-if="roleModalTab === 'topology'" class="space-y-4">
                      <p class="text-sm text-gray-500 mb-2">Configure qué módulos estarán visibles para este Rol en el Sidebar principal. (CA-28)</p>
                      
-                     <div v-if="isCoreRole(roleForm.id)" class="bg-blue-50 border border-blue-200 p-3 rounded-lg flex gap-2 items-center mb-4">
+                     <div v-if="isCoreRole(roleForm)" class="bg-blue-50 border border-blue-200 p-3 rounded-lg flex gap-2 items-center mb-4">
                          <span class="material-symbols-outlined text-blue-500">lock</span>
                          <span class="text-xs font-bold text-blue-800">Inmutabilidad (CA-27): Los Roles Fundacionales no pueden ser restringidos visualmente ni modificados por diseño de seguridad.</span>
                      </div>
 
                      <div class="grid grid-cols-2 gap-3">
                          <!-- Módulos Macro -->
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.WORKDESK" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm) }">
+                             <input type="checkbox" v-model="roleForm.topology.WORKDESK" :disabled="isCoreRole(roleForm)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Operativo / Workdesk</span><br/><span class="text-[10px] text-gray-500">Bandeja Unificada y Kanban</span></div>
                          </label>
                          
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.SERVICE_DELIVERY" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm) }">
+                             <input type="checkbox" v-model="roleForm.topology.SERVICE_DELIVERY" :disabled="isCoreRole(roleForm)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Service Delivery</span><br/><span class="text-[10px] text-gray-500">Intake, Customer 360, Portal</span></div>
                          </label>
                          
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.BAM" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm) }">
+                             <input type="checkbox" v-model="roleForm.topology.BAM" :disabled="isCoreRole(roleForm)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Directivo (BAM)</span><br/><span class="text-[10px] text-gray-500">Analytics y PMO Settings</span></div>
                          </label>
                          
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.MODELER" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm) }">
+                             <input type="checkbox" v-model="roleForm.topology.MODELER" :disabled="isCoreRole(roleForm)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Configuración Modeler</span><br/><span class="text-[10px] text-gray-500">BPMN, DMN, Forms</span></div>
                          </label>
 
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.INTEGRATION" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm) }">
+                             <input type="checkbox" v-model="roleForm.topology.INTEGRATION" :disabled="isCoreRole(roleForm)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Integración</span><br/><span class="text-[10px] text-gray-500">API Builder, Mapper, DLQ</span></div>
                          </label>
 
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.PROJECTS" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm) }">
+                             <input type="checkbox" v-model="roleForm.topology.PROJECTS" :disabled="isCoreRole(roleForm)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Proyectos</span><br/><span class="text-[10px] text-gray-500">Gestor Ágil, PMO</span></div>
                          </label>
 
-                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm.id) }">
-                             <input type="checkbox" v-model="roleForm.topology.ADMINISTRATION" :disabled="isCoreRole(roleForm.id)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
+                         <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="{ 'opacity-60 cursor-not-allowed': isCoreRole(roleForm) }">
+                             <input type="checkbox" v-model="roleForm.topology.ADMINISTRATION" :disabled="isCoreRole(roleForm)" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 disabled:bg-gray-200" />
                              <div><span class="font-bold text-sm text-gray-800">Administración</span><br/><span class="text-[10px] text-gray-500">Identity, Buzones, Incidentes</span></div>
                          </label>
                      </div>

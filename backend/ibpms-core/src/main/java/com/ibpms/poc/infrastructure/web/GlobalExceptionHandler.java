@@ -170,6 +170,15 @@ public class GlobalExceptionHandler {
     @ApiResponse(responseCode = "500", description = "Error interno - Blindado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
+        // Ignorar ClientAbortException o Broken pipe que ocurren frecuentemente en SSE y desconexiones de cliente
+        if (ex instanceof java.io.IOException || ex.getClass().getSimpleName().equals("ClientAbortException")) {
+            String msg = ex.getMessage();
+            if (msg != null && (msg.contains("Broken pipe") || msg.contains("Connection reset"))) {
+                log.warn("Client disconnected abruptly (Broken pipe/Connection reset). Suppressing error.");
+                return null;
+            }
+        }
+        
         log.error("💥 ERROR CRITICO DEL SISTEMA ENVIADO A ELK: ", ex); // Delegación a Logback/ELK
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setType(URI.create("about:blank"));

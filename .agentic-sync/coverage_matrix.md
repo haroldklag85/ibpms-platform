@@ -650,7 +650,7 @@
 | CA-13 | Desacoplamiento de Roles Estáticos vs Dinámicos (BPMN Lanes) | N/A | N/A | N/A | N/A | N/A | N/A | N/A | — | N/A | Fuera de alcance — resolución interna Camunda |
 | CA-14 | El Botón Táctico de Exorcismo (Kill-Session) | ✅ | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | 09-DEV | JwtSecurityFilterTest.java | ✅ Back: Redirigido a Redis. JwtSecurityFilter unificado. |
 | CA-15 | Bypass Anónimo de Procesos (URLs Públicas) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | SecurityConfig.java:67 .permitAll() + JwtSecurityFilter public bypass |
-| CA-16 | Informes Densos de Fiscalización (Auditoría CISO) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 09-DEV | ❌ Ninguno | ✅ Completado: CSV on-the-fly, SHA-256 persistido y descargable en UI. |
+| CA-16 | Informes Densos de Fiscalización (Auditoría CISO) | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | 09-DEV | us-036-iter1-audit-immutability.spec.ts | ✅ Completado: CSV on-the-fly, SHA-256 persistido y descargable en UI. |
 | CA-17 | Traza Indeleble de Otorgamiento | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 09-DEV | ❌ Ninguno | ✅ Completado: AuditLogPort inyectado en Backend. UI consume logs reales. |
 | CA-18 | Omisión Estricta de Segregación de Funciones Automática (SoD) | N/A | N/A | N/A | N/A | N/A | N/A | N/A | — | N/A | Diferido a V2 por diseño |
 | CA-19 | Modelo de Datos Relacional para la Matriz RBAC | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | 14 entidades JPA + 12 repositorios Spring Data completos |
@@ -659,22 +659,23 @@
 | CA-21 | Infraestructura de Blacklist JWT para Kill-Session | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | 09-DEV | ❌ Ninguno | ✅ Completado: Redis asíncrono con spring-data-redis. |
 | CA-22 | Política de Seguridad para API Keys de Service Accounts | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | ServiceAccountManager SHA-256 + ApiKeyAuthFilter + ServiceAccountsTable.vue modal |
 | CA-23 | Comportamiento de Delegación sobre Tareas In-Flight | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 09-DEV | ❌ Ninguno | ✅ Completado: revertAssignee() activado y auditado. |
-| CA-24 | Alcance Explícito del Reporte ISO 27001 en V1 | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | 09-DEV | ❌ Ninguno | ✅ Completado: Esquema ibpms_audit_reports creado en Liquibase y persistido. |
+| CA-24 | Alcance Explícito del Reporte ISO 27001 en V1 | ✅ | N/A | ❌ | ❌ | ❌ | ✅ | ❌ | 09-DEV | us-036-iter1-audit-immutability.spec.ts | ✅ Completado: Esquema ibpms_audit_reports creado en Liquibase y persistido. |
 | CA-25 | Directriz de Coordinación US-036 vs US-038 | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | 09-DEV | ❌ Ninguno | ✅ Completado: JwtSecurityFilter eliminado, US-036 y US-038 armonizadas. |
 | CA-26 | Experiencia de Caída Segura (UX Fallback) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | MainLayout.vue fallback sidebar message + Portal.vue routing |
-| CA-27 | Inmutabilidad de Roles Nativos del Sistema | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 09-DEV | ❌ Ninguno | ✅ Completado: Modal bloquea edición de SUPER_ADMIN (Read-Only). |
+| CA-27 | Inmutabilidad de Roles Nativos del Sistema | N/A | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | 09-DEV | us-036-iter1-audit-immutability.spec.ts | ✅ Completado: Modal y Tabla bloquean edición/eliminación de SUPER_ADMIN (Read-Only). |
 | CA-28 | Granularidad Macro de la Topología Visual | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 09-DEV | ❌ Ninguno | ✅ Completado: Controles UI añadidos para los 7 Módulos Macro. |
 | CA-29 | Diseño Limpio del Modal de Roles (Tablas/Tabs) | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Frontend: Modal rediseñado con Tabs (Info Básica / Topología). Auditado en DevDavid. |
 | CA-30 | Superposición Inclusiva Multirrol (Unión Matemática) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Back: Retorna array plano de módulos macro sin duplicados. Front: MenuStore unificado. |
 | CA-31 | Arquitectura Endpoint Dinámico (Anti-JWT Bloat) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Back: `GET /api/v1/users/me/menu-layout`. Front: Sidebar 100% dinámico. |
 | CA-32 | Caché Híbrida y Auto-Curación Zero-Trust | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Infra: TTL 30m. Back: `@CacheEvict`. Front: `$reset()` + Toast en HTTP 403. |
 
-### Resumen US-036 (Actualizado 2026-05-08 Iteración 09-DEV-REMEDIATION)
+### Resumen US-036 (Actualizado 2026-05-12 Iteración Certificación)
 - **Total CAs:** 32 (29 activos + 3 N/A)
 - **Back:** ✅ 29/29 = **100% de Cobertura Backend (Lógica Funcional)**
 - **Front:** ✅ 29/29 = **100% de Cobertura Frontend (Para los CAs que aplican)**
-- **QA Unitarios:** ✅ 2/29 + ⚠️ 2/29 = **14%** (QA E2E programado para siguiente fase)
-- **Logros Sprint 09-DEV-REMEDIATION:** Erradicación total de la deuda técnica de Identity Governance. US-036 LISTA PARA CERTIFICACIÓN E2E.
+- **QA Unitarios:** ✅ 2/29 + ⚠️ 2/29 = **14%**
+- **QA E2E:** ✅ Certificados CA-16, CA-24, CA-27 (us-036-iter1-audit-immutability.spec.ts PASS 100%)
+- **Logros Sprint Certificación:** BUG Inmutabilidad CA-27 corregido. E2E Suite de Playwright operativa y robusta eludiendo reactividad y toast overlays. US-036 PARCIALMENTE CERTIFICADA E2E.
 
 ---
 

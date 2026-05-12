@@ -36,7 +36,7 @@ class AuditReportControllerTest {
     @WithMockUser(roles = "SUPER_ADMIN", username = "testuser")
     void shouldDownloadCsvReport() throws Exception {
         AuditReportService.ReportResult mockResult = new AuditReportService.ReportResult(
-            "dummy csv".getBytes(), "hash123", null
+            "dummy csv".getBytes(), "hash123"
         );
         when(auditReportService.generateIso27001Report("testuser")).thenReturn(mockResult);
 

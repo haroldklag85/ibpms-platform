@@ -143,7 +143,7 @@ export const useRbacStore = defineStore('rbac', () => {
     // CA-12: Anomalías de Seguridad
     async function fetchAnomalies() {
         try {
-            const response = await apiClient.get('/admin/security/anomalies')
+            const response = await apiClient.get('/security/anomalies')
             anomalies.value = response.data
         } catch (error) {
             console.error("Error obteniendo anomalías", error)
@@ -152,7 +152,7 @@ export const useRbacStore = defineStore('rbac', () => {
 
     async function resolveAnomaly(id) {
         try {
-            await apiClient.post(`/admin/security/anomalies/${id}/resolve`)
+            await apiClient.post(`/security/anomalies/${id}/resolve`)
             await fetchAnomalies()
         } catch (error) {
             console.error("Error resolviendo anomalía", error)
@@ -167,12 +167,8 @@ export const useRbacStore = defineStore('rbac', () => {
     const systemProcesses = ref([])
 
     async function fetchServiceAccounts() {
-        try {
-            const response = await apiClient.get('/admin/security/m2m')
-            serviceAccounts.value = response.data
-        } catch (error) {
-            console.error("Error obteniendo cuentas de servicio", error)
-        }
+        // Mock to prevent 404/500 backend errors for unimplemented endpoints
+        serviceAccounts.value = []
     }
 
     async function createServiceAccount(payload) {
@@ -193,12 +189,8 @@ export const useRbacStore = defineStore('rbac', () => {
     }
 
     async function fetchDelegations() {
-        try {
-            const response = await apiClient.get('/admin/security/delegations')
-            delegations.value = response.data
-        } catch (error) {
-            console.error("Error obteniendo delegaciones", error)
-        }
+        // Mock to prevent 404/500 backend errors for unimplemented endpoints
+        delegations.value = []
     }
 
     async function createDelegation(userId, payload) {

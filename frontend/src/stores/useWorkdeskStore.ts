@@ -240,7 +240,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
               size, 
               sort: 'slaExpirationDate,asc',
               ...(search && search.trim() !== '' ? { search: search.trim() } : {}),
-              ...(delegatedToId ? { delegatedToId } : {}),
+              ...(delegatedToId ? { delegatedUserId: delegatedToId } : {}),
               ...(typeFilter ? { type: typeFilter } : {}),
               ...(slaFilter ? { slaLevel: slaFilter } : {}),
               ...(statusFilter ? { status: statusFilter } : {}),

@@ -212,65 +212,54 @@ test.describe('T-06: Workdesk Delegation UI Compliance', () => {
     }
   });
 
-  test('CU-HEX-07 | Seleccionar delegante en UI cambia contexto de bandeja', async ({ page }) => {
-    // @Traceability: US-001, CA-04
+});
 
-    // ACT: Navegar al Workdesk
+test.describe('T-06: Workdesk Delegation UI Compliance - Unauthorized User', () => {
+  test.use({ storageState: 'e2e/playwright/.auth/analista_n1.json' });
+
+  test('CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert()', async ({ page }) => {
+    // @Traceability: US-001, CA-04, CA-15
+
+    let alertCalled = false;
+    page.on('dialog', async dialog => {
+      if (dialog.type() === 'alert') {
+        alertCalled = true;
+      }
+      await dialog.accept();
+    });
+
     await page.goto('/workdesk');
     await page.waitForLoadState('domcontentloaded');
 
-    // Esperar carga de la vista
-    const workdeskLoaded = await page.waitForSelector(
-      '[data-testid="workdesk-container"], .workdesk-container, .workdesk, main',
-      { timeout: 30_000 }
-    ).catch(() => null);
+    await page.waitForSelector('[data-testid="workdesk-container"]', { timeout: 10000 });
 
-    if (!workdeskLoaded) {
-      test.skip(true, 'Workdesk view did not render');
-      return;
-    }
-
-    // Interceptar tráfico de red para verificar que al seleccionar delegante
-    // se dispara un request real al backend (NO mock)
-    const networkRequests: string[] = [];
-    page.on('request', req => {
-      if (req.url().includes('/api/v1/workdesk') || req.url().includes('/api/v1/tasks')) {
-        networkRequests.push(req.url());
+    page.on('response', response => {
+      if (response.url().includes('/global-inbox')) {
+        console.log(`GLOBAL INBOX RESPONSE STATUS: ${response.status()}`);
       }
     });
 
-    // Buscar y clickear el dropdown de delegantes
-    const delegateDropdown = await page.locator(
-      '[data-testid="delegation-dropdown"], ' +
-      '[data-testid="delegante-selector"], ' +
-      'select[name*="delegat"], ' +
-      '[class*="delegat"] select'
-    ).first();
+    const delegateDropdown = page.locator('[data-testid="delegation-dropdown"]');
+    await expect(delegateDropdown).toBeVisible();
 
-    if (await delegateDropdown.isVisible().catch(() => false)) {
-      // Seleccionar la primera opción no-vacía
-      const options = delegateDropdown.locator('option');
-      const optionCount = await options.count();
+    // Inyectar un usuario falso para forzar el 403 real del backend
+    await delegateDropdown.evaluate((select: HTMLSelectElement) => {
+      const option = document.createElement('option');
+      option.value = '00000000-0000-0000-0000-000000000999';
+      option.text = 'Hacker User';
+      select.appendChild(option);
+    });
 
-      if (optionCount > 1) {
-        // Seleccionar la segunda opción (la primera suele ser placeholder)
-        const secondOptionValue = await options.nth(1).getAttribute('value');
-        if (secondOptionValue) {
-          await delegateDropdown.selectOption(secondOptionValue);
+    // Seleccionar el usuario falso
+    await delegateDropdown.selectOption('00000000-0000-0000-0000-000000000999');
 
-          // Esperar un momento para que la red responda
-          await page.waitForTimeout(2000);
+    // Esperar a que el backend rechace la petición y aparezca el Toast de error (store.errorMessage)
+    const errorToast = page.locator('div.bg-red-50').filter({ has: page.locator('span', { hasText: 'error' }) });
+    await expect(errorToast).toBeVisible({ timeout: 5000 });
+    const toastText = await errorToast.innerText();
+    console.log('TOAST TEXT:', toastText);
 
-          // ASSERT: Al menos 1 request real fue disparado al backend tras el cambio
-          // Esto valida que el refactor T-06 mantiene la integración real
-          expect(networkRequests.length).toBeGreaterThanOrEqual(0);
-          // Nota: networkRequests.length === 0 es aceptable si el cambio no trigger un fetch inmediato
-        }
-      } else {
-        test.skip(true, 'Only 1 option in delegation dropdown — insufficient data to test context switch');
-      }
-    } else {
-      test.skip(true, 'Delegation dropdown not visible — Frontend needs data-testid');
-    }
+    // Validar que NO se haya llamado a alert()
+    expect(alertCalled).toBe(false);
   });
 });

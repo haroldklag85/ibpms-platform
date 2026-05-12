@@ -10,6 +10,8 @@ import com.ibpms.poc.domain.port.OrphanPayloadRepository;
 import com.ibpms.poc.domain.port.TriageTaskRepository;
 import com.ibpms.poc.domain.port.WebhookTransactionRepository;
 import com.ibpms.poc.infrastructure.config.WebhookProperties;
+import com.ibpms.poc.infrastructure.jpa.entity.TenantConfigEntity;
+import com.ibpms.poc.infrastructure.jpa.repository.TenantConfigRepository;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.slf4j.Logger;
@@ -55,6 +57,7 @@ public class WebhookIntakeService {
 
     private final TriageTaskRepository triageTaskRepo;
     private final IntegrationEventPublisher integrationEventPublisher;
+    private final TenantConfigRepository tenantConfigRepo;
 
     public WebhookIntakeService(
             WebhookTransactionRepository transactionRepo,
@@ -64,7 +67,8 @@ public class WebhookIntakeService {
             ClamAvScanner clamAvScanner,
             RuntimeService runtimeService,
             WebhookProperties webhookProperties,
-            IntegrationEventPublisher integrationEventPublisher) {
+            IntegrationEventPublisher integrationEventPublisher,
+            TenantConfigRepository tenantConfigRepo) {
         this.transactionRepo = transactionRepo;
         this.orphanRepo = orphanRepo;
         this.domainRepo = domainRepo;
@@ -73,6 +77,7 @@ public class WebhookIntakeService {
         this.runtimeService = runtimeService;
         this.webhookProperties = webhookProperties;
         this.integrationEventPublisher = integrationEventPublisher;
+        this.tenantConfigRepo = tenantConfigRepo;
     }
 
     /**
@@ -170,6 +175,11 @@ public class WebhookIntakeService {
                 } catch (Exception ignored) {}
             }
 
+            // @Traceability: US-004, CA-18
+            int slaHours = tenantConfigRepo.findById(tenantId)
+                                         .map(TenantConfigEntity::getWebhookSlaHours)
+                                         .orElse(48); // Fallback base seguro
+
             // @Traceability: US-004 - CA-8, CA-9: DB Record for human triage hybrid approach
             TriageTask triageTask = TriageTask.builder()
                     .id(UUID.randomUUID())
@@ -181,7 +191,7 @@ public class WebhookIntakeService {
                     .scanStatus(scanStatus)
                     .fileSha256Hash(fileHash)
                     .status("PENDING")
-                    .slaDeadline(ZonedDateTime.now().plusHours(4)) // Enforced baseline 4-hour SLA
+                    .slaDeadline(ZonedDateTime.now().plusHours(slaHours)) // Dynamic SLA
                     .createdAt(ZonedDateTime.now())
                     .updatedAt(ZonedDateTime.now())
                     .build();

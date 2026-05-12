@@ -47,7 +47,8 @@ public class AuthSyncController {
         
         // Emite token para que Playwright pueda inyectarlo en las cabeceras REST.
         // Aseguramos inyectar los claims con los ROLES tal y como los espera el JwtAuthFilter (ibpms_rol_*)
-        String resolvedTenant = email.contains("beta.com") ? "tenant_beta" : "tenant_alpha";
+        // @Traceability: US-027, CA-04
+        String resolvedTenant = "tenant_" + email.split("@")[1].split("\\.")[0];
         String tkn = jwtTokenProvider.generateToken(email, List.of("ibpms_rol_PROCESS_ARCHITECT", "ibpms_rol_BPMN_DESIGNER", "ibpms_rol_USER"), resolvedTenant);
         return ResponseEntity.ok(Map.of("token", tkn, "tenantId", resolvedTenant, "message", "Login Exitoso E2E"));
     }
@@ -127,7 +128,8 @@ public class AuthSyncController {
 
         // Emitir JWT con claims
         String sub = user.getUsername();
-        String tenantId = email.contains("beta.com") ? "tenant_beta" : "tenant_alpha";
+        // @Traceability: US-027, CA-04
+        String tenantId = "tenant_" + email.split("@")[1].split("\\.")[0];
         
         // Asumiendo roles del usuario mapeados
         List<String> roles = user.getRoles().stream()
@@ -284,7 +286,8 @@ public class AuthSyncController {
 
         com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity targetUser = userOpt.get();
         String sub = targetUser.getUsername();
-        String tenantId = targetEmail.contains("beta.com") ? "tenant_beta" : "tenant_alpha";
+        // @Traceability: US-027, CA-04
+        String tenantId = "tenant_" + targetEmail.split("@")[1].split("\\.")[0];
         
         List<String> roles = targetUser.getRoles().stream()
             .map(role -> "ibpms_rol_" + role.getName().replace("ROLE_", ""))

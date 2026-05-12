@@ -39,7 +39,7 @@ class AutoResponderBlockTest {
     @BeforeEach
     void setUp() {
         WebhookProperties props = new WebhookProperties();
-        service = new WebhookIntakeService(transactionRepo, orphanRepo, domainRepo, mock(com.ibpms.poc.domain.port.TriageTaskRepository.class), clamAvScanner, runtimeService, props, mock(com.ibpms.poc.application.service.IntegrationEventPublisher.class));
+        service = new WebhookIntakeService(transactionRepo, orphanRepo, domainRepo, mock(com.ibpms.poc.domain.port.TriageTaskRepository.class), clamAvScanner, runtimeService, props, mock(com.ibpms.poc.application.service.IntegrationEventPublisher.class), mock(com.ibpms.poc.infrastructure.jpa.repository.TenantConfigRepository.class));
     }
 
     @ParameterizedTest

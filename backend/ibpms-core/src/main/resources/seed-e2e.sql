@@ -299,3 +299,18 @@ VALUES
     ('60000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001', 'Tarea Agile 2', 'Desc 2', 8.0, 'TODO', 2, 'admin', NOW()),
     ('60000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000001', 'Tarea Agile 3', 'Desc 3', 3.0, 'TODO', 3, 'admin', NOW())
 ON CONFLICT (id) DO NOTHING;
+
+-- ====================================================================
+-- E2E SEED PARA WHITELIST DE WEBHOOKS (T-02) Y TENANT CONFIG (T-03)
+-- ====================================================================
+-- @Traceability: US-004, CA-18
+
+-- Whitelist domain para entorno E2E
+INSERT INTO ibpms_allowed_domain (id, domain, tenant_id, is_active, created_at)
+VALUES ('00000000-0000-0000-0000-000000000001', '@e2e.domain.com', 'tenant_alpha', true, CURRENT_TIMESTAMP)
+ON CONFLICT DO NOTHING;
+
+-- Configuración por defecto para tenant_alpha (T-03)
+INSERT INTO ibpms_tenant_config (tenant_id, webhook_sla_hours)
+VALUES ('tenant_alpha', 24)
+ON CONFLICT DO NOTHING;

@@ -214,6 +214,21 @@ export const useAuthStore = defineStore('auth', () => {
 
     const roles = computed(() => user.value?.roles || []);
 
+    // @Traceability: US-001, CA-04 — Selector múltiple de delegantes
+    // Reemplaza el campo fantasma que usaba (authStore as any).delegatedAssistants
+    const delegatedAssistants = ref<{ id: string; displayName?: string; name?: string; email?: string }[]>([]);
+
+    const fetchDelegatedAssistants = async (userId: string) => {
+        try {
+            const { data } = await apiClient.get(`/admin/users/${userId}/delegations`);
+            delegatedAssistants.value = data || [];
+            return data;
+        } catch (error) {
+            console.error('Error fetching delegations:', error);
+            throw error;
+        }
+    };
+
     return {
         token,
         user,
@@ -223,6 +238,7 @@ export const useAuthStore = defineStore('auth', () => {
         isHydrating,
         isGlobal404,
         isSSEDisconnected,
+        delegatedAssistants,
         login,
         logout,
         switchRole,
@@ -232,6 +248,7 @@ export const useAuthStore = defineStore('auth', () => {
         impersonatedBy,
         impersonationExpiresAt,
         startImpersonation,
-        exitImpersonation
+        exitImpersonation,
+        fetchDelegatedAssistants
     };
 });

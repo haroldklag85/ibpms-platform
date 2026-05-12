@@ -51,8 +51,8 @@
                data-testid="toggle-delegation"
              >
                <option value="" disabled selected v-if="delegationMode !== 'DELEGATED'">👤 Delegar Bandeja...</option>
-               <option v-for="asst in (authStore as any).delegatedAssistants || []" :key="asst.id" :value="asst.id" class="text-gray-700 bg-white">
-                 👤 {{ asst.name || asst.id }}
+               <option v-for="asst in authStore.delegatedAssistants" :key="asst.id" :value="asst.id" class="text-gray-700 bg-white">
+                 👤 {{ asst.displayName || asst.name || asst.id }}
                </option>
              </select>
            </div>
@@ -588,6 +588,18 @@ const isMetricsPanelOpen = ref(true);
 // ==========================================
 const authStore = useAuthStore();
 const AdminMetricsWidget = defineAsyncComponent(() => import('@/views/admin/Analytics/DashboardBAM.vue'));
+
+// @Traceability: US-001, CA-04
+onMounted(async () => {
+    try {
+        if (authStore.user?.username) {
+            await authStore.fetchDelegatedAssistants(authStore.user.username);
+        }
+    } catch (e: any) {
+        store.errorMessage = 'No se pudieron cargar las delegaciones: ' + (e.response?.data?.message || e.message);
+        store.isError = true;
+    }
+});
 
 const dynamicComponents = computed(() => {
     const list = [];

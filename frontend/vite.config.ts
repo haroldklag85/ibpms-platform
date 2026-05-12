@@ -32,6 +32,7 @@ export default defineConfig({
         css: true,
         setupFiles: ['./src/tests/setupVitest.ts'],
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+        exclude: ['**/node_modules/**', '**/dist/**', '**/*.e2e.spec.ts', 'src/tests/ct/**'],
         server: {
             deps: {
                 inline: ['element-plus', 'vue-router']

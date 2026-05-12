@@ -40,25 +40,19 @@ describe('apiClient Interceptors (ADR-014)', () => {
         expect(customEvent.detail.message).toContain('trace-123');
     });
 
-    it('Error 502: Dispatcha evento con type SERVICE_UNAVAILABLE y autoRetry true', async () => {
+    it('Error 502: Muestra toast silencioso de reinicio y no dispara global-error-dispatch (ADR-014)', async () => {
         mock.onGet('/test-502').reply(502);
 
         try {
             await apiClient.get('/test-502');
         } catch (error) {}
 
-        expect(window.dispatchEvent).toHaveBeenCalled();
         const call = vi.mocked(window.dispatchEvent).mock.calls.find(
             c => (c[0] as CustomEvent).type === 'global-error-dispatch'
         );
+        expect(call).toBeUndefined();
         
-        const customEvent = call![0] as CustomEvent;
-        expect(customEvent.detail).toEqual(expect.objectContaining({
-            code: 502,
-            type: 'SERVICE_UNAVAILABLE',
-            autoRetry: true,
-            dismissible: true
-        }));
+        expect(document.getElementById('silent-restart-toast')).not.toBeNull();
     });
 
     it('Error 504: Dispatcha evento con type GATEWAY_TIMEOUT y dismissible true, sin autoRetry', async () => {

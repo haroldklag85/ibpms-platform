@@ -196,20 +196,20 @@ describe('useWorkdeskStore.ts - Iteration 79-DEV (CA-06, CA-13, CA-26, CA-27)', 
         await store.fetchGlobalInbox(0, 50, '', 'uuid-assistant');
         
         expect(getSpy).toHaveBeenCalledWith('/workdesk/global-inbox', expect.objectContaining({
-            params: expect.objectContaining({ delegatedToId: 'uuid-assistant' })
+            params: expect.objectContaining({ delegatedUserId: 'uuid-assistant' })
         }));
     });
 
-    it('Test 23: CA-04 delegation_toggle_returns_to_self: fetchGlobalInbox excluye delegatedToId', async () => {
+    it('Test 23: CA-04 delegation_toggle_returns_to_self: fetchGlobalInbox excluye delegatedUserId', async () => {
         const { default: apiClient } = await import('@/services/apiClient');
         const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
             data: { content: [], pageable: { pageNumber: 0, pageSize: 50, totalElements: 0 } }
         });
         
-        await store.fetchGlobalInbox(0, 50); // sin delegatedToId
+        await store.fetchGlobalInbox(0, 50); // sin delegatedUserId
         
         const callArgs = getSpy.mock.calls[0][1] as any;
-        expect(callArgs.params).not.toHaveProperty('delegatedToId');
+        expect(callArgs.params).not.toHaveProperty('delegatedUserId');
     });
 
     it('Test 24: CA-15 delegation_response_stores_last_delegation_context: El payload delegationContext se preserva', async () => {
@@ -248,7 +248,7 @@ describe('useWorkdeskStore.ts - Iteration 79-DEV (CA-06, CA-13, CA-26, CA-27)', 
         await store.fetchGlobalInbox(1, 50, '', 'assistant-uuid');
         
         expect(getSpy).toHaveBeenCalledWith('/workdesk/global-inbox', expect.objectContaining({
-            params: expect.objectContaining({ page: 1, delegatedToId: 'assistant-uuid' })
+            params: expect.objectContaining({ page: 1, delegatedUserId: 'assistant-uuid' })
         }));
     });
 

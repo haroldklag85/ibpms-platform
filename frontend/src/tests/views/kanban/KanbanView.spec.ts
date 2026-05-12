@@ -3,13 +3,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createTestingPinia } from '@pinia/testing';
 import KanbanView from '@/views/kanban/KanbanView.vue';
 import { useKanbanStore } from '@/stores/kanbanStore';
+import apiClient from '@/services/apiClient';
+
+// @Traceability: US-008, CA-12
 
 // Mock dialog component implicitly as VTU handles standard HTML unless imported globally. 
 // Since we might use a standard HTML dialog or a dummy component, we ignore subcomponents if needed, or stub them.
 vi.mock('@/services/apiClient', () => ({
-    api: {
-        getKanbanBoard: vi.fn(),
-        updateKanbanStatus: vi.fn()
+    default: {
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        delete: vi.fn()
     }
 }));
 
@@ -44,6 +49,9 @@ describe('KanbanView.vue', () => {
                 plugins: [createTestingPinia({
                     createSpy: vi.fn,
                     initialState: {
+                        auth: {
+                            user: { roles: ['OPERATOR'] }
+                        },
                         kanban: {
                             columns: [
                                 { id: 'DOING', title: 'Doing', items: [{ id: 'T-1', title: 'Task 1', status: 'DOING' }] },

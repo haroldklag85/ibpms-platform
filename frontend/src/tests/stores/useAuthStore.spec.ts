@@ -40,7 +40,7 @@ describe('AuthStore - Security & RBAC', () => {
     });
 
     it('debería asignar rol administrativo solo si el JWT porta las claims validadas (EMERGENCY_LOCAL_JWT)', async () => {
-        const tokenValid = 'header.eyJzdWIiOiJyb290QGlicG1zLmxvY2FsIiwicm9sZXMiOlsiaWJwbXNfcm9sX1JPTEVfU1VQRVJfQURNSU4iXX0=.sig';
+        const tokenValid = 'header.eyJzdWIiOiJyb290QGlicG1zLmxvY2FsIiwicm9sZXMiOlsiaWJwbXNfcm9sX1NVUEVSX0FETUlOIl19.sig';
         localStorage.setItem('ibpms_token', tokenValid);
         const store = useAuthStore();
         

@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * REST controller for executing user task completions.
+ * Connects the web layer with the {@link FormSubmissionUseCase} to process forms.
+ */
 @RestController
 @RequestMapping("/api/v1/workbox/tasks")
 @RequiredArgsConstructor

@@ -12,6 +12,10 @@ import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+/**
+ * Entity representing an append-only event store for form submissions.
+ * It is used for CQRS to persist raw payloads before processing in Camunda.
+ */
 @Data
 @Builder
 @NoArgsConstructor

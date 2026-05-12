@@ -15,6 +15,11 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Use case responsible for handling form submissions through CQRS architecture.
+ * Implements the Saga and Append-Only patterns to persist form payload as an event
+ * before executing the completion request in Camunda, allowing compensations on failure.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

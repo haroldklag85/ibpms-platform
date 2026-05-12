@@ -12,6 +12,10 @@ import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+/**
+ * Entity representing a saved draft of a task form.
+ * Allows users to save partial progress on a task without completing it.
+ */
 @Data
 @Builder
 @NoArgsConstructor

@@ -7,6 +7,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/**
+ * Repository for managing {@link FormEventStoreEntity}.
+ * Serves as the primary data access component for the CQRS event store.
+ */
 @Repository
 @Traceability(US = "US-017", CA = {"CA-06"})
 public interface FormEventStoreRepository extends JpaRepository<FormEventStoreEntity, UUID> {

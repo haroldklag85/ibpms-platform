@@ -8,6 +8,10 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository for managing {@link TaskDraftEntity}.
+ * Allows persisting and retrieving user task drafts.
+ */
 @Repository
 @Traceability(US = "US-017", CA = {"CA-06"})
 public interface TaskDraftRepository extends JpaRepository<TaskDraftEntity, UUID> {

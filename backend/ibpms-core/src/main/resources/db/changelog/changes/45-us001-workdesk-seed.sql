@@ -10,10 +10,10 @@ VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert users
-INSERT INTO ibpms_security_user (id, username, email, password_hash, is_active, is_external_idp, created_at)
+INSERT INTO ibpms_security_user (id, username, email, password_hash, status, is_external_idp, created_at)
 VALUES 
-    ('10000000-0000-0000-0000-000000000001', 'perito_a', 'perito_a@ibpms.com', '$2a$10$placeholder', true, false, CURRENT_TIMESTAMP),
-    ('20000000-0000-0000-0000-000000000002', 'director_1', 'director_1@ibpms.com', '$2a$10$placeholder', true, false, CURRENT_TIMESTAMP)
+    ('10000000-0000-0000-0000-000000000001', 'perito_a', 'perito_a@ibpms.com', '$2a$10$placeholder', 'ACTIVE', false, CURRENT_TIMESTAMP),
+    ('20000000-0000-0000-0000-000000000002', 'director_1', 'director_1@ibpms.com', '$2a$10$placeholder', 'ACTIVE', false, CURRENT_TIMESTAMP)
 ON CONFLICT (username) DO NOTHING;
 
 -- Link users to roles

@@ -16,4 +16,4 @@ CREATE TABLE ibpms_security_role_delegation (
 );
 
 -- US-036 CA-10: Expiración de Cuentas de Servicio
-ALTER TABLE ibpms_security_service_account ADD COLUMN expires_at TIMESTAMP;
+-- REMOVIDO: La tabla correcta es ibpms_service_accounts y ya incluye expires_at desde 20-us036-rbac-schema.sql

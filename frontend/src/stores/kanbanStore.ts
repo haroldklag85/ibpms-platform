@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import apiClient from '@/services/apiClient';
 import { Client } from '@stomp/stompjs';
 
 export interface KanbanItem {
@@ -26,7 +26,7 @@ export interface KanbanColumn {
 }
 
 /**
- * @Traceability(US = "US-008", CA = {"CA-11", "CA-12"})
+ * // @Traceability: US-008, CA-12
  */
 export const useKanbanStore = defineStore('kanban', {
     state: () => ({
@@ -46,8 +46,8 @@ export const useKanbanStore = defineStore('kanban', {
             this.error = null;
             try {
                 const [colsRes, tasksRes] = await Promise.all([
-                    axios.get(`/api/v1/kanban-tasks/boards/${boardId}/columns`),
-                    axios.get(`/api/v1/kanban-tasks/boards/${boardId}/tasks`)
+                    apiClient.get(`/api/v1/kanban/boards/${boardId}/columns`),
+                    apiClient.get(`/api/v1/kanban/boards/${boardId}/tasks`)
                 ]);
                 
                 this.columns = colsRes.data.map((c: any) => ({
@@ -100,11 +100,11 @@ export const useKanbanStore = defineStore('kanban', {
             targetTask.status = newStatus;
             if(blockedReason !== undefined) targetTask.blockedReason = blockedReason;
             
-            const payload: any = { newState: newStatus };
-            if(blockedReason) payload.blockedReason = blockedReason;
+            const payload: any = { newStatus };
+            if(blockedReason) payload.reason = blockedReason;
             
             try {
-                await axios.patch(`/api/v1/kanban-tasks/tasks/${taskId}/state`, payload);
+                await apiClient.patch(`/api/v1/kanban/tasks/${taskId}/move`, payload);
             } catch(error) {
                 console.warn("Fallo en Optimistic UI, revirtiendo estado...", error);
                 
@@ -124,7 +124,7 @@ export const useKanbanStore = defineStore('kanban', {
         },
         async startTimer(taskId: string) {
             try {
-                const res = await axios.post(`/api/v1/time-tracking/start`, { referenceId: taskId, referenceType: 'TASK_AGILE' });
+                const res = await apiClient.post(`/api/v1/time-tracking/start`, { referenceId: taskId, referenceType: 'TASK_AGILE' });
                 this.activeTimers[taskId] = res.data.id;
             } catch (e: any) {
                 console.error("Error startTimer", e);
@@ -133,7 +133,7 @@ export const useKanbanStore = defineStore('kanban', {
         },
         async stopTimer(logId: string) {
             try {
-                await axios.post(`/api/v1/time-tracking/stop/${logId}`);
+                await apiClient.post(`/api/v1/time-tracking/stop/${logId}`);
                 for(const key in this.activeTimers) {
                     if (this.activeTimers[key] === logId) {
                         delete this.activeTimers[key];
@@ -147,7 +147,7 @@ export const useKanbanStore = defineStore('kanban', {
         },
         async addColumn(boardId: string, name: string) {
             try {
-                const res = await axios.post(`/api/v1/kanban-tasks/boards/${boardId}/columns`, { name });
+                const res = await apiClient.post(`/api/v1/kanban/boards/${boardId}/columns`, { name });
                 const newCol = res.data;
                 this.columns.push({ ...newCol, title: newCol.name, items: [] });
             } catch (e: any) {
@@ -157,7 +157,7 @@ export const useKanbanStore = defineStore('kanban', {
         },
         async removeColumn(boardId: string, colId: string) {
             try {
-                await axios.delete(`/api/v1/kanban-tasks/boards/${boardId}/columns/${colId}`);
+                await apiClient.delete(`/api/v1/kanban/boards/${boardId}/columns/${colId}`);
                 this.columns = this.columns.filter(c => c.id !== colId);
             } catch (e: any) {
                 throw e;

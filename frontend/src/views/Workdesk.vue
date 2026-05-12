@@ -831,8 +831,7 @@ const SLA_THRESHOLDS = {
 
 // @Traceability(US = "US-001", CA = {"CA-05", "CA-11"})
 // TODO: Brecha Arquitectónica (CA-05). La lógica del "Semáforo SLA" fue inyectada duramente en la vista principal 
-// (Workdesk.vue) rompiendo Single Source of Truth. Convive con un componente huérfano (`useSlaTrafficLight.ts`) 
-// que además viola CA-11 por fugas de `setInterval`. El Tick-Tock reactivo sí funciona apoyado en `timeStore.currentTick`,
+// que además viola CA-11 por fugas de timers locales. El Tick-Tock reactivo sí funciona apoyado en `timeStore.currentTick`,
 // pero carece de encapsulamiento.
 const getSlaStatus = (isoString?: string): 'OK' | 'WARNING' | 'EXPIRED' | 'CRITICAL' => {
     if (!isoString) return 'OK'; // Sin SLA = no hay presión
@@ -909,7 +908,7 @@ onMounted(async () => {
     await store.checkForceRouting(); // CA-08: Verificar Feature Toggle
     loadData();
 
-    // CA-05/CA-11: Arrancar Heartbeat Store en vez de setInterval
+    // CA-05/CA-11: Arrancar Heartbeat Store en vez de timers locales
     timeStore.startEngine();
 
     // @Traceability(US = "US-001", CA = {"CA-25", "CA-31"})

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
  * GAP-14: Listener Asíncrono para invalidar caché de DMNs
  * cuando cambia un Form Schema.
  */
+// @Traceability: US-007, CA-16
 @Component
 public class FormSchemaChangedRabbitListener {
 

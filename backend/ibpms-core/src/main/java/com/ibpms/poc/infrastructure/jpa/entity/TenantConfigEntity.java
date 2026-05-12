@@ -10,6 +10,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Entity representing tenant-specific configuration, such as custom SLA times.
+ * This class maps to the 'ibpms_tenant_config' table and is used to abstract 
+ * hardcoded values into configurable tenant properties.
+ */
 @Entity
 @Table(name = "ibpms_tenant_config")
 @Data

@@ -13,10 +13,13 @@ import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 /**
  * T5: HmacValidationTest (US-004 CA-10)
  * Validates HMAC signature validation and mode switching.
  */
+@Traceability(US = "US-004", CA = {"CA-10"})
 class HmacValidationTest {
 
     private WebhookIntakeService service;

@@ -89,9 +89,23 @@ public class UserAdminController {
      * los roles del donante en el contexto JWT del receptor durante la ventana activa.
      */
     @PostMapping("/{id}/delegate")
-    public ResponseEntity<DelegationEntity> delegate(
+    public ResponseEntity<?> delegate(
             @PathVariable UUID id,
             @RequestBody DelegationRequestDTO dto) {
+        
+        String currentUserEmail = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
+        boolean isSuperAdmin = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+
+        com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity donor = userService.findById(id).orElse(null);
+        if (donor == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Donante no encontrado"));
+        }
+
+        if (!isSuperAdmin && !donor.getEmail().equals(currentUserEmail)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "IDOR detectado: No tienes permisos para delegar los permisos de este usuario."));
+        }
+
         DelegationEntity created = delegationService.createDelegation(id, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

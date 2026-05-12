@@ -28,7 +28,8 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
       stubs: {
         VueMonacoEditor: true,
         VueDraggableNext: true,
-        Vue3Lottie: true
+        Vue3Lottie: true,
+        Teleport: true
       }
     }
   });
@@ -149,6 +150,119 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
          { name: 'testVarUnmapped', match: false }
        ])
        expect((wrapper.vm as any).bpmnCoherenceResults.length).toBe(2);
+    }
+  })
+
+  // @Traceability: US-028 - CA-11
+  it('CA-11: Botón de certificación se habilita en Happy Path y cambia a Certificado', async () => {
+    const mockSchemaVars = JSON.stringify([{id: 'testVar1', camundaVariable: 'testVar1', type:'text', label: 'Test Var', required: false}]);
+    
+    vi.mocked(apiClient.get).mockImplementation((url) => {
+       if (url.includes('/api/v1/forms/test-id')) {
+          return Promise.resolve({ data: { schemaVariables: mockSchemaVars, isQaCertified: false, versionId: 1 } });
+       }
+       return Promise.resolve({ data: [] });
+    });
+    vi.mocked(apiClient.post).mockResolvedValue({ data: { success: true } });
+
+    const pinia = createPinia();
+    const wrapper = mount(FormDesigner, mountOptions(pinia));
+    await flushPromises();
+
+    // Simular que abrimos el Sandbox y tenemos payload no vacío y cero errores
+    const sandboxBtn = wrapper.findAll('button').find(b => b.text().includes('QA Sandbox Fuzzer'));
+    if (sandboxBtn) await sandboxBtn.trigger('click');
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+
+    const textarea = wrapper.findAll('textarea').find(t => t.classes('form-textarea'));
+    if (textarea) await textarea.setValue('{"testVar1": "valid"}');
+    await flushPromises();
+
+    const simulateBtn = wrapper.findAll('button').find(b => b.text().includes('Disparar Simulación de Contrato'));
+    if (simulateBtn) await simulateBtn.trigger('click');
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+
+    // El botón debería estar visible
+    const certifyBtn = wrapper.findAll('button').find(b => b.text().includes('CERTIFICAR CONTRATO ZOD'));
+    expect(certifyBtn).toBeDefined();
+
+    // Hacemos click en el botón
+    if (certifyBtn) {
+       // Preparamos el mock de loadForm() que ocurrirá tras certificar
+       vi.mocked(apiClient.get).mockImplementation((url) => {
+         if (url.includes('/api/v1/forms/test-id')) {
+            return Promise.resolve({ data: { schemaVariables: "[]", isQaCertified: true, versionId: 2, schema: JSON.stringify([{id: 'testVar1', type:'text'}]) } });
+         }
+         return Promise.resolve({ data: [] });
+       });
+
+       await certifyBtn.trigger('click');
+       await flushPromises();
+       await wrapper.vm.$nextTick();
+
+       // Verificamos que se haya hecho un POST a certify
+       const postCalls = vi.mocked(apiClient.post).mock.calls;
+       const certifyCall = postCalls.find(call => call[0].includes('certify'));
+       expect(certifyCall).toBeDefined();
+       
+       expect(wrapper.text()).toContain('Certificado QA');
+    }
+  })
+
+  // @Traceability: US-028 - CA-11
+  it('CA-11: Rechazo de certificación muestra mensaje de conflicto 409', async () => {
+    const mockSchemaVars = JSON.stringify([{id: 'testVar1', camundaVariable: 'testVar1', type:'text', label: 'Test Var', required: false}]);
+    
+    vi.mocked(apiClient.get).mockImplementation((url) => {
+       if (url.includes('/api/v1/forms/test-id')) {
+          return Promise.resolve({ data: { schemaVariables: mockSchemaVars, isQaCertified: false, versionId: 1 } });
+       }
+       return Promise.resolve({ data: [] });
+    });
+    // Mock 409 Conflict error for the certify endpoint
+    vi.mocked(apiClient.post).mockRejectedValue({
+      isAxiosError: true,
+      response: {
+        status: 409,
+        data: { message: 'Incompatible contract change detected' }
+      }
+    });
+
+    const pinia = createPinia();
+    const wrapper = mount(FormDesigner, mountOptions(pinia));
+    await flushPromises();
+
+    // Trigger Sandbox and Set valid payload
+    const sandboxBtn = wrapper.findAll('button').find(b => b.text().includes('QA Sandbox Fuzzer'));
+    if (sandboxBtn) await sandboxBtn.trigger('click');
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+
+    const textarea = wrapper.findAll('textarea').find(t => t.classes('form-textarea'));
+    if (textarea) await textarea.setValue('{"testVar1": "valid"}');
+    await flushPromises();
+
+    const simulateBtn = wrapper.findAll('button').find(b => b.text().includes('Disparar Simulación de Contrato'));
+    if (simulateBtn) await simulateBtn.trigger('click');
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+
+    const certifyBtn = wrapper.findAll('button').find(b => b.text().includes('CERTIFICAR CONTRATO ZOD'));
+    if (certifyBtn) {
+       await certifyBtn.trigger('click');
+       await flushPromises();
+       await wrapper.vm.$nextTick();
+
+       // Verify toast notification or console log handled error correctly
+       // Since useToast is inside store/component, we check if the component handles it without crashing
+       // And the state remains not certified
+       const postCalls = vi.mocked(apiClient.post).mock.calls;
+       const certifyCall = postCalls.find(call => call[0].includes('certify'));
+       expect(certifyCall).toBeDefined();
+       
+       expect(wrapper.text()).not.toContain('Certificado QA');
     }
   })
 })

@@ -44,6 +44,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/27-us001-workdesk-progress.sql
   - include:
+      file: db/changelog/27-us001-attend-next-schema.sql
+  - include:
       file: db/changelog/sprint3/001_create_form_event_store.sql
   - include:
       file: db/changelog/sprint3/002_create_task_drafts.sql
@@ -97,3 +99,22 @@ databaseChangeLog:
       context: dev,test
   - include:
       file: db/changelog/changes/46-us038-audit-columns.sql
+  - include:
+      file: db/changelog/changes/47-us025-user-preferences.sql
+  - include:
+      file: db/changelog/changes/48-us003-form-design-remediation.sql
+  - include:
+      file: db/changelog/changes/48-seed-e2e-operational.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/49-us025-correlation-id.sql
+  - include:
+      file: db/changelog/changes/51-us029-form-definitions-seed.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/52-us001-seed-remediation.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/53-us002-alter-claim-audit.sql
+  - include:
+      file: db/changelog/changes/54-us008-time-logs-and-kanban.sql

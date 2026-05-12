@@ -109,7 +109,7 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('ibpms_token', jwt);
         try {
             const payload = JSON.parse(atob(jwt.split('.')[1]));
-            const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', ''));
+            const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', 'ROLE_'));
             user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
         } catch (e) {
             user.value = { username: 'unknown', roles: ['ROLE_USER'] };
@@ -147,7 +147,7 @@ export const useAuthStore = defineStore('auth', () => {
 
             try {
                 const payload = JSON.parse(atob(jwt.split('.')[1]));
-                const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', ''));
+                const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', 'ROLE_'));
                 user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
             } catch (e) {
                 user.value = { username: 'unknown', roles: ['ROLE_USER'] };

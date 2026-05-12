@@ -279,14 +279,28 @@ public class BpmnDesignController {
         return ResponseEntity.ok(dataMappingPort.findByProcessDefinitionKey(key));
     }
 
+    /**
+     * @Traceability(US = "US-005", CA = {"CA-68"})
+     * POR QUÉ: Se implementa una barrera defensiva (Fail-Fast) para evitar que mapeos de datos corruptos 
+     * o sin contexto (taskId o connectorId nulos o vacíos) contaminen el repositorio y causen fallos en tiempo de ejecución.
+     */
     @PostMapping("/{processDefinitionKey}/data-mappings")
     @Traceability(US = "US-005", CA = {"CA-68"})
     public ResponseEntity<?> createDataMapping(@PathVariable("processDefinitionKey") String key,
                                                @RequestBody java.util.Map<String, String> payload) {
+        
+        String taskId = payload.get("taskId");
+        String connectorId = payload.get("connectorId");
+
+        if (taskId == null || taskId.trim().isEmpty() || "null".equalsIgnoreCase(taskId.trim()) ||
+            connectorId == null || connectorId.trim().isEmpty() || "null".equalsIgnoreCase(connectorId.trim())) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "El taskId y connectorId son obligatorios");
+        }
+
         DataMapping dataMapping = new DataMapping();
         dataMapping.setProcessDefinitionKey(key);
-        dataMapping.setTaskId(payload.get("taskId"));
-        dataMapping.setConnectorId(payload.get("connectorId"));
+        dataMapping.setTaskId(taskId);
+        dataMapping.setConnectorId(connectorId);
         dataMapping.setMappingJson(payload.get("mappingJson"));
         
         return ResponseEntity.status(HttpStatus.CREATED)

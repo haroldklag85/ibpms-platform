@@ -1,3 +1,4 @@
+<!-- @Traceability: US-008 - CA-01, CA-02, CA-06, CA-03 -->
 <template>
   <div class="bg-white p-3 rounded shadow-sm border border-gray-200 transition group" 
        :class="{'cursor-move hover:shadow-md': item.status !== 'DONE', 'done-readonly': item.status === 'DONE'}"
@@ -21,7 +22,7 @@
 
     <!-- Acciones Ocultas mostradas al hover -->
     <div class="mt-3 pt-2 border-t flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-      <button class="text-xs text-ibpms-brand hover:underline font-medium">✏️ Abrir</button>
+      <button @click.stop="$emit('openTask', item)" class="text-xs text-ibpms-brand hover:underline font-medium">✏️ Abrir</button>
       <button class="text-xs text-red-500 hover:underline font-medium">🗑️ Descartar</button>
     </div>
     
@@ -54,6 +55,8 @@ const props = defineProps({
     required: true
   }
 });
+
+const emit = defineEmits(['openTask']);
 
 const priorityClass = computed(() => {
   if (!props.item.priority) return 'bg-gray-100 text-gray-700';

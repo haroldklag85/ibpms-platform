@@ -7,8 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,6 +52,20 @@ public class WorkboxTaskController {
     }
 
     /**
+     * US-002 CA-02: Reclamación Masiva (Bulk Claim).
+     * POR QUÉ (Ley Global 3): Implementación requerida para permitir la asignación
+     * concurrente e inmutable de múltiples tareas en lotes desde el frontend.
+     */
+    @Operation(summary = "Reclamo Masivo", description = "Asigna una lista de tareas al usuario actual de manera atómica.")
+    @PostMapping("/bulk-claim")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-002", CA = {"CA-02"})
+    public ResponseEntity<Map<String, Object>> bulkClaim(@RequestBody List<String> taskIds) {
+        String username = SecurityContextUtils.getAssignee();
+        return ResponseEntity.ok(taskService.bulkClaim(taskIds, username));
+    }
+
+    /**
      * US-002 CA-28: claim-next. Toma la tarea más alta del pool en atomicidad.
      */
     @PostMapping("/claim-next")
@@ -74,14 +90,20 @@ public class WorkboxTaskController {
     }
 
     /**
-     * US-002: Liberar tarea.
+     * US-002 CA-04, CA-07: Liberar tarea con motivo.
+     * POR QUÉ (Ley Global 3): Se modifica para aceptar un payload opcional que contenga 
+     * el "mensajeInterno", posibilitando la auditoría forense del motivo de abandono.
      */
+    @Operation(summary = "Liberar tarea", description = "Libera una tarea asignada, opcionalmente con un mensaje de motivo.")
     @PostMapping("/{id}/unclaim")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-002", CA = {"CA-04", "CA-07"})
-    public ResponseEntity<Void> unclaimTask(@PathVariable UUID id, Authentication auth) {
+    public ResponseEntity<Void> unclaimTask(@PathVariable UUID id, 
+                                            @RequestBody(required = false) Map<String, String> payload, 
+                                            Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
-        taskService.unclaimTask(id, username);
+        String mensajeInterno = (payload != null) ? payload.get("mensajeInterno") : null;
+        taskService.unclaimTask(id, username, mensajeInterno);
         return ResponseEntity.ok().build();
     }
 
@@ -115,24 +137,17 @@ public class WorkboxTaskController {
 
     /**
      * US-002 CA-5: Preview Read-Only sin Lock (No requiere estar asignado).
+     * // @Traceability: Retro-Remediación ADR-001 (Hexagonal)
      */
     @GetMapping("/{id}/preview")
     @Traceability(US = "US-002", CA = {"CA-05"})
     public ResponseEntity<Map<String, Object>> previewTask(@PathVariable UUID id) {
-        com.ibpms.poc.domain.model.agile.AgileTask task = taskService.getTask(id);
-        // Exponer solo datos genéricos sin estados alterables:
-        return ResponseEntity.ok(Map.of(
-                "title", task.getTitle(),
-                "description", task.getDescription(),
-                "slaExpiration", task.getSlaDeadline(),
-                "status", task.getStatus(),
-                "assignee", task.getAssigneeIds() != null && !task.getAssigneeIds().isEmpty() ? String.join(",", task.getAssigneeIds()) : "",
-                "draftExpiresAt", task.getDraftExpiresAt() != null ? task.getDraftExpiresAt() : ""
-        ));
+        return ResponseEntity.ok(taskService.previewTask(id));
     }
 
     /**
      * US-002 CA-8: Force Unclaim de un Supervisor
+     * // @Traceability: Retro-Remediación ADR-001 (Hexagonal)
      */
     @PostMapping("/{id}/force-unclaim")
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
@@ -141,12 +156,7 @@ public class WorkboxTaskController {
         String supervisor = SecurityContextUtils.getAssignee();
         String tenantId = SecurityContextUtils.getTenantId();
         
-        // El taskService libera la tarea igual que un unclaim normal, pero saltando seguridad de current assignee
-        taskService.forceUnclaimTask(id);
-
-        // Emitir audit y notificación
-        claimAuditService.auditForceUnclaim(id, supervisor, tenantId);
-        notificationService.notifyTaskForceUnclaimed(tenantId, id.toString());
+        taskService.forceUnclaimTask(id, supervisor, tenantId);
 
         return ResponseEntity.ok().build();
     }

@@ -6,6 +6,7 @@ import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
 import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.slf4j.MDC;
 
 import java.util.UUID;
 import java.util.Set;
@@ -33,9 +34,10 @@ public class ImpersonationJpaAdapter implements ImpersonationPort {
 
     @Override
     public void logImpersonationEvent(UUID adminId, UUID targetUserId, String action, String ipAddress, String userAgent) {
-        String sql = "INSERT INTO ibpms_impersonation_audit_log (id, admin_id, target_user_id, action, ip_address, user_agent, created_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, NOW())";
-        jdbcTemplate.update(sql, UUID.randomUUID(), adminId, targetUserId, action, ipAddress, userAgent);
+        String correlationId = MDC.get("correlation_id");
+        String sql = "INSERT INTO ibpms_impersonation_audit_log (id, admin_id, target_user_id, action, ip_address, user_agent, correlation_id, created_at) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+        jdbcTemplate.update(sql, UUID.randomUUID(), adminId, targetUserId, action, ipAddress, userAgent, correlationId);
     }
 
     @Override
@@ -64,5 +66,12 @@ public class ImpersonationJpaAdapter implements ImpersonationPort {
         // Aquí usamos generateImpersonationToken de JwtTokenProvider
         // Asumo que si adminId es null, no estamos impersonando a nadie (es el JWT de salida).
         return jwtTokenProvider.generateImpersonationToken(user.getUsername(), roles, "default_tenant", adminId != null ? adminId.toString() : null);
+    }
+
+    @Override
+    public UUID getUserIdByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> user.getId())
+                .orElse(null);
     }
 }

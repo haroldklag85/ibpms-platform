@@ -143,6 +143,10 @@ public class UserService {
         return userRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
+    public java.util.Optional<UserEntity> findById(UUID id) {
+        return userRepository.findById(id);
+    }
+
     private String generateComplexRandomPassword() {
         // Garantiza: Al menos 8 chars, 1 Mayúscula, 1 número, 1 símbolo.
         String uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

@@ -14,10 +14,12 @@ public class SkipAuditService {
 
     private final SkipAuditRepository skipAuditRepository;
     private final AgileTaskService taskService;
+    private final com.ibpms.poc.infrastructure.jpa.repository.SystemAuditLogRepository systemAuditLogRepository;
 
-    public SkipAuditService(SkipAuditRepository skipAuditRepository, AgileTaskService taskService) {
+    public SkipAuditService(SkipAuditRepository skipAuditRepository, AgileTaskService taskService, com.ibpms.poc.infrastructure.jpa.repository.SystemAuditLogRepository systemAuditLogRepository) {
         this.skipAuditRepository = skipAuditRepository;
         this.taskService = taskService;
+        this.systemAuditLogRepository = systemAuditLogRepository;
     }
 
     @Transactional
@@ -38,8 +40,11 @@ public class SkipAuditService {
         audit.setDetails(details);
         skipAuditRepository.save(audit);
 
+        com.ibpms.poc.infrastructure.jpa.entity.SystemAuditLogEntity systemLog = new com.ibpms.poc.infrastructure.jpa.entity.SystemAuditLogEntity(username, "TASK_SKIPPED", 0, taskId.toString(), reason.name() + " - " + details);
+        systemAuditLogRepository.save(systemLog);
+
         // 2. Unclaim current task
-        taskService.unclaimTask(taskId, username);
+        taskService.unclaimTask(taskId, username, details);
 
         // 3. Return next task sorted by SLA priority
         return taskService.claimNextTask(username);

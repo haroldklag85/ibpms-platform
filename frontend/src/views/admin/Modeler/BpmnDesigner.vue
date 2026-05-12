@@ -257,8 +257,8 @@
              </label>
              <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Tabla de decisión conectada:</p>
              <select v-model="selectedElement.props.decisionRef" @change="syncElementProperties('camunda:decisionRef', selectedElement.props.decisionRef)" class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border mb-3">
-                <option value="">-- Sin Regla DMN --</option>
-                <option v-for="dmn in availableDmns" :key="dmn.id" :value="dmn.id">
+                <option value="">— Seleccionar tabla DMN —</option>
+                <option v-for="dmn in availableDmns" :key="dmn.id" :value="dmn.key || dmn.id">
                    {{ dmn.name }} (v{{ dmn.version }})
                 </option>
              </select>
@@ -1248,6 +1248,11 @@ onMounted(async () => {
       additionalModules: [minimapModule],
       keyboard: { bindTo: document } // CA-20 Copy/Paste enabled system-wide
     });
+    
+    // CA-E2E: Expose for playwright test injection
+    if (window.Cypress || typeof window !== 'undefined') {
+       (window as any).__modelerInstance = modelerInstance;
+    }
 
     await modelerInstance.importXML(emptyBpmn);
     modelerInstance.get('canvas').zoom('fit-viewport');

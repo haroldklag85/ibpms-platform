@@ -39,42 +39,84 @@
              >
                📋 Mis Tareas
              </button>
-             <button
+             <select
+               v-model="selectedAssistantId"
+               @change="handleAssistantChange"
                :class="[
-                 'px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200',
+                 'px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 outline-none cursor-pointer appearance-none',
                  delegationMode === 'DELEGATED'
                    ? 'bg-amber-500 text-white shadow-sm'
-                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                   : 'text-gray-500 bg-transparent hover:text-gray-700 hover:bg-gray-50'
                ]"
-               @click="switchDelegationMode('DELEGATED')"
                data-testid="toggle-delegation"
              >
-               👤 Tareas de mi Asistente
+               <option value="" disabled selected v-if="delegationMode !== 'DELEGATED'">👤 Delegar Bandeja...</option>
+               <option v-for="asst in (authStore as any).delegatedAssistants || []" :key="asst.id" :value="asst.id" class="text-gray-700 bg-white">
+                 👤 {{ asst.name || asst.id }}
+               </option>
+             </select>
+           </div>
+
+           <!-- @Traceability: US-002 - CA-10, CA-22 -->
+           <div class="inline-flex rounded-lg border border-gray-200/80 bg-white/50 backdrop-blur-sm p-0.5 shadow-sm" data-testid="filter-pool-tabs">
+             <button
+               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200', store.activeView === 'PERSONAL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+               @click="store.setActiveView('PERSONAL')"
+             >
+               👤 Mis Tareas
+             </button>
+             <button
+               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200', store.activeView === 'POOL' ? 'bg-teal-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+               @click="store.setActiveView('POOL')"
+             >
+               👥 Pool Disponible
              </button>
            </div>
 
-           <!-- @Traceability(US = "US-001", CA = {"CA-22"}) Filtro Tipo (Procesos vs Proyectos) -->
-           <select 
-              v-model="typeFilter"
-              @change="loadData"
-              class="bg-white border border-gray-200 text-gray-600 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 hover:bg-gray-50 cursor-pointer outline-none transition-colors"
-           >
-             <option value="">Todos los Tipos</option>
-             <option value="BPMN">Procesos (BPMN)</option>
-             <option value="KANBAN">Proyectos (Kanban)</option>
-           </select>
+           <!-- @Traceability(US = "US-001", CA = {"CA-22"}) Tab-Based Filtro Tipo (Procesos vs Proyectos) -->
+           <div class="inline-flex rounded-lg border border-gray-200/80 bg-white/50 backdrop-blur-sm p-0.5 shadow-sm" data-testid="filter-type-tabs">
+             <button
+               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200', typeFilter === '' ? 'bg-white text-indigo-700 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+               @click="typeFilter = ''; loadData()"
+             >
+               Todos
+             </button>
+             <button
+               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200', typeFilter === 'BPMN' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+               @click="typeFilter = 'BPMN'; loadData()"
+             >
+               Procesos (BPMN)
+             </button>
+             <button
+               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200', typeFilter === 'KANBAN' ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+               @click="typeFilter = 'KANBAN'; loadData()"
+               data-testid="filter-type-tab-kanban"
+             >
+               Proyectos (Kanban)
+             </button>
+           </div>
 
-           <!-- @Traceability(US = "US-001", CA = {"CA-22"}) Filtro Nivel de SLA -->
-           <select 
-              v-model="slaFilter"
-              @change="loadData"
-              class="bg-white border border-gray-200 text-gray-600 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 hover:bg-gray-50 cursor-pointer outline-none transition-colors"
-           >
-             <option value="">Cualquier Nivel SLA</option>
-             <option value="EXPIRED">Vencido</option>
-             <option value="WARNING">Urgente</option>
-             <option value="OK">Normal</option>
-           </select>
+           <!-- @Traceability(US = "US-001", CA = {"CA-22"}) Tab-Based Filtro Nivel de SLA -->
+           <div class="inline-flex rounded-lg border border-gray-200/80 bg-white/50 backdrop-blur-sm p-0.5 shadow-sm" data-testid="filter-sla-tabs">
+             <button
+               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200', slaFilter === '' ? 'bg-white text-indigo-700 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+               @click="slaFilter = ''; loadData()"
+             >
+               Cualquier SLA
+             </button>
+             <button
+               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200', slaFilter === 'EXPIRED' ? 'bg-red-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+               @click="slaFilter = 'EXPIRED'; loadData()"
+             >
+               Vencido
+             </button>
+             <button
+               :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200', slaFilter === 'WARNING' ? 'bg-amber-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+               @click="slaFilter = 'WARNING'; loadData()"
+             >
+               Urgente
+             </button>
+           </div>
         </div>
       </div>
 
@@ -97,7 +139,18 @@
       </div>
 
       <div class="flex items-center gap-4">
-        <!-- (CA-8 eliminado de aquí, ahora domina el main content) -->
+        <!-- @Traceability(US = "US-001", CA = {"CA-08"}) -->
+        <button 
+          v-if="authStore.hasAnyRole(['ROLE_SUPER_ADMIN', 'Global Admin'])"
+          @click="toggleForceRouting"
+          :class="[
+            'px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 border shadow-sm',
+            store.forceRoutingEnabled ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+          ]"
+        >
+          <span class="material-symbols-outlined text-[16px]">{{ store.forceRoutingEnabled ? 'toggle_on' : 'toggle_off' }}</span>
+          Forzar Enrutamiento (CA-08)
+        </button>
       </div>
     </header>
 
@@ -298,8 +351,8 @@
                    <!-- @Traceability(US = "US-001", CA = {"CA-11"}) Col 2: SLA Semáforo Vivo con Iconografía Accesible -->
                    <!-- ⚠️ BRECHA CA-11: Falta interruptor [Mute] sonoro en la UI -->
                    <td class="px-4 py-3">
-                     <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 w-fit', getSlaPillClass(task.slaExpirationDate)]" :data-testid="'sla-pill-' + (task.unifiedId || task.originalTaskId)">
-                       <span class="text-xs">{{ getSlaIcon(task.slaExpirationDate) }}</span>
+                     <span :class="['px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 w-fit', getSlaPillClass(task.slaExpirationDate)]" :data-testid="getSlaTestId(task.slaExpirationDate)">
+                       <span class="material-symbols-outlined text-[14px]">{{ getSlaIcon(task.slaExpirationDate) }}</span>
                        {{ getSlaRelativeTime(task.slaExpirationDate) }}
                      </span>
                    </td>
@@ -370,7 +423,7 @@
       </section>
 
       <!-- 25% Sidebar Metrics -->
-      <aside v-if="isMetricsPanelOpen" class="hidden lg:block w-1/4 bg-white p-8 overflow-y-auto no-scrollbar relative z-10 shrink-0 transition-all duration-300" data-testid="metrics-panel">
+      <aside v-if="isMetricsPanelOpen" class="hidden lg:block w-1/4 bg-white p-8 overflow-y-auto no-scrollbar relative z-10 shrink-0 transition-all duration-300" data-testid="workdesk-metrics-panel">
         <div class="space-y-10">
           <div>
             <h2 class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-8">Resumen Operativo</h2>
@@ -407,16 +460,16 @@
           </div>
 
           <div class="pt-8 border-t border-gray-100">
-             <div class="mt-2 bg-slate-50 p-5 rounded-xl border border-slate-200" data-testid="metric-cqrs-status">
+             <div class="mt-2 bg-slate-50 p-5 rounded-xl border border-slate-200" data-testid="cqrs-status">
                <div class="flex items-center gap-2 mb-3">
                  <span class="material-symbols-outlined text-indigo-500 text-lg">public</span>
                  <p class="text-xs text-indigo-800 font-bold uppercase tracking-widest">CQRS Engine</p>
                </div>
                <p class="text-sm text-slate-800 font-medium tracking-tight">Sync Eventual: <br/>
-                 <span v-if="!store.isError && store.stompConnected" class="font-bold text-emerald-600 flex items-center mt-2 gap-1.5 bg-emerald-50 px-2 py-1 rounded w-fit text-xs border border-emerald-100 animate-pulse">
+                 <span v-if="!store.isError && !store.isDegraded" class="font-bold text-emerald-600 flex items-center mt-2 gap-1.5 bg-emerald-50 px-2 py-1 rounded w-fit text-xs border border-emerald-100 animate-pulse">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ONLINE
                  </span>
-                 <span v-else class="font-bold text-red-600 flex items-center mt-2 gap-1.5 bg-red-50 px-2 py-1 rounded w-fit text-xs border border-red-200 animate-pulse" title="Conexión Rechazada o STOMP Caído">
+                 <span v-else class="font-bold text-red-600 flex items-center mt-2 gap-1.5 bg-red-50 px-2 py-1 rounded w-fit text-xs border border-red-200 animate-pulse" title="Conexión Rechazada, Modo Degradado o STOMP Caído">
                     <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> OFFLINE
                  </span>
                </p>
@@ -544,14 +597,27 @@ const dynamicComponents = computed(() => {
     return list;
 });
 
+// @Traceability(US = "US-001", CA = {"CA-08"})
+const toggleForceRouting = async () => {
+    try {
+        const newValue = !store.forceRoutingEnabled;
+        await store.updateFeatureToggle('force-routing', newValue);
+        toastSuccess.value = `Enrutamiento Forzoso ${newValue ? 'Activado' : 'Desactivado'}`;
+        setTimeout(() => { toastSuccess.value = ''; }, 3000);
+    } catch (e: any) {
+        store.errorMessage = e.message || 'Error al actualizar feature toggle';
+        store.isError = true;
+    }
+}
+
 // ==========================================
 // Búsqueda & Delegación & Filtros Dinámicos (Gaps CA-2, CA-4)
 // ==========================================
 const searchQuery = ref('');
-// CA-04: Estado del modo de delegación
 const delegationMode = ref<'SELF' | 'DELEGATED'>('SELF');
 const delegatedUserId = ref<string | null>(null);
 const delegatedUserName = ref<string | null>(null);
+const selectedAssistantId = ref('');
 
 const typeFilter = ref('');
 const slaFilter = ref('');
@@ -559,52 +625,48 @@ const statusFilter = ref('');
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
+const handleAssistantChange = () => {
+   if (selectedAssistantId.value) {
+      switchDelegationMode('DELEGATED', selectedAssistantId.value);
+   } else {
+      switchDelegationMode('SELF');
+   }
+}
+
 // @Traceability(US = "US-001", CA = {"CA-04", "CA-15"})
-// TODO: Brecha Arquitectónica (CA-04 y CA-15). El CA-04 exige un Dropdown o Toggle para poder seleccionar 
-// qué bandeja delegada observar (ya que múltiples asistentes pueden delegarle a Juan). 
-// La implementación actual asume un único `delegatedAssistantId` estático o quema un UUID ('101edfe'), 
-// forzando un esquema estático 1:1 y fallando en proveer un API dinámico de selección de delegaciones activas.
-const switchDelegationMode = async (mode: 'SELF' | 'DELEGATED') => {
-  if (mode === delegationMode.value) return;
+const switchDelegationMode = async (mode: 'SELF' | 'DELEGATED', assistantId?: string) => {
+  if (mode === delegationMode.value && mode === 'SELF') return;
 
   delegationMode.value = mode;
 
   if (mode === 'DELEGATED') {
-    // CA-15: Enviar request con el assistantId del usuario configurado
-    // V1: El assistantId se obtiene del perfil del ejecutivo logueado
-    // Nota: El authStore base tiene properties o any prop.
-    const auth = authStore;
-    const assistantId = (auth as any).delegatedAssistantId || '101edfe'; // UUID placeholder si no existe
-
     if (!assistantId) {
-      console.warn('CA-04: No se encontró asistente configurado para delegación');
+      console.warn('CA-04: Fail-Fast - Seleccione un asistente válido');
       delegationMode.value = 'SELF';
+      selectedAssistantId.value = '';
       return;
     }
 
     delegatedUserId.value = assistantId;
 
     try {
-      // CA-15: El Backend valida la jerarquía y retorna 403 si es IDOR
       await store.fetchGlobalInbox(0, 15, searchQuery.value, assistantId, typeFilter.value, slaFilter.value, statusFilter.value);
-
-      // Si la respuesta incluye delegationContext, extraer nombre
       delegatedUserName.value = store.lastDelegationContext?.delegatedUserDisplayName || assistantId;
     } catch (error: any) {
       if (error.response?.status === 403) {
-        // CA-15: Bloqueo IDOR — revertir al modo propio
         console.error('CA-15: Delegación denegada por el servidor (403 Forbidden)');
         delegationMode.value = 'SELF';
         delegatedUserId.value = null;
         delegatedUserName.value = null;
+        selectedAssistantId.value = '';
         alert('No tiene permisos para ver el escritorio de este usuario.');
       }
     }
   } else {
-    // Volver a "Mis Tareas"
     delegatedUserId.value = null;
     delegatedUserName.value = null;
-    await loadData(); // Recargar con el contexto propio
+    selectedAssistantId.value = '';
+    await loadData();
   }
 };
 
@@ -768,7 +830,7 @@ const getSlaStatus = (isoString?: string): 'OK' | 'WARNING' | 'EXPIRED' | 'CRITI
     if (diff <= 0) return 'EXPIRED'; // ⚫ Vencida (0%)
 
     // CA-24: Necesitamos el "total del SLA" para calcular el porcentaje.
-    const totalSlaWindow = 48 * 60 * 60 * 1000; // 48h ventana base V1
+    const totalSlaWindow = 120 * 60 * 60 * 1000; // 120h ventana base V1
     const percentRemaining = Math.min(diff / totalSlaWindow, 1.0);
 
     if (percentRemaining > SLA_THRESHOLDS.GREEN_ABOVE) return 'OK';        // 🟢
@@ -785,13 +847,13 @@ const getSlaPillClass = (isoString?: string) => {
 };
 
 // @Traceability(US = "US-001", CA = {"CA-12", "CA-11"}) 
-// ⚠️ BRECHA CA-11: La historia exige el uso de "SVGs in-line", pero la implementación actual retorna Emojis (⚫, ⚡, ⏳, ✔️)
+// REMEDIACIÓN CA-11: Uso de SVGs in-line (Material Icons) para cumplir accesibilidad
 const getSlaIcon = (isoString?: string): string => {
     const st = getSlaStatus(isoString);
-    if (st === 'EXPIRED') return '⚫';  // Vencida
-    if (st === 'CRITICAL') return '⚡'; // Rojo (Urgente)
-    if (st === 'WARNING') return '⏳';  // Amarillo (Por vencer)
-    return '✔️';                         // Verde (Al día)
+    if (st === 'EXPIRED') return 'block';        // Vencida
+    if (st === 'CRITICAL') return 'offline_bolt';// Rojo (Urgente)
+    if (st === 'WARNING') return 'hourglass_top';// Amarillo (Por vencer)
+    return 'check_circle';                       // Verde (Al día)
 };
 
 const getSlaRelativeTime = (isoString?: string) => {
@@ -805,6 +867,14 @@ const getSlaRelativeTime = (isoString?: string) => {
     if (diffHours < 0) return `Vencido hace ${Math.abs(Math.round(diffHours))} hrs`;
     if (diffHours < 24) return `Vence en ${Math.round(diffHours)} hrs`;
     return `Vence en ${Math.round(diffDays)} días`;
+};
+
+const getSlaTestId = (isoString?: string) => {
+    const st = getSlaStatus(isoString);
+    if (st === 'EXPIRED') return 'sla-badge-gray';
+    if (st === 'CRITICAL') return 'sla-badge-red';
+    if (st === 'WARNING') return 'sla-badge-yellow';
+    return 'sla-badge-green';
 };
 
 // ==========================================

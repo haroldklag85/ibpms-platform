@@ -1,0 +1,1663 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+Running 24 tests using 4 workers
+
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+  x   1 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:34:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-03 | Ordenamiento SLA: vencidas -> criticas -> warning -> OK (4.5s)
+  x   3 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:42:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-04 | 4 niveles semáforo simultáneos con heartbeat reactivo (timeStore) (4.3s)
+  x   4 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:11:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea (4.3s)
+  x   2 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:24:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-02 | Panel métricas: Total Tareas, Vencidas, Por Expirar, CQRS status (4.4s)
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+  x   5 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:42:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-04 | 4 niveles semáforo simultáneos con heartbeat reactivo (timeStore) (retry #1) (4.4s)
+  x   8 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:24:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-02 | Panel métricas: Total Tareas, Vencidas, Por Expirar, CQRS status (retry #1) (4.1s)
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+  x   7 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:34:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-03 | Ordenamiento SLA: vencidas -> criticas -> warning -> OK (retry #1) (7.7s)
+  x   6 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:11:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea (retry #1) (8.8s)
+  x   9 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:48:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-05 | Facetas con contadores + búsqueda debounce 500ms + empty state gamificado (3.4s)
+  x  10 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:59:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-06 | Claim tarea: POST /claim -> 200 -> toast green -> redirección formulario (3.8s)
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+  x  12 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:76:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-08 | Autoguardado: banner restaurar, datos presentes (3.6s)
+  x  11 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:68:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-07 | iForm Maestro: Mega-DTO BFF carga en <=2s, 16 componentes (3.7s)
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+  x  13 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:48:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-05 | Facetas con contadores + búsqueda debounce 500ms + empty state gamificado (retry #1) (4.2s)
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+  x  15 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:68:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-07 | iForm Maestro: Mega-DTO BFF carga en <=2s, 16 componentes (retry #1) (4.5s)
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+  x  16 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:76:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-08 | Autoguardado: banner restaurar, datos presentes (retry #1) (4.4s)
+  x  14 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:59:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-06 | Claim tarea: POST /claim -> 200 -> toast green -> redirección formulario (retry #1) (5.8s)
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+  x  18 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:82:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-10 | Completar tarea: Zod client + server (3.8s)
+  x  17 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:79:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-09 | Upload evidencia: barra progreso, thumbnail (3.3s)
+  x  20 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:105:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-12 | Panel métricas DESPUÉS: Total = N-1 (3.6s)
+  x  19 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:98:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-11 | RYOW: tarea desaparece del Workdesk en <=1s (3.9s)
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+  x  24 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:105:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-12 | Panel métricas DESPUÉS: Total = N-1 (retry #1) (4.6s)
+  x  21 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:82:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-10 | Completar tarea: Zod client + server (retry #1) (6.9s)
+  x  23 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:98:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-11 | RYOW: tarea desaparece del Workdesk en <=1s (retry #1) (4.6s)
+  x  22 [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:79:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-09 | Upload evidencia: barra progreso, thumbnail (retry #1) (7.3s)
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+  x  26 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:24:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-02 | Panel métricas: Total Tareas, Vencidas, Por Expirar, CQRS status (4.4s)
+  x  25 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:11:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea (4.3s)
+  x  28 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:42:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-04 | 4 niveles semáforo simultáneos con heartbeat reactivo (timeStore) (4.8s)
+  x  27 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:34:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-03 | Ordenamiento SLA: vencidas -> criticas -> warning -> OK (3.6s)
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+  x  29 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:24:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-02 | Panel métricas: Total Tareas, Vencidas, Por Expirar, CQRS status (retry #1) (5.0s)
+  x  30 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:11:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea (retry #1) (4.7s)
+  x  31 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:42:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-04 | 4 niveles semáforo simultáneos con heartbeat reactivo (timeStore) (retry #1) (3.9s)
+  x  32 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:34:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-03 | Ordenamiento SLA: vencidas -> criticas -> warning -> OK (retry #1) (4.1s)
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+  x  33 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:48:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-05 | Facetas con contadores + búsqueda debounce 500ms + empty state gamificado (3.5s)
+  x  34 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:59:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-06 | Claim tarea: POST /claim -> 200 -> toast green -> redirección formulario (3.2s)
+  x  35 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:68:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-07 | iForm Maestro: Mega-DTO BFF carga en <=2s, 16 componentes (3.8s)
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+  x  36 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:76:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-08 | Autoguardado: banner restaurar, datos presentes (3.6s)
+  x  37 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:48:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-05 | Facetas con contadores + búsqueda debounce 500ms + empty state gamificado (retry #1) (4.0s)
+  x  38 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:59:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-06 | Claim tarea: POST /claim -> 200 -> toast green -> redirección formulario (retry #1) (4.3s)
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+  x  39 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:68:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-07 | iForm Maestro: Mega-DTO BFF carga en <=2s, 16 componentes (retry #1) (4.0s)
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+  x  40 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:76:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-08 | Autoguardado: banner restaurar, datos presentes (retry #1) (4.5s)
+  x  41 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:79:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-09 | Upload evidencia: barra progreso, thumbnail (3.4s)
+  x  42 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:82:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-10 | Completar tarea: Zod client + server (3.5s)
+  x  43 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:98:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-11 | RYOW: tarea desaparece del Workdesk en <=1s (3.3s)
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+  x  44 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:105:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-12 | Panel métricas DESPUÉS: Total = N-1 (3.5s)
+  x  46 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:82:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-10 | Completar tarea: Zod client + server (retry #1) (4.3s)
+  x  45 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:79:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-09 | Upload evidencia: barra progreso, thumbnail (retry #1) (4.7s)
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+  x  47 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:98:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-11 | RYOW: tarea desaparece del Workdesk en <=1s (retry #1) (3.8s)
+  x  48 [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:105:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-12 | Panel métricas DESPUÉS: Total = N-1 (retry #1) (3.2s)
+
+
+  1) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:11:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:24:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-02 | Panel métricas: Total Tareas, Vencidas, Por Expirar, CQRS status 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:34:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-03 | Ordenamiento SLA: vencidas -> criticas -> warning -> OK 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:42:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-04 | 4 niveles semáforo simultáneos con heartbeat reactivo (timeStore) 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:48:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-05 | Facetas con contadores + búsqueda debounce 500ms + empty state gamificado 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:59:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-06 | Claim tarea: POST /claim -> 200 -> toast green -> redirección formulario 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:68:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-07 | iForm Maestro: Mega-DTO BFF carga en <=2s, 16 componentes 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:76:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-08 | Autoguardado: banner restaurar, datos presentes 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:79:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-09 | Upload evidencia: barra progreso, thumbnail 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:82:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-10 | Completar tarea: Zod client + server 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:98:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-11 | RYOW: tarea desaparece del Workdesk en <=1s 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:105:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-12 | Panel métricas DESPUÉS: Total = N-1 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-e2e-certification\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-e2e-certification\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-e2e-certification\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-e2e-certification\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-e2e-certification-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-e2e-certification-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-e2e-certification-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-e2e-certification-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-e2e-certification-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  13) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:11:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-f8f64-taGrid-5-1-columnas-1-tarea-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:24:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-02 | Panel métricas: Total Tareas, Vencidas, Por Expirar, CQRS status 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-666f5-das-Por-Expirar-CQRS-status-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  15) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:34:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-03 | Ordenamiento SLA: vencidas -> criticas -> warning -> OK 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-14e19-s---criticas---warning---OK-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  16) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:42:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-04 | 4 niveles semáforo simultáneos con heartbeat reactivo (timeStore) 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-b8044-artbeat-reactivo-timeStore--Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  17) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:48:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-05 | Facetas con contadores + búsqueda debounce 500ms + empty state gamificado 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-215bd-00ms-empty-state-gamificado-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  18) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:59:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-06 | Claim tarea: POST /claim -> 200 -> toast green -> redirección formulario 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-253a6-en---redirección-formulario-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  19) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:68:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-07 | iForm Maestro: Mega-DTO BFF carga en <=2s, 16 componentes 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-158ec--carga-en-2s-16-componentes-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  20) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:76:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-08 | Autoguardado: banner restaurar, datos presentes 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-6c5e8-r-restaurar-datos-presentes-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  21) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:79:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-09 | Upload evidencia: barra progreso, thumbnail 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-fa610-ia-barra-progreso-thumbnail-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  22) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:82:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-10 | Completar tarea: Zod client + server 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-eacdf-tar-tarea-Zod-client-server-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  23) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:98:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-11 | RYOW: tarea desaparece del Workdesk en <=1s 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-72960-saparece-del-Workdesk-en-1s-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  24) [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:105:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-12 | Panel métricas DESPUÉS: Total = N-1 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-Zero-Mock-E2E\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-Zero-Mock-E2E\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-Zero-Mock-E2E\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-Zero-Mock-E2E\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/workdesk
+    Call log:
+    [2m  - navigating to "http://localhost:5173/workdesk", waiting until "load"[22m
+
+
+       6 |
+       7 |   test.beforeEach(async ({ page }) => {
+    >  8 |     await page.goto('/workdesk');
+         |                ^
+       9 |   });
+      10 |
+      11 |   test('CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-Zero-Mock-E2E-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-Zero-Mock-E2E-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-Zero-Mock-E2E-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-Zero-Mock-E2E-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\j04-f1-f2-bandeja-ejecucio-3cd79--métricas-DESPUÉS-Total-N-1-Zero-Mock-E2E-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  24 failed
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:11:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:24:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-02 | Panel métricas: Total Tareas, Vencidas, Por Expirar, CQRS status 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:34:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-03 | Ordenamiento SLA: vencidas -> criticas -> warning -> OK 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:42:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-04 | 4 niveles semáforo simultáneos con heartbeat reactivo (timeStore) 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:48:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-05 | Facetas con contadores + búsqueda debounce 500ms + empty state gamificado 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:59:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-06 | Claim tarea: POST /claim -> 200 -> toast green -> redirección formulario 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:68:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-07 | iForm Maestro: Mega-DTO BFF carga en <=2s, 16 componentes 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:76:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-08 | Autoguardado: banner restaurar, datos presentes 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:79:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-09 | Upload evidencia: barra progreso, thumbnail 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:82:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-10 | Completar tarea: Zod client + server 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:98:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-11 | RYOW: tarea desaparece del Workdesk en <=1s 
+    [e2e-certification] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:105:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-12 | Panel métricas DESPUÉS: Total = N-1 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:11:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-01 | Workdesk carga en <=2s con DataGrid 5+1 columnas, >=1 tarea 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:24:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-02 | Panel métricas: Total Tareas, Vencidas, Por Expirar, CQRS status 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:34:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-03 | Ordenamiento SLA: vencidas -> criticas -> warning -> OK 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:42:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-04 | 4 niveles semáforo simultáneos con heartbeat reactivo (timeStore) 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:48:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-05 | Facetas con contadores + búsqueda debounce 500ms + empty state gamificado 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:59:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-06 | Claim tarea: POST /claim -> 200 -> toast green -> redirección formulario 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:68:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-07 | iForm Maestro: Mega-DTO BFF carga en <=2s, 16 componentes 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:76:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-08 | Autoguardado: banner restaurar, datos presentes 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:79:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-09 | Upload evidencia: barra progreso, thumbnail 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:82:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-10 | Completar tarea: Zod client + server 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:98:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-11 | RYOW: tarea desaparece del Workdesk en <=1s 
+    [Zero-Mock-E2E] › e2e\certification\j04-f1-f2-bandeja-ejecucion.e2e.spec.ts:105:3 › J-04 F1-F2: Workdesk Bandeja, Claim y Ejecución › CU-J04-12 | Panel métricas DESPUÉS: Total = N-1 

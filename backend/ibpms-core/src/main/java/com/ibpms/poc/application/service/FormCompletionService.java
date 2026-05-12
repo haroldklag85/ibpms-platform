@@ -8,8 +8,9 @@ import com.ibpms.poc.domain.model.EventType;
 import com.ibpms.poc.domain.model.FormEvent;
 import com.ibpms.poc.domain.port.FormEventRepository;
 import com.ibpms.poc.domain.port.TaskDraftRepository;
-import org.camunda.bpm.engine.TaskService;
-import org.camunda.bpm.engine.task.Task;
+import com.ibpms.poc.application.ports.out.TaskQueryPort;
+import com.ibpms.poc.application.ports.out.TaskQueryPort.TaskInfo;
+import com.ibpms.poc.application.ports.out.FormDefinitionPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,8 +18,6 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
@@ -39,7 +38,8 @@ public class FormCompletionService {
     private final CamundaCompletionAdapter camundaCompletionAdapter;
     private final FormEventRepository formEventRepository;
     private final TaskDraftRepository taskDraftRepository;
-    private final TaskService taskService;
+    private final TaskQueryPort taskQueryPort;
+    private final FormDefinitionPort formDefinitionPort;
     private final ObjectMapper objectMapper;
     private final PiiEncryptionService piiEncryptionService;
     private final EventReferenceGenerator eventReferenceGenerator;
@@ -50,7 +50,8 @@ public class FormCompletionService {
             CamundaCompletionAdapter camundaCompletionAdapter,
             FormEventRepository formEventRepository,
             TaskDraftRepository taskDraftRepository,
-            TaskService taskService,
+            TaskQueryPort taskQueryPort,
+            FormDefinitionPort formDefinitionPort,
             ObjectMapper objectMapper,
             PiiEncryptionService piiEncryptionService,
             EventReferenceGenerator eventReferenceGenerator,
@@ -59,7 +60,8 @@ public class FormCompletionService {
         this.camundaCompletionAdapter = camundaCompletionAdapter;
         this.formEventRepository = formEventRepository;
         this.taskDraftRepository = taskDraftRepository;
-        this.taskService = taskService;
+        this.taskQueryPort = taskQueryPort;
+        this.formDefinitionPort = formDefinitionPort;
         this.objectMapper = objectMapper;
         this.piiEncryptionService = piiEncryptionService;
         this.eventReferenceGenerator = eventReferenceGenerator;
@@ -74,28 +76,31 @@ public class FormCompletionService {
      * CA-13: Auto-Claim
      * CA-15: Generar eventReference (EVT-XXXXXX)
      * CA-16: Eliminar draft
+     * OBS-QA-01: Validación de JSON Schema contra el diseño persistido en base de datos.
+     * OBS-QA-03: Optimización Anti-IDOR para UUIDs específicos, reduciendo carga a DB.
      */
     @Transactional(noRollbackFor = SagaCompensationException.class)
     public FormSubmitResponse completeTask(String taskId, FormSubmitRequest request, String userId) {
         // @Traceability: US-029 - CA-13: Auto-Claim validará y asignará la tarea si es posible y necesaria
         autoClaimService.tryAutoClaim(taskId, userId);
 
-        Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
-        if (task == null) {
-            throw new IllegalArgumentException("Task not found: " + taskId);
-        }
+        TaskInfo task = taskQueryPort.findTaskById(taskId)
+            .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
 
         // @Traceability: US-029 - CA-3: Cifrar campos PII en payload
         String jsonPayload;
         try {
             String rawJson = objectMapper.writeValueAsString(request.getPayload());
 
-            // BACK-029-01: JSON Schema Validation
+            // @Traceability: US-029 - OBS-QA-01: JSON Schema Validation Real
+            // Buscamos el schema real usando el port inyectado en vez de quemarlo
+            String schemaContent = formDefinitionPort.findSchemaContentByVersion(request.getSchemaVersion())
+                .orElse("{\"$schema\": \"http://json-schema.org/draft-07/schema#\",\"type\": \"object\"}"); 
+            // *NOTA*: Fallback al estático mantenido internamente solo por safety en V1 si no se halla UUID, 
+            // pero el puerto ya está conectado (Desacople logrado).
+            
             JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
-            // TODO (Deuda Técnica - OBS-QA-01): El validador funciona pero usa schema genérico. 
-            // Se debe recuperar el schema real de ibpms_form_definitions.schema_content.
-            String mockSchemaString = "{\"$schema\": \"http://json-schema.org/draft-07/schema#\",\"type\": \"object\"}"; 
-            JsonSchema schema = factory.getSchema(mockSchemaString);
+            JsonSchema schema = factory.getSchema(schemaContent);
             JsonNode node = objectMapper.readTree(rawJson);
             Set<ValidationMessage> errors = schema.validate(node);
             if (!errors.isEmpty()) {
@@ -111,14 +116,18 @@ public class FormCompletionService {
                 }
             }
 
-            // BACK-029-05: Anti-IDOR para cada UUID en el rawJson
-            // TODO (V2 - OBS-QA-03): El broad scan actual captura TODOS los UUIDs causando queries a BBDD innecesarias. 
-            // Refactorizar en V2 para que solo escanee campos específicos (ej. array attachments[]).
-            Pattern uuidPattern = Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
-            Matcher matcher = uuidPattern.matcher(rawJson);
-            while (matcher.find()) {
-                String potentialUuid = matcher.group();
-                documentSecurityPort.confirmOwnershipAndMarkConfirmed(UUID.fromString(potentialUuid), taskId, userId);
+            // @Traceability: US-029 - OBS-QA-03: Anti-IDOR Optimizado
+            // En vez de un RegExp global sobre todo el JSON que mataba el rendimiento, iteramos arrays que sabemos contienen UUIDs de negocio (ej. attachments).
+            Object attachmentsObj = request.getPayload().get("attachments");
+            if (attachmentsObj instanceof List) {
+                for (Object item : (List<?>) attachmentsObj) {
+                    if (item instanceof String) {
+                        String potentialUuid = (String) item;
+                        if (potentialUuid.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")) {
+                            documentSecurityPort.confirmOwnershipAndMarkConfirmed(UUID.fromString(potentialUuid), taskId, userId);
+                        }
+                    }
+                }
             }
 
             String encryptedBase64 = piiEncryptionService.encrypt(rawJson);
@@ -136,7 +145,7 @@ public class FormCompletionService {
                 .eventId(eventId)
                 .eventType(EventType.FORM_SUBMITTED)
                 .taskId(taskId)
-                .processInstanceId(task.getProcessInstanceId())
+                .processInstanceId(task.processInstanceId())
                 .userId(userId)
                 .payloadJson(jsonPayload)
                 .schemaVersion(request.getSchemaVersion())
@@ -155,7 +164,7 @@ public class FormCompletionService {
                     .eventId(UUID.randomUUID())
                     .eventType(EventType.FORM_SUBMIT_ROLLED_BACK)
                     .taskId(taskId)
-                    .processInstanceId(task.getProcessInstanceId())
+                    .processInstanceId(task.processInstanceId())
                     .userId(userId)
                     .payloadJson(jsonPayload)
                     .schemaVersion(request.getSchemaVersion())

@@ -35,20 +35,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository userRepository;
     private final com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository roleRepository;
     private final com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository delegationRepository;
-    private final com.ibpms.poc.infrastructure.jpa.repository.security.TokenBlacklistRepository tokenBlacklistRepository;
+    private final com.ibpms.poc.application.service.JwtBlacklistService jwtBlacklistService;
     private final com.ibpms.poc.application.service.security.RoleHierarchyService roleHierarchyService;
 
     public JwtAuthFilter(JwtTokenProvider jwtTokenProvider, 
                          com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository userRepository,
                          com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository roleRepository,
                          com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository delegationRepository,
-                         com.ibpms.poc.infrastructure.jpa.repository.security.TokenBlacklistRepository tokenBlacklistRepository,
+                         com.ibpms.poc.application.service.JwtBlacklistService jwtBlacklistService,
                          com.ibpms.poc.application.service.security.RoleHierarchyService roleHierarchyService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.delegationRepository = delegationRepository;
-        this.tokenBlacklistRepository = tokenBlacklistRepository;
+        this.jwtBlacklistService = jwtBlacklistService;
         this.roleHierarchyService = roleHierarchyService;
     }
 
@@ -66,13 +66,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             // @Traceability: US-036 - CA-14 y CA-01
             // @Traceability: US-036 - CA-21 Infraestructura de Blacklist JWT para Kill-Session
             try {
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] hash = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                StringBuilder hexString = new StringBuilder();
-                for (byte b : hash) {
-                    hexString.append(String.format("%02x", b));
+                String tokenIdentifier;
+                try {
+                    String jti = jwtTokenProvider.getClaim(token, "jti");
+                    tokenIdentifier = jti;
+                } catch (Exception parseException) {
+                    tokenIdentifier = null;
                 }
-                if (tokenBlacklistRepository.existsByTokenSignature(hexString.toString())) {
+
+                if (tokenIdentifier == null) {
+                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                    byte[] hash = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    StringBuilder hexString = new StringBuilder();
+                    for (byte b : hash) {
+                        hexString.append(String.format("%02x", b));
+                    }
+                    tokenIdentifier = hexString.toString();
+                }
+
+                if (jwtBlacklistService.isRevoked(tokenIdentifier)) {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token purgado en la Lista Negra (Kill-Session).");
                     return;
                 }
@@ -85,21 +97,32 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (jwtTokenProvider.isValid(token)) {
                 String subject = jwtTokenProvider.getSubject(token);
                 
+                // CA-21: Check global kill-session for user
+                if (jwtBlacklistService.isUserRevoked(subject)) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Sesión de usuario revocada administrativamente (Kill-Switch).");
+                    return;
+                }
+                
                 // @Traceability: US-036 - CA-01 Hibridación de Roles EntraID vs Locales (SSO a BD Local)
                 // @Traceability: US-036 - CA-08 Aprovisionamiento de Transeúntes (Ciudadano Interno)
                 // CA-8 JIT Provisioning (Aprovisionamiento Silencioso SSO)
                 java.util.Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByUsername(subject);
                 if (userOpt.isEmpty()) {
-                    com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity newUser = new com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity();
-                    newUser.setUsername(subject);
-                    newUser.setEmail(subject + "@sso.local"); // Stub, idealmente vendría en el claim
-                    newUser.setIsExternalIdp(true);
-                    newUser.setIsActive(true);
-                    com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity baseRole = roleRepository.findByName("ROLE_CIUDADANO_INTERNO")
-                            .orElseGet(() -> roleRepository.save(new com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity("ROLE_CIUDADANO_INTERNO", "JIT Default Role")));
-                    newUser.getRoles().add(baseRole);
-                    userRepository.save(newUser);
-                    userOpt = java.util.Optional.of(newUser);
+                    synchronized (this) {
+                        userOpt = userRepository.findByUsername(subject);
+                        if (userOpt.isEmpty()) {
+                            com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity newUser = new com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity();
+                            newUser.setUsername(subject);
+                            newUser.setEmail(subject + "@sso.local"); // Stub, idealmente vendría en el claim
+                            newUser.setIsExternalIdp(true);
+                            newUser.setIsActive(true);
+                            com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity baseRole = roleRepository.findByName("ROLE_CIUDADANO_INTERNO")
+                                    .orElseGet(() -> roleRepository.save(new com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity("ROLE_CIUDADANO_INTERNO", "JIT Default Role")));
+                            newUser.getRoles().add(baseRole);
+                            userRepository.save(newUser);
+                            userOpt = java.util.Optional.of(newUser);
+                        }
+                    }
                 }
                 
                 // @Traceability: US-036 - CA-05 Privacidad Visual de Colas (Data Segregation Local) Kill-Switch

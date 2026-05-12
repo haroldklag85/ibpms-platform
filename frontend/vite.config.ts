@@ -19,8 +19,12 @@ export default defineConfig({
                 target: 'http://127.0.0.1:8080', // Apuntando al APIM o Backend Spring Boot Local
                 changeOrigin: true,
                 secure: false,
+                timeout: 120000, // ADR-014: Timeout amplio para arranque en frío de Spring Boot
             },
         },
+    },
+    optimizeDeps: {
+        include: ['vue', 'vue-router', 'pinia', 'axios'],
     },
     test: {
         globals: true,

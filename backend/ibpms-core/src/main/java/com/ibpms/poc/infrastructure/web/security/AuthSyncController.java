@@ -261,4 +261,45 @@ public class AuthSyncController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Error procesando el token"));
         }
     }
+
+    /**
+     * CA-9 / CA-31 / ARQ-025-08: Impersonación "Ver Sistema Como"
+     */
+    @PostMapping("/impersonate")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ibpms_rol_System_Admin')")
+    public ResponseEntity<?> impersonateUser(@RequestBody Map<String, String> payload) {
+        String targetEmail = payload.get("targetEmail");
+        if (targetEmail == null) {
+            targetEmail = payload.get("targetUserId");
+        }
+
+        if (targetEmail == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Debe proveer targetEmail o targetUserId"));
+        }
+
+        Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByEmail(targetEmail);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Usuario objetivo no encontrado"));
+        }
+
+        com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity targetUser = userOpt.get();
+        String sub = targetUser.getUsername();
+        String tenantId = targetEmail.contains("beta.com") ? "tenant_beta" : "tenant_alpha";
+        
+        List<String> roles = targetUser.getRoles().stream()
+            .map(role -> "ibpms_rol_" + role.getName().replace("ROLE_", ""))
+            .toList();
+
+        // Obtener al administrador actual
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        String adminUsername = auth != null && auth.getName() != null ? auth.getName() : "SYSTEM_ADMIN";
+
+        // Generar token híbrido
+        String overrideToken = jwtTokenProvider.generateImpersonationToken(sub, roles, tenantId, adminUsername);
+
+        // Auditoría
+        systemAuditLogRepository.save(new com.ibpms.poc.infrastructure.jpa.entity.SystemAuditLogEntity(adminUsername, "IMPERSONATION_STARTED", 0, sub, roles.toString()));
+
+        return ResponseEntity.ok(Map.of("token", overrideToken, "message", "Impersonation session started successfully"));
+    }
 }

@@ -61,13 +61,7 @@ public class DmnGovernanceController {
     public ResponseEntity<?> getDmnCatalog(@RequestParam(defaultValue = "0") int page, 
                                            @RequestParam(defaultValue = "10") int size) {
         String invokerTenant = SecurityContextUtils.getTenantId();
-        // Lógica delegada al Use Case real retornar Page
-        return ResponseEntity.ok(Map.of(
-            "tenant", invokerTenant,
-            "page", page,
-            "size", size,
-            "content", java.util.Collections.emptyList() // Placeholder DTO
-        ));
+        return ResponseEntity.ok(dmnGovernanceUseCase.getDmnCatalog(invokerTenant, page, size));
     }
 
     /**
@@ -77,8 +71,7 @@ public class DmnGovernanceController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getDmnById(@PathVariable String id) {
         String invokerTenant = SecurityContextUtils.getTenantId();
-        // Lógica delegada al UseCase
-        return ResponseEntity.ok(Map.of("id", id, "tenant", invokerTenant, "status", "ACTIVE"));
+        return ResponseEntity.ok(dmnGovernanceUseCase.getDmnById(id, invokerTenant));
     }
 
     /**
@@ -88,12 +81,7 @@ public class DmnGovernanceController {
     @PostMapping("/simulate")
     public ResponseEntity<?> simulateDmnExecution(@RequestBody Map<String, Object> variables) {
         String invokerTenant = SecurityContextUtils.getTenantId();
-        // Simulación usando Fallback de BD si la IA falla (Pii Sanitize applied in Domain)
-        return ResponseEntity.ok(Map.of(
-            "decisionResult", "APPROVED", 
-            "tenant", invokerTenant, 
-            "confidence", 0.95
-        ));
+        return ResponseEntity.ok(dmnGovernanceUseCase.simulateDmnExecution(variables, invokerTenant));
     }
 
     /**

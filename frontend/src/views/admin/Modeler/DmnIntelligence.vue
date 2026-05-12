@@ -243,13 +243,33 @@ if (dmnDraft.value.hasData) {
 
 // CA-11: Probar DMN (Resalta verde simulando Hit)
 const highlightedRow = ref<number | null>(null)
-const testDmnLogic = () => {
-    // Escoge un ID aleatorio del Virtual Scroller validando XAI
-    const randomIndex = Math.floor(Math.random() * (dmnMockedRows.value.length - 1));
-    const hitId = dmnMockedRows.value[randomIndex].id;
-    highlightedRow.value = hitId;
-    lastAction.value = `[XAI Simulación] Ejecución de prueba hit row ID: ${hitId}`;
-    setTimeout(() => { highlightedRow.value = null }, 3000);
+
+// @Traceability: US-007 - CA-14 (Simulación Pre-Flight Zero-Mock)
+const testDmnLogic = async () => {
+    try {
+        const xml = dmnDraft.value.xmlData;
+        const variables = {}; // En el futuro se puede extraer dinámicamente
+        lastAction.value = '[XAI Simulación] Ejecutando simulación en el backend...';
+        
+        const response = await apiClient.post('/dmn-models/simulate-sandbox', { xml, variables });
+        const simulationResult = response.data;
+        
+        // Se asume que el backend retorna un hitId. Si no, se toma la primera regla (Fall-back)
+        const hitId = simulationResult?.hitId || (dmnMockedRows.value.length > 0 ? dmnMockedRows.value[0].id : null);
+        
+        if (hitId) {
+            highlightedRow.value = hitId;
+            lastAction.value = `[XAI Simulación] Ejecución de prueba hit row ID: ${hitId}`;
+            setTimeout(() => { highlightedRow.value = null }, 3000);
+        }
+    } catch (error: any) {
+        if (error.response?.status === 400 || error.response?.status === 429) {
+            alert(`Error de simulación: ${error.response?.data?.message || 'Petición inválida o demasiadas peticiones'}`);
+        } else {
+            alert('Error inesperado al simular la regla DMN.');
+        }
+        lastAction.value = '[XAI Simulación] Error durante la ejecución pre-flight.';
+    }
 }
 
 // CA-10 Tab/Enter KeyListeners (Native Simulation of Cursor focus for Grid Excel-like UX)

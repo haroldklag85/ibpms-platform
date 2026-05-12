@@ -23,6 +23,11 @@ public class WorkdeskQueryService {
         return projectionRepository.findWorkdeskTasks(tenantId, search, effectiveAssignee, pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Page<WorkdeskProjectionEntity> getWorkdeskTasksBySource(String tenantId, String search, String effectiveAssignee, String sourceSystem, Pageable pageable) {
+        return projectionRepository.findWorkdeskTasksBySource(tenantId, search, effectiveAssignee, sourceSystem, pageable);
+    }
+
     // @Traceability(US = "US-001", CA = {"CA-29"})
     @Cacheable(value = "workdesk_tasks", key = "'facets_' + #tenantId")
     @Transactional(readOnly = true)

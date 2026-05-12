@@ -68,12 +68,12 @@ Provisiona el ambiente usando la infraestructura **E2E dedicada** del proyecto. 
    ```
    Espera a que todos los healthchecks pasen (Postgres E2E en `:5433`, Redis E2E en `:6380`, RabbitMQ E2E en `:5673`).
 
-2. **Levantar Backend contra infra de desarrollo (si E2E usa mismo backend):**
+2. **Levantar Backend de forma NATIVA (Obligatorio):**
    ```bash
-   docker compose up -d ibpms-core-dev
+   start-e2e.bat
    ```
-   Verifica el arranque: `docker logs --tail 10 ibpms-core-dev`. Solo continúa si ves `Started Application` y `Tomcat started on port 8080`.
-   **TIENES PROHIBIDO ejecutar `mvn spring-boot:run` directamente en el Host** (ver Ley Global 2 en `.cursorrules`).
+   (O `start-e2e.sh`). Verifica la consola nativa. Solo continúa si ves `Started Application` y `Tomcat started on port 8080`.
+   **TIENES ESTRICTAMENTE PROHIBIDO ejecutar `docker compose up ibpms-core`** (ver Nueva Ley Global 2 en `.cursorrules`. El backend debe correr en el host).
 
 3. **Levantar Frontend:**
    ```bash

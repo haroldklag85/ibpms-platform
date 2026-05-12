@@ -91,16 +91,22 @@ apiClient.interceptors.response.use(
                     // NO auto-remove: este toast es imborrable per ADR-014
                 }
             } else if (status === 502 || status === 503) {
-                // Categoría 2: Servidor no disponible — Toast dismissible + auto-retry ya manejado arriba (L49-60)
-                console.warn(`[ADR-014] Servidor no disponible (${status})`);
-                const event = new CustomEvent('global-error-dispatch', { detail: { 
-                    code: status,
-                    type: 'SERVICE_UNAVAILABLE',
-                    message: `El servidor no está disponible (${status}). Verificando conexión...`,
-                    dismissible: true,
-                    autoRetry: true
-                }});
-                window.dispatchEvent(event);
+                // Categoría 2: Servidor no disponible — Toast silencioso de reinicio (Fase 3 Vite Handoff)
+                console.warn(`[ADR-014] Servidor reiniciándose (${status}). Reintento automático en progreso...`);
+                
+                const body = document.querySelector('body');
+                if (body && !document.getElementById('silent-restart-toast')) {
+                    const toast = document.createElement('div');
+                    toast.id = 'silent-restart-toast';
+                    toast.style.cssText = 'position:fixed; top:10px; right:10px; background:#3b82f6; color:white; padding:8px 16px; border-radius:20px; z-index:99999; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); font-family:sans-serif; font-size:12px; opacity:0.9; transition:opacity 0.5s; pointer-events:none;';
+                    toast.innerHTML = `🔄 Servidor reiniciándose (${status})... reconectando.`;
+                    body.appendChild(toast);
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 500);
+                    }, 4000);
+                }
+                // No disparamos 'global-error-dispatch' para mantenerlo silencioso y no bloquear la UI.
             } else if (status === 504) {
                 // Categoría 3: Timeout del proxy — Toast dismissible
                 console.warn(`[ADR-014] Gateway Timeout (504)`);
@@ -126,11 +132,10 @@ apiClient.interceptors.response.use(
         }
 
         if (error.response && error.response.status === 401) {
-            const authStore = useAuthStore();
-            // @Traceability(US = "US-001", CA = {"CA-14"}) Acierto UX: Expulsión local destructiva (authStore.logout()) al recibir 401, mitigando acceso con cachés obsoletos.
             console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
-            authStore.logout();
-            // Ya no redirigimos ni hacemos logout destructivo
+            const event = new CustomEvent('global-error-dispatch', { detail: { type: 'SESSION_EXPIRED' } });
+            window.dispatchEvent(event);
+            return new Promise(() => {}); // Interceptar y suspender en lugar de destruir estado
         }
         
         // CA-3: Interceptar HTTP 428 (Perfil Incompleto)
@@ -298,8 +303,8 @@ export const api = {
     saveFormVersion: (id: string, payload: any) => apiClient.post(`/forms/${id}`, payload),
 
     // 10. Kanban Status Update (Pantalla 3)
-    getKanbanBoard: () => apiClient.get('/kanban/board'),
-    updateKanbanStatus: (id: string, payload: any) => apiClient.patch(`/kanban/${id}/state`, payload),
+    getKanbanBoard: () => apiClient.get('/kanban/board'), // This one is fine because KanbanStateController exposes /kanban/board
+    updateKanbanStatus: (id: string, payload: any) => apiClient.patch(`/kanban-tasks/tasks/${id}/state`, payload),
 
     // 10. AI Agents & Copilot (CA-8 US-005)
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),

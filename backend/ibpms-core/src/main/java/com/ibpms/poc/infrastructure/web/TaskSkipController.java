@@ -19,9 +19,11 @@ import java.util.UUID;
 public class TaskSkipController {
 
     private final SkipAuditService skipAuditService;
+    private final com.ibpms.poc.infrastructure.jpa.repository.SkipAuditRepository skipAuditRepository;
 
-    public TaskSkipController(SkipAuditService skipAuditService) {
+    public TaskSkipController(SkipAuditService skipAuditService, com.ibpms.poc.infrastructure.jpa.repository.SkipAuditRepository skipAuditRepository) {
         this.skipAuditService = skipAuditService;
+        this.skipAuditRepository = skipAuditRepository;
     }
 
     @PostMapping("/{taskId}/skip")
@@ -37,6 +39,11 @@ public class TaskSkipController {
         }
 
         return ResponseEntity.ok(nextTask);
+    }
+
+    @GetMapping("/skip-audit")
+    public ResponseEntity<java.util.List<com.ibpms.poc.infrastructure.jpa.entity.SkipAuditEntity>> getSkipAuditLogs() {
+        return ResponseEntity.ok(skipAuditRepository.findAll());
     }
 
     public record TaskSkipRequest(

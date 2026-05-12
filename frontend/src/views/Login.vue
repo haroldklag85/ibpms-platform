@@ -191,16 +191,8 @@ const disableBreakGlass = () => {
 // ===============================================
 const triggerAzureSSO = async () => {
     // @Traceability: US-036 - CA-11 Respeto ciego al Autenticador Perimetral (EntraID MFA)
-    // Simular latencia de redirección
-    setTimeout(() => {
-        console.log('Redirigiendo a https://login.microsoftonline.com/...');
-        
-        // Simulación de un token válido inyectado (US-025 FASE 3B)
-        const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI... (mock SSO JWT)";
-        
-        authStore.login(mockToken);
-        router.push('/');
-    }, 800);
+    console.log('Redirigiendo a https://login.microsoftonline.com/ o endpoint interno...');
+    window.location.href = '/api/v1/auth/sso/azure';
 };
 
 // ===============================================

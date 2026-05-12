@@ -33,10 +33,15 @@ services:
       retries: 10
 
   rabbitmq-e2e:
-    image: rabbitmq:3.12-management-alpine
+    image: rabbitmq:3.12-management
+    environment:
+      HOME: /tmp
+      RABBITMQ_ERLANG_COOKIE: "ibpms_e2e_cookie"
     ports:
       - "5673:5672"
       - "15673:15672"
+    volumes:
+      - rabbitmq_e2e_data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -49,3 +54,6 @@ services:
       - "10001:10001"
       - "10002:10002"
     command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
+
+volumes:
+  rabbitmq_e2e_data:

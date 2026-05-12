@@ -16,10 +16,14 @@ import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/v1/tasks")
 @CrossOrigin(origins = "*")
 @Traceability(US = "US-004", CA = {"CA-01"})
+@Tag(name = "Task Claim Management", description = "Operaciones de Asignación y Reclamación de Tareas Ágiles")
 public class TaskClaimApiController {
 
     private final AgileTaskService taskService;
@@ -34,6 +38,7 @@ public class TaskClaimApiController {
      * POST /{taskId}/claim
      */
     @PostMapping("/{taskId}/claim")
+    @Operation(summary = "Reclamar una tarea específica", description = "Asigna la tarea al usuario autenticado actual.")
     public ResponseEntity<?> claimTask(@PathVariable UUID taskId) {
         String assignee = SecurityContextUtils.getAssignee();
         taskService.claimTask(taskId, assignee);
@@ -48,6 +53,7 @@ public class TaskClaimApiController {
      * GAP-004
      */
     @PostMapping("/bulk-claim")
+    @Operation(summary = "Reclamar múltiples tareas", description = "Asigna un lote de tareas al usuario autenticado actual con tolerancia a fallos parcial (REQUIRES_NEW).")
     public ResponseEntity<?> bulkClaim(@RequestBody Map<String, List<String>> body) {
         List<String> taskIds = body.get("taskIds");
         if (taskIds == null || taskIds.isEmpty()) {
@@ -62,22 +68,26 @@ public class TaskClaimApiController {
     }
 
     /**
-     * POST /{taskId}/release
-     * GAP-005
+     * POST /{taskId}/unclaim
+     * Unificación de Unclaim / Release con mensaje interno
      */
-    @PostMapping("/{taskId}/release")
-    public ResponseEntity<?> releaseTask(@PathVariable UUID taskId, @RequestBody(required = false) Map<String, String> body) {
-        String message = (body != null) ? body.get("message") : null;
+    @PostMapping("/{taskId}/unclaim")
+    @Operation(summary = "Liberar una tarea (Unclaim)", description = "Libera la tarea actual y registra opcionalmente un mensaje interno.")
+    public ResponseEntity<?> unclaimTask(@PathVariable UUID taskId, @RequestBody(required = false) Map<String, String> body) {
+        String message = (body != null) ? body.get("mensajeInterno") : null;
+        if (message == null && body != null && body.containsKey("message")) {
+            message = body.get("message"); // Fallback for retro-compatibility
+        }
         if (message != null && message.length() > 500) {
             message = message.substring(0, 500);
         }
 
         String assignee = SecurityContextUtils.getAssignee();
-        taskService.releaseTask(taskId, assignee, message);
+        taskService.unclaimTask(taskId, assignee, message);
 
         return ResponseEntity.ok(Map.of(
                 "taskId", taskId.toString(),
-                "releasedAt", java.time.Instant.now().toString()
+                "unclaimedAt", java.time.Instant.now().toString()
         ));
     }
 
@@ -87,6 +97,7 @@ public class TaskClaimApiController {
      */
     @PostMapping("/{taskId}/force-unclaim")
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @Operation(summary = "Forzar liberación de tarea (Supervisor)", description = "Permite a un supervisor liberar una tarea retenida.")
     public ResponseEntity<?> forceUnclaimTask(@PathVariable UUID taskId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String supervisorId = auth.getName();
@@ -104,6 +115,7 @@ public class TaskClaimApiController {
      * POST /{taskId}/extend-timeout
      */
     @PostMapping("/{taskId}/extend-timeout")
+    @Operation(summary = "Extender el SLA timeout de una tarea reclamada", description = "Añade tiempo adicional a la tarea si está permitida.")
     public ResponseEntity<?> extendTimeout(@PathVariable UUID taskId) {
         String assignee = SecurityContextUtils.getAssignee();
         taskService.extendTimeout(taskId, assignee);
@@ -115,6 +127,7 @@ public class TaskClaimApiController {
      * GAP-007
      */
     @GetMapping("/{taskId}/audit-trail")
+    @Operation(summary = "Obtener el historial de reclamos/liberaciones", description = "Devuelve los logs de auditoría asociados a los movimientos de la tarea.")
     public ResponseEntity<?> getAuditTrail(@PathVariable UUID taskId) {
         List<ClaimAuditLog> trail = claimAuditService.getAuditTrail(taskId);
         

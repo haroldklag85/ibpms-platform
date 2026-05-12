@@ -41,6 +41,11 @@ public class AutoClaimService {
             throw new IllegalArgumentException("Task not found: " + taskId);
         }
 
+        String currentTenant = com.ibpms.poc.application.util.SecurityContextUtils.getTenantId();
+        if (task.getTenantId() != null && !task.getTenantId().equals(currentTenant)) {
+            throw new IllegalStateException("HTTP 403 - FORBIDDEN: Violación Cross-Tenant detectada.");
+        }
+
         if (task.getAssignee() != null) {
             if (!task.getAssignee().equals(userId)) {
                 throw new IllegalStateException("FORBIDDEN: La tarea ya se encuentra asignada a otro usuario.");

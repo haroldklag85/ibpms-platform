@@ -1,4 +1,6 @@
 import { defineConfig, devices } from '@playwright/experimental-ct-vue';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 /**
  * Playwright Component Testing Configuration
@@ -23,7 +25,7 @@ export default defineConfig({
     ctViteConfig: {
       resolve: {
         alias: {
-          '@': '/src',
+          '@': fileURLToPath(new URL('./src', import.meta.url)),
         },
       },
     },

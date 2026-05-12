@@ -28,7 +28,8 @@ public class BulkClaimServiceTest {
         
         service = new AgileTaskService(taskRepository, mock(SlaChangeLogService.class), mock(AuditLogService.class), 
                 messagingTemplate, mock(com.ibpms.poc.infrastructure.jpa.repository.TaskAuditLogRepository.class), 
-                mock(FormFieldCleanserService.class), claimAuditService);
+                mock(FormFieldCleanserService.class), claimAuditService,
+                mock(com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService.class));
     }
 
     @Test

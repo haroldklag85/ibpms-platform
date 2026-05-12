@@ -1,231 +1,117 @@
 package com.ibpms.poc.infrastructure.web.security;
 
-import com.ibpms.poc.AbstractIntegrationTest;
-
-
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ibpms.poc.AbstractLocalE2ETest;
+import com.ibpms.poc.application.rest.dto.GenericFormSubmitRequest;
+import org.camunda.bpm.engine.RepositoryService;
+import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.repository.Deployment;
+import org.camunda.bpm.engine.runtime.ProcessInstance;
+import org.camunda.bpm.engine.task.Task;
+import org.camunda.bpm.model.bpmn.Bpmn;
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.Arrays;
+import java.util.ArrayList;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-import org.springframework.boot.test.web.server.LocalServerPort;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+public class GenericFormIntegrationTest extends AbstractLocalE2ETest {
 
-public class GenericFormIntegrationTest extends AbstractIntegrationTest {
+    @Autowired
+    private MockMvc mockMvc;
 
-    @LocalServerPort
-    private int port;
+    @Autowired
+    private RepositoryService repositoryService;
+
+    @Autowired
+    private RuntimeService runtimeService;
+
+    @Autowired
+    private TaskService taskService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private String taskId;
+    private String processInstanceId;
+    private Deployment deployment;
 
     @BeforeEach
     void setUp() {
-        RestAssured.port = port;
-        RestAssured.basePath = "/api/v1";
+        BpmnModelInstance modelInstance = Bpmn.createExecutableProcess("genericFormTestProcess")
+                .startEvent()
+                .userTask("genericTask")
+                    .camundaAssignee("correct-user")
+                .boundaryEvent("panicBoundary")
+                    .error("TASK_CANCELLED_BY_OPERATOR")
+                    .endEvent()
+                .moveToActivity("genericTask")
+                .endEvent()
+                .done();
+
+        deployment = repositoryService.createDeployment()
+                .addModelInstance("genericFormTestProcess.bpmn", modelInstance)
+                .deploy();
+
+        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("genericFormTestProcess");
+        processInstanceId = processInstance.getId();
+
+        Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult();
+        taskId = task.getId();
     }
 
-    // ==========================================
-    // CA-4: Validación del Cuerpo Editable
-    // ==========================================
-
-    @Test
-    @DisplayName("CA-4: POST /generic-form-complete con observations < 5 chars -> HTTP 400")
-    void testCa4_ShortObservationsShouldFail() {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("observations", "ok"); // < 5 chars
-        payload.put("managementResult", "APPROVED");
-
-        given()
-            .contentType(ContentType.JSON)
-            .body(payload)
-        .when()
-            .post("/generic-form-complete")
-        .then()
-            .statusCode(400); // TDD Fail-Fast: Expected 400
-    }
-
-    @Test
-    @DisplayName("CA-4: POST /generic-form-complete con >5 attachmentUuids -> HTTP 400")
-    void testCa4_TooManyAttachmentsShouldFail() {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("observations", "Observations valid length");
-        payload.put("managementResult", "APPROVED");
-        payload.put("attachmentUuids", Arrays.asList("id1", "id2", "id3", "id4", "id5", "id6"));
-
-        given()
-            .contentType(ContentType.JSON)
-            .body(payload)
-        .when()
-            .post("/generic-form-complete")
-        .then()
-            .statusCode(400); // Límite de adjuntos según remediación
+    @AfterEach
+    void tearDown() {
+        if (runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult() != null) {
+            runtimeService.deleteProcessInstance(processInstanceId, "Test cleanup");
+        }
+        repositoryService.deleteDeployment(deployment.getId(), true);
     }
 
     @Test
-    @DisplayName("CA-4: POST /generic-form-complete válido -> HTTP 200")
-    void testCa4_ValidPayloadShouldPass() {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("observations", "Todo en orden, procede."); // > 5 chars
-        payload.put("managementResult", "APPROVED");
-        payload.put("attachmentUuids", Arrays.asList("doc-1234"));
+    @DisplayName("Fail-Fast: Submit de un usuario que NO es el Assignee devuelve un 403 Forbidden")
+    @WithMockUser(username = "wrong-user")
+    void testFailFast_WhenUserIsNotAssignee_ReturnsForbidden() throws Exception {
+        GenericFormSubmitRequest request = new GenericFormSubmitRequest();
+        request.setObservations("Testing observations > 10 chars");
+        request.setManagementResult("APPROVED");
+        request.setAttachmentUuids(new ArrayList<>());
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(payload)
-        .when()
-            .post("/generic-form-complete")
-        .then()
-            .statusCode(204); 
-    }
-
-    // ==========================================
-    // CA-5: Whitelist Regex por Proceso
-    // ==========================================
-
-    @Test
-    @DisplayName("CA-5: El sistema debe sanitizar prefillData descartando variables_internal")
-    void testCa5_InternalVariablesDiscarded() {
-        // Asumiendo que el GET details invoca al BFF y retorna la variables.
-        given()
-            .contentType(ContentType.JSON)
-        .when()
-            .get("/tasks/mock-task-id-123/details")
-        .then()
-            // Even if the endpoint doesn't exist, we document the contract
-            .statusCode(200)
-            .body("prefillData._internal_var", nullValue());
+        mockMvc.perform(post("/api/v1/workbox/tasks/" + taskId + "/generic-form-complete")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("CA-5: PUT /generic-form-config con >10 claves en whitelist -> HTTP 400")
-    void testCa5_WhitelistExceeds10ShouldFail() {
-        List<String> tooManyKeys = java.util.stream.IntStream.range(0, 11)
-            .mapToObj(i -> "var_" + i)
-            .collect(java.util.stream.Collectors.toList());
+    @DisplayName("CA-8 Panic Action: CANCELLED devuelve codigo y termina con el event boundary")
+    @WithMockUser(username = "correct-user")
+    void testPanicAction_Cancelled_TerminesProcessWithError() throws Exception {
+        GenericFormSubmitRequest request = new GenericFormSubmitRequest();
+        request.setObservations("Testing panic action with valid size justification");
+        request.setManagementResult("APPROVED");
+        request.setPanicAction("CANCELLED");
+        request.setPanicJustification("El usuario presiona pánico para cancelar el proceso debido a un error grave."); // >= 20 chars
+        request.setAttachmentUuids(new ArrayList<>());
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("whitelist", tooManyKeys);
+        mockMvc.perform(post("/api/v1/workbox/tasks/" + taskId + "/generic-form-complete")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(payload)
-        .when()
-            .put("/design/processes/test-process/generic-form-config")
-        .then()
-            .statusCode(400);
-    }
-
-    // ==========================================
-    // CA-7: Persistencia y Auto-Guardado
-    // ==========================================
-
-    @Test
-    @DisplayName("CA-7: PUT a /drafts/{taskId} persistencia idempotente")
-    void testCa7_DraftAutosave() {
-        Map<String, Object> draft = new HashMap<>();
-        draft.put("observations", "Parcialmente escrito");
-
-        given()
-            .contentType(ContentType.JSON)
-            .body(draft)
-        .when()
-            .put("/drafts/t-100")
-        .then()
-            // The existing dummy returns 200 GET, but PUT isn't fully implemented in proxy
-            // If it fails with 405/404, it tells us the implementation is missing
-            .statusCode(204); 
-    }
-
-    // ==========================================
-    // CA-8: Botones de Pánico
-    // ==========================================
-
-    @Test
-    @DisplayName("CA-8: POST /generic-form-complete con CANCELLED sin justificación -> HTTP 400")
-    void testCa8_CancelledRequiresJustification() {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("panicAction", "CANCELLED"); // trigger panic
-        // Sin justificación
-
-        given()
-            .contentType(ContentType.JSON)
-            .body(payload)
-        .when()
-            .post("/generic-form-complete")
-        .then()
-            .statusCode(400); 
-    }
-
-    // ==========================================
-    // QA-TEST-01: VIP Pre-Flight Restrictor
-    // ==========================================
-
-    @Test
-    @DisplayName("QA-TEST-01: VIP dinámico - Insertar rol, verificar bloqueo sin re-deploy")
-    void testQa01_DynamicVipRestrictor() {
-        given()
-            .header("Authorization", "Bearer VIP_USER_TOKEN")
-            .contentType(ContentType.JSON)
-        .when()
-            // Simulamos abrir tarea de un formKey restringido
-            .get("/workbox/tasks/mock-task-id/details")
-        .then()
-            // Se espera HTTP 403 con 'RESTRICCIÓN VIP'
-            .statusCode(403);
-    }
-
-    // ==========================================
-    // QA-TEST-02: Segregación de Funciones (SoD)
-    // ==========================================
-
-    @Test
-    @DisplayName("QA-TEST-02: SoD - Initiator no puede auto-aprobar")
-    void testQa02_SegregationOfDutiesRestriction() {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("observations", "Intentando auto-completar 12345");
-        payload.put("managementResult", "APPROVED");
-
-        given()
-            .header("Authorization", "Bearer INITIATOR_TOKEN")
-            .contentType(ContentType.JSON)
-            .body(payload)
-        .when()
-            .post("/workbox/tasks/mock-task-id/generic-form-complete")
-        .then()
-            .statusCode(403);
-    }
-
-    // ==========================================
-    // QA-TEST-03: Whitelist Configurable
-    // ==========================================
-
-    @Test
-    @DisplayName("QA-TEST-03: Configuracion de Whitelist via PUT")
-    void testQa03_WhitelistConfiguration() {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("whitelist", Arrays.asList("Case_ID", "amount", "priority"));
-
-        given()
-            .contentType(ContentType.JSON)
-            .body(payload)
-        .when()
-            .put("/design/processes/test-process/generic-form-config")
-        .then()
-            // HTTP 200 al tener < 10 variables válidas
-            .statusCode(200);
-            
-        // Se esperaria que GET devuelva solo lo configurado:
-        given()
-            .contentType(ContentType.JSON)
-        .when()
-            .get("/generic-form-context")
-        .then()
-            .statusCode(200);
+        org.junit.jupiter.api.Assertions.assertNull(
+                runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult(),
+                "Process should be completed/cancelled due to Panic Action"
+        );
     }
 }

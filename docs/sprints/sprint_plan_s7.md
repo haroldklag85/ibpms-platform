@@ -1,0 +1,84 @@
+# Sprint 7: Planificación y Certificación del Journey J-02
+
+**Fecha de Inicio:** 2026-05-10
+**Épica Central:** Journey J-02 (Diseñar → Modelar → Vincular → Desplegar → Ejecutar flujo real de Siniestros)
+**Objetivo Principal:** Ejecución exitosa del 95% de los Casos de Uso del J-02, respaldada por una infraestructura E2E estable, deuda técnica saldada y remediación de seguridad crítica.
+
+---
+
+## 1. Contexto y Objetivos
+
+El **Sprint 7** se enfocará en habilitar y certificar el **Journey J-02**, el cual representa el flujo principal ("Happy Path" completo y escenarios alternos) de un analista de procesos: desde la creación de un formulario (IDE), pasando por el modelador BPMN, vinculación con tablas de decisión DMN, despliegue al motor Camunda y ejecución final.
+
+Dadas las lecciones aprendidas del Sprint 6, este sprint se dividirá en etapas, iniciando con un cierre contundente de deuda técnica (Iteración 7.1) antes de abordar la certificación masiva de E2E (Iteración 7.3).
+
+---
+
+## 2. Estructura de Iteraciones
+
+### Iteración 7.1: Estabilización Base (Deuda Técnica, Seguridad e Infraestructura)
+*Objetivo: Sentar una base sólida para que las pruebas E2E y el desarrollo fluyan sin bloqueantes sistémicos.*
+
+*   ✅ **Infraestructura Frontend (Bloqueante S6):** Resolver la inestabilidad del servidor Vite (`Vite pre-transform error: Failed to load url /src/main.ts`) que interfiere con Playwright. Resuelto mediante optimización de dependencias y timeout de 7 mins E2E (ADR-014).
+*   **Brechas de Seguridad Críticas:**
+    *   **US-027 (Copiloto IA):** Remediar el vulnerabilidad IDOR en el destructor de sesión RAG (`tenantId` hardcodeado).
+    *   **US-004 (Webhooks):** Parchear el by-pass de seguridad heredado y habilitar el pipeline completo (HMAC, ClamAV, Whitelist).
+*   **Arquitectura CQRS (US-017):** Retomar y finalizar la implementación del patrón CQRS (Event Sourcing) para la ejecución y guardado de formularios.
+*   **Mecanismo de Data Seed (Liquibase):** Implementar la hidratación determinista de la base de datos utilizando scripts de Liquibase (Data Seeder). **Nota para Construcción:** El seeder deberá incluir:
+    *   Usuarios base con sus perfiles (ej. Arquitecto, Peritos A/B, Supervisor).
+    *   Roles de Sistema (ej. ROLE_SUPER_ADMIN).
+    *   Reglas de Delegación (para la tabla `user_delegation`) para que el dropdown de delegantes (CA-04) no esté vacío.
+    *   Datos temporales para prefill de formularios (CA-5 / US-029).
+    *   Feature Toggles inicializados en BD (CA-08 / US-001).
+    *   Tareas simuladas en estado vivo para estabilizar las pruebas de Workdesk.
+*   **Cumplimiento ADR-001 (Pureza Hexagonal):** Refactorizar `WorkdeskAttendNextController` para extraer la lógica `@Transactional` y de base de datos hacia un Caso de Uso (Application Service).
+*   **Cumplimiento ADR-006 (Performance Vue3):** Migrar la lógica reactiva y los `setInterval` de SLA desde `Workdesk.vue` hacia un store centralizado de Pinia (`timeStore.ts`).
+*   **Purga de Hardcodes (Zero-Trust):** Eliminar IDORs potenciales (ej. `assistantId` = `101edfe`), parametrizar SLA fijos (48h) según el Tenant, y asegurar segregación Multi-Tenant en eventos WebSocket.
+*   **Gobernanza Testing (ADR-010):** Refactorizar el test de integración de BPMN (US-005) para consumir el esquema real de Liquibase, eliminando los Mocks DDL estáticos.
+*   **Deuda Funcional DMN (US-007):** Implementar el buscador visual en las grillas DMN (CA-24) y completar la validación del Pre-Flight execution (CA-14).
+*   **Deuda Funcional IDE Formularios (US-003):** Ejecutar y certificar en el entorno E2E estático la persistencia y carga dinámica del `FormDesigner` (reactivando o creando los tests necesarios).
+*   **Deuda Funcional Formulario Genérico (US-039):** Ejecutar y certificar la suite de integración `GenericFormIntegrationTest` para validar los endpoints de metadatos, autoguardado de borradores y botones de pánico.
+*   **Deuda Funcional Navegación Wizard (US-029):** Implementar la interfaz visual de navegación multi-etapa (Wizard) en `FormRenderer.vue`, con pasos previos clickeables y auto-guardado en cada "Siguiente", conectando con `useWizardValidation.ts` (CA-22). El mock de prefill (CA-5) será reemplazado consumiendo la data inyectada por el Data Seeder de Liquibase.
+*   **Deuda Funcional Bandeja Unificada (US-001):** Desarrollar el endpoint administrativo (PUT/POST) protegido por RBAC en `FeatureToggleController` para gestionar el estado del *Feature Toggle* de enrutamiento (CA-08), e implementar el selector múltiple de delegantes en el frontend eliminando el hardcode (CA-04).
+*   **Deuda Funcional Reclamación de Tareas (US-002):** Refactorizar `AgileTaskService` aislando cada reclamación del `bulkClaim` en transacciones `REQUIRES_NEW` para lograr tolerancia a fallos parcial (CA-02). Unificar conceptual y técnicamente los endpoints de Unclaim y Release bajo una sola operación robusta con `mensajeInterno` (CA-04). Inyectar validación por Tenant en `AutoClaimService` (CA-06), agregar Swagger OpenAPI y completar la UI de separación por Tabs usando componentes nativos de Vue (CA-22).
+*   **Deuda Funcional Tablero Kanban (US-008):** Eliminar los datos mockeados (Zero-Mock Policy ADR-010) en el estado frontend (`kanbanStore.ts` y `KanbanView.vue`) e integrarlos bidireccionalmente con los endpoints reales del backend.
+
+**Estrategia de Ejecución Inside-Out (Iteración 7.1):**
+Para garantizar la política Zero-Mock (ADR-010) y prevenir errores `404/500` por desincronización, las tareas se ejecutarán en el siguiente orden estricto:
+1.  ✅ **Backend First (Contratos y APIs):** Resolver primero la deuda de `AgileTaskService`, el iterador `bulkClaim`, unificación de Unclaim (US-002), y crear el endpoint de `FeatureToggleController` (US-001).
+2.  ✅ **Frontend Next (Consumo Real):** Una vez estabilizados los endpoints, purgar los mocks en Vue (`kanbanStore`, UI del Workdesk y Wizard) para consumir datos reales (US-008, US-001, US-029).
+3.  ✅ **Certificación E2E:** Apoyados en el Data Seeder de Liquibase ya creado, validar y certificar los flujos completos.
+
+### Iteración 7.2: Ensamblaje y Handoffs del Journey J-02
+*Objetivo: Conectar el ecosistema Low-Code (IDE + BPMN + DMN).*
+
+*   **Validación de Módulos Core:** Asegurar la comunicación limpia entre `US-003` (IDE Formularios), `US-005` (BPMN Designer) y `US-007` (DMN Intelligence).
+*   **Gestión de Mocks Autorizados (US-008 y US-025):** Para este sprint, el Tablero Kanban y el Dashboard de Roles mantendrán sus datos estáticos (mocks) dado que no son el núcleo del J-02. Sin embargo, se dejarán notas explícitas (`TODO/FIXME`) en el código advirtiendo que violan la política arquitectónica (ADR-010 Zero-Mock) y deberán ser refactorizados en el futuro.
+
+### Iteración 7.3: Certificación Masiva (UAT & E2E)
+*Objetivo: Aprobar el Journey.*
+
+*   Ejecutar la suite de Playwright apuntando a los 4 flujos principales de Siniestros (Happy Path + 3 desenlaces alternos).
+*   Asegurar las validaciones del E2E sobre el motor Camunda real con multi-instancia (Perito A y Perito B).
+
+---
+
+## 3. Criterios de Éxito Global (Definition of Done)
+
+1. **J-02 Certificado:** El 95% de los Casos de Uso del documento `casos_uso_uat_j02.md` pasan exitosamente en el pipeline automatizado (PASS).
+2. **Infraestructura Verde:** Cero fallos de infraestructura frontend (Vite/Pre-transform) durante la corrida completa E2E.
+3. **CQRS Completado:** `US-017` refleja un 100% de cumplimiento en la `coverage_matrix.md`.
+4. **Data Seed Operativo:** El entorno de pruebas se levanta y se hidrata automáticamente con los datos requeridos.
+5. **Seguridad Auditada:** `US-027` (IDOR) y `US-004` (By-pass) reportan correcciones verificadas y mergeadas.
+
+---
+
+## 4. Historial de Cambios y Cierre Sprint 7
+
+| Fecha | Evento/Cambio | Notas y Hallazgos | Estado |
+|-------|---------------|-------------------|:------:|
+| 2026-05-10 | **Implementación US-029 (Wizard)** | Se implementó el componente visual `FormWizard.vue` integrado en `FormRenderer.vue`. Validación desacoplada a través de composables. | ✅ APROBADO |
+| 2026-05-10 | **Restricción US-029 (Submit)** | Se acopló el evento de cambio de etapa (`stage-change`) a la UI general para deshabilitar botones de "Completar Tarea" en etapas intermedias. | ✅ APROBADO |
+| 2026-05-10 | **Certificación US-028 (QA Sandbox)** | Se implementó el endpoint y botón frontend para la certificación de contratos Zod, con cobertura Playwright CT Zero-Mock. | ✅ APROBADO |
+| 2026-05-11 | **Estabilización Vite (Bloqueante S6)** | Implementación de ADR-014 con X-Correlation-ID en Backend/MDC, Toast silencioso para 502/503 en Frontend, optimizeDeps y timeouts E2E (7 mins). | ✅ APROBADO |
+| 2026-05-11 | **Implementación US-036 / US-038 (Kill-Switch)** | Se implementó Modal Vue 3 con política Fail-Fast (Zero-Mock) para la funcionalidad Break-Glass, integrando axios para consumir el endpoint real de revocación. | ✅ APROBADO |

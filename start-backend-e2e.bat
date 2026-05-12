@@ -24,12 +24,9 @@ if %errorlevel% neq 0 (
 echo ===================================================
 echo [3/4] Levantando Servidor con Perfil E2E Estatico
 echo ===================================================
-echo [INFO] Iniciando en ventana secundaria para no bloquear la terminal...
-start "IBPMS_BACKEND_E2E" cmd /c "..\..\maven\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run -Dspring-boot.run.profiles=e2e"
-
-echo ===================================================
-echo [4/4] Validando Salud del Endpoint...
-echo ===================================================
+echo [INFO] Iniciando backend E2E...
+cd backend/ibpms-core
+call ..\..\maven\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run "-Dspring-boot.run.profiles=e2e" "-Dmaven.test.skip=true"
 echo Esperando a que el backend reporte UP (puede tardar ~30s)...
 :wait_backend
 curl.exe -s -o nul -w "%%{http_code}" http://localhost:8080/actuator/health | findstr "200" > nul

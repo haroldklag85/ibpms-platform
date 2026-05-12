@@ -87,7 +87,8 @@
                 </td>
                 <td class="px-4 py-3 text-right text-sm">
                   <button @click="openUserModal(user)" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase mr-3">Editar</button>
-                  <button @click="killSession(user)" :disabled="!user.active" class="text-red-500 disabled:text-gray-300 font-bold text-xs uppercase" title="Purge JWT">Kill</button>
+                  <!-- @Traceability: US-036, US-038 - CA-21, CA-25 -->
+                  <button @click="openRevokeModal(user)" :disabled="!user.active" class="text-red-500 disabled:text-gray-300 font-bold text-xs uppercase" title="Purge JWT">Kill-Switch</button>
                 </td>
               </tr>
             </tbody>
@@ -592,10 +593,43 @@
           </div>
         </Teleport>
 
+        <!-- Modal Kill-Switch / Exorcización (US-036 / US-038) -->
+        <Teleport to="body">
+          <div v-if="showRevokeModal" class="fixed inset-0 bg-gray-900/90 flex items-center justify-center z-[400] p-4 backdrop-blur-md">
+            <div class="bg-white rounded-xl shadow-2xl overflow-hidden max-w-md w-full border border-red-600 flex flex-col">
+              <div class="px-6 py-4 bg-red-50 border-b border-red-200 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-red-600 text-[24px]">warning</span>
+                  <h3 class="text-lg font-bold text-red-800 uppercase tracking-wider">Confirmar Kill-Switch</h3>
+                </div>
+                <button @click="showRevokeModal = false" class="text-red-400 hover:text-red-600">&times;</button>
+              </div>
+              <div class="p-6 bg-white">
+                <p class="text-sm text-gray-700 mb-4 font-medium leading-relaxed">
+                  ⚠️ ¿Está seguro de desconectar forzosamente al usuario <b class="text-red-600">{{ userToRevoke?.name }}</b>?
+                </p>
+                <p class="text-xs text-gray-500">
+                  Esta acción inyectará el token JWT activo en la Blacklist global en Redis y cortará inmediatamente cualquier operación en curso en el sistema.
+                </p>
+              </div>
+              <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+                <button @click="showRevokeModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 transition">Cancelar</button>
+                <button @click="executeRevoke" :disabled="isRevoking" class="px-5 py-2 text-sm font-bold text-white bg-red-600 rounded shadow hover:bg-red-700 disabled:opacity-50 transition flex items-center gap-2 uppercase tracking-wide">
+                  <span class="material-symbols-outlined text-[16px] animate-spin" v-if="isRevoking">refresh</span>
+                  Confirmar Revocación
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
+
   </div>
 </template>
 
 <script setup lang="ts">
+// TODO (Sprint 7.2): Este Dashboard de Identidad y Roles (US-025 / US-036) depende fuertemente de MOCKS locales. 
+// ⚠️ ESTO VIOLA LA POLÍTICA ARQUITECTÓNICA ADR-010 (Zero-Mock). 
+// Es imperativo migrar todos los datos estáticos a los servicios reales de IAM y CISO Dashboard.
 import { ref, computed, onMounted } from 'vue';
 import { z } from 'zod';
 import apiClient from '@/services/apiClient';
@@ -647,11 +681,34 @@ const toggleUserStatus = async (user: any) => {
     }
 };
 
-const killSession = (user: any) => {
-  if (confirm(`⚠️ ¿Desconectar forzosamente al usuario ${user.name} (Destruir JWT Remoto)?`)) {
-    user.active = false;
-    showToast(`Sesión de ${user.email} terminada y añadida al Blacklist.`, 'success');
-  }
+const showRevokeModal = ref(false);
+const userToRevoke = ref<any>(null);
+const isRevoking = ref(false);
+
+const openRevokeModal = (user: any) => {
+    userToRevoke.value = user;
+    showRevokeModal.value = true;
+};
+
+const executeRevoke = async () => {
+    if (!userToRevoke.value) return;
+    isRevoking.value = true;
+    try {
+        await apiClient.post(`/api/v1/admin/auth/revoke/${userToRevoke.value.id}`);
+        userToRevoke.value.active = false;
+        showToast(`Sesión de ${userToRevoke.value.name} terminada y añadida al Blacklist.`, 'success');
+        showRevokeModal.value = false;
+    } catch (e: any) {
+        if (e.response && e.response.status === 403) {
+            showToast('Fallo 403: Permisos insuficientes (Se requiere ROLE_SUPER_ADMIN o ROLE_CISO).', 'error');
+        } else if (e.response && e.response.status === 500) {
+            showToast('Fallo 500: Error interno del servidor en la revocación.', 'error');
+        } else {
+            showToast('Fallo de red o servicio inalcanzable (Fail-Fast).', 'error');
+        }
+    } finally {
+        isRevoking.value = false;
+    }
 };
 
 const globalKillSession = async () => {
@@ -669,7 +726,7 @@ const triggerExorcism = async (user: any) => {
     if (confirm(`⚠️ ALERTA CISO: ¿Desea desencadenar el Exorcismo (RabbitMQ) para desasignar masivamente todas las tareas de ${user.name}?`)) {
         try {
             // CA-14: Exorcismo JWT (Kill Session Extremo) & Desasignación RabbitMQ
-            await apiClient.post(`/api/v1/admin/users/${user.id}/kill-session`);
+            await apiClient.post(`/api/v1/admin/users/${user.id}/revoke-session`);
             showToast(`RabbitMQ TaskRescueConsumer disparado para ${user.name}.`, 'success');
         } catch(e) {
             showToast(`Fallback local: Tareas de ${user.name} liberadas a nivel cliente.`, 'success');

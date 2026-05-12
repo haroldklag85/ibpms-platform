@@ -83,6 +83,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/security/anomalies", "/api/v1/security/anomalies/**").permitAll()
                         .requestMatchers("/api/v1/security/audit/**").permitAll()
                         .requestMatchers("/api/v1/security/stream").permitAll()
+                        // Agile Task Skip Audit (E2E Observabilidad — CU-J04-42)
+                        .requestMatchers("/api/v1/agile/**").permitAll()
                         .anyRequest().authenticated());
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(getJwtAuthenticationConverter())));

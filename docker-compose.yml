@@ -62,6 +62,7 @@ services:
   # 4. Backend Core (Spring Boot - Dev Mode)
   # Container agnóstico para Hot-Reloading de código sin requerir Maven en el Host
   ibpms-core:
+    profiles: ["legacy-dev"]
     image: maven:3.9.6-eclipse-temurin-21
     container_name: ibpms-core-dev
     restart: unless-stopped
@@ -75,7 +76,7 @@ services:
       - maven_data:/root/.m2
     ports:
       - "8080:8080"
-    command: bash -c "mvn clean install -pl ibpms-dmn-engine -Dmaven.test.skip=true && mvn clean install -pl ibpms-core -Dmaven.test.skip=true && cd ibpms-core && mvn spring-boot:run -Dmaven.test.skip=true"
+    command: bash -c "mvn clean install -Dmaven.test.skip=true && cd ibpms-core && mvn spring-boot:run -Dmaven.test.skip=true"
     depends_on:
       ibpms-postgres:
         condition: service_healthy

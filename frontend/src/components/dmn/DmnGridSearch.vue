@@ -1,3 +1,4 @@
+<!-- @Traceability: US-007 - CA-24 (Buscador visual en DMN) -->
 <template>
   <div v-if="isOpen" class="fixed top-4 right-4 bg-white p-3 rounded shadow-lg border border-gray-200 z-50 flex items-center gap-3">
     <input 

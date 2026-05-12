@@ -25,6 +25,9 @@ Todo agente (Frontend, Backend, y QA) DEBE asegurar que el ecosistema entero fun
 3. **PROHIBIDA LA POSTERGACIÓN EN BACKEND**
    - El Agente Backend no puede diferir la creación de tablas JPA o Migraciones argumentando que "El Frontend está mockeando el flujo". La base de datos relacional dicta la realidad absoluta.
 
+4. **PROHIBIDO EL USO DE TESTCONTAINERS (Hardware Limitations)**
+   - Debido a las restricciones severas de CPU y RAM de las laptops locales de desarrollo, **ESTÁ ESTRICTAMENTE PROHIBIDO instanciar Testcontainers** en las pruebas de integración de Backend. Levantar contenedores efímeros satura la máquina, provocando timeouts. Las pruebas deben ejecutarse apuntando siempre a la infraestructura de contenedores estáticos (BD ya viva) definida en el `docker-compose.e2e.yml`.
+
 ---
 
 ## ✅ Directivas Específicas por Rol
@@ -40,9 +43,9 @@ Si un endpoint falla porque el backend aún no ha finalizado una historia de usu
 - Asegúrate de nutrir siempre el archivo `seed-e2e.sql` asegurándote de que la semilla refleje un estado inicial completo y funcional para el agente de QA.
 
 ### 🧪 3. Agentes de Quality Assurance (QA / Playwright)
-- Tus pruebas E2E deben validar el circuito completo (*Full-Stack*).
-- **Mandato Cero Mocks:** Antes de confirmar una prueba de frontend a verde (PASSED), estás bajo la **orden directa de validar la mutación de los datos en Postgres local o Docker**.
-- **Entorno de Pruebas:** Tus comandos de test siempre deben ser acompañados bajo el contexto de `docker-compose.e2e.yml`. Valida explícitamente que los contenedores Postgres/Camunda/RabbitMQ/Redis del E2E config están recibiendo la carga de la prueba.
+- Tus pruebas E2E deben validar el circuito completo (*Full-Stack*). Los navegadores *headless* se levantan de manera local, así que procura mantener los scripts óptimos.
+- **Mandato Cero Mocks:** Las pruebas unitarias/integración de Backend siguen obligadas a cumplir este protocolo. Para que la máquina no colapse, **tu entorno objetivo NUNCA es Testcontainers**.
+- **Entorno de Pruebas Obligatorio:** Tus comandos y pruebas de integración deben configurarse mediante el `application-test.yml` para conectarse a los puertos fijos del `docker-compose.e2e.yml` que ya está corriendo en segundo plano (ej. Postgres en 5433). Valida explícitamente que esos contenedores estáticos están recibiendo la carga.
 
 ---
 

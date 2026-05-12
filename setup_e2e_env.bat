@@ -12,7 +12,7 @@ echo ===================================================
 echo [2/3] Compilando el backend (evadiendo test y forzando UTF-8)...
 echo ===================================================
 cd backend
-call ..\maven\apache-maven-3.9.6\bin\mvn.cmd clean package -DskipTests -Dfile.encoding=UTF-8
+call ..\maven\apache-maven-3.9.6\bin\mvn.cmd clean package -Dmaven.test.skip=true -Dfile.encoding=UTF-8
 if %errorlevel% neq 0 (
   echo Error en la compilación de Maven.
   cd ..

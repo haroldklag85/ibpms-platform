@@ -6,6 +6,7 @@ import SudoModal from '@/components/common/SudoModal.vue'
 import ErrorStateGlobal from '@/components/common/ErrorStateGlobal.vue'
 import ConnectionToast from '@/components/common/ConnectionToast.vue'
 import IncompleteProfileModal from '@/components/common/IncompleteProfileModal.vue'
+import SessionLockModal from '@/components/common/SessionLockModal.vue'
 import { useConnectionStatus } from '@/composables/useConnectionStatus'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -71,4 +72,7 @@ onMounted(() => {
 
   <!-- CA-3: Incomplete Profile JIT Modal -->
   <IncompleteProfileModal />
+
+  <!-- CA-27: Glassmorphism Soft-Lock -->
+  <SessionLockModal />
 </template>

@@ -1,3 +1,4 @@
+<!-- @Traceability: US-008 - CA-01, CA-02, CA-06, CA-03 -->
 <template>
   <div class="flex flex-col flex-shrink-0 w-80 bg-gray-50 rounded-lg shadow-inner overflow-hidden border border-gray-200" :data-testid="'kanban-column-' + column.id">
     
@@ -19,7 +20,7 @@
         @change="onChange"
       >
         <template #item="{ element }">
-          <KanbanCard :item="element" />
+          <KanbanCard :item="element" @openTask="$emit('openTask', $event)" />
         </template>
         <!-- Slot vacío si no hay items -->
         <template #footer v-if="items.length === 0">
@@ -54,7 +55,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['itemMoved']);
+const emit = defineEmits(['itemMoved', 'openTask']);
 
 const onChange = (evt: any) => {
   // Cuando VueDraggable suelta un item de otro grupo, emite un 'added'

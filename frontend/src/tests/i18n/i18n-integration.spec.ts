@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { createI18n } from 'vue-i18n';
+import { createI18n, useI18n } from 'vue-i18n';
 import { defineComponent, h } from 'vue';
 import es from '@/i18n/locales/es.json';
 import en from '@/i18n/locales/en.json';
@@ -8,7 +8,7 @@ import en from '@/i18n/locales/en.json';
 // Componente auxiliar para verificar traducciones en contexto
 const TestComponent = defineComponent({
   setup() {
-    const { t, locale } = (await import('vue-i18n')).useI18n();
+    const { t, locale } = useI18n();
     return { t, locale };
   },
   render() {

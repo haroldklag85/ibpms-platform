@@ -52,6 +52,7 @@ const router = createRouter({
                     path: 'admin',
                     name: 'AdminSettings',
                     component: () => import('@/views/admin/SettingsView.vue'),
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'Global Admin'] }
                 },
                 {
                     path: 'admin/incidents',

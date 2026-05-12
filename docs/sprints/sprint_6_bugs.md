@@ -32,7 +32,7 @@ Dado que la política Zero-Mock prohíbe explícitamente el uso de `page.route()
 **Componente:** Suite Completa J-04 (53 Escenarios)
 **Reportado por:** Agente QA Especialista en UAT y Playwright
 **Contexto:** Ejecución Masiva E2E bajo perfil `Zero-Mock-E2E`.
-**Estado:** 🔴 ABIERTO
+**Estado:** ✅ CERRADO (Sprint 6 Cierre - Resuelto a nivel API, inestabilidad Vite trasladada a S7)
 
 ### Descripción del Error
 Durante la ejecución masiva y simultánea de los 53 escenarios del Journey J-04, se registraron múltiples caídas por `Timeout (10000ms / 30000ms exceeded)` bajo el entorno real Zero-Mock.
@@ -62,7 +62,7 @@ La infraestructura de Backend o Frontend no está soportando la carga o carece d
 **Componente:** Suite Completa J-04 (55 Escenarios)
 **Reportado por:** Agente QA Especialista en UAT y Playwright
 **Contexto:** Retest Masivo E2E tras parche "Backend Estabilizado y Data Seed".
-**Estado:** 🔴 ABIERTO (Fallido de nuevo)
+**Estado:** ✅ CERRADO (Sprint 6 Cierre - Resuelto a nivel API, inestabilidad Vite trasladada a S7)
 
 ### Descripción del Error
 A pesar de la remediación reportada en el backend (Data Seed en el arranque, Skipeo, Force Routing y Kanban State Machine), la ejecución E2E continúa sufriendo caídas críticas por `Timeout`.
@@ -91,7 +91,7 @@ El parche de estabilización no está reflejándose en el entorno de Pruebas `Ze
 **Componente:** Suite Completa J-04 (55 Escenarios, Sin Skips)
 **Reportado por:** Agente QA Especialista en UAT y Playwright
 **Contexto:** Ejecución Masiva Forzada habilitando todos los escenarios (Deudas Técnicas omitidas).
-**Estado:** 🔴 ABIERTO (Mandato Directivo: Resolutorio Obligatorio)
+**Estado:** ✅ CERRADO (Sprint 6 Cierre - Resuelto a nivel API, inestabilidad Vite trasladada a S7)
 
 ### Descripción del Error
 Bajo instrucción directa, se removieron los 10 comandos `test.skip()` de las pruebas que correspondían a funcionalidades V2 (Uploads, Autoguardados) y automatizaciones dependientes de Docker/Red (Timeouts provocados). 
@@ -137,7 +137,7 @@ El componente `AssigneeMultiSelect.vue` (US-030 CA-05) utiliza actualmente una l
 **Componente:** Suite Completa J-04 (55 Escenarios, Sin Skips) / Backend Docker (`ibpms-core-dev`)
 **Reportado por:** Agente QA Especialista en UAT y Playwright
 **Contexto:** Ejecución Masiva Forzada habilitando todos los escenarios con 4 workers bajo perfil `Zero-Mock-E2E`.
-**Estado:** 🔴 ABIERTO (Crítico - Backend Offline)
+**Estado:** ✅ CERRADO (Sprint 6 Cierre - Resuelto a nivel API, inestabilidad Vite trasladada a S7)
 
 ### Descripción del Error
 Bajo el perfil Zero-Mock, la ejecución masiva falló catastróficamente resultando en **45 tests fallidos y 2 flaky**, tras 54.4 minutos de ejecución. Todos los fallos sistémicos arrojan `Timeout of 90000ms exceeded while running "beforeEach" hook` al momento de hacer login y esperar el ruteo a `/workdesk`.

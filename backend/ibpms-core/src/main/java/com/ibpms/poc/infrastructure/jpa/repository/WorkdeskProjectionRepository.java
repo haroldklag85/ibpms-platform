@@ -23,8 +23,8 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
     @Query(value = """
         SELECT * FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
-          AND (:search IS NULL OR w.title ILIKE CONCAT('%%', :search, '%%')) 
-          AND (:assignee IS NULL OR w.assignee = :assignee) 
+          AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
+          AND (CAST(:assignee AS VARCHAR) IS NULL OR w.assignee = CAST(:assignee AS VARCHAR) OR w.assignee IS NULL) 
         ORDER BY 
           CASE WHEN w.impact_level >= 8 THEN 0 ELSE 1 END ASC, 
           w.sla_expiration_date ASC NULLS LAST, 
@@ -33,14 +33,40 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         countQuery = """
         SELECT COUNT(*) FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
-          AND (:search IS NULL OR w.title ILIKE CONCAT('%%', :search, '%%')) 
-          AND (:assignee IS NULL OR w.assignee = :assignee)
+          AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
+          AND (CAST(:assignee AS VARCHAR) IS NULL OR w.assignee = CAST(:assignee AS VARCHAR) OR w.assignee IS NULL)
         """,
         nativeQuery = true)
     Page<WorkdeskProjectionEntity> findWorkdeskTasks(
            @Param("tenantId") String tenantId, 
            @Param("search") String search, 
            @Param("assignee") String assignee, 
+           Pageable pageable);
+
+    @Query(value = """
+        SELECT * FROM ibpms_workdesk_projection w 
+        WHERE w.tenant_id = :tenantId 
+          AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
+          AND (CAST(:assignee AS VARCHAR) IS NULL OR w.assignee = CAST(:assignee AS VARCHAR) OR w.assignee IS NULL) 
+          AND w.source_system = :sourceSystem
+        ORDER BY 
+          CASE WHEN w.impact_level >= 8 THEN 0 ELSE 1 END ASC, 
+          w.sla_expiration_date ASC NULLS LAST, 
+          w.created_at ASC
+        """,
+        countQuery = """
+        SELECT COUNT(*) FROM ibpms_workdesk_projection w 
+        WHERE w.tenant_id = :tenantId 
+          AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
+          AND (CAST(:assignee AS VARCHAR) IS NULL OR w.assignee = CAST(:assignee AS VARCHAR) OR w.assignee IS NULL)
+          AND w.source_system = :sourceSystem
+        """,
+        nativeQuery = true)
+    Page<WorkdeskProjectionEntity> findWorkdeskTasksBySource(
+           @Param("tenantId") String tenantId, 
+           @Param("search") String search, 
+           @Param("assignee") String assignee, 
+           @Param("sourceSystem") String sourceSystem,
            Pageable pageable);
 
     // CA-22, CA-29: Faceted Filters & Counters
@@ -53,7 +79,7 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         SELECT * FROM ibpms_workdesk_projection w
         WHERE w.tenant_id = :tenantId
           AND w.assignee IS NULL
-          AND (:skills IS NULL OR w.category_tag = ANY(CAST(:skills AS VARCHAR[])))
+          AND (CAST(:skills AS VARCHAR[]) IS NULL OR w.category_tag = ANY(CAST(:skills AS VARCHAR[])))
         ORDER BY w.impact_level DESC, w.sla_expiration_date ASC NULLS LAST
         LIMIT 1
         FOR UPDATE SKIP LOCKED

@@ -71,6 +71,18 @@ export const useWorkdeskStore = defineStore('workdesk', {
       }
     },
 
+    // @Traceability(US = "US-001", CA = {"CA-08"})
+    async updateFeatureToggle(toggleId: string, enabled: boolean) {
+      try {
+        await apiClient.put(`/workdesk/feature-toggles/${toggleId}`, { enabled });
+        if (toggleId === 'force-routing' || toggleId === 'FORCE_ROUTING') {
+          this.forceRoutingEnabled = enabled;
+        }
+      } catch (err: any) {
+        throw new Error(err.response?.data?.message || 'Error updating feature toggle');
+      }
+    },
+
     // CA-08 / CA-16: Atender Siguiente Tarea (Skill-Based Routing)
     async attendNext() {
       this.isAttending = true;
@@ -164,13 +176,40 @@ export const useWorkdeskStore = defineStore('workdesk', {
         }
     },
 
-    async unclaimTask(taskId: string) {
+    // @Traceability: US-002 - CA-10, CA-22
+    async unclaimTask(taskId: string, internalMessage?: string) {
+      const snapshot = structuredClone(this.items);
+      const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
+      
+      if (taskIdx !== -1) {
+          this.items.splice(taskIdx, 1);
+      }
+      
       try {
-        const { data } = await apiClient.post(`/tasks/${taskId}/unclaim`);
+        const payload = internalMessage ? { mensajeInterno: internalMessage } : {};
+        const { data } = await apiClient.post(`/api/v1/workbox/tasks/${taskId}/unclaim`, payload);
         return data;
       } catch (err: any) {
+        this.items = snapshot;
         throw err;
       }
+    },
+
+    // @Traceability: US-002 - CA-10, CA-22
+    async bulkClaimTasks(taskIds: string[]) {
+        const snapshot = structuredClone(this.items);
+        
+        if (this.activeView === 'POOL') {
+           this.items = this.items.filter(t => !taskIds.includes(t.unifiedId) && !taskIds.includes(t.originalTaskId));
+        }
+
+        try {
+           const { data } = await apiClient.post('/api/v1/workbox/tasks/bulk-claim', taskIds);
+           return data;
+        } catch (err: any) {
+           this.items = snapshot;
+           throw err;
+        }
     },
 
     // CA-21: Skipeo Justificado
@@ -209,13 +248,29 @@ export const useWorkdeskStore = defineStore('workdesk', {
             }
         });
         
-        if (response.data && Array.isArray(response.data.content)) {
-            this.items = response.data.content;
-            this.pageInfo = response.data.pageable || { pageNumber: page, pageSize: size, totalElements: response.data.totalElements || this.items.length };
+        const responseData = response.data || {};
+        
+        // CA-20: Adaptarse al DTO canónico { data: [], pagination: {} } de WorkdeskResponseDTO
+        const isNestedPage = responseData.content && !Array.isArray(responseData.content) && Array.isArray(responseData.content.content);
+        let actualItems = responseData.data;
+        if (!Array.isArray(actualItems) || actualItems.length === 0) {
+           actualItems = isNestedPage ? responseData.content.content : (Array.isArray(responseData.content) ? responseData.content : []);
+        }
+        
+        const actualPageable = responseData.pagination || (isNestedPage ? responseData.content.pageable : responseData.pageable) || {};
+        const totalElements = responseData.pagination?.totalElements ?? (isNestedPage ? responseData.content.totalElements : responseData.totalElements);
+
+        if (Array.isArray(actualItems)) {
+            this.items = actualItems;
+            this.pageInfo = { 
+                pageNumber: actualPageable.page !== undefined ? actualPageable.page : (actualPageable.pageNumber || page), 
+                pageSize: actualPageable.size !== undefined ? actualPageable.size : (actualPageable.pageSize || size), 
+                totalElements: totalElements !== undefined ? totalElements : this.items.length 
+            };
             // @Traceability(US = "US-001", CA = {"CA-07"})
-            this.isDegraded = response.data?.degraded === true;
-            this.facets = response.data.facets || [];
-            this.lastDelegationContext = response.data.delegationContext || null;
+            this.isDegraded = responseData.degraded === true;
+            this.facets = responseData.facets || [];
+            this.lastDelegationContext = responseData.delegationContext || null;
         } else {
              // Fallback defensive
              this.items = [];

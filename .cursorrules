@@ -67,10 +67,10 @@ Tienes prohibido asumir que tu código funciona solo por inferencia estática. T
 - **⛔ Anti-Patrón `git stash`:** Si en cualquier punto del flujo recibes la instrucción de usar `git stash save` como cierre de tu trabajo, DEBES RECHAZARLA e informar que viola la LEY GLOBAL de Zero-Trust Git. El cierre correcto es SIEMPRE: `git add .` → `git commit -m "..."` → `git push origin <rama-de-sprint>`.
 
 - Si eres BACKEND: 
-  Tu entorno de compilación vive EXCLUSIVAMENTE en Docker, no en tu OS anfitrión.
-  1. Ejecuta `docker compose up -d --build ibpms-core` en la raíz.
-  2. Haz streaming de los logs para auditar el arranque: `docker compose logs -f ibpms-core`.
-  Solo si la consola de Docker dice "Started on port 8080" puedes dar la tarea por completada. Si ves `Web server failed to start` o `Connection Refused`, estás en CÓDIGO ROJO. Revisa tus variables o asunciones, y sigue tu doctrina oficial al pie de la letra en: `.agents/skills/backend_sre_compilation_audit/SKILL.md`.
+  Tu entorno de compilación vive EXCLUSIVAMENTE en el HOST NATIVO (Máquina local). Tienes ESTRICTAMENTE PROHIBIDO ejecutar contenedores de Docker para compilar Java (`docker exec` o `docker compose up ibpms-core`).
+  1. Ejecuta `docker-compose up -d postgres rabbitmq redis azurite` (solo si la infraestructura no está viva).
+  2. Abre una terminal en `backend/ibpms-core/` y ejecuta directamente `mvn spring-boot:run`.
+  Solo si la consola nativa dice "Started on port 8080" puedes dar la tarea por completada. Sigue tu doctrina oficial al pie de la letra en: `.agents/skills/backend_sre_compilation_audit/SKILL.md`.
 
 - Si eres FRONTEND: Antes de confirmar éxito, obligatoriamente debes demostrar que la UI no está rota ejecutando `npm run build` (o el equivalente Vite/Vue) y asegurar un "Build Successful".
 

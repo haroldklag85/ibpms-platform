@@ -123,17 +123,18 @@ public class WorkboxTaskController {
 
     /**
      * US-029: Completitud de tarea (Validada).
+     * @deprecated Movido a TaskCompletionController por US-017 (CQRS).
      */
-    @PostMapping("/{id}/complete")
-    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
-    @Traceability(US = "US-029", CA = {"CA-01", "CA-16"})
-    public ResponseEntity<Void> completeTask(@PathVariable UUID id, 
-                                             @RequestBody Map<String, Object> payload, 
-                                             Authentication auth) {
-        String username = SecurityContextUtils.getAssignee();
-        draftService.completeTask(id, payload, username);
-        return ResponseEntity.ok().build();
-    }
+    // @PostMapping("/{id}/complete")
+    // @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    // @Traceability(US = "US-029", CA = {"CA-01", "CA-16"})
+    // public ResponseEntity<Void> completeTask(@PathVariable UUID id, 
+    //                                          @RequestBody Map<String, Object> payload, 
+    //                                          Authentication auth) {
+    //     String username = SecurityContextUtils.getAssignee();
+    //     draftService.completeTask(id, payload, username);
+    //     return ResponseEntity.ok().build();
+    // }
 
     /**
      * US-002 CA-5: Preview Read-Only sin Lock (No requiere estar asignado).

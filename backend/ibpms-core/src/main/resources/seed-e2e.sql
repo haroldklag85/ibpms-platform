@@ -18,10 +18,10 @@ CREATE TABLE IF NOT EXISTS ibpms_feature_toggles (
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     description VARCHAR(255)
 );
--- @Traceability: US-001, CA-08 (Feature Toggles)
+-- @Traceability: US-001, CA-08 (Feature Toggles Anti Cherry-Picking)
 INSERT INTO ibpms_feature_toggles (id, tenant_id, toggle_key, enabled, changed_by, description)
-VALUES (gen_random_uuid(), 'default', 'FORCE_ROUTING', false, 'admin', 'Toggle CA-08')
-ON CONFLICT (tenant_id, toggle_key) DO NOTHING;
+VALUES (gen_random_uuid(), 'tenant_alpha', 'FORCE_ROUTING', false, 'admin', 'Toggle CA-08')
+ON CONFLICT (tenant_id, toggle_key) DO UPDATE SET enabled = false;
 
 
 
@@ -137,9 +137,10 @@ ON CONFLICT DO NOTHING;
 -- Requerido por: CU-J04-39 (Firma Final Director)
 -- Sin esta tarea, el Director no ve nada en su bandeja personal.
 -- ====================================================================
+-- @Traceability: US-002, CA-08 (Despojo Forzoso) y US-001 CA-04 (Delegación)
 INSERT INTO ibpms_workdesk_projection (id, source_system, original_task_id, title, assignee, candidate_group,
     sla_expiration_date, status, tenant_id, impact_level) VALUES
-  ('wd_task_5', 'BPMN', 'task_5', 'Firma Final (Director)', NULL, 'Directors',
+  ('wd_task_5', 'BPMN', 'task_5', 'Firma Final (Director)', NULL, 'ROLE_SUPERVISOR',
    CURRENT_TIMESTAMP + INTERVAL '5 days', 'PENDING', 'tenant_alpha', 1)
 ON CONFLICT (id) DO NOTHING;
 

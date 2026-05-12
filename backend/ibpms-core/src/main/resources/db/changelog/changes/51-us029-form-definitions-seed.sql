@@ -57,3 +57,14 @@ VALUES (
     'qa_system',
     NOW()
 ) ON CONFLICT DO NOTHING;
+
+-- @Traceability: US-029, CA-05 (Form Wizard Prefill & Draft)
+INSERT INTO ibpms_task_drafts (task_id, user_id, current_step, partial_data, schema_version, updated_at)
+VALUES (
+    'wd_task_2', 
+    'analista',
+    1,
+    '{"applicantName": "Juan Perez", "applicantAge": 30}'::jsonb,
+    '1.0',
+    CURRENT_TIMESTAMP
+) ON CONFLICT DO NOTHING;

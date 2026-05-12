@@ -3,11 +3,17 @@ package com.ibpms.poc.infrastructure.adapters;
 import com.ibpms.poc.application.port.out.TaskSkipPort;
 import com.ibpms.poc.infrastructure.jpa.entity.TaskSkipEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.TaskSkipRepository;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+/**
+ * Adaptador JPA para el puerto de omisión de tareas (TaskSkip).
+ * Encapsula la persistencia física de las razones de rechazo.
+ */
 @Component
+@Traceability(US = "US-001", CA = {"CA-21"})
 public class TaskSkipJpaAdapter implements TaskSkipPort {
 
     private final TaskSkipRepository repository;

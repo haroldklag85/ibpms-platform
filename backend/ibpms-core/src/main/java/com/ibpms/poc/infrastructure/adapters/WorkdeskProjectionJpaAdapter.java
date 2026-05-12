@@ -3,11 +3,17 @@ package com.ibpms.poc.infrastructure.adapters;
 import com.ibpms.poc.application.port.out.WorkdeskProjectionPort;
 import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+/**
+ * Adaptador JPA para el puerto de proyecciones del Workdesk.
+ * Provee la implementación física a la interfaz definida por el dominio.
+ */
 @Component
+@Traceability(US = "US-001", CA = {"CA-28", "CA-21"})
 public class WorkdeskProjectionJpaAdapter implements WorkdeskProjectionPort {
 
     private final WorkdeskProjectionRepository repository;

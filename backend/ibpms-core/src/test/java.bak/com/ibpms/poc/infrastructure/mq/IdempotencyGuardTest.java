@@ -41,9 +41,9 @@ class IdempotencyGuardTest {
     @Test
     void shouldProcessNewMessageAndSaveIdempotencyKey() throws Throwable {
         // Arrange
-        amqpMessage.getMessageProperties().setHeader("x-idempotency-key", "abc-123");
+        amqpMessage.getMessageProperties().setHeader("x-idempotency-key", "123e4567-e89b-12d3-a456-426614174000");
         when(joinPoint.getArgs()).thenReturn(new Object[]{amqpMessage});
-        when(idempotencyRepository.existsById("abc-123")).thenReturn(false);
+        when(idempotencyRepository.findByIdempotencyKey(any(java.util.UUID.class))).thenReturn(java.util.Optional.empty());
         when(joinPoint.proceed()).thenReturn("SUCCESS");
 
         // Act
@@ -58,9 +58,9 @@ class IdempotencyGuardTest {
     @Test
     void shouldDropDuplicateMessageSilently() throws Throwable {
         // Arrange
-        amqpMessage.getMessageProperties().setHeader("x-idempotency-key", "dup-456");
+        amqpMessage.getMessageProperties().setHeader("x-idempotency-key", "123e4567-e89b-12d3-a456-426614174001");
         when(joinPoint.getArgs()).thenReturn(new Object[]{amqpMessage});
-        when(idempotencyRepository.existsById("dup-456")).thenReturn(true);
+        when(idempotencyRepository.findByIdempotencyKey(any(java.util.UUID.class))).thenReturn(java.util.Optional.of(new ProcessedMessageEntity()));
 
         // Act
         Object result = idempotencyGuard.checkIdempotency(joinPoint);

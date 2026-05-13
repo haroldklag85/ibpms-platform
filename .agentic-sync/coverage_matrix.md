@@ -781,29 +781,41 @@
 
 ---
 
-## Resumen Global de Cobertura (Actualizado 2026-04-18T15:25 — Reconciliación PO Cruzada)
+## US-051: Matriz de Gobernanza Visual y Enrutamiento RBAC
+**Épica:** 13 — Seguridad/RBAC | **Estado:** ✅ COMPLETADA (Back+Front+QA)
+
+| CA | Título (corto) | Back | Front | Unitarios | Componente | Integración | E2E | UAT | Sprint | Spec File | Notas |
+|----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- |--------| ❌ Ninguno |-------|
+| CA-1 | Renderizado Visual Condicionado (Botones, Links) | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | S-6 | us-051-rbac-governance.spec.ts | Completado |
+| CA-2 | Interceptores de Navegación Frontend (Router Guards) | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | S-6 | us-051-rbac-governance.spec.ts | Completado |
+| CA-3 | Prevención de Fugas de Layout por Hidratación Tardía | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | S-6 | us-051-rbac-governance.spec.ts | Completado |
+| CA-4 | Seguridad por Oscuridad en Navegación Indebida | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | S-6 | us-051-rbac-governance.spec.ts | Completado |
+| CA-5 | Modo Solo Lectura (Read-Only) Global | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | S-6 | us-051-rbac-governance.spec.ts | Completado |
+| CA-6 | Privilegio "Sudo" (Double-Check) para Acciones Destructivas | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | S-6 | us-051-rbac-governance.spec.ts | Completado |
+
+### Resumen US-051
+- **Total CAs auditados:** 6 | **Back:** ✅ 100% | **Front:** ✅ 100% | **QA:** ✅ 100%
+
+---
+
+## Resumen Global de Cobertura (Actualizado 2026-05-12T22:00 — Reconciliación PO Cruzada)
 
 | Métrica | Valor |
 |---------|-------|
 | **Total US en V1** | 56 |
-| **US Completadas (Back+Front)** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
+| **US Completadas (Back+Front)** | 12 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048, US-051) |
 | **US En Construcción (avanzadas >60%)** | 6 (US-002 ~68%, US-004 ~71%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
 | **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — bloqueada por IDOR, US-017 ~50% — 8 CAs UX/UI pendientes) |
 | **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
-| **US Pendientes** | 32 |
-| **CAs Implementados (estimado)** | ~290+ |
-| **CAs Validados QA** | ~38 (~13%) |
+| **US Pendientes** | 31 |
+| **CAs Implementados (estimado)** | ~296+ |
+| **CAs Validados QA** | ~44 (~15%) |
 | **Falsos Positivos Corregidos** | 5 (US-001 CA-8 · US-002 9%→68% · US-017 0%→50% · US-025 ausente · US-027 ausente) |
 | **Vulnerabilidades Críticas Abiertas** | 0 (IDOR US-007 + US-027 cerrado en S6.1; Webhook legacy US-004 deprecado a 410) |
-| **Principal Brecha** | 🟡 QA < 13% global. US-008 Kanban sigue mock. Data seed E2E pendiente para UI tests. |
-| **E2E Sprint 6.1** | 4/7 PASS (57%) — Lotes B1+B2 PASS (Security), B3+B4+B5 FAIL (UI sin data seed) |
-| **Falsos Positivos Corregidos** | 5 (US-001 CA-8 · US-002 9%→68% · US-017 0%→50% · US-025 ausente · US-027 ausente) |
-| **Vulnerabilidades Críticas Abiertas** | 0 (IDOR US-007 + US-027 cerrado en S6.1; Webhook legacy US-004 deprecado a 410) |
-| **Principal Brecha** | 🟡 QA < 13% global. US-008 Kanban sigue mock. Data seed E2E pendiente para UI tests. |
-| **E2E Sprint 6.1** | 4/7 PASS (57%) — Lotes B1+B2 PASS (Security), B3+B4+B5 FAIL (UI sin data seed) |
+| **Principal Brecha** | 🟡 QA < 15% global. US-008 Kanban sigue mock. Data seed E2E pendiente para UI tests. |
+| **E2E Sprint 6** | US-036 y US-051 100% PASS (Security & UI Navigation) |
 
-### Brechas Prioritarias (Post Iteración 6.1 — 2026-04-19)
-### Brechas Prioritarias (Post Iteración 6.1 — 2026-04-19)
+### Brechas Prioritarias (Post Iteración 6.2 — 2026-05-12)
 
 | Prioridad | Brecha | US Afectadas | Acción Recomendada | Estado |
 |-----------|--------|-------------|-------------------|:------:|

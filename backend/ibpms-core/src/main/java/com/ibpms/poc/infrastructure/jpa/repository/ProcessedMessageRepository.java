@@ -8,9 +8,12 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
+import java.util.Optional;
 
 @Repository
-public interface ProcessedMessageRepository extends JpaRepository<ProcessedMessageEntity, String> {
+public interface ProcessedMessageRepository extends JpaRepository<ProcessedMessageEntity, UUID> {
+    Optional<ProcessedMessageEntity> findByIdempotencyKey(UUID idempotencyKey);
 
     @Modifying
     @Transactional

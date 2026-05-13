@@ -19,11 +19,9 @@ import java.util.UUID;
 public class TaskSkipController {
 
     private final SkipAuditService skipAuditService;
-    private final com.ibpms.poc.infrastructure.jpa.repository.SkipAuditRepository skipAuditRepository;
 
-    public TaskSkipController(SkipAuditService skipAuditService, com.ibpms.poc.infrastructure.jpa.repository.SkipAuditRepository skipAuditRepository) {
+    public TaskSkipController(SkipAuditService skipAuditService) {
         this.skipAuditService = skipAuditService;
-        this.skipAuditRepository = skipAuditRepository;
     }
 
     @PostMapping("/{taskId}/skip")
@@ -43,7 +41,8 @@ public class TaskSkipController {
 
     @GetMapping("/skip-audit")
     public ResponseEntity<java.util.List<com.ibpms.poc.infrastructure.jpa.entity.SkipAuditEntity>> getSkipAuditLogs() {
-        return ResponseEntity.ok(skipAuditRepository.findAll());
+        // @Traceability: Retro-Remediación ADR-001
+        return ResponseEntity.ok(skipAuditService.findAll());
     }
 
     public record TaskSkipRequest(

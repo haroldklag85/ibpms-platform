@@ -67,6 +67,11 @@ public class RoleService {
         return roleRepository.findByIsActiveTrue();
     }
 
+    // @Traceability: Retro-Remediación ADR-001
+    public java.util.Optional<RoleEntity> findById(UUID id) {
+        return roleRepository.findById(id);
+    }
+
     /**
      * @Traceability: US-036 - CA-02 El Guardián Absoluto (Blindaje de Borrado)
      * CA-2 US-036 — Inmutabilidad del Guardián.

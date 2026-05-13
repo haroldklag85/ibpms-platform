@@ -1,7 +1,7 @@
 package com.ibpms.poc.infrastructure.web.security;
 
 import com.ibpms.poc.infrastructure.jpa.entity.security.IdentityEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.security.IdentityRepository;
+import com.ibpms.poc.application.service.security.IdentityService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,16 +24,17 @@ import java.util.List;
 @Traceability(US = "US-036", CA = {"CA-16", "CA-17", "CA-24"})
 public class AuditReportController {
 
-    private final IdentityRepository identityRepository;
+    private final IdentityService identityService;
 
-    public AuditReportController(IdentityRepository identityRepository) {
-        this.identityRepository = identityRepository;
+    public AuditReportController(IdentityService identityService) {
+        this.identityService = identityService;
     }
 
     @GetMapping("/iso27001/role-matrix")
     public ResponseEntity<StreamingResponseBody> downloadIso27001RoleMatrix() {
 
-        List<IdentityEntity> users = identityRepository.findAll();
+        // @Traceability: Retro-Remediación ADR-001
+        List<IdentityEntity> users = identityService.findAll();
 
         StreamingResponseBody stream = out -> {
             try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out))) {

@@ -49,4 +49,8 @@ public class SkipAuditService {
         // 3. Return next task sorted by SLA priority
         return taskService.claimNextTask(username);
     }
+    // @Traceability: Retro-Remediación ADR-001
+    public java.util.List<SkipAuditEntity> findAll() {
+        return skipAuditRepository.findAll();
+    }
 }

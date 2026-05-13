@@ -15,11 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-import com.ibpms.poc.infrastructure.jpa.repository.security.TokenBlacklistRepository;
-import com.ibpms.poc.infrastructure.jpa.entity.security.TokenBlacklistEntity;
-import java.time.LocalDateTime;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import com.ibpms.poc.application.service.security.TokenBlacklistService;
 import java.util.Map;
 import java.util.HashMap;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -29,14 +25,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 public class UserAdminController {
 
     private final UserService userService;
-    private final TokenBlacklistRepository blacklistRepository;
+    private final TokenBlacklistService blacklistService;
     private final DelegationService delegationService;
 
     public UserAdminController(UserService userService,
-                               TokenBlacklistRepository blacklistRepository,
+                               TokenBlacklistService blacklistService,
                                DelegationService delegationService) {
         this.userService = userService;
-        this.blacklistRepository = blacklistRepository;
+        this.blacklistService = blacklistService;
         this.delegationService = delegationService;
     }
 
@@ -118,15 +114,9 @@ public class UserAdminController {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             try {
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] hash = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                StringBuilder hexString = new StringBuilder();
-                for (byte b : hash) {
-                    hexString.append(String.format("%02x", b));
-                }
-                TokenBlacklistEntity blackToken = new TokenBlacklistEntity(hexString.toString(), LocalDateTime.now().plusDays(1), null);
-                blacklistRepository.save(blackToken);
-            } catch (NoSuchAlgorithmException e) {
+                // @Traceability: Retro-Remediación ADR-001
+                blacklistService.blacklistToken(token);
+            } catch (RuntimeException e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
         }

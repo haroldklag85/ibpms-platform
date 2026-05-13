@@ -17,10 +17,16 @@ public class SlaService {
     private static final Logger log = LoggerFactory.getLogger(SlaService.class);
     private final TaskService camundaTaskService;
     private final CustomBusinessCalendar customBusinessCalendar;
+    private final com.ibpms.poc.infrastructure.jpa.repository.bpm.HolidayRepository holidayRepository;
+    private final com.ibpms.poc.infrastructure.jpa.repository.bpm.BusinessHoursRepository businessHoursRepository;
 
-    public SlaService(TaskService camundaTaskService, CustomBusinessCalendar customBusinessCalendar) {
+    public SlaService(TaskService camundaTaskService, CustomBusinessCalendar customBusinessCalendar,
+                      com.ibpms.poc.infrastructure.jpa.repository.bpm.HolidayRepository holidayRepository,
+                      com.ibpms.poc.infrastructure.jpa.repository.bpm.BusinessHoursRepository businessHoursRepository) {
         this.camundaTaskService = camundaTaskService;
         this.customBusinessCalendar = customBusinessCalendar;
+        this.holidayRepository = holidayRepository;
+        this.businessHoursRepository = businessHoursRepository;
     }
 
     /**
@@ -63,5 +69,30 @@ public class SlaService {
         }
 
         log.info("[SLA_REC] Recálculo completado exitosamente.");
+    }
+
+    // @Traceability: Retro-Remediación ADR-001
+    public List<com.ibpms.poc.infrastructure.jpa.entity.bpm.HolidayEntity> getHolidays() {
+        return holidayRepository.findAll();
+    }
+
+    // @Traceability: Retro-Remediación ADR-001
+    public com.ibpms.poc.infrastructure.jpa.entity.bpm.HolidayEntity addHoliday(com.ibpms.poc.infrastructure.jpa.entity.bpm.HolidayEntity holiday) {
+        return holidayRepository.save(holiday);
+    }
+
+    // @Traceability: Retro-Remediación ADR-001
+    public void deleteHoliday(java.util.UUID id) {
+        holidayRepository.deleteById(id);
+    }
+
+    // @Traceability: Retro-Remediación ADR-001
+    public List<com.ibpms.poc.infrastructure.jpa.entity.bpm.BusinessHoursEntity> getBusinessHours() {
+        return businessHoursRepository.findAll();
+    }
+
+    // @Traceability: Retro-Remediación ADR-001
+    public com.ibpms.poc.infrastructure.jpa.entity.bpm.BusinessHoursEntity saveBusinessHours(com.ibpms.poc.infrastructure.jpa.entity.bpm.BusinessHoursEntity businessHours) {
+        return businessHoursRepository.save(businessHours);
     }
 }

@@ -147,6 +147,26 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    // @Traceability: Retro-Remediación ADR-001
+    public java.util.Optional<UserEntity> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    // @Traceability: Retro-Remediación ADR-001
+    public java.util.Optional<UserEntity> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    // @Traceability: Retro-Remediación ADR-001
+    public java.util.Optional<Boolean> isUserActive(String username) {
+        return userRepository.isUserActive(username);
+    }
+
+    // @Traceability: Retro-Remediación ADR-001
+    public UserEntity saveUser(UserEntity user) {
+        return userRepository.save(user);
+    }
+
     private String generateComplexRandomPassword() {
         // Garantiza: Al menos 8 chars, 1 Mayúscula, 1 número, 1 símbolo.
         String uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

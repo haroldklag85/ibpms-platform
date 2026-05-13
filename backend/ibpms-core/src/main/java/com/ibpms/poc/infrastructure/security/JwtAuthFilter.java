@@ -81,6 +81,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             } catch (Exception e) {
                 // CA-01: Fail-Open Policy. Resiliencia ante caída del motor de Invalidación (Timeout Redis/DB).
                 logger.error("[SRE RESILIENCE] Redis Fail-Open CATCH: Lista Negra inaccesible. Confiando en la criptografía del Token. Causa: " + e.getMessage());
+                String method = request.getMethod();
+                if (!"GET".equalsIgnoreCase(method) && !"OPTIONS".equalsIgnoreCase(method)) {
+                    response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Sistema degradado. Mutaciones deshabilitadas.");
+                    return;
+                }
             }
 
             if (jwtTokenProvider.isValid(token)) {
@@ -90,9 +95,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 java.util.Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByUsername(subject);
                 if (userOpt.isEmpty()) {
                     try {
+                        java.util.Map<String, String> claims = new java.util.HashMap<>();
+                        claims.put("email", subject + "@sso.local");
+                        claims.put("name", subject);
+                        claims.put("Sucursal_ID", jwtTokenProvider.getClaim(token, "Sucursal_ID"));
+                        claims.put("Codigo_Jefe", jwtTokenProvider.getClaim(token, "Codigo_Jefe"));
+
                         com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity newUser = 
-                            entraIdSyncService.provisionUser(subject, subject + "@sso.local", subject);
+                            entraIdSyncService.provisionUser(subject, claims);
                         userOpt = java.util.Optional.of(newUser);
+                    } catch (com.ibpms.poc.application.service.security.exceptions.PreconditionRequiredException e) {
+                        response.setContentType("application/json");
+                        response.setStatus(428);
+                        response.getWriter().write("{\"error\": \"Precondition Required\", \"missing_fields\": " + new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(e.getMissingFields()) + "}");
+                        return;
                     } catch (Exception e) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN, "Error en aprovisionamiento JIT: " + e.getMessage());
                         return;

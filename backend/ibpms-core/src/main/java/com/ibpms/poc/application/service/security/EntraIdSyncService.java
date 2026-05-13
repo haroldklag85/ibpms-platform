@@ -41,11 +41,18 @@ public class EntraIdSyncService {
      * Crea el usuario localmente si no existe tras una autenticación SSO exitosa.
      */
     @Transactional
-    public UserEntity provisionUser(String username, String email, String fullName) {
-        if (email == null || email.isBlank() || fullName == null || fullName.isBlank()) {
-            throw new IllegalArgumentException("Claims obligatorios faltantes (email/name) para JIT Provisioning.");
+    public UserEntity provisionUser(String username, Map<String, String> claims) {
+        List<String> missingFields = new java.util.ArrayList<>();
+        if (!claims.containsKey("email") || claims.get("email").isBlank()) missingFields.add("email");
+        if (!claims.containsKey("name") || claims.get("name").isBlank()) missingFields.add("name");
+        if (!claims.containsKey("Sucursal_ID") || claims.get("Sucursal_ID").isBlank()) missingFields.add("Sucursal_ID");
+        if (!claims.containsKey("Codigo_Jefe") || claims.get("Codigo_Jefe").isBlank()) missingFields.add("Codigo_Jefe");
+
+        if (!missingFields.isEmpty()) {
+            throw new com.ibpms.poc.application.service.security.exceptions.PreconditionRequiredException("Claims obligatorios faltantes para JIT Provisioning.", missingFields);
         }
 
+        String email = claims.get("email");
         Optional<UserEntity> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             return userOpt.get();
@@ -56,6 +63,12 @@ public class EntraIdSyncService {
         newUser.setEmail(email);
         newUser.setIsExternalIdp(true);
         newUser.setStatus(UserStatus.ACTIVE);
+        
+        try {
+            newUser.setJitClaimsJson(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(claims));
+        } catch (Exception e) {
+            newUser.setJitClaimsJson("{}");
+        }
 
         // Asignación de Rol Base por defecto (Ciudadano Interno)
         RoleEntity baseRole = roleRepository.findByName("ROLE_USER_INTERNAL")

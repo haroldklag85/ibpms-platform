@@ -126,3 +126,6 @@ databaseChangeLog:
       file: db/changelog/changes/055-create-dmn-models.sql
 #  - include:
 #      file: db/changelog/changes/017-create-task-drafts.sql
+  - include:
+      file: db/changelog/changes/056-seed-e2e-j02.sql
+      context: dev,test

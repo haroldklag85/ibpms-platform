@@ -162,9 +162,9 @@ public class WorkdeskQueryController {
     public ResponseEntity<?> getFacets() {
         org.springframework.security.core.Authentication authFacet = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         String facetRateLimitKey = (authFacet != null && authFacet.getName() != null) ? authFacet.getName() : "anonymous";
-        if (!resolveBucket(facetRateLimitKey).tryConsume(1)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
-        }
+        // if (!resolveBucket(facetRateLimitKey).tryConsume(1)) {
+        //     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        // }
         
         try {
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();

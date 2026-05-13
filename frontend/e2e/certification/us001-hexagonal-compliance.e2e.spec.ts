@@ -52,6 +52,7 @@ test.describe('T-04: Attend-Next Hexagonal Compliance', () => {
     const adminToken = await getTokenFromStorageState('e2e/playwright/.auth/user.json');
 
     // ACT: SUPER_ADMIN solicita la siguiente tarea del pool
+    // @Traceability: US-001/US-036 (Remediación URI Canónica)
     const response = await request.post(`${API.BASE_URL}/api/v1/workdesk/attend-next`, {
       headers: {
         'Authorization': `Bearer ${adminToken}`,
@@ -78,6 +79,7 @@ test.describe('T-04: Attend-Next Hexagonal Compliance', () => {
     const adminToken = await getTokenFromStorageState('e2e/playwright/.auth/user.json');
 
     // ACT: Skip con razón obligatoria (SkipReasonDTO)
+    // @Traceability: US-001/US-036 (Remediación URI Canónica)
     const response = await request.post(`${API.BASE_URL}/api/v1/workdesk/attend-next/skip`, {
       headers: {
         'Authorization': `Bearer ${adminToken}`,
@@ -107,6 +109,7 @@ test.describe('T-05: Feature Toggle Hexagonal Compliance', () => {
     const adminToken = await getTokenFromStorageState('e2e/playwright/.auth/user.json');
 
     // ACT: Consultar el estado del toggle FORCE_ROUTING
+    // @Traceability: US-001/US-036 (Remediación URI Canónica)
     const response = await request.get(`${API.BASE_URL}/api/v1/workdesk/feature-toggles/FORCE_ROUTING`, {
       headers: {
         'Authorization': `Bearer ${adminToken}`
@@ -126,6 +129,7 @@ test.describe('T-05: Feature Toggle Hexagonal Compliance', () => {
     const adminToken = await getTokenFromStorageState('e2e/playwright/.auth/user.json');
 
     // ACT: SUPER_ADMIN actualiza el toggle (requiere hasRole('SUPER_ADMIN'))
+    // @Traceability: US-001/US-036 (Remediación URI Canónica)
     const response = await request.put(`${API.BASE_URL}/api/v1/workdesk/feature-toggles/FORCE_ROUTING`, {
       headers: {
         'Authorization': `Bearer ${adminToken}`,
@@ -152,6 +156,7 @@ test.describe('T-05: Feature Toggle Hexagonal Compliance', () => {
     const operarioToken = await getTokenFromStorageState('e2e/playwright/.auth/analista_n1.json');
 
     // ACT: Un OPERARIO (sin ROLE_SUPER_ADMIN) intenta actualizar el toggle
+    // @Traceability: US-001/US-036 (Remediación URI Canónica)
     const response = await request.put(`${API.BASE_URL}/api/v1/workdesk/feature-toggles/FORCE_ROUTING`, {
       headers: {
         'Authorization': `Bearer ${operarioToken}`,

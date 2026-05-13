@@ -38,6 +38,7 @@ test.describe('US-036/US-038: Kill-Switch — Revocación de Sesión (Break-Glas
       // ACT: SUPER_ADMIN ejecuta la acción destructiva (Kill-Switch)
       // Usamos el email como userId ya que el backend identifica por email/username
       const targetUserId = USERS.ANALISTA_N1.email;
+      // @Traceability: US-036 (Remediación URI Canónica)
       const revokeResponse = await request.post(
         `${API.BASE_URL}${API.KILL_SWITCH}/${encodeURIComponent(targetUserId)}/revoke-session`
       );
@@ -51,6 +52,7 @@ test.describe('US-036/US-038: Kill-Switch — Revocación de Sesión (Break-Glas
     test('CU-KS-02 | Post-revocación: requests del usuario revocado devuelven HTTP 401', async ({ request }) => {
       // ARRANGE: Revocamos primero (idempotente)
       const targetUserId = USERS.ANALISTA_N1.email;
+      // @Traceability: US-036 (Remediación URI Canónica)
       await request.post(
         `${API.BASE_URL}${API.KILL_SWITCH}/${encodeURIComponent(targetUserId)}/revoke-session`
       );
@@ -71,9 +73,11 @@ test.describe('US-036/US-038: Kill-Switch — Revocación de Sesión (Break-Glas
       const targetUserId = USERS.ANALISTA_N1.email;
 
       // ACT: Doble revocación
+      // @Traceability: US-036 (Remediación URI Canónica)
       const first = await request.post(
         `${API.BASE_URL}${API.KILL_SWITCH}/${encodeURIComponent(targetUserId)}/revoke-session`
       );
+      // @Traceability: US-036 (Remediación URI Canónica)
       const second = await request.post(
         `${API.BASE_URL}${API.KILL_SWITCH}/${encodeURIComponent(targetUserId)}/revoke-session`
       );
@@ -95,6 +99,7 @@ test.describe('US-036/US-038: Kill-Switch — Revocación de Sesión (Break-Glas
       const targetUserId = USERS.ADMIN_ALPHA.email;
 
       // ACT: Operario intenta ejecutar Kill-Switch contra el admin
+      // @Traceability: US-036 (Remediación URI Canónica)
       const response = await request.post(
         `${API.BASE_URL}${API.KILL_SWITCH}/${encodeURIComponent(targetUserId)}/revoke-session`,
         {
@@ -110,6 +115,7 @@ test.describe('US-036/US-038: Kill-Switch — Revocación de Sesión (Break-Glas
       const targetUserId = USERS.ANALISTA_N1.email;
 
       // ACT: Request sin token de autorización
+      // @Traceability: US-036 (Remediación URI Canónica)
       const response = await request.post(
         `${API.BASE_URL}${API.KILL_SWITCH}/${encodeURIComponent(targetUserId)}/revoke-session`,
         {
@@ -124,6 +130,7 @@ test.describe('US-036/US-038: Kill-Switch — Revocación de Sesión (Break-Glas
     test('CU-KS-NEG-03 | Fuzzing: userId con payload XSS no causa 500', async ({ request }) => {
       // ACT: Inyección de payload malicioso como userId
       const maliciousUserId = '<script>alert(1)</script>';
+      // @Traceability: US-036 (Remediación URI Canónica)
       const response = await request.post(
         `${API.BASE_URL}${API.KILL_SWITCH}/${encodeURIComponent(maliciousUserId)}/revoke-session`
       );

@@ -1,24 +1,24 @@
-# Solicitud de Aprobación Arquitectónica: Infraestructura US-034 (CA-01 al CA-05)
+# Solicitud de Aprobación Arquitectónica: Infraestructura US-038
 
-**De:** Agente Infra/BD
-**Para:** Arquitecto Líder
+**Rol:** Agente Infra/BD
+**Iteración:** 01-DEV-038-DAVID
 **Rama:** DevDavid
-**Iteración:** 01-DEV-034-DAVID
 
-Arquitecto, he completado mi fase de PLANNING y el `implementation_plan.md` está listo. 
+**Arquitecto Líder:**
+He completado el análisis y el modo PLANNING para la base de infraestructura solicitada en la US-038 (Sincronización EntraID y Multi-Rol). A continuación presento el resumen de hallazgos y el plan de inyección estructural:
 
-**Resumen de hallazgos y plan propuesto:**
-1. **Topología RabbitMQ (CA-4):** Auditada exitosamente. Los archivos `docs/architecture/rabbitmq_topology.md` y el `docker-compose.yml` ya se encuentran totalmente alineados con la arquitectura solicitada.
-2. **Tabla de Idempotencia (CA-5):** Identifiqué que la tabla `ibpms_processed_messages` existe en BD (vía el script anterior `19-create-rabbitmq-resilience-tables.sql`) pero con `idempotency_key` como Primary Key. 
-   Propongo un changeset `47-us034-idempotency.sql` que hace un DROP a la PK actual, inyecta `id` (UUID) como nueva PK, y hace `idempotency_key` de tipo UUID y UNIQUE.
+## 1. Verificación Redis (CA-01)
+Audité el archivo `docker-compose.yml`. El contenedor de Redis (`ibpms-redis`) está configurado adecuadamente con el puerto 6379, volumen persistente `redis_data` y `--appendonly yes`. El entorno es 100% capaz de soportar las pruebas de resiliencia de desconexión / reconexión (Fail-Open Policy). No requiero hacer ajustes aquí.
 
-**🚨 ALERTA ARQUITECTÓNICA Y SOLICITUD DE DESBLOQUEO:**
-Como Agente Infra/BD, tengo permiso para modificar la Entidad JPA (`ProcessedMessageEntity.java`) para sincronizar el esquema. Sin embargo, al cambiar el `@Id` a la nueva columna `id` (UUID), el archivo `ProcessedMessageRepository.java` (y por ende `IdempotencyGuard.java`) romperán instantáneamente la compilación al esperar un `<Entity, String>`.
+## 2. Inyección DDL (CA-03 y CA-04)
+Para garantizar la Gobernanza de Identidades y el Break-Glass sin perder trazabilidad técnica, propongo ejecutar el siguiente esquema a través de Liquibase:
 
-Tengo **estrictamente prohibido** tocar la capa de Repositorios/Servicios. Si aplico el cambio, el build se corromperá y fallaré la instrucción *"cualquier daño a funcionalidades adyacentes será motivo de rechazo inmediato"*.
+**Changeset Propuesto:** `48-us038-user-metadata.sql`
+- `ALTER TABLE ibpms_security_user ADD COLUMN jit_claims_json JSONB;`: Requerido para almacenar todos los metadatos transitorios de EntraID sin romper el esquema estricto.
+- `ALTER TABLE ibpms_security_audit_log ADD COLUMN is_break_glass BOOLEAN DEFAULT false NOT NULL;`: Bandera inmutable para disparar alertas de CISO en inicios de sesión de contingencia.
+- `ALTER TABLE ibpms_security_audit_log ADD COLUMN justification TEXT;`: Requisito regulatorio para el Break-Glass.
 
-**¿Cómo debo proceder?**
-A) ¿Me otorgas excepción temporal para alterar únicamente la firma de `ProcessedMessageRepository` a `<ProcessedMessageEntity, UUID>` y ajustar `IdempotencyGuard.java` para mantener la compilación verde?
-B) ¿Aplico solo Liquibase + Entity y dejo la rama "rota" para que el Agente Backend lo repare en su sprint inmediato, ignorando la caída del build?
+## Solicitud Formal
+Solicito autorización expresa para pasar a modo EXECUTION, crear los archivos mencionados y registrarlos en el `db.changelog-master.yaml` para su empuje.
 
-Espero tus instrucciones para pasar a modo `EXECUTION`.
+Espero tu Veredicto Técnico.

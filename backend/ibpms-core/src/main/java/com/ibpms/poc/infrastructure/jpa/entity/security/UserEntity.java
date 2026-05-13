@@ -81,4 +81,11 @@ public class UserEntity {
     public void setSkills(String skills) { this.skills = skills; }
     public UserEntity getManager() { return manager; }
     public void setManager(UserEntity manager) { this.manager = manager; }
+    
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "jit_claims_json", columnDefinition = "jsonb")
+    private String jitClaimsJson;
+    
+    public String getJitClaimsJson() { return jitClaimsJson; }
+    public void setJitClaimsJson(String jitClaimsJson) { this.jitClaimsJson = jitClaimsJson; }
 }

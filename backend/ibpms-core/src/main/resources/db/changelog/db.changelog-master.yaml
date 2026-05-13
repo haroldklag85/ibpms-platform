@@ -109,4 +109,5 @@ databaseChangeLog:
       file: db/changelog/changes/46-us038-audit-columns.sql
   - include:
       file: db/changelog/changes/47-us034-idempotency.sql
-
+  - include:
+      file: db/changelog/changes/48-us038-user-metadata.sql

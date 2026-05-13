@@ -740,7 +740,7 @@ const applyFacetFilter = (status: string) => {
     loadData();
 };
 
-// @Traceability: Retro-Remediación DOM/Timeout J-04 (T-20.2)
+// @Traceability: US-001, CA-XX (Remediación Timeout DOM J-04)
 const loadData = async () => {
     store.isLoading = true;
     try {

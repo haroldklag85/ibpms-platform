@@ -59,8 +59,9 @@ VALUES (
 ) ON CONFLICT DO NOTHING;
 
 -- @Traceability: US-029, CA-05 (Form Wizard Prefill & Draft)
-INSERT INTO ibpms_task_drafts (task_id, user_id, current_step, partial_data, schema_version, updated_at)
+INSERT INTO task_drafts (id, task_id, user_id, current_step, partial_data, schema_version, updated_at)
 VALUES (
+    '20000000-0000-4000-8000-000000000001',
     'wd_task_2', 
     'analista',
     1,

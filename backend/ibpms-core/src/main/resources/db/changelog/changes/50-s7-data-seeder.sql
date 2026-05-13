@@ -44,9 +44,9 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- 5. Datos Temporales de Prefill (US-029 CA-5)
-INSERT INTO ibpms_task_drafts (id, task_id, form_key, user_id, payload, created_at, updated_at)
+INSERT INTO task_drafts (id, task_id, user_id, current_step, partial_data, schema_version, created_at, updated_at)
 VALUES
-    ('draft_prefill_1', 'task_mock_1', 'form_siniestros_v2', 'usr_perito_a', '{"asegurado": "Juan Perez", "poliza": "POL-12345", "siniestro_id": "SIN-987"}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ('10000000-0000-4000-8000-000000000001', 'task_mock_1', 'usr_perito_a', 1, '{"asegurado": "Juan Perez", "poliza": "POL-12345", "siniestro_id": "SIN-987"}', '1.0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
 -- 6. Tareas Simuladas en Estado Vivo (Workdesk Timeout prevention)

@@ -116,11 +116,11 @@ databaseChangeLog:
       context: dev,test
   - include:
       file: db/changelog/changes/53-us002-alter-claim-audit.sql
-  - include:
-      file: db/changelog/changes/54-us008-time-logs-and-kanban.sql
+#  - include:
+#      file: db/changelog/changes/54-us008-time-logs-and-kanban.sql
   - include:
       file: db/changelog/changes/015-create-tenant-config.sql
   - include:
       file: db/changelog/changes/016-create-cqrs-event-store.sql
-  - include:
-      file: db/changelog/changes/017-create-task-drafts.sql
+#  - include:
+#      file: db/changelog/changes/017-create-task-drafts.sql

@@ -44,7 +44,7 @@ public class ServiceAccountService {
      * @throws Exception en caso de fallo en encriptación.
      */
     // @Traceability: US-036 - CA-01 (ADR-001 Refactor)
-    public Map<String, Object> createServiceAccount(String name, String description, String roleIdStr) throws Exception {
+    public Map<String, Object> createServiceAccount(String name, String description, String roleIdStr) throws java.security.NoSuchAlgorithmException {
         RoleEntity role = roleService.findById(UUID.fromString(roleIdStr))
                 .orElseThrow(() -> new IllegalArgumentException("Role no encontrado"));
 

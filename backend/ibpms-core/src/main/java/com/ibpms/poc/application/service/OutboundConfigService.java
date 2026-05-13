@@ -41,7 +41,7 @@ public class OutboundConfigService {
      */
     // @Traceability: US-023 - CA-02 (ADR-001 Refactor)
     public OutboundConfigEntity findByTargetName(String targetName) {
-        return outboundConfigRepository.findByTargetName(targetName);
+        return outboundConfigRepository.findByName(targetName).orElse(null);
     }
 
     /**

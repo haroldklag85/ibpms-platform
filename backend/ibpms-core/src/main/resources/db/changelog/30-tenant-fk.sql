@@ -6,6 +6,7 @@ CREATE TABLE ibpms_tenant (
     name VARCHAR(255) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
+INSERT INTO ibpms_tenant (slug, name) VALUES ('default', 'Tenant Global Default');
 INSERT INTO ibpms_tenant (slug, name) VALUES ('tenant_alpha', 'Tenant Primario de Operaciones');
 
 -- Agregar FKs a todas las tablas base de dominio

@@ -13,7 +13,7 @@ import java.util.List;
  * 
  * @Traceability(US = "US-036", CA = {"CA-16"})
  */
-@Service
+@Service("ibpmsIdentityService")
 @Transactional
 @Traceability(US = "US-036", CA = {"CA-16"})
 public class IdentityService {

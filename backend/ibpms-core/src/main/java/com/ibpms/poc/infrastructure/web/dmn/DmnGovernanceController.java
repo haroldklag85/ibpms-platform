@@ -10,12 +10,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.Map;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 /**
  * Adapter-In (Controller) protegido por la directiva de AppSec para el mantenimiento DMN.
+ * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
  */
 @RestController
 @RequestMapping("/api/v1/dmn-models")
 @Tag(name = "DMN Governance", description = "Gobernanza de Modelos DMN, persistencia y ciclo de vida")
+@Traceability(US = "US-007", CA = {"CA-13", "CA-14"})
 public class DmnGovernanceController {
 
     private final DmnGovernanceUseCase dmnGovernanceUseCase;
@@ -42,6 +46,7 @@ public class DmnGovernanceController {
     }
 
     /**
+     * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
      * CA-12: Retroceso explícito de estados Draft a V1 Activa.
      */
     @Operation(summary = "Rollback de DMN", description = "Retrocede de estado Draft a V1 Activa")
@@ -54,6 +59,7 @@ public class DmnGovernanceController {
     }
 
     /**
+     * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
      * CA-13: Catálogo DMN Paginado
      */
     @Operation(summary = "Catálogo DMN", description = "Lista todos los DMN bajo el tenant actual")
@@ -65,6 +71,7 @@ public class DmnGovernanceController {
     }
 
     /**
+     * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
      * CA-14: Obtener detalle de un DMN específico
      */
     @Operation(summary = "Obtiene un DMN", description = "Retorna el XML y metadatos de un DMN específico")
@@ -85,6 +92,7 @@ public class DmnGovernanceController {
     }
 
     /**
+     * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
      * B-20: Lista las tablas DMN publicadas en el motor Camunda.
      * Consumido por BpmnDesigner (Frontend) para dropdown visual de decisionRef.
      */

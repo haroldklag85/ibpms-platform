@@ -9,8 +9,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
+/**
+ * Caso de Uso central para la gobernanza DMN.
+ * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
+ */
 @Service
 @SuppressWarnings("null")
+@Traceability(US = "US-007", CA = {"CA-06", "CA-12", "CA-13", "CA-14", "CA-15"})
 public class DmnGovernanceUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(DmnGovernanceUseCase.class);
@@ -21,6 +28,7 @@ public class DmnGovernanceUseCase {
     }
 
     /**
+     * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
      * CA-06: Inmutabilidad DMN BOLA/IDOR Protection.
      * Actualiza el XML de un DMN, SOLO si no está SELLADO y SOLO si el Tenant coincide.
      */
@@ -66,6 +74,7 @@ public class DmnGovernanceUseCase {
     }
 
     /**
+     * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
      * CA-12: Rollback Efímero del Copiloto AI.
      * Si la IA o el humano arruinan la tabla en estado DRAFT, este método aborta el estado y revierte.
      */
@@ -89,25 +98,53 @@ public class DmnGovernanceUseCase {
     }
 
     /**
+     * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
      * CA-13: Catálogo DMN Paginado
      */
     public java.util.Map<String, Object> getDmnCatalog(String invokerTenantId, int page, int size) {
+        java.util.List<DmnModelEntity> models = dmnRepository.findByTenantId(invokerTenantId);
+        
+        java.util.List<java.util.Map<String, Object>> content = models.stream().map(dmn -> {
+            return java.util.Map.<String, Object>of(
+                "id", dmn.getId(),
+                "name", dmn.getName() != null ? dmn.getName() : "Sin Nombre",
+                "status", dmn.getStatus(),
+                "version", "1.0",
+                "createdAt", dmn.getCreatedAt() != null ? dmn.getCreatedAt().toString() : ""
+            );
+        }).collect(java.util.stream.Collectors.toList());
+
         return java.util.Map.of(
             "tenant", invokerTenantId,
             "page", page,
             "size", size,
-            "content", java.util.Collections.emptyList() // Placeholder DTO
+            "content", content
         );
     }
 
     /**
+     * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
      * CA-14: Obtener detalle de un DMN específico
      */
     public java.util.Map<String, Object> getDmnById(String id, String invokerTenantId) {
-        return java.util.Map.of("id", id, "tenant", invokerTenantId, "status", "ACTIVE");
+        DmnModelEntity dmn = dmnRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DMN Model not found"));
+
+        if (!dmn.getTenantId().equals(invokerTenantId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso Cruzado BOLA detectado.");
+        }
+
+        return java.util.Map.of(
+            "id", dmn.getId(), 
+            "tenant", dmn.getTenantId(), 
+            "status", dmn.getStatus(),
+            "name", dmn.getName() != null ? dmn.getName() : "",
+            "xmlContent", dmn.getXmlContent() != null ? dmn.getXmlContent() : ""
+        );
     }
 
     /**
+     * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
      * CA-15: Endpoint simulador funcional (Fallback mode available en backend)
      */
     public java.util.Map<String, Object> simulateDmnExecution(java.util.Map<String, Object> variables, String invokerTenantId) {
@@ -124,6 +161,7 @@ public class DmnGovernanceUseCase {
     private String camundaBaseUrl;
 
     /**
+     * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
      * Consulta la API REST de Camunda 7 (/engine-rest/decision-definition)
      * filtrando por tenant y retornando id, key, name, version, deploymentId.
      */

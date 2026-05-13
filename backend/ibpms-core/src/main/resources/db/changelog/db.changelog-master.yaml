@@ -122,5 +122,7 @@ databaseChangeLog:
       file: db/changelog/changes/015-create-tenant-config.sql
   - include:
       file: db/changelog/changes/016-create-cqrs-event-store.sql
+  - include:
+      file: db/changelog/changes/055-create-dmn-models.sql
 #  - include:
 #      file: db/changelog/changes/017-create-task-drafts.sql

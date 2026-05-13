@@ -15,12 +15,17 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 /**
  * Servicio principal del BPMN Designer.
  * Orquesta: CRUD, Auto-Save (CA-10), Lock Pesimista (CA-7/CA-34), Auditoría
  * (CA-33).
+ * 
+ * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
  */
 @Service
+@Traceability(US = "US-005", CA = {"CA-10", "CA-34"})
 public class BpmnDesignService {
 
     private final BpmnDesignPort designPort;
@@ -58,6 +63,16 @@ public class BpmnDesignService {
         return toDto(domain);
     }
 
+    public BpmnProcessDesignDTO obtenerPorTechnicalId(String processKey) {
+        BpmnProcessDesign domain = designPort.findByTechnicalId(processKey)
+                .orElseThrow(() -> new IllegalArgumentException("Diseño BPMN no encontrado con technical_id: " + processKey));
+        return toDto(domain);
+    }
+
+    public List<BpmnProcessDesignDTO> listarTodos() {
+        return designPort.findAll().stream().map(this::toDto).collect(Collectors.toList());
+    }
+
     public void archivar(UUID id, String userId) {
         BpmnProcessDesign domain = getDomainModel(id);
         domain.archive();
@@ -68,12 +83,31 @@ public class BpmnDesignService {
 
     // --- Auto-Save (CA-10) ---
 
+    /**
+     * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
+     * Auto-Save del Borrador (XML) en base de datos.
+     */
+    @Traceability(US = "US-005", CA = {"CA-10"})
     public void guardarBorrador(UUID id, String xml, String userId) {
         BpmnProcessDesign domain = getDomainModel(id);
         domain.updateDraft(xml);
         designPort.save(domain);
 
         auditPort.logAction(id, "SAVE_DRAFT", userId, domain.getCurrentVersion(), null);
+    }
+
+    /**
+     * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
+     * Auto-Save del Borrador por su llave técnica, asegurando persistencia real.
+     */
+    @Traceability(US = "US-005", CA = {"CA-10"})
+    public void guardarBorradorPorTechnicalId(String processKey, String xml, String userId) {
+        BpmnProcessDesign domain = designPort.findByTechnicalId(processKey)
+                .orElseThrow(() -> new IllegalArgumentException("Diseño BPMN no encontrado con technical_id: " + processKey));
+        domain.updateDraft(xml);
+        designPort.save(domain);
+
+        auditPort.logAction(domain.getId(), "SAVE_DRAFT", userId, domain.getCurrentVersion(), null);
     }
 
     // --- Configuración de Generic Form (CA-7) ---
@@ -90,6 +124,11 @@ public class BpmnDesignService {
 
     // --- Request Deploy (CA-69) ---
 
+    /**
+     * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
+     * CA-69: Request de despliegue con versionamiento y revisión.
+     */
+    @Traceability(US = "US-005", CA = {"CA-69"})
     public Map<String, String> createDeployRequest(String processKey, String requestedBy) {
         // Validación 1: El proceso debe existir y estar en estado DRAFT o ACTIVE
         BpmnProcessDesign domain = designPort.findByTechnicalId(processKey)

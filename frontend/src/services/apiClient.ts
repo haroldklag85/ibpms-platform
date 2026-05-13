@@ -257,6 +257,7 @@ export const api = {
     createProjectTemplate: (payload: any) => apiClient.post('/projects/templates', payload),
 
     // 5. BPMN Draft / Deploy / Versioning (Pantalla 6)
+    // @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
     saveProcessDraft: (id: string, payload: any) => apiClient.put(`/design/processes/${id}/draft`, payload),
     validateProcess: (payload: any) => apiClient.post(`/design/processes/validate`, payload),
     deployProcess: (payload: FormData) => apiClient.post(`/design/processes/deploy`, payload, { headers: { 'Content-Type': 'multipart/form-data' } }),
@@ -298,21 +299,23 @@ export const api = {
     getAiMetrics: () => apiClient.get('/analytics/ai-metrics'),
 
     // 9. Formularios (Pantalla 7 / CA-30)
-    getForms: () => apiClient.get('/forms'),
-    getFormVersions: (id: string) => apiClient.get(`/forms/${id}/versions`),
-    saveFormVersion: (id: string, payload: any) => apiClient.post(`/forms/${id}`, payload),
+    getForms: () => apiClient.get('/design/form-definitions'),
+    getFormVersions: (id: string) => apiClient.get(`/design/form-definitions/${id}/versions`),
+    saveFormVersion: (id: string, payload: any) => apiClient.post(`/design/form-definitions/${id}`, payload),
 
     // 10. Kanban Status Update (Pantalla 3)
     getKanbanBoard: () => apiClient.get('/kanban/board'), // This one is fine because KanbanStateController exposes /kanban/board
     updateKanbanStatus: (id: string, payload: any) => apiClient.patch(`/kanban-tasks/tasks/${id}/state`, payload),
 
     // 10. AI Agents & Copilot (CA-8 US-005)
+    // @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),
     analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
     generateDmnRules: (payload: any) => apiClient.post(`/dmn/generate`, payload),
     updateDmnModel: (id: string, payload: any) => apiClient.put(`/dmn-models/${id}`, payload),
 
     // Sprint 6.1: DMN Definitions
+    // @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
     getDmnDefinitions: () => apiClient.get('/dmn-models/definitions'),
 
     // Configuraciones Administrativas (CA-30)

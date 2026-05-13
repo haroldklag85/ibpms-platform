@@ -22,11 +22,13 @@ import com.ibpms.poc.domain.model.DataMapping;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 /**
- * REST Controller for BPMN Design operations (Integration Gaps Mock).
+ * REST Controller for BPMN Design operations (Integration Gaps Mock / Zero-Mock V2).
+ * 
+ * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
  */
 @RestController
 @RequestMapping("/api/v1/design/processes")
-@Traceability(US = "US-001", CA = {"CA-01"})
+@Traceability(US = "US-005", CA = {"CA-01"})
 public class BpmnDesignController {
 
     private final PreFlightAnalyzerService preFlightAnalyzerService;
@@ -47,9 +49,18 @@ public class BpmnDesignController {
         this.dataMappingPort = dataMappingPort;
     }
 
+    /**
+     * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
+     * Auto-guarda el borrador del proceso BPMN en la base de datos real.
+     */
     @PutMapping("/{id}/draft")
     public ResponseEntity<Map<String, Object>> autoSaveDraft(@PathVariable("id") String id,
-            @RequestBody Map<String, Object> request) {
+            @RequestBody Map<String, Object> request, java.security.Principal principal) {
+        
+        String userId = principal != null ? principal.getName() : "system";
+        String xml = request.containsKey("xml") ? request.get("xml").toString() : "";
+        bpmnDesignService.guardarBorradorPorTechnicalId(id, xml, userId);
+
         return ResponseEntity.ok(Map.of(
                 "processId", id,
                 "status", "DRAFT_SAVED",
@@ -147,9 +158,10 @@ public class BpmnDesignController {
 
     @GetMapping("/{processDefinitionKey}/versions")
     public ResponseEntity<List<Map<String, Object>>> getProcessVersions(@PathVariable("processDefinitionKey") String processDefinitionKey) {
+        // En un futuro se listarán las versiones históricas, por ahora retornamos la versión actual
+        var dto = bpmnDesignService.obtenerPorTechnicalId(processDefinitionKey);
         List<Map<String, Object>> versions = List.of(
-            Map.of("versionId", 2, "deploymentId", "dep-888", "isLatest", true),
-            Map.of("versionId", 1, "deploymentId", "dep-777", "isLatest", false)
+            Map.of("versionId", dto.getCurrentVersion(), "deploymentId", "dep-" + processDefinitionKey, "isLatest", true)
         );
         return ResponseEntity.ok(versions);
     }
@@ -166,23 +178,40 @@ public class BpmnDesignController {
         ));
     }
 
+    /**
+     * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
+     * Lista todos los procesos BPMN persistidos.
+     */
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllLatestProcesses() {
-        return ResponseEntity.ok(List.of(
-            Map.of("key", "onboarding_1", "name", "Alta de Colaboradores", "version", 2, "deployDate", "2023-11-20T10:00:00Z", "status", "ACTIVO"),
-            Map.of("key", "invoice_proc", "name", "Procesamiento de Facturas", "version", 5, "deployDate", "2023-12-01T15:30:00Z", "status", "ACTIVO")
-        ));
+        List<Map<String, Object>> processes = bpmnDesignService.listarTodos().stream().map(dto -> Map.of(
+            "key", dto.getTechnicalId(),
+            "name", dto.getName(),
+            "version", (Object) dto.getCurrentVersion(),
+            "deployDate", dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : "",
+            "status", dto.getStatus()
+        )).collect(java.util.stream.Collectors.toList());
+        
+        return ResponseEntity.ok(processes);
     }
 
+    /**
+     * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
+     * Obtiene el XML borrador del proceso desde la persistencia real.
+     */
     @GetMapping("/{processDefinitionKey}/xml")
     public ResponseEntity<Map<String, String>> getProcessXml(@PathVariable("processDefinitionKey") String key) {
-        String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                         "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Definitions_1\">\n" +
-                         "  <bpmn:process id=\"" + key + "\" isExecutable=\"true\">\n" +
-                         "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
-                         "  </bpmn:process>\n" +
-                         "</bpmn:definitions>";
-        return ResponseEntity.ok(Map.of("xml", mockXml));
+        var dto = bpmnDesignService.obtenerPorTechnicalId(key);
+        String xml = dto.getXmlDraft();
+        if (xml == null || xml.isEmpty()) {
+            xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                  "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Definitions_1\">\n" +
+                  "  <bpmn:process id=\"" + key + "\" isExecutable=\"true\">\n" +
+                  "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
+                  "  </bpmn:process>\n" +
+                  "</bpmn:definitions>";
+        }
+        return ResponseEntity.ok(Map.of("xml", xml));
     }
 
     @GetMapping("/templates")
@@ -308,7 +337,10 @@ public class BpmnDesignController {
     }
 
     @PostMapping("/{processDefinitionKey}/draft")
-    public ResponseEntity<?> saveDraft(@PathVariable("processDefinitionKey") String key) {
+    public ResponseEntity<?> saveDraft(@PathVariable("processDefinitionKey") String key, @RequestBody Map<String, Object> request, java.security.Principal principal) {
+        String userId = principal != null ? principal.getName() : "system";
+        String xml = request.containsKey("xml") ? request.get("xml").toString() : "";
+        bpmnDesignService.guardarBorradorPorTechnicalId(key, xml, userId);
         return ResponseEntity.ok(Map.of("status", "DRAFT_SAVED", "processId", key));
     }
 

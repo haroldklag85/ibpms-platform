@@ -9,7 +9,14 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
+/**
+ * Adaptador JPA para la persistencia de procesos BPMN.
+ * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
+ */
 @Component
+@Traceability(US = "US-005", CA = {"CA-01"})
 public class BpmnDesignJpaAdapter implements BpmnDesignPort {
 
     private final BpmnProcessDesignRepository repository;
@@ -33,6 +40,11 @@ public class BpmnDesignJpaAdapter implements BpmnDesignPort {
         BpmnProcessDesignEntity entity = toEntity(design);
         BpmnProcessDesignEntity saved = repository.save(entity);
         return toDomain(saved);
+    }
+
+    @Override
+    public java.util.List<BpmnProcessDesign> findAll() {
+        return repository.findAll().stream().map(this::toDomain).collect(java.util.stream.Collectors.toList());
     }
 
     private BpmnProcessDesign toDomain(BpmnProcessDesignEntity entity) {

@@ -29,12 +29,13 @@
 
       <div class="flex items-center gap-2 flex-wrap">
         <!-- Import -->
-        <label class="cursor-pointer bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex gap-1 items-center transition">
+        <label data-testid="btn-import-bpmn" class="cursor-pointer bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex gap-1 items-center transition">
           ⬆️ Importar
-          <input type="file" @change="handleFileUpload" accept=".bpmn,.xml" class="hidden" />
+          <!-- @Traceability: Testabilidad J-02 (T-24) -->
+          <input data-testid="input-import-bpmn" type="file" @change="handleFileUpload" accept=".bpmn,.xml" class="hidden" />
         </label>
         <!-- Export -->
-        <button @click="downloadXML" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
+        <button data-testid="btn-export-bpmn" @click="downloadXML" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
           ⬇️ Exportar .bpmn
         </button>
         <!-- Copilot con Notificación Dinámica Inteligente (CA-08) -->
@@ -74,7 +75,7 @@
           📩 Solicitar Despliegue
         </button>
         <!-- Deploy (CA-21) -->
-        <button v-show="activeRole === 'BPMN_Release_Manager'"
+        <button data-testid="btn-deploy" v-show="activeRole === 'BPMN_Release_Manager'"
                 @click="showDeployModal = true" 
                 :disabled="isDeploying || !['VALIDATED', 'WARNING'].includes(preFlightStatus)" 
                 class="bg-indigo-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 transition">
@@ -128,7 +129,8 @@
       </div>
 
       <!-- BPMN Canvas -->
-      <div ref="canvasContainer" class="flex-1 overflow-hidden h-full bpmn-canvas" :class="{ 'pointer-events-none': isLocked }"></div>
+      <!-- @Traceability: Testabilidad J-02 (T-24) -->
+      <div data-testid="bpmn-canvas-wrapper" ref="canvasContainer" class="flex-1 overflow-hidden h-full bpmn-canvas" :class="{ 'pointer-events-none': isLocked }"></div>
 
       <!-- CA-25: Floating Zoom Controls -->
       <div class="absolute bottom-4 left-4 flex gap-2 z-30">
@@ -438,7 +440,7 @@
           </div>
           <div class="flex justify-end space-x-3 pt-2">
             <button @click="showDeployModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
-            <button @click="confirmDeploy" :disabled="isDeploying" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50">
+            <button data-testid="btn-confirm-deploy" @click="confirmDeploy" :disabled="isDeploying" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50">
               {{ isDeploying ? 'Desplegando...' : 'Confirmar Despliegue' }}
             </button>
           </div>

@@ -432,20 +432,6 @@ export const useWorkdeskStore = defineStore('workdesk', {
         }, 2000);
     },
     
-    _showForceUnclaimToast() {
-        const body = document.querySelector('body');
-        if (body && !document.getElementById('force-unclaim-toast')) {
-             const toast = document.createElement('div');
-             toast.id = 'force-unclaim-toast';
-             toast.style.cssText = 'position:fixed; bottom:24px; right:24px; background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; transition:opacity 0.5s;';
-             toast.innerHTML = '⚠️ Una tarea ha sido liberada por un supervisor.';
-             body.appendChild(toast);
-             setTimeout(() => {
-                 toast.style.opacity = '0';
-                 setTimeout(() => toast.remove(), 500);
-             }, 4000);
-        }
-    },
 
     _showGhostClaimToast() {
         const body = document.querySelector('body');

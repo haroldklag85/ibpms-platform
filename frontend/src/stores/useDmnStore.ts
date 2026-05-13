@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { api } from '@/services/apiClient';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { useTimeStore } from '@/stores/timeStore';
 
+// @Traceability: Testabilidad J-02 (T-24)
 export const useDmnStore = defineStore('dmnStore', () => {
     const generatedXml = ref<string | null>(null);
     const confidence = ref<number>(0);
@@ -24,34 +26,31 @@ export const useDmnStore = defineStore('dmnStore', () => {
         requiresFallback.value = false;
         generatedXml.value = '';
 
-        let initialTimeout: ReturnType<typeof setTimeout> | null = null;
-        let stallTimeout: ReturnType<typeof setTimeout> | null = null;
+        const timeStore = useTimeStore();
+        let startTick = timeStore.currentTick;
+        let lastRowTick = timeStore.currentTick;
         let hasReceivedRows = false;
         const ctrl = new AbortController();
 
-        const clearTimers = () => {
-            if (initialTimeout) clearTimeout(initialTimeout);
-            if (stallTimeout) clearTimeout(stallTimeout);
-        };
-
-        const resetStallTimer = () => {
-            if (stallTimeout) clearTimeout(stallTimeout);
-            stallTimeout = setTimeout(() => {
-                ctrl.abort();
-                requiresFallback.value = true;
-                generationError.value = 'Estancamiento de 15s en generación. Generación parcial recuperada.';
-                isGenerating.value = false;
-            }, 15000);
-        };
-
-        initialTimeout = setTimeout(() => {
-            if (!hasReceivedRows) {
+        const unwatch = watch(() => timeStore.currentTick, (current) => {
+            if (!hasReceivedRows && current - startTick > 30000) {
                 ctrl.abort();
                 isSseTimeout.value = true;
                 generationError.value = 'La generación tardó más de lo esperado. Pulse [🔄 Reintentar]';
                 isGenerating.value = false;
+                unwatch();
+            } else if (hasReceivedRows && current - lastRowTick > 15000) {
+                ctrl.abort();
+                requiresFallback.value = true;
+                generationError.value = 'Estancamiento de 15s en generación. Generación parcial recuperada.';
+                isGenerating.value = false;
+                unwatch();
             }
-        }, 30000);
+        });
+
+        const clearTimers = () => {
+            unwatch();
+        };
 
         try {
             await fetchEventSource('/api/v1/dmn/generate-stream', {
@@ -65,9 +64,8 @@ export const useDmnStore = defineStore('dmnStore', () => {
                 onmessage(msg) {
                     if (!hasReceivedRows) {
                         hasReceivedRows = true;
-                        if (initialTimeout) clearTimeout(initialTimeout);
                     }
-                    resetStallTimer();
+                    lastRowTick = timeStore.currentTick;
 
                     if (msg.event === 'row') {
                         generatedXml.value += msg.data;

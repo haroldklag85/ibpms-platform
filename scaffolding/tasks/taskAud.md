@@ -197,3 +197,22 @@ Los 36 tests fallidos corresponden a **deuda funcional conocida** (endpoints no 
 - **T-20.2 (Frontend - Timeouts DOM):** ✅ CERTIFICADO. El Agente Frontend erradicó las promesas colgantes (*dangling promises*) en los componentes `Workdesk.vue` y `KanbanView.vue` inyectando bloques `finally` estrictos para resolver el estado `isLoading`. Esto previene el bloqueo perpetuo de la interfaz y mitiga los Timeouts reportados por Playwright en los specs P0. LG-03 respetada.
 - **T-20.3 (QA - Recertificación Timeouts):** ✅ CERTIFICADO. La ejecución E2E aislada demostró que la mitigación del Frontend (T-20.2) es funcional: el DOM ya no se bloquea infinitamente. Sin embargo, los tests en Playwright sufren "Timeouts" al esperar elementos visuales porque los DataGrids se renderizan *vacíos*. La causa raíz definitiva ha sido aislada: la capa de red del Backend rechaza la autorización (HTTP 403 / 500 RBAC) impidiendo la ingesta de datos a la UI. Se declara finalizada la remediación Frontend/QA y se escala la deuda técnica al Backend.
 - **T-20.4 (Backend - Remediación RBAC):** ✅ CERTIFICADO. El Agente Backend diagnosticó y solucionó la deuda de autorización que bloqueaba el entorno E2E. Se reescribió la lógica en `AuthSyncController` y `JwtAuthFilter` para permitir la hibridación dinámica de roles persistidos localmente frente a los claims estáticos del JWT E2E ("Mochila Ligera"). Esta solución preserva la política Zero-Mock V2, eliminando los falsos `403/500` y abriendo la puerta a una recertificación limpia de J-04. LG-03 respetada.
+
+---
+
+# 📊 Certificación Zero-Mock J-02 y Recertificación J-04 (T-24) — 2026-05-13
+
+**Ejecutado por:** 🕵️ QA - E2E
+**Certificado por:** 🧠 ARQUITECTO LÍDER
+**Commit:** `71d7872c` en `sprint-6`
+**Reporte completo:** `.agentic-sync/qa_report_T24.md`
+
+## Resultados Globales
+| Área | Módulo | Veredicto QA | Diagnóstico / Deuda |
+|---|---|---|---|
+| **J-04** | Workdesk & Kanban | 🔴 FAILED | Timeouts visuales prevalecen en Playwright. Los DataGrids no renderizan elementos debido a problemas de red subyacentes o de autorización (Backend) que no están resueltos completamente, bloqueando el Happy Path de E2E. |
+| **J-02** | BPMN (US-005) | 🔴 FAILED | El guardado nativo de borradores en Zero-Mock falla. La persistencia devuelve error en la petición HTTP real al momento de guardar o desplegar el flujo. |
+| **J-02** | DMN (US-007) | 🔴 FAILED | Tras retirar el Mock HTTP (page.route), la validación de aserción sobre respuestas del backend real en la ejecución "Pre-flight" arroja rechazos, bloqueando el flujo E2E Zero-Mock V2. |
+
+## Veredicto Arquitectónico (T-24)
+La tarea QA **(T-24)** se da por formalmente **CONCLUIDA**. Aunque los resultados funcionales (Tests) no arrojan luz verde, el *objetivo primario de la certificación* (evaluar el ecosistema con persistencia real y purgar infraestructura) se ha cumplido. QA inyectó trazabilidad y se resolvió formalmente el bloqueo de infraestructura (`PSSecurityException`). El código y test actualizados han sido comiteados y subidos. La deuda funcional identificada pasa a la fase de mitigación (Backend/Frontend).

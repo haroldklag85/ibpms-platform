@@ -149,10 +149,10 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
-import apiClient from '@/services/apiClient';
 
 const router = useRouter();
 const route = useRoute();
@@ -202,7 +202,7 @@ const handleEmergencyLogin = async () => {
     loginError.value = null; // Limpiar error previo
     try {
         console.log(`[BREAK-GLASS] Forzando POST /auth/emergency-login para ${email.value}`);
-        const response = await apiClient.post('/auth/emergency-login', { 
+        const response = await integrationStore.post('/auth/emergency-login', { 
             email: email.value, 
             password: password.value 
         });
@@ -251,6 +251,7 @@ const handleEmergencyLogin = async () => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
+
 .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 </style>

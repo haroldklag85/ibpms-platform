@@ -98,32 +98,3 @@ watch(() => timeStore.currentTick, (newTick) => {
 4. Verificar inyección de Trazabilidad.
 5. Ejecutar compilación: `npm run build` (en `frontend`).
 6. Commit: `git add . && git commit -m "refactor(frontend): purgar smart components y timers zombies (ADR-006/CA-11)" && git push`
-
-## 📋 Instrucciones para Copiar y Pegar
-
-```text
-Asume el rol de 🎨 FRONTEND - VUE.
-
-ANTES DE HACER CUALQUIER COSA, lee obligatoriamente estos archivos en este orden exacto:
-
-1. cat .cursorrules
-2. cat .agents/skills/frontend_build_audit/SKILL.md
-3. cat .agents/skills/clean_code_standards/SKILL.md
-4. cat .agents/skills/zero_mock_enforcement/SKILL.md
-5. cat docs/architecture/ADR-006_Dumb_Components.md
-6. cat .agentic-sync/T-21_Frontend_ADR006_SmartComponents.md
-
-TU MISIÓN:
-
-1. Ejecutar el Handoff T-21 para refactorizar los 9 componentes visuales que llaman directamente a la red.
-2. Migrar las peticiones de `IdentityGovernance.vue`, `ServiceAccountsTable.vue` y otros a Stores de Pinia.
-3. Erradicar los `setInterval` de `BpmnDesigner.vue` y `IntakeTriageView.vue`, atándolos al `timeStore.currentTick`.
-4. Build/Compile: npm run build (dentro de frontend)
-5. Commit: git add . && git commit -m "refactor(frontend): purgar anti-patrones de red y tiempo (ADR-006)" && git push
-
-REGLAS INQUEBRANTABLES:
-- PROHIBIDO importar o usar `apiClient` directamente dentro de un archivo `.vue`.
-- PROHIBIDO usar `setInterval` nativo. Todo ciclo debe depender de `timeStore`.
-- DEBES incluir el comentario `// @Traceability: Retro-Remediación ADR-006` en los cambios.
-- DEBES comprobar que Vite logra un Build exitoso de producción sin errores de TS.
-```

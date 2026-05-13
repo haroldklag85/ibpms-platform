@@ -4,12 +4,20 @@ import com.ibpms.poc.domain.model.agile.AgileTask;
 import com.ibpms.poc.domain.model.agile.SkipReason;
 import com.ibpms.poc.infrastructure.jpa.entity.SkipAuditEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.SkipAuditRepository;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Servicio de auditoría para operaciones Skip Task (Saltar Tareas).
+ * Extrae la lógica de persistencia del TaskSkipController.
+ * 
+ * @Traceability(US = "US-008", CA = {"CA-02"})
+ */
 @Service
+@Traceability(US = "US-008", CA = {"CA-02"})
 public class SkipAuditService {
 
     private final SkipAuditRepository skipAuditRepository;
@@ -49,7 +57,10 @@ public class SkipAuditService {
         // 3. Return next task sorted by SLA priority
         return taskService.claimNextTask(username);
     }
-    // @Traceability: Retro-Remediación ADR-001
+    /**
+     * Retorna el histórico completo de skips (uso administrativo/auditoría).
+     */
+    // @Traceability: US-008 - CA-02 (ADR-001 Refactor)
     public java.util.List<SkipAuditEntity> findAll() {
         return skipAuditRepository.findAll();
     }

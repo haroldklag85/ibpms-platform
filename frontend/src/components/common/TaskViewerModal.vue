@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
 import { z } from 'zod';
-import apiClient from '@/services/apiClient';
 import FormRenderer from '@/components/forms/FormRenderer.vue';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 // ==========================================
 // 1. PROPS Y TYPES (El Camaleón)
@@ -141,7 +144,7 @@ const submitTaskPayload = async (eventType: 'save-progress' | 'complete' | 'erro
      if (eventType === 'error-boundary') endpoint = `/api/v1/tasks/${props.context.taskId}/escalate`;
      
      // Simulamos la llamada (O descomentar en Prod)
-     // await apiClient.post(endpoint, namespacedPayload);
+     // await integrationStore.post(endpoint, namespacedPayload);
      
      // Simular Fallback: si es 'complete', forzamos el Happy Path o Error Mock
      emit(eventType as any, namespacedPayload);

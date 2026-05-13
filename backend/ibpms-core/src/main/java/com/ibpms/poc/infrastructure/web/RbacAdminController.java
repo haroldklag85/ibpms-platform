@@ -29,38 +29,38 @@ public class RbacAdminController {
 
     @GetMapping("/profiles")
     public ResponseEntity<List<IbpmsProfileEntity>> getAllProfiles() {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(rbacAdminService.getAllProfiles());
     }
 
     @PostMapping("/profiles")
     public ResponseEntity<IbpmsProfileEntity> createProfile(@RequestBody IbpmsProfileEntity profile) {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(rbacAdminService.saveProfile(java.util.Objects.requireNonNull(profile)));
     }
 
     @GetMapping("/mappings")
     public ResponseEntity<List<IdpGroupMappingEntity>> getAllMappings() {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(rbacAdminService.getAllMappings());
     }
 
     @PostMapping("/mappings")
     public ResponseEntity<IdpGroupMappingEntity> addMapping(@RequestBody IdpGroupMappingEntity mapping) {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(rbacAdminService.saveMapping(java.util.Objects.requireNonNull(mapping)));
     }
 
     @GetMapping("/assignments")
     public ResponseEntity<List<ProfileBpmnAssignmentEntity>> getAllAssignments() {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(rbacAdminService.getAllAssignments());
     }
 
     @PostMapping("/assignments")
     public ResponseEntity<ProfileBpmnAssignmentEntity> addAssignment(
             @RequestBody ProfileBpmnAssignmentEntity assignment) {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(rbacAdminService.saveAssignment(java.util.Objects.requireNonNull(assignment)));
     }
 }

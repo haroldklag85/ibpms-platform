@@ -145,7 +145,7 @@ public class TaskController {
                 if (oldStr == null || !oldStr.equals(newStr)) {
                     UUID formId = new UUID(0, 0); // Mock UUID for form design ID since it involves joining with
                                                   // Definition
-                    // @Traceability: Retro-Remediación ADR-001
+                    // @Traceability: US-008 - CA-01 (ADR-001 Refactor)
                     auditService.saveAudit(
                             new FormFieldValueAuditEntity(processInstanceId, formId, key, oldStr, newStr, username));
                 }

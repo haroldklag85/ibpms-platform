@@ -41,7 +41,7 @@ public class TaskSkipController {
 
     @GetMapping("/skip-audit")
     public ResponseEntity<java.util.List<com.ibpms.poc.infrastructure.jpa.entity.SkipAuditEntity>> getSkipAuditLogs() {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-008 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(skipAuditService.findAll());
     }
 

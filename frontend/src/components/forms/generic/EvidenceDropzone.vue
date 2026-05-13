@@ -66,9 +66,12 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref } from 'vue'
 import { useGenericFormStore, type UploadedFile } from '@/stores/genericFormStore'
-import apiClient from '@/services/apiClient'
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const store = useGenericFormStore()
 const isDragging = ref(false)
@@ -136,7 +139,7 @@ const uploadFile = async (item: UploadedFile) => {
     formData.append('file', item.file);
     
     try {
-        const res = await apiClient.post('/api/v1/documents/upload-temp', formData, {
+        const res = await integrationStore.post('/api/v1/documents/upload-temp', formData, {
             headers: { 
                 'Content-Type': 'multipart/form-data',
                 'X-Task-Id': store.taskId 

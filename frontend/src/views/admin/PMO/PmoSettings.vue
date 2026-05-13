@@ -170,8 +170,8 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
-import apiClient from '@/services/apiClient';
 
 // ── ESTADO CA-3: Config Horas ──
 const slaForm = ref({
@@ -189,7 +189,7 @@ const submitSlaConfig = async () => {
     isSubmitting.value = true;
     try {
         // Guardar configuración de horas
-        await apiClient.put('/admin/sla/business-hours', {
+        await integrationStore.put('/admin/sla/business-hours', {
             startTime: slaForm.value.startHour,
             endTime: slaForm.value.endHour,
             timezone: slaForm.value.timezone,
@@ -198,7 +198,7 @@ const submitSlaConfig = async () => {
         
         // CA-3: Manejo 202 si 'applyRetroactive' es verdadero
         if (slaForm.value.applyRetroactive) {
-            const response = await apiClient.post('/admin/sla/apply', null, { 
+            const response = await integrationStore.post('/admin/sla/apply', null, { 
                 params: { applyRetroactively: true } 
             });
             if (response.status === 202) {
@@ -231,7 +231,7 @@ const addHoliday = async () => {
         return;
     }
     try {
-        const response = await apiClient.post('/admin/sla/holidays', {
+        const response = await integrationStore.post('/admin/sla/holidays', {
             holidayDate: newHoliday.value.date,
             description: newHoliday.value.name
         });
@@ -251,7 +251,7 @@ const addHoliday = async () => {
 
 const removeHoliday = async (id: string) => {
     try {
-        await apiClient.delete(`/admin/sla/holidays/${id}`);
+        await integrationStore.delete(`/admin/sla/holidays/${id}`);
         holidays.value = holidays.value.filter(h => h.id !== id);
     } catch (e) {
         console.error('Error al eliminar asueto', e);
@@ -261,7 +261,7 @@ const removeHoliday = async (id: string) => {
 
 onMounted(async () => {
     try {
-        const resHours = await apiClient.get('/admin/sla/business-hours');
+        const resHours = await integrationStore.get('/admin/sla/business-hours');
         if (resHours.data) {
             slaForm.value.startHour = resHours.data.startTime || '08:00';
             slaForm.value.endHour = resHours.data.endTime || '18:00';
@@ -272,7 +272,7 @@ onMounted(async () => {
     }
 
     try {
-        const resHols = await apiClient.get('/admin/sla/holidays');
+        const resHols = await integrationStore.get('/admin/sla/holidays');
         if (resHols.data) {
             holidays.value = resHols.data.map((h: any) => ({
                 id: h.id,
@@ -289,6 +289,7 @@ onMounted(async () => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
+
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;

@@ -147,22 +147,22 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    // @Traceability: Retro-Remediación ADR-001
+    // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
     public java.util.Optional<UserEntity> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
-    // @Traceability: Retro-Remediación ADR-001
+    // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
     public java.util.Optional<UserEntity> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
-    // @Traceability: Retro-Remediación ADR-001
+    // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
     public java.util.Optional<Boolean> isUserActive(String username) {
         return userRepository.isUserActive(username);
     }
 
-    // @Traceability: Retro-Remediación ADR-001
+    // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
     public UserEntity saveUser(UserEntity user) {
         return userRepository.save(user);
     }

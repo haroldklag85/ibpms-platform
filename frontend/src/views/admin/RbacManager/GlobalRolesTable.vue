@@ -208,10 +208,13 @@
 </template>
 
 <script setup>
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, reactive } from 'vue'
 import { useRbacStore } from '@/stores/rbacStore'
-import apiClient from '@/services/apiClient'
 import { RoleFactories } from '@/tests/factories'
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const store = useRbacStore()
 
@@ -226,7 +229,7 @@ function isRootRole(name) {
 // --- CA-2: Delete ---
 function onDeleteRole(rol) {
   if (!confirm(`¿Eliminar el rol "${rol.name}"? Esta acción es irreversible.`)) return
-  apiClient.delete(`/admin/roles/${rol.id}`)
+  integrationStore.delete(`/admin/roles/${rol.id}`)
     .then(() => store.fetchRoles())
     .catch(err => alert(`Error al eliminar: ${err?.response?.data?.message ?? err.message}`))
 }
@@ -247,7 +250,7 @@ async function confirmCreateRole() {
       source: 'LOCAL',
       parentRole: newRole.parentRoleId ? { id: newRole.parentRoleId } : null,
     }
-    await apiClient.post('/admin/roles/', payload)
+    await integrationStore.post('/admin/roles/', payload)
     createModalOpen.value = false
     Object.assign(newRole, { name: '', description: '', parentRoleId: '', isTemplate: false })
     store.fetchRoles()
@@ -273,7 +276,7 @@ async function confirmMassAssign() {
   if (!massAssignTarget.value) return
   massAssigning.value = true
   try {
-    const { data } = await apiClient.post(
+    const { data } = await integrationStore.post(
       `/admin/roles/${massAssignTarget.value.id}/assign-massively`,
       demoUserIds
     )

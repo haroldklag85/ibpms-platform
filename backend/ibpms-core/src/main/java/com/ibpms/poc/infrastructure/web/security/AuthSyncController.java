@@ -102,7 +102,7 @@ public class AuthSyncController {
             ));
         }
 
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
         Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userService.findByEmail(email);
         
         if (userOpt.isEmpty()) {
@@ -171,7 +171,7 @@ public class AuthSyncController {
             ));
         }
 
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
         Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userService.findByEmail(email);
         
         if (userOpt.isEmpty() || !passwordEncoder.matches(currentPassword, userOpt.get().getPasswordHash())) {
@@ -193,7 +193,7 @@ public class AuthSyncController {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setMustChangePassword(false);
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
         userService.saveUser(user);
 
         return ResponseEntity.ok(Map.of("message", "Contraseña actualizada exitosamente."));
@@ -220,7 +220,7 @@ public class AuthSyncController {
             }
 
             // Chequeo Cero-Trust explícito: ¿Sigue el usuario activo en DB?
-            // @Traceability: Retro-Remediación ADR-001
+            // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
             boolean isActive = userService.isUserActive(username).orElse(false);
             if (!isActive) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -261,7 +261,7 @@ public class AuthSyncController {
             jwtBlacklistService.revokeSession(username);
 
             // CA-4: Auditoría de cierre Break-Glass
-            // @Traceability: Retro-Remediación ADR-001
+            // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
             systemAuditLogService.saveAuditLog(new com.ibpms.poc.infrastructure.jpa.entity.SystemAuditLogEntity(username, "EMERGENCY_OVERRIDE_TERMINATED", 0, null, null));
 
             return ResponseEntity.ok(Map.of("message", "Emergency session terminated successfully"));
@@ -285,7 +285,7 @@ public class AuthSyncController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Debe proveer targetEmail o targetUserId"));
         }
 
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
         Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userService.findByEmail(targetEmail);
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Usuario objetivo no encontrado"));
@@ -308,7 +308,7 @@ public class AuthSyncController {
         String overrideToken = jwtTokenProvider.generateImpersonationToken(sub, roles, tenantId, adminUsername);
 
         // Auditoría
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
         systemAuditLogService.saveAuditLog(new com.ibpms.poc.infrastructure.jpa.entity.SystemAuditLogEntity(adminUsername, "IMPERSONATION_STARTED", 0, sub, roles.toString()));
 
         return ResponseEntity.ok(Map.of("token", overrideToken, "message", "Impersonation session started successfully"));

@@ -118,8 +118,11 @@
 </template>
 
 <script setup>
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, reactive, onMounted } from 'vue'
-import apiClient from '@/services/apiClient'
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 // ID del usuario autenticado actual (en producción viene del store de sesión)
 // Para el demostrador se usa un valor mock; reemplazar por useAuthStore().currentUser.id
@@ -145,7 +148,7 @@ const errors = reactive({
 
 onMounted(async () => {
   try {
-    const { data } = await apiClient.get('/admin/users')
+    const { data } = await integrationStore.get('/admin/users')
     availableUsers.value = data.filter(u => u.id !== CURRENT_USER_ID)
   } catch {
     // En demo, silenciamos errores de carga de usuarios
@@ -203,7 +206,7 @@ async function submitDelegation() {
 
   submitting.value = true
   try {
-    await apiClient.post(`/admin/users/${CURRENT_USER_ID}/delegate`, {
+    await integrationStore.post(`/admin/users/${CURRENT_USER_ID}/delegate`, {
       recipientId: form.recipientId,
       startDate: new Date(form.startDate).toISOString().slice(0, 19),
       endDate: new Date(form.endDate).toISOString().slice(0, 19),

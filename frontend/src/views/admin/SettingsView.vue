@@ -79,7 +79,7 @@
 
           <div v-if="draftType === 'OUTBOUND'">
              <label class="block text-sm font-medium text-gray-700 mb-1">Target URL (Webhook Externo)</label>
-             <input type="url" placeholder="https://api.empresa.com/webhook" class="w-full font-mono text-sm px-3 py-2 border rounded shadow-sm">
+             <input type="url" placeholder="https://integrationStore.empresa.com/webhook" class="w-full font-mono text-sm px-3 py-2 border rounded shadow-sm">
           </div>
 
           <div v-if="draftType === 'INBOUND'">
@@ -104,12 +104,15 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
 import IntegrationsList from '@/components/admin/IntegrationsList.vue';
 import RbacManager from '@/components/admin/RbacManager.vue';
-import apiClient from '@/services/apiClient';
 import type { WebhookConfig, WebhookDirection } from '@/types/Integration';
 import type { UserProfile } from '@/types/Security';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const currentTab = ref('users'); // Empezar probando el Tab de Usuarios
 const isSlideOpen = ref(false);
@@ -120,7 +123,7 @@ const activeUsers = ref<UserProfile[]>([]);
 
 onMounted(async () => {
   try {
-    const { data } = await apiClient.get('/admin/users');
+    const { data } = await integrationStore.get('/admin/users');
     activeUsers.value = data || [];
   } catch (err) {
     console.error('Failed to load users:', err);

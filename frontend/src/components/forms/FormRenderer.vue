@@ -4,15 +4,18 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted, onBeforeUnmount, createApp, h, watch, type VNode, Teleport, reactive, computed } from 'vue';
 import jexl from 'jexl';
 import IMask from 'imask';
 import { z } from 'zod';
 import { IMaskDirective } from 'vue-imask';
 import { useDebounceFn } from '@vueuse/core';
-import apiClient from '@/services/apiClient';
 import FormWizard from './FormWizard.vue';
 import { useWizardValidation } from '@/composables/useWizardValidation';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const props = defineProps<{ schema: any[], mockContext?: Record<string, any> }>();
 const formData = defineModel<Record<string, any>>({ default: () => ({}) });
@@ -225,7 +228,7 @@ onMounted(() => {
             if(!url) return;
             try {
                 // Simulando CA-77
-                const res = await apiClient.get(`${url}?q=${query}`);
+                const res = await integrationStore.get(`${url}?q=${query}`);
                 asyncOptions.value[fieldId] = res.data;
             } catch(e) {
                 asyncOptions.value[fieldId] = [{ id: 'mock1', name: 'Dato Gobernado 1' }, { id: 'mock2', name: 'Dato Gobernado 2' }];

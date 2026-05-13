@@ -627,12 +627,15 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 // TODO (Sprint 7.2): Este Dashboard de Identidad y Roles (US-025 / US-036) depende fuertemente de MOCKS locales. 
 // ⚠️ ESTO VIOLA LA POLÍTICA ARQUITECTÓNICA ADR-010 (Zero-Mock). 
 // Es imperativo migrar todos los datos estáticos a los servicios reales de IAM y CISO Dashboard.
 import { ref, computed, onMounted } from 'vue';
 import { z } from 'zod';
-import apiClient from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 // ── Navegación Tabs ──
 const tabs = [
@@ -668,7 +671,7 @@ const toggleUserStatus = async (user: any) => {
     const originalState = user.active;
     user.active = !user.active; // Mapeo Optimista
     try {
-        await apiClient.put(`/api/v1/admin/users/${user.id}/status`, { active: user.active });
+        await integrationStore.put(`/api/v1/admin/users/${user.id}/status`, { active: user.active });
         if(!user.active) showToast(`Usuario ${user.name} desactivado (Kill Switch accionado).`, 'error');
         else showToast(`Usuario ${user.name} activado exitosamente.`, 'success');
     } catch(e: any) {
@@ -694,7 +697,7 @@ const executeRevoke = async () => {
     if (!userToRevoke.value) return;
     isRevoking.value = true;
     try {
-        await apiClient.post(`/api/v1/admin/auth/revoke/${userToRevoke.value.id}`);
+        await integrationStore.post(`/api/v1/admin/auth/revoke/${userToRevoke.value.id}`);
         userToRevoke.value.active = false;
         showToast(`Sesión de ${userToRevoke.value.name} terminada y añadida al Blacklist.`, 'success');
         showRevokeModal.value = false;
@@ -714,7 +717,7 @@ const executeRevoke = async () => {
 const globalKillSession = async () => {
     if (confirm("⚠️ ALERTA NIVEL ROJO: ¿Está seguro que desea revocar todas las sesiones globalmente? Esto expulsará a todos los usuarios del sistema.")) {
         try {
-            await apiClient.post(`/kill-session`);
+            await integrationStore.post(`/kill-session`);
             showToast('Sesiones Centrales Evaporadas (Kill Session Global Accionado)', 'error');
         } catch(e) {
             showToast('Fallback local: Sesiones Centrales Evaporadas (sin Backend)', 'error');
@@ -726,7 +729,7 @@ const triggerExorcism = async (user: any) => {
     if (confirm(`⚠️ ALERTA CISO: ¿Desea desencadenar el Exorcismo (RabbitMQ) para desasignar masivamente todas las tareas de ${user.name}?`)) {
         try {
             // CA-14: Exorcismo JWT (Kill Session Extremo) & Desasignación RabbitMQ
-            await apiClient.post(`/api/v1/admin/users/${user.id}/revoke-session`);
+            await integrationStore.post(`/api/v1/admin/users/${user.id}/revoke-session`);
             showToast(`RabbitMQ TaskRescueConsumer disparado para ${user.name}.`, 'success');
         } catch(e) {
             showToast(`Fallback local: Tareas de ${user.name} liberadas a nivel cliente.`, 'success');
@@ -788,7 +791,7 @@ const tempPasswordValue = ref('');
 const generateTempPassword = async () => {
     if(!editingUser.value) return;
     try {
-        const res = await apiClient.post(`/api/v1/admin/users/${editingUser.value.id}/reset-password`);
+        const res = await integrationStore.post(`/api/v1/admin/users/${editingUser.value.id}/reset-password`);
         if (!res.data || !res.data.tempPassword) {
              throw new Error('No tempPassword provided by server');
         }
@@ -882,7 +885,7 @@ const saveMatrix = async () => {
            canExecuteTasks: !!matrixState.value[`${role.id}_${proc.id}_E`]
        })).filter(p => p.canInitiateProcess || p.canExecuteTasks);
 
-       return apiClient.put(`/api/v1/admin/roles/${role.id}/process-permissions`, permissions);
+       return integrationStore.put(`/api/v1/admin/roles/${role.id}/process-permissions`, permissions);
     });
     
     await Promise.all(promises);
@@ -899,7 +902,7 @@ const saveMatrix = async () => {
 };
 const downloadMatrixCsv = async () => {
   try {
-    const response = await apiClient.get('/api/v1/admin/security/matrix/export', { responseType: 'blob' });
+    const response = await integrationStore.get('/api/v1/admin/security/matrix/export', { responseType: 'blob' });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -978,7 +981,7 @@ const activeAuditLog = ref<any>(null);
 const resolveAnomaly = async (anomaly: any) => {
    try {
      // El CISO emite el comando de subsanamiento a la base de datos (HTTP PUT)
-     await apiClient.put(`/api/v1/security/anomalies/${anomaly.id}/resolve`, { resolution: 'Revisado y Subsanado Manualmente' });
+     await integrationStore.put(`/api/v1/security/anomalies/${anomaly.id}/resolve`, { resolution: 'Revisado y Subsanado Manualmente' });
      anomaly.status = 'RESOLVED';
      showToast(`Anomalía ${anomaly.id} subsanada con éxito.`, 'success');
    } catch(e) {
@@ -997,11 +1000,11 @@ onMounted(async () => {
     try {
         // Fetch all necessary data for E2E validation without mocks
         const [usersRes, rolesRes, processesRes, anomaliesRes, auditRes] = await Promise.all([
-            apiClient.get('/admin/users').catch(() => ({ data: [] })),
-            apiClient.get('/admin/roles').catch(() => ({ data: [] })),
-            apiClient.get('/design/processes').catch(() => ({ data: [] })), // GET /api/v1/design/processes → BpmnDesignController.getAllLatestProcesses()
-            apiClient.get('/security/anomalies').catch(() => ({ data: [] })),
-            apiClient.get('/security/audit/reports').catch(() => ({ data: [] }))
+            integrationStore.get('/admin/users').catch(() => ({ data: [] })),
+            integrationStore.get('/admin/roles').catch(() => ({ data: [] })),
+            integrationStore.get('/design/processes').catch(() => ({ data: [] })), // GET /api/v1/design/processes → BpmnDesignController.getAllLatestProcesses()
+            integrationStore.get('/security/anomalies').catch(() => ({ data: [] })),
+            integrationStore.get('/security/audit/reports').catch(() => ({ data: [] }))
         ]);
 
         if (usersRes.data && Array.isArray(usersRes.data)) {

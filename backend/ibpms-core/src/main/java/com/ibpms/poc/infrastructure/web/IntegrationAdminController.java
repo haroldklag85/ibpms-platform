@@ -28,13 +28,13 @@ public class IntegrationAdminController {
 
     @GetMapping("/inbound")
     public ResponseEntity<List<InboundWebhookEntity>> getAllInboundWebhooks() {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-023 - CA-01 (ADR-001 Refactor)
         return ResponseEntity.ok(inboundService.findAll());
     }
 
     @PostMapping("/inbound")
     public ResponseEntity<InboundWebhookEntity> createInboundWebhook(@RequestBody InboundWebhookEntity entity) {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-023 - CA-01 (ADR-001 Refactor)
         return ResponseEntity.ok(inboundService.saveInboundWebhook(java.util.Objects.requireNonNull(entity)));
     }
 
@@ -42,13 +42,13 @@ public class IntegrationAdminController {
 
     @GetMapping("/outbound")
     public ResponseEntity<List<OutboundConfigEntity>> getAllOutboundConfigs() {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-023 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(outboundService.findAll());
     }
 
     @PostMapping("/outbound")
     public ResponseEntity<OutboundConfigEntity> createOutboundConfig(@RequestBody OutboundConfigEntity entity) {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-023 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(outboundService.saveOutboundConfig(java.util.Objects.requireNonNull(entity)));
     }
 }

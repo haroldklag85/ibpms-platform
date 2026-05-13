@@ -3,6 +3,7 @@ package com.ibpms.poc.application.service.security;
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.ServiceAccountEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.security.ServiceAccountRepository;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,8 +15,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Servicio de Aplicación para Cuentas de Servicio.
+ * Gestiona la lógica de negocio y persistencia de cuentas Service-to-Service (M2M).
+ * 
+ * @Traceability(US = "US-036", CA = {"CA-01"})
+ */
 @Service
 @Transactional
+@Traceability(US = "US-036", CA = {"CA-01"})
 public class ServiceAccountService {
 
     private final ServiceAccountRepository serviceAccountRepository;
@@ -27,8 +35,16 @@ public class ServiceAccountService {
         this.roleService = roleService;
     }
 
-    // @Traceability: Retro-Remediación ADR-001
-    public Map<String, Object> createServiceAccount(String name, String description, String roleIdStr) throws NoSuchAlgorithmException {
+    /**
+     * Crea una cuenta de servicio con su respectivo token y claves.
+     * @param name Nombre de la cuenta.
+     * @param description Descripción (opcional).
+     * @param roleIdStr UUID del rol asociado.
+     * @return Mapa con las credenciales de la cuenta.
+     * @throws Exception en caso de fallo en encriptación.
+     */
+    // @Traceability: US-036 - CA-01 (ADR-001 Refactor)
+    public Map<String, Object> createServiceAccount(String name, String description, String roleIdStr) throws Exception {
         RoleEntity role = roleService.findById(UUID.fromString(roleIdStr))
                 .orElseThrow(() -> new IllegalArgumentException("Role no encontrado"));
 

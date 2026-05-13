@@ -31,7 +31,7 @@ public class WebhookControllerAdvice {
                 .errorType("MALFORMED_JSON")
                 .createdAt(ZonedDateTime.now())
                 .build();
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-004 - CA-12 (ADR-001 Refactor)
         orphanService.save(orphan);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("MALFORMED_JSON: Body is not readable.");
     }

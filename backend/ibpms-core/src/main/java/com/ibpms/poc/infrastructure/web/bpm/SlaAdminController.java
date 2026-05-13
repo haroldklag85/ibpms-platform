@@ -36,19 +36,19 @@ public class SlaAdminController {
      */
     @GetMapping("/holidays")
     public ResponseEntity<List<HolidayEntity>> getHolidays() {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(slaService.getHolidays());
     }
 
     @PostMapping("/holidays")
     public ResponseEntity<HolidayEntity> addHoliday(@RequestBody HolidayEntity holiday) {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(slaService.addHoliday(holiday));
     }
 
     @DeleteMapping("/holidays/{id}")
     public ResponseEntity<Void> deleteHoliday(@PathVariable java.util.UUID id) {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
         slaService.deleteHoliday(id);
         return ResponseEntity.noContent().build();
     }
@@ -58,7 +58,7 @@ public class SlaAdminController {
      */
     @GetMapping("/business-hours")
     public ResponseEntity<BusinessHoursEntity> getBusinessHours() {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
         List<BusinessHoursEntity> configs = slaService.getBusinessHours();
         if (configs.isEmpty()) {
             return ResponseEntity.ok(new BusinessHoursEntity());
@@ -68,7 +68,7 @@ public class SlaAdminController {
 
     @PutMapping("/business-hours")
     public ResponseEntity<BusinessHoursEntity> updateBusinessHours(@RequestBody BusinessHoursEntity updatedConfig) {
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
         List<BusinessHoursEntity> configs = slaService.getBusinessHours();
         BusinessHoursEntity configToSave;
         if (configs.isEmpty()) {
@@ -82,7 +82,7 @@ public class SlaAdminController {
                 configToSave.setTimezone(updatedConfig.getTimezone());
             }
         }
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
         return ResponseEntity.ok(slaService.saveBusinessHours(configToSave));
     }
 }

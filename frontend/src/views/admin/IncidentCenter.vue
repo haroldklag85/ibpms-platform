@@ -69,8 +69,11 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
-import { api } from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 interface Incident {
   id: string;
@@ -87,7 +90,7 @@ const processingId = ref<string | null>(null);
 const fetchIncidents = async () => {
   loading.value = true;
   try {
-    const { data } = await api.getIncidents();
+    const { data } = await integrationStore.getIncidents();
     incidents.value = data || [];
   } catch (err) {
     console.error('Failed to fetch incidents', err);
@@ -109,7 +112,7 @@ const retryIncident = async (id: string) => {
   if (!confirm(`¿Estás seguro de inyectar Electrochoque (Retry Job) al token ${id}?`)) return;
   processingId.value = id;
   try {
-    await api.retryIncident(id);
+    await integrationStore.retryIncident(id);
     alert(`⚡ Retry ejecutado exitosamente en ${id}`);
     await fetchIncidents();
   } catch (err) {
@@ -123,7 +126,7 @@ const abortIncident = async (id: string) => {
   if (!confirm(`🛑 PELIGRO: ¿Estás completamente seguro de Abortar (Matar) el token ${id}? Esta acción destruirá la instancia BPMN para siempre.`)) return;
   processingId.value = id;
   try {
-    await api.abortIncident(id);
+    await integrationStore.abortIncident(id);
     alert(`💀 Instancia ${id} abortada y purgada exitosamente.`);
     await fetchIncidents();
   } catch (err) {

@@ -23,7 +23,7 @@ public class ServiceAccountController {
         String name = request.get("name");
         String roleIdStr = request.get("roleId");
 
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-036 - CA-01 (ADR-001 Refactor)
         Map<String, Object> response = serviceAccountService.createServiceAccount(name, request.get("description"), roleIdStr);
         return ResponseEntity.ok(response);
     }

@@ -8,11 +8,20 @@ import com.ibpms.poc.infrastructure.jpa.repository.IdpGroupMappingRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.ProfileBpmnAssignmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.List;
 
+/**
+ * Servicio Administrativo de RBAC (Role-Based Access Control).
+ * Se encarga de aislar la persistencia de los Controladores Administrativos,
+ * permitiendo la gestión de Perfiles, Mapeos IDP y Asignaciones BPMN.
+ * 
+ * @Traceability(US = "US-005", CA = {"CA-02"})
+ */
 @Service
 @Transactional
+@Traceability(US = "US-005", CA = {"CA-02"})
 public class RbacAdminService {
 
     private final IbpmsProfileRepository profileRepository;
@@ -27,32 +36,53 @@ public class RbacAdminService {
         this.assignmentRepository = assignmentRepository;
     }
 
-    // @Traceability: Retro-Remediación ADR-001
+    /**
+     * @return Lista de todos los perfiles iBPMS.
+     */
+    // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
     public List<IbpmsProfileEntity> getAllProfiles() {
         return profileRepository.findAll();
     }
 
-    // @Traceability: Retro-Remediación ADR-001
+    /**
+     * @param profile Perfil a guardar.
+     * @return Perfil guardado.
+     */
+    // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
     public IbpmsProfileEntity saveProfile(IbpmsProfileEntity profile) {
         return profileRepository.save(profile);
     }
 
-    // @Traceability: Retro-Remediación ADR-001
+    /**
+     * @return Mapeos entre grupos IDP y roles/perfiles.
+     */
+    // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
     public List<IdpGroupMappingEntity> getAllMappings() {
         return mappingRepository.findAll();
     }
 
-    // @Traceability: Retro-Remediación ADR-001
+    /**
+     * @param mapping Mapeo a guardar.
+     * @return Mapeo guardado.
+     */
+    // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
     public IdpGroupMappingEntity saveMapping(IdpGroupMappingEntity mapping) {
         return mappingRepository.save(mapping);
     }
 
-    // @Traceability: Retro-Remediación ADR-001
+    /**
+     * @return Asignaciones de perfiles a definiciones BPMN.
+     */
+    // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
     public List<ProfileBpmnAssignmentEntity> getAllAssignments() {
         return assignmentRepository.findAll();
     }
 
-    // @Traceability: Retro-Remediación ADR-001
+    /**
+     * @param assignment Asignación BPMN a guardar.
+     * @return Asignación guardada.
+     */
+    // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
     public ProfileBpmnAssignmentEntity saveAssignment(ProfileBpmnAssignmentEntity assignment) {
         return assignmentRepository.save(assignment);
     }

@@ -161,8 +161,8 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, nextTick } from 'vue'
-import apiClient from '@/services/apiClient'
 import { useAuthStore } from '@/stores/authStore'
 import { useLocalStorage } from '@vueuse/core'
 import { sanitizeDmnXml } from '@/utils/security'
@@ -251,7 +251,7 @@ const testDmnLogic = async () => {
         const variables = {}; // En el futuro se puede extraer dinámicamente
         lastAction.value = '[XAI Simulación] Ejecutando simulación en el backend...';
         
-        const response = await apiClient.post('/dmn-models/simulate-sandbox', { xml, variables });
+        const response = await integrationStore.post('/dmn-models/simulate-sandbox', { xml, variables });
         const simulationResult = response.data;
         
         // Se asume que el backend retorna un hitId. Si no, se toma la primera regla (Fall-back)
@@ -298,7 +298,7 @@ const openPublishModal = () => {
 const resetToV1 = async () => {
     if(confirm("¿Seguro que desea purgar los cambios generados por la Inteligencia Artificial y revertir el modelo al estándar V1?")) {
         try {
-            await apiClient.post('/dmn/current-dmn-id/rollback');
+            await integrationStore.post('/dmn/current-dmn-id/rollback');
             dmnDraft.value = { prompt: '', hasData: false, xmlData: '' };
             dmnMockedRows.value = [];
             lastAction.value = "[Reversión MLOps] Modelo restaurado a versión legacy.";
@@ -309,6 +309,9 @@ const resetToV1 = async () => {
 }
 
 import { useDmnStore } from '@/stores/useDmnStore'
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 const dmnStore = useDmnStore()
 
 const executeControlledDeploy = async () => {

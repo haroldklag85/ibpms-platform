@@ -850,13 +850,13 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useLocalStorage } from '@vueuse/core';
 import VueDraggable from 'vuedraggable';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
-import apiClient from '@/services/apiClient';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 import FormRenderer from '@/components/forms/FormRenderer.vue';
 // @ts-ignore
@@ -864,6 +864,9 @@ import jexl from 'jexl';
 import { useAuthStore } from '@/stores/authStore';
 import { useFormDesignerStore } from '@/stores/useFormDesignerStore';
 import { storeToRefs } from 'pinia';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 
 // GAP 9: Mimetismo RBAC
@@ -1278,7 +1281,7 @@ const simulateMockSubmit = async () => {
            pattern: formPattern.value,
            formFields: canvasFields.value
         };
-        const response = await apiClient.post('/forms', dto);
+        const response = await integrationStore.post('/forms', dto);
         modalContent.value += `\n[BACKEND HTTP RESPONSE 201 CREATED]:\nRecepción de metadatos aprobada por la API.\nFormulario guardado para distribución:\n\n${JSON.stringify(response.data, null, 2)}`;
     } catch (error: any) {
         modalContent.value += `\n[BACKEND HTTP ERROR]:\n\nEndpoint devolvió fallo. Asegúrate que Java está activo.\n${error.message}`;

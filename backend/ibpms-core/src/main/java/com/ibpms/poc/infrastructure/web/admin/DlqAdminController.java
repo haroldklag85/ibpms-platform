@@ -71,7 +71,7 @@ public class DlqAdminController {
         Integer count = getQueueCount();
         
         // CA-8: Rastro Forense Persistido
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-017 - CA-08 (ADR-001 Refactor)
         auditService.saveAuditLog(new SystemAuditLogEntity(actor, "Retry", count, null, null));
         
         log.warn("SUDO INVOKE [Audit Trail]: Ejecución de reintentos masivos de la DLQ solicitada por usuario: {}", actor);
@@ -85,7 +85,7 @@ public class DlqAdminController {
         Integer count = getQueueCount();
         
         // CA-8: Rastro Forense Persistido
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-017 - CA-08 (ADR-001 Refactor)
         auditService.saveAuditLog(new SystemAuditLogEntity(actor, "Purge", count, null, null));
         
         log.warn("SUDO INVOKE [Audit Trail]: Purgando totalmente ibpms.dlq.global. Datos no archivables perdidos permanentemente. Acción ejecutada por usuario: {}", actor);

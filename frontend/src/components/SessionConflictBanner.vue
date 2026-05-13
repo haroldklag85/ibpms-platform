@@ -7,8 +7,11 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted, onUnmounted } from 'vue';
-import { api } from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const visible = ref(false);
 const taskIdRef = ref<string | null>(null);
@@ -25,7 +28,7 @@ const hide = () => {
 const forceReload = async () => {
     if (taskIdRef.value) {
         try {
-            await api.unclaimTask(taskIdRef.value); // fallback
+            await integrationStore.unclaimTask(taskIdRef.value); // fallback
         } catch(e) {}
     }
     window.location.reload();

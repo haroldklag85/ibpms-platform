@@ -35,10 +35,13 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
-import apiClient from '@/services/apiClient';
 import { useRouter } from 'vue-router';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const isOpen = ref(false);
 const form = ref({ branchId: '', phone: '' });
@@ -63,7 +66,7 @@ onUnmounted(() => {
 
 const submitProfile = async () => {
     try {
-        const res = await apiClient.put('/auth/sync', {
+        const res = await integrationStore.put('/auth/sync', {
             tempToken: tempToken.value,
             claims: form.value
         });

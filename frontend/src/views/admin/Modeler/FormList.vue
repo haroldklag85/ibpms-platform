@@ -83,8 +83,11 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
-import apiClient from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const forms = ref<any[]>([]);
 const isLoading = ref(true);
@@ -106,7 +109,7 @@ const fetchForms = async () => {
     isLoading.value = true;
     try {
         const queryParam = searchQuery.value ? `?search=${encodeURIComponent(searchQuery.value)}` : '';
-        const response = await apiClient.get(`/api/v1/forms${queryParam}`);
+        const response = await integrationStore.get(`/api/v1/forms${queryParam}`);
         forms.value = response.data || [];
     } catch (error) {
         showAlert('Error recuperando diccionario de formularios.', 'error');
@@ -119,7 +122,7 @@ const deleteForm = async (id: string) => {
     if (!confirm(`¿Advertencia de Integridad: Está seguro de eliminar el formulario [${id}]?`)) return;
     
     try {
-        await apiClient.delete(`/api/v1/forms/${id}`);
+        await integrationStore.delete(`/api/v1/forms/${id}`);
         showAlert(`El formulario ${id} fue disipado de la bóveda.`, 'success');
         fetchForms();
     } catch (error: any) {

@@ -22,15 +22,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
+import { useTimeStore } from '@/stores/timeStore';
 import { useI18n } from 'vue-i18n';
 
 const authStore = useAuthStore();
+const timeStore = useTimeStore();
 const { t } = useI18n();
 
 const timeLeft = ref(0);
-let interval: any;
 
 const updateTime = () => {
   if (!authStore.impersonationExpiresAt) return;
@@ -54,10 +55,11 @@ const handleExit = () => {
 
 onMounted(() => {
   updateTime();
-  interval = setInterval(updateTime, 1000);
 });
 
-onUnmounted(() => {
-  clearInterval(interval);
-});
+watch(() => timeStore.currentTick, (tick) => {
+  if (tick % 1000 < 500) {
+    updateTime();
+  }
+}); // @Traceability: Retro-Remediación ADR-006
 </script>

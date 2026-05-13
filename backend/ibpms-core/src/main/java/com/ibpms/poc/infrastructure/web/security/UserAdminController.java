@@ -114,7 +114,7 @@ public class UserAdminController {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             try {
-                // @Traceability: Retro-Remediación ADR-001
+                // @Traceability: US-038 - CA-02 (ADR-001 Refactor)
                 blacklistService.blacklistToken(token);
             } catch (RuntimeException e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

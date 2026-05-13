@@ -33,7 +33,7 @@ public class AuditReportController {
     @GetMapping("/iso27001/role-matrix")
     public ResponseEntity<StreamingResponseBody> downloadIso27001RoleMatrix() {
 
-        // @Traceability: Retro-Remediación ADR-001
+        // @Traceability: US-036 - CA-16 (ADR-001 Refactor)
         List<IdentityEntity> users = identityService.findAll();
 
         StreamingResponseBody stream = out -> {

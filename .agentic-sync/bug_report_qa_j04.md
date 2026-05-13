@@ -11,4 +11,7 @@ npx : No se puede cargar el archivo C:\Program Files\nodejs\npx.ps1 porque la ej
 ```
 
 ## Acción Tomada
-Por protocolo de resiliencia y orquestación paralela (Carril A), se reporta este fallo de infraestructura de QA como un **Bug Aislado** y se aborta temporalmente la recertificación de QA para continuar *implacablemente* con el ensamblaje de la Iteración 7.2 (J-02) en los carriles de Backend y Frontend.
+Por protocolo de resiliencia y orquestación paralela (Carril A), se reportó este fallo de infraestructura de QA como un **Bug Aislado** y se abortó temporalmente la recertificación de QA para continuar *implacablemente* con el ensamblaje de la Iteración 7.2 (J-02) en los carriles de Backend y Frontend.
+
+**Actualización (2026-05-13):**
+El fallo de infraestructura local (`PSSecurityException`) ha sido solventado definitivamente mediante la actualización de políticas de ejecución en PowerShell (`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`). El bug queda formalmente marcado como **SOLUCIONADO**. La recertificación se transfiere al Handoff T-24.

@@ -386,11 +386,11 @@
                    <!-- @Traceability: US-002, CA-22 (Botonera Condicional según Tab Activa) -->
                    <td class="px-4 py-3 text-center" @click.stop>
                      <!-- TAB: MI BANDEJA -->
-                     <div v-if="store.activeView === 'PERSONAL'" class="flex items-center justify-center gap-2">
+                     <div v-if="store.activeView === 'PERSONAL' && task.assignee" class="flex items-center justify-center gap-2">
                        <button @click="openTaskDetails(task)" class="px-2 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-open-task">
                          <span class="material-symbols-outlined text-[14px]">open_in_new</span> Abrir
                        </button>
-                       <button @click="onReleaseTask(task)" class="px-2 py-1.5 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-release-task">
+                       <button @click="onReleaseTask(task)" class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-release-task">
                          <span class="material-symbols-outlined text-[14px]">undo</span> Liberar
                        </button>
                      </div>
@@ -400,7 +400,7 @@
                        <button @click="openTaskDetails(task)" class="px-2 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-explore-task">
                          <span class="material-symbols-outlined text-[14px]">visibility</span> Explorar
                        </button>
-                       <button @click="onClaimTask(task)" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)" class="px-2 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" :data-testid="'claim-button-' + (task.unifiedId || task.originalTaskId)">
+                       <button v-if="!task.assignee" @click="onClaimTask(task)" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)" class="px-2 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" :data-testid="'claim-button-' + (task.unifiedId || task.originalTaskId)">
                          <span v-if="isClaiming === (task.unifiedId || task.originalTaskId)" class="material-symbols-outlined text-[14px] animate-spin">refresh</span>
                          <span v-else class="material-symbols-outlined text-[14px]">pan_tool</span>
                          Reclamar

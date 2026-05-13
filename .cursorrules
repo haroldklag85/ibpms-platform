@@ -143,3 +143,14 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 - **Prohibición de Red Estática:** Queda ESTRICTAMENTE PROHIBIDO para cualquier Agente Frontend o Backend utilizar, habilitar o sugerir interceptores de red (ej. `mockAdapter.ts`) para simular respuestas del servidor. 
 - **Fail-Fast de Integración:** Si un endpoint o funcionalidad de la BD no está listo, la aplicación debe fallar ("Fail-Fast" con HTTP 404/500), y programar *Graceful Degradation*, no inyectar datos JSON estáticos fijos.
 - **Validación QA Real:** Todo Agente de QA (Playwright/Vitest) tiene la LEY MÁXIMA de validar operaciones E2E mutando y consultando sobre la base de datos real bajo contexto de contenerización Docker (`docker-compose.e2e.yml`). Falsos positivos originados por UI Mockeada son un quiebre de la Ley Global 2.
+
+---
+# 🛑 LEY GLOBAL 4: INMUTABILIDAD DE REGRESIÓN (TEST-DRIVEN DECAY PREVENTION)
+
+Modificar un test antiguo (de un Sprint previo) simplemente para que vuelva a pasar es un anti-patrón crítico conocido como "Test-Driven Decay". Las pruebas son contratos inmutables de negocio.
+
+- **Inmutabilidad de Aserciones:** Queda ESTRICTAMENTE PROHIBIDO modificar los bloques lógicos de validación (`assert`, `expect`, `Given-When-Then`) de una prueba de regresión certificada en Sprints anteriores, a menos que el Usuario apruebe explícitamente un cambio en la Historia de Usuario.
+- **Upgrades de Infraestructura (Excepción Controlada):** Solo está permitido modificar el `Setup` o la configuración de infraestructura de un test (Ej. migrar de Mocks en memoria a Testcontainers/Liquibase). En este caso, el comportamiento funcional del test DEBE mantenerse intacto.
+- **Prohibición de Pruebas Mentirosas:** Si un test E2E o de Integración de un Sprint anterior falla durante el Sprint actual, el agente DEBE asumir que el nuevo código introdujo una regresión. **Se arregla el código, NUNCA se ajusta el test para que pase en verde.**
+- **Auditoría de Aserciones:** Antes de cerrar una tarea de estabilización de QA, el agente QA DEBE demostrar (mediante un diff) que no redujo la cobertura de las aserciones del negocio original.
+

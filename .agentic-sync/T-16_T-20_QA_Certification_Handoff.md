@@ -90,6 +90,7 @@ public class BpmnIntegrationTest {
 | 2 | BPMN usa Liquibase en Tests | La clase `BpmnIntegrationTest` arranca mediante Testcontainers/Liquibase sin fallos de esquema. |
 | 3 | T-20 Playwright J-04 Verde | El reporte HTML de Playwright muestra 18/18 pruebas superadas. |
 | 4 | Cero Mocks Restantes | Búsqueda forense no revela `Mockito.when()` en la lógica de negocio central si no es puramente para infraestructura externa de I/O de terceros. |
+| 5 | **Auditoría de Aserciones** | **LEY GLOBAL 4:** El agente QA entrega un Diff demostrando que NINGÚN bloque de aserción original de negocio (`assert`, `expect`) fue alterado o relajado durante la migración a Testcontainers. |
 
 ## 🚦 SECUENCIA DE EJECUCIÓN
 
@@ -120,6 +121,8 @@ TU MISIÓN:
 6. Commit: `git add . && git commit -m "test(qa): final certification sprint 7.1" && git push`
 
 REGLAS INQUEBRANTABLES:
+- **LEY GLOBAL 4:** Tienes ESTRICTAMENTE PROHIBIDO modificar los bloques lógicos de validación (`assert`, `expect`, `Given-When-Then`) de las pruebas de regresión certificadas en Sprints anteriores. Solo tienes permitido alterar la configuración de infraestructura (Ej. el `@BeforeEach` o el Setup de Testcontainers).
+- Antes de completar la tarea, DEBES presentar un Diff de auditoría confirmando que las aserciones de negocio de T-18 y T-20 no fueron reducidas.
 - Inyectar // @Traceability: US-XXX, CA-XX en toda prueba refactorizada o creada.
 - El build completo (Frontend y Backend test suites) debe terminar en SUCCESS.
 ```

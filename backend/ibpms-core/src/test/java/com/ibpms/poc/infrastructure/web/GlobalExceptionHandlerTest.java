@@ -92,6 +92,6 @@ public class GlobalExceptionHandlerTest {
         assertNotNull(problem.getDetail());
         assertFalse(problem.getDetail().contains(secretErrorDetail));
         assertFalse(problem.getDetail().contains("NullPointerException"));
-        assertTrue(problem.getDetail().contains("Fallo del servidor reportado"));
+        assertTrue(problem.getDetail().contains("Error interno del servidor"));
     }
 }

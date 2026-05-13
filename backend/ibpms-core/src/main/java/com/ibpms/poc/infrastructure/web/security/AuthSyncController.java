@@ -49,8 +49,21 @@ public class AuthSyncController {
         // Emite token para que Playwright pueda inyectarlo en las cabeceras REST.
         // Aseguramos inyectar los claims con los ROLES tal y como los espera el JwtAuthFilter (ibpms_rol_*)
         // @Traceability: US-027, CA-04
+        // @Traceability: Retro-Remediación RBAC J-04 (T-20.4)
         String resolvedTenant = "tenant_" + email.split("@")[1].split("\\.")[0];
-        String tkn = jwtTokenProvider.generateToken(email, List.of("ibpms_rol_PROCESS_ARCHITECT", "ibpms_rol_BPMN_DESIGNER", "ibpms_rol_USER"), resolvedTenant);
+        List<String> defaultRoles = new ArrayList<>(List.of("ibpms_rol_PROCESS_ARCHITECT", "ibpms_rol_BPMN_DESIGNER", "ibpms_rol_USER"));
+        
+        Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userService.findByEmail(email);
+        if (userOpt.isPresent()) {
+            userOpt.get().getRoles().forEach(r -> {
+                String roleClaim = "ibpms_rol_" + r.getName().replace("ROLE_", "");
+                if (!defaultRoles.contains(roleClaim)) {
+                    defaultRoles.add(roleClaim);
+                }
+            });
+        }
+        
+        String tkn = jwtTokenProvider.generateToken(email, defaultRoles, resolvedTenant);
         return ResponseEntity.ok(Map.of("token", tkn, "tenantId", resolvedTenant, "message", "Login Exitoso E2E"));
     }
 

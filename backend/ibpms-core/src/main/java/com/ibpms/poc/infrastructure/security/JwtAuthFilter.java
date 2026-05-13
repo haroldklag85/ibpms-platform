@@ -139,6 +139,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .map(r -> r.replace("ibpms_rol_", ""))
                         .collect(Collectors.toList());
                 
+                // @Traceability: Retro-Remediación RBAC J-04 (T-20.4)
+                // Carga de roles desde la Base de Datos para hibridación local
+                for (com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity r : userOpt.get().getRoles()) {
+                    String rName = r.getName().replace("ROLE_", "");
+                    if (!roles.contains(rName)) {
+                        roles.add(rName);
+                    }
+                }
+                
                 // CA-9 Inyección Dinámica de Delegaciones (Sustituciones Temporales)
                 java.util.List<com.ibpms.poc.infrastructure.jpa.entity.security.DelegationEntity> activeDelegations = 
                         delegationRepository.findActiveDelegationsForSubstitute(userOpt.get().getId(), java.time.LocalDateTime.now());

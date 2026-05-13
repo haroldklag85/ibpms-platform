@@ -740,9 +740,17 @@ const applyFacetFilter = (status: string) => {
     loadData();
 };
 
+// @Traceability: Retro-Remediación DOM/Timeout J-04 (T-20.2)
 const loadData = async () => {
-    const delegatedId = delegationMode.value === 'DELEGATED' ? delegatedUserId.value : undefined;
-    await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 15, searchQuery.value, delegatedId || undefined, typeFilter.value, slaFilter.value, statusFilter.value);
+    store.isLoading = true;
+    try {
+        const delegatedId = delegationMode.value === 'DELEGATED' ? delegatedUserId.value : undefined;
+        await store.fetchGlobalInbox(0, store.pageInfo?.pageSize || 15, searchQuery.value, delegatedId || undefined, typeFilter.value, slaFilter.value, statusFilter.value);
+    } catch (err) {
+        console.error("Error cargando DataGrid:", err);
+    } finally {
+        store.isLoading = false; // CRÍTICO: Liberar la UI para el renderizado
+    }
 };
 
 // ==========================================

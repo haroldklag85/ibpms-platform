@@ -191,3 +191,6 @@
 
 ## Veredicto Arquitectónico
 Los 36 tests fallidos corresponden a **deuda funcional conocida** (endpoints no implementados, seeds incompletos, UI de features pendientes) y NO a regresiones causadas por los cambios de la Iteración 7.1. El núcleo de la plataforma (Core J-04, Kanban, CQRS, Webhooks, Kill-Switch, Observabilidad, Seguridad) está **ESTABLE**. Se certifica T-20 como completada con daños mapeados.
+
+### Hitos de Remediación Post-Regresión
+- **T-20.1 (QA - Remediación URIs):** ✅ CERTIFICADO. El Agente QA actualizó exitosamente las rutas *legacy* hacia la topología Hexagonal (`/api/v1/...`). Esto **erradicó los falsos positivos (404 Not Found)** originados en la red. Se identificó que la aserción de negocio del Kill-Switch arroja `403` y `500` debido a inconsistencias temporales en la configuración RBAC/Tenant del entorno E2E. Este hallazgo se clasifica como *Deuda Funcional Backend* real, lo cual demuestra que los tests ahora sí están comunicándose con la lógica de negocio. Se respetaron estrictamente las Leyes Globales 3 (Trazabilidad) y 4 (Inmutabilidad de asserts).

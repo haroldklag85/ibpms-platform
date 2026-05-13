@@ -173,8 +173,16 @@ const confirmAddColumn = async (name: string) => {
   }
 };
 
+// @Traceability: Retro-Remediación DOM/Timeout J-04 (T-20.2)
 const loadBoard = async () => {
-  await kanbanStore.fetchBoard(boardId.value);
+  kanbanStore.loading = true;
+  try {
+    await kanbanStore.fetchBoard(boardId.value);
+  } catch (err) {
+    console.error("Error cargando Kanban:", err);
+  } finally {
+    kanbanStore.loading = false; // CRÍTICO: Liberar la UI
+  }
 };
 
 onMounted(() => {

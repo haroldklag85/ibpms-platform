@@ -65,6 +65,18 @@ export const useWorkdeskStore = defineStore('workdesk', {
   },
 
   actions: {
+    // @Traceability: US-001, CA-24 (Remediación ADR-006: Manejo Global de Estados Asíncronos)
+    async _withNetworkSafety<T>(operation: () => Promise<T>): Promise<T> {
+        try {
+            return await operation();
+        } catch (error) {
+            throw error;
+        } finally {
+            this.isLoading = false;
+            this.isAttending = false;
+            // Cualquier otra bandera global se apaga aquí para evitar DOM Thrashing
+        }
+    },
     // @Traceability(US = "US-001", CA = {"CA-08"})
     // CA-08: Verificar si el Feature Toggle está activado
     async checkForceRouting() {
@@ -134,6 +146,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
 
     // US-002: Task Claim UI (CA-21 Optimistic UI Rollback)
     async claimTask(taskId: string) {
+      return this._withNetworkSafety(async () => {
         // Snapshot
         const snapshot = structuredClone(this.items);
         const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
@@ -180,29 +193,33 @@ export const useWorkdeskStore = defineStore('workdesk', {
                 }
             }
         }
+      });
     },
 
     // @Traceability: US-002 - CA-10, CA-22
     async unclaimTask(taskId: string, internalMessage?: string) {
-      const snapshot = structuredClone(this.items);
-      const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
-      
-      if (taskIdx !== -1) {
-          this.items.splice(taskIdx, 1);
-      }
-      
-      try {
+      return this._withNetworkSafety(async () => {
+        const snapshot = structuredClone(this.items);
+        const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
+        
+        if (taskIdx !== -1) {
+            this.items.splice(taskIdx, 1);
+        }
+        
+        try {
         const payload = internalMessage ? { mensajeInterno: internalMessage } : {};
         const { data } = await apiClient.post(`/api/v1/workbox/tasks/${taskId}/unclaim`, payload);
         return data;
-      } catch (err: any) {
-        this.items = snapshot;
-        throw err;
-      }
+        } catch (err: any) {
+          this.items = snapshot;
+          throw err;
+        }
+      });
     },
 
     // @Traceability: US-002 - CA-10, CA-22
     async bulkClaimTasks(taskIds: string[]) {
+      return this._withNetworkSafety(async () => {
         const snapshot = structuredClone(this.items);
         
         if (this.activeView === 'POOL') {
@@ -216,6 +233,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
            this.items = snapshot;
            throw err;
         }
+      });
     },
 
     // CA-21: Skipeo Justificado

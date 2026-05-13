@@ -20,9 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import org.springframework.http.HttpStatus;
 import java.time.Duration;
 
@@ -40,20 +37,9 @@ public class WorkdeskQueryController {
 
     private final WorkdeskQueryService workdeskQueryService;
     private final TaskDelegationService taskDelegationService;
-    // @Traceability(US = "US-001", CA = {"CA-30"})
-    // REMEDIACIÓN CA-30: Rate Limiter migrado de Singleton global a per-user para evitar DoS falso entre usuarios concurrentes.
-    private final java.util.concurrent.ConcurrentHashMap<String, Bucket> userBuckets = new java.util.concurrent.ConcurrentHashMap<>();
-
     public WorkdeskQueryController(WorkdeskQueryService workdeskQueryService, TaskDelegationService taskDelegationService) {
         this.workdeskQueryService = workdeskQueryService;
         this.taskDelegationService = taskDelegationService;
-    }
-
-    private Bucket resolveBucket(String userId) {
-        return userBuckets.computeIfAbsent(userId, k -> {
-            Bandwidth limit = Bandwidth.builder().capacity(60).refillGreedy(60, Duration.ofMinutes(1)).build();
-            return Bucket.builder().addLimit(limit).build();
-        });
     }
 
     /**
@@ -76,17 +62,10 @@ public class WorkdeskQueryController {
             @Parameter(description = "ID del usuario delegado (para suplantación/delegación)") @RequestParam(required = false) String delegatedUserId,
             // @Traceability(US = "US-001", CA = {"CA-09"}) 
             // REMEDIACIÓN CA-09: Se añadió @PageableDefault(size = 15) para alinear con el contrato canónico del Workdesk.
-            @PageableDefault(size = 15) Pageable pageable) {
+            @PageableDefault(size = 15) Pageable pageable,
+            // @Traceability: US-001, CA-14 (Consolidación Identidad / Inyección Transparente)
+            @com.ibpms.poc.infrastructure.web.annotation.CurrentTenant String tenantId) {
         
-        // @Traceability(US = "US-001", CA = {"CA-30"})
-        // CA-30: Rate Limiting per-user (60 rq/min por usuario autenticado)
-        org.springframework.security.core.Authentication authForRateLimit = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        String rateLimitKey = (authForRateLimit != null && authForRateLimit.getName() != null) ? authForRateLimit.getName() : "anonymous";
-        if (!resolveBucket(rateLimitKey).tryConsume(1)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                .body(null); // CA-30: El frontend muestra el toast 'Has realizado demasiadas consultas'
-        }
-
         // @Traceability(US = "US-001", CA = {"CA-09", "CA-10"})
         // REMEDIACIÓN CA-10: Se reemplazó IllegalArgumentException por ResponseStatusException(400) para emitir HTTP 400 semántico.
         if (pageable.getPageSize() > 100) {
@@ -94,17 +73,8 @@ public class WorkdeskQueryController {
         }
 
         try {
-            // @Traceability: US-001 - CA-14
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
             String currentUserId = (auth != null && auth.getName() != null) ? auth.getName() : "default";
-            String tenantId = "default";
-            if (auth != null && auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
-                tenantId = jwt.getClaimAsString("tenant_id");
-            } else if (currentUserId != null && (currentUserId.endsWith("@alpha.com") || currentUserId.startsWith("analista") || currentUserId.startsWith("perito") || currentUserId.startsWith("director") || currentUserId.startsWith("admin"))) {
-                tenantId = "tenant_alpha";
-            } else if ("analista_n1@ibpms.local".equals(currentUserId)) {
-                tenantId = "tenant_alpha"; // Fallback para tests E2E si el JWT no inyecta el claim o si no es JwtAuthentication
-            }
 
             DelegationContextDTO delegationContext = null;
             String effectiveAssignee = currentUserId; 

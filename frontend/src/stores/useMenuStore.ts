@@ -73,14 +73,14 @@ export const useMenuStore = defineStore('menu', () => {
              
              if (Array.isArray(data)) {
                  for (const item of data) {
-                     // CA-06: Si es explícitamente un contenedor (tiene propiedad children)
-                     if (item.children !== undefined) {
+                     // CA-06: Si es explícitamente un contenedor (tiene propiedad items)
+                     if (item.items !== undefined) {
                          // Solo si tiene hijos autorizados lo agregamos (Auto-Collapse)
-                         if (item.children.length > 0) {
+                         if (item.items.length > 0) {
                              mappedLayout.push({
                                  title: item.title,
-                                 items: item.children.map((c: any) => ({
-                                     label: c.title,
+                                 items: item.items.map((c: any) => ({
+                                     label: c.title || c.label,
                                      icon: mapIcon(c.icon),
                                      path: c.path
                                  }))

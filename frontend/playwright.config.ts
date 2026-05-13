@@ -19,7 +19,7 @@ export default defineConfig({
     navigationTimeout: 60_000,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5176',
+    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',
   },
   projects: [
     {
@@ -40,7 +40,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    port: 5176,
+    port: 5173,
     reuseExistingServer: true,
   },
 });

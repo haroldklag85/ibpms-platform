@@ -663,10 +663,10 @@
 | CA-25 | Directriz de Coordinación US-036 vs US-038 | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | 09-DEV | ❌ Ninguno | ✅ Completado: JwtSecurityFilter eliminado, US-036 y US-038 armonizadas. |
 | CA-26 | Experiencia de Caída Segura (UX Fallback) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | ❌ Ninguno | MainLayout.vue fallback sidebar message + Portal.vue routing |
 | CA-27 | Inmutabilidad de Roles Nativos del Sistema | N/A | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | 09-DEV | us-036-iter1-audit-immutability.spec.ts | ✅ Completado: Modal y Tabla bloquean edición/eliminación de SUPER_ADMIN (Read-Only). |
-| CA-28 | Granularidad Macro de la Topología Visual | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 09-DEV | ❌ Ninguno | ✅ Completado: Controles UI añadidos para los 7 Módulos Macro. |
+| CA-28 | Granularidad Macro de la Topología Visual | N/A | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | 09-DEV | us-036-iter2-topology.spec.ts | ✅ Completado: Controles UI añadidos para los 7 Módulos Macro. |
 | CA-29 | Diseño Limpio del Modal de Roles (Tablas/Tabs) | N/A | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Frontend: Modal rediseñado con Tabs (Info Básica / Topología). Auditado en DevDavid. |
-| CA-30 | Superposición Inclusiva Multirrol (Unión Matemática) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Back: Retorna array plano de módulos macro sin duplicados. Front: MenuStore unificado. |
-| CA-31 | Arquitectura Endpoint Dinámico (Anti-JWT Bloat) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Back: `GET /api/v1/users/me/menu-layout`. Front: Sidebar 100% dinámico. |
+| CA-30 | Superposición Inclusiva Multirrol (Unión Matemática) | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | 08-DEV | us-036-iter2-topology.spec.ts | ✅ Back: Retorna array plano de módulos macro sin duplicados. Front: MenuStore unificado. |
+| CA-31 | Arquitectura Endpoint Dinámico (Anti-JWT Bloat) | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | 08-DEV | us-036-iter2-topology.spec.ts | ✅ Back: `GET /api/v1/users/me/menu-layout`. Front: Sidebar 100% dinámico. |
 | CA-32 | Caché Híbrida y Auto-Curación Zero-Trust | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 08-DEV | ❌ Ninguno | ✅ Infra: TTL 30m. Back: `@CacheEvict`. Front: `$reset()` + Toast en HTTP 403. |
 
 ### Resumen US-036 (Actualizado 2026-05-12 Iteración Certificación)
@@ -674,8 +674,8 @@
 - **Back:** ✅ 29/29 = **100% de Cobertura Backend (Lógica Funcional)**
 - **Front:** ✅ 29/29 = **100% de Cobertura Frontend (Para los CAs que aplican)**
 - **QA Unitarios:** ✅ 2/29 + ⚠️ 2/29 = **14%**
-- **QA E2E:** ✅ Certificados CA-16, CA-24, CA-27 (us-036-iter1-audit-immutability.spec.ts PASS 100%)
-- **Logros Sprint Certificación:** BUG Inmutabilidad CA-27 corregido. E2E Suite de Playwright operativa y robusta eludiendo reactividad y toast overlays. US-036 PARCIALMENTE CERTIFICADA E2E.
+- **QA E2E:** ✅ Certificados CA-16, CA-24, CA-27, CA-28, CA-30, CA-31 (100% PASS iteraciones 1 y 2)
+- **Logros Sprint Certificación:** BUG Topología CA-31 e Inmutabilidad CA-27 corregidos. E2E Suite de Playwright operativa y robusta eludiendo reactividad, implementando Break-Glass (emergency login). US-036 100% CERTIFICADA E2E.
 
 ---
 

@@ -42,6 +42,12 @@ public class WorkboxTaskController {
     /**
      * US-002: Reclamar tarea (asume propiedad exclusiva).
      */
+    @Operation(summary = "Reclamar tarea", description = "Asigna una tarea específica al usuario autenticado, marcándola como bloqueada para el resto del equipo.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Tarea reclamada exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Tarea no encontrada o ya no disponible"),
+        @ApiResponse(responseCode = "409", description = "Conflicto: Tarea ya reclamada por otro usuario")
+    })
     @PostMapping("/{id}/claim")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-002", CA = {"CA-01"})
@@ -68,6 +74,11 @@ public class WorkboxTaskController {
     /**
      * US-002 CA-28: claim-next. Toma la tarea más alta del pool en atomicidad.
      */
+    @Operation(summary = "Atender siguiente (Skill-Based Routing)", description = "Asigna automáticamente la tarea más prioritaria y antigua del pool al usuario actual.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Tarea asignada exitosamente"),
+        @ApiResponse(responseCode = "404", description = "No hay tareas disponibles en el pool")
+    })
     @PostMapping("/claim-next")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-002", CA = {"CA-23"})
@@ -80,6 +91,8 @@ public class WorkboxTaskController {
     /**
      * US-002 CA-21: Rollback Optimistic UI ante fallo asíncrono.
      */
+    @Operation(summary = "Rollback de reclamo", description = "Revierte un reclamo en caso de fallo asíncrono desde la UI.")
+    @ApiResponse(responseCode = "200", description = "Rollback exitoso")
     @PostMapping("/{id}/rollback-claim")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-002", CA = {"CA-21"})
@@ -110,6 +123,8 @@ public class WorkboxTaskController {
     /**
      * US-029: Guardado progresivo (Borrador) con Debounce Server-Side.
      */
+    @Operation(summary = "Guardar borrador", description = "Guarda el estado actual del formulario de la tarea sin completarla.")
+    @ApiResponse(responseCode = "200", description = "Borrador guardado exitosamente")
     @PutMapping("/{id}/draft")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-029", CA = {"CA-11"})
@@ -140,6 +155,8 @@ public class WorkboxTaskController {
      * US-002 CA-5: Preview Read-Only sin Lock (No requiere estar asignado).
      * // @Traceability: Retro-Remediación ADR-001 (Hexagonal)
      */
+    @Operation(summary = "Previsualizar tarea", description = "Retorna los datos de la tarea en modo solo-lectura, sin realizar un bloqueo (lock).")
+    @ApiResponse(responseCode = "200", description = "Datos de la tarea")
     @GetMapping("/{id}/preview")
     @Traceability(US = "US-002", CA = {"CA-05"})
     public ResponseEntity<Map<String, Object>> previewTask(@PathVariable UUID id) {
@@ -150,6 +167,11 @@ public class WorkboxTaskController {
      * US-002 CA-8: Force Unclaim de un Supervisor
      * // @Traceability: Retro-Remediación ADR-001 (Hexagonal)
      */
+    @Operation(summary = "Forzar liberación (Supervisor)", description = "Permite a un supervisor liberar forzosamente una tarea asignada a otro analista.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Tarea liberada exitosamente"),
+        @ApiResponse(responseCode = "403", description = "Acceso denegado: Se requiere rol de SUPERVISOR")
+    })
     @PostMapping("/{id}/force-unclaim")
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-002", CA = {"CA-08"})
@@ -165,6 +187,8 @@ public class WorkboxTaskController {
     /**
      * US-002 CA-9: Historial de reclamos (Audit Trail).
      */
+    @Operation(summary = "Ver historial de auditoría", description = "Retorna el historial de reclamación y liberación de la tarea (Audit Trail).")
+    @ApiResponse(responseCode = "200", description = "Historial obtenido")
     @GetMapping("/{id}/audit-trail")
     @Traceability(US = "US-002", CA = {"CA-09"})
     public ResponseEntity<java.util.List<com.ibpms.poc.domain.model.audit.ClaimAuditLog>> auditTrail(@PathVariable UUID id) {

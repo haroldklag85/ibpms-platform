@@ -185,17 +185,19 @@
       </div>
     </Transition>
 
-    <!-- @Traceability(US = "US-001", CA = {"CA-18"})
-    TODO: Brecha UX CA-18. Se implementó como Banner estático que desplaza el DOM, cuando
-    el SSOT exige un "Toast" flotante que no altere el layout principal del Workdesk. -->
     <!-- @Traceability(US = "US-001", CA = {"CA-07", "CA-18"}) -->
-    <!-- CA-07/CA-18: Banner de Degradación BPMN -->
+    <!-- CA-07/CA-18: Banner de Degradación BPMN convertido a Toast flotante -->
     <Transition name="toast-slide">
-      <div v-if="store.isDegraded" class="bg-amber-50 border-b border-amber-300 p-3 shadow-sm flex items-center flex-shrink-0 gap-3" data-testid="degradation-banner">
-        <span class="material-symbols-outlined text-amber-600 text-xl animate-pulse shrink-0">warning</span>
+      <div v-if="store.isDegraded" class="fixed bottom-6 right-6 max-w-sm z-[200] bg-amber-50 border border-amber-300 rounded-lg p-4 shadow-xl flex items-start gap-3" data-testid="degradation-banner">
+        <span class="material-symbols-outlined text-amber-600 text-2xl animate-pulse shrink-0">warning</span>
         <div>
-          <p class="text-amber-800 font-bold text-sm">Sincronización BPMN degradada temporalmente</p>
-          <p class="text-amber-600 text-xs">Las tareas de procesos automatizados podrían no estar actualizadas. Las tareas Kanban operan con normalidad.</p>
+          <div class="flex items-center justify-between">
+            <p class="text-amber-900 font-bold text-sm">Sincronización Degradada</p>
+            <button @click="store.isDegraded = false" class="text-amber-500 hover:text-amber-700 ml-2" title="Descartar">
+              <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </div>
+          <p class="text-amber-700 text-xs mt-1">Las tareas de procesos podrían no estar actualizadas. Kanban opera normal.</p>
         </div>
       </div>
     </Transition>
@@ -263,13 +265,17 @@
              <button @click="isMetricsPanelOpen = !isMetricsPanelOpen" class="p-1 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition -ml-2" :title="isMetricsPanelOpen ? 'Ocultar Resumen Panel Derecho' : 'Mostrar Resumen'">
                 <span class="material-symbols-outlined text-xl">{{ isMetricsPanelOpen ? 'dock_to_right' : 'dock_to_left' }}</span>
              </button>
+             <!-- @Traceability(US = "US-001", CA = {"CA-11"}) Botón Mute añadido -->
+             <button @click="isMuted = !isMuted" class="p-1.5 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition" :title="isMuted ? 'Activar Sonido SLA' : 'Silenciar Alertas'">
+                <span class="material-symbols-outlined text-[18px]">{{ isMuted ? 'volume_off' : 'volume_up' }}</span>
+             </button>
              <span class="text-xs font-medium text-gray-500 flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">filter_alt</span>
                 Mostrando: <span class="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{{ filteredItems.length }}</span> resultados locales
              </span>
           </div>
-          <div class="text-[11px] font-medium text-gray-400">
-              Total Global: {{ store.pageInfo.totalElements }}
+          <div class="text-[11px] font-medium text-gray-400 flex items-center gap-4">
+              <span>Total Global: {{ store.pageInfo.totalElements }}</span>
           </div>
         </div>
 
@@ -338,16 +344,16 @@
                          {{ task.sourceSystem === 'BPMN' ? 'bolt' : 'account_tree' }}
                        </span>
                        <div class="flex flex-col min-w-0">
-                         <!-- @Traceability(US = "US-001", CA = {"CA-12"}) TODO: Brecha Ergonomía. Falta tooltip (title) para proveer Zero-Click Context del truncamiento. -->
-                         <span class="font-semibold text-[#1e1b4b] truncate max-w-[280px] group-hover:text-indigo-600 transition-colors">{{ task.title }}</span>
+                         <!-- @Traceability(US = "US-001", CA = {"CA-12"}) Acierto Ergonomía: Tooltip añadido para contexto Zero-Click -->
+                         <span class="font-semibold text-[#1e1b4b] truncate max-w-[280px] group-hover:text-indigo-600 transition-colors" :title="task.title">{{ task.title }}</span>
                          <span class="text-[10px] font-mono text-gray-400">{{ task.originalTaskId }}</span>
                        </div>
                        <!-- CA-10: Badge de Autorización Tipográfica -->
-                       <span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold border border-indigo-200 shrink-0">{{ task.targetRole || 'Rol Operativo' }}</span>
+                       <span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold border border-indigo-200 shrink-0" title="Rol objetivo requerido">{{ task.targetRole || 'Rol Operativo' }}</span>
                        
                        <span v-if="task.variables?.isSlaAtRisk === true && getSlaStatus(task.slaExpirationDate) !== 'EXPIRED'" class="px-1.5 py-0.5 bg-amber-500 text-white rounded text-[9px] font-bold border border-amber-600 shrink-0" title="SLA en Riesgo (<20% restante)">⚠️ SLA en Riesgo</span>
                        <!-- @Traceability(US = "US-001", CA = {"CA-17"}) Acierto UX: Renderizado dinámico de impacto masivo -->
-                       <span v-if="task.financialImpactHigh" class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[9px] font-black border border-red-200 shrink-0">🔥 Impacto</span>
+                       <span v-if="task.financialImpactHigh" class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[9px] font-black border border-red-200 shrink-0" title="Impacto financiero masivo">🔥 Impacto</span>
                      </div>
                    </td>
                    <!-- @Traceability(US = "US-001", CA = {"CA-11"}) Col 2: SLA Semáforo Vivo con Iconografía Accesible -->
@@ -387,20 +393,20 @@
                    <td class="px-4 py-3 text-center" @click.stop>
                      <!-- TAB: MI BANDEJA -->
                      <div v-if="store.activeView === 'PERSONAL' && task.assignee" class="flex items-center justify-center gap-2">
-                       <button @click="openTaskDetails(task)" class="px-2 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-open-task">
+                       <button @click="openTaskDetails(task)" class="px-2 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-open-task" title="Abrir y Ejecutar Tarea">
                          <span class="material-symbols-outlined text-[14px]">open_in_new</span> Abrir
                        </button>
-                       <button @click="onReleaseTask(task)" class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-release-task">
+                       <button @click="onReleaseTask(task)" class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-release-task" title="Liberar Tarea a la Cola">
                          <span class="material-symbols-outlined text-[14px]">undo</span> Liberar
                        </button>
                      </div>
                      
                      <!-- TAB: COLA DEL EQUIPO -->
                      <div v-if="store.activeView === 'POOL'" class="flex items-center justify-center gap-2">
-                       <button @click="openTaskDetails(task)" class="px-2 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-explore-task">
+                       <button @click="openTaskDetails(task)" class="px-2 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-explore-task" title="Previsualizar Tarea en Modo Solo-Lectura">
                          <span class="material-symbols-outlined text-[14px]">visibility</span> Explorar
                        </button>
-                       <button v-if="!task.assignee" @click="onClaimTask(task)" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)" class="px-2 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" :data-testid="'claim-button-' + (task.unifiedId || task.originalTaskId)">
+                       <button v-if="!task.assignee" @click="onClaimTask(task)" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)" class="px-2 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" :data-testid="'claim-button-' + (task.unifiedId || task.originalTaskId)" title="Reclamar y Asignar Tarea">
                          <span v-if="isClaiming === (task.unifiedId || task.originalTaskId)" class="material-symbols-outlined text-[14px] animate-spin">refresh</span>
                          <span v-else class="material-symbols-outlined text-[14px]">pan_tool</span>
                          Reclamar
@@ -448,7 +454,7 @@
             <h2 class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-8">Resumen Operativo</h2>
             <div class="space-y-8">
               <div class="flex items-center gap-4">
-                <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100">
+                <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100" title="Total de tareas unificadas en esta vista">
                    <span class="text-base font-bold text-indigo-700" data-testid="metric-total-tasks">{{ store.pageInfo.totalElements }}</span>
                 </div>
                 <div>
@@ -457,7 +463,7 @@
                 </div>
               </div>
               <div class="flex items-center gap-4">
-                <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-red-50 border border-red-100">
+                <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-red-50 border border-red-100" title="Tareas cuyo SLA ha expirado">
                    <span class="text-base font-bold text-red-600" data-testid="metric-overdue-tasks">{{ countExpiredSLA() }}</span>
                    <div v-if="countExpiredSLA() > 0" class="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></div>
                 </div>
@@ -467,7 +473,7 @@
                 </div>
               </div>
               <div class="flex items-center gap-4">
-                <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-yellow-50 border border-yellow-100">
+                <div class="relative w-14 h-14 rounded-full flex items-center justify-center bg-yellow-50 border border-yellow-100" title="Tareas en riesgo inminente de vencer (< 24 hrs)">
                    <span class="text-base font-bold text-yellow-600" data-testid="metric-expiring-tasks">{{ countWarningSLA() }}</span>
                 </div>
                 <div>
@@ -485,7 +491,7 @@
                  <p class="text-xs text-indigo-800 font-bold uppercase tracking-widest">CQRS Engine</p>
                </div>
                <p class="text-sm text-slate-800 font-medium tracking-tight">Sync Eventual: <br/>
-                 <span v-if="!store.isError && !store.isDegraded" class="font-bold text-emerald-600 flex items-center mt-2 gap-1.5 bg-emerald-50 px-2 py-1 rounded w-fit text-xs border border-emerald-100 animate-pulse">
+                 <span v-if="!store.isError && !store.isDegraded" class="font-bold text-emerald-600 flex items-center mt-2 gap-1.5 bg-emerald-50 px-2 py-1 rounded w-fit text-xs border border-emerald-100 animate-pulse" title="Conexión CQRS Estable">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ONLINE
                  </span>
                  <span v-else class="font-bold text-red-600 flex items-center mt-2 gap-1.5 bg-red-50 px-2 py-1 rounded w-fit text-xs border border-red-200 animate-pulse" title="Conexión Rechazada, Modo Degradado o STOMP Caído">
@@ -601,6 +607,11 @@ watch(() => store.items.length, (newLen) => {
 // Toggle del Panel Lateral Derecho
 // ==========================================
 const isMetricsPanelOpen = ref(true);
+
+// ==========================================
+// Toggle de Silencio (CA-11)
+// ==========================================
+const isMuted = ref(false);
 
 // ==========================================
 // Búsqueda & Delegación & Filtros Dinámicos (Gaps CA-2, CA-4)

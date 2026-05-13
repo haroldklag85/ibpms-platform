@@ -21,11 +21,15 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.ibpms.poc.infrastructure.security.SecurityConfig;
+import org.springframework.context.annotation.Import;
+
 /**
  * @Traceability(US = "US-034", CA = "CA-02")
  * TDD: Validación de RBAC y endpoints del Dashboard DLQ.
  */
 @WebMvcTest(AdminQueueController.class)
+@Import(SecurityConfig.class)
 class AdminQueueControllerTest {
 
     @Autowired

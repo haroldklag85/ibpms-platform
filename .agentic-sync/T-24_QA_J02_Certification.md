@@ -230,7 +230,8 @@ REGLAS INQUEBRANTABLES:
 - OBLIGATORIO documentar con // @Traceability en CADA archivo.
 - Fixtures XML BPMN/DMN son PERMITIDOS vía __modelerInstance.importXML() para Fase 2.
 - Panel de Propiedades: OBLIGATORIO asertar formKey/decisionRef desde el sidebar UI.
-- 🔐 ESTRATEGIA DE AUTENTICACIÓN: Para los roles, utiliza los fixtures `.auth/rol.json` generados en setup (ej. `storageState: '.auth/sysadmin.json'`). Infraestructura inyectará los usuarios en BD (sysadmin_e2e, operario_a, operario_b, supervisor_e2e). Debes usar esos perfiles para testear segregación de roles (RBAC).
+- 🔐 ESTRATEGIA DE AUTENTICACIÓN: Para los roles, utiliza los fixtures `.auth/rol.json` generados en setup (ej. `storageState: '.auth/sysadmin.json'`). Infraestructura inyectará los usuarios en BD (sysadmin_e2e, operario_a, operario_b, supervisor_e2e). Debes usar esos perfiles para testear segregación de roles (RBAC). 
+- 💡 NOTA SOBRE SEEDS: El agente de Infraestructura/DB (o sprints anteriores) ya ha creado las semillas base en `backend/ibpms-core/src/main/resources/db/changelog/changes/056-seed-e2e-j02.sql` y `057-seed-e2e-j02-extend.sql`. DEBES leer esos dos archivos .sql antes de empezar para conocer exactamente cuáles correos electrónicos (`@alpha.com`) y contraseñas/roles tienes disponibles en la base de datos real para tus tests.
 ```
 
 ---

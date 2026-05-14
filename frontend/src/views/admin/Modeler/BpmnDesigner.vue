@@ -1569,7 +1569,7 @@ const confirmDeploy = async () => {
     
     // CA-6: Autogeneración de Roles Feedback
     if (deployResponse?.data?.generatedRoles && deployResponse.data.generatedRoles.length > 0) {
-       alert(`Proceso desplegado con Éxito.\\n\\nSe han auto-generado los siguientes perfiles de seguridad:\\n➡ ${deployResponse.data.generatedRoles.join('\\n➡ ')}\\n\\nPuedes asignar estos roles en el CND.`);
+       showToast(`Se han auto-generado los perfiles de seguridad: ${deployResponse.data.generatedRoles.join(', ')}`, 'success');
     }
     
     // CA-65: Reflejo en Toast

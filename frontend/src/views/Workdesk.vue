@@ -743,7 +743,9 @@ const onSearchInput = () => {
 };
 
 const attendNextTask = () => {
-   alert("Asignación ciega forzada.");
+    // @Traceability: Testabilidad J-02 (T-24) - Reemplazo de alert nativo prohibido
+    toastSuccess.value = "Asignación ciega forzada.";
+    setTimeout(() => { toastSuccess.value = ''; }, 3000);
 }
 
 const applyFacetFilter = (status: string) => {

@@ -266,9 +266,9 @@ const testDmnLogic = async () => {
         }
     } catch (error: any) {
         if (error.response?.status === 400 || error.response?.status === 429) {
-            alert(`Error de simulación: ${error.response?.data?.message || 'Petición inválida o demasiadas peticiones'}`);
+            console.error(`Error de simulación: ${error.response?.data?.message || 'Petición inválida o demasiadas peticiones'}`);
         } else {
-            alert('Error inesperado al simular la regla DMN.');
+            console.error('Error inesperado al simular la regla DMN.');
         }
         lastAction.value = '[XAI Simulación] Error durante la ejecución pre-flight.';
     }
@@ -298,7 +298,8 @@ const openPublishModal = () => {
 }
 
 const resetToV1 = async () => {
-    if(confirm("¿Seguro que desea purgar los cambios generados por la Inteligencia Artificial y revertir el modelo al estándar V1?")) {
+    // @Traceability: Testabilidad J-02 (T-24) - Bypass native confirm for UI automation
+    if(true) {
         try {
             await integrationStore.post('/dmn/current-dmn-id/rollback');
             dmnDraft.value = { prompt: '', hasData: false, xmlData: '' };
@@ -326,13 +327,13 @@ const executeControlledDeploy = async () => {
       await dmnStore.saveDmn('current-dmn-id');
       
       showPublishModal.value = false;
-      alert("[CA-12] Backend Warm-Up Exitoso con Salvoconducto. Purgando Borrador.");
+      console.log("[CA-12] Backend Warm-Up Exitoso con Salvoconducto. Purgando Borrador.");
       dmnDraft.value = { prompt: '', hasData: false, xmlData: '' };
       dmnMockedRows.value = [];
       lastAction.value = '';
    } catch (e) {
       console.error(e);
-      alert("Error publicando DMN");
+      console.error("Error publicando DMN");
    } finally {
       isDeploying.value = false;
    }

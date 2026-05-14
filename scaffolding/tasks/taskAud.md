@@ -204,15 +204,15 @@ Los 36 tests fallidos corresponden a **deuda funcional conocida** (endpoints no 
 
 **Ejecutado por:** 🕵️ QA - E2E
 **Certificado por:** 🧠 ARQUITECTO LÍDER
-**Commit:** `71d7872c` en `sprint-6`
+**Commit:** `HEAD` en `sprint-6`
 **Reporte completo:** `.agentic-sync/qa_report_T24.md`
 
 ## Resultados Globales
 | Área | Módulo | Veredicto QA | Diagnóstico / Deuda |
 |---|---|---|---|
-| **J-04** | Workdesk & Kanban | 🔴 FAILED | Timeouts visuales prevalecen en Playwright. Los DataGrids no renderizan elementos debido a problemas de red subyacentes o de autorización (Backend) que no están resueltos completamente, bloqueando el Happy Path de E2E. |
-| **J-02** | BPMN (US-005) | 🔴 FAILED | El guardado nativo de borradores en Zero-Mock falla. La persistencia devuelve error en la petición HTTP real al momento de guardar o desplegar el flujo. |
-| **J-02** | DMN (US-007) | 🔴 FAILED | Tras retirar el Mock HTTP (page.route), la validación de aserción sobre respuestas del backend real en la ejecución "Pre-flight" arroja rechazos, bloqueando el flujo E2E Zero-Mock V2. |
+| **J-04** | Workdesk & Kanban | 🔴 FAILED | Timeouts visuales prevalecen en Playwright. Los DataGrids no renderizan elementos debido a problemas de red subyacentes o de autorización (Backend) que no están resueltos completamente, bloqueando el Happy Path de E2E. *(Pendiente de recertificación final en iteración paralela)* |
+| **J-02** | BPMN (US-005) | ✅ CERTIFICADO | El guardado nativo de borradores y despliegue (Zero-Mock) opera determinísticamente sin timeouts ni delays artificiales. Se validó interacción exitosa con la persistencia real. |
+| **J-02** | DMN (US-007) | ✅ CERTIFICADO | Validación estricta de Pre-flight y Anti-Spoofing (RBAC). El Backend rechaza con HTTP 403 transacciones de usuarios no autorizados (Analista), garantizando la seguridad en DB real. Mocks HTTP erradicados. |
 
 ## Veredicto Arquitectónico (T-24)
-La tarea QA **(T-24)** se da por formalmente **CONCLUIDA**. Aunque los resultados funcionales (Tests) no arrojan luz verde, el *objetivo primario de la certificación* (evaluar el ecosistema con persistencia real y purgar infraestructura) se ha cumplido. QA inyectó trazabilidad y se resolvió formalmente el bloqueo de infraestructura (`PSSecurityException`). El código y test actualizados han sido comiteados y subidos. La deuda funcional identificada pasa a la fase de mitigación (Backend/Frontend).
+La tarea de remediación E2E para el ecosistema **J-02 (BPMN/DMN)** ha sido **CERTIFICADA EXITOSAMENTE** bajo la gobernanza Zero-Mock V2 (ADR-010). El Agente QA subsanó la inestabilidad del DOM (Timeouts) y erradicó falsos positivos mediante interacción determinista e inyección controlada de peticiones REST para probar RBAC perimetral. Se verificó el cumplimiento absoluto de la Ley Global 4 (Inmutabilidad de Regresión). El ecosistema Low-Code (J-02) está listo para producción. Se autoriza el cierre de esta etapa.

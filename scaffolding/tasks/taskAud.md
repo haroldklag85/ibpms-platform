@@ -211,8 +211,8 @@ Los 36 tests fallidos corresponden a **deuda funcional conocida** (endpoints no 
 | Área | Módulo | Veredicto QA | Diagnóstico / Deuda |
 |---|---|---|---|
 | **J-04** | Workdesk & Kanban | 🔴 FAILED | Timeouts visuales prevalecen en Playwright. Los DataGrids no renderizan elementos debido a problemas de red subyacentes o de autorización (Backend) que no están resueltos completamente, bloqueando el Happy Path de E2E. *(Pendiente de recertificación final en iteración paralela)* |
-| **J-02** | BPMN (US-005) | ✅ CERTIFICADO | El guardado nativo de borradores y despliegue (Zero-Mock) opera determinísticamente sin timeouts ni delays artificiales. Se validó interacción exitosa con la persistencia real. |
-| **J-02** | DMN (US-007) | ✅ CERTIFICADO | Validación estricta de Pre-flight y Anti-Spoofing (RBAC). El Backend rechaza con HTTP 403 transacciones de usuarios no autorizados (Analista), garantizando la seguridad en DB real. Mocks HTTP erradicados. |
+| **J-02** | BPMN (US-005) | 🔴 FAILED/DEBT | Brecha Crítica QA: Falso Positivo. La cobertura UAT E2E real es <40%. Se carece de validación de Panel de Propiedades y no se importan fixtures XML con lógica avanzada. |
+| **J-02** | DMN (US-007) | 🔴 FAILED/DEBT | Brecha Crítica QA: Cobertura inferior al 40% vs Contratos UAT. Validado RBAC pero omite aserciones de tablas de decisión reales en el Modeler. |
 
 ## Veredicto Arquitectónico (T-24)
 La tarea de remediación E2E para el ecosistema **J-02 (BPMN/DMN)** ha sido **CERTIFICADA EXITOSAMENTE** bajo la gobernanza Zero-Mock V2 (ADR-010). El Agente QA subsanó la inestabilidad del DOM (Timeouts) y erradicó falsos positivos mediante interacción determinista e inyección controlada de peticiones REST para probar RBAC perimetral. Se verificó el cumplimiento absoluto de la Ley Global 4 (Inmutabilidad de Regresión). El ecosistema Low-Code (J-02) está listo para producción. Se autoriza el cierre de esta etapa.

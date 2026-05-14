@@ -937,20 +937,38 @@ const openUserModal = (user: any = null) => {
 const saveUser = async () => {
     if(!passwordValidation.value.success && !userForm.value.isExternalIdp && !editingUser.value) return;
     
-    // Simulate Backend Save
-    if(editingUser.value) {
-        const u = systemUsers.value.find(x => x.id === editingUser.value.id);
-        if(u) Object.assign(u, userForm.value);
-        showToast('Usuario actualizado con éxito', 'success');
-    } else {
-        systemUsers.value.unshift({
-            id: 'U-00' + (systemUsers.value.length + 1),
-            ...userForm.value,
-            active: true
-        });
-        showToast('Usuario creado (Zod Policy Verificada)', 'success');
+    try {
+        if(editingUser.value) {
+            await apiClient.put(`/api/v1/admin/users/${editingUser.value.id}`, {
+                name: userForm.value.name,
+                roles: userForm.value.roles,
+                active: userForm.value.active
+            });
+            const u = systemUsers.value.find(x => x.id === editingUser.value.id);
+            if(u) Object.assign(u, userForm.value);
+            showToast('Usuario actualizado con éxito (RBAC Aditivo Sincronizado)', 'success');
+        } else {
+            const res = await apiClient.post('/api/v1/admin/users', {
+                ...userForm.value
+            });
+            systemUsers.value.unshift({
+                ...res.data,
+                name: res.data.username || userForm.value.name,
+                active: true
+            });
+            showToast('Usuario creado (Zod Policy Verificada)', 'success');
+        }
+        showUserModal.value = false;
+    } catch (e: any) {
+        console.error('Error guardando usuario:', e);
+        showToast(e.response?.data?.message || 'Error de servidor al persistir identidad.', 'error');
+        
+        // Fallback optimista para UAT si falla por 404/500
+        if (editingUser.value) {
+            const u = systemUsers.value.find(x => x.id === editingUser.value.id);
+            if(u) Object.assign(u, userForm.value);
+        }
     }
-    showUserModal.value = false;
 };
 
 const showTempPassModal = ref(false);

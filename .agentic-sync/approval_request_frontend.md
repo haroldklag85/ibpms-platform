@@ -1,18 +1,27 @@
-# 🛡️ Solicitud de Aprobación: US-036 (CA-29 a CA-32)
+# Solicitud de Aprobación: US-038 Identity Governance (Frontend)
 
-**Agente:** David (Frontend Developer)
-**Rama:** `DevDavid`
-**Objetivo:** Finalizar la UI de Gobernanza y la dinámica del Menú Maestro.
+**Agente:** Frontend Developer
+**Tarea:** Remediación CA-01 al CA-05
+**Branch:** `DevDavid`
 
 ## Resumen del Plan Propuesto
 
-1.  **Rediseño de Modal (CA-29)**: Se añadirán los prefijos numéricos ("Tab 1", "Tab 2") a las pestañas del modal de gestión de roles en `IdentityGovernance.vue` para mayor claridad administrativa.
-2.  **Sidebar 100% Dinámico (CA-31)**: Se purificará `MainLayout.vue` para que la navegación lateral se base exclusivamente en el `menuStore`, eliminando validaciones redundantes de roles en el cliente.
-3.  **Gobernanza de Caché (CA-32)**: Se integrará en `apiClient.ts` la purga automática del `menuStore` mediante `$reset()` cuando el backend emita un 403, garantizando que el usuario visualice sus permisos actualizados instantáneamente.
+1.  **CA-01 (Redis Fail-Open)**: Intercepción de HTTP 403 con mensaje de Redis caído para mostrar alerta de "Degradación Segura" (Modo Solo Lectura).
+2.  **CA-03 (JIT Completion)**: Centralización de la lógica de sincronización de perfiles incompletos (428) en `authStore.ts` y actualización del modal.
+3.  **CA-04 (Break-Glass)**: Implementación de un nuevo componente `BreakGlassLogin.vue` que incluya el campo obligatorio de **Justificación** para auditoría forense.
+4.  **CA-05 (RBAC Aditivo)**: Verificación de la integridad visual del multi-select de roles y la fusión aditiva de permisos.
 
-## Puntos de Control de Arquitectura
-- **Anti-JWT Bloat**: No se lee información de menús desde el token.
-- **Zero-Trust**: El fallo de red o permisos bloquea la UI (CA-26/32).
-- **Clean Code**: Se implementará `$reset` manual en el store para mantener el estándar Pinia.
+## Cambios Técnicos Clave
 
-**Humano, por favor entrega este mensaje al Arquitecto Líder y regrésame su veredicto.**
+-   **`apiClient.ts`**: Nuevo interceptor para estados de degradación.
+-   **`authStore.ts`**: Nuevo método `syncProfile`.
+-   **`BreakGlassLogin.vue`**: Nuevo componente de seguridad táctica.
+-   **`ErrorStateGlobal.vue`**: Soporte para alertas de degradación segura.
+
+## Verificación
+-   Suite de tests unitarios (Vitest) cubriendo los 3 flujos críticos (Fail-Open, JIT, Break-Glass).
+-   `npm run build` mandatorio para asegurar Zero-Trust UI.
+
+---
+
+**Humano, por favor entrega este mensaje al Arquitecto Líder para su veredicto técnico.**

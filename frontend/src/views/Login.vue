@@ -53,93 +53,13 @@
 
       <!-- VISTA 2: BREAK-GLASS LOGIN (CA-4 - Emergencia Local) -->
       <div v-else class="space-y-6 animate-fade-in">
-         <div class="bg-red-50 border border-red-100 rounded-lg p-3 text-center mb-6">
-             <span class="text-red-600 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1">
-                 <span class="material-symbols-outlined text-[14px]">emergency</span> Modo Break-Glass Activo
-             </span>
-             <p class="text-xs text-red-500 mt-1 font-medium leading-tight">Uso exclusivo para fallos de Federación SAML/OIDC. Su IP será auditada.</p>
+         <BreakGlassLogin />
+         
+         <div class="text-center pt-2">
+             <button type="button" @click="disableBreakGlass" class="text-[11px] font-bold text-gray-500 hover:text-blue-600 transition uppercase tracking-wider">
+                 ← Volver al SSO Corporativo
+             </button>
          </div>
-
-         <!-- Banner de Error Diferenciado (Break-Glass) -->
-         <div 
-             v-if="loginError" 
-             data-testid="login-error-banner"
-             class="rounded-lg p-3 text-center mb-4 border animate-fade-in"
-             :class="{
-                 'bg-amber-50 border-amber-200': loginError.code === 'USER_NOT_FOUND',
-                 'bg-red-50 border-red-200': loginError.code === 'INVALID_PASSWORD',
-                 'bg-gray-100 border-gray-300': loginError.code === 'ACCOUNT_DISABLED',
-                 'bg-yellow-50 border-yellow-200': loginError.code === 'MISSING_FIELDS',
-                 'bg-red-100 border-red-300': loginError.code === 'UNKNOWN'
-             }"
-         >
-             <div class="flex items-center justify-center gap-2">
-                 <span class="material-symbols-outlined text-[18px]"
-                     :class="{
-                         'text-amber-600': loginError.code === 'USER_NOT_FOUND',
-                         'text-red-600': loginError.code === 'INVALID_PASSWORD' || loginError.code === 'UNKNOWN',
-                         'text-gray-600': loginError.code === 'ACCOUNT_DISABLED',
-                         'text-yellow-600': loginError.code === 'MISSING_FIELDS'
-                     }"
-                 >
-                     {{ loginError.code === 'USER_NOT_FOUND' ? 'person_off' : 
-                        loginError.code === 'INVALID_PASSWORD' ? 'lock' : 
-                        loginError.code === 'ACCOUNT_DISABLED' ? 'block' : 
-                        'error' }}
-                 </span>
-                 <p class="text-sm font-semibold"
-                     :class="{
-                         'text-amber-800': loginError.code === 'USER_NOT_FOUND',
-                         'text-red-800': loginError.code === 'INVALID_PASSWORD' || loginError.code === 'UNKNOWN',
-                         'text-gray-800': loginError.code === 'ACCOUNT_DISABLED',
-                         'text-yellow-800': loginError.code === 'MISSING_FIELDS'
-                     }"
-                 >
-                     {{ loginError.message }}
-                 </p>
-             </div>
-         </div>
-
-         <form @submit.prevent="handleEmergencyLogin" class="space-y-5">
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Usuario Táctico</label>
-              <input 
-                data-testid="email-input"
-                v-model="email" 
-                type="email" 
-                required 
-                placeholder="admin.local@empresa.com"
-                class="block w-full px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm font-medium transition"
-              >
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Contraseña Bóveda</label>
-              <input 
-                data-testid="password-input"
-                v-model="password" 
-                type="password" 
-                required
-                class="block w-full px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm font-medium transition"
-              >
-            </div>
-
-            <div class="pt-2">
-              <button 
-                data-testid="login-submit"
-                type="submit" 
-                class="w-full flex items-center justify-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
-              >
-                <span class="material-symbols-outlined text-[18px]">verified_user</span> Forzar Acceso Local
-              </button>
-            </div>
-            
-            <div class="text-center pt-2">
-                <button type="button" @click="disableBreakGlass" class="text-[11px] font-bold text-gray-500 hover:text-blue-600 transition uppercase tracking-wider">
-                    ← Volver al SSO Corporativo
-                </button>
-            </div>
-         </form>
       </div>
     </div>
 
@@ -153,6 +73,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import apiClient from '@/services/apiClient';
+import BreakGlassLogin from '@/components/auth/BreakGlassLogin.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -160,8 +81,6 @@ const authStore = useAuthStore();
 
 // UI States
 const isBreakGlass = ref(false);
-const email = ref('');
-const password = ref('');
 const loginError = ref<{ code: string; message: string } | null>(null);
 
 // ===============================================
@@ -203,58 +122,7 @@ const triggerAzureSSO = async () => {
     }, 800);
 };
 
-// ===============================================
-// VISTA 2: BREAK-GLASS EMERGENCY LOGIN CA-4
-// ===============================================
-const handleEmergencyLogin = async () => {
-    loginError.value = null; // Limpiar error previo
-    try {
-        console.log(`[BREAK-GLASS] Forzando POST /auth/emergency-login para ${email.value}`);
-        const response = await apiClient.post('/auth/emergency-login', { 
-            email: email.value, 
-            password: password.value 
-        });
-        const { token } = response.data;
-        authStore.login(token);
-        router.push('/workdesk');
-    } catch (e: any) {
-        const responseData = e?.response?.data;
-        const code = responseData?.code || 'UNKNOWN';
-        const message = responseData?.message;
-
-        switch (code) {
-            case 'USER_NOT_FOUND':
-                loginError.value = {
-                    code,
-                    message: message || 'No existe una cuenta asociada al correo proporcionado.'
-                };
-                break;
-            case 'INVALID_PASSWORD':
-                loginError.value = {
-                    code,
-                    message: message || 'La contraseña proporcionada es incorrecta.'
-                };
-                break;
-            case 'ACCOUNT_DISABLED':
-                loginError.value = {
-                    code,
-                    message: message || 'La cuenta se encuentra deshabilitada. Contacte al administrador.'
-                };
-                break;
-            case 'MISSING_FIELDS':
-                loginError.value = {
-                    code,
-                    message: message || 'Debe ingresar correo y contraseña.'
-                };
-                break;
-            default:
-                loginError.value = {
-                    code: 'UNKNOWN',
-                    message: 'Error de conexión con el servidor. Verifique que el backend esté activo.'
-                };
-        }
-    }
-};
+// El manejo de login de emergencia ahora lo delega al componente BreakGlassLogin.vue
 </script>
 
 <style scoped>

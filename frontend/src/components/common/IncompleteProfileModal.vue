@@ -37,7 +37,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
-import apiClient from '@/services/apiClient';
 import { useRouter } from 'vue-router';
 
 const isOpen = ref(false);
@@ -63,14 +62,10 @@ onUnmounted(() => {
 
 const submitProfile = async () => {
     try {
-        const res = await apiClient.put('/auth/sync', {
-            tempToken: tempToken.value,
-            claims: form.value
-        });
-        isOpen.value = false;
-        if (res.data && res.data.token) {
-            const authStore = useAuthStore();
-            authStore.login(res.data.token);
+        const authStore = useAuthStore();
+        const success = await authStore.syncProfile(tempToken.value, form.value);
+        if (success) {
+            isOpen.value = false;
             router.push('/');
         }
     } catch (e) {

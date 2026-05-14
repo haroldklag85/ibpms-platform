@@ -133,6 +133,24 @@ export const useAuthStore = defineStore('auth', () => {
         window.dispatchEvent(new CustomEvent('role-switched', { detail: { roleId } }));
     };
 
+    // CA-03: Sincronización de Perfil JIT (Completar Perfil Incompleto)
+    const syncProfile = async (tempTokenValue: string, claims: any) => {
+        try {
+            const { data } = await apiClient.put('/auth/sync', {
+                tempToken: tempTokenValue,
+                claims: claims
+            });
+            if (data && data.token) {
+                login(data.token);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error en syncProfile:', error);
+            throw error;
+        }
+    };
+
     // CA-1: Espera síncrona de hidratación
     const hydrateAuth = async () => {
         isHydrating.value = true;
@@ -200,6 +218,7 @@ export const useAuthStore = defineStore('auth', () => {
         login,
         logout,
         switchRole,
+        syncProfile,
         hydrateAuth,
         hasAnyRole,
         hasWritePermission

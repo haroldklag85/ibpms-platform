@@ -103,8 +103,23 @@ apiClient.interceptors.response.use(
                     // NO auto-remove: este toast es imborrable per ADR-014
                 }
             } else if (status === 502 || status === 503) {
-                // Categoría 2: Servidor no disponible — Toast dismissible + auto-retry ya manejado arriba (L49-60)
-                console.warn(`[ADR-014] Servidor no disponible (${status})`);
+                // Categoría 2: Servidor no disponible o Degradación Segura (Fail-Open)
+                console.warn(`[ADR-014] Servidor no disponible o en Degradación (${status})`);
+                
+                // CA-01: Detectar Modo de Degradación Segura (Redis Caído)
+                const isMutation = ['post', 'put', 'delete', 'patch'].includes(error.config?.method?.toLowerCase() || '');
+                if (status === 503 && isMutation) {
+                    console.error('CA-01: Sistema en Degradación Segura (Redis Fail-Open). Bloqueando mutación.');
+                    const event = new CustomEvent('global-error-dispatch', { detail: { 
+                        code: 503,
+                        type: 'DEGRADED_MODE',
+                        message: `Operación Denegada: Sistema en Degradación Segura (Modo Solo Lectura).`,
+                        dismissible: true
+                    }});
+                    window.dispatchEvent(event);
+                    return Promise.reject(error);
+                }
+
                 const event = new CustomEvent('global-error-dispatch', { detail: { 
                     code: status,
                     type: 'SERVICE_UNAVAILABLE',

@@ -639,6 +639,442 @@
 
 ---
 
+## FASE 7: CERTIFICACIÓN OPERATIVA — WORKDESK, CLAIM & KANBAN
+
+> **Objetivo:** Certificar las funcionalidades operativas diarias: bandeja de tareas (US-001), reclamo/liberación (US-002) y tablero ágil (US-008), utilizadas como vehículo transitorio en Fases 1-6 pero sin certificación propia.
+> **US:** US-001, US-002, US-008
+> **Precondiciones adicionales:**
+
+| # | Precondición | Verificación |
+|---|-------------|-------------|
+| PRE-10 | Tablero Kanban ágil "QA Sprint E2E" con columnas: TODO, DOING, REVIEW, BLOCKED, DONE | Seed data |
+| PRE-11 | 3 tarjetas Kanban pre-cargadas en columna TODO | Seed data |
+| PRE-12 | 2 usuarios operarios en mismo equipo: `operario_a` y `operario_b` (grupo `Adjusters`) | Seed data |
+| PRE-13 | 1 usuario supervisor: `supervisor_e2e` (grupo `Directors`, mismo `team_id` que operarios) | Seed data |
+| PRE-14 | ≥20 tareas BPMN+Kanban mixtas en Cola del Equipo de `Adjusters` | Generadas por Fases 1-4 + seed |
+
+---
+
+### FASE 7A: WORKDESK — Grilla Unificada y SLA Vivo (US-001)
+
+---
+
+#### CU-J02-W01: Carga inicial con paginación server-side
+
+**US:** US-001 | **CAs:** CA-10, CA-19, CA-20
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Navega al Workdesk (`/workdesk`) | Grilla con Skeleton loader (no spinner) |
+| 2 | Sistema | GET `/api/v1/workdesk/tasks?page=1&size=15&sort=sla_asc` | Response con `pagination: { page:1, size:15, total_records, total_pages }` |
+| 3 | Sistema | Máximo 15 tarjetas renderizadas (CA-09) | Botonera paginación sticky arriba y abajo |
+| 4 | Sistema | Ordenamiento SLA ascendente forzoso (CA-01) | Tarea con menor tiempo restante en posición 1 |
+| 5 | Operario A | Navega a página 2 | GET con `page=2` → Nuevas 15 tarjetas |
+
+**Estado esperado:** ✅ PASA
+**Criterio:** Paginación server-side estricta. Sin filtrado client-side. 15 tarjetas/página.
+
+---
+
+#### CU-J02-W02: Búsqueda server-side con debounce
+
+**US:** US-001 | **CAs:** CA-19, CA-20
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Escribe "EXP-90" en barra de búsqueda | Debounce 300ms antes de emitir request |
+| 2 | Sistema | GET `/api/v1/workdesk/tasks?page=1&size=15&search=EXP-90` | Resultados filtrados server-side (`pg_trgm`) |
+| 3 | Sistema | Paginación reiniciada a página 1 | Consistencia con CA-22 |
+| 4 | Operario A | Borra búsqueda | Grilla vuelve al estado completo paginado |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-W03: Filtros facetados con contadores
+
+**US:** US-001 | **CAs:** CA-22, CA-29
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Sistema | Carga inicial Workdesk | Filtros: `[Todos (N)]` / `[⚡ BPMN (X)]` / `[📋 Kanban (Y)]` |
+| 2 | Operario A | Selecciona "⚡ BPMN" | GET con `origin=BPMN` → Solo tareas de proceso |
+| 3 | Sistema | Chip removible "⚡ BPMN" sobre la grilla | Feedback visual |
+| 4 | Operario A | Adiciona filtro "🔴 Vencida" | GET con `origin=BPMN&status=OVERDUE` → Intersección |
+| 5 | Sistema | Contadores: `facets: { origin: {...}, status: {...} }` | Números reflejan total real |
+| 6 | Operario A | Remueve chip "⚡ BPMN" | Filtro revertido, paginación reinicia a p.1 |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-W04: Semáforo SLA vivo — Ticking Engine
+
+**US:** US-001 | **CAs:** CA-05, CA-11, CA-24
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Sistema | Renderiza 15 tareas con SLA distintos | Semáforos: 🟢(>50%) 🟡(15-50%) 🔴(<15%) ⚫(vencida) |
+| 2 | Sistema | Iconografía SVG acompañando colores (CA-11) | ✔️ Verde, ⏳ Amarillo, ⚡ Rojo (accesibilidad daltónicos) |
+| 3 | Sistema | UN solo Global Heartbeat Store (rAF) | Prohibido: múltiples `setInterval` por tarjeta |
+| 4 | Operario A | Espera 30s observando | Temporizadores se actualizan en vivo sin F5 |
+| 5 | Sistema | Tarea próxima a vencer transiciona 🟡→🔴 | Cambio de color automático sin recarga |
+
+**Estado esperado:** ✅ PASA
+**Criterio:** Zero `setInterval` por tarjeta. Global Heartbeat. Transiciones automáticas.
+
+---
+
+#### CU-J02-W05: Recálculo SLA tras pestaña inactiva
+
+**US:** US-001 | **CAs:** CA-25, CA-31
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Workdesk con tareas en semáforo 🟡 | Estado inicial |
+| 2 | Operario A | Cambia a otra pestaña por 6 minutos | rAF se pausa |
+| 3 | Operario A | Regresa a pestaña Workdesk | `visibilitychange` detectado |
+| 4 | Sistema | Recálculo INMEDIATO semáforos con `Date.now()` (CA-25) | 🟡→🔴 si venció durante inactividad |
+| 5 | Sistema | Auto-refresco silencioso (CA-31, >5min) | Shimmer sutil → datos renovados sin destruir KeepAlive ni filtros |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-W06: Consolidación BPMN + Kanban en grilla unificada
+
+**US:** US-001 | **CAs:** CA-03, CA-17, CA-23
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Sistema | Grilla carga | 5 columnas: Nombre, SLA, Estado, Avance, Recurso |
+| 2 | Sistema | Tareas BPMN (insurance_claims) | Badge ⚡ izquierda del nombre |
+| 3 | Sistema | Tareas Kanban (tablero ágil) | Badge 📋 izquierda del nombre |
+| 4 | Sistema | Avance BPMN (CA-23) | `(Índice UserTask / Total UserTasks) × 100` → barra progreso |
+| 5 | Sistema | Avance Kanban (CA-23) | `(Índice columna / Total columnas) × 100` |
+| 6 | Sistema | Tareas sin `dueDate` | "SLA Infinito" → fondo del grid (NULLS LAST) |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-W07: KeepAlive y navegación de retorno
+
+**US:** US-001 | **CAs:** CA-12
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Configura filtros + scroll hasta fila 10 | Estado personalizado |
+| 2 | Operario A | Abre formulario de una tarea | Sale del Workdesk |
+| 3 | Operario A | Presiona "Atrás" | `<keep-alive>` restaura filtros, scroll, página |
+| 4 | Sistema | Carga en 0ms sin petición al backend | KeepAlive funcional |
+| 5 | Sistema | Si página queda vacía (todas resueltas) | Redirigir a Página 1 (Last Page Empty) |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-W08: WebSocket — Desaparición + relleno automático
+
+**US:** US-001 | **CAs:** CA-06, CA-13, CA-26, CA-27
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Workdesk con 15 tareas en Cola del Equipo | Página completa |
+| 2 | Operario B | Reclama tarea TK-123 desde otra sesión | POST claim → 200 |
+| 3 | Sistema | WS: `{ action: 'REMOVE', taskId: 'TK-123' }` | Operario A recibe |
+| 4 | Workdesk A | Animación CSS `opacity: 0` (CA-13) | Sin salto abrupto de fila |
+| 5 | Workdesk A | Toast: "Tarea reclamada por otro equipo" | Sin revelar identidad (privacidad) |
+| 6 | Sistema | Ventana 5s → petición silenciosa relleno (CA-26) | Página vuelve a 15 tarjetas (fade-in sutil) |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-W09: Delegación segura — Toggle de vista
+
+**US:** US-001 | **CAs:** CA-04, CA-15
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Supervisor | Activa Toggle "Ver tareas de [Operario A]" | GET `/api/v1/workdesk/tasks/{operarioA_id}` |
+| 2 | Sistema | Banner: "Estás viendo el escritorio de [Operario A]" | Mitigación errores |
+| 3 | Sistema | Validación RBAC: supervisor es superior jerárquico | 200 OK |
+| 4 | Supervisor | Desactiva toggle | Vuelve a sus propias tareas |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-W10: Anti Cherry-Picking — "Atender Siguiente"
+
+**US:** US-001 | **CAs:** CA-08, CA-16, CA-21, CA-28
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Admin | Activa Feature Toggle "Enrutamiento Forzoso" | Huella en Audit Log |
+| 2 | Operario A | Workdesk cambia: oculta grilla selectiva | CTA gigante: `[Atender Siguiente Tarea]` |
+| 3 | Operario A | Presiona "Atender Siguiente" | Backend cruza task antigua vs skills operario |
+| 4 | Sistema | `SELECT FOR UPDATE SKIP LOCKED` (CA-28) | Asignación atómica |
+| 5 | Sistema | Tarea asignada + formulario abierto | Sin opción de elegir otra |
+| 6 | Operario A | Skip → Dropdown motivos (CA-21) | "Cliente no responde" etc. → Audit Log |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### FASE 7B: CLAIM TASK — Reclamo, Liberación y Despojo (US-002)
+
+> **Precondiciones:** ≥5 tareas en Cola del Equipo de `Adjusters`. `operario_a` y `operario_b` con sesiones simultáneas.
+
+---
+
+#### CU-J02-C01: Reclamo individual con asignación
+
+**US:** US-002 | **CAs:** CA-01, CA-14
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | En "Cola del Equipo", visualiza TK-200 | Botones: [Explorar] [Reclamar] |
+| 2 | Operario A | Presiona [Reclamar] | POST `/api/v1/tasks/TK-200/claim` |
+| 3 | Sistema | 200: `{ taskId, assignee: 'operario_a', claimedAt }` | Tarea migra a "Mi Bandeja" |
+| 4 | Workdesk B | WS `REMOVE` → TK-200 desaparece de cola de B | Sincronización instantánea |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-C02: Concurrencia optimista — 2 usuarios simultáneos
+
+**US:** US-002 | **CAs:** CA-01, CA-11
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Ambos | A y B visualizan TK-201 | Botón [Reclamar] visible para ambos |
+| 2 | Simultáneo | Ambos clic [Reclamar] en el mismo segundo | 2 POST concurrentes |
+| 3 | Sistema | `SELECT FOR UPDATE SKIP LOCKED` | Solo 1 gana atómicamente |
+| 4 | Ganador | 200: tarea asignada | En "Mi Bandeja" |
+| 5 | Perdedor | 409: Modal "Lo sentimos, [Nombre] se te adelantó" | Sin stacktrace |
+
+**Estado esperado:** ✅ PASA
+**Criterio:** Exclusión mutua por BD. Zero duplicados. Modal amable.
+
+---
+
+#### CU-J02-C03: Reclamo masivo en lote (Bulk Claim)
+
+**US:** US-002 | **CAs:** CA-02, CA-14, CA-23
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Selecciona 5 checkboxes en Cola | [Reclamar Seleccionadas] activo |
+| 2 | Operario A | Presiona [Reclamar Seleccionadas] | POST `/api/v1/tasks/bulk-claim` body: `{ taskIds: [...5] }` |
+| 3 | Sistema | Batch atómico | `{ claimed: 4, conflicts: [{ taskId, reason }] }` |
+| 4 | Sistema | WS `BULK_REMOVE` (CA-23) | 1 mensaje → desvanecimiento escalonado 150ms |
+| 5 | Operario A | Resumen visual | "4 reclamadas, 1 ya no disponible" |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-C04: Exploración solo lectura + aviso de reclamo externo
+
+**US:** US-002 | **CAs:** CA-05, CA-18
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Doble clic en TK-202 de la Cola | Formulario en Modo Solo Lectura |
+| 2 | Sistema | `assignee` NO se altera en BD | [Reclamar] visible dentro del formulario |
+| 3 | Operario B | Reclama TK-202 durante exploración de A | WS `REMOVE` alcanza a A |
+| 4 | Workdesk A | Banner: "⚠️ Tarea reclamada por otro compañero" | [Reclamar] se deshabilita (gris + candado) |
+| 5 | Operario A | Puede seguir leyendo pero no actuar | Al cerrar, tarea ya no en Cola |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-C05: Liberación + Amnesia Transaccional + Nota interna
+
+**US:** US-002 | **CAs:** CA-04, CA-07, CA-16, CA-17
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | TK-203 reclamada, formulario parcialmente llenado | Borrador LocalStorage + 1 archivo subido |
+| 2 | Operario A | Presiona [Liberar Tarea] | Modal: "Perderá los datos no enviados" |
+| 3 | Operario A | Confirma + mensaje: "@Pedro, revisalo" | POST `/tasks/TK-203/release` body: `{ message }` |
+| 4 | Sistema | Purga LocalStorage + archivos `orphaned` | Amnesia total (CA-07, CA-17) |
+| 5 | Sistema | WS `ADD` → TK-203 reaparece en Cola | Disponible para reclamar |
+| 6 | Operario B | Reclama TK-203 y abre formulario | Formulario 100% en blanco |
+| 7 | Sistema | Banner: "📝 Nota: @Pedro — [Op.A, hace X min]" (CA-16) | Visible hasta 1ra acción de B |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-C06: Despojo forzoso por supervisor
+
+**US:** US-002 | **CAs:** CA-08, CA-13
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Supervisor | Vista monitoreo → TK-204 asignada a Op. A | [Forced Unclaim] visible |
+| 2 | Supervisor | Ejecuta Forced Unclaim con motivo | POST `/tasks/TK-204/force-unclaim` |
+| 3 | Sistema | Valida `team_id` supervisor = `team_id` tarea | 200 OK |
+| 4 | Sistema | WS `REMOVE` bandeja de A + WS `ADD` Cola grupal | Despojo bidireccional |
+| 5 | Sistema | Audit Log: `{ action: 'FORCE_UNCLAIM', result: 'SUCCESS' }` | Inmutable |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-C07: Trazabilidad forense pop-up
+
+**US:** US-002 | **CAs:** CA-09, CA-20
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Clic "Ver Trazabilidad" de TK-200 | Pop-Up timeline vertical |
+| 2 | Sistema | GET `/api/v1/tasks/TK-200/audit-trail` | Historial rotación `assignee` |
+| 3 | Sistema | Tipos: 🟢 CLAIMED, 🔵 RELEASED, 🟠 FORCE_UNCLAIMED, 🔴 AUTO_UNCLAIMED | Íconos color + timestamps |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-C08: Separación visual Cola vs Bandeja personal
+
+**US:** US-002 | **CAs:** CA-22
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Sistema | Workdesk carga | 2 tabs: "Mi Bandeja ([N])" / "Cola del Equipo ([M])" |
+| 2 | Operario A | Tab "Mi Bandeja" | Botones: [Abrir] [Liberar]. NO [Reclamar] |
+| 3 | Operario A | Tab "Cola del Equipo" | Botones: [Explorar] [Reclamar]. Checkboxes Bulk |
+| 4 | Operario A | Reclama 1 tarea | N+1, M-1 en tiempo real |
+| 5 | Sistema | Tab activa preservada en KeepAlive | Consistente con US-001 CA-12 |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### FASE 7C: KANBAN ÁGIL — Tablero, CRUD y Drag & Drop (US-008)
+
+> **Proceso:** Tablero ágil independiente "QA Sprint E2E" (no vinculado al proceso BPMN de siniestros).
+
+---
+
+#### CU-J02-A01: Crear tablero ágil con columnas
+
+**US:** US-008 | **CAs:** CA-05, CA-08
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | SM | Pantalla 10 → "Nuevo Proyecto Ágil" | Pop-Up: "Iniciar vacío" / "Usar Plantilla WBS" |
+| 2 | SM | Selecciona "Iniciar vacío" | Hub con tablero sin tarjetas |
+| 3 | SM | Columnas default: TODO, DOING, DONE | 3 columnas base |
+| 4 | SM | Añade: REVIEW, BLOCKED | Total 5 ≤ 7 (hard-limit CA-08) |
+| 5 | Sistema | Valida rol `Scrum_Master` o `Lider_Proyecto` | Solo estos roles |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-A02: CRUD de tarjetas Kanban
+
+**US:** US-008, US-030 | **CAs:** CA-03, CA-04 (US-030)
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | SM | "+ Nueva Tarea" en barra superior | Slide-Panel con campos |
+| 2 | SM | Título, Descripción(rich text), Esfuerzo=4h, Responsable=`operario_a` | Validados |
+| 3 | SM | Guarda | POST → Tarjeta en TODO, visible en P3 |
+| 4 | SM | Crea 2 tarjetas más | Total 3 en TODO |
+| 5 | SM | Edita título existente | PUT → Actualización inmediata |
+| 6 | SM | Elimina tarjeta con confirmación | Hard-Delete + Audit Log previo |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-A03: Drag & Drop entre columnas + propagación WebSocket
+
+**US:** US-008 | **CAs:** CA-12, CA-06
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Arrastra KT-001 de TODO → DOING | Drag visual con placeholder |
+| 2 | Sistema | PATCH `.../kanban/tasks/KT-001/status` → `{ new_status: 'DOING' }` | 200: `{ status: 'DOING', version: 2 }` |
+| 3 | Sistema | State Machine valida TODO→DOING (CA-06) | Transición permitida |
+| 4 | Sistema | WS propaga a todos los conectados (CA-12) | Op. B ve KT-001 en DOING |
+| 5 | Sistema | `last_modified` actualizado | Timestamp correcto |
+
+**Estado esperado:** ✅ PASA
+**Criterio:** Sub-segundo. Sin overhead BPMN. Propagación WS confirmada.
+
+---
+
+#### CU-J02-A04: Motivo obligatorio al mover a BLOCKED
+
+**US:** US-008 | **CAs:** CA-01
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Arrastra KT-001 de DOING → BLOCKED | Modal: "Motivo del Bloqueo" |
+| 2 | Operario A | Escribe motivo (≥10 chars), confirma | PATCH status + motivo persistido |
+| 3 | Sistema | SLA NO se congela (CA-01) | Reloj sigue corriendo |
+| 4 | Sistema | Badge "🔴 BLOCKED" con tooltip motivo | Visible al hover |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-A05: Time Tracking Play/Stop por columna
+
+**US:** US-008 | **CAs:** CA-03, CA-09
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Sistema | KT-001 en TODO | Timer oculto y bloqueado |
+| 2 | Operario A | Arrastra a DOING | Timer habilitado: [▶ Start] visible |
+| 3 | Operario A | [▶ Start] → 5 min → [⏹ Stop] | Tiempo acumulado: 5:00 |
+| 4 | Operario A | Arrastra a BLOCKED | Timer sigue disponible |
+| 5 | Operario A | Arrastra a DONE | Timer se bloquea definitivamente |
+| 6 | Sistema | Log en `ibpms_time_logs` ref_type=`TASK_AGILE` | Asiento inmutable (CA-09) |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-A06: Inmutabilidad en DONE + Single-Assignee
+
+**US:** US-008 | **CAs:** CA-02, CA-04
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Sistema | KT-002 en DONE | Badge ✅ |
+| 2 | Operario A | Abre detalle | Solo Lectura absoluto, botones ocultos |
+| 3 | Sistema | POST actualización → Backend rechaza | Inmutabilidad post-DONE (CA-02) |
+| 4 | SM | Intenta asignar 2 usuarios a KT-003 | Error: política 1:1 (CA-04) |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+#### CU-J02-A07: Formulario genérico en tarea sin iForm
+
+**US:** US-008, US-039 | **CAs:** CA-01/02 (US-039)
+
+| Paso | Actor | Acción | Resultado Esperado |
+|:----:|-------|--------|-------------------|
+| 1 | Operario A | Abre KT-003 (sin formKey) | `sys_generic_form` carga |
+| 2 | Sistema | MetadataGrid + Resultado + Observaciones + Adjuntos | Genérico funcional |
+| 3 | Operario A | Resultado="Aprobar", Obs(≥10 chars) | Zod OK |
+| 4 | Operario A | "✅ Aprobar" | Tarea avanza en Kanban |
+
+**Estado esperado:** ✅ PASA
+
+---
+
 ## Escenarios Negativos
 
 ---
@@ -743,6 +1179,150 @@
 
 ---
 
+### CU-J02-NEG-08: Hard Limit paginación >100 registros
+
+**US:** US-001 | **CAs:** CA-10
+
+| Paso | Resultado Esperado |
+|:----:|-------------------|
+| 1 | Request manipulado: GET `/api/v1/workdesk/tasks?page=1&size=500` |
+| 2 | Backend retorna HTTP 400 Bad Request |
+| 3 | "El parámetro size no puede superar 100 registros" |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### CU-J02-NEG-09: IDOR en delegación — Espiar usuario sin jerarquía
+
+**US:** US-001 | **CAs:** CA-15
+
+| Paso | Resultado Esperado |
+|:----:|-------------------|
+| 1 | Operario A altera URL para ver tareas de otro departamento |
+| 2 | Backend valida RBAC perimetral: A NO es superior jerárquico |
+| 3 | HTTP 403 Forbidden: "No tiene permisos para ver este escritorio" |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### CU-J02-NEG-10: Rate Limiting en endpoint de grilla
+
+**US:** US-001 | **CAs:** CA-30
+
+| Paso | Resultado Esperado |
+|:----:|-------------------|
+| 1 | Script dispara >60 peticiones/min a `/api/v1/workdesk/tasks` |
+| 2 | Petición 61: HTTP 429 Too Many Requests |
+| 3 | "Demasiadas consultas. Espera unos segundos." |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### CU-J02-NEG-11: Sanitización DTO — Sin data leaks
+
+**US:** US-001 | **CAs:** CA-14
+
+| Paso | Resultado Esperado |
+|:----:|-------------------|
+| 1 | DevTools → Network → interceptar response de grilla |
+| 2 | DTO sanitizado: sin PII, sin variables internas Camunda |
+| 3 | Solo 5 columnas rígidas en payload (CA-14) |
+| 4 | Toda consulta incluye `tenantId` inyectado |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### CU-J02-NEG-12: Supervisor cross-team intenta despojo forzoso
+
+**US:** US-002 | **CAs:** CA-13
+
+| Paso | Resultado Esperado |
+|:----:|-------------------|
+| 1 | Supervisor Dept. B intenta `force-unclaim` de tarea Dept. A |
+| 2 | Backend cruza `team_id` supervisor vs `team_id` tarea |
+| 3 | HTTP 403: "No tiene permisos para gestionar tareas de este equipo" |
+| 4 | Intento en Audit Log: `{ result: 'DENIED' }` |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### CU-J02-NEG-13: Optimistic UI + Rollback tras fallo persistente
+
+**US:** US-002 | **CAs:** CA-10, CA-21
+
+| Paso | Resultado Esperado |
+|:----:|-------------------|
+| 1 | Micro-corte de red durante reclamo |
+| 2 | Frontend "miente": tarea en "Mi Bandeja" con ⟳ giratorio |
+| 3 | 3 reintentos (2s, 4s, 8s) todos fallan |
+| 4 | Rollback visual: tarea devuelta a Cola |
+| 5 | Modal: "No pudimos confirmar tu reclamo. La tarea sigue en la cola." |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### CU-J02-NEG-14: Exceder 7 columnas en tablero Kanban
+
+**US:** US-008 | **CAs:** CA-08
+
+| Paso | Resultado Esperado |
+|:----:|-------------------|
+| 1 | Tablero con 7 columnas (Hard-Limit V1) |
+| 2 | SM presiona "Añadir Columna" |
+| 3 | HTTP 400: "Máximo 7 columnas por tablero en V1" |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### CU-J02-NEG-15: Editar formulario de tarea en DONE
+
+**US:** US-008 | **CAs:** CA-02
+
+| Paso | Resultado Esperado |
+|:----:|-------------------|
+| 1 | Abrir tarea completada (DONE) |
+| 2 | Todos los campos en Solo Lectura absoluto |
+| 3 | POST/PUT de actualización → Backend rechaza |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### CU-J02-NEG-16: Asignar 2 usuarios a tarjeta Kanban
+
+**US:** US-008 | **CAs:** CA-04
+
+| Paso | Resultado Esperado |
+|:----:|-------------------|
+| 1 | Intentar co-asignar `operario_a` y `operario_b` |
+| 2 | Motor restringe: política 1:1 (Single-Assignee) |
+| 3 | Error: "Solo un dueño por tarjeta en ejecución" |
+
+**Estado esperado:** ✅ PASA
+
+---
+
+### CU-J02-NEG-17: Inmutabilidad de costos — Borrar time log
+
+**US:** US-008 | **CAs:** CA-11
+
+| Paso | Resultado Esperado |
+|:----:|-------------------|
+| 1 | Operario intenta DELETE/PUT sobre registro en `ibpms_time_logs` |
+| 2 | API deniega: Append-Only |
+| 3 | Correcciones solo via asiento contable negativo + auditoría |
+
+**Estado esperado:** ✅ PASA
+
+---
+
 ## Brechas Descubiertas en esta Certificación
 
 | # | Brecha | Severidad | US | Sprint |
@@ -791,9 +1371,45 @@
 | CU-J02-NEG-05 | Import | US-028,007 | — | — | SHOULD | ✅ |
 | CU-J02-NEG-06 | Genérico | US-039 | CA-04 | — | MUST | ✅ |
 | CU-J02-NEG-07 | Ejecución | US-029 | — | — | SHOULD | ✅ |
+| CU-J02-W01 | Workdesk | US-001 | CA-10,19,20 | — | MUST | ✅ |
+| CU-J02-W02 | Workdesk | US-001 | CA-19,20 | — | MUST | ✅ |
+| CU-J02-W03 | Workdesk | US-001 | CA-22,29 | — | MUST | ✅ |
+| CU-J02-W04 | Workdesk | US-001 | CA-05,11,24 | — | MUST | ✅ |
+| CU-J02-W05 | Workdesk | US-001 | CA-25,31 | — | MUST | ✅ |
+| CU-J02-W06 | Workdesk | US-001 | CA-03,17,23 | — | MUST | ✅ |
+| CU-J02-W07 | Workdesk | US-001 | CA-12 | — | MUST | ✅ |
+| CU-J02-W08 | Workdesk | US-001 | CA-06,13,26,27 | — | MUST | ✅ |
+| CU-J02-W09 | Workdesk | US-001 | CA-04,15 | — | MUST | ✅ |
+| CU-J02-W10 | Workdesk | US-001 | CA-08,16,21,28 | — | MUST | ✅ |
+| CU-J02-C01 | Claim | US-002 | CA-01,14 | — | MUST | ✅ |
+| CU-J02-C02 | Claim | US-002 | CA-01,11 | — | MUST | ✅ |
+| CU-J02-C03 | Claim | US-002 | CA-02,14,23 | — | MUST | ✅ |
+| CU-J02-C04 | Claim | US-002 | CA-05,18 | — | MUST | ✅ |
+| CU-J02-C05 | Claim | US-002 | CA-04,07,16,17 | — | MUST | ✅ |
+| CU-J02-C06 | Claim | US-002 | CA-08,13 | — | MUST | ✅ |
+| CU-J02-C07 | Claim | US-002 | CA-09,20 | — | MUST | ✅ |
+| CU-J02-C08 | Claim | US-002 | CA-22 | — | MUST | ✅ |
+| CU-J02-A01 | Kanban | US-008 | CA-05,08 | — | MUST | ✅ |
+| CU-J02-A02 | Kanban | US-008,030 | CA-03,04 | — | MUST | ✅ |
+| CU-J02-A03 | Kanban | US-008 | CA-12,06 | — | MUST | ✅ |
+| CU-J02-A04 | Kanban | US-008 | CA-01 | — | MUST | ✅ |
+| CU-J02-A05 | Kanban | US-008 | CA-03,09 | — | MUST | ✅ |
+| CU-J02-A06 | Kanban | US-008 | CA-02,04 | — | MUST | ✅ |
+| CU-J02-A07 | Kanban | US-008,039 | CA-01,02 | — | MUST | ✅ |
+| CU-J02-NEG-08 | Workdesk | US-001 | CA-10 | — | MUST | ✅ |
+| CU-J02-NEG-09 | Workdesk | US-001 | CA-15 | — | MUST | ✅ |
+| CU-J02-NEG-10 | Workdesk | US-001 | CA-30 | — | MUST | ✅ |
+| CU-J02-NEG-11 | Workdesk | US-001 | CA-14 | — | MUST | ✅ |
+| CU-J02-NEG-12 | Claim | US-002 | CA-13 | — | MUST | ✅ |
+| CU-J02-NEG-13 | Claim | US-002 | CA-10,21 | — | MUST | ✅ |
+| CU-J02-NEG-14 | Kanban | US-008 | CA-08 | — | MUST | ✅ |
+| CU-J02-NEG-15 | Kanban | US-008 | CA-02 | — | MUST | ✅ |
+| CU-J02-NEG-16 | Kanban | US-008 | CA-04 | — | MUST | ✅ |
+| CU-J02-NEG-17 | Kanban | US-008 | CA-11 | — | MUST | ✅ |
 
-**Total: 31 escenarios UAT** (24 positivos + 7 negativos)  
-**Cobertura: 4 flujos E2E** (Happy Path + Rechazo DMN + Timeout/Escalamiento + Error/Compensación)  
+**Total: 57 escenarios UAT** (40 positivos + 17 negativos)  
+**Cobertura Fase 1-6:** 4 flujos E2E (Happy Path + Rechazo DMN + Timeout/Escalamiento + Error/Compensación)  
+**Cobertura Fase 7:** US-001 (10 CU + 4 NEG = 14), US-002 (8 CU + 2 NEG = 10), US-008 (7 CU + 4 NEG = 11)  
 **Formularios probados: 5** (2 Maestro + 2 Simple + 1 Genérico Kanban)
 
 ---
@@ -806,3 +1422,5 @@
 | 2026-04-13 | v2: Reordenado a flujo de negocio real + 2 escenarios negativos | Arquitecto Lead |
 | 2026-04-19 | v3: Reescritura Total: +17 escenarios (32 total), iForm Maestro, US-028, US-039 | Agente PO + Arquitecto Lead |
 | 2026-04-19 | **v4: Certificación E2E.** Proceso `insurance_claims_complex.bpmn`. 4 formularios campo-por-campo alineados a FormDesigner.vue. 4 flujos E2E (Happy+DMN Reject+Timeout+Compensation). DMN creation. Multi-instance 2 peritos. Kanban genérico. 31 escenarios. 6 brechas. B-20 formalizada. | Agente PO + Antigravity |
+| 2026-05-13 | **v5: Fase 7 — Certificación Operativa.** +26 escenarios (10 Workdesk, 8 Claim, 7 Kanban, 10 NEG). Paginación server-side, SLA Ticking Engine, Concurrencia Optimista, Drag & Drop Kanban, Despojo Forzoso. Tablero ágil independiente. Total: 57 CU. | Agente PO (SSOT Gatekeeper) |
+

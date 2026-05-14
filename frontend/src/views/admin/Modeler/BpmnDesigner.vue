@@ -59,7 +59,7 @@
           📜 Versiones
         </button>
         <!-- Deploy Requests CA-69 -->
-        <button v-show="activeRole === 'BPMN_Release_Manager'" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
+        <button v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
           📨 Solicitudes
         </button>
         <!-- Active Role CA-21 -->
@@ -71,11 +71,11 @@
           🧬 Gestor de Instancias
         </button>
         <!-- Request Deploy -->
-        <button v-show="activeRole === 'BPMN_Designer'" @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
+        <button v-show="['BPMN_Designer', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)" @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
           📩 Solicitar Despliegue
         </button>
         <!-- Deploy (CA-21) -->
-        <button data-testid="btn-deploy" v-show="activeRole === 'BPMN_Release_Manager'"
+        <button data-testid="btn-deploy" v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)"
                 @click="showDeployModal = true" 
                 :disabled="isDeploying || !['VALIDATED', 'WARNING'].includes(preFlightStatus)" 
                 class="bg-indigo-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 transition">

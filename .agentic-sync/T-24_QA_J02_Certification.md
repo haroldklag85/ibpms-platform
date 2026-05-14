@@ -218,8 +218,9 @@ TU MISIÓN:
 2. Cada test DEBE interactuar con la UI real y asertar contra el backend Zero-Mock.
 3. Los 8 CUs de Fase 4 (F1-01 a F4-01) van con test.skip("🔵 NO APLICA").
 4. Cada archivo DEBE tener el header @Traceability y @SSOT con líneas del UAT.
-5. Ejecutar: npx playwright test --grep "CU-J02" --reporter=list
-6. Commit: git add . && git commit -m "test(j02): add 49 E2E specs for UAT J-02 certification" && git push origin sprint-6
+5. ⚠️ ESTRATEGIA DE EJECUCIÓN OBLIGATORIA: Dada la inmensa complejidad (49 archivos), DEBES crear un archivo `task.md` local en tu workspace temporal para desglosar tu trabajo en batches (ej. Batch 1: Formularios, Batch 2: DMN/BPMN, etc.) y marcar tu progreso. NO intentes hacer los 49 en una sola ráfaga de pensamiento.
+6. Ejecutar: npx playwright test --grep "CU-J02" --reporter=list
+7. Commit: git add . && git commit -m "test(j02): add 49 E2E specs for UAT J-02 certification" && git push origin sprint-6
 
 REGLAS INQUEBRANTABLES:
 - PROHIBIDO usar route.fulfill() — Zero-Mock V2 (ADR-010).

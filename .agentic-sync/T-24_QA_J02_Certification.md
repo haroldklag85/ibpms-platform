@@ -230,6 +230,7 @@ REGLAS INQUEBRANTABLES:
 - OBLIGATORIO documentar con // @Traceability en CADA archivo.
 - Fixtures XML BPMN/DMN son PERMITIDOS vía __modelerInstance.importXML() para Fase 2.
 - Panel de Propiedades: OBLIGATORIO asertar formKey/decisionRef desde el sidebar UI.
+- 🔐 ESTRATEGIA DE AUTENTICACIÓN: Para los roles, utiliza los fixtures `.auth/rol.json` generados en setup (ej. `storageState: '.auth/sysadmin.json'`). Infraestructura inyectará los usuarios en BD (sysadmin_e2e, operario_a, operario_b, supervisor_e2e). Debes usar esos perfiles para testear segregación de roles (RBAC).
 ```
 
 ---

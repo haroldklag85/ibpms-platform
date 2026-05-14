@@ -94,7 +94,7 @@ const handleEmergencyLogin = async () => {
   error.value = '';
   
   try {
-    const res = await apiClient.post('/api/v1/auth/emergency/login', {
+    const res = await apiClient.post('/auth/emergency-login', {
       email: emergencyForm.value.email,
       password: emergencyForm.value.password,
       justification: emergencyForm.value.justification

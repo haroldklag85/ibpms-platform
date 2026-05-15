@@ -288,7 +288,7 @@
                          <span class="text-[10px] font-mono text-gray-400">{{ task.originalTaskId }}</span>
                        </div>
                        <!-- CA-10: Badge de Autorización Tipográfica -->
-                       <span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold border border-indigo-200 shrink-0">{{ task.targetRole || 'Rol Operativo' }}</span>
+                       <span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold border border-indigo-200 shrink-0">{{ task.targetRole || 'Operativo' }}</span>
                        
                        <span v-if="task.variables?.isSlaAtRisk === true && getSlaStatus(task.slaExpirationDate) !== 'EXPIRED'" class="px-1.5 py-0.5 bg-amber-500 text-white rounded text-[9px] font-bold border border-amber-600 shrink-0" title="SLA en Riesgo (<20% restante)">⚠️ SLA en Riesgo</span>
                        <!-- @Traceability(US = "US-001", CA = {"CA-17"}) Acierto UX: Renderizado dinámico de impacto masivo -->

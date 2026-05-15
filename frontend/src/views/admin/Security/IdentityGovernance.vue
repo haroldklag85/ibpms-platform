@@ -431,6 +431,9 @@
             <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                <span class="material-symbols-outlined text-red-600">gpp_bad</span> Consola de Anomalías de Seguridad
             </h2>
+            <button @click="rbacStore.fetchAnomalies()" class="text-indigo-600 hover:text-indigo-800 text-xs font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">refresh</span> Actualizar Tablero
+            </button>
           </div>
           
           <table class="min-w-full divide-y divide-gray-200 border rounded-lg overflow-hidden flex-1 shadow-sm">
@@ -444,7 +447,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 bg-white">
-               <tr v-for="anomaly in securityAnomalies" :key="anomaly.id" class="hover:bg-red-50 transition-colors">
+               <tr v-for="anomaly in rbacStore.anomalies" :key="anomaly.id" class="hover:bg-red-50 transition-colors">
                  <td class="px-4 py-3 text-xs whitespace-nowrap text-gray-500 font-mono">{{ new Date(anomaly.detectedAt).toLocaleString() }}</td>
                  <td class="px-4 py-3 text-xs">
                     <span class="px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[10px]" :class="anomaly.severity === 'CRITICAL' ? 'bg-red-600 text-white' : 'bg-orange-100 text-orange-800 border border-orange-200'">{{ anomaly.type.replace('_', ' ') }}</span>
@@ -462,7 +465,7 @@
                     <span v-else class="text-gray-400 text-xs font-medium italic">Acción Cerrada</span>
                  </td>
                </tr>
-               <tr v-if="securityAnomalies.length === 0">
+               <tr v-if="rbacStore.anomalies.length === 0">
                  <td colspan="5" class="py-12 text-center text-gray-400 font-medium">No se detectan incidentes de seguridad (Limpieza IAM).</td>
                </tr>
             </tbody>
@@ -816,7 +819,6 @@ const isCoreRole = (role: any) => {
 const systemRoles = ref<any[]>([]);
 const systemUsers = ref<any[]>([]);
 const systemProcesses = ref<any[]>([]);
-const securityAnomalies = ref<any[]>([]);
 
 const getRoleName = (roleId: string) => {
     const r = systemRoles.value.find(x => x.id === roleId);
@@ -1182,7 +1184,7 @@ const createDelegation = async () => {
             endDate: delForm.value.end + "T23:59:59",
             reason: "Delegación administrativa vía Panel de Gobernanza"
         };
-        await rbacStore.createDelegation(authStore.user.id, payload);
+            await rbacStore.createDelegation(payload);
         showToast('Delegación temporal activada con éxito.', 'success');
         delForm.value = { targetUser: '', start: '', end: '' };
     } catch (e) {
@@ -1306,9 +1308,8 @@ const activeAuditLog = ref<any>(null);
 
 const resolveAnomaly = async (anomaly: any) => {
    try {
-     // El CISO emite el comando de subsanamiento a la base de datos (HTTP PUT)
-     await apiClient.put(`/api/v1/security/anomalies/${anomaly.id}/resolve`, { resolution: 'Revisado y Subsanado Manualmente' });
-     anomaly.status = 'RESOLVED';
+     // CA-12: Delegar resolución al rbacStore
+     await rbacStore.resolveAnomaly(anomaly.id);
      showToast(`Anomalía ${anomaly.id} subsanada con éxito.`, 'success');
    } catch(e) {
      // Fallback Mock UAT
@@ -1338,7 +1339,6 @@ onMounted(async () => {
         // Sync local refs with store state
         systemRoles.value = rbacStore.roles;
         systemProcesses.value = rbacStore.systemProcesses;
-        securityAnomalies.value = rbacStore.anomalies;
         
         // Mocking system users for now as there is no specific store for them yet
         // but consuming from real endpoint

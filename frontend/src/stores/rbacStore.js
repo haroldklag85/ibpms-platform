@@ -140,7 +140,7 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
-    // CA-12: Anomalías de Seguridad
+    // CA-12: Anomalías de Seguridad (Tablero CISO)
     async function fetchAnomalies() {
         try {
             const response = await apiClient.get('/security/anomalies')
@@ -152,7 +152,8 @@ export const useRbacStore = defineStore('rbac', () => {
 
     async function resolveAnomaly(id) {
         try {
-            await apiClient.post(`/security/anomalies/${id}/resolve`)
+            // CA-12: El contrato exige PUT para resolver anomalías
+            await apiClient.put(`/security/anomalies/${id}/resolve`)
             await fetchAnomalies()
         } catch (error) {
             console.error("Error resolviendo anomalía", error)
@@ -189,14 +190,19 @@ export const useRbacStore = defineStore('rbac', () => {
     }
 
     async function fetchDelegations() {
-        // Mock to prevent 404/500 backend errors for unimplemented endpoints
-        delegations.value = []
+        try {
+            // CA-07: Obtener delegaciones reales
+            const response = await apiClient.get('/security/delegations')
+            delegations.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo delegaciones", error)
+        }
     }
 
-    async function createDelegation(userId, payload) {
+    async function createDelegation(payload) {
         try {
-            // CA-9: Endpoint real de delegación por usuario
-            await apiClient.post(`/api/v1/admin/users/${userId}/delegate`, payload)
+            // CA-07: Crear delegación real
+            await apiClient.post('/security/delegations', payload)
             await fetchDelegations()
         } catch (error) {
             console.error("Error creando delegación", error)
@@ -206,7 +212,8 @@ export const useRbacStore = defineStore('rbac', () => {
 
     async function revokeDelegation(id) {
         try {
-            await apiClient.delete(`/admin/security/delegations/${id}`)
+            // CA-07: Revocar/Eliminar delegación
+            await apiClient.delete(`/security/delegations/${id}`)
             await fetchDelegations()
         } catch (error) {
             console.error("Error revocando delegación", error)

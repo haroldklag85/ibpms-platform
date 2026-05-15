@@ -27,13 +27,17 @@ public class RabbitMQConfig {
     // --- Exchange Names ---
     public static final String TOPIC_EXCHANGE = "ibpms.exchange.topic";
     public static final String DLX_EXCHANGE = "ibpms.exchange.dlx";
+    public static final String SECURITY_EXCHANGE = "ibpms.security.exchange";
 
     // --- Queue Names ---
     public static final String DLQ_GLOBAL = "ibpms.dlq.global";
     public static final String BUSINESS_QUEUE = "ibpms.queue.business";
+    public static final String UNCLAIM_QUEUE = "camunda.task.unclaim.queue";
 
     // --- Routing Keys ---
     public static final String DLQ_ROUTING_KEY = "dlq.global";
+    public static final String DELEGATED_ROUTING_KEY = "security.user.delegated";
+    public static final String DEACTIVATED_ROUTING_KEY = "security.user.deactivated";
 
     // === Exchanges ===
 
@@ -45,6 +49,11 @@ public class RabbitMQConfig {
     @Bean
     public DirectExchange ibpmsDlxExchange() {
         return new DirectExchange(DLX_EXCHANGE, true, false);
+    }
+
+    @Bean
+    public TopicExchange ibpmsSecurityExchange() {
+        return new TopicExchange(SECURITY_EXCHANGE, true, false);
     }
 
     // === Queues ===
@@ -71,6 +80,14 @@ public class RabbitMQConfig {
                 .build();
     }
 
+    @Bean
+    public Queue camundaTaskUnclaimQueue() {
+        return QueueBuilder.durable(UNCLAIM_QUEUE)
+                .withArgument("x-dead-letter-exchange", DLX_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
+                .build();
+    }
+
     // === Bindings ===
 
     @Bean
@@ -81,6 +98,16 @@ public class RabbitMQConfig {
     @Bean
     public Binding businessQueueBinding(Queue ibpmsBusinessQueue, TopicExchange ibpmsTopicExchange) {
         return BindingBuilder.bind(ibpmsBusinessQueue).to(ibpmsTopicExchange).with("business.#");
+    }
+
+    @Bean
+    public Binding unclaimDelegatedBinding(Queue camundaTaskUnclaimQueue, TopicExchange ibpmsSecurityExchange) {
+        return BindingBuilder.bind(camundaTaskUnclaimQueue).to(ibpmsSecurityExchange).with(DELEGATED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding unclaimDeactivatedBinding(Queue camundaTaskUnclaimQueue, TopicExchange ibpmsSecurityExchange) {
+        return BindingBuilder.bind(camundaTaskUnclaimQueue).to(ibpmsSecurityExchange).with(DEACTIVATED_ROUTING_KEY);
     }
 
     // === Message Converter ===

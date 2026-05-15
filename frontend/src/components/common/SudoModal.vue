@@ -24,7 +24,7 @@
 
              <form @submit.prevent="handleSubmit">
                  <div class="mb-5">
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">{{ t('common.password') }}</label>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Contraseña</label>
                     <input 
                        ref="pwdInput"
                        type="password" 
@@ -40,10 +40,10 @@
                  </div>
 
                  <div class="flex justify-end gap-3">
-                     <button type="button" @click="handleCancel" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded transition" :disabled="isLoading">{{ t('common.cancel') }}</button>
+                     <button type="button" @click="handleCancel" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded transition" :disabled="isLoading">Cancelar</button>
                      <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm transition flex items-center gap-2" :disabled="isLoading || !password">
                          <span v-if="isLoading" class="material-symbols-outlined text-[14px] animate-spin">sync</span>
-                         {{ t('common.confirm') }}
+                         Confirmar Acción
                      </button>
                  </div>
              </form>
@@ -54,12 +54,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useSudo } from '@/composables/workdesk/useSudo';
-import { useI18n } from 'vue-i18n';
 
-const { isSudoVisible, currentRequest, confirmSudo, cancelSudo } = useSudo();
-const { t } = useI18n();
+const { isSudoVisible, currentRequest, confirmSudo, cancelSudo, requestSudo } = useSudo();
 const password = ref('');
 const errorMsg = ref('');
 const isLoading = ref(false);
@@ -92,4 +90,19 @@ const handleSubmit = async () => {
 const handleCancel = () => {
     if (!isLoading.value) cancelSudo();
 };
+
+const handleSudoRequired = async (e: Event) => {
+    const customEvent = e as CustomEvent;
+    const actionName = customEvent.detail?.actionName || 'Acción Crítica';
+    const authorized = await requestSudo(actionName);
+    window.dispatchEvent(new CustomEvent('sudo-resolved', { detail: { authorized } }));
+};
+
+onMounted(() => {
+    window.addEventListener('sudo-required', handleSudoRequired);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('sudo-required', handleSudoRequired);
+});
 </script>

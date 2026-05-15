@@ -57,10 +57,6 @@ public class RoleEntity {
     @Column(name = "lane_id", length = 255)
     private String laneId;
 
-    // CA-07 US-036: Inmutabilidad por Desactivación Suave (Soft-Delete)
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
-
     public RoleEntity() {}
 
     public RoleEntity(String name, String description) {
@@ -92,6 +88,4 @@ public class RoleEntity {
     public void setProcessDefinitionId(String processDefinitionId) { this.processDefinitionId = processDefinitionId; }
     public String getLaneId() { return laneId; }
     public void setLaneId(String laneId) { this.laneId = laneId; }
-    public Boolean getIsActive() { return isActive; }
-    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 }

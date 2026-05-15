@@ -71,6 +71,9 @@ public class BpmnProcessDesignEntity {
     @Column(name = "opt_lock_version")
     private Long optLockVersion;
 
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic = false;
+
     // Getters and Setters
     public UUID getId() {
         return id;
@@ -182,5 +185,13 @@ public class BpmnProcessDesignEntity {
 
     public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean isPublic) {
+        this.isPublic = isPublic;
     }
 }

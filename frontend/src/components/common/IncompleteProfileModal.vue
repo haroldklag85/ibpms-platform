@@ -66,14 +66,10 @@ onUnmounted(() => {
 
 const submitProfile = async () => {
     try {
-        const res = await integrationStore.put('/auth/sync', {
-            tempToken: tempToken.value,
-            claims: form.value
-        });
-        isOpen.value = false;
-        if (res.data && res.data.token) {
-            const authStore = useAuthStore();
-            authStore.login(res.data.token);
+        const authStore = useAuthStore();
+        const success = await authStore.syncProfile(tempToken.value, form.value);
+        if (success) {
+            isOpen.value = false;
             router.push('/');
         }
     } catch (e) {

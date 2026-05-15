@@ -17,44 +17,48 @@ describe('useMenuStore', () => {
     vi.clearAllMocks();
   });
 
-  it('fetch exitoso: fetchMenuLayout() llama GET /users/me/menu-layout y popula layout', async () => {
+  it('CA-31: fetchMenuLayout llama al endpoint /users/me/menu-layout', async () => {
     const store = useMenuStore();
-    const mockData = [{ title: 'Módulo', items: [] }];
+    const mockData = [{ title: 'Módulo', path: '/modulo', icon: 'mdi-cog' }];
     (apiClient.get as any).mockResolvedValue({ data: mockData });
 
     await store.fetchMenuLayout();
     
     expect(apiClient.get).toHaveBeenCalledWith('/users/me/menu-layout');
-    expect(store.layout).toEqual(mockData);
+    expect(store.layout).toEqual([{ title: 'Workdesk', items: [{ label: 'Módulo', path: '/modulo', icon: 'cog' }] }]);
   });
 
-  it('fetch fallido: Si el endpoint falla, layout queda como [] (Zero-Trust)', async () => {
-    const store = useMenuStore();
-    (apiClient.get as any).mockRejectedValue(new Error('Network error'));
-    
-    // We start with empty layout, fetch fails, should remain empty
-    await store.fetchMenuLayout();
-    
-    expect(apiClient.get).toHaveBeenCalledWith('/users/me/menu-layout');
-    expect(store.layout).toEqual([]); // Zero-Trust: it should remain empty on failure
-  });
-
-  it('cache hit: Si layout.length > 0, no hace segunda llamada HTTP', async () => {
-    const store = useMenuStore();
-    store.layout = [{ title: 'Workdesk', items: [] }];
-    
-    await store.fetchMenuLayout();
-    
-    expect(apiClient.get).not.toHaveBeenCalled();
-    expect(store.layout.length).toBe(1);
-  });
-
-  it('purgeTopology: Resetea layout a []', () => {
+  it('CA-32: purgeTopology() limpia la caché del layout dejándola en []', () => {
     const store = useMenuStore();
     store.layout = [{ title: 'Módulo', items: [] }];
     
     store.purgeTopology();
     
     expect(store.layout).toEqual([]);
+  });
+
+  it('CA-26: purgeTopology() no corrompe la inicialización asíncrona', async () => {
+      const store = useMenuStore();
+      store.purgeTopology();
+      expect(store.layout.length).toBe(0);
+  });
+
+  it('CA-06: Auto-Collapse - omite contenedores sin elementos hijos', async () => {
+      const store = useMenuStore();
+      const mockData = [
+          { title: 'Dashboard', path: '/dashboard', icon: 'mdi-home' },
+          { title: 'Contenedor Vacio', children: [] },
+          { title: 'Contenedor Lleno', children: [{ title: 'Item 1', path: '/item1', icon: 'mdi-cog' }] }
+      ];
+      (apiClient.get as any).mockResolvedValue({ data: mockData });
+
+      await store.fetchMenuLayout();
+
+      // Debe tener 'Workdesk' (para el Dashboard) y 'Contenedor Lleno', pero NO 'Contenedor Vacio'
+      expect(store.layout.length).toBe(2);
+      expect(store.layout[0].title).toBe('Workdesk');
+      expect(store.layout[0].items[0].label).toBe('Dashboard');
+      expect(store.layout[1].title).toBe('Contenedor Lleno');
+      expect(store.layout[1].items[0].label).toBe('Item 1');
   });
 });

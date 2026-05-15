@@ -24,8 +24,9 @@ public class UserEntity {
     @Column(name = "password_hash", length = 100)
     private String passwordHash;
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private UserStatus status = UserStatus.ACTIVE;
 
     @Column(name = "is_external_idp", nullable = false)
     private Boolean isExternalIdp = false;
@@ -62,8 +63,8 @@ public class UserEntity {
     public void setEmail(String email) { this.email = email; }
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
-    public Boolean getIsActive() { return isActive; }
-    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public UserStatus getStatus() { return status; }
+    public void setStatus(UserStatus status) { this.status = status; }
     public Boolean getIsExternalIdp() { return isExternalIdp; }
     public void setIsExternalIdp(Boolean isExternalIdp) { this.isExternalIdp = isExternalIdp; }
     public LocalDateTime getCreatedAt() { return createdAt; }
@@ -80,4 +81,11 @@ public class UserEntity {
     public void setSkills(String skills) { this.skills = skills; }
     public UserEntity getManager() { return manager; }
     public void setManager(UserEntity manager) { this.manager = manager; }
+    
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "jit_claims_json", columnDefinition = "jsonb")
+    private String jitClaimsJson;
+    
+    public String getJitClaimsJson() { return jitClaimsJson; }
+    public void setJitClaimsJson(String jitClaimsJson) { this.jitClaimsJson = jitClaimsJson; }
 }

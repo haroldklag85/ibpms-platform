@@ -171,6 +171,16 @@ public class GlobalExceptionHandler {
     @ApiResponse(responseCode = "500", description = "Error interno - Blindado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
+        // @Traceability(US="US-000", CA="CA-NOISE", DESC="Supresión de ruido de red (Broken pipe/SSE) proveniente de DevDavid")
+        if (ex instanceof java.io.IOException || ex.getClass().getSimpleName().equals("ClientAbortException")) {
+            String msg = ex.getMessage();
+            if (msg != null && (msg.contains("Broken pipe") || msg.contains("Connection reset"))) {
+                log.warn("Client disconnected abruptly (Broken pipe/Connection reset). Suppressing error.");
+                return null;
+            }
+        }
+
+        // @Traceability(US="US-000", CA="CA-OBS", DESC="ADR-014: Trazabilidad Distribuida (TraceID) con MDC para APM/ELK")
         String traceId = org.slf4j.MDC.get("traceId");
         if (traceId == null) {
             traceId = java.util.UUID.randomUUID().toString();

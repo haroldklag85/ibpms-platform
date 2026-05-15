@@ -186,7 +186,7 @@ const router = createRouter({
                     path: 'admin/security/identity',
                     name: 'IdentityGovernance',
                     component: () => import('@/views/admin/Security/IdentityGovernance.vue'),
-                    meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'SUPER_ADMIN', 'Global Admin'] }
+                    meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'SUPER_ADMIN', 'Global Admin', 'ibpms_rol_SUPER_ADMIN'] }
                 },
                 // --- Bloque K: PMO SLA Management (Pantalla 19) CA-1 a CA-6 ---
                 {
@@ -194,6 +194,12 @@ const router = createRouter({
                     name: 'PmoSettings',
                     component: () => import('@/views/admin/PMO/PmoSettings.vue'),
                     meta: { title: 'Configuración PMO / SLA', requiresAuth: true, roles: ['Global Admin', 'ROLE_SUPER_ADMIN'] }
+                },
+                // --- Ruta Comodín (Catch-All 404) dentro del Layout ---
+                {
+                    path: ':pathMatch(.*)*',
+                    name: 'NotFoundInLayout',
+                    component: () => import('@/components/common/NotFound404.vue')
                 }
             ]
         }

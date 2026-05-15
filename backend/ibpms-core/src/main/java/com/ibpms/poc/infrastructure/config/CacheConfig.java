@@ -28,6 +28,8 @@ public class CacheConfig {
         return RedisCacheManager.builder(connectionFactory)
                 .withCacheConfiguration("workdesk_tasks",
                         RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofSeconds(10)))
+                .withCacheConfiguration("menuTopology",
+                        RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(30)))
                 .build();
     }
 

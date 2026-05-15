@@ -3,6 +3,9 @@ package com.ibpms.poc.application.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.camunda.bpm.engine.TaskService;
+import com.ibpms.poc.application.port.out.AuditLogPort;
+import java.util.UUID;
 
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
@@ -19,10 +22,14 @@ public class TaskDelegationService {
 
     private final IbpmsProfileRepository profileRepository;
     private final com.ibpms.poc.infrastructure.jpa.repository.UserDelegationRepository delegationRepository;
+    private final TaskService taskService;
+    private final AuditLogPort auditLogPort;
 
-    public TaskDelegationService(IbpmsProfileRepository profileRepository, com.ibpms.poc.infrastructure.jpa.repository.UserDelegationRepository delegationRepository) {
+    public TaskDelegationService(IbpmsProfileRepository profileRepository, com.ibpms.poc.infrastructure.jpa.repository.UserDelegationRepository delegationRepository, TaskService taskService, AuditLogPort auditLogPort) {
         this.profileRepository = profileRepository;
         this.delegationRepository = delegationRepository;
+        this.taskService = taskService;
+        this.auditLogPort = auditLogPort;
     }
     /**
      * Revisa si una tarea pertenece a una delegación vigente o si ya expiró.
@@ -41,10 +48,28 @@ public class TaskDelegationService {
             if (!originalOwner.equals(currentAssignee)) {
                 log.info("Lazy Evaluation CA-23: La delegación para la tarea {} ha expirado. Revirtiendo On-the-fly a {}.", taskId, originalOwner);
                 
-                // Realizar UPDATE a `ibpms_workdesk_projection` SET assignee = originalOwner WHERE id = taskId
-                // taskRepository.revertAssignee(taskId, originalOwner);
+                try {
+                    // Revertimos on-the-fly al dueño original usando el motor BPMN
+                    taskService.setAssignee(taskId, originalOwner);
+                    
+                    // CA-23: Registro de la auditoría indeleble
+                    auditLogPort.saveAuditLog(
+                        UUID.randomUUID().toString(),
+                        "TASK_DELEGATION",
+                        taskId,
+                        "REVERT_DELEGATION",
+                        "SYSTEM",
+                        java.time.LocalDateTime.now(),
+                        null,
+                        false,
+                        false,
+                        String.format("{\"originalOwner\":\"%s\",\"expiredAssignee\":\"%s\"}", originalOwner, currentAssignee)
+                    );
+                    log.warn("SUDO Action [Audit Trail]: Retorno automático de tarea In-Flight post-delegación. Tarea: {}, Nuevo Asignado: {}", taskId, originalOwner);
+                } catch (Exception e) {
+                    log.error("Guardrail CA-23: Error al intentar revertir la asignación en Camunda. No bloqueamos la transacción.", e);
+                }
                 
-                log.warn("SUDO Action [Audit Trail]: Retorno automático de tarea In-Flight post-delegación. Tarea: {}, Nuevo Asignado: {}", taskId, originalOwner);
                 return originalOwner;
             }
         }

@@ -72,6 +72,18 @@ apiClient.interceptors.response.use(
             if (status === 500) {
                 // Categoría 1: Bug en el backend — Toast imborrable con traceId
                 console.error(`[ADR-014] Error 500 — Trace: ${traceId}`);
+                
+                // CA-25: Fail-Safe Session Recovery
+                // Si el error 500 ocurre en un endpoint crítico de hidratación/auth, purgamos el token malformado
+                const url = error.config?.url || '';
+                if (url.includes('/auth/') || url.includes('/users/me/')) {
+                    console.warn('CA-25: Detectada anomalía crítica en Auth (500). Purgando sesión local para auto-recuperación.');
+                    localStorage.removeItem('ibpms_token');
+                    localStorage.removeItem('ibpms_user');
+                    // No redirigimos inmediatamente para permitir que el usuario vea el traceId si es necesario, 
+                    // pero el "REINICIAR CONTEXTO" ahora funcionará limpio.
+                }
+
                 const event = new CustomEvent('global-error-dispatch', { detail: { 
                     code: 500,
                     type: 'SERVER_ERROR',
@@ -91,22 +103,36 @@ apiClient.interceptors.response.use(
                     // NO auto-remove: este toast es imborrable per ADR-014
                 }
             } else if (status === 502 || status === 503) {
-                // Categoría 2: Servidor no disponible — Toast silencioso de reinicio (Fase 3 Vite Handoff)
-                console.warn(`[ADR-014] Servidor reiniciándose (${status}). Reintento automático en progreso...`);
+                // Categoría 2: Servidor no disponible o Degradación Segura (Fail-Open)
+                console.warn(`[ADR-014] Servidor no disponible o en Degradación (${status})`);
                 
+                // CA-01: Detectar Modo de Degradación Segura (Redis Caído)
+                const isMutation = ['post', 'put', 'delete', 'patch'].includes(error.config?.method?.toLowerCase() || '');
+                if (status === 503 && isMutation) {
+                    console.error('CA-01: Sistema en Degradación Segura (Redis Fail-Open). Bloqueando mutación.');
+                    const event = new CustomEvent('global-error-dispatch', { detail: { 
+                        code: 503,
+                        type: 'DEGRADED_MODE',
+                        message: `Operación Denegada: Sistema en Degradación Segura (Modo Solo Lectura).`,
+                        dismissible: true
+                    }});
+                    window.dispatchEvent(event);
+                    return Promise.reject(error);
+                }
+
+                // Para operaciones seguras (GET), mostramos Toast silencioso (Fase 3 Vite Handoff) para no bloquear la UI
                 const body = document.querySelector('body');
                 if (body && !document.getElementById('silent-restart-toast')) {
                     const toast = document.createElement('div');
                     toast.id = 'silent-restart-toast';
                     toast.style.cssText = 'position:fixed; top:10px; right:10px; background:#3b82f6; color:white; padding:8px 16px; border-radius:20px; z-index:99999; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); font-family:sans-serif; font-size:12px; opacity:0.9; transition:opacity 0.5s; pointer-events:none;';
-                    toast.innerHTML = `🔄 Servidor reiniciándose (${status})... reconectando.`;
+                    toast.innerHTML = `🔄 Servidor no disponible (${status})... verificando reconexión.`;
                     body.appendChild(toast);
                     setTimeout(() => {
                         toast.style.opacity = '0';
                         setTimeout(() => toast.remove(), 500);
                     }, 4000);
                 }
-                // No disparamos 'global-error-dispatch' para mantenerlo silencioso y no bloquear la UI.
             } else if (status === 504) {
                 // Categoría 3: Timeout del proxy — Toast dismissible
                 console.warn(`[ADR-014] Gateway Timeout (504)`);
@@ -209,14 +235,14 @@ apiClient.interceptors.response.use(
                // CA-32: Auto-Curación Zero-Trust
                console.warn('CA-32: Revocación de acceso detectada (403). Purgando topología local.');
                const menuStore = useMenuStore();
-               menuStore.purgeTopology();
+               menuStore.$reset();
                
                const body = document.querySelector('body');
                if (body && !document.getElementById('privilege-update-toast')) {
                    const toast = document.createElement('div');
                    toast.id = 'privilege-update-toast';
                    toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
-                   toast.innerHTML = '🔄 Sus accesos han sido actualizados por el Administrador';
+                   toast.innerHTML = 'Sus accesos han sido actualizados por el Administrador';
                    body.appendChild(toast);
                    setTimeout(() => {
                        toast.style.opacity = '0';

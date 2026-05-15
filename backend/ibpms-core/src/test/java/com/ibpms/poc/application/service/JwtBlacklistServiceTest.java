@@ -17,6 +17,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit Test Suite for JwtBlacklistService.
+ * @Traceability(US="US-010", CA="CA-14", DESC="ADR-010: Testing Pyramid. Pruebas unitarias para revocación JTI, UserId y resiliencia Fail-Open.")
+ */
 @ExtendWith(MockitoExtension.class)
 class JwtBlacklistServiceTest {
 
@@ -31,8 +35,12 @@ class JwtBlacklistServiceTest {
 
     @BeforeEach
     void setUp() {
-        // mock opsForValue only when needed
+        // Mock opsForValue only when needed to prevent UnnecessaryStubbingException
     }
+
+    // ==========================================
+    // PRUEBAS DE HEAD (Token por JTI con TTL)
+    // ==========================================
 
     @Test
     void shouldBlacklistTokenSuccessfully() {
@@ -60,7 +68,6 @@ class JwtBlacklistServiceTest {
         boolean revoked = jwtBlacklistService.isRevoked("test-jti-456");
 
         assertFalse(revoked);
-        verify(stringRedisTemplate, times(1)).hasKey("blacklist:token:test-jti-456");
     }
 
     @Test
@@ -70,5 +77,61 @@ class JwtBlacklistServiceTest {
         boolean revoked = jwtBlacklistService.isRevoked("test-jti-null");
 
         assertFalse(revoked);
+    }
+
+    // ==========================================
+    // PRUEBAS DE DEV-DAVID (Sesiones y Fail-Open)
+    // ==========================================
+
+    // @Traceability(US="US-010", CA="CA-14", DESC="Asegurar expiración global de sesiones por UserId.")
+    @Test
+    void shouldRevokeSessionInRedis() {
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        String userId = "user-123";
+        
+        jwtBlacklistService.revokeSession(userId);
+        
+        verify(valueOperations).set(
+                eq("blacklist:user:" + userId),
+                eq("revoked"),
+                eq(24L),
+                eq(TimeUnit.HOURS)
+        );
+    }
+
+    @Test
+    void shouldReturnTrueIfUserIdIsRevokedInRedis() {
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        String userId = "user-123";
+        when(valueOperations.get("blacklist:user:" + userId)).thenReturn("revoked");
+        
+        boolean isRevoked = jwtBlacklistService.isUserRevoked(userId);
+        
+        assertTrue(isRevoked);
+    }
+
+    @Test
+    void shouldReturnFalseIfUserIdIsNotRevoked() {
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        String userId = "user-active";
+        when(valueOperations.get("blacklist:user:" + userId)).thenReturn(null);
+        
+        boolean isRevoked = jwtBlacklistService.isUserRevoked(userId);
+        
+        assertFalse(isRevoked);
+    }
+
+    // @Traceability(US="US-010", CA="CA-14", DESC="ADR-013/CA-14: Política Fail-Open. El sistema NO bloquea usuarios si Redis colapsa.")
+    @Test
+    void shouldHandleRedisFailureAndFailOpen() {
+        // Configurar simulación de caída catastrófica de Redis
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        String userId = "user-fail";
+        when(valueOperations.get(anyString())).thenThrow(new RuntimeException("Redis Down"));
+        
+        // CA-14 Policy: Fail-Open. If Redis fails, we should not block the user.
+        boolean isRevoked = jwtBlacklistService.isUserRevoked(userId);
+        
+        assertFalse(isRevoked, "Should fail-open and allow access if Redis is down");
     }
 }

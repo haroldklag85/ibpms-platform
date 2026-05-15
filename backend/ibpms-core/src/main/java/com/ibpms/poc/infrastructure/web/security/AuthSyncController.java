@@ -100,7 +100,6 @@ public class AuthSyncController {
     }
 
     /**
-     * @Traceability: US-036 - CA-01 Hibridación de Roles EntraID vs Locales (Fallback Interno Local)
      * Protocolo Emergency Login para Sprint 6.2 (Valida contra BCrypt y retorna JWT)
      */
     @PostMapping("/emergency-login")
@@ -134,7 +133,7 @@ public class AuthSyncController {
             ));
         }
 
-        if (!user.getIsActive()) {
+        if (user.getStatus() != com.ibpms.poc.infrastructure.jpa.entity.security.UserStatus.ACTIVE) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                 "code", "ACCOUNT_DISABLED",
                 "message", "La cuenta existe pero se encuentra deshabilitada. Contacte al administrador."

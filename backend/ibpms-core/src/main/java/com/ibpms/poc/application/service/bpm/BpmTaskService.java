@@ -28,11 +28,13 @@ public class BpmTaskService {
     private final TaskService camundaTaskService;
     private final ApplicationEventPublisher eventPublisher;
     private final RoleRepository roleRepository;
+    private final com.ibpms.poc.application.service.security.DataSegregationService dataSegregationService;
 
-    public BpmTaskService(TaskService camundaTaskService, ApplicationEventPublisher eventPublisher, RoleRepository roleRepository) {
+    public BpmTaskService(TaskService camundaTaskService, ApplicationEventPublisher eventPublisher, RoleRepository roleRepository, com.ibpms.poc.application.service.security.DataSegregationService dataSegregationService) {
         this.camundaTaskService = camundaTaskService;
         this.eventPublisher = eventPublisher;
         this.roleRepository = roleRepository;
+        this.dataSegregationService = dataSegregationService;
     }
 
     /**
@@ -44,17 +46,7 @@ public class BpmTaskService {
      * @return Lista de Tareas filtradas rígidamente.
      */
     public List<Task> getSecureUserTasks(String userId, List<String> userRoles) {
-        TaskQuery query = camundaTaskService.createTaskQuery().active();
-        
-        if (userRoles != null && !userRoles.isEmpty()) {
-            query.or()
-                 .taskAssignee(userId)
-                 .taskCandidateGroupIn(userRoles)
-                 .endOr();
-        } else {
-            // Si el usuario no tiene roles estáticos, solo puede ver lo explícitamente asignado.
-            query.taskAssignee(userId);
-        }
+        TaskQuery query = dataSegregationService.getSecureTaskQuery(userId, userRoles);
 
         // CA-13: Roles Dinámicos (Process + Task level variables)
         // Ya que Camunda interpreta los Expression Lanes en Runtime literalizando el Assignee
@@ -68,16 +60,7 @@ public class BpmTaskService {
      * antes de permitir una operación (Reclaim, Complete, etc).
      */
     public boolean canInteractWithTask(String taskId, String userId, List<String> userRoles) {
-        TaskQuery query = camundaTaskService.createTaskQuery().taskId(taskId).active();
-        
-        if (userRoles != null && !userRoles.isEmpty()) {
-            query.or()
-                 .taskAssignee(userId)
-                 .taskCandidateGroupIn(userRoles)
-                 .endOr();
-        } else {
-            query.taskAssignee(userId);
-        }
+        TaskQuery query = dataSegregationService.getSecureTaskQuery(userId, userRoles).taskId(taskId);
 
         return query.count() > 0;
     }

@@ -5,13 +5,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.util.UUID;
+
 @Entity
-@Table(name = "ibpms_kanban_board_v2") // optional, just to make sure
+@Table(name = "ibpms_kanban_board_v2")
 public class KanbanV2BoardEntity {
 
     @Id
-    @Column(name = "id", length = 50)
-    private String id;
+    @Column(name = "id")
+    private UUID id;
 
     @Column(name = "title", nullable = false, length = 100)
     private String title;
@@ -23,8 +25,8 @@ public class KanbanV2BoardEntity {
     private Integer orderIndex;
 
     // Getters and Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public Integer getWipLimit() { return wipLimit; }

@@ -24,14 +24,22 @@ public class MenuTopologyJpaAdapter implements MenuTopologyPort {
 
         StringBuilder whereClause = new StringBuilder();
         List<Object> params = new ArrayList<>();
-        int i = 0;
-        for (String role : roles) {
-            if (i > 0) {
-                whereClause.append(" OR ");
+        
+        boolean isNativeAdmin = roles.stream()
+                .anyMatch(r -> r.contains("SUPER_ADMIN") || r.contains("SYSTEM_ADMIN"));
+
+        if (isNativeAdmin) {
+            whereClause.append("1=1");
+        } else {
+            int i = 0;
+            for (String role : roles) {
+                if (i > 0) {
+                    whereClause.append(" OR ");
+                }
+                whereClause.append("required_roles @> ?::jsonb");
+                params.add("[\"" + role + "\"]");
+                i++;
             }
-            whereClause.append("required_roles @> ?::jsonb");
-            params.add("[\"" + role + "\"]");
-            i++;
         }
 
         // Suponemos que parent_id nulo es la raíz. Ordenamos por parent_id NULLS FIRST y luego por id

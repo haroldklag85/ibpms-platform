@@ -22,9 +22,11 @@ public class ServiceAccountController {
     public ResponseEntity<Map<String, Object>> createServiceAccount(@RequestBody Map<String, String> request) throws NoSuchAlgorithmException {
         String name = request.get("name");
         String roleIdStr = request.get("roleId");
+        String daysToExpireStr = request.get("daysToExpire");
 
-        // @Traceability: US-036 - CA-01 (ADR-001 Refactor)
-        Map<String, Object> response = serviceAccountService.createServiceAccount(name, request.get("description"), roleIdStr);
+        // @Traceability(US="US-036", CA="CA-01", DESC="ADR-001 Refactor: Generación M2M y Hashing delegados a capa de Servicio. CISO Expiration Policy pasada como argumento.")
+        Map<String, Object> response = serviceAccountService.createServiceAccount(name, request.get("description"), roleIdStr, daysToExpireStr);
+        
         return ResponseEntity.ok(response);
     }
 }

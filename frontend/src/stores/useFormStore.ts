@@ -85,6 +85,7 @@ export const useFormStore = defineStore('formStore', () => {
                 return;
             }
             
+            const connectionStore = useConnectionStore();
             if (!isRetry) {
                 idempotencyKey.value = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2);
                 connectionStore.retryCount = 0;

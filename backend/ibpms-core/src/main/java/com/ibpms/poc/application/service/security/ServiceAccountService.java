@@ -43,8 +43,8 @@ public class ServiceAccountService {
      * @return Mapa con las credenciales de la cuenta.
      * @throws Exception en caso de fallo en encriptación.
      */
-    // @Traceability: US-036 - CA-01 (ADR-001 Refactor)
-    public Map<String, Object> createServiceAccount(String name, String description, String roleIdStr) throws java.security.NoSuchAlgorithmException {
+    // @Traceability: US-036 - CA-01 / CA-10 / CA-22 (ADR-001 Refactor: Delegación de Criptografía M2M y CISO)
+    public Map<String, Object> createServiceAccount(String name, String description, String roleIdStr, String daysToExpireStr) throws java.security.NoSuchAlgorithmException {
         RoleEntity role = roleService.findById(UUID.fromString(roleIdStr))
                 .orElseThrow(() -> new IllegalArgumentException("Role no encontrado"));
 
@@ -53,24 +53,41 @@ public class ServiceAccountService {
         secureRandom.nextBytes(keyBytes);
         String rawApiKey = Base64.getUrlEncoder().withoutPadding().encodeToString(keyBytes);
 
-        // Hashing Criptográfico SHA-256 (Never store plain keys)
+        // Hashing Criptográfico SHA-256 con Salt (CA-22)
+        byte[] salt = new byte[16];
+        secureRandom.nextBytes(salt);
+        String saltStr = Base64.getEncoder().encodeToString(salt);
+
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        digest.update(salt);
         byte[] hash = digest.digest(rawApiKey.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        StringBuilder hexString = new StringBuilder(2 * hash.length);
+        
+        StringBuilder hexString = new StringBuilder();
         for (byte b : hash) {
             String hex = Integer.toHexString(0xff & b);
             if (hex.length() == 1) hexString.append('0');
             hexString.append(hex);
         }
-        String hashedKey = hexString.toString();
+        String hashedKeyWithSalt = saltStr + ":" + hexString.toString();
 
-        ServiceAccountEntity account = new ServiceAccountEntity(name, description, hashedKey, role);
+        // CA-22: Fecha de expiración obligatoria (default 365 días)
+        java.time.LocalDateTime expiresAt = java.time.LocalDateTime.now().plusDays(365);
+        if (daysToExpireStr != null && !daysToExpireStr.isBlank()) {
+            long days = Long.parseLong(daysToExpireStr);
+            if (days > 730) {
+                throw new IllegalArgumentException("La expiración no puede exceder los 730 días (Políticas CISO).");
+            }
+            expiresAt = java.time.LocalDateTime.now().plusDays(days);
+        }
+
+        ServiceAccountEntity account = new ServiceAccountEntity(name, description, hashedKeyWithSalt, role, expiresAt);
         serviceAccountRepository.save(account);
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", account.getId());
         response.put("name", account.getName());
         response.put("plainApiKey", rawApiKey);
+        response.put("expiresAt", expiresAt);
         response.put("message", "GUARDE LA API KEY. NUNCA PODRÁ VOLVER A VISUALIZARLA.");
 
         return response;

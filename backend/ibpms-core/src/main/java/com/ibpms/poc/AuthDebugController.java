@@ -1,4 +1,3 @@
-// @Orphan: No se encontró CA en requerimientos. Endpoint de debugging residual.
 package com.ibpms.poc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

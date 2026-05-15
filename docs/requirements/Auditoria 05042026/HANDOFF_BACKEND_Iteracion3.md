@@ -18,56 +18,13 @@ Este handoff consolida **todas las tareas de backend** derivadas de la auditorí
 
 ### ✅ REM-039-A: Eliminación de VIP Hardcoding en BpmTaskService
 
-**Severidad:** 🔴 Crítica | **CA afectado:** CA-1 + CA-6  
-**Estado:** ✅ IMPLEMENTADO por Arquitecto
-
-**Qué se hizo:**
-Se eliminaron los strings hardcoded `"ROLE_ALTA_DIRECCION"` y `"ROLE_APROBADOR_FINANCIERO"` del Pre-Flight Analyzer y se reemplazaron por una consulta dinámica a la BD.
-
-**Archivo modificado:** `backend/ibpms-core/src/main/java/com/ibpms/poc/application/service/bpm/BpmTaskService.java`
-
-**Cambios exactos:**
-```diff
- // Inyección de dependencia agregada
-+private final RoleRepository roleRepository;
- 
--public BpmTaskService(TaskService camundaTaskService, ApplicationEventPublisher eventPublisher) {
-+public BpmTaskService(TaskService camundaTaskService, ApplicationEventPublisher eventPublisher, RoleRepository roleRepository) {
-     this.camundaTaskService = camundaTaskService;
-     this.eventPublisher = eventPublisher;
-+    this.roleRepository = roleRepository;
- }
-
- // En getGenericTaskPayload():
--// CA-1: VIP Pre-Flight Restrictor
--boolean isVip = userRoles != null && (userRoles.contains("ROLE_ALTA_DIRECCION") || userRoles.contains("ROLE_APROBADOR_FINANCIERO"));
-+// CA-1 + CA-6 (REM-039-A): VIP Pre-Flight Restrictor — Dinámico desde BD
-+List<String> vipRoleNames = roleRepository.findByIsVipRestrictedTrue()
-+        .stream().map(r -> "ROLE_" + r.getName()).collect(Collectors.toList());
-+boolean isVip = userRoles != null && userRoles.stream().anyMatch(vipRoleNames::contains);
-```
-
-**Verificación requerida por el equipo:**
-- [ ] Confirmar que el import de `RoleRepository` y `Collectors` compila sin errores.
-- [ ] Ejecutar `mvn compile -pl ibpms-core` sin fallos.
-- [ ] Validar que los 3 roles semilla (`ALTA_DIRECCION`, `APROBADOR_FINANCIERO`, `SELLO_LEGAL`) con `is_vip_restricted=true` devuelven HTTP 403 al intentar abrir una tarea `sys_generic_form`.
+> **[GRADUADO AL SSOT]** Este hallazgo fue consolidado como CA-6 en [epic_B_formularios_bpmn.md](../epics/epic_B_formularios_bpmn.md)
 
 ---
 
 ### ✅ REM-039-B: Validación @Size(max=10) en Whitelist DTO
 
-**Severidad:** 🟡 Media | **CA afectado:** CA-5  
-**Estado:** ✅ YA EXISTÍA (no requirió cambio)
-
-El DTO `GenericFormConfigUpdateRequest.java` ya contenía:
-```java
-@Size(max = 10, message = "Whitelist cannot exceed 10 variables")
-private List<String> whitelist;
-```
-
-**Verificación requerida por el equipo:**
-- [ ] Confirmar que el endpoint `PUT /api/v1/design/processes/{key}/generic-form-config` con un array de 11+ claves devuelve HTTP 400.
-- [ ] Confirmar que el controlador tiene `@Valid` en el `@RequestBody`.
+> **[GRADUADO AL SSOT]** Este hallazgo fue consolidado como CA-5 en [epic_B_formularios_bpmn.md](../epics/epic_B_formularios_bpmn.md)
 
 ---
 

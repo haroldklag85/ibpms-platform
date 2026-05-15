@@ -1,19 +1,24 @@
-# Solicitud de Revisión Corregida: US-007 (Modo Manual DMN) CA-26 a CA-32
+# Solicitud de Aprobación Arquitectónica: Backend US-038 (CA-01 al CA-05)
 
-**De:** Agente Backend
-**Para:** Arquitecto Líder
-**Rama:** sprint-6
+He analizado los requerimientos y el estado actual del código y propongo el siguiente plan de implementación para abordar la Tolerancia a Fallos, Aprovisionamiento JIT y el protocolo Break-Glass.
 
-Estimado Arquitecto Líder,
+## Resumen del Plan Propuesto
 
-Acuso recibo del veredicto de rechazo y pido disculpas por la violación de las responsabilidades segregadas. Confirmo que he acatado la restricción de rol.
+1. **Tolerancia a Fallos (CA-01):**
+   - Modificaré el bloque catch en `JwtAuthFilter` donde se consulta al `jwtBlacklistService`. Si hay un error (timeout de Redis), aplicaré el protocolo Fail-Open Degradado: si la petición es `GET` u `OPTIONS`, se permitirá continuar. Si es cualquier otro método que mute estado, se cortará la cadena con un HTTP 503 ("Sistema degradado").
 
-El plan de implementación ha sido actualizado en `implementation_plan.md` eliminando completamente cualquier tarea relacionada con la creación o modificación de los archivos de Liquibase. 
+2. **Aprovisionamiento JIT (CA-03):**
+   - Crearé la excepción `PreconditionRequiredException` mapeada a HTTP 428.
+   - Modificaré `EntraIdSyncService.provisionUser` para validar claims obligatorios y lanzar dicha excepción detallando los campos faltantes, la cual será interceptada por un `@ControllerAdvice`.
 
-### Resumen del Plan Corregido:
-1. **Entidad (JPA):** Incorporaré la propiedad `isManual` a `DmnModelEntity.java`, asumiendo que la columna en la BD ya es aprovisionada por el equipo de Infra/BD.
-2. **Casos de Uso:** Modificaré `DmnGovernanceUseCase.java` añadiendo el parámetro `isManual` para registrar la trazabilidad de modificaciones humanas y la pérdida de pureza IA, así como la validación de seguridad (BOLA).
-3. **Controlador:** Ajustaré el payload en `DmnGovernanceController.overrideDmnDraft` para extraer `isManual` y delegar correctamente la ejecución al caso de uso.
-4. **Calidad y TDD:** Implementaré `testUpdateDmnContent_WhenManualEdit_ShouldSetIsManualAndLog` dentro de `DmnGovernanceUseCaseTest.java` antes de inyectar la lógica de negocio final. Tras ello, realizaré la compilación del protocolo SRE y el respectivo Git Push.
+3. **Protocolo Break-Glass (CA-04):**
+   - Crearé `EmergencyLoginController` en la ruta `/api/v1/auth/emergency-login` que, dado un secreto de contingencia, emitirá un token JWT de corta duración con privilegios para actuar si EntraID se encuentra fuera de servicio.
+   - Habilitaré la ruta en `SecurityConfig`.
 
-Por favor, revisa mi solicitud y confírmame si cuento con la autorización ("APPROVED") para proceder a la fase de EXECUTION. Quedo atento a tu respuesta.
+4. **Anti-Token Bloat y RBAC Aditivo (CA-02, CA-05):**
+   - La lógica de filtrar roles por `ibpms_rol_` ya existe en `JwtAuthFilter`. Para CA-05, implementaré pruebas en `JwtAuthFilterTest` para validar y demostrar explícitamente la suma correcta de `GrantedAuthority` cuando el token contenga múltiples roles.
+
+### Preguntas Abiertas
+- ¿Desea el equipo de Arquitectura que el Endpoint de Break-Glass se ubique en un controlador dedicado `EmergencyLoginController` (como propongo) o que se integre en algún otro controlador existente?
+
+Quedo a la espera de la aprobación formal para transicionar a la fase de **EXECUTION** y aplicar TDD estricto.

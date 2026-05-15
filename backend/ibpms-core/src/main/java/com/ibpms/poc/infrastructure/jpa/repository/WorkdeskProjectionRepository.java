@@ -12,19 +12,17 @@ import org.springframework.data.repository.query.Param;
 @Repository
 public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProjectionEntity, String> {
     
-    // @Traceability: US-036 - CA-05 Privacidad Visual de Colas (Data Segregation Local)
+    // @Traceability: US-036 - CA-23 Delegación In-Flight + CA-05 Privacidad Visual de Colas
     // CA-14, CA-19, CA-17, CA-01: Strict Tenant Isolation + GIN Index ILIKE + SLA-First Sorting
-    // @Traceability(US = "US-001", CA = {"CA-19", "CA-10", "CA-01", "CA-17"})
-    // REMEDIACIÓN BUG-S6-002/003/004: Se reemplazó LOWER(w.title) LIKE por ILIKE nativo para 
-    // restaurar el uso del índice GIN (pg_trgm) y eliminar Seq Scans.
-    // Se corrigió el ORDER BY para que SLA sea la directriz principal (CA-01), y solo el 
-    // Impacto Masivo (>= 8) rompa la priorización cronológica (CA-17).
-    // Se añadió created_at como criterio de desempate final.
+    // REMEDIACIÓN BUG-S6-002/003/004: ILIKE nativo para GIN (pg_trgm), elimina Seq Scans.
+    // SLA-First sorting (CA-01) + Impacto Masivo >= 8 (CA-17) + created_at desempate.
+    // @Traceability(US="US-036", CA={"CA-23", "BUG-PG-CAST"}, DESC="Híbrido: Delegación In-Flight con Safe Postgres Casting para prevenir PSQLException en nulos")
+    // MERGE: Se conserva soporte a List<assignees> (origin/DevDavid) y protección CAST de nulos nativos (HEAD).
     @Query(value = """
         SELECT * FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
           AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
-          AND (CAST(:assignee AS VARCHAR) IS NULL OR w.assignee = CAST(:assignee AS VARCHAR) OR w.assignee IS NULL) 
+          AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[]))) 
         ORDER BY 
           CASE WHEN w.impact_level >= 8 THEN 0 ELSE 1 END ASC, 
           w.sla_expiration_date ASC NULLS LAST, 
@@ -34,13 +32,13 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         SELECT COUNT(*) FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
           AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
-          AND (CAST(:assignee AS VARCHAR) IS NULL OR w.assignee = CAST(:assignee AS VARCHAR) OR w.assignee IS NULL)
+          AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[])))
         """,
         nativeQuery = true)
     Page<WorkdeskProjectionEntity> findWorkdeskTasks(
            @Param("tenantId") String tenantId, 
            @Param("search") String search, 
-           @Param("assignee") String assignee, 
+           @Param("assignees") java.util.List<String> assignees, 
            Pageable pageable);
 
     @Query(value = """

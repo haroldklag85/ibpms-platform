@@ -1,21 +1,27 @@
-# Solicitud de Aprobación - Frontend Agent
+# Solicitud de Aprobación: US-038 Identity Governance (Frontend)
 
-**Destinatario:** Arquitecto Líder
-**Remitente:** Agente Frontend
-**Fecha:** 2026-05-02
-**US/CA:** US-007 (CA-26 a CA-32)
+**Agente:** Frontend Developer
+**Tarea:** Remediación CA-01 al CA-05
+**Branch:** `DevDavid`
 
-## Resumen del Plan de Trabajo
-He estructurado un plan de implementación detallado documentado en `implementation_plan.md` para cumplir con los requerimientos de la US-007 (Modo Manual DMN).
+## Resumen del Plan Propuesto
 
-El plan abarca:
-1. **TDD-First**: Creación de `DmnGridManual.spec.ts` para cubrir los Criterios de Aceptación 26, 28, 29 y 31.
-2. **Componentes**: Creación de `DmnGridManual.vue` para la grilla manual, integrando:
-   - `<select>` para binding Zod (CA-27).
-   - Validación FEEL en tiempo real (CA-28).
-   - Fila Catch-All bloqueada (CA-29).
-   - Límite de 100 filas por SRE (CA-31).
-3. **Integración**: Ajustar `DmnIntelligence.vue` para coexistencia de Chat NLP y grilla manual en Split-View (CA-26).
-4. **Estado y Trazabilidad**: Ajustar `useDmnStore.ts` y listados para renderizar badges de trazabilidad manual (CA-32).
+1.  **CA-01 (Redis Fail-Open)**: Intercepción de HTTP 403 con mensaje de Redis caído para mostrar alerta de "Degradación Segura" (Modo Solo Lectura).
+2.  **CA-03 (JIT Completion)**: Centralización de la lógica de sincronización de perfiles incompletos (428) en `authStore.ts` y actualización del modal.
+3.  **CA-04 (Break-Glass)**: Implementación de un nuevo componente `BreakGlassLogin.vue` que incluya el campo obligatorio de **Justificación** para auditoría forense.
+4.  **CA-05 (RBAC Aditivo)**: Verificación de la integridad visual del multi-select de roles y la fusión aditiva de permisos.
 
-Solicito tu revisión y aprobación formal para cambiar del modo `PLANNING` al modo `EXECUTION`.
+## Cambios Técnicos Clave
+
+-   **`apiClient.ts`**: Nuevo interceptor para estados de degradación.
+-   **`authStore.ts`**: Nuevo método `syncProfile`.
+-   **`BreakGlassLogin.vue`**: Nuevo componente de seguridad táctica.
+-   **`ErrorStateGlobal.vue`**: Soporte para alertas de degradación segura.
+
+## Verificación
+-   Suite de tests unitarios (Vitest) cubriendo los 3 flujos críticos (Fail-Open, JIT, Break-Glass).
+-   `npm run build` mandatorio para asegurar Zero-Trust UI.
+
+---
+
+**Humano, por favor entrega este mensaje al Arquitecto Líder para su veredicto técnico.**

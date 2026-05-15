@@ -20,6 +20,12 @@ import com.ibpms.poc.application.port.out.ExternalTaskTopicPort;
 import com.ibpms.poc.application.port.out.DataMappingPort;
 import com.ibpms.poc.domain.model.DataMapping;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
+import com.ibpms.poc.application.rest.dto.GenericFormConfigUpdateRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * REST Controller for BPMN Design operations (Integration Gaps Mock / Zero-Mock V2).
@@ -36,17 +42,20 @@ public class BpmnDesignController {
     private final BpmnDesignService bpmnDesignService;
     private final ExternalTaskTopicPort externalTaskTopicPort;
     private final DataMappingPort dataMappingPort;
+    private final ObjectMapper objectMapper;
 
     public BpmnDesignController(PreFlightAnalyzerService preFlightAnalyzerService, 
                                 ProcessMigrationService processMigrationService,
                                 BpmnDesignService bpmnDesignService,
                                 ExternalTaskTopicPort externalTaskTopicPort,
-                                DataMappingPort dataMappingPort) {
+                                DataMappingPort dataMappingPort,
+                                ObjectMapper objectMapper) {
         this.preFlightAnalyzerService = preFlightAnalyzerService;
         this.processMigrationService = processMigrationService;
         this.bpmnDesignService = bpmnDesignService;
         this.externalTaskTopicPort = externalTaskTopicPort;
         this.dataMappingPort = dataMappingPort;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -180,9 +189,10 @@ public class BpmnDesignController {
 
     /**
      * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
-     * Lista todos los procesos BPMN persistidos.
+     * @Traceability(US="US-005", CA="CA-ZERO-MOCK", DESC="ADR-010: Retorno de datos reales a través de bpmnDesignService.listarTodos()")
+     * @Traceability(US="US-005", CA="CA-ENDPOINT", DESC="Fusión de ruta /catalog requerida por Frontend")
      */
-    @GetMapping
+    @GetMapping("/catalog")
     public ResponseEntity<List<Map<String, Object>>> getAllLatestProcesses() {
         List<Map<String, Object>> processes = bpmnDesignService.listarTodos().stream().map(dto -> Map.of(
             "key", dto.getTechnicalId(),
@@ -193,6 +203,29 @@ public class BpmnDesignController {
         )).collect(java.util.stream.Collectors.toList());
         
         return ResponseEntity.ok(processes);
+    }
+
+    /**
+     * @Traceability(US="US-028", CA="CA-FORM-CONFIG", DESC="ADR-001: Delegación de configuración de formularios a BpmnDesignService (Application Layer)")
+     */
+    @PutMapping("/{processKey}/generic-form-config")
+    @Operation(summary = "Update Generic Form Config", description = "Configures the whitelist in ibpms_bpmn_process_design (Merged from application layer)")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> updateGenericFormConfig(
+            @PathVariable("processKey") String processKey,
+            @Valid @RequestBody GenericFormConfigUpdateRequest request,
+            Authentication authentication) {
+
+        String userId = authentication != null ? authentication.getName() : "anonymous";
+        String whitelistJson;
+        try {
+            whitelistJson = objectMapper.writeValueAsString(request.getWhitelist());
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        bpmnDesignService.updateGenericFormConfig(processKey, whitelistJson, userId);
+        return ResponseEntity.noContent().build();
     }
 
     /**

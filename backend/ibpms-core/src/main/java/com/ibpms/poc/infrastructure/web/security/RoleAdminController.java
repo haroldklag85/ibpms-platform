@@ -2,7 +2,9 @@ package com.ibpms.poc.infrastructure.web.security;
 
 import com.ibpms.poc.infrastructure.jpa.entity.security.ProcessPermissionEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.security.RoleAuditLogEntity;
 import com.ibpms.poc.application.service.security.RoleService;
+import com.ibpms.poc.application.service.security.EntraIdSyncService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +18,11 @@ import java.util.UUID;
 public class RoleAdminController {
 
     private final RoleService roleService;
+    private final EntraIdSyncService entraIdSyncService;
 
-    public RoleAdminController(RoleService roleService) {
+    public RoleAdminController(RoleService roleService, EntraIdSyncService entraIdSyncService) {
         this.roleService = roleService;
+        this.entraIdSyncService = entraIdSyncService;
     }
 
     @PostMapping
@@ -93,5 +97,34 @@ public class RoleAdminController {
                 .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=matriz_rbac.csv")
                 .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "text/csv")
                 .body(csvData);
+    }
+
+    /**
+     * CA-1 US-036 — Soporte Doble Motor (EntraID SSO).
+     * GET /api/v1/admin/roles/entraid-groups
+     * Devuelve la lista de grupos sincronizados desde Microsoft Graph API.
+     */
+    @GetMapping("/entraid-groups")
+    public ResponseEntity<List<Map<String, String>>> getEntraIdGroups() {
+        return ResponseEntity.ok(entraIdSyncService.fetchAvailableGroups());
+    }
+
+    /**
+     * CA-17 US-036 — Traza Forense Indeleble.
+     * GET /api/v1/admin/roles/{id}/audit-logs
+     * Devuelve el historial de cambios (Deltas JSON) del rol.
+     */
+    @GetMapping("/{id}/audit-logs")
+    public ResponseEntity<List<RoleAuditLogEntity>> getRoleAuditLogs(@PathVariable UUID id) {
+        return ResponseEntity.ok(roleService.getAuditLogsForRole(id));
+    }
+
+    /**
+     * CA-17 US-036 — Traza Forense Indeleble Global.
+     * GET /api/v1/admin/roles/audit-logs
+     */
+    @GetMapping("/audit-logs")
+    public ResponseEntity<List<RoleAuditLogEntity>> getAllAuditLogs() {
+        return ResponseEntity.ok(roleService.getAllAuditLogs());
     }
 }

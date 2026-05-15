@@ -7,11 +7,11 @@ public enum KanbanState {
     TODO, IN_PROGRESS, BLOCKED, QA_APPROVAL, DONE;
 
     private static final Map<KanbanState, EnumSet<KanbanState>> TRANSITIONS = Map.of(
-        TODO, EnumSet.of(IN_PROGRESS),
-        IN_PROGRESS, EnumSet.of(BLOCKED, QA_APPROVAL, DONE),
-        BLOCKED, EnumSet.of(IN_PROGRESS),
-        QA_APPROVAL, EnumSet.of(IN_PROGRESS, DONE),
-        DONE, EnumSet.noneOf(KanbanState.class)
+        TODO,         EnumSet.of(IN_PROGRESS),
+        IN_PROGRESS,  EnumSet.of(BLOCKED, QA_APPROVAL, DONE),
+        BLOCKED,      EnumSet.of(IN_PROGRESS),
+        QA_APPROVAL,  EnumSet.of(DONE, IN_PROGRESS),
+        DONE,         EnumSet.noneOf(KanbanState.class)
     );
 
     public boolean canTransitionTo(KanbanState target) {

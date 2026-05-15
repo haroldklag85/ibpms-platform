@@ -15,7 +15,6 @@ public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
 
     Optional<RoleEntity> findByName(String name);
     List<RoleEntity> findByIsVipRestrictedTrue();
-    List<RoleEntity> findByIsActiveTrue();
 
     /**
      * CA-6 US-036 — Resolución de Árbol de Permisos por Herencia Piramidal.
@@ -41,14 +40,11 @@ public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
             """, nativeQuery = true)
     List<UUID> findRoleIdsInTree(@Param("roleId") UUID roleId);
 
-    /**
-     * CA-6 US-036 — Resolución de Árbol de Nombres de Rol por Herencia Piramidal.
-     */
     @Query(value = """
             WITH RECURSIVE role_tree AS (
                 SELECT id, parent_role_id, name
                 FROM ibpms_security_role
-                WHERE name = :roleName
+                WHERE name = :name
                 UNION ALL
                 SELECT r.id, r.parent_role_id, r.name
                 FROM ibpms_security_role r
@@ -56,5 +52,5 @@ public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
             )
             SELECT name FROM role_tree
             """, nativeQuery = true)
-    List<String> findInheritedRoleNamesByName(@Param("roleName") String roleName);
+    List<String> findInheritedRoleNamesByName(@Param("name") String name);
 }

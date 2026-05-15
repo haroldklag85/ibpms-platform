@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import apiClient from '@/services/apiClient';
 import { useAuthStore } from '@/stores/authStore';
 import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 export interface WorkdeskGlobalItemDTO {
   unifiedId: string;
@@ -319,17 +320,25 @@ export const useWorkdeskStore = defineStore('workdesk', {
     initWebSocket() {
       if (this.stompClient && this.stompClient.active) return;
 
-      // URL base nativa para WebSockets STOMP hacia el backend
-      const socketUrl = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:8080/ws/workdesk/websocket';
+      // URL SockJS relativa al origen del frontend — el proxy Vite (/ws → http://127.0.0.1:8080)
+      // la reenvía al backend sin CORS. En producción usar VITE_WS_HTTP_URL absoluta.
+      const httpUrl = (import.meta as any).env?.VITE_WS_HTTP_URL
+        || `${window.location.origin}/ws/workdesk`;
 
       this.stompClient = new Client({
-        brokerURL: socketUrl,
+        // webSocketFactory reemplaza brokerURL cuando el servidor usa SockJS
+        webSocketFactory: () => new SockJS(httpUrl),
         debug: (_str) => {
           // console.log('STOMP: ', _str); // Oculto para evitar ruido en consola
         },
-        reconnectDelay: 5000,
+        reconnectDelay: 30000, // 30s entre reintentos para evitar storm de errores en consola
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000,
+        onWebSocketError: (_evt) => {
+          // Silencio controlado: el backend puede no tener WebSocket activo aún
+          // El error ya se refleja en stompConnected = false en la UI
+          this.stompConnected = false;
+        },
       });
 
       this.stompClient.onConnect = (_frame) => {

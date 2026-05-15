@@ -7,9 +7,10 @@ async function globalSetup(config: FullConfig) {
   const baseURL = process.env.E2E_BASE_URL || 'http://localhost:5173';
   
   const requestContext = await request.newContext({
-    baseURL: 'http://localhost:8080'
+    baseURL: 'http://127.0.0.1:8080'
   });
 
+<<<<<<< HEAD
   const authDir = path.resolve('e2e/playwright/.auth');
   if (!fs.existsSync(authDir)) {
     fs.mkdirSync(authDir, { recursive: true });
@@ -31,7 +32,34 @@ async function globalSetup(config: FullConfig) {
           email: user.email,
           password: user.password
         }
+=======
+  // Retry login up to 90 times waiting for the backend to be ready (15 minutes total wait)
+  let response;
+  for (let attempt = 1; attempt <= 90; attempt++) {
+    try {
+      response = await requestContext.post('/api/v1/auth/emergency-login', {
+        headers: { 'Content-Type': 'application/json' },
+        data: {
+          email: 'root@ibpms.local',
+          password: 'Root#Temp4Sys'
+        },
+        timeout: 10_000
+>>>>>>> origin/DevDavid
       });
+      if (!response.ok()) {
+         throw new Error(`HTTP ${response.status()}`);
+      }
+      break; // Success!
+    } catch (err: any) {
+      console.warn(`[global-setup] Login attempt ${attempt}/90 failed (${err.message}), retrying in 10s...`);
+      if (attempt === 90) {
+        console.error('[global-setup] Backend not reachable after 15 minutes. Skipping auth setup.');
+        return;
+      }
+      await new Promise(r => setTimeout(r, 10_000));
+    }
+  }
+  if (!response) return;
 
       if (!response.ok()) {
         // Para root, usamos "admin" si "password123" falla
@@ -47,6 +75,7 @@ async function globalSetup(config: FullConfig) {
         }
         throw new Error(`Failed to login ${user.email} in global setup: ` + response.statusText());
       }
+<<<<<<< HEAD
 
       const { token, tenantId } = await response.json();
       saveStorageState(authDir, user.filename, baseURL, user.email, token, tenantId);
@@ -56,6 +85,8 @@ async function globalSetup(config: FullConfig) {
     }
   }
 }
+=======
+>>>>>>> origin/DevDavid
 
 function saveStorageState(authDir: string, filename: string, baseURL: string, email: string, token: string, tenantId: string) {
   const storageState = {
@@ -66,9 +97,15 @@ function saveStorageState(authDir: string, filename: string, baseURL: string, em
         localStorage: [
           { name: 'ibpms_token', value: token },
           { name: 'ibpms_user', value: JSON.stringify({
+<<<<<<< HEAD
             username: email,
             roles: ['ROLE_OPERARIO', 'ROLE_USER'], // Simplified for tests
             email: email,
+=======
+            username: '[Super_Administrador]',
+            roles: ['ROLE_SUPER_ADMIN'],
+            email: 'root@ibpms.local',
+>>>>>>> origin/DevDavid
             tenantId: tenantId
           }) }
         ]

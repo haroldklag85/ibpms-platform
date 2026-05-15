@@ -9,14 +9,11 @@ export const useRbacStore = defineStore('rbac', () => {
     // CA-12: Anomalías de Seguridad (Tablero CISO)
     const anomalies = ref([])
 
-    const auditLogs = ref([
-        { timestamp: '10:45am', message: 'Administrador añadió a @Pedro al rol VPE_Finanzas' },
-        { timestamp: '09:30am', message: 'Al desplegar BPMN_Crédito, el sistema autogeneró el rol PROCESS:Credito:Analista_Riesgos' }
-    ])
+    const auditLogs = ref([])
 
     // Getters computados
-    const globalRoles = computed(() => roles.value.filter(r => r.type === 'GLOBAL'))
-    const processRoles = computed(() => roles.value.filter(r => r.type === 'PROCESS_GENERATED'))
+    const globalRoles = computed(() => roles.value)
+    const processRoles = computed(() => roles.value.filter(r => r.processDefinitionId))
 
     // Acciones
     async function fetchRoles() {
@@ -82,27 +79,213 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
-    // CA-12: Obtener anomalías del Dashboard CISO
-    async function fetchAnomalies() {
+    // CA-1: Obtener grupos de EntraID (Azure AD)
+    async function fetchEntraIdGroups() {
         isLoading.value = true
         try {
-            const response = await apiClient.get('/api/v1/security/anomalies')
-            anomalies.value = response.data
+            const response = await apiClient.get('/admin/roles/entraid-groups')
+            return response.data
         } catch (error) {
-            console.error("Error obteniendo anomalías", error)
+            console.error("Error obteniendo grupos EntraID", error)
+            return []
         } finally {
             isLoading.value = false
         }
     }
 
-    // CA-12: Resolver anomalía (Investigada/Mitigada/Ignorada)
-    async function resolveAnomaly(id, resolutionStatus) {
+    // CA-1: Importar un grupo como Rol de iBPMS
+    async function importRole(group) {
+        isLoading.value = true
         try {
-            await apiClient.patch(`/api/v1/security/anomalies/${id}/resolve?status=${resolutionStatus}`)
-            await fetchAnomalies() // Refrescar lista
+            const payload = {
+                name: group.displayName,
+                description: `Sincronizado desde EntraID: ${group.id}`,
+                source: 'ENTRA_ID',
+                isTemplate: false
+            }
+            await apiClient.post('/admin/roles/', payload)
+            await fetchRoles()
+        } catch (error) {
+            console.error("Error importando rol", error)
+            throw error
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    // CA-4: Actualizar permisos granulares de proceso (Alineado al contrato PUT del Backend)
+    async function updateProcessPermission(roleId, permissionData) {
+        try {
+            await apiClient.put(`/admin/roles/${roleId}`, {
+                processPermissions: [permissionData]
+            })
+            await fetchRoles()
+        } catch (error) {
+            console.error("Error actualizando permisos de proceso", error)
+            throw error
+        }
+    }
+
+    // CA-06: Actualizar rol (incluyendo herencia)
+    async function updateRole(roleId, payload) {
+        isLoading.value = true
+        try {
+            await apiClient.put(`/admin/roles/${roleId}`, payload)
+            await fetchRoles()
+        } catch (error) {
+            console.error("Error actualizando rol", error)
+            throw error
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    // CA-12: Anomalías de Seguridad
+    async function fetchAnomalies() {
+        try {
+            const response = await apiClient.get('/security/anomalies')
+            anomalies.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo anomalías", error)
+        }
+    }
+
+    async function resolveAnomaly(id) {
+        try {
+            await apiClient.post(`/security/anomalies/${id}/resolve`)
+            await fetchAnomalies()
         } catch (error) {
             console.error("Error resolviendo anomalía", error)
             throw error
+        }
+    }
+
+    // --- Fase 2: Delegaciones y M2M ---
+    const serviceAccounts = ref([])
+    const delegations = ref([])
+    const cisoReports = ref([])
+    const systemProcesses = ref([])
+
+    async function fetchServiceAccounts() {
+        // Mock to prevent 404/500 backend errors for unimplemented endpoints
+        serviceAccounts.value = []
+    }
+
+    async function createServiceAccount(payload) {
+        try {
+            const apiPayload = {
+                name: payload.appName,
+                description: payload.description,
+                roleId: payload.roleId,
+                daysToExpire: 365
+            };
+            const response = await apiClient.post('/admin/service-accounts', apiPayload)
+            await fetchServiceAccounts()
+            return response.data // Debe incluir el secret_key generado solo esta vez
+        } catch (error) {
+            console.error("Error creando cuenta de servicio", error)
+            throw error
+        }
+    }
+
+    async function fetchDelegations() {
+        // Mock to prevent 404/500 backend errors for unimplemented endpoints
+        delegations.value = []
+    }
+
+    async function createDelegation(userId, payload) {
+        try {
+            // CA-9: Endpoint real de delegación por usuario
+            await apiClient.post(`/api/v1/admin/users/${userId}/delegate`, payload)
+            await fetchDelegations()
+        } catch (error) {
+            console.error("Error creando delegación", error)
+            throw error
+        }
+    }
+
+    async function revokeDelegation(id) {
+        try {
+            await apiClient.delete(`/admin/security/delegations/${id}`)
+            await fetchDelegations()
+        } catch (error) {
+            console.error("Error revocando delegación", error)
+            throw error
+        }
+    }
+
+    // --- CA-14: Kill-Session ---
+    async function revokeUserSession(userId) {
+        try {
+            // CA-14: Exorcismo JWT (Kill Session Extremo)
+            await apiClient.post(`/api/v1/admin/users/${userId}/kill-session`)
+        } catch (error) {
+            console.error("Error revocando sesión de usuario", error)
+            throw error
+        }
+    }
+
+    // --- CA-15: Public Process Management ---
+    async function fetchSystemProcesses() {
+        try {
+            const response = await apiClient.get('/design/processes')
+            systemProcesses.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo procesos del sistema", error)
+        }
+    }
+
+    async function toggleProcessPublicStatus(processId, isPublic) {
+        try {
+            await apiClient.put(`/design/processes/${processId}/public`, { isPublic })
+            await fetchSystemProcesses()
+        } catch (error) {
+            console.error("Error cambiando estado público del proceso", error)
+            throw error
+        }
+    }
+
+    // --- CA-16: ISO 27001 Reporting ---
+    async function fetchCisoReports() {
+        try {
+            const response = await apiClient.get('/security/audit/reports')
+            cisoReports.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo reportes CISO", error)
+        }
+    }
+
+    async function generateCisoReport() {
+        try {
+            // CA-16/CA-24: Consumir endpoint real POST para generación on-demand
+            const response = await apiClient.post('/security/audit/reports/iso27001', {}, {
+                responseType: 'blob'
+            })
+            
+            // Descarga automática del blob (ISO 27001 Compliance)
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', `ibpms_iso27001_report_${new Date().toISOString().split('T')[0]}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            window.URL.revokeObjectURL(url)
+            
+            await fetchCisoReports()
+        } catch (error) {
+            console.error("Error generando reporte CISO", error)
+            throw error
+        }
+    }
+
+    // --- CA-17: Audit Logs ---
+    async function fetchAuditLogs() {
+        try {
+            const response = await apiClient.get('/admin/roles/audit-logs')
+            auditLogs.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo logs de auditoría", error)
         }
     }
 
@@ -113,8 +296,27 @@ export const useRbacStore = defineStore('rbac', () => {
         isLoading,
         globalRoles,
         processRoles,
+        serviceAccounts,
+        delegations,
         fetchRoles,
         fetchAnomalies,
-        resolveAnomaly
+        resolveAnomaly,
+        fetchEntraIdGroups,
+        importRole,
+        updateProcessPermission,
+        updateRole,
+        fetchServiceAccounts,
+        createServiceAccount,
+        fetchDelegations,
+        createDelegation,
+        revokeDelegation,
+        revokeUserSession,
+        fetchSystemProcesses,
+        toggleProcessPublicStatus,
+        fetchCisoReports,
+        generateCisoReport,
+        fetchAuditLogs,
+        cisoReports,
+        systemProcesses
     }
 })

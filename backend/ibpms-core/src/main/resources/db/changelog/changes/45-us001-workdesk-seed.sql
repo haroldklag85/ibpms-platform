@@ -10,10 +10,10 @@ VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert users
-INSERT INTO ibpms_security_user (id, username, email, password_hash, is_active, is_external_idp, created_at)
+INSERT INTO ibpms_security_user (id, username, email, password_hash, status, is_external_idp, created_at)
 VALUES 
-    ('10000000-0000-0000-0000-000000000001', 'perito_a', 'perito_a@ibpms.com', '$2a$10$placeholder', true, false, CURRENT_TIMESTAMP),
-    ('20000000-0000-0000-0000-000000000002', 'director_1', 'director_1@ibpms.com', '$2a$10$placeholder', true, false, CURRENT_TIMESTAMP)
+    ('10000000-0000-0000-0000-000000000001', 'perito_a', 'perito_a@ibpms.com', '$2a$10$placeholder', 'ACTIVE', false, CURRENT_TIMESTAMP),
+    ('20000000-0000-0000-0000-000000000002', 'director_1', 'director_1@ibpms.com', '$2a$10$placeholder', 'ACTIVE', false, CURRENT_TIMESTAMP)
 ON CONFLICT (username) DO NOTHING;
 
 -- Link users to roles
@@ -30,7 +30,7 @@ ON CONFLICT DO NOTHING;
 -- Seed Workdesk projection initial state
 INSERT INTO ibpms_workdesk_projection (id, source_system, original_task_id, title, assignee, candidate_group, status, tenant_id, impact_level)
 VALUES 
-    ('wd-task-perito-1', 'KANBAN', 'kb-task-1', 'Revisión Pericial Inicial', 'perito_a', NULL, 'AVAILABLE', 'default', 1),
-    ('wd-task-director-1', 'BPMN', 'bpmn-task-1', 'Aprobación de Director', 'director_1', NULL, 'IN_PROGRESS', 'default', 2),
-    ('wd-task-perito-2', 'BPMN', 'bpmn-task-2', 'Validación Técnica', NULL, 'ROLE_PERITO', 'AVAILABLE', 'default', 1)
+    ('wd-task-perito-1', 'KANBAN', 'kb-task-1', 'Revisión Pericial Inicial', 'perito_a', NULL, 'AVAILABLE', 'tenant_alpha', 1),
+    ('wd-task-director-1', 'BPMN', 'bpmn-task-1', 'Aprobación de Director', 'director_1', NULL, 'IN_PROGRESS', 'tenant_alpha', 2),
+    ('wd-task-perito-2', 'BPMN', 'bpmn-task-2', 'Validación Técnica', NULL, 'ROLE_PERITO', 'AVAILABLE', 'tenant_alpha', 1)
 ON CONFLICT (id) DO NOTHING;

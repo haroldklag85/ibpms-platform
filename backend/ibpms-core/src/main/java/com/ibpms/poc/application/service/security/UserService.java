@@ -9,8 +9,10 @@ import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
 import com.ibpms.poc.infrastructure.mq.producer.TaskRescueProducer;
+import com.ibpms.poc.infrastructure.jpa.entity.security.UserStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.ibpms.poc.application.service.ui.MenuLayoutService;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -28,14 +30,16 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final TaskRescueProducer taskRescueProducer;
-    private final SecurityStreamService securityStreamService;
+    private final MenuLayoutService menuLayoutService;
+    private final com.ibpms.poc.application.port.out.AuditLogPort auditLogPort;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TaskRescueProducer taskRescueProducer, SecurityStreamService securityStreamService) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TaskRescueProducer taskRescueProducer, MenuLayoutService menuLayoutService, com.ibpms.poc.application.port.out.AuditLogPort auditLogPort) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.taskRescueProducer = taskRescueProducer;
-        this.securityStreamService = securityStreamService;
+        this.menuLayoutService = menuLayoutService;
+        this.auditLogPort = auditLogPort;
     }
 
     public UserResponseDTO createUser(UserCreateRequestDTO dto) {
@@ -50,7 +54,7 @@ public class UserService {
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setIsExternalIdp(dto.getIsExternalIdp());
-        user.setIsActive(true);
+        user.setStatus(UserStatus.ACTIVE);
 
         if (!dto.getIsExternalIdp()) {
             user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
@@ -68,7 +72,6 @@ public class UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        // @Traceability: US-036 - CA-02 El Guardián Absoluto (Inmutabilidad de Mutación)
         if ("[Super_Administrador]".equals(user.getUsername())) {
              throw new org.springframework.security.access.AccessDeniedException("Imposible modificar al Super Administrador Root.");
         }
@@ -77,7 +80,10 @@ public class UserService {
             user.setEmail(dto.getEmail());
         }
         if (dto.getIsActive() != null) {
-            user.setIsActive(dto.getIsActive());
+            user.setStatus(Boolean.TRUE.equals(dto.getIsActive()) ? UserStatus.ACTIVE : UserStatus.INACTIVE);
+        }
+        if (dto.getStatus() != null) {
+            user.setStatus(UserStatus.valueOf(dto.getStatus()));
         }
         if (dto.getIsExternalIdp() != null) {
             user.setIsExternalIdp(dto.getIsExternalIdp());
@@ -87,16 +93,37 @@ public class UserService {
         }
         if (dto.getRoleIds() != null) {
             user.setRoles(new HashSet<>(roleRepository.findAllById(dto.getRoleIds())));
-            securityStreamService.broadcastEvent("[ROLES_UPDATED]");
         }
 
         userRepository.save(user);
 
-        if (Boolean.FALSE.equals(dto.getIsActive())) {
+        // CA-17: Traza Indeleble de Auditoría
+        String adminUser = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null ? 
+                           org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName() : "SYSTEM";
+        
+        String details = String.format("{\"email\":\"%s\",\"status\":\"%s\",\"roles\":[%s]}",
+            user.getEmail(), user.getStatus(), user.getRoles().stream().map(r -> "\"" + r.getName() + "\"").collect(Collectors.joining(",")));
+
+        auditLogPort.saveAuditLog(
+            UUID.randomUUID().toString(),
+            "USER",
+            user.getId().toString(),
+            "UPDATE_USER",
+            adminUser,
+            java.time.LocalDateTime.now(),
+            null,
+            false,
+            false,
+            details
+        );
+
+        if (UserStatus.INACTIVE.equals(user.getStatus())) {
             // CA-08 Trigger mass unclaim if user was deactivated
             taskRescueProducer.triggerMassiveUnclaim(id.toString());
-            securityStreamService.broadcastEvent("[ROLE_REVOKED]");
         }
+
+        // CA-32: Auto-curación del menú cacheado cuando los roles del usuario cambian
+        menuLayoutService.invalidateMenuTopology(user.getUsername());
 
         return toDto(user);
     }
@@ -123,20 +150,44 @@ public class UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        // @Traceability: US-036 - CA-02 El Guardián Absoluto (Inmutabilidad de Soft-Delete)
         if ("[Super_Administrador]".equals(user.getUsername())) {
              throw new org.springframework.security.access.AccessDeniedException("El usuario Root no puede ser desactivado (Inmutabilidad).");
         }
 
-        user.setIsActive(false);
+        user.setStatus(UserStatus.INACTIVE);
         userRepository.save(user);
         
+        // CA-17: Traza Indeleble
+        String adminUser = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null ? 
+                           org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName() : "SYSTEM";
+        auditLogPort.saveAuditLog(
+            UUID.randomUUID().toString(),
+            "USER",
+            user.getId().toString(),
+            "DEACTIVATE_USER",
+            adminUser,
+            java.time.LocalDateTime.now(),
+            null,
+            false,
+            false,
+            "{\"status\":\"INACTIVE\"}"
+        );
+
         // CA-08 Trigger mass unclaim since user is deactivated
         taskRescueProducer.triggerMassiveUnclaim(id.toString());
         
-        securityStreamService.broadcastEvent("[ROLE_REVOKED]");
+        // CA-32: Auto-curación del menú cacheado
+        menuLayoutService.invalidateMenuTopology(user.getUsername());
         
         // Nota Arquitectura: el rechazo final de los JWT activos de este usuario lo hace el JwtAuthFilter en vivo contra JPA.
+    }
+
+    /**
+     * CA-07 US-036: Soft-Delete.
+     * Prohibido el borrado físico de registros de usuario por trazabilidad.
+     */
+    public void deleteUser(UUID id) {
+        deactivateUser(id);
     }
 
     public List<UserResponseDTO> listAll() {
@@ -202,7 +253,8 @@ public class UserService {
         dto.setId(entity.getId());
         dto.setUsername(entity.getUsername());
         dto.setEmail(entity.getEmail());
-        dto.setIsActive(entity.getIsActive());
+        dto.setIsActive(UserStatus.ACTIVE.equals(entity.getStatus()));
+        dto.setStatus(entity.getStatus().name());
         dto.setIsExternalIdp(entity.getIsExternalIdp());
         
         if (entity.getRoles() != null) {

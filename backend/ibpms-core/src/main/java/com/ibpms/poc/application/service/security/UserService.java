@@ -119,7 +119,7 @@ public class UserService {
 
         if (UserStatus.INACTIVE.equals(user.getStatus())) {
             // CA-08 Trigger mass unclaim if user was deactivated
-            taskRescueProducer.triggerMassiveUnclaim(id.toString());
+            taskRescueProducer.triggerDeactivationUnclaim(id.toString());
         }
 
         // CA-32: Auto-curación del menú cacheado cuando los roles del usuario cambian
@@ -174,7 +174,7 @@ public class UserService {
         );
 
         // CA-08 Trigger mass unclaim since user is deactivated
-        taskRescueProducer.triggerMassiveUnclaim(id.toString());
+        taskRescueProducer.triggerDeactivationUnclaim(id.toString());
         
         // CA-32: Auto-curación del menú cacheado
         menuLayoutService.invalidateMenuTopology(user.getUsername());

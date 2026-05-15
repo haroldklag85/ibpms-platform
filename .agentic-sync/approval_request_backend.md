@@ -1,24 +1,15 @@
-# Solicitud de Aprobación Arquitectónica: Backend US-038 (CA-01 al CA-05)
+# Arquitecto Líder - Solicitud de Aprobación Backend (US-038 Fase 2)
 
-He analizado los requerimientos y el estado actual del código y propongo el siguiente plan de implementación para abordar la Tolerancia a Fallos, Aprovisionamiento JIT y el protocolo Break-Glass.
+## Contexto de la Solicitud
+Se requiere tu aprobación arquitectónica antes de proceder con la implementación de **CA-06 al CA-12** (Gobernanza de Identidad) bajo la rama `DevDavid`.
 
-## Resumen del Plan Propuesto
+## Puntos Clave del Plan
+1. **SoD (CA-06):** Se creará `SoDValidatorDomainService` (pura regla de negocio) y se inyectará en los servicios de aplicación (`GenericFormService` / `CompletarTareaService`) para evaluar que `Creator_ID != Approver_ID`. Las violaciones se lanzarán como `SoDViolationException` y se registrarán asíncronamente en `SecurityAnomalyService`.
+2. **RabbitMQ Topología (CA-07 y CA-08):** Se creará `RabbitMQSecurityConfig` para mapear el exchange `ibpms.security.exchange`. El productor existente `TaskRescueProducer` se dividirá para enviar `security.user.delegated` y `security.user.deactivated`.
+3. **Tablero Anomalías (CA-12):** El controlador `SecurityAnomalyController` ya existe y está alineado; se aplicará TDD para garantizar su correcto funcionamiento sin inyecciones adicionales complejas.
 
-1. **Tolerancia a Fallos (CA-01):**
-   - Modificaré el bloque catch en `JwtAuthFilter` donde se consulta al `jwtBlacklistService`. Si hay un error (timeout de Redis), aplicaré el protocolo Fail-Open Degradado: si la petición es `GET` u `OPTIONS`, se permitirá continuar. Si es cualquier otro método que mute estado, se cortará la cadena con un HTTP 503 ("Sistema degradado").
+## Pregunta Abierta (Requiere Resolución)
+> [!WARNING]
+> ¿Debemos buscar el `Creator_ID` de la tarea inspeccionando la variable `initiator` del proceso en Camunda, o existe alguna otra variable estandarizada que se deba utilizar para esta validación (ej. `startUserId` o una variable específica de los formularios genéricos)?
 
-2. **Aprovisionamiento JIT (CA-03):**
-   - Crearé la excepción `PreconditionRequiredException` mapeada a HTTP 428.
-   - Modificaré `EntraIdSyncService.provisionUser` para validar claims obligatorios y lanzar dicha excepción detallando los campos faltantes, la cual será interceptada por un `@ControllerAdvice`.
-
-3. **Protocolo Break-Glass (CA-04):**
-   - Crearé `EmergencyLoginController` en la ruta `/api/v1/auth/emergency-login` que, dado un secreto de contingencia, emitirá un token JWT de corta duración con privilegios para actuar si EntraID se encuentra fuera de servicio.
-   - Habilitaré la ruta en `SecurityConfig`.
-
-4. **Anti-Token Bloat y RBAC Aditivo (CA-02, CA-05):**
-   - La lógica de filtrar roles por `ibpms_rol_` ya existe en `JwtAuthFilter`. Para CA-05, implementaré pruebas en `JwtAuthFilterTest` para validar y demostrar explícitamente la suma correcta de `GrantedAuthority` cuando el token contenga múltiples roles.
-
-### Preguntas Abiertas
-- ¿Desea el equipo de Arquitectura que el Endpoint de Break-Glass se ubique en un controlador dedicado `EmergencyLoginController` (como propongo) o que se integre en algún otro controlador existente?
-
-Quedo a la espera de la aprobación formal para transicionar a la fase de **EXECUTION** y aplicar TDD estricto.
+Por favor revisa el plan en `implementation_plan.md` y emite tu veredicto (APROBADO, APROBADO CON OBSERVACIONES, o RECHAZADO).

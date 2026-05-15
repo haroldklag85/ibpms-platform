@@ -85,7 +85,7 @@ public class DelegationService {
         DelegationEntity saved = delegationRepository.save(delegation);
 
         // CA-07 Trigger massive unclaim to free donor's tasks
-        taskRescueProducer.triggerMassiveUnclaim(donorId.toString());
+        taskRescueProducer.triggerDelegationUnclaim(donorId.toString());
 
         return saved;
     }

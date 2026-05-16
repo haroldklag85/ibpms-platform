@@ -27,7 +27,6 @@ import org.springframework.context.annotation.FilterType;
         type = FilterType.ASSIGNABLE_TYPE,
         classes = {
             com.ibpms.poc.infrastructure.security.JwtAuthFilter.class,
-            com.ibpms.poc.infrastructure.security.JwtSecurityFilter.class,
             com.ibpms.poc.infrastructure.security.ApiKeyAuthFilter.class
         }
     )

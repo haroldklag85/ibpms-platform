@@ -8,19 +8,19 @@ import com.ibpms.poc.domain.port.DocumentSecurityPort;
 import com.ibpms.poc.domain.port.FormEventRepository;
 import com.ibpms.poc.domain.port.TaskDraftRepository;
 import com.ibpms.poc.infrastructure.security.PiiEncryptionService;
-import org.camunda.bpm.engine.TaskService;
-import org.camunda.bpm.engine.task.Task;
-import org.camunda.bpm.engine.task.TaskQuery;
+import com.ibpms.poc.application.ports.out.TaskQueryPort;
+import com.ibpms.poc.application.ports.out.TaskQueryPort.TaskInfo;
+import com.ibpms.poc.application.ports.out.FormDefinitionPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,7 +32,8 @@ class FormCompletionServiceTest {
     private CamundaCompletionAdapter camundaCompletionAdapter;
     private FormEventRepository formEventRepository;
     private TaskDraftRepository taskDraftRepository;
-    private TaskService taskService;
+    private TaskQueryPort taskQueryPort;
+    private FormDefinitionPort formDefinitionPort;
     private ObjectMapper objectMapper;
     private PiiEncryptionService piiEncryptionService;
     private EventReferenceGenerator eventReferenceGenerator;
@@ -45,7 +46,8 @@ class FormCompletionServiceTest {
         camundaCompletionAdapter = mock(CamundaCompletionAdapter.class);
         formEventRepository = mock(FormEventRepository.class);
         taskDraftRepository = mock(TaskDraftRepository.class);
-        taskService = mock(TaskService.class);
+        taskQueryPort = mock(TaskQueryPort.class);
+        formDefinitionPort = mock(FormDefinitionPort.class);
         objectMapper = new ObjectMapper();
         piiEncryptionService = mock(PiiEncryptionService.class);
         eventReferenceGenerator = mock(EventReferenceGenerator.class);
@@ -56,7 +58,8 @@ class FormCompletionServiceTest {
                 camundaCompletionAdapter,
                 formEventRepository,
                 taskDraftRepository,
-                taskService,
+                taskQueryPort,
+                formDefinitionPort,
                 objectMapper,
                 piiEncryptionService,
                 eventReferenceGenerator,
@@ -75,13 +78,10 @@ class FormCompletionServiceTest {
         request.setPayload(payload);
         request.setSchemaVersion("1.0");
 
-        Task taskMock = mock(Task.class);
-        when(taskMock.getProcessInstanceId()).thenReturn("proc-1");
+        TaskInfo taskMock = new TaskInfo(taskId, "proc-1", userId);
+        when(taskQueryPort.findTaskById(taskId)).thenReturn(Optional.of(taskMock));
 
-        TaskQuery taskQueryMock = mock(TaskQuery.class);
-        when(taskService.createTaskQuery()).thenReturn(taskQueryMock);
-        when(taskQueryMock.taskId(taskId)).thenReturn(taskQueryMock);
-        when(taskQueryMock.singleResult()).thenReturn(taskMock);
+        when(formDefinitionPort.findSchemaContentByVersion(any())).thenReturn(Optional.empty()); // Fallback to basic schema
 
         when(piiEncryptionService.encrypt(anyString())).thenReturn("ENCRYPTED_DATA");
         when(eventReferenceGenerator.generateFromId(any(UUID.class))).thenReturn("EVT-123456");
@@ -109,10 +109,7 @@ class FormCompletionServiceTest {
         
         FormSubmitRequest request = new FormSubmitRequest();
 
-        TaskQuery taskQueryMock = mock(TaskQuery.class);
-        when(taskService.createTaskQuery()).thenReturn(taskQueryMock);
-        when(taskQueryMock.taskId(taskId)).thenReturn(taskQueryMock);
-        when(taskQueryMock.singleResult()).thenReturn(null);
+        when(taskQueryPort.findTaskById(taskId)).thenReturn(Optional.empty());
 
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
             formCompletionService.completeTask(taskId, request, userId);
@@ -129,15 +126,13 @@ class FormCompletionServiceTest {
 
         FormSubmitRequest request = new FormSubmitRequest();
         Map<String, Object> payload = new HashMap<>();
-        // Inyectando un UUID en el payload
-        payload.put("fileId", docId.toString());
+        // Inyectando un UUID en el array attachments del payload
+        payload.put("attachments", List.of(docId.toString()));
         request.setPayload(payload);
 
-        Task taskMock = mock(Task.class);
-        TaskQuery taskQueryMock = mock(TaskQuery.class);
-        when(taskService.createTaskQuery()).thenReturn(taskQueryMock);
-        when(taskQueryMock.taskId(taskId)).thenReturn(taskQueryMock);
-        when(taskQueryMock.singleResult()).thenReturn(taskMock);
+        TaskInfo taskMock = new TaskInfo(taskId, "proc-1", userId);
+        when(taskQueryPort.findTaskById(taskId)).thenReturn(Optional.of(taskMock));
+        when(formDefinitionPort.findSchemaContentByVersion(any())).thenReturn(Optional.empty());
         
         when(piiEncryptionService.encrypt(anyString())).thenReturn("ENCRYPTED_DATA");
 
@@ -158,13 +153,9 @@ class FormCompletionServiceTest {
         request.setPayload(payload);
         request.setSchemaVersion("1.0");
 
-        Task taskMock = mock(Task.class);
-        when(taskMock.getProcessInstanceId()).thenReturn("proc-1");
-
-        TaskQuery taskQueryMock = mock(TaskQuery.class);
-        when(taskService.createTaskQuery()).thenReturn(taskQueryMock);
-        when(taskQueryMock.taskId(taskId)).thenReturn(taskQueryMock);
-        when(taskQueryMock.singleResult()).thenReturn(taskMock);
+        TaskInfo taskMock = new TaskInfo(taskId, "proc-1", userId);
+        when(taskQueryPort.findTaskById(taskId)).thenReturn(Optional.of(taskMock));
+        when(formDefinitionPort.findSchemaContentByVersion(any())).thenReturn(Optional.empty());
 
         when(piiEncryptionService.encrypt(anyString())).thenReturn("ENCRYPTED_DATA");
         

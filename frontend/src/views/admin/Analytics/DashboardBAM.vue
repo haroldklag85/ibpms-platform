@@ -180,8 +180,11 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
-import { api } from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 const isLoading = ref(true);
 const processHealth = ref<any>(null);
 const aiMetrics = ref<any>(null);
@@ -191,8 +194,8 @@ const fetchMetrics = async () => {
   
   try {
     const [healthRes, aiRes] = await Promise.all([
-      api.getProcessHealth(),
-      api.getAiMetrics()
+      integrationStore.getProcessHealth(),
+      integrationStore.getAiMetrics()
     ]);
     
     processHealth.value = healthRes.data;

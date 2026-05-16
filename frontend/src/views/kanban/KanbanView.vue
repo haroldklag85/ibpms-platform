@@ -1,3 +1,4 @@
+<!-- @Traceability: US-008 - CA-01, CA-02, CA-06, CA-03 -->
 <template>
   <div class="h-full flex flex-col pt-2 bg-white" data-testid="kanban-board">
     <div class="flex justify-between items-center mb-6 px-6">
@@ -34,6 +35,7 @@
           :items="col.items"
           :disabled="isReadonly"
           @itemMoved="handleItemMove"
+          @openTask="handleOpenTask"
         />
 
       </div>
@@ -52,10 +54,18 @@
       @confirm="confirmAddColumn"
       @cancel="showAddColModal = false"
     />
+
+    <TaskPreviewModal 
+      v-if="selectedTask" 
+      :taskId="selectedTask.id" 
+      :readOnly="isReadonly || selectedTask.status === 'DONE'"
+      @close="selectedTask = null" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+// Tablero Kanban (US-008): Cumple con ADR-010 (Zero-Mock) consumiendo los endpoints de kanban-tasks de forma directa.
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useKanbanStore } from '@/stores/kanbanStore';
@@ -63,6 +73,7 @@ import KanbanColumn from '@/components/kanban/KanbanColumn.vue';
 import { useAuthStore } from '@/stores/authStore';
 import BlockedReasonModal from '@/components/kanban/BlockedReasonModal.vue';
 import AddColumnModal from '@/components/kanban/AddColumnModal.vue';
+import TaskPreviewModal from '@/components/workdesk/TaskPreviewModal.vue';
 
 const route = useRoute();
 const kanbanStore = useKanbanStore();
@@ -71,12 +82,18 @@ const authStore = useAuthStore();
 const boardId = computed(() => (route.params.projectId as string) || 'default-board');
 
 const syncStatus = ref('');
-const isReadonly = ref(false); // Lógica temporal. TODO: Ligar a RBAC real si se requiere
+
+// Lógica RBAC real para determinar modo sólo lectura
+const isReadonly = computed(() => {
+  const roles = authStore.user?.roles || [];
+  // Si no tiene permisos de operario o superior, es modo lectura
+  return !roles.some(r => ['ROLE_SUPER_ADMIN', 'SUPERVISOR', 'OPERATOR', 'Global Admin'].includes(r));
+});
 
 // Auth for columns
 const canManageColumns = computed(() => {
   const roles = authStore.user?.roles || [];
-  return roles.includes('SUPERVISOR') || roles.includes('SUPER_ADMIN');
+  return roles.includes('SUPERVISOR') || roles.includes('SUPER_ADMIN') || roles.includes('Global Admin');
 });
 
 // Block Modal State
@@ -86,7 +103,14 @@ const taskToBlock = ref<any>(null);
 // Add Col Modal State
 const showAddColModal = ref(false);
 
+// Task Preview State
+const selectedTask = ref<any>(null);
+
 const isLoading = computed(() => kanbanStore.loading);
+
+const handleOpenTask = (task: any) => {
+  selectedTask.value = task;
+};
 
 const handleItemMove = async ({ item, newStatus }: { item: any, newStatus: string }) => {
   if (isReadonly.value) return;
@@ -149,8 +173,16 @@ const confirmAddColumn = async (name: string) => {
   }
 };
 
+// @Traceability: US-008, CA-XX (Remediación Timeout DOM J-04)
 const loadBoard = async () => {
-  await kanbanStore.fetchBoard(boardId.value);
+  kanbanStore.loading = true;
+  try {
+    await kanbanStore.fetchBoard(boardId.value);
+  } catch (err) {
+    console.error("Error cargando Kanban:", err);
+  } finally {
+    kanbanStore.loading = false; // CRÍTICO: Liberar la UI
+  }
 };
 
 onMounted(() => {

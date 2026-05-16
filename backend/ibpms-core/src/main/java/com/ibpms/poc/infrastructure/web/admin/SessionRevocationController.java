@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/admin/users")
 @Tag(name = "User Identity & Session Admin", description = "Operaciones de administración y revocación de identidades")
-@PreAuthorize("hasRole('ADMIN_IT')")
+@PreAuthorize("hasAnyRole('ADMIN_IT', 'SUPER_ADMIN')")
 public class SessionRevocationController {
 
     private static final Logger log = LoggerFactory.getLogger(SessionRevocationController.class);

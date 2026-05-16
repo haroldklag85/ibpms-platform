@@ -67,6 +67,11 @@ public class RoleService {
         return roleRepository.findAll();
     }
 
+    // @Traceability: Retro-Remediación ADR-001
+    public java.util.Optional<RoleEntity> findById(UUID id) {
+        return roleRepository.findById(id);
+    }
+
     /**
      * CA-2 US-036 — Inmutabilidad del Guardián.
      * Aborta la transacción con AccessDeniedException si el rol objetivo

@@ -83,10 +83,13 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted, computed } from 'vue';
 import DmnGridSearch from './DmnGridSearch.vue';
 import DOMPurify from 'dompurify';
-import apiClient from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const props = defineProps({
   editable: { type: Boolean, default: true }
@@ -125,7 +128,7 @@ const zodDictionary = ref<any[]>([
 
 onMounted(async () => {
   try {
-    const res = await apiClient.get('/forms/current/variables');
+    const res = await integrationStore.get('/forms/current/variables');
     if (res.data && res.data.length > 0) {
       zodDictionary.value = res.data;
     }

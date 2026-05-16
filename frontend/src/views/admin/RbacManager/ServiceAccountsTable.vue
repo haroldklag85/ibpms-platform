@@ -110,8 +110,11 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue'
-import apiClient from '@/services/apiClient'
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 interface ServiceAccount {
   id: string;
@@ -132,7 +135,7 @@ const generatedKeyData = ref<{ token: string, account: ServiceAccount } | null>(
 const fetchAccounts = async () => {
   isLoading.value = true
   try {
-    const res = await apiClient.get('/admin/service-accounts')
+    const res = await integrationStore.get('/admin/service-accounts')
     if (res.data && Array.isArray(res.data)) {
         serviceAccounts.value = res.data
     }
@@ -168,7 +171,7 @@ const generateKey = async () => {
   if (!newKeyName.value) return
   isGenerating.value = true
   try {
-    const res = await apiClient.post('/admin/service-accounts', { name: newKeyName.value })
+    const res = await integrationStore.post('/admin/service-accounts', { name: newKeyName.value })
     if (res.data) {
         generatedKeyData.value = {
         token: res.data.token,
@@ -204,7 +207,7 @@ const closeModal = () => {
 
 const revokeKey = async (id: string) => {
   try {
-    await apiClient.delete(`/admin/service-accounts/${id}`)
+    await integrationStore.delete(`/admin/service-accounts/${id}`)
     fetchAccounts()
   } catch (e) {
     console.error('Failed to revoke', e)

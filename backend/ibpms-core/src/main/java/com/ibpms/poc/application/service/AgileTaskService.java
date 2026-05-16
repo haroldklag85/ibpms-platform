@@ -23,6 +23,11 @@ public class AgileTaskService {
     private final com.ibpms.poc.infrastructure.jpa.repository.TaskAuditLogRepository taskAuditLogRepository;
     private final FormFieldCleanserService formFieldCleanserService;
     private final ClaimAuditService claimAuditService;
+    private final com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService notificationService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private AgileTaskService self;
 
     public AgileTaskService(AgileTaskRepositoryJpa taskRepository, 
                             SlaChangeLogService slaChangeLogService, 
@@ -30,7 +35,8 @@ public class AgileTaskService {
                             org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate,
                             com.ibpms.poc.infrastructure.jpa.repository.TaskAuditLogRepository taskAuditLogRepository,
                             FormFieldCleanserService formFieldCleanserService,
-                            ClaimAuditService claimAuditService) {
+                            ClaimAuditService claimAuditService,
+                            com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.slaChangeLogService = slaChangeLogService;
         this.auditLogService = auditLogService;
@@ -38,6 +44,19 @@ public class AgileTaskService {
         this.taskAuditLogRepository = taskAuditLogRepository;
         this.formFieldCleanserService = formFieldCleanserService;
         this.claimAuditService = claimAuditService;
+        this.notificationService = notificationService;
+    }
+
+    public java.util.Map<String, Object> previewTask(UUID id) {
+        AgileTask task = getTask(id);
+        return java.util.Map.of(
+                "title", task.getTitle(),
+                "description", task.getDescription(),
+                "slaExpiration", task.getSlaDeadline(),
+                "status", task.getStatus(),
+                "assignee", task.getAssigneeIds() != null && !task.getAssigneeIds().isEmpty() ? String.join(",", task.getAssigneeIds()) : "",
+                "draftExpiresAt", task.getDraftExpiresAt() != null ? task.getDraftExpiresAt() : ""
+        );
     }
 
     @Transactional
@@ -266,22 +285,25 @@ public class AgileTaskService {
 
     /**
      * @Traceability: US-002 - CA-4
-     * Libera una tarea y emite un evento WebSocket a la UI.
+     * Libera una tarea y emite un evento WebSocket a la UI (Unifica Unclaim/Release con mensajeInterno).
      */
     @Transactional
-    public void unclaimTask(UUID taskId, String unclaimedBy) {
+    public void unclaimTask(UUID taskId, String unclaimedBy, String mensajeInterno) {
         AgileTask task = getTaskForUpdate(taskId);
         if (task.getAssigneeIds() == null || !task.getAssigneeIds().contains(unclaimedBy)) {
-            throw new com.ibpms.poc.domain.exception.TaskOwnershipViolationException(unclaimedBy);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La tarea ya fue reclamada por otro operador o no te pertenece");
         }
         task.setStatus("AVAILABLE");
         task.getAssigneeIds().remove(unclaimedBy);
         taskRepository.save(task);
 
+        claimAuditService.audit(taskId, unclaimedBy, "UNCLAIMED", null, null, mensajeInterno);
+
         messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
                 "event", com.ibpms.poc.domain.model.agile.WebSocketEventType.TASK_UNCLAIMED.name(),
                 "taskId", taskId,
                 "unclaimedBy", unclaimedBy,
+                "mensajeInterno", mensajeInterno != null ? mensajeInterno : "",
                 "timestamp", java.time.Instant.now()
         ));
     }
@@ -290,15 +312,19 @@ public class AgileTaskService {
      * @Traceability: US-002 - CA-8
      * Force Unclaim de un Supervisor
      * Libera la tarea anulando las validaciones de ownership y notifica.
+     * // @Traceability: Retro-Remediación ADR-001 (Hexagonal)
      */
     @Transactional
-    public void forceUnclaimTask(UUID taskId) {
+    public void forceUnclaimTask(UUID taskId, String supervisor, String tenantId) {
         AgileTask task = getTaskForUpdate(taskId);
         task.setStatus("AVAILABLE");
         if (task.getAssigneeIds() != null) {
             task.getAssigneeIds().clear();
         }
         taskRepository.save(task);
+
+        claimAuditService.auditForceUnclaim(taskId, supervisor, tenantId);
+        notificationService.notifyTaskForceUnclaimed(tenantId, taskId.toString());
 
         messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
                 "event", "TASK_FORCE_UNCLAIMED",
@@ -309,7 +335,7 @@ public class AgileTaskService {
 
     /**
      * @Traceability: US-002 - CA-2
-     * bulk-claim
+     * bulk-claim con tolerancia a fallos parcial vía REQUIRES_NEW
      */
     @Transactional
     public java.util.Map<String, Object> bulkClaim(List<String> taskIds, String assignee) {
@@ -317,25 +343,11 @@ public class AgileTaskService {
         List<java.util.Map<String, String>> conflicts = new java.util.ArrayList<>();
 
         for (String idStr : taskIds) {
-            UUID taskId = UUID.fromString(idStr);
             try {
-                AgileTask task = getTaskForUpdate(taskId);
-                if (!"OPEN".equals(task.getStatus()) && !"AVAILABLE".equals(task.getStatus())) {
-                    conflicts.add(java.util.Map.of("taskId", idStr, "reason", "Task is not AVAILABLE"));
-                    continue;
-                }
-                task.setStatus("CLAIMED");
-                if (task.getAssigneeIds() == null) {
-                    task.setAssigneeIds(new java.util.HashSet<>());
-                }
-                task.getAssigneeIds().add(assignee);
-                taskRepository.save(task);
-
-                claimAuditService.audit(taskId, assignee, "BULK_CLAIMED", null, null, null);
+                self.claimSingleTaskIsolated(UUID.fromString(idStr), assignee);
                 claimed.add(idStr);
-
             } catch (Exception e) {
-                conflicts.add(java.util.Map.of("taskId", idStr, "reason", "Concurrency conflict or not found"));
+                conflicts.add(java.util.Map.of("taskId", idStr, "reason", e.getMessage() != null ? e.getMessage() : "Concurrency conflict or not found"));
             }
         }
 
@@ -350,25 +362,20 @@ public class AgileTaskService {
         return java.util.Map.of("claimed", claimed, "conflicts", conflicts);
     }
 
-    /**
-     * GAP-005: releaseTask
-     */
-    @Transactional
-    public void releaseTask(UUID taskId, String assignee, String message) {
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public void claimSingleTaskIsolated(UUID taskId, String assignee) {
         AgileTask task = getTaskForUpdate(taskId);
-        if (task.getAssigneeIds() == null || !task.getAssigneeIds().contains(assignee)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot release unowned task");
+        if (!"OPEN".equals(task.getStatus()) && !"AVAILABLE".equals(task.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Task is not AVAILABLE");
         }
-        task.getAssigneeIds().remove(assignee);
-        task.setStatus("AVAILABLE");
+        task.setStatus("CLAIMED");
+        if (task.getAssigneeIds() == null) {
+            task.setAssigneeIds(new java.util.HashSet<>());
+        }
+        task.getAssigneeIds().add(assignee);
         taskRepository.save(task);
 
-        claimAuditService.audit(taskId, assignee, "RELEASED", null, null, message);
-
-        messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
-                "event", "ADD",
-                "taskId", taskId
-        ));
+        claimAuditService.audit(taskId, assignee, "BULK_CLAIMED", null, null, null);
     }
 
     /**

@@ -10,6 +10,7 @@ import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.security.ServiceAccountRepository;
+import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 /**
  * Audit CA-20, CA-21, CA-22 - US-036
  * Zero-Trust & Fail-Fast Integration Tests.
+ * // @Traceability: US-036, CA-20, CA-21, CA-22
  */
 
 public class IdentityGovernanceIntegrationTest extends AbstractIntegrationTest {
@@ -51,6 +53,9 @@ public class IdentityGovernanceIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private ServiceAccountManager serviceAccountManager;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     @BeforeEach
     void setUp() {
         RestAssured.port = port;
@@ -67,6 +72,9 @@ public class IdentityGovernanceIntegrationTest extends AbstractIntegrationTest {
         folioMaria.setSourceSystem("CAMUNDA");
         folioMaria.setStatus("OPEN");
         folioMaria.setSlaExpirationDate(java.time.LocalDateTime.now().plusDays(2));
+        folioMaria.setOriginalTaskId(UUID.randomUUID().toString());
+        folioMaria.setTenantId("default");
+        folioMaria.setImpactLevel(1);
         workdeskRepository.save(folioMaria);
 
         WorkdeskProjectionEntity folioJuan = new WorkdeskProjectionEntity();
@@ -76,6 +84,9 @@ public class IdentityGovernanceIntegrationTest extends AbstractIntegrationTest {
         folioJuan.setSourceSystem("CAMUNDA");
         folioJuan.setStatus("OPEN");
         folioJuan.setSlaExpirationDate(java.time.LocalDateTime.now().plusDays(2));
+        folioJuan.setOriginalTaskId(UUID.randomUUID().toString());
+        folioJuan.setTenantId("default");
+        folioJuan.setImpactLevel(1);
         workdeskRepository.save(folioJuan);
     }
 
@@ -99,15 +110,17 @@ public class IdentityGovernanceIntegrationTest extends AbstractIntegrationTest {
         // Pero si existiese el @Aspect de RLS, interceptaría la llamada asumiendo que "SpringSecurityContext" tiene a "maria".
         // Como este test fallará predeciblemente si no hay RLS, declaramos la aserción de negocio.
 
-        // TODO: Cuando spring-security esté enforcing full Oauth2, mockear con RestAssuredMockMvc
-        given()
+        String mariaToken = jwtTokenProvider.generateToken("maria", java.util.List.of("ibpms_rol_USER"), "default");
+
+        given().log().all()
+                .header("Authorization", "Bearer " + mariaToken)
                 .param("delegatedUserId", "maria") 
         .when()
                 .get("/api/v1/workdesk/global-inbox")
-        .then()
+        .then().log().all()
                 .statusCode(200)
-                .body("content.size()", org.hamcrest.Matchers.equalTo(1)) // FAIL FAST: Debe traer SOLO 1 elemento (el de ella).
-                .body("content[0].assignee", org.hamcrest.Matchers.equalTo("maria"));
+                .body("data.size()", org.hamcrest.Matchers.equalTo(1)) // FAIL FAST: Debe traer SOLO 1 elemento (el de ella).
+                .body("data[0].assignee", org.hamcrest.Matchers.equalTo("maria"));
     }
 
     /**
@@ -122,7 +135,7 @@ public class IdentityGovernanceIntegrationTest extends AbstractIntegrationTest {
         
         // Simulación: Inyección en lista negra
         blacklistService.revokeSession("juan");
-        assertTrue(blacklistService.isRevoked("juan"));
+        assertTrue(blacklistService.isUserRevoked("juan"));
     }
 
     /**
@@ -131,9 +144,11 @@ public class IdentityGovernanceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("CA-22: Creación de API Key, hashing irreversible en BD, y ciclos de ServiceAccount")
     void shouldCreateApiKeyAndStoreHashedVersion() {
-        RoleEntity role = new RoleEntity();
-        role.setName("ROBOT_ROLE");
-        role = roleRepository.save(role);
+        RoleEntity role = roleRepository.findByName("ROBOT_ROLE").orElseGet(() -> {
+            RoleEntity r = new RoleEntity();
+            r.setName("ROBOT_ROLE");
+            return roleRepository.save(r);
+        });
 
         String jsonPayload = "{" +
                 "\"name\": \"CRM_Sync_Bot\"," +

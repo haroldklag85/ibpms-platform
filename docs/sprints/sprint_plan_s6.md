@@ -53,3 +53,11 @@ El Sprint 6 se centrará únicamente en los componentes y APIs que impactan la v
 2. ✅ Cero clases de test en "carpetas rotas" excluidas de la compilación de Maven.
 3. ✅ Tests de Integración del backend corriendo establemente contra Postgres/RabbitMQ locales, sin H2.
 4. ✅ Playwright E2E ejecutando validaciones con Data Seed real, sin timeouts por estado vacío.
+
+---
+
+## 5. Historial de Cambios y Cierre Sprint 6
+
+| Fecha | Evento/Cambio | Notas y Hallazgos | Estado |
+|-------|---------------|-------------------|:------:|
+| 2026-05-10 | **Cierre Formal Sprint 6** | Certificación J-04 alcanzada con 44/45 escenarios (97.8% PASS). Remediación exitosa de bloqueos de seguridad en observabilidad (CU-J04-42), IDOR de delegación (NEG-04) y RBAC de rutas (NEG-07). **Bloqueante trasladado a Sprint 7:** El error de infraestructura frontend `Vite pre-transform error: Failed to load url /src/main.ts` que interfiere intermitentemente con los tests basados en UI. | ✅ APROBADO |

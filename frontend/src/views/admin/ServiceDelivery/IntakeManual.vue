@@ -176,9 +176,12 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, reactive, onMounted } from 'vue';
-import { api } from '@/services/apiClient';
 import { useAuthStore } from '@/stores/authStore';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const authStore = useAuthStore();
 const isSacLeader = computed(() => authStore.roles?.includes('SAC_Leader'));
@@ -205,7 +208,7 @@ const submitIntake = async () => {
   successMessage.value = '';
   
   try {
-    const response = await api.manualStart(form);
+    const response = await integrationStore.manualStart(form);
     
     console.log('Intake payload submitted:', { ...response.data });
     successMessage.value = `Trámite Iniciado Exitosamente. Caso asignado ID: ${response.data.id || 'Generado'}`;
@@ -232,7 +235,7 @@ const pendingEmails = ref<any[]>([]);
 
 onMounted(async () => {
    try {
-      const response = await api.getPendingEmails?.() || { data: [] };
+      const response = await integrationStore.getPendingEmails?.() || { data: [] };
       pendingEmails.value = response.data;
    } catch (e) {
       console.error('Error fetching emails', e);

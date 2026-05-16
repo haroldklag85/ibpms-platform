@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import apiClient from '@/services/apiClient';
 import { Client } from '@stomp/stompjs';
 
 export interface KanbanItem {
@@ -26,7 +26,7 @@ export interface KanbanColumn {
 }
 
 /**
- * @Traceability(US = "US-008", CA = {"CA-11", "CA-12"})
+ * // @Traceability: US-008, CA-12
  */
 export const useKanbanStore = defineStore('kanban', {
     state: () => ({
@@ -46,8 +46,8 @@ export const useKanbanStore = defineStore('kanban', {
             this.error = null;
             try {
                 const [colsRes, tasksRes] = await Promise.all([
-                    axios.get(`/api/v1/kanban/boards/${boardId}/columns`),
-                    axios.get(`/api/v1/kanban/boards/${boardId}/tasks`)
+                    apiClient.get(`/api/v1/kanban/boards/${boardId}/columns`),
+                    apiClient.get(`/api/v1/kanban/boards/${boardId}/tasks`)
                 ]);
                 
                 this.columns = colsRes.data.map((c: any) => ({
@@ -72,47 +72,59 @@ export const useKanbanStore = defineStore('kanban', {
         },
         async moveTask(taskId: string, newStatus: string, blockedReason?: string) {
             let targetTask: KanbanItem | undefined;
-            let oldCol: KanbanColumn | undefined;
+            let currentArrayCol: KanbanColumn | undefined;
+            
+            // Find task in current columns (VueDraggable might have already moved it)
             for(const col of this.columns) {
-                const idx = col.items.findIndex(i => i.id === taskId);
-                if (idx > -1) {
-                    targetTask = col.items[idx];
-                    oldCol = col;
+                const item = col.items.find(i => i.id === taskId);
+                if (item) {
+                    targetTask = item;
+                    currentArrayCol = col;
                     break;
                 }
             }
-            if(!targetTask || !oldCol) return;
+            if(!targetTask) return;
             
             const originalStatus = targetTask.status;
             const originalReason = targetTask.blockedReason;
             
-            oldCol.items = oldCol.items.filter(i => i.id !== taskId);
+            // Only manipulate arrays if not already moved by VueDraggable
+            if (currentArrayCol?.name !== newStatus) {
+                if (currentArrayCol) {
+                    currentArrayCol.items = currentArrayCol.items.filter(i => i.id !== taskId);
+                }
+                const newCol = this.columns.find(c => c.name === newStatus);
+                if(newCol) newCol.items.push(targetTask);
+            }
+            
             targetTask.status = newStatus;
             if(blockedReason !== undefined) targetTask.blockedReason = blockedReason;
             
-            const newCol = this.columns.find(c => c.name === newStatus);
-            if(newCol) newCol.items.push(targetTask);
-            
-            const payload: any = { newState: newStatus };
-            if(blockedReason) payload.blockedReason = blockedReason;
+            const payload: any = { newStatus };
+            if(blockedReason) payload.reason = blockedReason;
             
             try {
-                await axios.patch(`/api/v1/kanban/${taskId}/state`, payload);
+                await apiClient.patch(`/api/v1/kanban/tasks/${taskId}/move`, payload);
             } catch(error) {
                 console.warn("Fallo en Optimistic UI, revirtiendo estado...", error);
-                if(newCol) {
-                    newCol.items = newCol.items.filter(i => i.id !== taskId);
-                }
+                
                 targetTask.status = originalStatus;
                 targetTask.blockedReason = originalReason;
-                oldCol.items.push(targetTask);
+                
+                const currentNewCol = this.columns.find(c => c.name === newStatus);
+                if(currentNewCol) {
+                    currentNewCol.items = currentNewCol.items.filter(i => i.id !== taskId);
+                }
+                const originalCol = this.columns.find(c => c.name === originalStatus);
+                if(originalCol) originalCol.items.push(targetTask);
+                
                 this.error = "Error al mover la tarjeta";
                 throw error;
             }
         },
         async startTimer(taskId: string) {
             try {
-                const res = await axios.post(`/api/v1/time-tracking/start`, { referenceId: taskId, referenceType: 'TASK_AGILE' });
+                const res = await apiClient.post(`/api/v1/time-tracking/start`, { referenceId: taskId, referenceType: 'TASK_AGILE' });
                 this.activeTimers[taskId] = res.data.id;
             } catch (e: any) {
                 console.error("Error startTimer", e);
@@ -121,7 +133,7 @@ export const useKanbanStore = defineStore('kanban', {
         },
         async stopTimer(logId: string) {
             try {
-                await axios.post(`/api/v1/time-tracking/stop/${logId}`);
+                await apiClient.post(`/api/v1/time-tracking/stop/${logId}`);
                 for(const key in this.activeTimers) {
                     if (this.activeTimers[key] === logId) {
                         delete this.activeTimers[key];
@@ -135,7 +147,7 @@ export const useKanbanStore = defineStore('kanban', {
         },
         async addColumn(boardId: string, name: string) {
             try {
-                const res = await axios.post(`/api/v1/kanban/boards/${boardId}/columns`, { name });
+                const res = await apiClient.post(`/api/v1/kanban/boards/${boardId}/columns`, { name });
                 const newCol = res.data;
                 this.columns.push({ ...newCol, title: newCol.name, items: [] });
             } catch (e: any) {
@@ -145,7 +157,7 @@ export const useKanbanStore = defineStore('kanban', {
         },
         async removeColumn(boardId: string, colId: string) {
             try {
-                await axios.delete(`/api/v1/kanban/boards/${boardId}/columns/${colId}`);
+                await apiClient.delete(`/api/v1/kanban/boards/${boardId}/columns/${colId}`);
                 this.columns = this.columns.filter(c => c.id !== colId);
             } catch (e: any) {
                 throw e;

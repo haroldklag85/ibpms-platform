@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
-import com.ibpms.poc.infrastructure.security.JwtSecurityFilter;
+import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
 import com.ibpms.poc.infrastructure.security.JwtAuthFilter;
 
 @WebMvcTest(controllers = ProjectTemplateController.class)
@@ -49,8 +49,7 @@ public class ProjectTemplateControllerTest {
     @MockBean
     private JwtAuthFilter jwtAuthFilter;
 
-    @MockBean
-    private JwtSecurityFilter jwtSecurityFilter;
+
 
     @MockBean
     private com.ibpms.poc.infrastructure.security.ApiKeyAuthFilter apiKeyAuthFilter;

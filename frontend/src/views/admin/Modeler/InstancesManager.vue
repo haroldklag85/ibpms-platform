@@ -87,9 +87,12 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
 
-import apiClient from '@/services/apiClient';
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
+
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -108,7 +111,7 @@ const activeInstances = ref<any[]>([]);
 
 onMounted(async () => {
   try {
-    const { data } = await apiClient.get(`/design/processes/${props.processId}/instances`);
+    const { data } = await integrationStore.get(`/design/processes/${props.processId}/instances`);
     activeInstances.value = data || [];
   } catch (error) {
     console.error('Error fetching instances:', error);

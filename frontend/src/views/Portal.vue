@@ -77,9 +77,12 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
-import { api } from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const authStore = useAuthStore();
 const processDefinitions = ref<any[]>([]);
@@ -88,7 +91,7 @@ const loading = ref(true);
 
 onMounted(async () => {
     try {
-        const { data } = await api.getCatalogProcesses();
+        const { data } = await integrationStore.getCatalogProcesses();
         processDefinitions.value = data || [];
     } catch (e) {
         console.error('Error fetching processes', e);

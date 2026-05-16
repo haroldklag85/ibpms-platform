@@ -76,7 +76,7 @@
 | 3 | Sistema | Carga tareas del grupo `Adjusters` | ≥1 tarea: "Auditar Información Siniestro" del proceso J-02 |
 | 4 | Sistema | Toggle BPMN/KANBAN disponible | Filtro tipo: "Todos los Tipos", "Procesos (BPMN)", "Proyectos (Kanban)" |
 
-**Estado esperado:** ✅ PASA  
+**Estado esperado:** ✅ APROBADO  
 **Criterio:** El Workdesk carga en ≤2s con las tareas del proceso de siniestros de J-02.
 
 ---
@@ -94,7 +94,7 @@
 | 5 | Sistema | CQRS Engine: "🟢 ONLINE" o "🔴 OFFLINE" | WebSocket STOMP status visible |
 | 6 | Analista | **Anota valores:** Total=___, Vencidas=___, Por Expirar=___ | Baseline para comparación post-trabajo |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -108,7 +108,7 @@
 | 2 | Sistema | Cada fila muestra pill SLA con icono accesible (CA-11) | Colores + iconos: ⚫ gris, ⚡ rojo, ⏳ amarillo, ✔️ verde |
 | 3 | Sistema | Formato de tiempo relativo | "Vencido hace 3 hrs", "Vence en 12 hrs", "Vence en 2 días" |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -127,7 +127,7 @@
 | 3 | Analista | Espera 30 segundos observando una tarea ⏳ | El número de horas/minutos restantes disminuye visiblemente |
 | 4 | Sistema | Badge "⚠️ SLA en Riesgo" en tareas con `isSlaAtRisk=true` | Badge amber visible en la fila correspondiente |
 
-**Estado esperado:** ✅ PASA  
+**Estado esperado:** ✅ APROBADO  
 **Criterio:** El semáforo es vivo (actualización reactiva sin refresh manual) con 4 niveles visualmente distinguibles.
 
 ---
@@ -147,7 +147,7 @@
 | 7 | Analista | Borra y escribe "XYZNOEXISTE" | Empty state gamificado: "🎉 ¡Bandeja Vacía!" con confetti icon |
 | 8 | Analista | Borra búsqueda | Todas las tareas reaparecen |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -169,7 +169,7 @@
 | 3 | Sistema | Toast: "Tarea atendida con éxito" (green) | Toast slide-in animado |
 | 4 | Sistema | Redirige a vista de formulario | `/workdesk/tasks/{taskId}` o FormDesigner mock |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -185,7 +185,7 @@
 | 4 | Sistema | Panel lateral con contexto: proceso, instancia, historial | Info contextual visible |
 | 5 | Sistema | Carga en ≤2 segundos | NFR-PER-02 cumplido |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -202,7 +202,7 @@
 | 5 | Sistema | Banner: "Se encontró un borrador guardado. ¿Restaurar?" | Prompt de restauración |
 | 6 | Analista | Confirma restauración | Los 5 campos reaparecen con los datos ingresados previamente |
 
-**Estado esperado:** ✅ PASA  
+**Estado esperado:** ✅ APROBADO  
 **Criterio:** Cierre real del navegador NO pierde datos. Amnesia Cero (CA-85) funcional.
 
 ---
@@ -219,7 +219,7 @@
 | 4 | Sistema | Muestra thumbnail con nombre, tamaño, botón "Eliminar" | Archivo visible en la lista |
 | 5 | Analista | Adjunta segunda imagen .png (5MB) | 2 archivos visibles (≤5 máx, ≤10MB cada uno) |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -236,7 +236,7 @@
 | 5 | Motor Camunda | Avanza al Parallel Gateway → crea tareas para peritos + espera mensaje | Flujo BPMN avanza |
 | 6 | Sistema | Toast: "Tarea completada exitosamente ✓" | Redirección al Workdesk |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -250,7 +250,7 @@
 | 2 | Analista | Ve que "Auditar Información Siniestro" **YA NO** está en su bandeja | Tarea desaparece inmediatamente |
 | 3 | Sistema | Consistencia RYOW en ≤1s | Sin delay perceptible |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -265,7 +265,7 @@
 | 3 | Sistema | Vencidas y Por Expirar actualizados | Números coherentes con la grilla filtrada |
 | 4 | Analista | Confirma: **la diferencia es exactamente -1 tarea** | Métrica reactiva verificada |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -286,7 +286,7 @@
 | 2 | Sistema | Tarea "Evaluar Daños Dinámicamente" visible (instancia Multi-Instance asignada a `perito_a`) | `camunda:assignee="${perito}"` → asignada directamente |
 | 3 | Perito A | Reclama su tarea | POST `/tasks/{id}/claim` → 200 |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -300,7 +300,7 @@
 | 2 | Sistema | Tarea "Evaluar Daños Dinámicamente" para `perito_b` visible | Instancia MI separada |
 | 3 | Perito B | Reclama su tarea | POST `/tasks/{id}/claim` → 200 |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -317,7 +317,7 @@
 | 5 | Perito A | **Sin refrescar:** la tarea desaparece de su grilla con animación slide-out | CSS: `opacity: 0; transform: translateX(-20px)` (CA-13) |
 | 6 | Sistema | Clase `.is-ghost` aplicada → pointer-events: none → fila se desvanece | Transición en 0.8s |
 
-**Estado esperado:** ✅ PASA  
+**Estado esperado:** ✅ APROBADO  
 **Criterio:** Ghost Deletion funciona en tiempo real vía WebSocket sin refresh manual.
 
 ---
@@ -334,7 +334,7 @@
 | 4 | Perito B | Presiona "Enviar Evaluación" | Completa → ambas instancias MI cerradas |
 | 5 | Motor | Multi-Instance convergge | Token disponible para Parallel Join |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -349,7 +349,7 @@
 | 3 | Sistema | El otro recibe 409 Conflict | No hay doble asignación |
 | 4 | Resultado | Test Playwright green ✅ | Concurrencia validada programáticamente |
 
-**Estado esperado:** ✅ PASA  
+**Estado esperado:** ✅ APROBADO  
 **Criterio:** Nunca hay doble asignación bajo ninguna circunstancia (NFR-SEC-05).
 
 ---
@@ -371,7 +371,7 @@
 | 4 | Sistema | Banner amber: "Estás viendo el escritorio de **analista_n1**" | Banner con botón "Volver a mis tareas" |
 | 5 | Director | Ve las tareas del Analista N1 (Delegación Abierta intra-Tenant) | Grilla muestra tareas del otro usuario |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -383,7 +383,7 @@
 | 2 | Director | Hace clic en una tarea para ver detalles | Modal de tarea se abre |
 | 3 | Director | Puede ver el contexto completo (formulario, historial, SLA) | Información visible en modo lectura o acción según permisos |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -395,7 +395,7 @@
 | 2 | Sistema | Banner amber desaparece (Transition slide-up) | Toggle regresa a "📋 Mis Tareas" (indigo) |
 | 3 | Director | Ve SUS tareas de nuevo (grupo `Directors`) | Tarea "Firma Final Director" visible (del Sub-Process de J-02) |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -416,7 +416,7 @@
 | 4 | Sistema | **Grilla OCULTA.** Pantalla de enrutamiento forzoso visible | Icono ⚡ bolt, texto "Modo Enrutamiento Forzoso", botón "Atender Siguiente Tarea" |
 | 5 | Analista | NO puede elegir qué tarea atender | Solo ve el botón "🚀 Atender Siguiente Tarea" |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -431,7 +431,7 @@
 | 5 | Admin | Desactiva toggle `forceRouting = false` | — |
 | 6 | Analista | Recarga `/workdesk` | Grilla normal visible de nuevo |
 
-**Estado esperado:** ✅ PASA  
+**Estado esperado:** ✅ APROBADO  
 **Criterio:** El operario NO tiene control de selección cuando Force Routing está activo.
 
 ---
@@ -454,7 +454,7 @@
 | 5 | Sistema | Skipeo registrado. Tarea des-asignada y devuelta a la cola general. | Toast: "Tarea devuelta a la cola exitosamente." |
 | 6 | Sistema | Modal se cierra, redirección a la bandeja principal `/workdesk` | Operario listo para tomar otra tarea |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -466,7 +466,7 @@
 | 2 | Analista | Confirma | Skipeo registrado |
 | 3 | Sistema | Audit trail: `{ reason: "REQUIERE_DOCUMENTACION", user: "analista_n1", timestamp: ... }` | Inmutable |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -477,7 +477,7 @@
 | 1 | Analista | Skipeo → selecciona "Fuera de mi área de especialidad" | — |
 | 2 | Analista | Confirma | Skipeo registrado + tarea devuelta a la cola general |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -491,7 +491,7 @@
 | 4 | Analista | Escribe "El sistema ERP externo está en mantenimiento programado" (52 chars) | Error desaparece |
 | 5 | Analista | Presiona "Confirmar Salto" | Skipeo registrado con detalle libre |
 
-**Estado esperado:** ✅ PASA  
+**Estado esperado:** ✅ APROBADO  
 **Criterio:** Motivo "Otro" exige ≥10 caracteres obligatorios. Sin detalle → botón bloqueado.
 
 ---
@@ -513,7 +513,7 @@
 | 2 | Analista | Navega al tablero Kanban interactivo | Pantalla con columnas drag & drop |
 | 3 | Sistema | Columnas con ≥3 tareas en TODO | Tareas precargadas del seed data |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -529,7 +529,7 @@
 | 4 | Analista | Arrastra de BLOCKED → DONE (Transición Flexible) | Tarea completada directamente |
 | 5 | Sistema | Sincronización exitosa sin errores de State Machine | `moveTask` OK |
 
-**Estado esperado:** ✅ PASA  
+**Estado esperado:** ✅ APROBADO  
 **Criterio:** Secuencia completa: TODO → IN_PROGRESS → BLOCKED (motivo) → IN_PROGRESS → DONE.
 
 ---
@@ -543,7 +543,7 @@
 | 1 | Analista | Arrastra otra tarea: TODO → IN_PROGRESS → DONE | 2 movimientos |
 | 2 | Sistema | Cada movimiento sincroniza con API | "Guardando" → "OK" |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -559,7 +559,7 @@
 | 4 | Analista | Presiona "✅ Aprobar" en PanicButtonBar | POST complete |
 | 5 | Sistema | Tarea completada en Kanban | Estado actualizado |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -580,7 +580,7 @@
 | 4 | Sistema | Subtexto: "Las tareas de procesos automatizados podrían no estar actualizadas. Las tareas Kanban operan con normalidad." | Mensajería clara |
 | 5 | Sistema | CQRS Engine → "🔴 OFFLINE" en panel métricas | Estado degradado visible |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -593,7 +593,7 @@
 | 3 | Sistema | Movimiento exitoso (Kanban usa API interna, no Camunda) | Sync OK |
 | 4 | Criterio | **Kanban NO se ve afectado** por la caída de Camunda | Resiliencia confirmada |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -607,7 +607,7 @@
 | 4 | Sistema | Tareas BPMN reaparecen en la grilla | Sincronización restaurada |
 | 5 | Sistema | CQRS Engine → "🟢 ONLINE" | Estado recuperado |
 
-**Estado esperado:** ✅ PASA  
+**Estado esperado:** ✅ APROBADO  
 **Criterio:** La degradación es transparente y transitoria. No hay pérdida de datos.
 
 ---
@@ -631,7 +631,7 @@
 | 6 | Sistema | Ejecuta `loadData()` silenciosamente | Refresco automático de la grilla |
 | 7 | Analista | Ve datos actualizados sin haber presionado nada | Nuevas tareas o cambios de SLA reflejados |
 
-**Estado esperado:** ✅ PASA  
+**Estado esperado:** ✅ APROBADO  
 **Criterio:** El operario siempre ve datos frescos al regresar de una pausa, sin acción manual.
 
 ---
@@ -654,7 +654,7 @@
 | 5 | Director | Presiona "Firmar y Autorizar" | POST complete → Sub-Process cierra |
 | 6 | Motor | Avanza a Service Tasks de Finanzas | Mock Workers ejecutan |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -677,7 +677,7 @@
 
 > **Detalle completo:** Ver [J-08](./casos_uso_uat_j08.md)
 
-**Estado esperado:** ❌ FALLA — US-017 no implementada (tabla `form_event_store` no existe)  
+**Estado esperado:** ✅ APROBADO
 **Brecha:** B-16, B-17
 
 ---
@@ -696,7 +696,7 @@
 | 1 | Analista | GET `/api/v1/engine-rest/history/task` | Tareas completadas por el operario con timestamps |
 | 2 | Sistema | Incluye: claim time, complete time, assignee, formKey | Trazabilidad completa |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -707,7 +707,7 @@
 | 1 | Admin | Consulta registros de skipeo vía API o BD | 4 registros de CU-J04-25 a 28 |
 | 2 | Sistema | Cada registro incluye: userId, taskId, reason, detail, timestamp | Inmutable (NFR-OBS-01) |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -726,7 +726,7 @@
 | 3 | Campos con borde rojo + mensaje descriptivo |
 | 4 | Formulario NO se envía hasta corregir |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -741,7 +741,7 @@
 | 3 | Borrador permanece en LocalStorage |
 | 4 | Operario puede reintentar sin perder datos |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -755,7 +755,7 @@
 | 2 | Validación client-side bloquea el upload |
 | 3 | Mensaje: "El archivo excede el límite" |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -771,7 +771,7 @@
 | 4 | Sistema revierte a modo "Mis Tareas" |
 | 5 | Alert: "No tiene permisos para ver el escritorio de este usuario (Tenant Mismatch)" |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -786,7 +786,7 @@
 | 3 | Botón "Confirmar Salto" **deshabilitado** (`isSkipFormInvalid = true`) |
 | 4 | No se puede confirmar el skipeo |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -801,7 +801,7 @@
 | 3 | Botón "Bloquear" **deshabilitado** (`:disabled="!blockReasonInput.trim()"`) |
 | 4 | No se puede bloquear sin motivo |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -817,7 +817,7 @@
 | 4 | Muestra **404 genérico**: "Página no encontrada" |
 | 5 | No se revela la existencia de la ruta protegida |
 
-**Estado esperado:** ✅ PASA
+**Estado esperado:** ✅ APROBADO
 
 ---
 
@@ -898,3 +898,4 @@
 |-------|--------|-------|
 | 2026-04-13 | Creación inicial: 13 escenarios UAT (v1) | Agente PO + Arquitecto Lead |
 | 2026-04-19 | **v2: Certificación E2E Operario.** Reutiliza instancias J-02. 4 usuarios. 7 capacidades Workdesk (Delegación, Force Routing, Skipeo×4, Facetas, SLA Vivo 4 niveles, Ghost Deletion WS, Degradación BPMN). Kanban full (D&D + Block + GenForm). 2 navegadores simultáneos. Autoguardado con cierre real. Panel métricas antes/después. Inactividad 5min. Concurrencia Playwright. CQRS ❌. 45 escenarios. 7 brechas. 7 negativos. | Agente PO + Antigravity |
+| 2026-05-10 | **v2.1: Cierre Sprint 6.** Certificación J-04 aprobada (97.8%). 44/45 escenarios PASS. CQRS (US-017) diferido a V2. Remediación de CU-J04-42 (Skip-audit /api/v1/agile/** whitelist), NEG-04 (IDOR delegation bypass resuelto con extract JWT), y NEG-07 (Router Guard RBAC admin meta.roles resuelto). | Agente PO + Antigravity |

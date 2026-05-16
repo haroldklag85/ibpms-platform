@@ -150,10 +150,10 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
-    async function resolveAnomaly(id) {
+    async function resolveAnomaly(id, resolutionText = 'Subsanado') {
         try {
-            // CA-12: El contrato exige PUT para resolver anomalías
-            await apiClient.put(`/security/anomalies/${id}/resolve`)
+            // CA-12: El contrato exige PUT para resolver anomalías con payload (Sprint-6)
+            await apiClient.put(`/security/anomalies/${id}/resolve`, { resolution: resolutionText })
             await fetchAnomalies()
         } catch (error) {
             console.error("Error resolviendo anomalía", error)

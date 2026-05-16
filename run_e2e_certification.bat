@@ -5,12 +5,13 @@ echo ===================================================
 echo [1/5] Apagando entorno DEV y purgando volumenes
 echo ===================================================
 docker-compose down -v
+docker-compose -f docker-compose.e2e.yml down -v
 
 echo ===================================================
 echo [2/5] Compilando Backend (Forzando UTF-8)
 echo ===================================================
 cd backend
-call ..\maven\apache-maven-3.9.6\bin\mvn.cmd clean package -DskipTests -Dfile.encoding=UTF-8
+call ..\maven\apache-maven-3.9.6\bin\mvn.cmd clean package -Dmaven.test.skip=true -Dfile.encoding=UTF-8
 if %errorlevel% neq 0 (
   echo Error en la compilación de Maven. Abortando.
   exit /b %errorlevel%
@@ -27,7 +28,7 @@ echo [4/5] Levantando Backend (E2E) y Frontend Proxy
 echo ===================================================
 :: Usamos un título de ventana único para matar solo estos procesos al final
 echo [INFO] Iniciando Backend en ventana oculta (vía Maven para evitar bug jar:nested)...
-start "IBPMS_BACKEND_E2E" /MIN cmd /c "cd backend\ibpms-core && ..\..\maven\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run -Dspring-boot.run.profiles=e2e > ..\..\backend_real_log2.txt 2>&1"
+start "IBPMS_BACKEND_E2E" /MIN cmd /c "cd backend\ibpms-core && ..\..\maven\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run -Dspring-boot.run.profiles=e2e -Dmaven.test.skip=true > ..\..\backend_real_log2.txt 2>&1"
 :: Polling inteligente: Esperamos hasta que el Backend reporte UP en actuator/health
 echo [INFO] Esperando a que el Backend E2E termine su arranque (puede tardar hasta 5 minutos por timeouts de Azure/DMN)...
 :wait_backend

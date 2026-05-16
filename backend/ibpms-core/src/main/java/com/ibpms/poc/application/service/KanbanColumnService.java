@@ -28,7 +28,7 @@ public class KanbanColumnService {
     public KanbanColumn createColumn(UUID boardId, String name) {
         long count = kanbanColumnPort.countByBoardId(boardId);
         if (count >= 7) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Límite de 7 columnas superado");
+            throw new IllegalStateException("Límite de 7 columnas superado");
         }
 
         // Podríamos validar nombre único aquí, pero puede delegarse al constraint de base de datos también

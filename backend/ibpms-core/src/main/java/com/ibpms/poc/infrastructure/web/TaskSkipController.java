@@ -39,6 +39,12 @@ public class TaskSkipController {
         return ResponseEntity.ok(nextTask);
     }
 
+    @GetMapping("/skip-audit")
+    public ResponseEntity<java.util.List<com.ibpms.poc.infrastructure.jpa.entity.SkipAuditEntity>> getSkipAuditLogs() {
+        // @Traceability: US-008 - CA-02 (ADR-001 Refactor)
+        return ResponseEntity.ok(skipAuditService.findAll());
+    }
+
     public record TaskSkipRequest(
             @NotNull(message = "El motivo (reason) es requerido") SkipReason reason,
             String details

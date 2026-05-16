@@ -29,12 +29,13 @@
 
       <div class="flex items-center gap-2 flex-wrap">
         <!-- Import -->
-        <label class="cursor-pointer bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex gap-1 items-center transition">
+        <label data-testid="btn-import-bpmn" class="cursor-pointer bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex gap-1 items-center transition">
           ⬆️ Importar
-          <input type="file" @change="handleFileUpload" accept=".bpmn,.xml" class="hidden" />
+          <!-- @Traceability: Testabilidad J-02 (T-24) -->
+          <input data-testid="input-import-bpmn" type="file" @change="handleFileUpload" accept=".bpmn,.xml" class="hidden" />
         </label>
         <!-- Export -->
-        <button @click="downloadXML" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
+        <button data-testid="btn-export-bpmn" @click="downloadXML" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
           ⬇️ Exportar .bpmn
         </button>
         <!-- Copilot con Notificación Dinámica Inteligente (CA-08) -->
@@ -58,7 +59,7 @@
           📜 Versiones
         </button>
         <!-- Deploy Requests CA-69 -->
-        <button v-show="activeRole === 'BPMN_Release_Manager'" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
+        <button v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
           📨 Solicitudes
         </button>
         <!-- Active Role CA-21 -->
@@ -70,11 +71,11 @@
           🧬 Gestor de Instancias
         </button>
         <!-- Request Deploy -->
-        <button v-show="activeRole === 'BPMN_Designer'" @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
+        <button v-show="['BPMN_Designer', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)" @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
           📩 Solicitar Despliegue
         </button>
         <!-- Deploy (CA-21) -->
-        <button v-show="activeRole === 'BPMN_Release_Manager'"
+        <button data-testid="btn-deploy" v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)"
                 @click="showDeployModal = true" 
                 :disabled="isDeploying || !['VALIDATED', 'WARNING'].includes(preFlightStatus)" 
                 class="bg-indigo-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 transition">
@@ -128,7 +129,8 @@
       </div>
 
       <!-- BPMN Canvas -->
-      <div ref="canvasContainer" class="flex-1 overflow-hidden h-full bpmn-canvas" :class="{ 'pointer-events-none': isLocked }"></div>
+      <!-- @Traceability: Testabilidad J-02 (T-24) -->
+      <div data-testid="bpmn-canvas-wrapper" ref="canvasContainer" class="flex-1 overflow-hidden h-full bpmn-canvas" :class="{ 'pointer-events-none': isLocked }"></div>
 
       <!-- CA-25: Floating Zoom Controls -->
       <div class="absolute bottom-4 left-4 flex gap-2 z-30">
@@ -257,8 +259,8 @@
              </label>
              <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Tabla de decisión conectada:</p>
              <select v-model="selectedElement.props.decisionRef" @change="syncElementProperties('camunda:decisionRef', selectedElement.props.decisionRef)" class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border mb-3">
-                <option value="">-- Sin Regla DMN --</option>
-                <option v-for="dmn in availableDmns" :key="dmn.id" :value="dmn.id">
+                <option value="">— Seleccionar tabla DMN —</option>
+                <option v-for="dmn in availableDmns" :key="dmn.id" :value="dmn.key || dmn.id">
                    {{ dmn.name }} (v{{ dmn.version }})
                 </option>
              </select>
@@ -438,7 +440,7 @@
           </div>
           <div class="flex justify-end space-x-3 pt-2">
             <button @click="showDeployModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
-            <button @click="confirmDeploy" :disabled="isDeploying" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50">
+            <button data-testid="btn-confirm-deploy" @click="confirmDeploy" :disabled="isDeploying" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50">
               {{ isDeploying ? 'Desplegando...' : 'Confirmar Despliegue' }}
             </button>
           </div>
@@ -716,9 +718,10 @@
 </template>
 
 <script setup lang="ts">
+import { useTimeStore } from '@/stores/timeStore';
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
-import { api } from '@/services/apiClient';
 import { debounce } from 'lodash-es';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 import InstancesManager from './InstancesManager.vue';
@@ -851,7 +854,7 @@ watch(newProcessOrigin, async (val) => {
   if (val === 'TEMPLATE' && templatesList.value.length === 0) {
     loadingTemplates.value = true;
     try {
-      const { data } = await api.getBpmnTemplates();
+      const { data } = await integrationStore.getBpmnTemplates();
       templatesList.value = data || [];
     } catch (err) {
       showToast('Error cargando plantillas', 'error');
@@ -898,7 +901,7 @@ const versionHistory = ref<any[]>([]);
 
 const fetchLockState = async () => {
   try {
-    const { data } = await api.getProcessLock(processId.value);
+    const { data } = await integrationStore.getProcessLock(processId.value);
     if (data && data.active) {
       lockOwner.value = data.owner;
       lockSince.value = data.since;
@@ -923,16 +926,18 @@ const fetchLockState = async () => {
 let heartbeatInterval: any = null;
 const setupHeartbeat = () => {
   if (heartbeatInterval) clearInterval(heartbeatInterval);
-  heartbeatInterval = setInterval(async () => {
+  watch(() => timeStore.currentTick, async (tick) => {
+  if (tick % 30000 < 1000) {
     if (processId.value && document.hasFocus() && !isLocked.value) {
-      try { await api.heartbeatProcessLock(processId.value); } catch (e) {}
+      try { await integrationStore.heartbeatProcessLock(processId.value); } catch (e) {}
     }
-  }, 30000);
+  }
+}); // @Traceability: Retro-Remediación ADR-006
 };
 
 const breakLock = async () => {
   try {
-    await api.forceUnlockProcess(processId.value);
+    await integrationStore.forceUnlockProcess(processId.value);
     showToast('🔓 Candado roto exitosamente por el Administrador', 'success');
     await fetchLockState();
   } catch (err: any) {
@@ -949,7 +954,7 @@ const openDeployRequests = async () => {
   showDeployRequests.value = true;
   loadingDeployRequests.value = true;
   try {
-     const { data } = await api.getDeployRequests(processId.value);
+     const { data } = await integrationStore.getDeployRequests(processId.value);
      deployRequests.value = data || [];
   } catch (err) {
      showToast('Error obteniendo solicitudes', 'error');
@@ -961,10 +966,10 @@ const openDeployRequests = async () => {
 const handleDeployRequest = async (id: string, approve: boolean) => {
   try {
      if (approve) {
-        await api.approveDeployRequest(id, {});
+        await integrationStore.approveDeployRequest(id, {});
         showToast('Solicitud Aprobada. Proceso desplegado.', 'success');
      } else {
-        await api.rejectDeployRequest(id, { reason: 'Rechazado por UI' });
+        await integrationStore.rejectDeployRequest(id, { reason: 'Rechazado por UI' });
         showToast('Solicitud Rechazada.', 'success');
      }
      await openDeployRequests();
@@ -982,7 +987,7 @@ const fetchTopics = async () => {
   if (externalTopics.value.length > 0) return;
   loadingTopics.value = true;
   try {
-     const { data } = await api.getExternalTaskTopics();
+     const { data } = await integrationStore.getExternalTaskTopics();
      externalTopics.value = data || ['topic-legacy-default'];
   } catch (err) {
      externalTopics.value = ['topic-fallback'];
@@ -995,7 +1000,7 @@ const fetchTopics = async () => {
 const availableDmns = ref<any[]>([]);
 const fetchDmnDefinitions = async () => {
   try {
-    const { data } = await api.getDmnDefinitions();
+    const { data } = await integrationStore.getDmnDefinitions();
     availableDmns.value = data || [];
   } catch {
     availableDmns.value = [
@@ -1007,7 +1012,7 @@ const fetchDmnDefinitions = async () => {
 const fetchVersions = async () => {
   loadingVersions.value = true;
   try {
-    const { data } = await api.getProcessVersions(processId.value);
+    const { data } = await integrationStore.getProcessVersions(processId.value);
     // Asume array [{version, date, author, status}]
     versionHistory.value = data;
   } catch (err) {
@@ -1026,7 +1031,7 @@ const fetchVersions = async () => {
 const restoreVersion = async (v: number) => {
   if (isLocked.value) return showToast('Proceso bloqueado, no se puede restaurar.', 'error');
   try {
-    const { data } = await api.restoreProcessVersion(processId.value, v);
+    const { data } = await integrationStore.restoreProcessVersion(processId.value, v);
     showToast(`Versión ${v} restaurada con éxito.`);
     if (data && data.xml && modelerInstance) {
       await modelerInstance.importXML(data.xml);
@@ -1047,7 +1052,7 @@ watch(showCatalog, async (val) => {
   if (val) {
     loadingCatalog.value = true;
     try {
-      const { data } = await api.getCatalogProcesses();
+      const { data } = await integrationStore.getCatalogProcesses();
       catalogProcesses.value = data || [];
     } catch (err) {
       console.error('Mocks de Catálogo desactivados. Fallo al cargar.');
@@ -1071,7 +1076,7 @@ const availableForms = ref<any[]>([]);
 
 const fetchForms = async () => {
   try {
-    const { data } = await api.getForms();
+    const { data } = await integrationStore.getForms();
     // Assuming backend returns array of objects with { id o key, name, type }
     // Normalizing against old static mapping if backend structure differs slightly
     availableForms.value = data.map((f: any) => ({
@@ -1094,7 +1099,7 @@ const availableConnectors = ref<any[]>([]);
 
 const fetchConnectors = async () => {
   try {
-    const { data } = await api.getIntegrationConnectors();
+    const { data } = await integrationStore.getIntegrationConnectors();
     if(data && Array.isArray(data)) availableConnectors.value = data;
   } catch(e) {
     console.warn('API Integraciones MOCKS (CA-45)');
@@ -1109,7 +1114,7 @@ const fetchConnectors = async () => {
 // CA-49 & CA-50: Lógica de DataMapperGrid
 const fetchProcessVariables = async () => {
   try {
-    const { data } = await api.getProcessVariables(processId.value);
+    const { data } = await integrationStore.getProcessVariables(processId.value);
     processVariables.value = data || [];
   } catch (err) {
     processVariables.value = [
@@ -1127,7 +1132,7 @@ const fetchConnectorSchema = async (connectorId: string) => {
   }
   loadingSchema.value = true;
   try {
-    const { data } = await api.getConnectorSchema(connectorId);
+    const { data } = await integrationStore.getConnectorSchema(connectorId);
     connectorSchema.value = data || [];
   } catch (err) {
     connectorSchema.value = [
@@ -1181,7 +1186,7 @@ const saveConnectorMapping = async () => {
 
   // CA-68: Integración de Data Mapping a Backend
   try {
-     await api.saveDataMappings(processId.value, selectedElement.value.id, {
+     await integrationStore.saveDataMappings(processId.value, selectedElement.value.id, {
         connectorId: selectedConnector.value,
         mappings: connectorMappings.value
      });
@@ -1201,7 +1206,7 @@ const openAuditLogs = async () => {
   showVersions.value = false;
   loadingAuditLogs.value = true;
   try {
-    const { data } = await api.getProcessAuditLogs(processId.value);
+    const { data } = await integrationStore.getProcessAuditLogs(processId.value);
     auditLogs.value = data || [];
   } catch (err) {
     auditLogs.value = [
@@ -1248,6 +1253,11 @@ onMounted(async () => {
       additionalModules: [minimapModule],
       keyboard: { bindTo: document } // CA-20 Copy/Paste enabled system-wide
     });
+    
+    // CA-E2E: Expose for playwright test injection
+    if (window.Cypress || typeof window !== 'undefined') {
+       (window as any).__modelerInstance = modelerInstance;
+    }
 
     await modelerInstance.importXML(emptyBpmn);
     modelerInstance.get('canvas').zoom('fit-viewport');
@@ -1258,7 +1268,7 @@ onMounted(async () => {
     fetchTopics();
     fetchDmnDefinitions(); // CA-12 DMNs
     try {
-      const { data } = await api.getBpmnComplexityLimit();
+      const { data } = await integrationStore.getBpmnComplexityLimit();
       if (data && data.limit) bpmnComplexityLimit.value = data.limit;
     } catch (_) {
       console.warn('Fallo obteniendo threshold, usando default 100 limit (CA-30)');
@@ -1353,7 +1363,7 @@ onMounted(async () => {
              if(shapes.length > 0) {
                  const modeling = modelerInstance.get('modeling');
                  modeling.removeElements(shapes); // Destrucción silenciosa del warning ISO manual
-                 api.reportIsoOverride({ processId: processId.value, action: 'IGNORED_3_TIMES' }).catch(()=>{});
+                 integrationStore.reportIsoOverride({ processId: processId.value, action: 'IGNORED_3_TIMES' }).catch(()=>{});
                  showToast('⚠️ Advertencia ISO Descartes detectada iterativamente. Nota ISO purgada y rastreada al CISO (CA-09).', 'error');
              }
              isoIgnoreCount = 0;
@@ -1380,28 +1390,32 @@ onMounted(async () => {
   }
 
   // Auto-save timer (CA-19)
-  autoSaveInterval = setInterval(async () => {
-    if (modelerInstance && !isLocked.value) {
-      const { xml } = await modelerInstance.saveXML({ format: true });
-      if (xml !== lastSavedXml.value) {
-        await saveDraft();
-        autoSaveAgo.value = 0;
+  watch(() => timeStore.currentTick, async (tick) => {
+    if (tick % 30000 < 1000) {
+      if (modelerInstance && !isLocked.value) {
+        const { xml } = await modelerInstance.saveXML({ format: true });
+        if (xml !== lastSavedXml.value) {
+          await saveDraft();
+          autoSaveAgo.value = 0;
+        }
       }
     }
-  }, 30000);
+  }); // @Traceability: Retro-Remediación ADR-006
 
   // CA-04: Hook de abandono agresivo para purgar RAG
-  window.addEventListener('beforeunload', api.destroyCopilotSession);
+  window.addEventListener('beforeunload', integrationStore.destroyCopilotSession);
 
   // Tick the "ago" counter every second
-  setInterval(() => { autoSaveAgo.value++; }, 1000);
+  watch(() => timeStore.currentTick, (tick) => {
+  if (tick % 1000 < 500) { autoSaveAgo.value++; }
+});
 });
 
 onBeforeUnmount(() => {
   if (heartbeatInterval) clearInterval(heartbeatInterval); // CA-66
   // CA-04: Purga RAG al destruir el componente Vue nativo (Vue router leave)
-  api.destroyCopilotSession();
-  window.removeEventListener('beforeunload', api.destroyCopilotSession);
+  integrationStore.destroyCopilotSession();
+  window.removeEventListener('beforeunload', integrationStore.destroyCopilotSession);
 
   if (modelerInstance) modelerInstance.destroy();
   if (autoSaveInterval) clearInterval(autoSaveInterval);
@@ -1452,7 +1466,7 @@ const debouncedValidate = debounce(async () => {
 
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
-    const { data } = await api.validateProcess({ xml });
+    const { data } = await integrationStore.validateProcess({ xml });
     // CA-9 & CA-46: Soporte de warnings no-bloqueantes
     if (data && data.warnings && data.warnings.length > 0) {
       preFlightStatus.value = 'WARNING';
@@ -1487,7 +1501,7 @@ const saveDraft = async () => {
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
     
-    await api.saveProcessDraft(processId.value, { xml });
+    await integrationStore.saveProcessDraft(processId.value, { xml });
     lastSavedXml.value = xml;
     console.log('[AutoSave] Draft XML saved to Backend API successfully (CA-19)');
   } catch (err) {
@@ -1550,12 +1564,12 @@ const confirmDeploy = async () => {
       const xmlBlob = new Blob([xml!], { type: 'application/xml' });
       formData.append('file', xmlBlob, `${processId.value}.bpmn`);
 
-      deployResponse = await api.deployProcess(formData);
+      deployResponse = await integrationStore.deployProcess(formData);
     }
     
     // CA-6: Autogeneración de Roles Feedback
     if (deployResponse?.data?.generatedRoles && deployResponse.data.generatedRoles.length > 0) {
-       alert(`Proceso desplegado con Éxito.\\n\\nSe han auto-generado los siguientes perfiles de seguridad:\\n➡ ${deployResponse.data.generatedRoles.join('\\n➡ ')}\\n\\nPuedes asignar estos roles en el CND.`);
+       showToast(`Se han auto-generado los perfiles de seguridad: ${deployResponse.data.generatedRoles.join(', ')}`, 'success');
     }
     
     // CA-65: Reflejo en Toast
@@ -1586,7 +1600,7 @@ const requestDeploy = async () => {
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
     // CA-25: Mandamos a API
-    await api.requestDeployment(processId.value, { xml });
+    await integrationStore.requestDeployment(processId.value, { xml });
     showToast('📩 Solicitud de despliegue enviada de forma exitosa al Release Manager', 'success');
     processStatus.value = 'PENDING';
   } catch(err: any) {
@@ -1600,7 +1614,7 @@ const runSandbox = async () => {
     const { xml } = await modelerInstance.saveXML({ format: true });
     
     // CA-41: Simulador Hardcore Camunda V1
-    await api.spawnSandbox({ xml });
+    await integrationStore.spawnSandbox({ xml });
     
     showToast(`✅ Sandbox (CA-41): Ejecución simulada sin errores.`, 'success');
   } catch (err) {
@@ -1645,10 +1659,10 @@ const createNewProcess = () => {
 // CA-32: Archivar Proceso Activo
 const archiveProcess = async (pId: string) => {
   try {
-     await api.archiveProcess(pId);
+     await integrationStore.archiveProcess(pId);
      showToast('Proceso archivado correctamente');
      if(showCatalog.value) {
-        const { data } = await api.getCatalogProcesses();
+        const { data } = await integrationStore.getCatalogProcesses();
         catalogProcesses.value = data || [];
      }
   } catch(err: any) {
@@ -1912,6 +1926,8 @@ const syncElementProperties = (key: string, value: any) => {
 @import 'bpmn-js/dist/assets/bpmn-js.css';
 @import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
 @import 'diagram-js-minimap/assets/diagram-js-minimap.css';
+
+
 
 /* CA-13: Pure Palette CSS Overrides (Hide complex elements to focus on Business basics) */
 .djs-palette .entry[data-action="create.inclusive-gateway"],

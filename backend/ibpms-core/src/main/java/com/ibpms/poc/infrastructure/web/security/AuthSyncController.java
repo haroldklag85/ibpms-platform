@@ -10,7 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
+import com.ibpms.poc.application.service.security.UserService;
+import com.ibpms.poc.application.service.SystemAuditLogService;
 import java.util.Optional;
 
 @RestController
@@ -18,21 +19,21 @@ import java.util.Optional;
 public class AuthSyncController {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final com.ibpms.poc.application.service.JwtBlacklistService jwtBlacklistService;
-    private final com.ibpms.poc.infrastructure.jpa.repository.SystemAuditLogRepository systemAuditLogRepository;
+    private final SystemAuditLogService systemAuditLogService;
 
     public AuthSyncController(JwtTokenProvider jwtTokenProvider, 
-                              UserRepository userRepository, 
+                              UserService userService, 
                               org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
                               com.ibpms.poc.application.service.JwtBlacklistService jwtBlacklistService,
-                              com.ibpms.poc.infrastructure.jpa.repository.SystemAuditLogRepository systemAuditLogRepository) {
+                              SystemAuditLogService systemAuditLogService) {
         this.jwtTokenProvider = jwtTokenProvider;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.jwtBlacklistService = jwtBlacklistService;
-        this.systemAuditLogRepository = systemAuditLogRepository;
+        this.systemAuditLogService = systemAuditLogService;
     }
 
     /**
@@ -47,8 +48,22 @@ public class AuthSyncController {
         
         // Emite token para que Playwright pueda inyectarlo en las cabeceras REST.
         // Aseguramos inyectar los claims con los ROLES tal y como los espera el JwtAuthFilter (ibpms_rol_*)
-        String resolvedTenant = email.contains("beta.com") ? "tenant_beta" : "tenant_alpha";
-        String tkn = jwtTokenProvider.generateToken(email, List.of("ibpms_rol_PROCESS_ARCHITECT", "ibpms_rol_BPMN_DESIGNER", "ibpms_rol_USER"), resolvedTenant);
+        // @Traceability: US-027, CA-04
+        // @Traceability: Retro-Remediación RBAC J-04 (T-20.4)
+        String resolvedTenant = "tenant_" + email.split("@")[1].split("\\.")[0];
+        List<String> defaultRoles = new ArrayList<>(List.of("ibpms_rol_PROCESS_ARCHITECT", "ibpms_rol_BPMN_DESIGNER", "ibpms_rol_USER"));
+        
+        Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userService.findByEmail(email);
+        if (userOpt.isPresent()) {
+            userOpt.get().getRoles().forEach(r -> {
+                String roleClaim = "ibpms_rol_" + r.getName().replace("ROLE_", "");
+                if (!defaultRoles.contains(roleClaim)) {
+                    defaultRoles.add(roleClaim);
+                }
+            });
+        }
+        
+        String tkn = jwtTokenProvider.generateToken(email, defaultRoles, resolvedTenant);
         return ResponseEntity.ok(Map.of("token", tkn, "tenantId", resolvedTenant, "message", "Login Exitoso E2E"));
     }
 
@@ -99,7 +114,8 @@ public class AuthSyncController {
             ));
         }
 
-        Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByEmail(email);
+        // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+        Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userService.findByEmail(email);
         
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
@@ -126,7 +142,8 @@ public class AuthSyncController {
 
         // Emitir JWT con claims
         String sub = user.getUsername();
-        String tenantId = email.contains("beta.com") ? "tenant_beta" : "tenant_alpha";
+        // @Traceability: US-027, CA-04
+        String tenantId = "tenant_" + email.split("@")[1].split("\\.")[0];
         
         // Asumiendo roles del usuario mapeados
         List<String> roles = user.getRoles().stream()
@@ -166,7 +183,8 @@ public class AuthSyncController {
             ));
         }
 
-        Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByEmail(email);
+        // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+        Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userService.findByEmail(email);
         
         if (userOpt.isEmpty() || !passwordEncoder.matches(currentPassword, userOpt.get().getPasswordHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
@@ -187,7 +205,8 @@ public class AuthSyncController {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setMustChangePassword(false);
-        userRepository.save(user);
+        // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+        userService.saveUser(user);
 
         return ResponseEntity.ok(Map.of("message", "Contraseña actualizada exitosamente."));
     }
@@ -213,7 +232,8 @@ public class AuthSyncController {
             }
 
             // Chequeo Cero-Trust explícito: ¿Sigue el usuario activo en DB?
-            boolean isActive = userRepository.isUserActive(username).orElse(false);
+            // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+            boolean isActive = userService.isUserActive(username).orElse(false);
             if (!isActive) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("code", "PRIVILEGES_CHANGED", "message", "Cuenta Deshabilitada M2M"));
@@ -253,7 +273,8 @@ public class AuthSyncController {
             jwtBlacklistService.revokeSession(username);
 
             // CA-4: Auditoría de cierre Break-Glass
-            systemAuditLogRepository.save(new com.ibpms.poc.infrastructure.jpa.entity.SystemAuditLogEntity(username, "EMERGENCY_OVERRIDE_TERMINATED", 0, null, null));
+            // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+            systemAuditLogService.saveAuditLog(new com.ibpms.poc.infrastructure.jpa.entity.SystemAuditLogEntity(username, "EMERGENCY_OVERRIDE_TERMINATED", 0, null, null));
 
             return ResponseEntity.ok(Map.of("message", "Emergency session terminated successfully"));
         } catch (Exception e) {
@@ -281,4 +302,47 @@ public class AuthSyncController {
         }
     }
 
+    /**
+     * CA-9 / CA-31 / ARQ-025-08: Impersonación "Ver Sistema Como"
+     */
+    @PostMapping("/impersonate")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ibpms_rol_System_Admin')")
+    public ResponseEntity<?> impersonateUser(@RequestBody Map<String, String> payload) {
+        String targetEmail = payload.get("targetEmail");
+        if (targetEmail == null) {
+            targetEmail = payload.get("targetUserId");
+        }
+
+        if (targetEmail == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Debe proveer targetEmail o targetUserId"));
+        }
+
+        // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+        Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userService.findByEmail(targetEmail);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Usuario objetivo no encontrado"));
+        }
+
+        com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity targetUser = userOpt.get();
+        String sub = targetUser.getUsername();
+        // @Traceability: US-027, CA-04
+        String tenantId = "tenant_" + targetEmail.split("@")[1].split("\\.")[0];
+        
+        List<String> roles = targetUser.getRoles().stream()
+            .map(role -> "ibpms_rol_" + role.getName().replace("ROLE_", ""))
+            .toList();
+
+        // Obtener al administrador actual
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        String adminUsername = auth != null && auth.getName() != null ? auth.getName() : "SYSTEM_ADMIN";
+
+        // Generar token híbrido
+        String overrideToken = jwtTokenProvider.generateImpersonationToken(sub, roles, tenantId, adminUsername);
+
+        // Auditoría
+        // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+        systemAuditLogService.saveAuditLog(new com.ibpms.poc.infrastructure.jpa.entity.SystemAuditLogEntity(adminUsername, "IMPERSONATION_STARTED", 0, sub, roles.toString()));
+
+        return ResponseEntity.ok(Map.of("token", overrideToken, "message", "Impersonation session started successfully"));
+    }
 }

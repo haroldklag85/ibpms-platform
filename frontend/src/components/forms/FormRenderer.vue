@@ -4,15 +4,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, createApp, h, watch, type VNode, Teleport, reactive } from 'vue';
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
+import { ref, onMounted, onBeforeUnmount, createApp, h, watch, type VNode, Teleport, reactive, computed } from 'vue';
 import jexl from 'jexl';
 import IMask from 'imask';
+import { z } from 'zod';
 import { IMaskDirective } from 'vue-imask';
 import { useDebounceFn } from '@vueuse/core';
-import apiClient from '@/services/apiClient';
+import FormWizard from './FormWizard.vue';
+import { useWizardValidation } from '@/composables/useWizardValidation';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const props = defineProps<{ schema: any[], mockContext?: Record<string, any> }>();
 const formData = defineModel<Record<string, any>>({ default: () => ({}) });
+const emit = defineEmits(['stage-change']);
 
 const hostRef = ref<HTMLElement | null>(null);
 let shadowApp: any = null;
@@ -56,6 +63,124 @@ onMounted(() => {
       setup() {
         // CA-11B: Memoria local del Info Modal
         const infoModalOpen = reactive<Record<string, boolean>>({});
+
+        // CA-22: Configuración del Wizard (Multi-Stage)
+        const stages = computed(() => {
+            const stgs: string[] = [];
+            const traverse = (nodes: any[]) => {
+                for (const n of nodes) {
+                    if (n.stage && !stgs.includes(n.stage)) stgs.push(n.stage);
+                    if (n.children) traverse(n.children);
+                }
+            };
+            traverse(props.schema);
+            return stgs.length > 1 ? stgs : [];
+        });
+
+        const isWizard = computed(() => stages.value.length > 0);
+        const currentStageIndex = ref(0);
+        const currentStageName = computed(() => isWizard.value ? stages.value[currentStageIndex.value] : null);
+
+        // Zod validation per stage using useWizardValidation (CA-22)
+        const schemaConfigs = reactive<Record<string, z.ZodSchema>>({});
+        const { wizardErrors, validateStep, hasStepErrors, clearStepErrors } = useWizardValidation(schemaConfigs);
+
+        watchEffect(() => {
+            if (!isWizard.value) return;
+            stages.value.forEach(stg => {
+                const nodesInStage: any[] = [];
+                const traverse = (nodes: any[]) => {
+                    for(const n of nodes) {
+                        if ((n.stage || 'GLOBAL') === stg || !n.stage) {
+                            nodesInStage.push(n);
+                        }
+                        if (n.children) traverse(n.children);
+                    }
+                };
+                traverse(props.schema);
+                
+                const shape: any = {};
+                nodesInStage.forEach(node => {
+                    if (isVisible(node) && node.type !== 'container' && node.type !== 'info_modal') {
+                        let fieldZod = z.any();
+                        if (node.type === 'number') fieldZod = z.number({ invalid_type_error: "Debe ser numérico" });
+                        else fieldZod = z.string({ invalid_type_error: "Inválido" });
+                        
+                        if (node.required) {
+                            if (node.type !== 'number') {
+                                fieldZod = (fieldZod as z.ZodString).min(1, 'Este campo es requerido');
+                            }
+                        } else {
+                            fieldZod = fieldZod.optional().nullable();
+                        }
+                        
+                        const key = node.camundaVariable || node.id;
+                        shape[key] = fieldZod;
+                    }
+                });
+                schemaConfigs[stg] = z.object(shape);
+            });
+        });
+
+        const validateCurrentStageZod = () => {
+            if (!isWizard.value || !currentStageName.value) return true;
+            
+            const isValid = validateStep(currentStageName.value, formData.value);
+            
+            if (!isValid) {
+                // Focus on first error element
+                const stepErrs = wizardErrors.value[currentStageName.value] || {};
+                const firstErrKey = Object.keys(stepErrs)[0];
+                if (firstErrKey) {
+                    // Try to find the node id by variable or id
+                    const findNodeId = (nodes: any[]): string | null => {
+                         for (const n of nodes) {
+                             if ((n.camundaVariable || n.id) === firstErrKey) return n.id;
+                             if (n.children) {
+                                 const found = findNodeId(n.children);
+                                 if (found) return found;
+                             }
+                         }
+                         return null;
+                    };
+                    const errorId = findNodeId(props.schema);
+                    if (errorId) {
+                        const el = hostRef.value?.shadowRoot?.querySelector(`#field-wrapper-${errorId}`);
+                        if (el) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            el.classList.add('ring-2', 'ring-red-500', 'animate-pulse', 'rounded');
+                            setTimeout(() => el.classList.remove('ring-2', 'ring-red-500', 'animate-pulse', 'rounded'), 2000);
+                        }
+                    }
+                }
+                return false;
+            }
+            clearStepErrors(currentStageName.value);
+            return true;
+        };
+
+        const checkStageState = () => {
+             const isLast = !isWizard.value || currentStageIndex.value === stages.value.length - 1;
+             emit('stage-change', { isLastStage: isLast, currentStage: currentStageName.value });
+        };
+
+        const nextStage = () => {
+            if (validateCurrentStageZod()) {
+                currentStageIndex.value++;
+                checkStageState();
+            }
+        };
+
+        const prevStage = () => {
+            if (currentStageIndex.value > 0) {
+                currentStageIndex.value--;
+                checkStageState();
+            }
+        };
+
+        watch(() => stages.value, () => {
+             checkStageState();
+        }, { immediate: true });
 
         // CA-54: GAP 8 - Mantenimiento Mnemónico (Auto-purga)
         watch(() => formData.value, (newVal) => {
@@ -103,7 +228,7 @@ onMounted(() => {
             if(!url) return;
             try {
                 // Simulando CA-77
-                const res = await apiClient.get(`${url}?q=${query}`);
+                const res = await integrationStore.get(`${url}?q=${query}`);
                 asyncOptions.value[fieldId] = res.data;
             } catch(e) {
                 asyncOptions.value[fieldId] = [{ id: 'mock1', name: 'Dato Gobernado 1' }, { id: 'mock2', name: 'Dato Gobernado 2' }];
@@ -112,6 +237,11 @@ onMounted(() => {
 
         const renderField = (node: any): VNode | null => {
            if (!isVisible(node)) return null;
+
+           // CA-22: Filter by Stage if Wizard mode
+           if (isWizard.value && node.stage && node.stage !== currentStageName.value) {
+               return null;
+           }
 
            const bindingKey = node.camundaVariable || node.id;
            const val = formData.value[bindingKey];
@@ -279,10 +409,36 @@ onMounted(() => {
                inputVNode = h('div', { class: 'text-xs text-gray-400 border border-dashed border-gray-200 p-2 rounded' }, `[Componente no soportado por Runtime Renderer: ${node.type}]`);
            }
 
-           return h('div', { class: 'mb-4' }, [labelVNode, inputVNode]);
+           return h('div', { class: 'mb-4', id: `field-wrapper-${node.id}` }, [labelVNode, inputVNode]);
         };
 
-        return () => h('div', { class: 'space-y-1' }, props.schema.map(node => renderField(node)));
+        return () => {
+            const children: VNode[] = [];
+            
+            // Form Fields rendering mapped per node
+            const formFields = h('div', { class: 'space-y-1' }, props.schema.map(node => renderField(node)));
+
+            if (isWizard.value && currentStageName.value) {
+                const errorMapRaw = Object.keys(wizardErrors.value).reduce((acc, stg) => {
+                    acc[stg] = hasStepErrors(stg);
+                    return acc;
+                }, {} as Record<string, boolean>);
+
+                return h('div', { class: 'w-full' }, [
+                    h(FormWizard, {
+                        stages: stages.value,
+                        currentStage: currentStageName.value,
+                        errorMap: errorMapRaw,
+                        onNextStep: nextStage,
+                        onPrevStep: prevStage
+                    }, {
+                        default: () => formFields
+                    })
+                ]);
+            } else {
+                return h('div', { class: 'w-full' }, [formFields]);
+            }
+        };
       }
     });
 

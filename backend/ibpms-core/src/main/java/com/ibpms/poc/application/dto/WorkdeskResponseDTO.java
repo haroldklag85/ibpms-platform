@@ -6,18 +6,38 @@ import org.springframework.data.domain.Page;
 @Data
 public class WorkdeskResponseDTO {
     private boolean degraded;
-    private Page<WorkdeskGlobalItemDTO> content;
-
+    private java.util.List<WorkdeskGlobalItemDTO> data;
+    private PaginationDTO pagination;
     private DelegationContextDTO delegationContext;
 
-    public WorkdeskResponseDTO(boolean degraded, Page<WorkdeskGlobalItemDTO> content) {
+    public WorkdeskResponseDTO(boolean degraded, Page<WorkdeskGlobalItemDTO> pageData) {
         this.degraded = degraded;
-        this.content = content;
+        this.data = pageData.getContent();
+        this.pagination = new PaginationDTO(
+            pageData.getTotalElements(),
+            pageData.getTotalPages(),
+            pageData.getSize(),
+            pageData.getNumber()
+        );
     }
 
-    public WorkdeskResponseDTO(boolean degraded, Page<WorkdeskGlobalItemDTO> content, DelegationContextDTO delegationContext) {
-        this.degraded = degraded;
-        this.content = content;
+    public WorkdeskResponseDTO(boolean degraded, Page<WorkdeskGlobalItemDTO> pageData, DelegationContextDTO delegationContext) {
+        this(degraded, pageData);
         this.delegationContext = delegationContext;
+    }
+
+    @Data
+    public static class PaginationDTO {
+        private long totalElements;
+        private int totalPages;
+        private int size;
+        private int page;
+
+        public PaginationDTO(long totalElements, int totalPages, int size, int page) {
+            this.totalElements = totalElements;
+            this.totalPages = totalPages;
+            this.size = size;
+            this.page = page;
+        }
     }
 }

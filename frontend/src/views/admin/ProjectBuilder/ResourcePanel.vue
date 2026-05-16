@@ -110,8 +110,11 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, reactive, watch, onMounted } from 'vue';
-import apiClient from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const props = defineProps<{
   isOpen: boolean;
@@ -132,7 +135,7 @@ const form = reactive({
 
 const loadUsers = async () => {
     try {
-        const response = await apiClient.get('/users/peers');
+        const response = await integrationStore.get('/users/peers');
         users.value = response.data;
     } catch (e) {
         console.error("No se pudo cargar el LDAP", e);
@@ -168,7 +171,7 @@ const saveResource = async () => {
     };
     
     // Epic 10.B PUT /assign endpoint
-    await apiClient.put(`/execution/projects/tasks/${props.task.id}/assign`, payload);
+    await integrationStore.put(`/execution/projects/tasks/${props.task.id}/assign`, payload);
     successMsg.value = 'Asignación Guardada Correctamente.';
     
     // Simulate updating the parent Gantt Task

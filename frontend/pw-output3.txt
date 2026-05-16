@@ -1,0 +1,88 @@
+
+Running 1 test using 1 worker
+
+GLOBAL INBOX RESPONSE STATUS: 200
+  x  1 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:220:3 › T-06: Workdesk Delegation UI Compliance - Unauthorized User › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() (3.6s)
+GLOBAL INBOX RESPONSE STATUS: 200
+GLOBAL INBOX RESPONSE STATUS: 200
+  x  2 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:220:3 › T-06: Workdesk Delegation UI Compliance - Unauthorized User › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() (retry #1) (1.5s)
+
+
+  1) [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:220:3 › T-06: Workdesk Delegation UI Compliance - Unauthorized User › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('.bg-red-50')
+    Expected: visible
+    Error: strict mode violation: locator('.bg-red-50') resolved to 2 elements:
+        1) <span data-v-986239b9="" data-testid="sla-badge-red" class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 w-fit bg-red-50 text-red-700 border-red-200/60">…</span> aka getByTestId('sla-badge-red')
+        2) <div data-v-986239b9="" class="relative w-14 h-14 rounded-full flex items-center justify-center bg-red-50 border border-red-100">…</div> aka locator('div').filter({ hasText: /^1$/ }).first()
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.bg-red-50')[22m
+
+
+      256 |     // Esperar a que el backend rechace la petición y aparezca el Toast de error (store.errorMessage)
+      257 |     const errorToast = page.locator('.bg-red-50');
+    > 258 |     await expect(errorToast).toBeVisible({ timeout: 5000 });
+          |                              ^
+      259 |     const toastText = await errorToast.innerText();
+      260 |     console.log('TOAST TEXT:', toastText);
+      261 |
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:258:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('.bg-red-50')
+    Expected: visible
+    Error: strict mode violation: locator('.bg-red-50') resolved to 2 elements:
+        1) <span data-v-986239b9="" data-testid="sla-badge-red" class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 w-fit bg-red-50 text-red-700 border-red-200/60">…</span> aka getByTestId('sla-badge-red')
+        2) <div data-v-986239b9="" class="relative w-14 h-14 rounded-full flex items-center justify-center bg-red-50 border border-red-100">…</div> aka locator('div').filter({ hasText: /^1$/ }).first()
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.bg-red-50')[22m
+
+
+      256 |     // Esperar a que el backend rechace la petición y aparezca el Toast de error (store.errorMessage)
+      257 |     const errorToast = page.locator('.bg-red-50');
+    > 258 |     await expect(errorToast).toBeVisible({ timeout: 5000 });
+          |                              ^
+      259 |     const toastText = await errorToast.innerText();
+      260 |     console.log('TOAST TEXT:', toastText);
+      261 |
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:258:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:220:3 › T-06: Workdesk Delegation UI Compliance - Unauthorized User › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() 

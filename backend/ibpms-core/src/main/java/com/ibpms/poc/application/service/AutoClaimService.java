@@ -15,6 +15,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Collection;
 
+/**
+ * Servicio encargado de la lógica de Auto-Reclamación (AutoClaim) de tareas.
+ * 
+ * <p><strong>Ley Global 3 - Traceability Inversa:</strong></p>
+ * <ul>
+ *   <li><strong>Epic:</strong> Epic A (Motor Core & Task Management)</li>
+ *   <li><strong>User Story:</strong> US-002 (Gestión de Tareas)</li>
+ *   <li><strong>Criterio de Aceptación:</strong> CA-06 (Despojo de Tareas) / T-12</li>
+ *   <li><strong>Descripción:</strong> Provee los mecanismos seguros para que los usuarios autorizados puedan auto-reclamar tareas huérfanas, verificando estrictamente los roles y el aislamiento multi-tenant.</li>
+ * </ul>
+ */
+// @Traceability: US-002, CA-06
 @Service
 public class AutoClaimService {
 
@@ -39,6 +51,11 @@ public class AutoClaimService {
         
         if (task == null) {
             throw new IllegalArgumentException("Task not found: " + taskId);
+        }
+
+        String currentTenant = com.ibpms.poc.application.util.SecurityContextUtils.getTenantId();
+        if (task.getTenantId() != null && !task.getTenantId().equals(currentTenant)) {
+            throw new IllegalStateException("HTTP 403 - FORBIDDEN: Violación Cross-Tenant detectada.");
         }
 
         if (task.getAssignee() != null) {
@@ -76,10 +93,12 @@ public class AutoClaimService {
         taskService.claim(taskId, userId);
 
         FormEvent autoClaimEvent = FormEvent.builder()
+                .eventId(java.util.UUID.randomUUID())
                 .taskId(taskId)
                 .eventType(EventType.TASK_AUTO_CLAIMED)
                 .payloadJson("{\"action\": \"auto-claim\", \"userId\": \"" + userId + "\"}")
                 .userId(userId)
+                .schemaVersion("v1.0")
                 .createdAt(java.time.ZonedDateTime.now())
                 .build();
         formEventRepository.save(autoClaimEvent);

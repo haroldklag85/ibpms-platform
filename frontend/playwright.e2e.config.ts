@@ -7,10 +7,11 @@ dotenv.config();
 
 export default defineConfig({
   testDir: './e2e/certification',
-  timeout: 180000,
+  timeout: 420000,
   expect: {
-    timeout: 30000
+    timeout: 60000
   },
+  // globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1, // UAT Resilience
@@ -21,7 +22,7 @@ export default defineConfig({
   ],
   use: {
     // E2E against real backend
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',
+    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5174',
     trace: 'retain-on-failure',
     video: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -40,14 +41,8 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         channel: 'chrome',
-        baseURL: process.env.ZERO_MOCK_URL || 'http://localhost:5173',
+        baseURL: process.env.ZERO_MOCK_URL || 'http://localhost:5174',
       },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
 });

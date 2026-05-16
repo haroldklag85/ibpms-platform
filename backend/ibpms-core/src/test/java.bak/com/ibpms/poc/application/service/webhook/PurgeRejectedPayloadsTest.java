@@ -18,10 +18,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import com.ibpms.poc.domain.port.TriageTaskRepository;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 /**
  * T9: PurgeRejectedPayloadsTest (US-004 CA-13)
  * Validates that orphan payloads older than 30 days are physically purged.
  */
+@Traceability(US = "US-004", CA = {"CA-13"})
 @ExtendWith(MockitoExtension.class)
 class PurgeRejectedPayloadsTest {
 
@@ -33,7 +36,7 @@ class PurgeRejectedPayloadsTest {
     @BeforeEach
     void setUp() {
         WebhookProperties props = new WebhookProperties();
-        service = new WebhookIntakeService(null, orphanRepo, null, triageTaskRepository, null, null, props, null);
+        service = new WebhookIntakeService(null, orphanRepo, null, triageTaskRepository, null, null, props, null, null);
     }
 
     @Test

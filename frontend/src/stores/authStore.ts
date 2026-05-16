@@ -103,7 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('ibpms_token', jwt);
         try {
             const payload = JSON.parse(atob(jwt.split('.')[1]));
-            const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', ''));
+            const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', 'ROLE_'));
             user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
         } catch (e) {
             user.value = { username: 'unknown', roles: ['ROLE_USER'] };
@@ -164,7 +164,7 @@ export const useAuthStore = defineStore('auth', () => {
 
             try {
                 const payload = JSON.parse(atob(jwt.split('.')[1]));
-                const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', ''));
+                const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', 'ROLE_'));
                 user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
             } catch (e) {
                 user.value = { username: 'unknown', roles: ['ROLE_USER'] };
@@ -207,6 +207,21 @@ export const useAuthStore = defineStore('auth', () => {
 
     const roles = computed(() => user.value?.roles || []);
 
+    // @Traceability: US-001, CA-04 — Selector múltiple de delegantes
+    // Reemplaza el campo fantasma que usaba (authStore as any).delegatedAssistants
+    const delegatedAssistants = ref<{ id: string; displayName?: string; name?: string; email?: string }[]>([]);
+
+    const fetchDelegatedAssistants = async (userId: string) => {
+        try {
+            const { data } = await apiClient.get(`/admin/users/${userId}/delegations`);
+            delegatedAssistants.value = data || [];
+            return data;
+        } catch (error) {
+            console.error('Error fetching delegations:', error);
+            throw error;
+        }
+    };
+
     return {
         token,
         user,
@@ -215,12 +230,14 @@ export const useAuthStore = defineStore('auth', () => {
         effectiveRoles,
         isHydrating,
         isGlobal404,
+        delegatedAssistants,
         login,
         logout,
         switchRole,
         syncProfile,
         hydrateAuth,
         hasAnyRole,
-        hasWritePermission
+        hasWritePermission,
+        fetchDelegatedAssistants
     };
 });

@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
 import { z } from 'zod';
-import apiClient from '@/services/apiClient';
 import FormRenderer from '@/components/forms/FormRenderer.vue';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 // ==========================================
 // 1. PROPS Y TYPES (El Camaleón)
@@ -93,6 +96,11 @@ const genericFormSchema = z.object({
 // Estado de validación
 const errors = ref<Record<string, string>>({});
 
+const isLastWizardStage = ref(true);
+const handleStageChange = (payload: { isLastStage: boolean }) => {
+  isLastWizardStage.value = payload.isLastStage;
+};
+
 const validateForm = () => {
   try {
     genericFormSchema.parse(formData.value);
@@ -136,7 +144,7 @@ const submitTaskPayload = async (eventType: 'save-progress' | 'complete' | 'erro
      if (eventType === 'error-boundary') endpoint = `/api/v1/tasks/${props.context.taskId}/escalate`;
      
      // Simulamos la llamada (O descomentar en Prod)
-     // await apiClient.post(endpoint, namespacedPayload);
+     // await integrationStore.post(endpoint, namespacedPayload);
      
      // Simular Fallback: si es 'complete', forzamos el Happy Path o Error Mock
      emit(eventType as any, namespacedPayload);
@@ -207,7 +215,7 @@ const handleEscalate = () => {
         <!-- Si tiene Snapshot de Formulario (CA-78) -->
         <div v-if="context.formSnapshot && context.formSnapshot.length > 0" class="bg-indigo-50/30 p-4 rounded-xl border border-indigo-100 mb-4">
            <h3 class="text-xs font-bold text-indigo-800 mb-4 border-b border-indigo-100 pb-2 flex items-center gap-2"><span class="material-symbols-outlined text-[14px]">history</span> Snapshot In-Flight (CA-78)</h3>
-           <FormRenderer :schema="context.formSnapshot" v-model="formData" />
+           <FormRenderer :schema="context.formSnapshot" v-model="formData" @stage-change="handleStageChange" />
         </div>
 
         <!-- Slider de Progreso (Solamente en AGILE y si NO hay formSnapshot) -->
@@ -292,7 +300,8 @@ const handleEscalate = () => {
         <!-- Completar Definitivo -->
         <button 
           @click="handleComplete"
-          class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 hover:shadow-lg transition-all flex items-center gap-2"
+          :disabled="!isLastWizardStage"
+          class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span>{{ context.sourceEngine === 'BPMN' ? 'Completar Tarea' : 'Cerrar Tarea (100%)' }}</span>
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>

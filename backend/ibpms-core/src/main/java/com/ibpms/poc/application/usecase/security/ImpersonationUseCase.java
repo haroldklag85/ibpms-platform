@@ -15,7 +15,12 @@ public class ImpersonationUseCase {
         this.impersonationPort = impersonationPort;
     }
 
-    public String startImpersonation(UUID adminId, UUID targetUserId, HttpServletRequest request) {
+    public String startImpersonation(String adminUsername, UUID targetUserId, HttpServletRequest request) {
+        UUID adminId = impersonationPort.getUserIdByUsername(adminUsername);
+        if (adminId == null) {
+            throw new IllegalStateException("Admin user not found");
+        }
+
         if (!impersonationPort.isUserImpersonable(targetUserId)) {
             throw new IllegalArgumentException("Target user is not impersonable or has SUPER_ADMIN role");
         }
@@ -27,12 +32,15 @@ public class ImpersonationUseCase {
         return impersonationPort.generateImpersonationToken(adminId, targetUserId);
     }
 
-    public String exitImpersonation(UUID adminId, UUID targetUserId, HttpServletRequest request) {
+    public void exitImpersonation(UUID adminId, String targetUsername, HttpServletRequest request) {
+        UUID targetUserId = impersonationPort.getUserIdByUsername(targetUsername);
+        if (targetUserId == null) {
+            throw new IllegalStateException("Target user not found");
+        }
+
         String ipAddress = getClientIp(request);
         String userAgent = request.getHeader("User-Agent");
         impersonationPort.logImpersonationEvent(adminId, targetUserId, "EXIT", ipAddress, userAgent);
-
-        return impersonationPort.generateImpersonationToken(null, adminId);
     }
 
     private String getClientIp(HttpServletRequest request) {

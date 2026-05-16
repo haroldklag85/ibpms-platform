@@ -8,7 +8,9 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
-
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.context.annotation.Primary;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -21,12 +23,14 @@ public class CacheConfig {
      * Usado por: workdesk_tasks (TTL 10s), menuTopology (default TTL).
      */
     @Bean
-    public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
-        return (builder) -> builder
+    @Primary
+    public RedisCacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
+        return RedisCacheManager.builder(connectionFactory)
                 .withCacheConfiguration("workdesk_tasks",
                         RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofSeconds(10)))
                 .withCacheConfiguration("menuTopology",
-                        RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(30)));
+                        RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(30)))
+                .build();
     }
 
     /**

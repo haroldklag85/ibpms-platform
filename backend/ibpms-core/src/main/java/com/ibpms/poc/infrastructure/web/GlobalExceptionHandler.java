@@ -167,10 +167,11 @@ public class GlobalExceptionHandler {
     /** 500 — Error interno genérico (CA-37) */
     // @Traceability: US-000 - CA-1
     // @Traceability: US-000 - CA-4
+    // @Traceability: ADR-014 Observabilidad 5xx
     @ApiResponse(responseCode = "500", description = "Error interno - Blindado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
-        // Ignorar ClientAbortException o Broken pipe que ocurren frecuentemente en SSE y desconexiones de cliente
+        // @Traceability(US="US-000", CA="CA-NOISE", DESC="Supresión de ruido de red (Broken pipe/SSE) proveniente de DevDavid")
         if (ex instanceof java.io.IOException || ex.getClass().getSimpleName().equals("ClientAbortException")) {
             String msg = ex.getMessage();
             if (msg != null && (msg.contains("Broken pipe") || msg.contains("Connection reset"))) {
@@ -178,12 +179,19 @@ public class GlobalExceptionHandler {
                 return null;
             }
         }
-        
-        log.error("💥 ERROR CRITICO DEL SISTEMA ENVIADO A ELK: ", ex); // Delegación a Logback/ELK
+
+        // @Traceability(US="US-000", CA="CA-OBS", DESC="ADR-014: Trazabilidad Distribuida (TraceID) con MDC para APM/ELK")
+        String traceId = org.slf4j.MDC.get("traceId");
+        if (traceId == null) {
+            traceId = java.util.UUID.randomUUID().toString();
+            org.slf4j.MDC.put("traceId", traceId);
+        }
+        log.error("💥 ERROR CRITICO DEL SISTEMA ENVIADO A ELK [TraceID: {}]: ", traceId, ex); // Delegación a Logback/ELK
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setType(URI.create("about:blank"));
         problem.setTitle("Error interno del servidor");
         problem.setDetail("Error interno del servidor"); // Enmascaramiento total de PII, tal como exige CA-37
+        problem.setProperty("traceId", traceId); // Expuesto para el Frontend (ADR-014)
         return problem;
     }
     /** 504 — Tiempo de Espera Agotado (SLA CA-24, CA-31) */

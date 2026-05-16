@@ -1,11 +1,13 @@
+import { useTimeStore } from '@/stores/timeStore';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { z } from 'zod';
 import { api } from '@/services/apiClient';
 import { useConnectionStore } from '@/stores/connectionStore';
 
 export const useFormStore = defineStore('formStore', () => {
     const formData = ref<Record<string, any>>({});
+    const timeStore = useTimeStore();
     const isDirty = ref(false);
     const isSubmitting = ref(false);
     const validationErrors = ref<Record<string, string>>({});
@@ -13,8 +15,7 @@ export const useFormStore = defineStore('formStore', () => {
     // CA-29: Soft-Undo
     const isUndoAvailable = ref(false);
     const undoTimeLeft = ref(0);
-    let undoTimer: ReturnType<typeof setInterval> | null = null;
-    let pendingSubmitDraft: { taskId: string; payload: any } | null = null;
+        let pendingSubmitDraft: { taskId: string; payload: any } | null = null;
 
     // CA-31 & CA-32: Idempotency Retry Limit
     const idempotencyKey = ref('');
@@ -127,24 +128,24 @@ export const useFormStore = defineStore('formStore', () => {
         }
     };
 
-    const startUndoTimer = (seconds: number) => {
-        isUndoAvailable.value = true;
-        undoTimeLeft.value = seconds;
-        
-        if (undoTimer) clearInterval(undoTimer);
-        
-        undoTimer = setInterval(() => {
+    // Handle undo countdown using timeStore tick
+    watch(() => timeStore.currentTick, (tick) => {
+        if (isUndoAvailable.value && tick % 1000 < 500) {
             undoTimeLeft.value--;
             if (undoTimeLeft.value <= 0) {
                 commitPendingSubmit();
             }
-        }, 1000);
+        }
+    }); // @Traceability: Retro-Remediación ADR-006
+
+    const startUndoTimer = (seconds: number) => {
+        isUndoAvailable.value = true;
+        undoTimeLeft.value = seconds;
     };
 
     const softUndo = () => {
         if (!isUndoAvailable.value) return false;
         
-        if (undoTimer) clearInterval(undoTimer);
         isUndoAvailable.value = false;
         undoTimeLeft.value = 0;
         pendingSubmitDraft = null;
@@ -155,7 +156,6 @@ export const useFormStore = defineStore('formStore', () => {
     const commitPendingSubmit = async () => {
         if (!pendingSubmitDraft) return;
         
-        if (undoTimer) clearInterval(undoTimer);
         isUndoAvailable.value = false;
         
         try {

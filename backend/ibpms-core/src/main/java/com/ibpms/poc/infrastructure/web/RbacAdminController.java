@@ -3,9 +3,7 @@ package com.ibpms.poc.infrastructure.web;
 import com.ibpms.poc.infrastructure.jpa.entity.IbpmsProfileEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.IdpGroupMappingEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.ProfileBpmnAssignmentEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.IbpmsProfileRepository;
-import com.ibpms.poc.infrastructure.jpa.repository.IdpGroupMappingRepository;
-import com.ibpms.poc.infrastructure.jpa.repository.ProfileBpmnAssignmentRepository;
+import com.ibpms.poc.application.service.RbacAdminService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
@@ -23,46 +21,46 @@ import java.util.List;
 @Traceability(US = "US-036", CA = {"CA-01"})
 public class RbacAdminController {
 
-    private final IbpmsProfileRepository profileRepository;
-    private final IdpGroupMappingRepository mappingRepository;
-    private final ProfileBpmnAssignmentRepository assignmentRepository;
+    private final RbacAdminService rbacAdminService;
 
-    public RbacAdminController(IbpmsProfileRepository profileRepository,
-            IdpGroupMappingRepository mappingRepository,
-            ProfileBpmnAssignmentRepository assignmentRepository) {
-        this.profileRepository = profileRepository;
-        this.mappingRepository = mappingRepository;
-        this.assignmentRepository = assignmentRepository;
+    public RbacAdminController(RbacAdminService rbacAdminService) {
+        this.rbacAdminService = rbacAdminService;
     }
 
     @GetMapping("/profiles")
     public ResponseEntity<List<IbpmsProfileEntity>> getAllProfiles() {
-        return ResponseEntity.ok(profileRepository.findAll());
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
+        return ResponseEntity.ok(rbacAdminService.getAllProfiles());
     }
 
     @PostMapping("/profiles")
     public ResponseEntity<IbpmsProfileEntity> createProfile(@RequestBody IbpmsProfileEntity profile) {
-        return ResponseEntity.ok(profileRepository.save(java.util.Objects.requireNonNull(profile)));
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
+        return ResponseEntity.ok(rbacAdminService.saveProfile(java.util.Objects.requireNonNull(profile)));
     }
 
     @GetMapping("/mappings")
     public ResponseEntity<List<IdpGroupMappingEntity>> getAllMappings() {
-        return ResponseEntity.ok(mappingRepository.findAll());
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
+        return ResponseEntity.ok(rbacAdminService.getAllMappings());
     }
 
     @PostMapping("/mappings")
     public ResponseEntity<IdpGroupMappingEntity> addMapping(@RequestBody IdpGroupMappingEntity mapping) {
-        return ResponseEntity.ok(mappingRepository.save(java.util.Objects.requireNonNull(mapping)));
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
+        return ResponseEntity.ok(rbacAdminService.saveMapping(java.util.Objects.requireNonNull(mapping)));
     }
 
     @GetMapping("/assignments")
     public ResponseEntity<List<ProfileBpmnAssignmentEntity>> getAllAssignments() {
-        return ResponseEntity.ok(assignmentRepository.findAll());
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
+        return ResponseEntity.ok(rbacAdminService.getAllAssignments());
     }
 
     @PostMapping("/assignments")
     public ResponseEntity<ProfileBpmnAssignmentEntity> addAssignment(
             @RequestBody ProfileBpmnAssignmentEntity assignment) {
-        return ResponseEntity.ok(assignmentRepository.save(java.util.Objects.requireNonNull(assignment)));
+        // @Traceability: US-005 - CA-02 (ADR-001 Refactor)
+        return ResponseEntity.ok(rbacAdminService.saveAssignment(java.util.Objects.requireNonNull(assignment)));
     }
 }

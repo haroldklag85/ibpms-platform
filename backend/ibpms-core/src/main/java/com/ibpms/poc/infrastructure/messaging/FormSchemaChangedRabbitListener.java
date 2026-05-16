@@ -10,9 +10,17 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 /**
- * GAP-14: Listener Asíncrono para invalidar caché de DMNs
- * cuando cambia un Form Schema.
+ * GAP-14: Listener Asíncrono para invalidar caché de DMNs cuando cambia un Form Schema.
+ * 
+ * <p><strong>Ley Global 3 - Traceability Inversa:</strong></p>
+ * <ul>
+ *   <li><strong>Epic:</strong> Epic A (Motor Core & Task Management)</li>
+ *   <li><strong>User Story:</strong> US-007 (Evaluación de Reglas de Negocio)</li>
+ *   <li><strong>Criterio de Aceptación:</strong> CA-16 (Sincronización de Caché DMN) / T-15</li>
+ *   <li><strong>Descripción:</strong> Consume eventos de RabbitMQ emitidos cuando un esquema de formulario es modificado, forzando la invalidación asíncrona de la caché DMN asociada a través de AiDmnCacheService.</li>
+ * </ul>
  */
+// @Traceability: US-007, CA-16
 @Component
 public class FormSchemaChangedRabbitListener {
 

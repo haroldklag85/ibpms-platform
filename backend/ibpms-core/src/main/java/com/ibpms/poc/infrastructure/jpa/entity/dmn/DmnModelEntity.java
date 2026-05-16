@@ -3,8 +3,15 @@ package com.ibpms.poc.infrastructure.jpa.entity.dmn;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
+/**
+ * Entidad JPA para persistencia de modelos DMN.
+ * @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
+ */
 @Entity
 @Table(name = "ibpms_dmn_models")
+@Traceability(US = "US-007", CA = {"CA-05", "CA-06", "CA-12", "CA-32"})
 public class DmnModelEntity {
 
     @Id
@@ -17,6 +24,12 @@ public class DmnModelEntity {
 
     @Column(nullable = false, length = 20)
     private String status; // DRAFT o SEALED
+
+    @Column(length = 200)
+    private String name;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
@@ -59,6 +72,12 @@ public class DmnModelEntity {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     
     public String getAuthorJwtHash() { return authorJwtHash; }
     public void setAuthorJwtHash(String authorJwtHash) { this.authorJwtHash = authorJwtHash; }

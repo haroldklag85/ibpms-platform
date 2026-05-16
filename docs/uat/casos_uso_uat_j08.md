@@ -392,14 +392,14 @@ Este Journey certifica la infraestructura de resiliencia que sostiene toda la pl
 
 | Escenario | US Principal | CAs Cubiertos | Fase | Estado Esperado |
 |-----------|:-----------:|:------------:|:----:|:--------------:|
-| CU-J08-01 | US-017 | CA-01, CA-06 | Event Store | ❌ FALLA |
-| CU-J08-02 | US-017 | CA-06, US-029 CA-12 | Event Store | ❌ FALLA |
-| CU-J08-03 | US-017 | CA-04, CA-13 | Event Store | ❌ FALLA |
-| CU-J08-04 | US-017 | CA-07, CA-09, CA-16 | Event Store | ❌ FALLA |
-| CU-J08-05 | US-017 | CA-07 | Event Store | ❌ FALLA |
-| CU-J08-06 | US-017 | CA-02 | Camunda | ❌ FALLA |
-| CU-J08-07 | US-017 | CA-03, CA-10 | Camunda | ❌ FALLA |
-| CU-J08-08 | US-017 | CA-15 | Camunda | ❌ FALLA |
+| CU-J08-01 | US-017 | CA-01, CA-06 | Event Store | ✅ PASA |
+| CU-J08-02 | US-017 | CA-06, US-029 CA-12 | Event Store | ✅ PASA |
+| CU-J08-03 | US-017 | CA-04, CA-13 | Event Store | ✅ PASA |
+| CU-J08-04 | US-017 | CA-07, CA-09, CA-16 | Event Store | ✅ PASA |
+| CU-J08-05 | US-017 | CA-07 | Event Store | ✅ PASA |
+| CU-J08-06 | US-017 | CA-02 | Camunda | ✅ PASA |
+| CU-J08-07 | US-017 | CA-03, CA-10 | Camunda | ✅ PASA |
+| CU-J08-08 | US-017 | CA-15 | Camunda | ✅ PASA |
 | CU-J08-09 | US-034 | CA-1, CA-4 | RabbitMQ | ✅ PASA |
 | CU-J08-10 | US-034 | CA-3, CA-6 | RabbitMQ | ✅ PASA |
 | CU-J08-11 | US-034 | CA-5 | RabbitMQ | ✅ PASA |
@@ -436,8 +436,8 @@ Este Journey certifica la infraestructura de resiliencia que sostiene toda la pl
 
 | # | Brecha | Severidad | US | Escenario | Acción Requerida |
 |---|--------|:---------:|:--:|-----------|-----------------|
-| B-16 | US-017 COMPLETAMENTE SIN DESARROLLAR | 🔴 P0 | US-017 | CU-J08-01 a 08, 20-22 | Implementar Event Store, CQRS Write/Read, Auto-Claim, Rollback Saga |
-| B-17 | Tabla `form_event_store` no existe | 🔴 P0 | US-017 | CU-J08-01 | DDL pendiente: 9 columnas definidas en CA-06 |
-| B-18 | Tabla `task_drafts` no existe | 🟠 P1 | US-017 | CU-J08-04 | DDL pendiente: drafts con TTL 72h |
-| B-19 | Rollback Compensatorio no implementado | 🔴 P0 | US-017 | CU-J08-07 | Implementar Saga reversa con evento `FORM_SUBMIT_ROLLED_BACK` |
-| B-20 | Cifrado AES-256 at-rest para PII no implementado | 🟠 P1 | US-017 | CU-J08-22 | Integrar Azure Key Vault para cifrado de `payload_json` |
+| B-16 | US-017 COMPLETAMENTE SIN DESARROLLAR | 🟢 CERRADA | US-017 | CU-J08-01 a 08, 20-22 | Event Store, CQRS Write/Read implementados |
+| B-17 | Tabla `form_event_store` no existe | 🟢 CERRADA | US-017 | CU-J08-01 | DDL aplicado en Sprint 3 |
+| B-18 | Tabla `task_drafts` no existe | 🟢 CERRADA | US-017 | CU-J08-04 | DDL aplicado en Sprint 3 |
+| B-19 | Rollback Compensatorio no implementado | 🟢 CERRADA | US-017 | CU-J08-07 | Saga implementada en FormCompletionService |
+| B-20 | Cifrado AES-256 at-rest para PII no implementado | 🟢 CERRADA | US-017 | CU-J08-22 | PiiEncryptionService en FormCompletionService |

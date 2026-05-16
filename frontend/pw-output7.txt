@@ -1,0 +1,17 @@
+
+Running 7 tests using 1 worker
+
+  ok 1 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:49:3 › T-04: Attend-Next Hexagonal Compliance › CU-HEX-01 | POST /workdesk/attend-next retorna 200 con tarea asignada (385ms)
+  ok 2 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:75:3 › T-04: Attend-Next Hexagonal Compliance › CU-HEX-02 | POST /workdesk/attend-next/skip retorna 200 con siguiente tarea (113ms)
+  ok 3 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:104:3 › T-05: Feature Toggle Hexagonal Compliance › CU-HEX-03 | GET /workdesk/feature-toggles/FORCE_ROUTING retorna 200 con {enabled: boolean} (78ms)
+  ok 4 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:123:3 › T-05: Feature Toggle Hexagonal Compliance › CU-HEX-04 | PUT /workdesk/feature-toggles/FORCE_ROUTING con SUPER_ADMIN retorna 200 (53ms)
+  ok 5 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:149:3 › T-05: Feature Toggle Hexagonal Compliance › CU-HEX-05 | PUT /workdesk/feature-toggles/FORCE_ROUTING sin ROLE_SUPER_ADMIN retorna 403 (78ms)
+  ok 6 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:174:3 › T-06: Workdesk Delegation UI Compliance › CU-HEX-06 | UI Workdesk: dropdown de delegantes no vacío (3.2s)
+GLOBAL INBOX RESPONSE STATUS: 200
+GLOBAL INBOX RESPONSE STATUS: 403
+TOAST TEXT: error
+
+Ocurrió un error al cargar la bandeja segura CA-5.
+  ok 7 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:220:3 › T-06: Workdesk Delegation UI Compliance - Unauthorized User › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() (1.3s)
+
+  7 passed (9.9s)

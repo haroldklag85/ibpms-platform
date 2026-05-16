@@ -36,6 +36,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final com.ibpms.poc.application.service.security.EntraIdSyncService entraIdSyncService;
     private final com.ibpms.poc.infrastructure.jpa.repository.security.RoleDelegationRepository roleDelegationRepository;
 
+    // @Traceability(US="US-036", CA="CA-08", DESC="ADR-001 Inyección de Puertos y Servicios de Dominio (EntraIdSyncService)")
     public JwtAuthFilter(JwtTokenProvider jwtTokenProvider, 
                          com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository userRepository,
                          com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository roleRepository,
@@ -65,17 +66,28 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             // CA-14 y CA-01: Exorcismo JWT con Tolerancia a Fallos (Fail-Open)
             try {
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] hash = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                StringBuilder hexString = new StringBuilder();
-                for (byte b : hash) {
-                    hexString.append(String.format("%02x", b));
+                String tokenIdentifier;
+                try {
+                    String jti = jwtTokenProvider.getClaim(token, "jti");
+                    tokenIdentifier = jti;
+                } catch (Exception parseException) {
+                    tokenIdentifier = null;
                 }
-                
+                // @Traceability(US="US-036", CA="CA-14", DESC="Híbrido: Generación de tokenIdentifier (hash) con validación isTokenRevoked de DevDavid")
+                if (tokenIdentifier == null) {
+                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                    byte[] hash = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    StringBuilder hexString = new StringBuilder();
+                    for (byte b : hash) {
+                        hexString.append(String.format("%02x", b));
+                    }
+                    tokenIdentifier = hexString.toString();
+                }
+
                 String subject = jwtTokenProvider.getSubject(token);
                 
-                if (jwtBlacklistService.isTokenRevoked(hexString.toString()) || jwtBlacklistService.isUserRevoked(subject)) {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token o sesión del usuario revocado (Kill-Session).");
+                if (jwtBlacklistService.isTokenRevoked(tokenIdentifier) || jwtBlacklistService.isUserRevoked(subject)) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token o sesión del usuario revocado administrativamente (Kill-Session).");
                     return;
                 }
             } catch (Exception e) {
@@ -91,30 +103,34 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (jwtTokenProvider.isValid(token)) {
                 String subject = jwtTokenProvider.getSubject(token);
                 
-                // CA-8 JIT Provisioning (Aprovisionamiento Silencioso SSO desacoplado)
+                // @Traceability(US="US-036", CA="CA-08", DESC="Híbrido: JIT Provisioning con Mutex(this) delegando al Servicio de Dominio EntraIdSyncService")
                 java.util.Optional<com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity> userOpt = userRepository.findByUsername(subject);
                 if (userOpt.isEmpty()) {
-                    try {
-                        java.util.Map<String, String> claims = new java.util.HashMap<>();
-                        claims.put("email", subject + "@sso.local");
-                        claims.put("name", subject);
-                        claims.put("Sucursal_ID", jwtTokenProvider.getClaim(token, "Sucursal_ID"));
-                        claims.put("Codigo_Jefe", jwtTokenProvider.getClaim(token, "Codigo_Jefe"));
+                    synchronized (this) {
+                        userOpt = userRepository.findByUsername(subject);
+                        if (userOpt.isEmpty()) {
+                            try {
+                                java.util.Map<String, String> claims = new java.util.HashMap<>();
+                                claims.put("email", subject + "@sso.local");
+                                claims.put("name", subject);
+                                claims.put("Sucursal_ID", jwtTokenProvider.getClaim(token, "Sucursal_ID"));
+                                claims.put("Codigo_Jefe", jwtTokenProvider.getClaim(token, "Codigo_Jefe"));
 
-                        com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity newUser = 
-                            entraIdSyncService.provisionUser(subject, claims);
-                        userOpt = java.util.Optional.of(newUser);
-                    } catch (com.ibpms.poc.application.service.security.exceptions.PreconditionRequiredException e) {
-                        response.setContentType("application/json");
-                        response.setStatus(428);
-                        response.getWriter().write("{\"error\": \"Precondition Required\", \"missing_fields\": " + new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(e.getMissingFields()) + "}");
-                        return;
-                    } catch (Exception e) {
-                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Error en aprovisionamiento JIT: " + e.getMessage());
-                        return;
+                                com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity newUser = 
+                                    entraIdSyncService.provisionUser(subject, claims);
+                                userOpt = java.util.Optional.of(newUser);
+                            } catch (com.ibpms.poc.application.service.security.exceptions.PreconditionRequiredException e) {
+                                response.setContentType("application/json");
+                                response.setStatus(428);
+                                response.getWriter().write("{\"error\": \"Precondition Required\", \"missing_fields\": " + new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(e.getMissingFields()) + "}");
+                                return;
+                            } catch (Exception e) {
+                                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Error en aprovisionamiento JIT: " + e.getMessage());
+                                return;
+                            }
+                        }
                     }
                 }
-                
                 // CA-07 Soft-Delete: Interceptamos Token Vivo si el Usuario fue Desactivado
                 if (com.ibpms.poc.infrastructure.jpa.entity.security.UserStatus.INACTIVE.equals(userOpt.get().getStatus())) {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Usuario inactivo o revocado localmente (Soft-Delete).");
@@ -127,6 +143,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .filter(r -> r.startsWith("ibpms_rol_"))
                         .map(r -> r.replace("ibpms_rol_", ""))
                         .collect(Collectors.toList());
+                
+                // @Traceability: Retro-Remediación RBAC J-04 (T-20.4)
+                // Carga de roles desde la Base de Datos para hibridación local
+                for (com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity r : userOpt.get().getRoles()) {
+                    String rName = r.getName().replace("ROLE_", "");
+                    if (!roles.contains(rName)) {
+                        roles.add(rName);
+                    }
+                }
                 
                 // CA-9 Inyección Dinámica de Delegaciones (Sustituciones Temporales)
                 java.util.List<com.ibpms.poc.infrastructure.jpa.entity.security.RoleDelegationEntity> activeDelegations = 

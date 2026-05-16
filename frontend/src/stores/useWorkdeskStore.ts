@@ -59,7 +59,25 @@ export const useWorkdeskStore = defineStore('workdesk', {
     _bulkDebounce: null as ReturnType<typeof setTimeout> | null
   }),
 
+  // @Traceability: US-002, CA-22 (Contadores N y M en store)
+  getters: {
+    personalTaskCount: (state) => state.items.filter((t: any) => t.assignee).length,
+    poolTaskCount: (state) => state.items.filter((t: any) => !t.assignee).length,
+  },
+
   actions: {
+    // @Traceability: US-001, CA-24 (Remediación ADR-006: Manejo Global de Estados Asíncronos)
+    async _withNetworkSafety<T>(operation: () => Promise<T>): Promise<T> {
+        try {
+            return await operation();
+        } catch (error) {
+            throw error;
+        } finally {
+            this.isLoading = false;
+            this.isAttending = false;
+            // Cualquier otra bandera global se apaga aquí para evitar DOM Thrashing
+        }
+    },
     // @Traceability(US = "US-001", CA = {"CA-08"})
     // CA-08: Verificar si el Feature Toggle está activado
     async checkForceRouting() {
@@ -69,6 +87,18 @@ export const useWorkdeskStore = defineStore('workdesk', {
       } catch (err) {
         console.warn('CA-08: No se pudo obtener feature toggle', err);
         this.forceRoutingEnabled = false;
+      }
+    },
+
+    // @Traceability(US = "US-001", CA = {"CA-08"})
+    async updateFeatureToggle(toggleId: string, enabled: boolean) {
+      try {
+        await apiClient.put(`/workdesk/feature-toggles/${toggleId}`, { enabled });
+        if (toggleId === 'force-routing' || toggleId === 'FORCE_ROUTING') {
+          this.forceRoutingEnabled = enabled;
+        }
+      } catch (err: any) {
+        throw new Error(err.response?.data?.message || 'Error updating feature toggle');
       }
     },
 
@@ -91,7 +121,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
     // Sprint 5.1 CA-5 / CA-9
     async fetchTaskPreview(taskId: string) {
         try {
-            const { data } = await apiClient.get(`/workdesk/tasks/${taskId}/preview`);
+            const { data } = await apiClient.get(`/workbox/tasks/${taskId}/preview`);
             return data;
         } catch (error) {
             console.error('Error en fetchTaskPreview', error);
@@ -101,7 +131,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
 
     async fetchAuditTrail(taskId: string) {
         try {
-            const { data } = await apiClient.get(`/workdesk/tasks/${taskId}/audit-trail`);
+            const { data } = await apiClient.get(`/workbox/tasks/${taskId}/audit-trail`);
             return data;
         } catch (error) {
             console.error('Error en fetchAuditTrail', error);
@@ -117,6 +147,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
 
     // US-002: Task Claim UI (CA-21 Optimistic UI Rollback)
     async claimTask(taskId: string) {
+      return this._withNetworkSafety(async () => {
         // Snapshot
         const snapshot = structuredClone(this.items);
         const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
@@ -134,7 +165,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
         const delays = [2000, 4000, 8000];
         for (let attempt = 0; attempt <= 3; attempt++) {
             try {
-                const { data } = await apiClient.post(`/tasks/${taskId}/claim`);
+                const { data } = await apiClient.post(`/workbox/tasks/${taskId}/claim`);
                 if (claimedTask) {
                     claimedTask._isConfirming = false;
                 }
@@ -163,15 +194,47 @@ export const useWorkdeskStore = defineStore('workdesk', {
                 }
             }
         }
+      });
     },
 
-    async unclaimTask(taskId: string) {
-      try {
-        const { data } = await apiClient.post(`/tasks/${taskId}/unclaim`);
+    // @Traceability: US-002 - CA-10, CA-22
+    async unclaimTask(taskId: string, internalMessage?: string) {
+      return this._withNetworkSafety(async () => {
+        const snapshot = structuredClone(this.items);
+        const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
+        
+        if (taskIdx !== -1) {
+            this.items.splice(taskIdx, 1);
+        }
+        
+        try {
+        const payload = internalMessage ? { mensajeInterno: internalMessage } : {};
+        const { data } = await apiClient.post(`/api/v1/workbox/tasks/${taskId}/unclaim`, payload);
         return data;
-      } catch (err: any) {
-        throw err;
-      }
+        } catch (err: any) {
+          this.items = snapshot;
+          throw err;
+        }
+      });
+    },
+
+    // @Traceability: US-002 - CA-10, CA-22
+    async bulkClaimTasks(taskIds: string[]) {
+      return this._withNetworkSafety(async () => {
+        const snapshot = structuredClone(this.items);
+        
+        if (this.activeView === 'POOL') {
+           this.items = this.items.filter(t => !taskIds.includes(t.unifiedId) && !taskIds.includes(t.originalTaskId));
+        }
+
+        try {
+           const { data } = await apiClient.post('/api/v1/workbox/tasks/bulk-claim', taskIds);
+           return data;
+        } catch (err: any) {
+           this.items = snapshot;
+           throw err;
+        }
+      });
     },
 
     // CA-21: Skipeo Justificado
@@ -202,7 +265,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
               size, 
               sort: 'slaExpirationDate,asc',
               ...(search && search.trim() !== '' ? { search: search.trim() } : {}),
-              ...(delegatedToId ? { delegatedToId } : {}),
+              ...(delegatedToId ? { delegatedUserId: delegatedToId } : {}),
               ...(typeFilter ? { type: typeFilter } : {}),
               ...(slaFilter ? { slaLevel: slaFilter } : {}),
               ...(statusFilter ? { status: statusFilter } : {}),
@@ -210,13 +273,29 @@ export const useWorkdeskStore = defineStore('workdesk', {
             }
         });
         
-        if (response.data && Array.isArray(response.data.content)) {
-            this.items = response.data.content;
-            this.pageInfo = response.data.pageable || { pageNumber: page, pageSize: size, totalElements: response.data.totalElements || this.items.length };
+        const responseData = response.data || {};
+        
+        // CA-20: Adaptarse al DTO canónico { data: [], pagination: {} } de WorkdeskResponseDTO
+        const isNestedPage = responseData.content && !Array.isArray(responseData.content) && Array.isArray(responseData.content.content);
+        let actualItems = responseData.data;
+        if (!Array.isArray(actualItems) || actualItems.length === 0) {
+           actualItems = isNestedPage ? responseData.content.content : (Array.isArray(responseData.content) ? responseData.content : []);
+        }
+        
+        const actualPageable = responseData.pagination || (isNestedPage ? responseData.content.pageable : responseData.pageable) || {};
+        const totalElements = responseData.pagination?.totalElements ?? (isNestedPage ? responseData.content.totalElements : responseData.totalElements);
+
+        if (Array.isArray(actualItems)) {
+            this.items = actualItems;
+            this.pageInfo = { 
+                pageNumber: actualPageable.page !== undefined ? actualPageable.page : (actualPageable.pageNumber || page), 
+                pageSize: actualPageable.size !== undefined ? actualPageable.size : (actualPageable.pageSize || size), 
+                totalElements: totalElements !== undefined ? totalElements : this.items.length 
+            };
             // @Traceability(US = "US-001", CA = {"CA-07"})
-            this.isDegraded = response.data?.degraded === true;
-            this.facets = response.data.facets || [];
-            this.lastDelegationContext = response.data.delegationContext || null;
+            this.isDegraded = responseData.degraded === true;
+            this.facets = responseData.facets || [];
+            this.lastDelegationContext = responseData.delegationContext || null;
         } else {
              // Fallback defensive
              this.items = [];
@@ -265,24 +344,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
       this.stompClient.onConnect = (_frame) => {
         this.stompConnected = true;
         
-        // Ghost Deletion Listener (Paso 4.A)
-        this.stompClient?.subscribe('/topic/workdesk/ghost-deletes', (message) => {
-           try {
-               const event = JSON.parse(message.body);
-               const currentUser = useAuthStore().user?.username;
-               if (event.status === 'CLAIMED' && event.assignee !== currentUser) {
-                   // @Traceability(US = "US-001", CA = {"CA-06", "CA-13"}) 
-                   // TODO: Brecha Arquitectónica (CA-06, CA-14, CA-27). Esta suscripción global evoca 
-                   // eventos de todos los tenants, violando aislamiento de datos. Brecha UX: Falta inyectar 
-                   // el Toast discreto de CA-13 "Tarea reclamada por otro equipo".
-                   this.removeTaskWithGhostAnimation(event.taskId);
-               }
-           } catch(e) {
-               console.error("Error parsing STOMP Ghost Delete event", e);
-           }
-        });
-
-        // @Traceability(US = "US-001", CA = {"CA-27"}) Suscripción segregada por Tenant
+        // @Traceability(US = "US-001", CA = {"CA-27", "CA-06", "CA-14"}) Suscripción segregada por Tenant (Remediado)
         const tenantId = (useAuthStore() as any).tenantId || 'default';
         this.stompClient?.subscribe(`/topic/workdesk/${tenantId}`, (message) => {
           if (message.body) {
@@ -305,14 +367,21 @@ export const useWorkdeskStore = defineStore('workdesk', {
                              this._handleWsAdd(event.payload); 
                          } else {
                              // @Traceability(US = "US-001", CA = {"CA-09"}) 
-                             // TODO: Brecha CA-09. El límite visual estricto es de 15 tarjetas por página (CA-09, CA-19). Aquí se solicita forzosamente '50', violando el contrato de paginación canónica.
-                             // Force global fetch si no hay payload en el websocket
-                             this.fetchGlobalInbox(this.currentPage, 50, '', '', '', '', 'AVAILABLE');
+                             // Force global fetch si no hay payload en el websocket (Límite estricto de 15)
+                             this.fetchGlobalInbox(this.currentPage, this.pageInfo.pageSize || 15, '', '', '', '', 'AVAILABLE');
                          }
                          break;
                      case 'TASK_FORCE_UNCLAIMED':
                          this._handleWsRemove(event.taskId);
                          this._showForceUnclaimToast();
+                         break;
+                     case 'GHOST_CLAIM':
+                         const currentUser = useAuthStore().user?.username;
+                         if (event.assignee !== currentUser) {
+                             // @Traceability(US = "US-001", CA = {"CA-13"}) Ghost Delete con Toast Discreto
+                             this.removeTaskWithGhostAnimation(event.taskId);
+                             this._showGhostClaimToast();
+                         }
                          break;
                      case 'TASKS_BULK_UPDATED':
                          this._handleWsBulkUpdate();
@@ -372,6 +441,22 @@ export const useWorkdeskStore = defineStore('workdesk', {
         }, 2000);
     },
     
+
+    _showGhostClaimToast() {
+        const body = document.querySelector('body');
+        if (body && !document.getElementById('ghost-claim-toast')) {
+             const toast = document.createElement('div');
+             toast.id = 'ghost-claim-toast';
+             toast.style.cssText = 'position:fixed; bottom:24px; right:24px; background:#6366f1; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; transition:opacity 0.5s;';
+             toast.innerHTML = '👻 Tarea reclamada por otro analista.';
+             body.appendChild(toast);
+             setTimeout(() => {
+                 toast.style.opacity = '0';
+                 setTimeout(() => toast.remove(), 500);
+             }, 3000);
+        }
+    },
+
     _handleWsAdd(payload: WorkdeskGlobalItemDTO) {
         // CA-26: Fade-in animation logic
         (payload as any)._isNew = true;

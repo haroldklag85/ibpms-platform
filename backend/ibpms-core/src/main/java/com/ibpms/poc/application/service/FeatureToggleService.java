@@ -1,31 +1,44 @@
 package com.ibpms.poc.application.service;
 
+import com.ibpms.poc.application.ports.in.UpdateFeatureToggleUseCase;
+import com.ibpms.poc.application.ports.out.FeatureTogglePort;
 import com.ibpms.poc.infrastructure.jpa.entity.FeatureToggleEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.FeatureToggleRepository;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
+/**
+ * @Traceability(US = "US-001", CA = {"CA-08"})
+ * POR QUÉ: Implementación del caso de uso de Feature Toggles que orquesta 
+ * la consulta y persistencia a través de los puertos (Hexagonal), garantizando 
+ * aislamiento entre la lógica transaccional y la capa Web/DB.
+ */
 @Service
-public class FeatureToggleService {
+@Traceability(US = "US-001", CA = {"CA-08"})
+public class FeatureToggleService implements UpdateFeatureToggleUseCase {
 
-    private final FeatureToggleRepository toggleRepository;
+    private final FeatureTogglePort featureTogglePort;
+    private final com.ibpms.poc.application.port.out.AuditLogPort auditLogPort;
 
-    public FeatureToggleService(FeatureToggleRepository toggleRepository) {
-        this.toggleRepository = toggleRepository;
+    public FeatureToggleService(FeatureTogglePort featureTogglePort,
+                                com.ibpms.poc.application.port.out.AuditLogPort auditLogPort) {
+        this.featureTogglePort = featureTogglePort;
+        this.auditLogPort = auditLogPort;
     }
 
     @Transactional(readOnly = true)
     public boolean isFeatureEnabled(String tenantId, String toggleKey) {
-        return toggleRepository.findByTenantIdAndToggleKey(tenantId, toggleKey)
+        return featureTogglePort.findByTenantIdAndToggleKey(tenantId, toggleKey)
                 .map(FeatureToggleEntity::getEnabled)
                 .orElse(false);
     }
 
     @Transactional
     public void setFeatureToggle(String tenantId, String toggleKey, boolean enabled, String changedBy) {
-        FeatureToggleEntity entity = toggleRepository.findByTenantIdAndToggleKey(tenantId, toggleKey)
+        FeatureToggleEntity entity = featureTogglePort.findByTenantIdAndToggleKey(tenantId, toggleKey)
                 .orElseGet(() -> {
                     FeatureToggleEntity newToggle = new FeatureToggleEntity();
                     newToggle.setTenantId(tenantId);
@@ -37,6 +50,45 @@ public class FeatureToggleService {
         entity.setChangedBy(changedBy);
         entity.setChangedAt(LocalDateTime.now());
 
-        toggleRepository.save(entity);
+        featureTogglePort.save(entity);
+    }
+
+    @Override
+    @Transactional
+    @Traceability(US = "US-001", CA = {"CA-08", "CA-16"})
+    public boolean updateFeatureToggle(String tenantId, String toggleKey, Boolean enabled) {
+        FeatureToggleEntity toggle = featureTogglePort.findByTenantIdAndToggleKey(tenantId, toggleKey)
+                .orElseGet(() -> {
+                    FeatureToggleEntity newToggle = new FeatureToggleEntity();
+                    newToggle.setTenantId(tenantId);
+                    newToggle.setToggleKey(toggleKey);
+                    return newToggle;
+                });
+        
+        boolean previousValue = toggle.getEnabled() != null ? toggle.getEnabled() : false;
+        boolean newValue = enabled != null ? enabled : false;
+        
+        toggle.setEnabled(newValue);
+        featureTogglePort.save(toggle);
+        
+        if (auditLogPort != null) {
+            String detailsJson = String.format("{\"key\": \"%s\", \"previousValue\": %b, \"newValue\": %b, \"changedBy\": \"SYSTEM\", \"timestamp\": \"%s\"}",
+                    toggleKey, previousValue, newValue, LocalDateTime.now().toString());
+            
+            auditLogPort.saveAuditLog(
+                    java.util.UUID.randomUUID().toString(),
+                    "FEATURE_TOGGLE",
+                    toggleKey,
+                    "FEATURE_TOGGLE_CHANGED",
+                    "SYSTEM",
+                    LocalDateTime.now(),
+                    null,
+                    false,
+                    false,
+                    detailsJson
+            );
+        }
+        
+        return toggle.getEnabled();
     }
 }

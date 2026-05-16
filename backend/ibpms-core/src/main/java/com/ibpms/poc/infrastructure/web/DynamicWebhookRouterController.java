@@ -3,7 +3,7 @@ package com.ibpms.poc.infrastructure.web;
 import com.ibpms.poc.application.dto.ExpedienteDTO;
 import com.ibpms.poc.application.port.in.CreateExpedienteUseCase;
 import com.ibpms.poc.infrastructure.jpa.entity.InboundWebhookEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.InboundWebhookRepository;
+import com.ibpms.poc.application.service.InboundWebhookService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +24,12 @@ import java.util.UUID;
 @Traceability(US = "US-023", CA = {"CA-01"})
 public class DynamicWebhookRouterController {
 
-    private final InboundWebhookRepository inboundRepository;
+    private final InboundWebhookService inboundService;
     private final CreateExpedienteUseCase createExpedienteUseCase;
 
-    public DynamicWebhookRouterController(InboundWebhookRepository inboundRepository,
+    public DynamicWebhookRouterController(InboundWebhookService inboundService,
             CreateExpedienteUseCase createExpedienteUseCase) {
-        this.inboundRepository = inboundRepository;
+        this.inboundService = inboundService;
         this.createExpedienteUseCase = createExpedienteUseCase;
     }
 
@@ -41,7 +41,8 @@ public class DynamicWebhookRouterController {
             @RequestBody Map<String, Object> payload) {
 
         // 1. Buscar configuración en Base de Datos
-        Optional<InboundWebhookEntity> webhookOpt = inboundRepository.findByIdAndIsActiveTrue(webhookId);
+        // @Traceability: Retro-Remediación ADR-001
+        Optional<InboundWebhookEntity> webhookOpt = inboundService.findByIdAndIsActiveTrue(webhookId);
         if (webhookOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Webhook ID no encontrado o inactivo.");
         }

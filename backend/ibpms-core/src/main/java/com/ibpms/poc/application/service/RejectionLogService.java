@@ -13,9 +13,11 @@ import java.util.stream.Collectors;
 public class RejectionLogService {
 
     private final FormEventRepository formEventRepository;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
-    public RejectionLogService(FormEventRepository formEventRepository) {
+    public RejectionLogService(FormEventRepository formEventRepository, com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
         this.formEventRepository = formEventRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -38,8 +40,17 @@ public class RejectionLogService {
     }
 
     private String extractRejectionReason(FormEvent event) {
-        // En escenarios reales el reason estaría dentro del JSONB payload descifrado o raw.
-        // Para acatar el sprint extraemos un mock seguro si no hay parseo complejo o retornamos "Rechazado por negocio".
+        if (event.getPayloadJson() == null || event.getPayloadJson().isBlank()) {
+            return "Rechazado en etapa anterior (Validación Automática)";
+        }
+        try {
+            com.fasterxml.jackson.databind.JsonNode rootNode = objectMapper.readTree(event.getPayloadJson());
+            if (rootNode.has("reason")) {
+                return rootNode.get("reason").asText();
+            }
+        } catch (Exception e) {
+            // Ignore parse errors and return fallback
+        }
         return "Rechazado en etapa anterior (Validación Automática)";
     }
 }

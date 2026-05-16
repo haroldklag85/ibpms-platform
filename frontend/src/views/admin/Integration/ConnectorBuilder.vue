@@ -222,6 +222,7 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref } from 'vue';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
 import { useAuthStore } from '@/stores/authStore';
@@ -247,7 +248,9 @@ const revealSecret = async () => {
 
 // CA-9: Sudo Modal Transversal
 import { useSudo } from '@/composables/workdesk/useSudo';
-import apiClient from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const { requestSudo } = useSudo();
 const approveConfig = async () => {

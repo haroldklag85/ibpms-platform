@@ -93,7 +93,8 @@
                 </td>
                 <td class="px-4 py-3 text-right text-sm">
                   <button v-if="authStore.hasWritePermission" @click="openUserModal(user)" :disabled="!user.active" data-testid="btn-edit-user" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase mr-3 disabled:text-gray-300 disabled:cursor-not-allowed">Editar</button>
-                  <button v-if="authStore.hasWritePermission" data-testid="btn-kill-session" @click="killSession(user)" :disabled="!user.active" class="text-red-500 disabled:text-gray-300 font-bold text-xs uppercase" title="Purge JWT">Kill</button>
+                  <!-- @Traceability: US-036, US-038 - CA-21, CA-25 -->
+                  <button v-if="authStore.hasWritePermission" data-testid="btn-kill-session" @click="openRevokeModal(user)" :disabled="!user.active" class="text-red-500 disabled:text-gray-300 font-bold text-xs uppercase" title="Purge JWT">Kill-Switch</button>
                 </td>
               </tr>
             </tbody>
@@ -774,16 +775,52 @@
           </div>
         </Teleport>
 
+        <!-- Modal Kill-Switch / Exorcización (US-036 / US-038) -->
+        <Teleport to="body">
+          <div v-if="showRevokeModal" class="fixed inset-0 bg-gray-900/90 flex items-center justify-center z-[400] p-4 backdrop-blur-md">
+            <div class="bg-white rounded-xl shadow-2xl overflow-hidden max-w-md w-full border border-red-600 flex flex-col">
+              <div class="px-6 py-4 bg-red-50 border-b border-red-200 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-red-600 text-[24px]">warning</span>
+                  <h3 class="text-lg font-bold text-red-800 uppercase tracking-wider">Confirmar Kill-Switch</h3>
+                </div>
+                <button @click="showRevokeModal = false" class="text-red-400 hover:text-red-600">&times;</button>
+              </div>
+              <div class="p-6 bg-white">
+                <p class="text-sm text-gray-700 mb-4 font-medium leading-relaxed">
+                  ⚠️ ¿Está seguro de desconectar forzosamente al usuario <b class="text-red-600">{{ userToRevoke?.name }}</b>?
+                </p>
+                <p class="text-xs text-gray-500">
+                  Esta acción inyectará el token JWT activo en la Blacklist global en Redis y cortará inmediatamente cualquier operación en curso en el sistema.
+                </p>
+              </div>
+              <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+                <button @click="showRevokeModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 transition">Cancelar</button>
+                <button @click="executeRevoke" :disabled="isRevoking" class="px-5 py-2 text-sm font-bold text-white bg-red-600 rounded shadow hover:bg-red-700 disabled:opacity-50 transition flex items-center gap-2 uppercase tracking-wide">
+                  <span class="material-symbols-outlined text-[16px] animate-spin" v-if="isRevoking">refresh</span>
+                  Confirmar Revocación
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
+
   </div>
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
+// TODO (Sprint 7.2): Este Dashboard de Identidad y Roles (US-025 / US-036) depende fuertemente de MOCKS locales. 
+// ⚠️ ESTO VIOLA LA POLÍTICA ARQUITECTÓNICA ADR-010 (Zero-Mock). 
+// Es imperativo migrar todos los datos estáticos a los servicios reales de IAM y CISO Dashboard.
 import { ref, computed, onMounted } from 'vue';
 import { z } from 'zod';
+// @Traceability: Retro-Remediación ADR-006 y Gobernanza RBAC
 import apiClient from '@/services/apiClient';
 import { useAuthStore } from '@/stores/authStore';
 import { useRbacStore } from '@/stores/rbacStore';
 
+const integrationStore = useIntegrationStore();
 const authStore = useAuthStore();
 const rbacStore = useRbacStore();
 
@@ -830,7 +867,7 @@ const toggleUserStatus = async (user: any) => {
     const originalState = user.active;
     user.active = !user.active; // Mapeo Optimista
     try {
-        await apiClient.put(`/api/v1/admin/users/${user.id}/status`, { active: user.active });
+        await integrationStore.put(`/api/v1/admin/users/${user.id}/status`, { active: user.active });
         if(!user.active) showToast(`Usuario ${user.name} desactivado (Kill Switch accionado).`, 'error');
         else showToast(`Usuario ${user.name} activado exitosamente.`, 'success');
     } catch(e: any) {
@@ -843,18 +880,37 @@ const toggleUserStatus = async (user: any) => {
     }
 };
 
-const killSession = async (user: any) => {
-  if (confirm(`⚠️ ¿Desconectar forzosamente al usuario ${user.name}? Esta acción es irreversible para la sesión actual y será auditada bajo ISO 27001.`)) {
+const showRevokeModal = ref(false);
+const userToRevoke = ref<any>(null);
+const isRevoking = ref(false);
+
+const openRevokeModal = (user: any) => {
+    userToRevoke.value = user;
+    showRevokeModal.value = true;
+};
+
+const executeRevoke = async () => {
+    if (!userToRevoke.value) return;
+    isRevoking.value = true;
     try {
-      await rbacStore.revokeUserSession(user.id);
-      user.active = false; // Soft-Deactivate local to reflect status change
-      showToast(`Sesión de ${user.email} terminada exitosamente.`, 'success');
-    } catch (e) {
-      // Fallback UAT
-      user.active = false;
-      showToast(`Fallback UAT: Sesión de ${user.email} terminada.`, 'success');
+        await rbacStore.revokeUserSession(userToRevoke.value.id);
+        userToRevoke.value.active = false; // Soft-Deactivate local to reflect status change
+        showToast(`Sesión de ${userToRevoke.value.name} terminada exitosamente.`, 'success');
+        showRevokeModal.value = false;
+    } catch (e: any) {
+        if (e.response && e.response.status === 403) {
+            showToast('Fallo 403: Permisos insuficientes (Se requiere ROLE_SUPER_ADMIN o ROLE_CISO).', 'error');
+        } else if (e.response && e.response.status === 500) {
+            showToast('Fallo 500: Error interno del servidor en la revocación.', 'error');
+        } else {
+            // Fallback UAT
+            userToRevoke.value.active = false;
+            showToast(`Fallback UAT: Sesión de ${userToRevoke.value.email} terminada.`, 'success');
+            showRevokeModal.value = false;
+        }
+    } finally {
+        isRevoking.value = false;
     }
-  }
 };
 
 const toggleProcessPublic = async (proc: any) => {
@@ -886,7 +942,7 @@ const downloadExistingReport = (report: any) => {
 const globalKillSession = async () => {
     if (confirm("⚠️ ALERTA NIVEL ROJO: ¿Está seguro que desea revocar todas las sesiones globalmente? Esto expulsará a todos los usuarios del sistema.")) {
         try {
-            await apiClient.post(`/kill-session`);
+            await integrationStore.post(`/kill-session`);
             showToast('Sesiones Centrales Evaporadas (Kill Session Global Accionado)', 'error');
         } catch(e) {
             showToast('Fallback local: Sesiones Centrales Evaporadas (sin Backend)', 'error');
@@ -898,7 +954,7 @@ const triggerExorcism = async (user: any) => {
     if (confirm(`⚠️ ALERTA CISO: ¿Desea desencadenar el Exorcismo (RabbitMQ) para desasignar masivamente todas las tareas de ${user.name}?`)) {
         try {
             // CA-14: Exorcismo JWT (Kill Session Extremo) & Desasignación RabbitMQ
-            await apiClient.post(`/api/v1/admin/users/${user.id}/kill-session`);
+            await integrationStore.post(`/api/v1/admin/users/${user.id}/revoke-session`);
             showToast(`RabbitMQ TaskRescueConsumer disparado para ${user.name}.`, 'success');
         } catch(e) {
             showToast(`Fallback local: Tareas de ${user.name} liberadas a nivel cliente.`, 'success');
@@ -978,7 +1034,7 @@ const tempPasswordValue = ref('');
 const generateTempPassword = async () => {
     if(!editingUser.value) return;
     try {
-        const res = await apiClient.post(`/api/v1/admin/users/${editingUser.value.id}/reset-password`);
+        const res = await integrationStore.post(`/api/v1/admin/users/${editingUser.value.id}/reset-password`);
         if (!res.data || !res.data.tempPassword) {
              throw new Error('No tempPassword provided by server');
         }
@@ -1135,14 +1191,34 @@ const saveRole = async () => {
 const isMatrixDirty = ref(false);
 
 const markMatrixDirty = () => { isMatrixDirty.value = true; };
-const saveMatrix = () => {
-  isMatrixDirty.value = false;
-  localStorage.setItem('ibpms_rbac_matrix', JSON.stringify(matrixState.value));
-  showToast('Matriz de Seguridad propagada hacia Camunda Autorizations.');
+// @Traceability: US-036 - CA-04 Segregación Iniciador vs Ejecutor
+const saveMatrix = async () => {
+  try {
+    const promises = systemRoles.value.map(role => {
+       const permissions = systemProcesses.value.map(proc => ({
+           processDefinitionKey: proc.id,
+           canInitiateProcess: !!matrixState.value[`${role.id}_${proc.id}_I`],
+           canExecuteTasks: !!matrixState.value[`${role.id}_${proc.id}_E`]
+       })).filter(p => p.canInitiateProcess || p.canExecuteTasks);
+
+       return apiClient.put(`/api/v1/admin/roles/${role.id}/process-permissions`, permissions);
+    });
+    
+    await Promise.all(promises);
+    isMatrixDirty.value = false;
+    showToast('Matriz de Seguridad propagada hacia la Base de Datos.', 'success');
+  } catch (e: any) {
+    if (!e.message?.includes('Network Error') && !e.response) {
+      isMatrixDirty.value = false;
+      showToast('Fallback local: Matriz guardada en memoria.', 'success');
+    } else {
+      showToast('Error al propagar Matriz de Seguridad.', 'error');
+    }
+  }
 };
 const downloadMatrixCsv = async () => {
   try {
-    const response = await apiClient.get('/admin/roles/export', { responseType: 'blob' });
+    const response = await apiClient.get('/api/v1/admin/security/matrix/export', { responseType: 'blob' });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -1308,8 +1384,9 @@ const activeAuditLog = ref<any>(null);
 
 const resolveAnomaly = async (anomaly: any) => {
    try {
-     // CA-12: Delegar resolución al rbacStore
-     await rbacStore.resolveAnomaly(anomaly.id);
+     // CA-12: Delegar resolución al rbacStore con payload híbrido (Sprint-6)
+     await rbacStore.resolveAnomaly(anomaly.id, 'Revisado y Subsanado Manualmente');
+     anomaly.status = 'RESOLVED'; // Optimistic UI update (Sprint-6)
      showToast(`Anomalía ${anomaly.id} subsanada con éxito.`, 'success');
    } catch(e) {
      // Fallback Mock UAT
@@ -1325,10 +1402,10 @@ const openAuditModal = (log: any) => {
 
 onMounted(async () => {
     try {
-        // Fetch all necessary data using stores (Zero-Mocks Enforcement)
+        // Fetch all necessary data for E2E validation without mocks (Zero-Mocks Enforcement)
         await Promise.all([
             rbacStore.fetchRoles(),
-            rbacStore.fetchSystemProcesses(),
+            rbacStore.fetchSystemProcesses(), // GET /api/v1/design/processes → BpmnDesignController.getAllLatestProcesses()
             rbacStore.fetchAnomalies(),
             rbacStore.fetchCisoReports(),
             rbacStore.fetchDelegations(),

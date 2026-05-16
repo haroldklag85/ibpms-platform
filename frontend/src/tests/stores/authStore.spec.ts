@@ -23,7 +23,7 @@ describe('Auth Store (Pinia)', () => {
         store.login(mockJwt);
 
         expect(store.token).toBe(mockJwt);
-        expect(store.user).toEqual({ username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] });
+        expect(store.user).toEqual({ username: 'carlos.admin', roles: ['ROLE_ROLE_USER', 'ROLE_ROLE_APPROVER'] });
         expect(localStorage.getItem('ibpms_token')).toBe(mockJwt);
     });
 

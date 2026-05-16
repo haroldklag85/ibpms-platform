@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/kanban-tasks")
+@RequestMapping("/api/v1/projects/kanban")
 @Traceability(US = "US-008", CA = {"CA-01", "CA-06", "CA-08", "CA-12"})
 public class KanbanTaskApiController {
 
@@ -34,7 +34,7 @@ public class KanbanTaskApiController {
         this.kanbanColumnPort = kanbanColumnPort;
     }
 
-    @PatchMapping("/tasks/{taskId}/state")
+    @PatchMapping("/tasks/{taskId}/status")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<KanbanTask> updateTaskState(@PathVariable UUID taskId, @RequestBody Map<String, String> body, Authentication authentication) {
         String newState = body.get("newState");

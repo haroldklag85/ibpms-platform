@@ -1,7 +1,7 @@
 package com.ibpms.poc.infrastructure.web.admin;
 
 import com.ibpms.poc.infrastructure.jpa.entity.SystemAuditLogEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.SystemAuditLogRepository;
+import com.ibpms.poc.application.service.SystemAuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -26,11 +26,11 @@ public class DlqAdminController {
 
     private static final Logger log = LoggerFactory.getLogger(DlqAdminController.class);
     private final RabbitAdmin rabbitAdmin;
-    private final SystemAuditLogRepository auditRepository;
+    private final SystemAuditLogService auditService;
 
-    public DlqAdminController(RabbitAdmin rabbitAdmin, SystemAuditLogRepository auditRepository) {
+    public DlqAdminController(RabbitAdmin rabbitAdmin, SystemAuditLogService auditService) {
         this.rabbitAdmin = rabbitAdmin;
-        this.auditRepository = auditRepository;
+        this.auditService = auditService;
     }
 
     @GetMapping("/summary")
@@ -72,7 +72,8 @@ public class DlqAdminController {
         Integer count = getQueueCount();
         
         // CA-8: Rastro Forense Persistido
-        auditRepository.save(new SystemAuditLogEntity(actor, "Retry", count, null, null));
+        // @Traceability: US-017 - CA-08 (ADR-001 Refactor)
+        auditService.saveAuditLog(new SystemAuditLogEntity(actor, "Retry", count, null, null));
         
         log.warn("SUDO INVOKE [Audit Trail]: Ejecución de reintentos masivos de la DLQ solicitada por usuario: {}", actor);
         return ResponseEntity.ok("Requeue process triggered.");
@@ -85,7 +86,8 @@ public class DlqAdminController {
         Integer count = getQueueCount();
         
         // CA-8: Rastro Forense Persistido
-        auditRepository.save(new SystemAuditLogEntity(actor, "Purge", count, null, null));
+        // @Traceability: US-017 - CA-08 (ADR-001 Refactor)
+        auditService.saveAuditLog(new SystemAuditLogEntity(actor, "Purge", count, null, null));
         
         log.warn("SUDO INVOKE [Audit Trail]: Purgando totalmente ibpms.dlq.global. Datos no archivables perdidos permanentemente. Acción ejecutada por usuario: {}", actor);
         rabbitAdmin.purgeQueue("ibpms.dlq.global", false);

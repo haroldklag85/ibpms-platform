@@ -2,9 +2,7 @@ package com.ibpms.poc.infrastructure.web.bpm;
 
 import com.ibpms.poc.application.service.bpm.SlaService;
 import com.ibpms.poc.infrastructure.jpa.entity.bpm.HolidayEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.bpm.HolidayRepository;
 import com.ibpms.poc.infrastructure.jpa.entity.bpm.BusinessHoursEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.bpm.BusinessHoursRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,13 +14,9 @@ import java.util.List;
 public class SlaAdminController {
 
     private final SlaService slaService;
-    private final HolidayRepository holidayRepository;
-    private final BusinessHoursRepository businessHoursRepository;
 
-    public SlaAdminController(SlaService slaService, HolidayRepository holidayRepository, BusinessHoursRepository businessHoursRepository) {
+    public SlaAdminController(SlaService slaService) {
         this.slaService = slaService;
-        this.holidayRepository = holidayRepository;
-        this.businessHoursRepository = businessHoursRepository;
     }
 
     /**
@@ -42,17 +36,20 @@ public class SlaAdminController {
      */
     @GetMapping("/holidays")
     public ResponseEntity<List<HolidayEntity>> getHolidays() {
-        return ResponseEntity.ok(holidayRepository.findAll());
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
+        return ResponseEntity.ok(slaService.getHolidays());
     }
 
     @PostMapping("/holidays")
     public ResponseEntity<HolidayEntity> addHoliday(@RequestBody HolidayEntity holiday) {
-        return ResponseEntity.ok(holidayRepository.save(holiday));
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
+        return ResponseEntity.ok(slaService.addHoliday(holiday));
     }
 
     @DeleteMapping("/holidays/{id}")
     public ResponseEntity<Void> deleteHoliday(@PathVariable java.util.UUID id) {
-        holidayRepository.deleteById(id);
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
+        slaService.deleteHoliday(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -61,7 +58,8 @@ public class SlaAdminController {
      */
     @GetMapping("/business-hours")
     public ResponseEntity<BusinessHoursEntity> getBusinessHours() {
-        List<BusinessHoursEntity> configs = businessHoursRepository.findAll();
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
+        List<BusinessHoursEntity> configs = slaService.getBusinessHours();
         if (configs.isEmpty()) {
             return ResponseEntity.ok(new BusinessHoursEntity());
         }
@@ -70,7 +68,8 @@ public class SlaAdminController {
 
     @PutMapping("/business-hours")
     public ResponseEntity<BusinessHoursEntity> updateBusinessHours(@RequestBody BusinessHoursEntity updatedConfig) {
-        List<BusinessHoursEntity> configs = businessHoursRepository.findAll();
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
+        List<BusinessHoursEntity> configs = slaService.getBusinessHours();
         BusinessHoursEntity configToSave;
         if (configs.isEmpty()) {
             configToSave = updatedConfig;
@@ -83,6 +82,7 @@ public class SlaAdminController {
                 configToSave.setTimezone(updatedConfig.getTimezone());
             }
         }
-        return ResponseEntity.ok(businessHoursRepository.save(configToSave));
+        // @Traceability: US-010 - CA-02 (ADR-001 Refactor)
+        return ResponseEntity.ok(slaService.saveBusinessHours(configToSave));
     }
 }

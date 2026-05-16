@@ -18,7 +18,7 @@ public class ServiceAccountEntity {
     @Column(name = "description", length = 255)
     private String description;
 
-    @Column(name = "api_key_hash", nullable = false, length = 64)
+    @Column(name = "api_key_hash", nullable = false, length = 255)
     private String apiKeyHash;
 
     @Column(name = "is_active", nullable = false)

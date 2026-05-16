@@ -15,5 +15,6 @@ CREATE TABLE IF NOT EXISTS ibpms_dmn_definitions (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- @Traceability(US="US-007", CA="CA-DB", DESC="Columna introducida por DevDavid. Quedará deprecada evolutivamente en el changeset 41 a favor de 'source'")
 ALTER TABLE ibpms_dmn_definitions
 ADD COLUMN IF NOT EXISTS is_manual BOOLEAN DEFAULT FALSE;

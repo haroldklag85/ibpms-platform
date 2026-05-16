@@ -1,4 +1,5 @@
-<!-- @Traceability(US="US-008", CA={"CA-10"}) -->
+<!-- @Traceability: US-008 - CA-01, CA-02, CA-06, CA-03 -->
+<!-- @Traceability: Remediación Deuda Técnica - CA-11 / ADR-006 (Pinia Centralizado) -->
 <template>
   <div v-if="currentState !== 'TODO'" class="flex items-center gap-2 p-1.5 rounded text-xs font-semibold shadow-sm border" :class="containerClass">
     
@@ -9,7 +10,7 @@
     </div>
 
     <!-- Play/Stop Button -->
-    <div v-if="currentState !== 'DONE'" class="flex items-center border-l pl-2" :class="borderClass">
+    <div v-if="currentState === 'DOING'" class="flex items-center border-l pl-2" :class="borderClass">
       <button v-if="!activeTimerId" @click.stop="handleStart" class="text-indigo-600 hover:text-indigo-800 flex items-center justify-center p-0.5 rounded hover:bg-white/50 transition">
         <span class="material-symbols-outlined text-[16px]">play_arrow</span>
       </button>
@@ -24,8 +25,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue';
-
+import { computed } from 'vue';
+import { useTimeStore } from '@/stores/timeStore';
 const props = defineProps<{
   taskId: string;
   referenceType: string;
@@ -39,16 +40,7 @@ const emit = defineEmits<{
   (e: 'stop', timerId: string): void;
 }>();
 
-const now = ref(new Date().getTime());
-let interval: any = null;
-
-onMounted(() => {
-  interval = setInterval(() => { now.value = new Date().getTime(); }, 60000); // update every minute
-});
-
-onUnmounted(() => {
-  if (interval) clearInterval(interval);
-});
+const timeStore = useTimeStore();
 
 // Mock total SLA duration based on created vs due.
 // Without createdAt, assume standard 48 hours for demonstration, or calculate ratio.
@@ -57,14 +49,14 @@ const slaRatio = computed(() => {
   const due = new Date(props.slaDueDate).getTime();
   // Assume a fixed 48h SLA if we don't know the start time, just to give a ratio
   const totalMs = 48 * 60 * 60 * 1000; 
-  const remainingMs = due - now.value;
+  const remainingMs = due - timeStore.currentTick;
   return Math.max(0, remainingMs / totalMs);
 });
 
 const formattedRemaining = computed(() => {
   if (!props.slaDueDate) return '--:--';
   const due = new Date(props.slaDueDate).getTime();
-  let diffMs = due - now.value;
+  let diffMs = due - timeStore.currentTick;
   if (diffMs < 0) return 'Expirado';
   
   const h = Math.floor(diffMs / (1000 * 60 * 60));

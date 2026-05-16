@@ -1,0 +1,443 @@
+
+Running 8 tests using 1 worker
+
+  x  1 [authenticated] › e2e\certification\phase1-workdesk.spec.ts:8:3 › Fase 1: Bandeja Unificada - Analista N1 (Zero-Mock) › CU-J04-01: Analista N1 accede al Workdesk y verifica carga básica (51.8s)
+  x  2 [authenticated] › e2e\certification\phase1-workdesk.spec.ts:8:3 › Fase 1: Bandeja Unificada - Analista N1 (Zero-Mock) › CU-J04-01: Analista N1 accede al Workdesk y verifica carga básica (retry #1) (47.4s)
+  ok 3 [authenticated] › e2e\certification\phase1-workdesk.spec.ts:20:3 › Fase 1: Bandeja Unificada - Analista N1 (Zero-Mock) › CU-J04-02: Analista ve panel de métricas y CQRS state (1.4s)
+  x  4 [authenticated] › e2e\certification\phase1-workdesk.spec.ts:36:3 › Fase 1: Bandeja Unificada - Analista N1 (Zero-Mock) › CU-J04-03 y CU-J04-04: Semáforo SLA Vivo (4 niveles) y ordenamiento (46.3s)
+  x  5 [authenticated] › e2e\certification\phase1-workdesk.spec.ts:36:3 › Fase 1: Bandeja Unificada - Analista N1 (Zero-Mock) › CU-J04-03 y CU-J04-04: Semáforo SLA Vivo (4 niveles) y ordenamiento (retry #1) (46.5s)
+  ok 6 [authenticated] › e2e\certification\phase1-workdesk.spec.ts:55:3 › Fase 1: Bandeja Unificada - Analista N1 (Zero-Mock) › CU-J04-05: Filtros facetados y búsqueda con debounce (2.3s)
+  x  7 [authenticated] › e2e\certification\smoke-j04-operario.e2e.spec.ts:6:3 › Smoke J-04: Operario MVP — Happy Path › CU-J04-01→06: Login → Workdesk → Claim → Form → Submit → Desaparición (1.0m)
+  x  8 [authenticated] › e2e\certification\smoke-j04-operario.e2e.spec.ts:6:3 › Smoke J-04: Operario MVP — Happy Path › CU-J04-01→06: Login → Workdesk → Claim → Form → Submit → Desaparición (retry #1) (1.0m)
+  x  9 [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:40:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 1 (CA-22 Tabs): Interaccionalidad de pestañas (46.4s)
+  x  10 [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:40:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 1 (CA-22 Tabs): Interaccionalidad de pestañas (retry #1) (46.5s)
+  x  11 [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:56:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 2 (CA-02 Bulk Claim): Reclamación masiva y Optimistic UI (30.9s)
+  x  12 [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:56:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 2 (CA-02 Bulk Claim): Reclamación masiva y Optimistic UI (retry #1) (31.0s)
+  x  13 [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:94:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 3 (CA-04 Unclaim): Liberar tarea con Motivo (46.0s)
+  x  14 [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:94:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 3 (CA-04 Unclaim): Liberar tarea con Motivo (retry #1) (46.5s)
+
+
+  1) [authenticated] › e2e\certification\phase1-workdesk.spec.ts:8:3 › Fase 1: Bandeja Unificada - Analista N1 (Zero-Mock) › CU-J04-01: Analista N1 accede al Workdesk y verifica carga básica 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="filter-type-select"]')
+    Expected: visible
+    Timeout: 45000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 45000ms[22m
+    [2m  - waiting for locator('[data-testid="filter-type-select"]')[22m
+
+
+      15 |     // 3. Toggle BPMN/KANBAN disponible
+      16 |     const filterToggle = page.locator('[data-testid="filter-type-select"]');
+    > 17 |     await expect(filterToggle).toBeVisible();
+         |                                ^
+      18 |   });
+      19 |
+      20 |   test('CU-J04-02: Analista ve panel de métricas y CQRS state', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\phase1-workdesk.spec.ts:17:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-phase1-workd-88e7c-esk-y-verifica-carga-básica-authenticated\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-phase1-workd-88e7c-esk-y-verifica-carga-básica-authenticated\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-phase1-workd-88e7c-esk-y-verifica-carga-básica-authenticated\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-phase1-workd-88e7c-esk-y-verifica-carga-básica-authenticated\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="filter-type-select"]')
+    Expected: visible
+    Timeout: 45000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 45000ms[22m
+    [2m  - waiting for locator('[data-testid="filter-type-select"]')[22m
+
+
+      15 |     // 3. Toggle BPMN/KANBAN disponible
+      16 |     const filterToggle = page.locator('[data-testid="filter-type-select"]');
+    > 17 |     await expect(filterToggle).toBeVisible();
+         |                                ^
+      18 |   });
+      19 |
+      20 |   test('CU-J04-02: Analista ve panel de métricas y CQRS state', async ({ page }) => {
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\phase1-workdesk.spec.ts:17:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-phase1-workd-88e7c-esk-y-verifica-carga-básica-authenticated-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-phase1-workd-88e7c-esk-y-verifica-carga-básica-authenticated-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-phase1-workd-88e7c-esk-y-verifica-carga-básica-authenticated-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-phase1-workd-88e7c-esk-y-verifica-carga-básica-authenticated-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [authenticated] › e2e\certification\phase1-workdesk.spec.ts:36:3 › Fase 1: Bandeja Unificada - Analista N1 (Zero-Mock) › CU-J04-03 y CU-J04-04: Semáforo SLA Vivo (4 niveles) y ordenamiento 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="sla-badge-red"]').first()
+    Expected: visible
+    Timeout: 45000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 45000ms[22m
+    [2m  - waiting for locator('[data-testid="sla-badge-red"]').first()[22m
+
+
+      49 |     await expect(greenSla).toBeVisible();
+      50 |     await expect(yellowSla).toBeVisible();
+    > 51 |     await expect(redSla).toBeVisible();
+         |                          ^
+      52 |     await expect(graySla).toBeVisible();
+      53 |   });
+      54 |
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\phase1-workdesk.spec.ts:51:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-phase1-workd-b42d9-vo-4-niveles-y-ordenamiento-authenticated\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-phase1-workd-b42d9-vo-4-niveles-y-ordenamiento-authenticated\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-phase1-workd-b42d9-vo-4-niveles-y-ordenamiento-authenticated\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-phase1-workd-b42d9-vo-4-niveles-y-ordenamiento-authenticated\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="sla-badge-red"]').first()
+    Expected: visible
+    Timeout: 45000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 45000ms[22m
+    [2m  - waiting for locator('[data-testid="sla-badge-red"]').first()[22m
+
+
+      49 |     await expect(greenSla).toBeVisible();
+      50 |     await expect(yellowSla).toBeVisible();
+    > 51 |     await expect(redSla).toBeVisible();
+         |                          ^
+      52 |     await expect(graySla).toBeVisible();
+      53 |   });
+      54 |
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\phase1-workdesk.spec.ts:51:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-phase1-workd-b42d9-vo-4-niveles-y-ordenamiento-authenticated-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-phase1-workd-b42d9-vo-4-niveles-y-ordenamiento-authenticated-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-phase1-workd-b42d9-vo-4-niveles-y-ordenamiento-authenticated-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-phase1-workd-b42d9-vo-4-niveles-y-ordenamiento-authenticated-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [authenticated] › e2e\certification\smoke-j04-operario.e2e.spec.ts:6:3 › Smoke J-04: Operario MVP — Happy Path › CU-J04-01→06: Login → Workdesk → Claim → Form → Submit → Desaparición 
+
+    TimeoutError: page.waitForURL: Timeout 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+      16 |     
+      17 |     // 2. Navegar a Workdesk
+    > 18 |     await page.waitForURL(/workdesk/);
+         |                ^
+      19 |     
+      20 |     // 3. Verificar lista de tareas cargada (no vacía)
+      21 |     const taskList = page.locator('[data-testid="task-list"] [data-testid^="task-row-"]');
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\smoke-j04-operario.e2e.spec.ts:18:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-smoke-j04-op-ae42e-orm-→-Submit-→-Desaparición-authenticated\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-smoke-j04-op-ae42e-orm-→-Submit-→-Desaparición-authenticated\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-smoke-j04-op-ae42e-orm-→-Submit-→-Desaparición-authenticated\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-smoke-j04-op-ae42e-orm-→-Submit-→-Desaparición-authenticated\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.waitForURL: Timeout 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+      16 |     
+      17 |     // 2. Navegar a Workdesk
+    > 18 |     await page.waitForURL(/workdesk/);
+         |                ^
+      19 |     
+      20 |     // 3. Verificar lista de tareas cargada (no vacía)
+      21 |     const taskList = page.locator('[data-testid="task-list"] [data-testid^="task-row-"]');
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\smoke-j04-operario.e2e.spec.ts:18:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-smoke-j04-op-ae42e-orm-→-Submit-→-Desaparición-authenticated-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-smoke-j04-op-ae42e-orm-→-Submit-→-Desaparición-authenticated-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-smoke-j04-op-ae42e-orm-→-Submit-→-Desaparición-authenticated-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-smoke-j04-op-ae42e-orm-→-Submit-→-Desaparición-authenticated-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:40:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 1 (CA-22 Tabs): Interaccionalidad de pestañas 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button:has-text("Pool Disponible")')
+    Expected: visible
+    Timeout: 45000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 45000ms[22m
+    [2m  - waiting for locator('button:has-text("Pool Disponible")')[22m
+
+
+      43 |
+      44 |     await expect(tabPersonal).toBeVisible();
+    > 45 |     await expect(tabPool).toBeVisible();
+         |                           ^
+      46 |
+      47 |     // Click on Pool Disponible
+      48 |     await tabPool.click();
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us002-workbox-kanban.spec.ts:45:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-63705-teraccionalidad-de-pestañas-authenticated\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us002-workbo-63705-teraccionalidad-de-pestañas-authenticated\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-63705-teraccionalidad-de-pestañas-authenticated\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us002-workbo-63705-teraccionalidad-de-pestañas-authenticated\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button:has-text("Pool Disponible")')
+    Expected: visible
+    Timeout: 45000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 45000ms[22m
+    [2m  - waiting for locator('button:has-text("Pool Disponible")')[22m
+
+
+      43 |
+      44 |     await expect(tabPersonal).toBeVisible();
+    > 45 |     await expect(tabPool).toBeVisible();
+         |                           ^
+      46 |
+      47 |     // Click on Pool Disponible
+      48 |     await tabPool.click();
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us002-workbox-kanban.spec.ts:45:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-63705-teraccionalidad-de-pestañas-authenticated-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us002-workbo-63705-teraccionalidad-de-pestañas-authenticated-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-63705-teraccionalidad-de-pestañas-authenticated-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us002-workbo-63705-teraccionalidad-de-pestañas-authenticated-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:56:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 2 (CA-02 Bulk Claim): Reclamación masiva y Optimistic UI 
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button:has-text("Pool Disponible")')[22m
+
+
+      57 |     // 1. Navegar al Pool
+      58 |     const tabPool = page.locator('button:has-text("Pool Disponible")');
+    > 59 |     await tabPool.click();
+         |                   ^
+      60 |
+      61 |     // 2. Seleccionar múltiples tareas
+      62 |     // Hay dos checkboxes inyectados desde el mock del POOL
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us002-workbox-kanban.spec.ts:59:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-ab277-ción-masiva-y-Optimistic-UI-authenticated\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us002-workbo-ab277-ción-masiva-y-Optimistic-UI-authenticated\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-ab277-ción-masiva-y-Optimistic-UI-authenticated\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us002-workbo-ab277-ción-masiva-y-Optimistic-UI-authenticated\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button:has-text("Pool Disponible")')[22m
+
+
+      57 |     // 1. Navegar al Pool
+      58 |     const tabPool = page.locator('button:has-text("Pool Disponible")');
+    > 59 |     await tabPool.click();
+         |                   ^
+      60 |
+      61 |     // 2. Seleccionar múltiples tareas
+      62 |     // Hay dos checkboxes inyectados desde el mock del POOL
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us002-workbox-kanban.spec.ts:59:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-ab277-ción-masiva-y-Optimistic-UI-authenticated-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us002-workbo-ab277-ción-masiva-y-Optimistic-UI-authenticated-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-ab277-ción-masiva-y-Optimistic-UI-authenticated-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us002-workbo-ab277-ción-masiva-y-Optimistic-UI-authenticated-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:94:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 3 (CA-04 Unclaim): Liberar tarea con Motivo 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button:has-text("Liberar (Unclaim)")').first()
+    Expected: visible
+    Timeout: 45000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 45000ms[22m
+    [2m  - waiting for locator('button:has-text("Liberar (Unclaim)")').first()[22m
+
+
+       95 |     // 1. Permanecer en Mis Tareas (Personal)
+       96 |     const btnUnclaim = page.locator('button:has-text("Liberar (Unclaim)")').first();
+    >  97 |     await expect(btnUnclaim).toBeVisible();
+          |                              ^
+       98 |     
+       99 |     // 2. Abrir Modal de Liberación
+      100 |     await btnUnclaim.click();
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us002-workbox-kanban.spec.ts:97:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-6e7ab-im-Liberar-tarea-con-Motivo-authenticated\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us002-workbo-6e7ab-im-Liberar-tarea-con-Motivo-authenticated\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-6e7ab-im-Liberar-tarea-con-Motivo-authenticated\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us002-workbo-6e7ab-im-Liberar-tarea-con-Motivo-authenticated\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button:has-text("Liberar (Unclaim)")').first()
+    Expected: visible
+    Timeout: 45000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 45000ms[22m
+    [2m  - waiting for locator('button:has-text("Liberar (Unclaim)")').first()[22m
+
+
+       95 |     // 1. Permanecer en Mis Tareas (Personal)
+       96 |     const btnUnclaim = page.locator('button:has-text("Liberar (Unclaim)")').first();
+    >  97 |     await expect(btnUnclaim).toBeVisible();
+          |                              ^
+       98 |     
+       99 |     // 2. Abrir Modal de Liberación
+      100 |     await btnUnclaim.click();
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us002-workbox-kanban.spec.ts:97:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-6e7ab-im-Liberar-tarea-con-Motivo-authenticated-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us002-workbo-6e7ab-im-Liberar-tarea-con-Motivo-authenticated-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us002-workbo-6e7ab-im-Liberar-tarea-con-Motivo-authenticated-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us002-workbo-6e7ab-im-Liberar-tarea-con-Motivo-authenticated-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6 failed
+    [authenticated] › e2e\certification\phase1-workdesk.spec.ts:8:3 › Fase 1: Bandeja Unificada - Analista N1 (Zero-Mock) › CU-J04-01: Analista N1 accede al Workdesk y verifica carga básica 
+    [authenticated] › e2e\certification\phase1-workdesk.spec.ts:36:3 › Fase 1: Bandeja Unificada - Analista N1 (Zero-Mock) › CU-J04-03 y CU-J04-04: Semáforo SLA Vivo (4 niveles) y ordenamiento 
+    [authenticated] › e2e\certification\smoke-j04-operario.e2e.spec.ts:6:3 › Smoke J-04: Operario MVP — Happy Path › CU-J04-01→06: Login → Workdesk → Claim → Form → Submit → Desaparición 
+    [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:40:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 1 (CA-22 Tabs): Interaccionalidad de pestañas 
+    [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:56:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 2 (CA-02 Bulk Claim): Reclamación masiva y Optimistic UI 
+    [authenticated] › e2e\certification\us002-workbox-kanban.spec.ts:94:3 › US-002 V2: Workbox Kanban y Operaciones Masivas (CA-02, CA-04, CA-22) › Prueba 3 (CA-04 Unclaim): Liberar tarea con Motivo 
+  2 passed (9.9m)

@@ -1,27 +1,19 @@
-import { ref, computed, onUnmounted } from 'vue';
+import { computed } from 'vue';
+import { useTimeStore } from '@/stores/timeStore';
 
-// @Traceability(US = "US-001", CA = {"CA-11"})
-// ⚠️ VIOLACIÓN DE ARQUITECTURA (Deuda Técnica): Este composable viola la CA-11 al instanciar múltiples `setInterval`
-// en lugar de consumir pasivamente el `useTimeStore` que maneja un único requestAnimationFrame global (Anti DOM-Thrashing).
+// @Traceability: Remediación Deuda Técnica - CA-11 / ADR-006 (Pinia Centralizado)
 export const useSlaTrafficLight = (expirationDateIso: string | null) => {
-    const timeRemainingMs = ref(0);
+    const timeStore = useTimeStore();
     const isValid = computed(() => expirationDateIso !== null && expirationDateIso !== '');
 
-    let timer: ReturnType<typeof setInterval> | null = null;
-
-    const startClock = () => {
-        if (!isValid.value) return;
+    const timeRemainingMs = computed(() => {
+        if (!isValid.value) return 0;
         const target = new Date(expirationDateIso as string).getTime();
-        
-        timer = setInterval(() => {
-            timeRemainingMs.value = target - Date.now();
-        }, 1000);
-        timeRemainingMs.value = target - Date.now();
-    };
+        return target - timeStore.currentTick;
+    });
 
-    const stopClock = () => {
-        if (timer) clearInterval(timer);
-    };
+    const startClock = () => {};
+    const stopClock = () => {};
 
     const trafficColor = computed(() => {
         if (!isValid.value) return 'bg-gray-100 text-gray-500';
@@ -35,13 +27,6 @@ export const useSlaTrafficLight = (expirationDateIso: string | null) => {
 
     const isAtRisk = computed(() => timeRemainingMs.value <= 86400000 && timeRemainingMs.value > 0);
     const isExpired = computed(() => timeRemainingMs.value <= 0 && isValid.value);
-
-    // Arrancar automaticamente si hay valor
-    if (isValid.value) startClock();
-
-    onUnmounted(() => {
-        stopClock();
-    });
 
     return {
         timeRemainingMs,

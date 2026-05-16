@@ -69,6 +69,7 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
@@ -101,8 +102,6 @@ const disableBreakGlass = () => {
     isBreakGlass.value = false;
     loginError.value = null;
     router.replace({ query: {} });
-    email.value = '';
-    password.value = '';
 };
 
 // ===============================================
@@ -110,16 +109,8 @@ const disableBreakGlass = () => {
 // ===============================================
 const triggerAzureSSO = async () => {
     // @Traceability: US-036 - CA-11 Respeto ciego al Autenticador Perimetral (EntraID MFA)
-    // Simular latencia de redirección
-    setTimeout(() => {
-        console.log('Redirigiendo a https://login.microsoftonline.com/...');
-        
-        // Simulación de un token válido inyectado (US-025 FASE 3B)
-        const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI... (mock SSO JWT)";
-        
-        authStore.login(mockToken);
-        router.push('/');
-    }, 800);
+    console.log('Redirigiendo a https://login.microsoftonline.com/ o endpoint interno...');
+    window.location.href = '/api/v1/auth/sso/azure';
 };
 
 // El manejo de login de emergencia ahora lo delega al componente BreakGlassLogin.vue
@@ -127,6 +118,7 @@ const triggerAzureSSO = async () => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
+
 .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 </style>

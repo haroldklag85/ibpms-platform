@@ -120,14 +120,19 @@ apiClient.interceptors.response.use(
                     return Promise.reject(error);
                 }
 
-                const event = new CustomEvent('global-error-dispatch', { detail: { 
-                    code: status,
-                    type: 'SERVICE_UNAVAILABLE',
-                    message: `El servidor no está disponible (${status}). Verificando conexión...`,
-                    dismissible: true,
-                    autoRetry: true
-                }});
-                window.dispatchEvent(event);
+                // Para operaciones seguras (GET), mostramos Toast silencioso (Fase 3 Vite Handoff) para no bloquear la UI
+                const body = document.querySelector('body');
+                if (body && !document.getElementById('silent-restart-toast')) {
+                    const toast = document.createElement('div');
+                    toast.id = 'silent-restart-toast';
+                    toast.style.cssText = 'position:fixed; top:10px; right:10px; background:#3b82f6; color:white; padding:8px 16px; border-radius:20px; z-index:99999; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); font-family:sans-serif; font-size:12px; opacity:0.9; transition:opacity 0.5s; pointer-events:none;';
+                    toast.innerHTML = `🔄 Servidor no disponible (${status})... verificando reconexión.`;
+                    body.appendChild(toast);
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 500);
+                    }, 4000);
+                }
             } else if (status === 504) {
                 // Categoría 3: Timeout del proxy — Toast dismissible
                 console.warn(`[ADR-014] Gateway Timeout (504)`);
@@ -153,11 +158,10 @@ apiClient.interceptors.response.use(
         }
 
         if (error.response && error.response.status === 401) {
-            const authStore = useAuthStore();
-            // @Traceability(US = "US-001", CA = {"CA-14"}) Acierto UX: Expulsión local destructiva (authStore.logout()) al recibir 401, mitigando acceso con cachés obsoletos.
             console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
-            authStore.logout();
-            // Ya no redirigimos ni hacemos logout destructivo
+            const event = new CustomEvent('global-error-dispatch', { detail: { type: 'SESSION_EXPIRED' } });
+            window.dispatchEvent(event);
+            return new Promise(() => {}); // Interceptar y suspender en lugar de destruir estado
         }
         
         // CA-3: Interceptar HTTP 428 (Perfil Incompleto)
@@ -279,6 +283,7 @@ export const api = {
     createProjectTemplate: (payload: any) => apiClient.post('/projects/templates', payload),
 
     // 5. BPMN Draft / Deploy / Versioning (Pantalla 6)
+    // @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
     saveProcessDraft: (id: string, payload: any) => apiClient.put(`/design/processes/${id}/draft`, payload),
     validateProcess: (payload: any) => apiClient.post(`/design/processes/validate`, payload),
     deployProcess: (payload: FormData) => apiClient.post(`/design/processes/deploy`, payload, { headers: { 'Content-Type': 'multipart/form-data' } }),
@@ -320,21 +325,23 @@ export const api = {
     getAiMetrics: () => apiClient.get('/analytics/ai-metrics'),
 
     // 9. Formularios (Pantalla 7 / CA-30)
-    getForms: () => apiClient.get('/forms'),
-    getFormVersions: (id: string) => apiClient.get(`/forms/${id}/versions`),
-    saveFormVersion: (id: string, payload: any) => apiClient.post(`/forms/${id}`, payload),
+    getForms: () => apiClient.get('/design/form-definitions'),
+    getFormVersions: (id: string) => apiClient.get(`/design/form-definitions/${id}/versions`),
+    saveFormVersion: (id: string, payload: any) => apiClient.post(`/design/form-definitions/${id}`, payload),
 
     // 10. Kanban Status Update (Pantalla 3)
-    getKanbanBoard: () => apiClient.get('/kanban/board'),
-    updateKanbanStatus: (id: string, payload: any) => apiClient.patch(`/kanban/${id}/state`, payload),
+    getKanbanBoard: () => apiClient.get('/kanban/board'), // This one is fine because KanbanStateController exposes /kanban/board
+    updateKanbanStatus: (id: string, payload: any) => apiClient.patch(`/kanban-tasks/tasks/${id}/state`, payload),
 
     // 10. AI Agents & Copilot (CA-8 US-005)
+    // @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),
     analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
     generateDmnRules: (payload: any) => apiClient.post(`/dmn/generate`, payload),
     updateDmnModel: (id: string, payload: any) => apiClient.put(`/dmn-models/${id}`, payload),
 
     // Sprint 6.1: DMN Definitions
+    // @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
     getDmnDefinitions: () => apiClient.get('/dmn-models/definitions'),
 
     // Configuraciones Administrativas (CA-30)

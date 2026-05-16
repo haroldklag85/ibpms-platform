@@ -16,21 +16,24 @@ public class WorkdeskTaskListener implements TaskListener {
         this.messagingTemplate = messagingTemplate;
     }
 
-    // @Traceability(US = "US-001", CA = {"CA-06"})
-    // TODO: Brecha CA-06, CA-14 y CA-27. Este publicador emite a un canal global ("/topic/workdesk/ghost-deletes") 
-    // sin aislar por Tenant, exponiendo eventos de asignación a empresas cruzadas. Además, incumple el 
-    // vocabulario atómico del CA-27 (debería emitir { action: 'REMOVE' }).
+    // @Traceability(US = "US-001", CA = {"CA-06", "CA-14", "CA-27"})
+    // REMEDIACIÓN: Emisión aislada por Tenant y usando vocabulario atómico (GHOST_CLAIM).
     @Override
     public void notify(DelegateTask delegateTask) {
         // Ignora eventos que no son de asignación
         if (!TaskListener.EVENTNAME_ASSIGNMENT.equals(delegateTask.getEventName())) return;
         
+        String tenantId = delegateTask.getTenantId();
+        if (tenantId == null || tenantId.isBlank()) {
+            tenantId = "default";
+        }
+        
         Map<String, Object> payload = Map.of(
+            "action", "GHOST_CLAIM",
             "taskId", delegateTask.getId(),
-            "assignee", delegateTask.getAssignee(),
-            "status", "CLAIMED"
+            "assignee", delegateTask.getAssignee() != null ? delegateTask.getAssignee() : ""
         );
-        // Publicar evento STOMP al Frontend
-        messagingTemplate.convertAndSend("/topic/workdesk/ghost-deletes", payload);
+        // Publicar evento STOMP al Frontend en el topic segregado
+        messagingTemplate.convertAndSend("/topic/workdesk/" + tenantId, payload);
     }
 }

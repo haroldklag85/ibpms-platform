@@ -62,37 +62,38 @@ services:
   # 4. Backend Core (Spring Boot - Dev Mode)
   # Compila primero el módulo padre (instala ibpms-dmn-engine en .m2)
   # y luego arranca ibpms-core con spring-boot:run
-  # ibpms-core:
-  #   image: maven:3.9.6-eclipse-temurin-21
-  #   container_name: ibpms-core-dev
-  #   restart: unless-stopped
-  #   working_dir: /app
-  #   environment:
-  #     - POSTGRES_HOST=ibpms-postgres
-  #     - POSTGRES_PORT=5432
-  #     - POSTGRES_DB=ibpms_db
-  #     - POSTGRES_USER=ibpms_user
-  #     - POSTGRES_PASSWORD=ibpms_password
-  #     - RABBITMQ_HOST=ibpms-rabbitmq
-  #     - RABBITMQ_PORT=5672
-  #     - RABBITMQ_USER=guest
-  #     - RABBITMQ_PASSWORD=guest
-  #     - REDIS_HOST=ibpms-redis
-  #     - REDIS_PORT=6379
-  #     - JWT_SECRET=changeme-this-must-be-at-least-32-chars-for-hs256-signature!!
-  #   volumes:
-  #     - ./backend:/app
-  #     - maven_data:/root/.m2
-  #   ports:
-  #     - "8080:8080"
-  #   command: bash -c "mvn install -Dmaven.test.skip=true && cd ibpms-core && mvn spring-boot:run -Dmaven.test.skip=true"
-  #   depends_on:
-  #     ibpms-postgres:
-  #       condition: service_healthy
-  #     ibpms-rabbitmq:
-  #       condition: service_healthy
-  #     ibpms-redis:
-  #       condition: service_healthy
+  ibpms-core:
+    profiles: ["legacy-dev"]
+    image: maven:3.9.6-eclipse-temurin-21
+    container_name: ibpms-core-dev
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      - POSTGRES_HOST=ibpms-postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=ibpms_db
+      - POSTGRES_USER=ibpms_user
+      - POSTGRES_PASSWORD=ibpms_password
+      - RABBITMQ_HOST=ibpms-rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
+      - REDIS_HOST=ibpms-redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=changeme-this-must-be-at-least-32-chars-for-hs256-signature!!
+    volumes:
+      - ./backend:/app
+      - maven_data:/root/.m2
+    ports:
+      - "8080:8080"
+    command: bash -c "mvn clean install -Dmaven.test.skip=true && cd ibpms-core && mvn spring-boot:run -Dmaven.test.skip=true"
+    depends_on:
+      ibpms-postgres:
+        condition: service_healthy
+      ibpms-rabbitmq:
+        condition: service_healthy
+      ibpms-redis:
+        condition: service_healthy
 
 volumes:
   # Volúmenes persistentes para que los datos no se pierdan al apagar la computadora / detener Docker

@@ -16,12 +16,13 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
     // CA-14, CA-19, CA-17, CA-01: Strict Tenant Isolation + GIN Index ILIKE + SLA-First Sorting
     // REMEDIACIÓN BUG-S6-002/003/004: ILIKE nativo para GIN (pg_trgm), elimina Seq Scans.
     // SLA-First sorting (CA-01) + Impacto Masivo >= 8 (CA-17) + created_at desempate.
-    // MERGE: Se conserva soporte a List<assignees> para delegación in-flight (US-036 CA-23).
+    // @Traceability(US="US-036", CA={"CA-23", "BUG-PG-CAST"}, DESC="Híbrido: Delegación In-Flight con Safe Postgres Casting para prevenir PSQLException en nulos")
+    // MERGE: Se conserva soporte a List<assignees> (origin/DevDavid) y protección CAST de nulos nativos (HEAD).
     @Query(value = """
         SELECT * FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
-          AND (:search IS NULL OR w.title ILIKE CONCAT('%%', :search, '%%')) 
-          AND (:assignees IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[]))) 
+          AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
+          AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[]))) 
         ORDER BY 
           CASE WHEN w.impact_level >= 8 THEN 0 ELSE 1 END ASC, 
           w.sla_expiration_date ASC NULLS LAST, 
@@ -30,14 +31,40 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         countQuery = """
         SELECT COUNT(*) FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
-          AND (:search IS NULL OR w.title ILIKE CONCAT('%%', :search, '%%')) 
-          AND (:assignees IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[])))
+          AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
+          AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[])))
         """,
         nativeQuery = true)
     Page<WorkdeskProjectionEntity> findWorkdeskTasks(
            @Param("tenantId") String tenantId, 
            @Param("search") String search, 
            @Param("assignees") java.util.List<String> assignees, 
+           Pageable pageable);
+
+    @Query(value = """
+        SELECT * FROM ibpms_workdesk_projection w 
+        WHERE w.tenant_id = :tenantId 
+          AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
+          AND (CAST(:assignee AS VARCHAR) IS NULL OR w.assignee = CAST(:assignee AS VARCHAR) OR w.assignee IS NULL) 
+          AND w.source_system = :sourceSystem
+        ORDER BY 
+          CASE WHEN w.impact_level >= 8 THEN 0 ELSE 1 END ASC, 
+          w.sla_expiration_date ASC NULLS LAST, 
+          w.created_at ASC
+        """,
+        countQuery = """
+        SELECT COUNT(*) FROM ibpms_workdesk_projection w 
+        WHERE w.tenant_id = :tenantId 
+          AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
+          AND (CAST(:assignee AS VARCHAR) IS NULL OR w.assignee = CAST(:assignee AS VARCHAR) OR w.assignee IS NULL)
+          AND w.source_system = :sourceSystem
+        """,
+        nativeQuery = true)
+    Page<WorkdeskProjectionEntity> findWorkdeskTasksBySource(
+           @Param("tenantId") String tenantId, 
+           @Param("search") String search, 
+           @Param("assignee") String assignee, 
+           @Param("sourceSystem") String sourceSystem,
            Pageable pageable);
 
     // CA-22, CA-29: Faceted Filters & Counters
@@ -50,7 +77,7 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         SELECT * FROM ibpms_workdesk_projection w
         WHERE w.tenant_id = :tenantId
           AND w.assignee IS NULL
-          AND (:skills IS NULL OR w.category_tag = ANY(CAST(:skills AS VARCHAR[])))
+          AND (CAST(:skills AS VARCHAR[]) IS NULL OR w.category_tag = ANY(CAST(:skills AS VARCHAR[])))
         ORDER BY w.impact_level DESC, w.sla_expiration_date ASC NULLS LAST
         LIMIT 1
         FOR UPDATE SKIP LOCKED

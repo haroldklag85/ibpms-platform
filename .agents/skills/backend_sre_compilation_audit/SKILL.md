@@ -28,19 +28,16 @@ Antes de ejecutar cualquier comando `docker compose`, DEBES verificar que el Doc
 Si Docker está inoperante **Y** el Arquitecto Líder autoriza explícitamente el desvío, el agente PUEDE usar el binario local `mvn test` o `mvn spring-boot:run` (ej. `.\maven_bin\apache-maven-3.9.6\bin\mvn.cmd test`) SOLO para ejecución de pruebas unitarias o de integración. La compilación final de producción SIGUE requiriendo Docker.
 
 ## 1. PROHIBIDO EL HANDOFF CIEGO
-Antes de enviar cualquier estado a QA, al Arquitecto, o notificar que has terminado, **DEBES** ejecutar la compilación y arranque mediante la topología de contenedores agnóstica de la plataforma. En la raíz del proyecto, ejecuta:
+Antes de enviar cualquier estado a QA, al Arquitecto, o notificar que has terminado, **DEBES** ejecutar la compilación y arranque nativo. En la raíz del proyecto, ejecuta:
 ```bash
-docker compose up -d --build ibpms-core
+start-dev.bat
 ```
-Esto reconstruirá y ejecutará la aplicación (Hot-Reload) usando el contenedor Maven dedicado sin depender de binarios en tu máquina Host.
+(O `start-dev.sh` en Linux/Mac). Esto levantará la infraestructura de base de datos en Docker y ejecutará Maven localmente.
 
 ## 2. AUDITORÍA DE ARRANQUE (GATEKEEPER DE CONSOLA)
-Inmediatamente después de lanzar el contenedor, debes leer activamente la consola de logs ejecutando:
-```bash
-docker compose logs -f ibpms-core
-```
+Inmediatamente después de lanzar el script, debes leer activamente la consola.
 Si observas un `BeanCreationException`, `UnsatisfiedDependencyException`, o un lapidario `Connection Refused` en el puerto 8080, **SE TE PROHÍBE ENTREGAR LA TAREA**. 
-Debes auto-corregir la inyección de dependencias (`@Autowired`, `@Lazy`) y verificar que el contenedor no muera silenciosamente hasta que Tomcat reporte:
+Debes auto-corregir la inyección de dependencias (`@Autowired`, `@Lazy`) y verificar que el servidor no muera silenciosamente hasta que Tomcat reporte:
 > `Tomcat started on port(s): 8080 (http)`
 
 ## 3. LEY DE CORRESPONDENCIA DDL (JPA vs DB)

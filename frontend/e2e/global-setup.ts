@@ -1,6 +1,7 @@
 import { request, FullConfig } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { USERS } from './fixtures/e2e-data';
 
 async function globalSetup(config: FullConfig) {
   const baseURL = process.env.E2E_BASE_URL || 'http://localhost:5173';
@@ -9,6 +10,29 @@ async function globalSetup(config: FullConfig) {
     baseURL: 'http://127.0.0.1:8080'
   });
 
+<<<<<<< HEAD
+  const authDir = path.resolve('e2e/playwright/.auth');
+  if (!fs.existsSync(authDir)) {
+    fs.mkdirSync(authDir, { recursive: true });
+  }
+
+  // Usuarios requeridos para J-04 usando los importados de e2e-data
+  const usersToLogin = [
+    { email: USERS.ADMIN_ALPHA.email, password: USERS.ADMIN_ALPHA.password, filename: 'user.json' },
+    { email: USERS.ANALISTA_N1.email, password: USERS.ANALISTA_N1.password, filename: 'analista_n1.json' },
+    { email: USERS.DIRECTOR_1.email, password: USERS.DIRECTOR_1.password, filename: 'director_1.json' },
+    { email: USERS.PERITO_A.email, password: USERS.PERITO_A.password, filename: 'perito_a.json' },
+    { email: USERS.PERITO_B.email, password: USERS.PERITO_B.password, filename: 'perito_b.json' }
+  ];
+
+  for (const user of usersToLogin) {
+    try {
+      const response = await requestContext.post('/api/v1/auth/login', {
+        data: {
+          email: user.email,
+          password: user.password
+        }
+=======
   // Retry login up to 90 times waiting for the backend to be ready (15 minutes total wait)
   let response;
   for (let attempt = 1; attempt <= 90; attempt++) {
@@ -20,6 +44,7 @@ async function globalSetup(config: FullConfig) {
           password: 'Root#Temp4Sys'
         },
         timeout: 10_000
+>>>>>>> origin/DevDavid
       });
       if (!response.ok()) {
          throw new Error(`HTTP ${response.status()}`);
@@ -37,15 +62,33 @@ async function globalSetup(config: FullConfig) {
   if (!response) return;
 
       if (!response.ok()) {
-        console.warn('Failed to login in global setup: ' + response.statusText());
-        // Evitamos lanzar throw si la bd no tiene a root para no bloquear las demás suites
-        return;
+        // Para root, usamos "admin" si "password123" falla
+        if (user.email === 'root@ibpms.local') {
+          const rootRetry = await requestContext.post('/api/v1/auth/login', {
+            data: { email: user.email, password: 'admin' }
+          });
+          if (rootRetry.ok()) {
+            const { token, tenantId } = await rootRetry.json();
+            saveStorageState(authDir, user.filename, baseURL, user.email, token, tenantId);
+            continue;
+          }
+        }
+        throw new Error(`Failed to login ${user.email} in global setup: ` + response.statusText());
       }
+<<<<<<< HEAD
 
-  const { token, tenantId } = await response.json();
+      const { token, tenantId } = await response.json();
+      saveStorageState(authDir, user.filename, baseURL, user.email, token, tenantId);
 
-  // We need to write this to a storage state JSON that Playwright can use
-  // We'll simulate the localStorage structure expected by our app
+    } catch (e: any) {
+      throw new Error(`Backend unreachable or login failed in global setup for ${user.email}. ` + e.message);
+    }
+  }
+}
+=======
+>>>>>>> origin/DevDavid
+
+function saveStorageState(authDir: string, filename: string, baseURL: string, email: string, token: string, tenantId: string) {
   const storageState = {
     cookies: [],
     origins: [
@@ -54,21 +97,22 @@ async function globalSetup(config: FullConfig) {
         localStorage: [
           { name: 'ibpms_token', value: token },
           { name: 'ibpms_user', value: JSON.stringify({
+<<<<<<< HEAD
+            username: email,
+            roles: ['ROLE_OPERARIO', 'ROLE_USER'], // Simplified for tests
+            email: email,
+=======
             username: '[Super_Administrador]',
             roles: ['ROLE_SUPER_ADMIN'],
             email: 'root@ibpms.local',
+>>>>>>> origin/DevDavid
             tenantId: tenantId
           }) }
         ]
       }
     ]
   };
-
-  const authDir = path.resolve('e2e/playwright/.auth');
-  if (!fs.existsSync(authDir)) {
-    fs.mkdirSync(authDir, { recursive: true });
-  }
-  fs.writeFileSync(path.join(authDir, 'user.json'), JSON.stringify(storageState));
+  fs.writeFileSync(path.join(authDir, filename), JSON.stringify(storageState));
 }
 
 export default globalSetup;

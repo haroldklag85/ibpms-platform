@@ -19,7 +19,8 @@ class RejectionLogServiceTest {
     void getRejectionHistory_returnsFormattedListForBff() {
         // Arrange
         FormEventRepository repositoryMock = mock(FormEventRepository.class);
-        RejectionLogService service = new RejectionLogService(repositoryMock);
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        RejectionLogService service = new RejectionLogService(repositoryMock, mapper);
 
         String processInstanceId = "PROC-123";
         FormEvent mockEvent = mock(FormEvent.class);

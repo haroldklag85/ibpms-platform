@@ -58,10 +58,13 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
-import apiClient from '@/services/apiClient';
 import { useI18n } from 'vue-i18n';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const { t } = useI18n();
 const authStore = useAuthStore();
@@ -80,7 +83,7 @@ const isLoading = ref(true);
 
 const fetchUsers = async () => {
   try {
-    const { data } = await apiClient.get('/admin/users');
+    const { data } = await integrationStore.get('/admin/users');
     users.value = data.filter((u: UserResponseDTO) => !u.roles.includes('ROLE_SUPER_ADMIN'));
   } catch (error) {
     console.error('Error fetching users for impersonation', error);

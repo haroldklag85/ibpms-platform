@@ -73,6 +73,6 @@ class WorkdeskQueryPerformanceTest {
         assertTrue(executionTime <= 800, "Violación NFR-PER-01: El tiempo de respuesta (" + executionTime + "ms) excedió los 800ms permitidos.");
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().getContent().getContent().size() == 50);
+        assertTrue(response.getBody().getData().size() == 50);
     }
 }

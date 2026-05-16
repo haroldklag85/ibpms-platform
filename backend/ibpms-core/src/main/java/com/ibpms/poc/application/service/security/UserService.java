@@ -194,6 +194,30 @@ public class UserService {
         return userRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
+    public java.util.Optional<UserEntity> findById(UUID id) {
+        return userRepository.findById(id);
+    }
+
+    // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+    public java.util.Optional<UserEntity> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+    public java.util.Optional<UserEntity> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+    public java.util.Optional<Boolean> isUserActive(String username) {
+        return userRepository.isUserActive(username);
+    }
+
+    // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+    public UserEntity saveUser(UserEntity user) {
+        return userRepository.save(user);
+    }
+
     private String generateComplexRandomPassword() {
         // Garantiza: Al menos 8 chars, 1 Mayúscula, 1 número, 1 símbolo.
         String uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

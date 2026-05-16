@@ -1,7 +1,7 @@
 package com.ibpms.poc.infrastructure.web.intake;
 
 import com.ibpms.poc.domain.model.OrphanPayload;
-import com.ibpms.poc.domain.port.OrphanPayloadRepository;
+import com.ibpms.poc.application.service.intake.OrphanPayloadService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -14,13 +14,13 @@ import java.util.UUID;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 
 @ControllerAdvice(assignableTypes = WebhookIntakeController.class)
-@ConditionalOnBean(OrphanPayloadRepository.class)
+@ConditionalOnBean(OrphanPayloadService.class)
 public class WebhookControllerAdvice {
     
-    private final OrphanPayloadRepository orphanRepo;
+    private final OrphanPayloadService orphanService;
 
-    public WebhookControllerAdvice(OrphanPayloadRepository orphanRepo) {
-        this.orphanRepo = orphanRepo;
+    public WebhookControllerAdvice(OrphanPayloadService orphanService) {
+        this.orphanService = orphanService;
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -31,7 +31,8 @@ public class WebhookControllerAdvice {
                 .errorType("MALFORMED_JSON")
                 .createdAt(ZonedDateTime.now())
                 .build();
-        orphanRepo.save(orphan);
+        // @Traceability: US-004 - CA-12 (ADR-001 Refactor)
+        orphanService.save(orphan);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("MALFORMED_JSON: Body is not readable.");
     }
 }

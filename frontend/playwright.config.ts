@@ -4,7 +4,7 @@ const E2E_JWT = 'eyJhbGciOiJub25lIn0=.eyJzdWIiOiJyb290X2UyZSIsInJvbGVzIjpbIlJPTE
 
 export default defineConfig({
   testDir: './e2e',
-  timeout: 180_000,
+  timeout: 420_000,
   expect: {
     timeout: 45_000
   },

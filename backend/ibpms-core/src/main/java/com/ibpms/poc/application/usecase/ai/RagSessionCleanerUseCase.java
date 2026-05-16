@@ -24,6 +24,7 @@ public class RagSessionCleanerUseCase {
      * Purga destructivamente cualquier vector y simula S3 wipe para la sesión actual.
      */
     @Transactional
+    // @Traceability: US-027, CA-04
     public void wipeSessionFootprint(String tenantId, String sessionId) {
         log.warn("[APPSEC-RAG-WIPE] Orden de Destrucción Recibida para Tenant: {}, Session: {}", tenantId, sessionId);
         

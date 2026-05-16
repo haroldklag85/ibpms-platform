@@ -38,7 +38,7 @@ public class RabbitMqTopologyConfig {
     }
 
     @Bean
-    public Binding dlqBinding() {
+    public Binding securityDlqBinding() {
         // Enlaza todo lo que caiga al DLX directo a la cola DLQ. Usamos "dlq.route" o similar genérico.
         return BindingBuilder.bind(dlqGlobalQueue()).to(dlxExchange()).with("dlq.route");
     }

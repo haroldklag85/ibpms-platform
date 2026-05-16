@@ -64,7 +64,9 @@ public class RabbitMQConfig {
      */
     @Bean
     public Queue ibpmsDlqGlobal() {
-        return QueueBuilder.durable(DLQ_GLOBAL).build();
+        return QueueBuilder.durable(DLQ_GLOBAL)
+                .withArgument("x-message-ttl", 2592000000L) // 30 días — Congruente con RabbitMqTopologyConfig
+                .build();
     }
 
     /**

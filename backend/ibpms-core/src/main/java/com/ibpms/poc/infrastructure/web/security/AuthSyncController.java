@@ -260,4 +260,25 @@ public class AuthSyncController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Error procesando el token"));
         }
     }
+
+    /**
+     * CA-25: Endpoint de validación para hidratación de sesión en Vue (AuthStore).
+     */
+    @GetMapping("/validate")
+    public ResponseEntity<?> validateToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String token = authHeader.substring(7);
+        try {
+            if (jwtBlacklistService.isTokenRevoked(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
 }

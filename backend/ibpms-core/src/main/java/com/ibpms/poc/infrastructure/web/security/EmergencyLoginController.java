@@ -17,6 +17,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/auth")
+@org.springframework.context.annotation.Profile("deprecated") // DEPRECADO: Resuelve Ambiguous Mapping con AuthSyncController.emergencyLogin (US-038)
 public class EmergencyLoginController {
 
     private final JwtTokenProvider jwtTokenProvider;

@@ -76,13 +76,24 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    /** 404 — Recurso no encontrado */
+    /** 404 — Recurso no encontrado (EntityNotFoundException) */
     @ApiResponse(responseCode = "404", description = "El recurso solicitado no fue encontrado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
     public ProblemDetail handleNotFound(jakarta.persistence.EntityNotFoundException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
         problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/not-found")));
         problem.setTitle("Recurso no encontrado");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 404 — Ruta Estática no encontrada (Spring Boot 3.2+ Dispatcher) */
+    @ApiResponse(responseCode = "404", description = "El endpoint o ruta estática no fue encontrada", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ProblemDetail handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/not-found")));
+        problem.setTitle("Endpoint o Recurso Inexistente");
         problem.setDetail(ex.getMessage());
         return problem;
     }

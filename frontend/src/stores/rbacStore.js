@@ -235,7 +235,7 @@ export const useRbacStore = defineStore('rbac', () => {
     // --- CA-15: Public Process Management ---
     async function fetchSystemProcesses() {
         try {
-            const response = await apiClient.get('/design/processes')
+            const response = await apiClient.get('/design/processes/catalog')
             systemProcesses.value = response.data
         } catch (error) {
             console.error("Error obteniendo procesos del sistema", error)

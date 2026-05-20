@@ -33,7 +33,7 @@ public class DataSeeder implements CommandLineRunner {
         RoleEntity rootRole = roleRepository.findByName("ROLE_SUPER_ADMIN")
                 .orElseGet(() -> roleRepository.save(new RoleEntity("ROLE_SUPER_ADMIN", "Permisos Totales Root")));
 
-        if (userRepository.findByUsername("[Super_Administrador]").isEmpty()) {
+        if (userRepository.findByUsername("[Super_Administrador]").isEmpty() && userRepository.findByEmail("root@ibpms.local").isEmpty()) {
             UserEntity rootUser = new UserEntity();
             rootUser.setUsername("[Super_Administrador]");
             rootUser.setEmail("root@ibpms.local");

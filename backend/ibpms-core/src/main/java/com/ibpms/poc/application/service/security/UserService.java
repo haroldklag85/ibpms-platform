@@ -199,8 +199,9 @@ public class UserService {
     }
 
     // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+    // @Traceability: US-000 BUG-FIX Resilencia contra duplicidad de DataSeeder
     public java.util.Optional<UserEntity> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findFirstByEmail(email);
     }
 
     // @Traceability: US-027 - CA-04 (ADR-001 Refactor)

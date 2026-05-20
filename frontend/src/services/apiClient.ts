@@ -361,7 +361,7 @@ export const api = {
     abortIncident: (id: string) => apiClient.delete(`/admin/incidents/${id}`),
     
     // CA-04: Limpieza de contexto IA al abandonar Sesión (Purga RAG)
-    destroyCopilotSession: () => fetch('/api/v1/ai/copilot/session', { method: 'DELETE', keepalive: true, headers: { 'Authorization': `Bearer ${localStorage.getItem('ibpms_token')}` } }),
+    destroyCopilotSession: (sessionId: string) => fetch(`/api/v1/ai/copilot/session?sessionId=${encodeURIComponent(sessionId)}`, { method: 'DELETE', keepalive: true, headers: { 'Authorization': `Bearer ${localStorage.getItem('ibpms_token')}` } }),
 
     // CA-09: Trazador Forense de Descartes ISO (Override)
     reportIsoOverride: (payload: any) => apiClient.post('/forensics/iso-override', payload),

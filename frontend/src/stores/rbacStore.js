@@ -225,7 +225,8 @@ export const useRbacStore = defineStore('rbac', () => {
     async function revokeUserSession(userId) {
         try {
             // CA-14: Exorcismo JWT (Kill Session Extremo)
-            await apiClient.post(`/api/v1/admin/users/${userId}/kill-session`)
+            await apiClient.post(`/admin/users/${userId}/kill-session`)
+            await fetchUsers()
         } catch (error) {
             console.error("Error revocando sesión de usuario", error)
             throw error

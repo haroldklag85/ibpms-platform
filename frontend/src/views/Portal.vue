@@ -91,7 +91,7 @@ const loading = ref(true);
 
 onMounted(async () => {
     try {
-        const { data } = await integrationStore.getCatalogProcesses();
+        const { data } = await integrationStore.get('/design/processes/catalog');
         processDefinitions.value = data || [];
     } catch (e) {
         console.error('Error fetching processes', e);

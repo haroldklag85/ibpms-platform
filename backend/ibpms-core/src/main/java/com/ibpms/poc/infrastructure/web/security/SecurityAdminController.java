@@ -24,6 +24,21 @@ public class SecurityAdminController {
         this.blacklistService = blacklistService;
     }
 
+    @GetMapping("/delegations")
+    public org.springframework.http.ResponseEntity<java.util.List<Object>> getDelegations() {
+        return org.springframework.http.ResponseEntity.ok(java.util.Collections.emptyList());
+    }
+
+    @PostMapping("/delegations")
+    public org.springframework.http.ResponseEntity<Object> createDelegation(@RequestBody Object payload) {
+        return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(payload);
+    }
+
+    @DeleteMapping("/delegations/{id}")
+    public org.springframework.http.ResponseEntity<Void> revokeDelegation(@PathVariable java.util.UUID id) {
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
+
     /**
      * CA-14: Revocación de sesión (Kill-Session).
      * Invalida el token del usuario en tiempo real mediante Redis.

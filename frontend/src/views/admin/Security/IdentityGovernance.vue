@@ -1165,13 +1165,16 @@ const saveRole = async () => {
             const r = systemRoles.value.find(x => x.id === editingRole.value.id);
             if(r) Object.assign(r, { id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology });
         } else {
-            await apiClient.post('/admin/roles', {
-                id: roleForm.value.id,
-                name: roleForm.value.name,
-                topology: roleForm.value.topology,
-                parentRole: roleForm.value.parentRole
-            });
-            systemRoles.value.push({ id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology } as any);
+            const payload: any = {
+                name: roleForm.value.name
+            };
+            if (roleForm.value.parentRole) {
+                payload.parentRole = { id: roleForm.value.parentRole };
+            }
+            const res = await apiClient.post('/admin/roles', payload);
+            const createdId = res.data.id;
+            roleForm.value.id = createdId; // Asignar el ID real UUID generado por el backend
+            systemRoles.value.push({ id: createdId, name: roleForm.value.name, topology: roleForm.value.topology } as any);
         }
         
         // Sync matrix state locally for UI

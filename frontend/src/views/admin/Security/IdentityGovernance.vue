@@ -972,7 +972,7 @@ const passwordPolicy = z.string()
     .min(8, 'Mínimo 8 caracteres')
     .regex(/[A-Z]/, 'Al menos una Mayúscula')
     .regex(/[0-9]/, 'Al menos un Número')
-    .regex(/[!@#$%^&*]/, 'Al menos un Símbolo Especial (!@#$%...)');
+    .regex(/[!@#$%^&*?]/, 'Al menos un Símbolo Especial (!@#$%...)');
 
 const passwordValidation = computed(() => {
     if(userForm.value.isExternalIdp || editingUser.value) return { success: true }; // Standby local edits
@@ -1029,7 +1029,7 @@ const saveUser = async () => {
         showUserModal.value = false;
     } catch (e: any) {
         console.error('Error guardando usuario:', e);
-        showToast(e.response?.data?.message || 'Error de servidor al persistir identidad.', 'error');
+        showToast(e.response?.data?.detail || e.response?.data?.message || 'Error de servidor al persistir identidad.', 'error');
         
         // Fallback optimista para UAT si falla por 404/500
         if (editingUser.value) {

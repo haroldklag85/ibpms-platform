@@ -20,33 +20,13 @@ public class RabbitMqTopologyConfig {
     public static final String QUEUE_BPMN_EVENTS = "ibpms.bpmn.events";
     public static final String QUEUE_TASK_RESCUE = "ibpms.task.rescue";
 
-    @Bean
-    public TopicExchange primaryExchange() {
-        return new TopicExchange(TOPIC_EXCHANGE);
-    }
-
-    @Bean
-    public DirectExchange dlxExchange() {
-        return new DirectExchange(DLX_EXCHANGE);
-    }
-
-    @Bean
-    public Queue dlqGlobalQueue() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-message-ttl", 2592000000L); // 30 días
-        return new Queue(DLQ_GLOBAL, true, false, false, args);
-    }
-
-    @Bean
-    public Binding dlqBinding() {
-        // Enlaza todo lo que caiga al DLX directo a la cola DLQ. Usamos "dlq.route" o similar genérico.
-        return BindingBuilder.bind(dlqGlobalQueue()).to(dlxExchange()).with("dlq.route");
-    }
+    // @Traceability: Remediación Colisión Beans RabbitMQ J-02 (T-24)
+    // Exchanges y DLQ manejados por RabbitMQConfig.java
 
     private Map<String, Object> dlxArgs() {
         Map<String, Object> args = new HashMap<>();
         args.put("x-dead-letter-exchange", DLX_EXCHANGE);
-        args.put("x-dead-letter-routing-key", "dlq.route");
+        args.put("x-dead-letter-routing-key", "dlq.global");
         args.put("x-max-priority", 10);
         return args;
     }
@@ -79,27 +59,27 @@ public class RabbitMqTopologyConfig {
 
     // Bindings
     @Bean
-    public Binding notificationsBinding() {
-        return BindingBuilder.bind(notificationsQueue()).to(primaryExchange()).with("notifications.#");
+    public Binding notificationsBinding(TopicExchange ibpmsTopicExchange) {
+        return BindingBuilder.bind(notificationsQueue()).to(ibpmsTopicExchange).with("notifications.#");
     }
 
     @Bean
-    public Binding aiGenerationBinding() {
-        return BindingBuilder.bind(aiGenerationQueue()).to(primaryExchange()).with("ai.#");
+    public Binding aiGenerationBinding(TopicExchange ibpmsTopicExchange) {
+        return BindingBuilder.bind(aiGenerationQueue()).to(ibpmsTopicExchange).with("ai.#");
     }
 
     @Bean
-    public Binding integrationsBinding() {
-        return BindingBuilder.bind(integrationsWebhookQueue()).to(primaryExchange()).with("integrations.#");
+    public Binding integrationsBinding(TopicExchange ibpmsTopicExchange) {
+        return BindingBuilder.bind(integrationsWebhookQueue()).to(ibpmsTopicExchange).with("integrations.#");
     }
 
     @Bean
-    public Binding bpmnEventsBinding() {
-        return BindingBuilder.bind(bpmnEventsQueue()).to(primaryExchange()).with("bpmn.#");
+    public Binding bpmnEventsBinding(TopicExchange ibpmsTopicExchange) {
+        return BindingBuilder.bind(bpmnEventsQueue()).to(ibpmsTopicExchange).with("bpmn.#");
     }
 
     @Bean
-    public Binding taskRescueBinding() {
-        return BindingBuilder.bind(taskRescueNewQueue()).to(primaryExchange()).with("task.#");
+    public Binding taskRescueBinding(TopicExchange ibpmsTopicExchange) {
+        return BindingBuilder.bind(taskRescueNewQueue()).to(ibpmsTopicExchange).with("task.#");
     }
 }

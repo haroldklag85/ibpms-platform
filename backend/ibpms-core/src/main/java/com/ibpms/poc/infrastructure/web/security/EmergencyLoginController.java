@@ -30,7 +30,8 @@ public class EmergencyLoginController {
         this.securityAuditLogRepository = securityAuditLogRepository;
     }
 
-    @PostMapping("/emergency-login")
+    // @Traceability: Remediación Mapeo Ambiguo J-02 (T-24)
+    @PostMapping("/emergency-login-legacy")
     public ResponseEntity<Map<String, String>> emergencyLogin(@RequestBody EmergencyLoginRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
         if (!emergencySecret.equals(request.secret())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Credenciales de emergencia inválidas"));

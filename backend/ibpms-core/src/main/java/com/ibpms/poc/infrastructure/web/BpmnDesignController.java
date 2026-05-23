@@ -88,12 +88,14 @@ public class BpmnDesignController {
     public ResponseEntity<?> deployBpmnProcess(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "deploy_comment", required = true) String deployComment,
-            @RequestParam(value = "force_deploy", required = false, defaultValue = "false") boolean forceDeploy) {
+            @RequestParam(value = "force_deploy", required = false, defaultValue = "false") boolean forceDeploy,
+            @RequestHeader(value = "X-Sandbox-Mode", required = false, defaultValue = "false") boolean isSandbox) {
 
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         boolean hasRole = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("BPMN_Release_Manager"));
 
-        if (!hasRole) {
+        // @Traceability: US-005, CA-63 Aislamiento de Sandbox (Bypass de seguridad de release para simulaciones)
+        if (!hasRole && !isSandbox) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager."));
         }

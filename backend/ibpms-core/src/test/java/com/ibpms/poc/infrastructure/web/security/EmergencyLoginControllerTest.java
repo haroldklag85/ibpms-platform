@@ -75,7 +75,7 @@ class EmergencyLoginControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("mocked.jwt.token", response.getBody().get("access_token"));
         
-        verify(securityAuditLogRepository, times(1)).save(argThat(audit -> 
+        verify(securityAuditLogRepository, times(1)).save(argThat((SecurityAuditLogEntity audit) -> 
             audit.getIsBreakGlass() && 
             "Caída de SSO principal".equals(audit.getJustification()) &&
             "127.0.0.1".equals(audit.getIpAddress())

@@ -96,17 +96,19 @@ test.describe('US-005 V2: Certificación Zero-Mock BPMN Modeler (Full Suite)', (
       const status = await page.evaluate(async () => {
         const token = localStorage.getItem('ibpms_token') || 'mock-token';
         try {
+          // @Traceability: US-005, CA-63
+          const formData = new FormData();
+          const xmlBlob = new Blob(['<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1"><bpmn:process id="Process_Sandbox" isExecutable="true"><bpmn:startEvent id="StartEvent_1" /></bpmn:process></bpmn:definitions>'], { type: 'text/xml' });
+          formData.append('file', xmlBlob, 'process.bpmn');
+          formData.append('deploy_comment', 'Sandbox test');
+
           const res = await fetch('/api/v1/design/processes/deploy', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
               'X-Sandbox-Mode': 'true'
             },
-            body: JSON.stringify({ 
-              xml: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions id="Definitions_1"><bpmn:process id="Process_Sandbox" isExecutable="true"><bpmn:startEvent id="StartEvent_1" /></bpmn:process></bpmn:definitions>',
-              comment: 'Sandbox test'
-            })
+            body: formData
           });
           return res.status;
         } catch (e) {

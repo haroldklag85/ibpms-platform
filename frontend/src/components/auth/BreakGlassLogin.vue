@@ -19,6 +19,7 @@
             v-model="emergencyForm.email"
             type="email" 
             required 
+            data-testid="email-input"
             placeholder="admin@local"
             class="w-full bg-white border-2 border-red-100 rounded-xl py-3 pl-10 pr-4 text-sm font-bold text-gray-900 focus:border-red-500 focus:ring-0 transition-all placeholder:text-red-200"
           />
@@ -33,6 +34,7 @@
             v-model="emergencyForm.password"
             type="password" 
             required 
+            data-testid="password-input"
             placeholder="••••••••"
             class="w-full bg-white border-2 border-red-100 rounded-xl py-3 pl-10 pr-4 text-sm font-bold text-gray-900 focus:border-red-500 focus:ring-0 transition-all placeholder:text-red-200"
           />
@@ -56,6 +58,7 @@
 
       <button 
         type="submit" 
+        data-testid="login-submit"
         :disabled="loading"
         class="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-black py-4 rounded-xl shadow-xl shadow-red-200 flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] mt-6"
       >
@@ -65,7 +68,7 @@
       </button>
     </form>
 
-    <div v-if="error" class="mt-4 p-3 bg-red-100 border-l-4 border-red-600 rounded flex items-start gap-3">
+    <div v-if="error" data-testid="login-error-banner" class="mt-4 p-3 bg-red-100 border-l-4 border-red-600 rounded flex items-start gap-3">
        <span class="material-symbols-outlined text-red-600 text-[18px]">error</span>
        <p class="text-[11px] text-red-800 font-bold leading-tight">{{ error }}</p>
     </div>
@@ -108,7 +111,7 @@ const handleEmergencyLogin = async () => {
     }
   } catch (err: any) {
     console.error('Error Break-Glass:', err);
-    error.value = err.response?.data?.message || 'Fallo de autenticación en protocolo Break-Glass. Verifique credenciales.';
+    error.value = err.response?.data?.message || 'Error de conexión con el servidor. Verifique que el backend esté activo.';
   } finally {
     loading.value = false;
   }

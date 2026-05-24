@@ -26,6 +26,6 @@ class CamundaBpmnValidationAdapterTest {
         DeploymentValidationResponse response = adapter.validateBpmnStream(stream, List.of(), List.of());
         
         assertFalse(response.isValid());
-        assertTrue(response.getErrors().stream().anyMatch(e -> e.getMessage().contains("Fallo severo al leer XML")));
+        assertTrue(response.getErrors().stream().anyMatch(e -> e.contains("Error al parsear el modelo BPMN")));
     }
 }

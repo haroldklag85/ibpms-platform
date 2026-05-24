@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
-import path from 'path';
+import { fileURLToPath, URL } from 'node:url';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -12,8 +12,8 @@ export default defineConfig({
     plugins: [vue() as any],
     resolve: {
         alias: {
-            '@': path.resolve(__dirname, './src'),
-            'frappe-gantt/dist/frappe-gantt.css': path.resolve(__dirname, './src/tests/dummy.css'),
+            '@': fileURLToPath(new URL('./src', import.meta.url)),
+            'frappe-gantt/dist/frappe-gantt.css': fileURLToPath(new URL('./src/tests/dummy.css', import.meta.url)),
         },
     },
     server: {

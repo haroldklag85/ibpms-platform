@@ -31,7 +31,7 @@ class ExternalTaskTopicJpaAdapterTest {
     void findByIsActiveTrue_ReturnsDomains() {
         ExternalTaskTopicEntity entity = new ExternalTaskTopicEntity();
         entity.setTopicName("topic1");
-        entity.setActive(true);
+        entity.setIsActive(true);
         when(repository.findByIsActiveTrue()).thenReturn(List.of(entity));
 
         List<ExternalTaskTopic> result = adapter.findByIsActiveTrue();

@@ -75,22 +75,19 @@ public abstract class AbstractIntegrationTest {
             registry.add("spring.rabbitmq.port", RABBITMQ_CONTAINER::getFirstMappedPort);
         } else {
             String postgresHost = System.getenv().getOrDefault("POSTGRES_HOST", "localhost");
-            String postgresPort = System.getenv().getOrDefault("POSTGRES_PORT", "5433");
             String redisHost = System.getenv().getOrDefault("REDIS_HOST", "localhost");
-            String redisPort = System.getenv().getOrDefault("REDIS_PORT", "6380");
             String rabbitmqHost = System.getenv().getOrDefault("RABBITMQ_HOST", "localhost");
-            String rabbitmqPort = System.getenv().getOrDefault("RABBITMQ_PORT", "5673");
 
-            registry.add("spring.datasource.url", () -> "jdbc:postgresql://" + postgresHost + ":" + postgresPort + "/ibpms_e2e");
-            registry.add("spring.datasource.username", () -> "ibpms");
-            registry.add("spring.datasource.password", () -> "ibpms_e2e_pass");
+            registry.add("spring.datasource.url", () -> "jdbc:postgresql://" + postgresHost + ":5432/ibpms_db");
+            registry.add("spring.datasource.username", () -> "ibpms_user");
+            registry.add("spring.datasource.password", () -> "ibpms_password");
             registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
 
             registry.add("spring.data.redis.host", () -> redisHost);
-            registry.add("spring.data.redis.port", () -> Integer.parseInt(redisPort));
+            registry.add("spring.data.redis.port", () -> 6379);
 
             registry.add("spring.rabbitmq.host", () -> rabbitmqHost);
-            registry.add("spring.rabbitmq.port", () -> Integer.parseInt(rabbitmqPort));
+            registry.add("spring.rabbitmq.port", () -> 5672);
         }
 
         // Cumplimiento Zero-Trust: Liquibase controla la DB, Hibernate en modo validación pura.

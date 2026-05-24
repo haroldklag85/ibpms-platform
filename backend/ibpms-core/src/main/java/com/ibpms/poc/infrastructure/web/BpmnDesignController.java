@@ -94,7 +94,7 @@ public class BpmnDesignController {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         boolean hasRole = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("BPMN_Release_Manager"));
 
-        // @Traceability: US-005, CA-63 Aislamiento de Sandbox (Bypass de seguridad de release para simulaciones)
+        // @Traceability: US-005, CA-63 Aislamiento de Sandbox
         if (!hasRole && !isSandbox) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager."));

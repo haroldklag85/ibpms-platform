@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
  * Todas las respuestas de error siguen el mismo formato JSON estándar.
  */
 @RestControllerAdvice
+@org.springframework.core.annotation.Order(org.springframework.core.Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
 @Traceability(US = "US-000", CA = {"CA-01", "CA-02", "CA-03", "CA-04", "CA-37"})
 public class GlobalExceptionHandler {
@@ -161,6 +162,34 @@ public class GlobalExceptionHandler {
         problem.setType(URI.create("https://ibpms.com/errors/status"));
         problem.setTitle(ex.getReason() != null ? ex.getReason() : "Error " + ex.getStatusCode().value());
         problem.setDetail(ex.getReason());
+        return problem;
+    }
+
+    // @Traceability: US-005, CA-65 Validaciones de Contrato API y prevención de JSONParseException
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ProblemDetail handleMediaTypeNotSupported(org.springframework.web.HttpMediaTypeNotSupportedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        problem.setType(URI.create("https://ibpms.com/errors/unsupported-media-type"));
+        problem.setTitle("Tipo de Contenido no Soportado");
+        problem.setDetail("El endpoint no acepta el Content-Type enviado. Asegúrese de enviar multipart/form-data si está subiendo archivos.");
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ProblemDetail handleMissingParams(org.springframework.web.bind.MissingServletRequestParameterException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setType(URI.create("https://ibpms.com/errors/missing-parameter"));
+        problem.setTitle("Parámetro Requerido Faltante");
+        problem.setDetail("El parámetro '" + ex.getParameterName() + "' es obligatorio y no fue provisto.");
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.MultipartException.class)
+    public ProblemDetail handleMultipartException(org.springframework.web.multipart.MultipartException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setType(URI.create("https://ibpms.com/errors/multipart-error"));
+        problem.setTitle("Error procesando archivo");
+        problem.setDetail("No se pudo leer el archivo adjunto o no se envió correctamente.");
         return problem;
     }
 

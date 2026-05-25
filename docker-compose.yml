@@ -80,6 +80,7 @@ services:
       - RABBITMQ_PASSWORD=guest
       - REDIS_HOST=ibpms-redis
       - REDIS_PORT=6379
+      - AZURITE_HOST=ibpms-azurite
       - JWT_SECRET=changeme-this-must-be-at-least-32-chars-for-hs256-signature!!
     volumes:
       - ./backend:/app
@@ -94,6 +95,22 @@ services:
         condition: service_healthy
       ibpms-redis:
         condition: service_healthy
+      ibpms-azurite:
+        condition: service_started
+
+  # 5. Emulador de Azure Storage (Azurite)
+  # Necesario para el almacenamiento local persistente de blobs, tablas y colas de Azure sin costo de nube.
+  ibpms-azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: ibpms-azurite-dev
+    restart: unless-stopped
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite_data:/data
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data"
 
 volumes:
   # Volúmenes persistentes para que los datos no se pierdan al apagar la computadora / detener Docker
@@ -101,3 +118,4 @@ volumes:
   rabbitmq_data:
   redis_data:
   maven_data:
+  azurite_data:

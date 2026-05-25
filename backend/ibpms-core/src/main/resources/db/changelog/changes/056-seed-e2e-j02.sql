@@ -9,13 +9,13 @@ VALUES ('tenant_alpha', 'Alpha Corp', true)
 ON CONFLICT (slug) DO NOTHING;
 
 -- Insertar Perfil Sysadmin para Anti-Spoofing DMN
-INSERT INTO ibpms_security_user (id, username, email, password_hash, is_active, is_external_idp, created_at) 
-VALUES (gen_random_uuid(), 'sysadmin', 'sysadmin@alpha.com', '$2a$10$dummyHash...', true, false, CURRENT_TIMESTAMP)
+INSERT INTO ibpms_security_user (id, username, email, password_hash, status, is_external_idp, created_at) 
+VALUES (gen_random_uuid(), 'sysadmin', 'sysadmin@alpha.com', '$2a$10$dummyHash...', 'ACTIVE', false, CURRENT_TIMESTAMP)
 ON CONFLICT (email) DO NOTHING;
 
 -- Insertar Perfil Analista Base
-INSERT INTO ibpms_security_user (id, username, email, password_hash, is_active, is_external_idp, created_at) 
-VALUES (gen_random_uuid(), 'analista_n1', 'analista_n1@alpha.com', '$2a$10$dummyHash...', true, false, CURRENT_TIMESTAMP)
+INSERT INTO ibpms_security_user (id, username, email, password_hash, status, is_external_idp, created_at) 
+VALUES (gen_random_uuid(), 'analista_n1', 'analista_n1@alpha.com', '$2a$10$dummyHash...', 'ACTIVE', false, CURRENT_TIMESTAMP)
 ON CONFLICT (email) DO NOTHING;
 
 -- Asignar roles

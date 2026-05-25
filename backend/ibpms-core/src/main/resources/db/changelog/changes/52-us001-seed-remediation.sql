@@ -4,11 +4,11 @@
 -- @Traceability: US-001 - CA-04, CA-08 (Seed Data)
 
 -- 1. Usuarios (SUPER_ADMIN, OPERATIVO_1, OPERATIVO_2)
-INSERT INTO ibpms_security_user (id, username, email, is_active, created_at)
+INSERT INTO ibpms_security_user (id, username, email, status, created_at)
 VALUES 
-    ('a0000000-0000-4000-8000-000000000001', 'admin.test', 'admin@ibpms.com', true, CURRENT_TIMESTAMP),
-    ('b0000000-0000-4000-8000-000000000001', 'operativo.1', 'op1@ibpms.com', true, CURRENT_TIMESTAMP),
-    ('c0000000-0000-4000-8000-000000000001', 'operativo.2', 'op2@ibpms.com', true, CURRENT_TIMESTAMP)
+    ('a0000000-0000-4000-8000-000000000001', 'admin.test', 'admin@ibpms.com', 'ACTIVE', CURRENT_TIMESTAMP),
+    ('b0000000-0000-4000-8000-000000000001', 'operativo.1', 'op1@ibpms.com', 'ACTIVE', CURRENT_TIMESTAMP),
+    ('c0000000-0000-4000-8000-000000000001', 'operativo.2', 'op2@ibpms.com', 'ACTIVE', CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. Feature Toggles

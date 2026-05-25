@@ -114,6 +114,12 @@
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- PostgreSQL Driver para Perfiles E2E y Prod -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 		<!-- Dependencia al Modulith de Decisiones (Hexagonal) -->
 		<dependency>
 			<groupId>com.ibpms</groupId>

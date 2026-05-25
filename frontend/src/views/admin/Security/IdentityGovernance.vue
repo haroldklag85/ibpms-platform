@@ -867,7 +867,7 @@ const toggleUserStatus = async (user: any) => {
     const originalState = user.active;
     user.active = !user.active; // Mapeo Optimista
     try {
-        await integrationStore.put(`/api/v1/admin/users/${user.id}/status`, { active: user.active });
+        await integrationStore.put(`/admin/users/${user.id}/status`, { active: user.active });
         if(!user.active) showToast(`Usuario ${user.name} desactivado (Kill Switch accionado).`, 'error');
         else showToast(`Usuario ${user.name} activado exitosamente.`, 'success');
     } catch(e: any) {
@@ -954,7 +954,7 @@ const triggerExorcism = async (user: any) => {
     if (confirm(`⚠️ ALERTA CISO: ¿Desea desencadenar el Exorcismo (RabbitMQ) para desasignar masivamente todas las tareas de ${user.name}?`)) {
         try {
             // CA-14: Exorcismo JWT (Kill Session Extremo) & Desasignación RabbitMQ
-            await integrationStore.post(`/api/v1/admin/users/${user.id}/revoke-session`);
+            await integrationStore.post(`/admin/users/${user.id}/revoke-session`);
             showToast(`RabbitMQ TaskRescueConsumer disparado para ${user.name}.`, 'success');
         } catch(e) {
             showToast(`Fallback local: Tareas de ${user.name} liberadas a nivel cliente.`, 'success');
@@ -972,7 +972,7 @@ const passwordPolicy = z.string()
     .min(8, 'Mínimo 8 caracteres')
     .regex(/[A-Z]/, 'Al menos una Mayúscula')
     .regex(/[0-9]/, 'Al menos un Número')
-    .regex(/[!@#$%^&*]/, 'Al menos un Símbolo Especial (!@#$%...)');
+    .regex(/[!@#$%^&*?]/, 'Al menos un Símbolo Especial (!@#$%...)');
 
 const passwordValidation = computed(() => {
     if(userForm.value.isExternalIdp || editingUser.value) return { success: true }; // Standby local edits
@@ -997,18 +997,28 @@ const saveUser = async () => {
     
     try {
         if(editingUser.value) {
-            await apiClient.put(`/api/v1/admin/users/${editingUser.value.id}`, {
-                name: userForm.value.name,
-                roles: userForm.value.roles,
-                active: userForm.value.active
-            });
+            const updatePayload: any = {
+                email: userForm.value.email,
+                roleIds: userForm.value.roles,
+                isActive: userForm.value.active,
+                isExternalIdp: userForm.value.isExternalIdp
+            };
+            if (userForm.value.password) {
+                updatePayload.password = userForm.value.password;
+            }
+            await apiClient.put(`/admin/users/${editingUser.value.id}`, updatePayload);
             const u = systemUsers.value.find(x => x.id === editingUser.value.id);
             if(u) Object.assign(u, userForm.value);
             showToast('Usuario actualizado con éxito (RBAC Aditivo Sincronizado)', 'success');
         } else {
-            const res = await apiClient.post('/api/v1/admin/users', {
-                ...userForm.value
-            });
+            const createPayload = {
+                username: userForm.value.name,
+                email: userForm.value.email,
+                password: userForm.value.password,
+                isExternalIdp: userForm.value.isExternalIdp,
+                roleIds: userForm.value.roles
+            };
+            const res = await apiClient.post('/admin/users', createPayload);
             systemUsers.value.unshift({
                 ...res.data,
                 name: res.data.username || userForm.value.name,
@@ -1019,7 +1029,7 @@ const saveUser = async () => {
         showUserModal.value = false;
     } catch (e: any) {
         console.error('Error guardando usuario:', e);
-        showToast(e.response?.data?.message || 'Error de servidor al persistir identidad.', 'error');
+        showToast(e.response?.data?.detail || e.response?.data?.message || 'Error de servidor al persistir identidad.', 'error');
         
         // Fallback optimista para UAT si falla por 404/500
         if (editingUser.value) {
@@ -1034,7 +1044,7 @@ const tempPasswordValue = ref('');
 const generateTempPassword = async () => {
     if(!editingUser.value) return;
     try {
-        const res = await integrationStore.post(`/api/v1/admin/users/${editingUser.value.id}/reset-password`);
+        const res = await integrationStore.post(`/admin/users/${editingUser.value.id}/reset-password`);
         if (!res.data || !res.data.tempPassword) {
              throw new Error('No tempPassword provided by server');
         }
@@ -1054,7 +1064,7 @@ const importEntraIdRoles = async () => {
     showEntraIdRolesModal.value = true;
     loadingEntraId.value = true;
     try {
-        const response = await apiClient.get('/api/v1/admin/roles/entraid-groups');
+        const response = await apiClient.get('/admin/roles/entraid-groups');
         entraIdGroups.value = response.data || [];
     } catch (e) {
         showToast('Fallback local: Usando grupos locales simulados', 'success');
@@ -1165,13 +1175,16 @@ const saveRole = async () => {
             const r = systemRoles.value.find(x => x.id === editingRole.value.id);
             if(r) Object.assign(r, { id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology });
         } else {
-            await apiClient.post('/admin/roles', {
-                id: roleForm.value.id,
-                name: roleForm.value.name,
-                topology: roleForm.value.topology,
-                parentRole: roleForm.value.parentRole
-            });
-            systemRoles.value.push({ id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology } as any);
+            const payload: any = {
+                name: roleForm.value.name
+            };
+            if (roleForm.value.parentRole) {
+                payload.parentRole = { id: roleForm.value.parentRole };
+            }
+            const res = await apiClient.post('/admin/roles', payload);
+            const createdId = res.data.id;
+            roleForm.value.id = createdId; // Asignar el ID real UUID generado por el backend
+            systemRoles.value.push({ id: createdId, name: roleForm.value.name, topology: roleForm.value.topology } as any);
         }
         
         // Sync matrix state locally for UI
@@ -1201,7 +1214,7 @@ const saveMatrix = async () => {
            canExecuteTasks: !!matrixState.value[`${role.id}_${proc.id}_E`]
        })).filter(p => p.canInitiateProcess || p.canExecuteTasks);
 
-       return apiClient.put(`/api/v1/admin/roles/${role.id}/process-permissions`, permissions);
+       return apiClient.put(`/admin/roles/${role.id}/process-permissions`, permissions);
     });
     
     await Promise.all(promises);
@@ -1218,7 +1231,7 @@ const saveMatrix = async () => {
 };
 const downloadMatrixCsv = async () => {
   try {
-    const response = await apiClient.get('/api/v1/admin/security/matrix/export', { responseType: 'blob' });
+    const response = await apiClient.get('/admin/security/matrix/export', { responseType: 'blob' });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -1364,7 +1377,7 @@ const copySecret = () => {
 const revealSecret = async () => {
     isRevealingSecret.value = true;
     try {
-        await apiClient.post('/api/v1/admin/audit/telemetry', { 
+        await apiClient.post('/admin/audit/telemetry', { 
             action: 'REVEAL_API_KEY', 
             timestamp: new Date().toISOString() 
         });

@@ -1,5 +1,8 @@
 # Auditoría de Arquitectura V2: Reporte Consolidado de Deuda Técnica y Ambigüedades
 
+> [!CAUTION]
+> **HALLAZGOS GRADUADOS AL SSOT:** Las brechas y deudas técnicas identificadas en este documento de auditoría de arquitectura V2 fueron solventadas y graduadas como Criterios de Aceptación formales en los archivos de Épica correspondientes (`docs/requirements/epics/`). Este archivo es ahora histórico y de solo lectura.
+
 **Fecha de Ejecución:** 2026-05-12
 **Autor:** Antigravity (Lead Architect)
 **Alcance (Historias de Usuario):** US-000, US-001, US-002, US-003, US-004, US-005, US-007, US-017, US-025, US-028, US-029, US-030, US-034, US-036, US-038, US-039, US-043, US-048.

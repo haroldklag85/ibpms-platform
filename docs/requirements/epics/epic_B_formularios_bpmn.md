@@ -1779,6 +1779,38 @@ Scenario: Intervención de Emergencia sobre Bloqueo Pesimista (Break-Lock)  (CA-
     And el Pre-Flight Analyzer validará que cada Service Task del BPMN tenga un Topic que exista en el catálogo. Si el Topic no existe, emitirá Error ❌: "La tarea '{taskName}' refiere al topic '{topicName}' que no está registrado en el catálogo de Workers."
     And el Administrador IT podrá registrar nuevos Topics desde una sección administrable en la Pantalla 11 (Hub de Integraciones).
 
+  Scenario: [REMEDIACIÓN] Hard-Stop Estructural de Gobernanza (CA-71)
+    # Origen: us005_audit_report.md — Ticket: REM-005-CA07 y CA09
+    Given el analizador Pre-Flight de Despliegue BPMN
+    When un Arquitecto intenta desplegar un diagrama con ambigüedades estructurales (ej. pasarelas divergentes sin flujos por defecto o procesos sin start/end events)
+    Then el motor debe detectar la ambigüedad y arrojar un `PreFlightResultDTO` con severidad `ERROR`
+    And bloquear físicamente el despliegue hacia producción retornando HTTP 422
+    And garantizando que ningún proceso lógicamente roto pueda instanciarse.
+
+  Scenario: [REMEDIACIÓN] Detección de Nodos Zombie o Colgados (CA-72)
+    # Origen: us005_audit_report.md — Ticket: REM-005-CA22
+    Given la validación topológica del motor BPMN en la etapa de diseño
+    When se evalúa un nodo (UserTask, ServiceTask, Event) dentro del flujo
+    Then el analizador debe verificar que todos los nodos (excepto StartEvent) posean al menos un flujo `incoming`
+    And debe verificar que todos los nodos (excepto EndEvent) posean al menos un flujo `outgoing`
+    And en caso de omisión, debe emitir un ERROR de "Nodo Zombie / Colgado" bloqueando el despliegue.
+
+  Scenario: [REMEDIACIÓN] Detección Topológica de Bucles Infinitos Síncronos (CA-73)
+    # Origen: us005_audit_report.md — Ticket: REM-005-CA23
+    Given la validación topológica de seguridad (Anti-DoS) del motor
+    When el motor procesa el grafo completo de SequenceFlows y Tareas
+    Then debe discriminar aristas que apunten a "Wait States" (UserTask, Timer, ReceiveTask, CatchEvent)
+    And aplicar Búsqueda en Profundidad (DFS) sobre el sub-grafo residual síncrono
+    And si detecta un ciclo cerrado en tiempo de compilación/diseño, levantar un ERROR "INFINITE_LOOP_DETECTED"
+    And abortar el despliegue para evitar caídas de CPU y denegación de servicio (DoS) en el contenedor.
+
+  Scenario: [REMEDIACIÓN] Hard-Stop para Pasarelas Divergentes sin Convergencia (CA-74)
+    # Origen: us005_audit_report.md — Ticket: REM-005-CA27
+    Given la validación topológica del motor BPMN
+    When un Arquitecto modela una pasarela paralela o inclusiva divergente (flujos de salida > 1)
+    Then el analizador debe auditar si existe al menos una pasarela convergente correspondiente
+    And si detecta pasarelas divergentes "huérfanas" de convergencia, debe levantar un ERROR "GATEWAY_CONVERGENCE_MISMATCH"
+    And abortar el despliegue para prevenir la fuga de tokens y ejecuciones fantasma.
 
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).

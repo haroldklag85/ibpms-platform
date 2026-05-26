@@ -1,4 +1,8 @@
 # 🚨 Reporte de Auditoría: Violaciones Zero-Mock Gate
+
+> [!CAUTION]
+> **HALLAZGOS GRADUADOS AL SSOT:** Las violaciones de este documento (datos mockeados en `BpmnDesigner.vue`, `FormDesigner.vue`, etc.) fueron solventadas y graduadas como Criterios de Aceptación formales en el archivo de Épica correspondiente (`docs/requirements/epics/epic_B_formularios_bpmn.md`). Este archivo es ahora histórico y de solo lectura.
+
 **Para:** Arquitecto Líder / CISO
 **Fecha:** 2026-04-23
 **Contexto del Incidente:** El pre-commit hook `anti-mock-scanner.js` ha bloqueado la integración del Sprint 6 hacia el entorno UAT. La política estricta prohíbe datos "mockeados" quemados (`hardcoded`) dentro del directorio `/src/views/` y `/src/components/`, requiriendo que cualquier simulación de datos ocurra estrictamente en la capa de testing (`/src/tests/`) o se consuman endpoints reales del Backend.

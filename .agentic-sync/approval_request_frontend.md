@@ -1,27 +1,22 @@
-# Solicitud de Aprobación: US-038 Identity Governance (Frontend)
+# APROBACIÓN REQUERIDA: US-038 - Certificación Frontend (CA-06 a CA-12)
 
-**Agente:** Frontend Developer
-**Tarea:** Remediación CA-01 al CA-05
-**Branch:** `DevDavid`
+**Para:** Arquitecto Líder
+**De:** Desarrollador Frontend (David)
+**Asunto:** Solicitud de Aprobación para Implementación de Trazabilidad y Anomalías
 
-## Resumen del Plan Propuesto
+## Resumen de la Propuesta
+Se solicita aprobación para proceder con la implementación técnica de los criterios finales de la US-038, enfocándonos en la interfaz de delegación, el tablero de anomalías CISO y la visibilidad multi-rol en el header/workdesk.
 
-1.  **CA-01 (Redis Fail-Open)**: Intercepción de HTTP 403 con mensaje de Redis caído para mostrar alerta de "Degradación Segura" (Modo Solo Lectura).
-2.  **CA-03 (JIT Completion)**: Centralización de la lógica de sincronización de perfiles incompletos (428) en `authStore.ts` y actualización del modal.
-3.  **CA-04 (Break-Glass)**: Implementación de un nuevo componente `BreakGlassLogin.vue` que incluya el campo obligatorio de **Justificación** para auditoría forense.
-4.  **CA-05 (RBAC Aditivo)**: Verificación de la integridad visual del multi-select de roles y la fusión aditiva de permisos.
+## Puntos Clave
+1. **Delegaciones (CA-07):** Migración de lógica mockeada a persistencia real en `/api/v1/security/delegations`.
+2. **Visibilidad Multi-Rol (CA-10/11):** Sincronización del Header y Workdesk con los claims del JWT para mostrar el contexto operativo real.
+3. **Anomalías (CA-12):** Dashboard reactivo para la resolución de conflictos de SoD detectados por el backend.
+4. **Resiliencia:** Verificación final mediante `frontend_build_audit`.
 
-## Cambios Técnicos Clave
+## Plan de Trabajo
+1. Refactorización de `rbacStore.js` para soportar delegaciones reales.
+2. Inyección de `topRolesTipText` en el Header de `MainLayout.vue`.
+3. Activación de la pestaña de Anomalías en `IdentityGovernance.vue`.
+4. Ejecución de build y commit en `DevDavid`.
 
--   **`apiClient.ts`**: Nuevo interceptor para estados de degradación.
--   **`authStore.ts`**: Nuevo método `syncProfile`.
--   **`BreakGlassLogin.vue`**: Nuevo componente de seguridad táctica.
--   **`ErrorStateGlobal.vue`**: Soporte para alertas de degradación segura.
-
-## Verificación
--   Suite de tests unitarios (Vitest) cubriendo los 3 flujos críticos (Fail-Open, JIT, Break-Glass).
--   `npm run build` mandatorio para asegurar Zero-Trust UI.
-
----
-
-**Humano, por favor entrega este mensaje al Arquitecto Líder para su veredicto técnico.**
+¿Procede la ejecución?

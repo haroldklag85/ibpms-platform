@@ -140,7 +140,7 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
-    // CA-12: Anomalías de Seguridad
+    // CA-12: Anomalías de Seguridad (Tablero CISO)
     async function fetchAnomalies() {
         try {
             const response = await apiClient.get('/security/anomalies')
@@ -150,9 +150,10 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
-    async function resolveAnomaly(id) {
+    async function resolveAnomaly(id, resolutionText = 'Subsanado') {
         try {
-            await apiClient.post(`/security/anomalies/${id}/resolve`)
+            // CA-12: El contrato exige PUT para resolver anomalías con payload (Sprint-6)
+            await apiClient.put(`/security/anomalies/${id}/resolve`, { resolution: resolutionText })
             await fetchAnomalies()
         } catch (error) {
             console.error("Error resolviendo anomalía", error)
@@ -189,14 +190,19 @@ export const useRbacStore = defineStore('rbac', () => {
     }
 
     async function fetchDelegations() {
-        // Mock to prevent 404/500 backend errors for unimplemented endpoints
-        delegations.value = []
+        try {
+            // CA-07: Obtener delegaciones reales
+            const response = await apiClient.get('/admin/security/delegations')
+            delegations.value = response.data
+        } catch (error) {
+            console.error("Error obteniendo delegaciones", error)
+        }
     }
 
-    async function createDelegation(userId, payload) {
+    async function createDelegation(payload) {
         try {
-            // CA-9: Endpoint real de delegación por usuario
-            await apiClient.post(`/api/v1/admin/users/${userId}/delegate`, payload)
+            // CA-07: Crear delegación real
+            await apiClient.post('/admin/security/delegations', payload)
             await fetchDelegations()
         } catch (error) {
             console.error("Error creando delegación", error)
@@ -206,6 +212,7 @@ export const useRbacStore = defineStore('rbac', () => {
 
     async function revokeDelegation(id) {
         try {
+            // CA-07: Revocar/Eliminar delegación
             await apiClient.delete(`/admin/security/delegations/${id}`)
             await fetchDelegations()
         } catch (error) {
@@ -218,7 +225,8 @@ export const useRbacStore = defineStore('rbac', () => {
     async function revokeUserSession(userId) {
         try {
             // CA-14: Exorcismo JWT (Kill Session Extremo)
-            await apiClient.post(`/api/v1/admin/users/${userId}/kill-session`)
+            await apiClient.post(`/admin/users/${userId}/kill-session`)
+            await fetchUsers()
         } catch (error) {
             console.error("Error revocando sesión de usuario", error)
             throw error
@@ -228,7 +236,7 @@ export const useRbacStore = defineStore('rbac', () => {
     // --- CA-15: Public Process Management ---
     async function fetchSystemProcesses() {
         try {
-            const response = await apiClient.get('/design/processes')
+            const response = await apiClient.get('/design/processes/catalog')
             systemProcesses.value = response.data
         } catch (error) {
             console.error("Error obteniendo procesos del sistema", error)

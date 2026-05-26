@@ -119,7 +119,7 @@ public class UserService {
 
         if (UserStatus.INACTIVE.equals(user.getStatus())) {
             // CA-08 Trigger mass unclaim if user was deactivated
-            taskRescueProducer.triggerMassiveUnclaim(id.toString());
+            taskRescueProducer.triggerDeactivationUnclaim(id.toString());
         }
 
         // CA-32: Auto-curación del menú cacheado cuando los roles del usuario cambian
@@ -174,7 +174,7 @@ public class UserService {
         );
 
         // CA-08 Trigger mass unclaim since user is deactivated
-        taskRescueProducer.triggerMassiveUnclaim(id.toString());
+        taskRescueProducer.triggerDeactivationUnclaim(id.toString());
         
         // CA-32: Auto-curación del menú cacheado
         menuLayoutService.invalidateMenuTopology(user.getUsername());
@@ -199,8 +199,9 @@ public class UserService {
     }
 
     // @Traceability: US-027 - CA-04 (ADR-001 Refactor)
+    // @Traceability: US-000 BUG-FIX Resilencia contra duplicidad de DataSeeder
     public java.util.Optional<UserEntity> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findFirstByEmail(email);
     }
 
     // @Traceability: US-027 - CA-04 (ADR-001 Refactor)

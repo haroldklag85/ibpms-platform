@@ -432,6 +432,9 @@
             <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                <span class="material-symbols-outlined text-red-600">gpp_bad</span> Consola de Anomalías de Seguridad
             </h2>
+            <button @click="rbacStore.fetchAnomalies()" class="text-indigo-600 hover:text-indigo-800 text-xs font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">refresh</span> Actualizar Tablero
+            </button>
           </div>
           
           <table class="min-w-full divide-y divide-gray-200 border rounded-lg overflow-hidden flex-1 shadow-sm">
@@ -445,7 +448,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 bg-white">
-               <tr v-for="anomaly in securityAnomalies" :key="anomaly.id" class="hover:bg-red-50 transition-colors">
+               <tr v-for="anomaly in rbacStore.anomalies" :key="anomaly.id" class="hover:bg-red-50 transition-colors">
                  <td class="px-4 py-3 text-xs whitespace-nowrap text-gray-500 font-mono">{{ new Date(anomaly.detectedAt).toLocaleString() }}</td>
                  <td class="px-4 py-3 text-xs">
                     <span class="px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[10px]" :class="anomaly.severity === 'CRITICAL' ? 'bg-red-600 text-white' : 'bg-orange-100 text-orange-800 border border-orange-200'">{{ anomaly.type.replace('_', ' ') }}</span>
@@ -463,7 +466,7 @@
                     <span v-else class="text-gray-400 text-xs font-medium italic">Acción Cerrada</span>
                  </td>
                </tr>
-               <tr v-if="securityAnomalies.length === 0">
+               <tr v-if="rbacStore.anomalies.length === 0">
                  <td colspan="5" class="py-12 text-center text-gray-400 font-medium">No se detectan incidentes de seguridad (Limpieza IAM).</td>
                </tr>
             </tbody>
@@ -853,7 +856,6 @@ const isCoreRole = (role: any) => {
 const systemRoles = ref<any[]>([]);
 const systemUsers = ref<any[]>([]);
 const systemProcesses = ref<any[]>([]);
-const securityAnomalies = ref<any[]>([]);
 
 const getRoleName = (roleId: string) => {
     const r = systemRoles.value.find(x => x.id === roleId);
@@ -865,7 +867,7 @@ const toggleUserStatus = async (user: any) => {
     const originalState = user.active;
     user.active = !user.active; // Mapeo Optimista
     try {
-        await integrationStore.put(`/api/v1/admin/users/${user.id}/status`, { active: user.active });
+        await integrationStore.put(`/admin/users/${user.id}/status`, { active: user.active });
         if(!user.active) showToast(`Usuario ${user.name} desactivado (Kill Switch accionado).`, 'error');
         else showToast(`Usuario ${user.name} activado exitosamente.`, 'success');
     } catch(e: any) {
@@ -952,7 +954,7 @@ const triggerExorcism = async (user: any) => {
     if (confirm(`⚠️ ALERTA CISO: ¿Desea desencadenar el Exorcismo (RabbitMQ) para desasignar masivamente todas las tareas de ${user.name}?`)) {
         try {
             // CA-14: Exorcismo JWT (Kill Session Extremo) & Desasignación RabbitMQ
-            await integrationStore.post(`/api/v1/admin/users/${user.id}/revoke-session`);
+            await integrationStore.post(`/admin/users/${user.id}/revoke-session`);
             showToast(`RabbitMQ TaskRescueConsumer disparado para ${user.name}.`, 'success');
         } catch(e) {
             showToast(`Fallback local: Tareas de ${user.name} liberadas a nivel cliente.`, 'success');
@@ -970,7 +972,7 @@ const passwordPolicy = z.string()
     .min(8, 'Mínimo 8 caracteres')
     .regex(/[A-Z]/, 'Al menos una Mayúscula')
     .regex(/[0-9]/, 'Al menos un Número')
-    .regex(/[!@#$%^&*]/, 'Al menos un Símbolo Especial (!@#$%...)');
+    .regex(/[!@#$%^&*?]/, 'Al menos un Símbolo Especial (!@#$%...)');
 
 const passwordValidation = computed(() => {
     if(userForm.value.isExternalIdp || editingUser.value) return { success: true }; // Standby local edits
@@ -995,18 +997,28 @@ const saveUser = async () => {
     
     try {
         if(editingUser.value) {
-            await apiClient.put(`/api/v1/admin/users/${editingUser.value.id}`, {
-                name: userForm.value.name,
-                roles: userForm.value.roles,
-                active: userForm.value.active
-            });
+            const updatePayload: any = {
+                email: userForm.value.email,
+                roleIds: userForm.value.roles,
+                isActive: userForm.value.active,
+                isExternalIdp: userForm.value.isExternalIdp
+            };
+            if (userForm.value.password) {
+                updatePayload.password = userForm.value.password;
+            }
+            await apiClient.put(`/admin/users/${editingUser.value.id}`, updatePayload);
             const u = systemUsers.value.find(x => x.id === editingUser.value.id);
             if(u) Object.assign(u, userForm.value);
             showToast('Usuario actualizado con éxito (RBAC Aditivo Sincronizado)', 'success');
         } else {
-            const res = await apiClient.post('/api/v1/admin/users', {
-                ...userForm.value
-            });
+            const createPayload = {
+                username: userForm.value.name,
+                email: userForm.value.email,
+                password: userForm.value.password,
+                isExternalIdp: userForm.value.isExternalIdp,
+                roleIds: userForm.value.roles
+            };
+            const res = await apiClient.post('/admin/users', createPayload);
             systemUsers.value.unshift({
                 ...res.data,
                 name: res.data.username || userForm.value.name,
@@ -1017,7 +1029,7 @@ const saveUser = async () => {
         showUserModal.value = false;
     } catch (e: any) {
         console.error('Error guardando usuario:', e);
-        showToast(e.response?.data?.message || 'Error de servidor al persistir identidad.', 'error');
+        showToast(e.response?.data?.detail || e.response?.data?.message || 'Error de servidor al persistir identidad.', 'error');
         
         // Fallback optimista para UAT si falla por 404/500
         if (editingUser.value) {
@@ -1032,7 +1044,7 @@ const tempPasswordValue = ref('');
 const generateTempPassword = async () => {
     if(!editingUser.value) return;
     try {
-        const res = await integrationStore.post(`/api/v1/admin/users/${editingUser.value.id}/reset-password`);
+        const res = await integrationStore.post(`/admin/users/${editingUser.value.id}/reset-password`);
         if (!res.data || !res.data.tempPassword) {
              throw new Error('No tempPassword provided by server');
         }
@@ -1052,7 +1064,7 @@ const importEntraIdRoles = async () => {
     showEntraIdRolesModal.value = true;
     loadingEntraId.value = true;
     try {
-        const response = await apiClient.get('/api/v1/admin/roles/entraid-groups');
+        const response = await apiClient.get('/admin/roles/entraid-groups');
         entraIdGroups.value = response.data || [];
     } catch (e) {
         showToast('Fallback local: Usando grupos locales simulados', 'success');
@@ -1163,13 +1175,16 @@ const saveRole = async () => {
             const r = systemRoles.value.find(x => x.id === editingRole.value.id);
             if(r) Object.assign(r, { id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology });
         } else {
-            await apiClient.post('/admin/roles', {
-                id: roleForm.value.id,
-                name: roleForm.value.name,
-                topology: roleForm.value.topology,
-                parentRole: roleForm.value.parentRole
-            });
-            systemRoles.value.push({ id: roleForm.value.id, name: roleForm.value.name, topology: roleForm.value.topology } as any);
+            const payload: any = {
+                name: roleForm.value.name
+            };
+            if (roleForm.value.parentRole) {
+                payload.parentRole = { id: roleForm.value.parentRole };
+            }
+            const res = await apiClient.post('/admin/roles', payload);
+            const createdId = res.data.id;
+            roleForm.value.id = createdId; // Asignar el ID real UUID generado por el backend
+            systemRoles.value.push({ id: createdId, name: roleForm.value.name, topology: roleForm.value.topology } as any);
         }
         
         // Sync matrix state locally for UI
@@ -1199,7 +1214,7 @@ const saveMatrix = async () => {
            canExecuteTasks: !!matrixState.value[`${role.id}_${proc.id}_E`]
        })).filter(p => p.canInitiateProcess || p.canExecuteTasks);
 
-       return apiClient.put(`/api/v1/admin/roles/${role.id}/process-permissions`, permissions);
+       return apiClient.put(`/admin/roles/${role.id}/process-permissions`, permissions);
     });
     
     await Promise.all(promises);
@@ -1216,7 +1231,7 @@ const saveMatrix = async () => {
 };
 const downloadMatrixCsv = async () => {
   try {
-    const response = await apiClient.get('/api/v1/admin/security/matrix/export', { responseType: 'blob' });
+    const response = await apiClient.get('/admin/security/matrix/export', { responseType: 'blob' });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -1258,7 +1273,7 @@ const createDelegation = async () => {
             endDate: delForm.value.end + "T23:59:59",
             reason: "Delegación administrativa vía Panel de Gobernanza"
         };
-        await rbacStore.createDelegation(authStore.user.id, payload);
+            await rbacStore.createDelegation(payload);
         showToast('Delegación temporal activada con éxito.', 'success');
         delForm.value = { targetUser: '', start: '', end: '' };
     } catch (e) {
@@ -1362,7 +1377,7 @@ const copySecret = () => {
 const revealSecret = async () => {
     isRevealingSecret.value = true;
     try {
-        await apiClient.post('/api/v1/admin/audit/telemetry', { 
+        await apiClient.post('/admin/audit/telemetry', { 
             action: 'REVEAL_API_KEY', 
             timestamp: new Date().toISOString() 
         });
@@ -1382,9 +1397,9 @@ const activeAuditLog = ref<any>(null);
 
 const resolveAnomaly = async (anomaly: any) => {
    try {
-     // El CISO emite el comando de subsanamiento a la base de datos (HTTP PUT)
-     await integrationStore.put(`/api/v1/security/anomalies/${anomaly.id}/resolve`, { resolution: 'Revisado y Subsanado Manualmente' });
-     anomaly.status = 'RESOLVED';
+     // CA-12: Delegar resolución al rbacStore con payload híbrido (Sprint-6)
+     await rbacStore.resolveAnomaly(anomaly.id, 'Revisado y Subsanado Manualmente');
+     anomaly.status = 'RESOLVED'; // Optimistic UI update (Sprint-6)
      showToast(`Anomalía ${anomaly.id} subsanada con éxito.`, 'success');
    } catch(e) {
      // Fallback Mock UAT
@@ -1414,7 +1429,6 @@ onMounted(async () => {
         // Sync local refs with store state
         systemRoles.value = rbacStore.roles;
         systemProcesses.value = rbacStore.systemProcesses;
-        securityAnomalies.value = rbacStore.anomalies;
         
         // Mocking system users for now as there is no specific store for them yet
         // but consuming from real endpoint

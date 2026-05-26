@@ -3,8 +3,13 @@ package com.ibpms.poc.application.service;
 import com.ibpms.poc.application.port.in.CompletarTareaUseCase;
 import com.ibpms.poc.application.port.out.IdempotencyPort;
 import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.HistoryService;
+import org.camunda.bpm.engine.history.HistoricProcessInstance;
 import org.camunda.bpm.engine.task.Task;
 import com.ibpms.poc.domain.exception.TaskOwnershipViolationException;
+import com.ibpms.poc.domain.exception.SoDViolationException;
+import com.ibpms.poc.domain.service.security.SoDValidatorDomainService;
+import com.ibpms.poc.application.service.security.SecurityAnomalyService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,11 +19,20 @@ import java.util.Map;
 public class CompletarTareaService implements CompletarTareaUseCase {
 
     private final TaskService taskService;
+    private final HistoryService historyService;
     private final IdempotencyPort idempotencyPort;
+    private final SecurityAnomalyService securityAnomalyService;
+    private final SoDValidatorDomainService sodValidator;
 
-    public CompletarTareaService(TaskService taskService, IdempotencyPort idempotencyPort) {
+    public CompletarTareaService(TaskService taskService, 
+                                 HistoryService historyService,
+                                 IdempotencyPort idempotencyPort,
+                                 SecurityAnomalyService securityAnomalyService) {
         this.taskService = taskService;
+        this.historyService = historyService;
         this.idempotencyPort = idempotencyPort;
+        this.securityAnomalyService = securityAnomalyService;
+        this.sodValidator = new SoDValidatorDomainService();
     }
 
     @Override
@@ -36,6 +50,30 @@ public class CompletarTareaService implements CompletarTareaUseCase {
             String assignee = task.getAssignee();
             if (assignee != null && username != null && !assignee.equals(username)) {
                 throw new TaskOwnershipViolationException("Acceso denegado: La tarea pertenece a otro usuario registrado.");
+            }
+            
+            // CA-06: Segregación de Funciones (SoD) - Creator_ID != Approver_ID
+            String creatorId = null;
+            HistoricProcessInstance hpi = historyService.createHistoricProcessInstanceQuery()
+                    .processInstanceId(task.getProcessInstanceId())
+                    .singleResult();
+            
+            if (hpi != null) {
+                creatorId = hpi.getStartUserId();
+            }
+            if (creatorId == null) {
+                // Si startUserId es nulo, buscar variable "initiator"
+                Object initiatorVar = taskService.getVariable(taskId, "initiator");
+                if (initiatorVar != null) {
+                    creatorId = initiatorVar.toString();
+                }
+            }
+            
+            try {
+                sodValidator.validate(creatorId, username);
+            } catch (SoDViolationException ex) {
+                securityAnomalyService.registerAnomaly("INTENTO_SOD_AUTOAPROBACION", username, taskId);
+                throw ex;
             }
         }
 

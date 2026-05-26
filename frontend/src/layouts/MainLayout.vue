@@ -162,6 +162,12 @@
             <input type="text" :placeholder="t('header.search')" class="w-full pl-9 pr-4 py-1.5 bg-slate-100/80 hover:bg-slate-100 border border-transparent focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100 rounded-lg text-sm transition-all outline-none">
           </div>
 
+          <!-- CA-11: Chip de Roles Operativos (Identidad Multi-Rol) -->
+          <div v-if="!isMobile" class="hidden lg:flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full shrink-0 shadow-sm" :title="'Roles Activos: ' + topRolesTipText">
+             <span class="material-symbols-outlined text-indigo-600 text-[14px]">verified_user</span>
+             <span class="text-[10px] font-bold text-indigo-700 truncate max-w-[150px]">{{ topRolesTipText }}</span>
+          </div>
+
           <RoleSelectorDropdown v-if="authStore.roles.length > 1" />
 
           <div class="h-6 w-px bg-slate-200 hidden md:block mx-1"></div>

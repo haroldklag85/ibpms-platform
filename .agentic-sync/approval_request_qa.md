@@ -1,33 +1,41 @@
-# 🏆 APROBACIÓN FINAL DE QA: CERTIFICACIÓN US-036
+# Solicitud de Aprobación — Agente QA SDET (Iteración 2)
 
-**Inspector:** Agente QA / DevOps
-**Módulo:** Identity Governance & Forensic Audit
-**Rama:** `DevDavid`
+**Fecha:** 2026-05-15  
+**De:** Agente QA SDET  
+**Para:** Arquitecto Líder  
+**Asunto:** Plan de Certificación E2E + Fixes de Infraestructura — US-038 (CA-06 al CA-12, excluyendo CA-09)
 
-## 1. Resumen de Ejecución E2E (Zero-Mock)
+---
 
-La suite de validación de la **Iteración 1 (CA-16, CA-24, CA-27)** fue ejecutada exitosamente bajo estrictas normativas *Zero-Mock*, certificando los siguientes hitos de la arquitectura de Identidad y Gobernanza:
+## Resumen Ejecutivo
 
-- ✅ **Alineación del Ecosistema Docker**: Los contenedores (`ibpms-postgres`, `ibpms-redis`, y `ibpms-core`) están completamente acoplados, sincronizados y respondiendo a los perfiles de prueba de forma integral y orgánica.
-- ✅ **CA-16 (Exportación ISO 27001)**: El endpoint POST de reportes de auditoría genera los CSV requeridos sin errores de serialización `jsonb`. La hidratación completa del frontend está operativa.
-- ✅ **CA-24 (Sellado Criptográfico SHA-256)**: Se validó que el payload generado se firma criptográficamente y su persistencia mantiene una estricta correspondencia tipo `jsonb` en la base de datos PostgreSQL, sin excepciones `SQLGrammarException`.
-- ✅ **CA-27 (Inmutabilidad de Roles Nativos)**: El dashboard frontal garantiza que los perfiles `ROLE_SUPER_ADMIN` y `ROLE_NATIVE_ADMIN` permanezcan blindados bajo el patrón "Disabled State", evadiendo modificaciones accidentales o maliciosas.
+### Infraestructura: 3 Bugs Críticos Resueltos
+El backend no arrancaba por 3 bloqueantes. Todos fueron corregidos quirúrgicamente:
 
-## 2. Hallazgos Corregidos en Fase Final
+| Bug | Archivo | Fix |
+|-----|---------|-----|
+| Ambiguous Mapping `/admin/queues/dlq/purge` | `DlqAdminController.java` | `@Profile("deprecated")` |
+| Ambiguous Mapping `/auth/emergency-login` | `EmergencyLoginController.java` | `@Profile("deprecated")` |
+| RabbitMQ PRECONDITION_FAILED (`x-message-ttl`) | `RabbitMQConfig.java` L67 | Added `x-message-ttl: 2592000000L` |
 
-- **JsonParseException (CTRL-CHAR 13)** resuelto: Se debió a un desajuste del Dialecto Hibernate al intentar persistir `String` directamente sobre columnas `jsonb` de PostgresSQL. Fue mitigado mediante la inyección directa de `@JdbcTypeCode(SqlTypes.JSON)` en la capa JPA del `AuditReportEntity`.
+**Estado actual: Spring Boot corriendo en `localhost:8080` ✅**
 
-## 3. Estado de Certificación y Graduation
+### Plan de Tests E2E
+Suite: `us-038-iteration2-sod-delegation.spec.ts` (6 tests, 3 bloques):
 
-| Criterio | Descripción | Estado | Evidencia |
-| :--- | :--- | :---: | :--- |
-| **CA-16** | Extracción del Reporte Forense ISO 27001 | 🟢 PASS | Integración REST y Blob Downloader |
-| **CA-24** | Persistencia SHA-256 del Reporte en BD | 🟢 PASS | PostgreSQL `ibpms_audit_reports` |
-| **CA-27** | Bloqueo inmutable de perfiles Core en UI | 🟢 PASS | V-Bind Disabled UI Constraints |
+| Bloque | CAs | Enfoque |
+|--------|-----|---------|
+| A: SoD + CISO | CA-06, CA-12 | API anomalies + UI Tablero CISO |
+| B: Delegaciones | CA-07, CA-08 | UI Form delegación + Revocación |
+| C: Badges | CA-10, CA-11 | UI MainLayout role badges |
 
-> [!IMPORTANT]
-> **Veredicto QA:** `CERTIFICADO`. La Historia de Usuario US-036 "Identity Governance" es robusta, segura bajo los estándares Zero-Trust y CISO, y está lista para su integración definitiva (Merge / Handoff) desde la rama `DevDavid`.
+### Credenciales
+- `root@ibpms.local` / `Root#Temp4Sys`
 
-### Próximos Pasos Recomendados:
-1. Sincronizar y comitear en `DevDavid`.
-2. Habilitar Fase de Merge y Cierre de Épica (Graduación).
+### Solicitud al Arquitecto
+1. ¿Aprueba los 3 fixes de infraestructura como requisitos previos?
+2. ¿Aprueba el plan de 6 CAs en 3 bloques?
+3. ¿Alguna modificación requerida al plan?
+
+---
+*Archivo generado por el Agente QA SDET según protocolo del handoff L97-101.*

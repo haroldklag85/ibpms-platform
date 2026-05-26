@@ -109,19 +109,10 @@ public class UserAdminController {
     // CA-14: Exorcismo JWT (Kill Session Extremo)
     @PostMapping("/{id}/kill-session")
     public ResponseEntity<Map<String, String>> killSession(@PathVariable UUID id, @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        // En un caso real, la firma vendría del cliente o de un gestor de tokens activos.
-        // Aquí demostramos la inserción de un token a la lista mediante el header interceptado o paramétrico.
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            try {
-                // @Traceability: US-038 - CA-02 (ADR-001 Refactor)
-                blacklistService.blacklistToken(token);
-            } catch (RuntimeException e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            }
-        }
+        // En lugar de añadir el token del admin a la lista negra (lo cual cerraría la sesión del admin),
+        // dependemos de la desactivación del usuario en la base de datos.
         
-        // También cerramos la transaccionalidad desactivando al usuario base transitoriamente
+        // Cerramos la transaccionalidad desactivando al usuario base transitoriamente
         userService.deactivateUser(id);
         
         Map<String, String> response = new HashMap<>();

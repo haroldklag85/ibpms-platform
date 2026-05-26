@@ -1414,19 +1414,24 @@ onMounted(async () => {
   }); // @Traceability: Retro-Remediación ADR-006
 
   // CA-04: Hook de abandono agresivo para purgar RAG
-  window.addEventListener('beforeunload', integrationStore.destroyCopilotSession);
+  // TODO: Implementar sessionId en Store para purga correcta sin violar IDOR
+  const handleBeforeUnload = () => {
+     // const sessionId = localStorage.getItem('copilot_session_id');
+     // if(sessionId) apiClient.destroyCopilotSession(sessionId);
+  };
+  window.addEventListener('beforeunload', handleBeforeUnload);
 
   // Tick the "ago" counter every second
   watch(() => timeStore.currentTick, (tick) => {
-  if (tick % 1000 < 500) { autoSaveAgo.value++; }
-});
+    if (tick % 1000 < 500) { autoSaveAgo.value++; }
+  });
 });
 
 onBeforeUnmount(() => {
   if (heartbeatInterval) clearInterval(heartbeatInterval); // CA-66
   // CA-04: Purga RAG al destruir el componente Vue nativo (Vue router leave)
-  integrationStore.destroyCopilotSession();
-  window.removeEventListener('beforeunload', integrationStore.destroyCopilotSession);
+  // TODO: integrationStore.destroyCopilotSession(sessionId);
+  window.removeEventListener('beforeunload', handleBeforeUnload);
 
   if (modelerInstance) modelerInstance.destroy();
   if (autoSaveInterval) clearInterval(autoSaveInterval);

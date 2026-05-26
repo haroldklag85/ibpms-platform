@@ -38,6 +38,62 @@ Antes de cualquier análisis, confirma que el usuario proporcionó los siguiente
 
 **Todos los agentes** (Infra/BD, Backend, Frontend, QA, Arquitecto) deben operar en la rama Git proporcionada. PROHIBIDO trabajar en `main` o en ramas ad-hoc.
 
+### Fase 0.B: Directiva de Infraestructura Híbrida (Obligatoria para TODOS los Handoffs)
+
+> ⚠️ **CAMBIO ARQUITECTÓNICO CRÍTICO — Infraestructura Dividida:**
+> El proceso de Spring Boot (`ibpms-core`) **YA NO CORRE DENTRO DE DOCKER**. Se ejecuta directamente en la consola del host Windows (JVM local) en el puerto `8080`. Los servicios de soporte (PostgreSQL, Redis, RabbitMQ) **SÍ SIGUEN EN DOCKER**.
+
+**Topología de Infraestructura Vigente:**
+
+| Servicio | Ejecución | Puerto Host | Validación |
+|----------|-----------|:-----------:|------------|
+| **Spring Boot (ibpms-core)** | **Consola local (JVM host)** | `8080` | `curl http://localhost:8080/actuator/health` |
+| PostgreSQL | Docker (`ibpms-postgres-uat`) | `5433` → 5432 | `docker ps --filter name=ibpms-postgres` |
+| Redis | Docker (`ibpms-redis-uat`) | `6379` | `docker ps --filter name=ibpms-redis` |
+| RabbitMQ | Docker (`ibpms-rabbitmq-uat`) | `5672` / `15672` | `docker ps --filter name=ibpms-rabbitmq` |
+
+**Protocolo de Pre-Validación de Backend (OBLIGATORIO para Backend, Frontend y QA):**
+
+Todo agente que necesite consumir la API del backend (Backend para tests de integración, Frontend para consumir endpoints, QA para pruebas E2E) **DEBE** ejecutar el siguiente protocolo ANTES de iniciar su trabajo:
+
+1. **Paso 1 — Verificar que Spring Boot está corriendo:**
+   ```powershell
+   curl -s http://localhost:8080/actuator/health
+   ```
+   - **Si responde `{"status":"UP"}`:** El backend está operativo. Continuar con la tarea.
+   - **Si no responde o da error de conexión:** Pasar al Paso 2.
+
+2. **Paso 2 — Arrancar Spring Boot en consola (SOLO si el Paso 1 falló):**
+   ```powershell
+   cd backend
+   mvn spring-boot:run -pl ibpms-core -Dspring-boot.run.profiles=default
+   ```
+   - Esperar hasta ver en la consola: `Tomcat started on port 8080` y `Started IbpmsCoreApplication`.
+   - Repetir el Paso 1 para confirmar el arranque exitoso.
+
+3. **Paso 3 — Verificar servicios Docker complementarios:**
+   ```powershell
+   docker ps --format "table {{.Names}}\t{{.Status}}"
+   ```
+   - Confirmar que `ibpms-postgres-uat`, `ibpms-redis-uat` y `ibpms-rabbitmq-uat` estén con status `Up` y `(healthy)`.
+   - Si algún contenedor no está corriendo: `docker compose up -d` desde la raíz del proyecto.
+
+> 🚫 **PROHIBICIONES ESTRICTAS:**
+> - **PROHIBIDO** intentar levantar el backend con `docker compose up ibpms-core` o crear un servicio Docker para el backend.
+> - **PROHIBIDO** modificar el `docker-compose.yml` para añadir el servicio de backend.
+> - **PROHIBIDO** asumir que el backend está corriendo sin ejecutar el health check del Paso 1.
+> - **PROHIBIDO** matar o reiniciar el proceso de Spring Boot sin justificación técnica documentada.
+
+**Inclusión en Handoffs:**
+El Arquitecto Líder DEBE incluir la siguiente sección en TODOS los Handoffs de Backend, Frontend y QA:
+
+> **📋 DIRECTIVA DE INFRAESTRUCTURA HÍBRIDA:**
+> El backend Spring Boot corre en consola local (NO en Docker) en el puerto `8080`. Antes de iniciar tu trabajo, ejecuta el protocolo de pre-validación:
+> 1. `curl -s http://localhost:8080/actuator/health` → Debe responder `{"status":"UP"}`.
+> 2. Si no responde, arráncalo con: `cd backend && mvn spring-boot:run -pl ibpms-core -Dspring-boot.run.profiles=default`.
+> 3. Verifica los servicios Docker: `docker ps` → PostgreSQL (`5433`), Redis (`6379`) y RabbitMQ (`5672`) deben estar `Up (healthy)`.
+> **PROHIBIDO** levantar el backend vía Docker o modificar el `docker-compose.yml`.
+
 ### Fase 0: Alineación Arquitectónica Obligatoria (Gate de Entrada)
 
 > ⚠️ **REGLA INNEGOCIABLE:** Antes de crear cualquier Handoff, el Arquitecto Líder DEBE verificar que la solución propuesta esté alineada con los principios de arquitectura del proyecto. Ningún Handoff puede emitirse sin este gate.

@@ -146,16 +146,18 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
 
                 if (decisionRef != null && !decisionRef.isBlank()) {
                     if (binding == null || binding.isBlank()) {
-                        response.addWarning(brt.getId(),
-                            "⚠️ BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
+                        // @Traceability: US-005, CA-12 Late vs Deployment Binding (DMN)
+                        response.addError(brt.getId(),
+                            "Hard-Stop: BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
                             "' enlaza a DMN (" + decisionRef + ") sin camunda:decisionRefBinding configurado. " +
-                            "El motor asumirá 'latest' por defecto, lo cual puede violar la protección de derechos adquiridos (CA-12). " +
-                            "Recomendación: Configure 'deployment' en el Modeler para garantizar que los casos en vuelo se evalúen con la versión DMN vigente al nacer el caso.");
+                            "El motor asumirá 'latest' por defecto, lo cual viola la protección de derechos adquiridos (CA-12). " +
+                            "Obligatorio: Configure 'deployment' en el Modeler para garantizar que los casos en vuelo se evalúen con la versión DMN vigente al nacer el caso.");
                     } else if ("latest".equals(binding)) {
-                        response.addWarning(brt.getId(),
-                            "ℹ️ BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
+                        // @Traceability: US-005, CA-12 Late vs Deployment Binding (DMN)
+                        response.addError(brt.getId(),
+                            "Hard-Stop: BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
                             "' usa Late Binding (LATEST). Los casos en vuelo se evaluarán con la última versión DMN publicada. " +
-                            "Confirme que este comportamiento es intencional y no viola compromisos contractuales.");
+                            "Esto viola compromisos contractuales. Cambie a 'deployment'.");
                     }
                     
                     // GAP-12: Validación de Catch-All en DMN

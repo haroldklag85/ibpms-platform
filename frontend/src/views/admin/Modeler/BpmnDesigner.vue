@@ -887,6 +887,7 @@ const selectCopilotOption = (msgItem: any, optionText: string) => {
   sendCopilotMessage();
 };
 
+// @Traceability: US-005, CA-17, US-027 CA-01
 const triggerCopilotAudit = async () => {
   showCopilot.value = true;
   if(copilotMessages.value.length > 1) return;
@@ -899,6 +900,7 @@ const showVersions = ref(false);
 const loadingVersions = ref(false);
 const versionHistory = ref<any[]>([]);
 
+// @Traceability: US-005, CA-16
 const fetchLockState = async () => {
   try {
     const { data } = await integrationStore.getProcessLock(processId.value);
@@ -935,6 +937,7 @@ const setupHeartbeat = () => {
 }); // @Traceability: Retro-Remediación ADR-006
 };
 
+// @Traceability: US-005, CA-64
 const breakLock = async () => {
   try {
     await integrationStore.forceUnlockProcess(processId.value);
@@ -950,6 +953,7 @@ const showDeployRequests = ref(false);
 const loadingDeployRequests = ref(false);
 const deployRequests = ref<any[]>([]);
 
+// @Traceability: US-005, CA-69
 const openDeployRequests = async () => {
   showDeployRequests.value = true;
   loadingDeployRequests.value = true;
@@ -963,6 +967,7 @@ const openDeployRequests = async () => {
   }
 };
 
+// @Traceability: US-005, CA-69, CA-21
 const handleDeployRequest = async (id: string, approve: boolean) => {
   try {
      if (approve) {
@@ -983,6 +988,7 @@ const handleDeployRequest = async (id: string, approve: boolean) => {
 const externalTopics = ref<string[]>([]);
 const loadingTopics = ref(false);
 
+// @Traceability: US-005, CA-70
 const fetchTopics = async () => {
   if (externalTopics.value.length > 0) return;
   loadingTopics.value = true;
@@ -1009,6 +1015,7 @@ const fetchDmnDefinitions = async () => {
   }
 };
 
+// @Traceability: US-005, CA-15
 const fetchVersions = async () => {
   loadingVersions.value = true;
   try {
@@ -1028,6 +1035,7 @@ const fetchVersions = async () => {
   }
 };
 
+// @Traceability: US-005, CA-15
 const restoreVersion = async (v: number) => {
   if (isLocked.value) return showToast('Proceso bloqueado, no se puede restaurar.', 'error');
   try {
@@ -1112,6 +1120,7 @@ const fetchConnectors = async () => {
 };
 
 // CA-49 & CA-50: Lógica de DataMapperGrid
+// @Traceability: US-005, CA-17
 const fetchProcessVariables = async () => {
   try {
     const { data } = await integrationStore.getProcessVariables(processId.value);
@@ -1161,6 +1170,7 @@ const isTypeCompatible = (schemaType: string, varType: string) => {
   return true;
 };
 
+// @Traceability: US-005, CA-68
 const saveConnectorMapping = async () => {
   mappingErrors.value = {};
   for (const schema of connectorSchema.value) {
@@ -1201,6 +1211,7 @@ const showAuditLogsModal = ref(false);
 const auditLogs = ref<any[]>([]);
 const loadingAuditLogs = ref(false);
 
+// @Traceability: US-005, CA-42
 const openAuditLogs = async () => {
   showAuditLogsModal.value = true;
   showVersions.value = false;
@@ -1501,6 +1512,7 @@ const onDiagramEdit = () => {
 
 const lastSavedXml = ref<string>('');
 
+// @Traceability: US-005, CA-24
 const saveDraft = async () => {
   if (!modelerInstance) return;
   try {
@@ -1551,6 +1563,7 @@ const downloadXML = async () => {
   }
 };
 
+// @Traceability: US-005, CA-3, CA-4, CA-21
 const confirmDeploy = async () => {
   isDeploying.value = true;
   validationErrors.value = [];
@@ -1601,6 +1614,7 @@ const confirmDeploy = async () => {
   }
 };
 
+// @Traceability: US-005, CA-69
 const requestDeploy = async () => {
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
@@ -1613,6 +1627,7 @@ const requestDeploy = async () => {
   }
 };
 
+// @Traceability: US-005, CA-20, CA-41, CA-63
 const runSandbox = async () => {
   try {
     showToast('🧪 Sandbox: Iniciando simulación en Motor V1...');
@@ -1662,6 +1677,7 @@ const createNewProcess = () => {
 
 
 // CA-32: Archivar Proceso Activo
+// @Traceability: US-005, CA-8, CA-10
 const archiveProcess = async (pId: string) => {
   try {
      await integrationStore.archiveProcess(pId);

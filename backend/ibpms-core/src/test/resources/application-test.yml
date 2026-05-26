@@ -2,7 +2,7 @@ spring:
   main:
     allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:127.0.0.1}:${POSTGRES_PORT:5432}/${POSTGRES_DB:ibpms_db}
+    url: jdbc:postgresql://${POSTGRES_HOST:127.0.0.1}:${POSTGRES_PORT:5433}/${POSTGRES_DB:ibpms_db}
     username: ${POSTGRES_USER:ibpms_user}
     password: ${POSTGRES_PASSWORD:ibpms_password}
     driver-class-name: org.postgresql.Driver

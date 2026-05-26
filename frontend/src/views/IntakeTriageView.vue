@@ -94,13 +94,14 @@
 </template>
 
 <script setup lang="ts">
+// @Traceability: US-004, CA-6, CA-8
 import { useTimeStore } from '@/stores/timeStore';
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useIntakeStore } from '@/stores/intakeStore';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { useIntakeTriageStore } from '@/stores/useIntakeTriageStore';
 import TriageTaskCard from '@/components/intake/TriageTaskCard.vue';
 import ApproveRejectDialog from '@/components/intake/ApproveRejectDialog.vue';
 
-const intakeStore = useIntakeStore();
+const intakeStore = useIntakeTriageStore();
 const timeStore = useTimeStore();
 
 const isDialogOpen = ref(false);

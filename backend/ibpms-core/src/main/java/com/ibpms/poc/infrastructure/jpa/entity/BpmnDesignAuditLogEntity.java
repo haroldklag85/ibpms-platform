@@ -38,7 +38,7 @@ public class BpmnDesignAuditLogEntity {
     @Column(name = "version_affected", nullable = false)
     private int versionAffected;
 
-    @Column(columnDefinition = "JSON")
+    @Column(columnDefinition = "jsonb")
     private String details;
 
     public BpmnDesignAuditLogEntity() {

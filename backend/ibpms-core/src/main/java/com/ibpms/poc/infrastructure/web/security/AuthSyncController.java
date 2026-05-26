@@ -63,7 +63,8 @@ public class AuthSyncController {
             });
         }
         
-        String tkn = jwtTokenProvider.generateToken(email, defaultRoles, resolvedTenant);
+        String subject = userOpt.isPresent() ? userOpt.get().getUsername() : email;
+        String tkn = jwtTokenProvider.generateToken(subject, defaultRoles, resolvedTenant);
         return ResponseEntity.ok(Map.of("token", tkn, "tenantId", resolvedTenant, "message", "Login Exitoso E2E"));
     }
 

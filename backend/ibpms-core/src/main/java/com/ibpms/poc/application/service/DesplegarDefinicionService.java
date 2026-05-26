@@ -6,6 +6,9 @@ import com.ibpms.poc.application.port.out.ProcesoBpmPort;
 import com.ibpms.poc.application.port.out.RbacPort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class DesplegarDefinicionService implements DesplegarDefinicionUseCase {
 
@@ -55,6 +58,7 @@ public class DesplegarDefinicionService implements DesplegarDefinicionUseCase {
             for (int i = 0; i < processNodes.getLength(); i++) {
                 org.w3c.dom.Element processElement = (org.w3c.dom.Element) processNodes.item(i);
                 String processId = processElement.getAttribute("id");
+                List<String> activeLaneIds = new ArrayList<>();
 
                 org.w3c.dom.NodeList laneNodes = processElement.getElementsByTagName("bpmn:lane");
                 if (laneNodes.getLength() == 0) {
@@ -67,6 +71,7 @@ public class DesplegarDefinicionService implements DesplegarDefinicionUseCase {
                     String laneName = laneElement.getAttribute("name");
 
                     if (laneId != null && !laneId.isEmpty()) {
+                        activeLaneIds.add(laneId);
                         String friendlyName = (laneName != null && !laneName.isEmpty()) ? laneName : laneId;
                         String roleName = "BPMN_" + processId + "_" + friendlyName.replaceAll("\\s+", "_");
                         String description = "Autogenerado desde el Carril '" + friendlyName + "' del proceso '"
@@ -75,6 +80,9 @@ public class DesplegarDefinicionService implements DesplegarDefinicionUseCase {
                         rbacPort.bindLaneToProfile(processId, laneId, roleName, description);
                     }
                 }
+                
+                // @Traceability: US-005, CA-06 Purga de Roles Zombies
+                rbacPort.purgeZombieLanes(processId, activeLaneIds);
             }
         } catch (Exception e) {
             // Loguear error pero no interrumpir el despliegue a Camunda (Fail-Safe)

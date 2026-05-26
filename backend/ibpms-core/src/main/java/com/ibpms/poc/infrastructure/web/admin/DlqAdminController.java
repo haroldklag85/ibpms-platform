@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Properties;
 
 @RestController
-@RequestMapping("/api/v1/admin/queues/dlq")
+@RequestMapping("/api/v1/admin/queues/dlq-legacy")
 @Tag(name = "DLQ Admin", description = "Operaciones administrativas para gestión de la Dead Letter Queue")
 @PreAuthorize("hasRole('ADMIN_IT')")
 @org.springframework.context.annotation.Profile("deprecated") // DEPRECADO: Desactivado para resolver Ambiguous Mapping con AdminQueueController (US-034)

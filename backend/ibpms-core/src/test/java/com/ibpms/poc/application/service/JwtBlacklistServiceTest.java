@@ -55,7 +55,7 @@ class JwtBlacklistServiceTest {
     void isRevokedShouldReturnTrueWhenKeyExists() {
         when(stringRedisTemplate.hasKey("blacklist:token:test-jti-123")).thenReturn(true);
         
-        boolean revoked = jwtBlacklistService.isRevoked("test-jti-123");
+        boolean revoked = jwtBlacklistService.isTokenRevoked("test-jti-123");
 
         assertTrue(revoked);
         verify(stringRedisTemplate, times(1)).hasKey("blacklist:token:test-jti-123");
@@ -65,7 +65,7 @@ class JwtBlacklistServiceTest {
     void isRevokedShouldReturnFalseWhenKeyDoesNotExist() {
         when(stringRedisTemplate.hasKey("blacklist:token:test-jti-456")).thenReturn(false);
         
-        boolean revoked = jwtBlacklistService.isRevoked("test-jti-456");
+        boolean revoked = jwtBlacklistService.isTokenRevoked("test-jti-456");
 
         assertFalse(revoked);
     }
@@ -74,7 +74,7 @@ class JwtBlacklistServiceTest {
     void isRevokedShouldReturnFalseWhenHasKeyReturnsNull() {
         when(stringRedisTemplate.hasKey(anyString())).thenReturn(null);
         
-        boolean revoked = jwtBlacklistService.isRevoked("test-jti-null");
+        boolean revoked = jwtBlacklistService.isTokenRevoked("test-jti-null");
 
         assertFalse(revoked);
     }
@@ -101,9 +101,8 @@ class JwtBlacklistServiceTest {
 
     @Test
     void shouldReturnTrueIfUserIdIsRevokedInRedis() {
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         String userId = "user-123";
-        when(valueOperations.get("blacklist:user:" + userId)).thenReturn("revoked");
+        when(stringRedisTemplate.hasKey("blacklist:user:" + userId)).thenReturn(true);
         
         boolean isRevoked = jwtBlacklistService.isUserRevoked(userId);
         
@@ -112,9 +111,8 @@ class JwtBlacklistServiceTest {
 
     @Test
     void shouldReturnFalseIfUserIdIsNotRevoked() {
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         String userId = "user-active";
-        when(valueOperations.get("blacklist:user:" + userId)).thenReturn(null);
+        when(stringRedisTemplate.hasKey("blacklist:user:" + userId)).thenReturn(false);
         
         boolean isRevoked = jwtBlacklistService.isUserRevoked(userId);
         
@@ -125,9 +123,8 @@ class JwtBlacklistServiceTest {
     @Test
     void shouldHandleRedisFailureAndFailOpen() {
         // Configurar simulación de caída catastrófica de Redis
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         String userId = "user-fail";
-        when(valueOperations.get(anyString())).thenThrow(new RuntimeException("Redis Down"));
+        when(stringRedisTemplate.hasKey(anyString())).thenThrow(new RuntimeException("Redis Down"));
         
         // CA-14 Policy: Fail-Open. If Redis fails, we should not block the user.
         boolean isRevoked = jwtBlacklistService.isUserRevoked(userId);

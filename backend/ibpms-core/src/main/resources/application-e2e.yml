@@ -16,6 +16,8 @@ spring:
   # Desactivar Liquibase en e2e (Hibernate ddl-auto:update maneja esquemas)
   liquibase:
     enabled: false
+  jpa:
+    defer-datasource-initialization: true
   data:
     redis:
       host: localhost

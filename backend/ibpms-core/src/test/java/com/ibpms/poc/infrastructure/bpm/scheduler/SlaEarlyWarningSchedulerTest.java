@@ -41,8 +41,8 @@ public class SlaEarlyWarningSchedulerTest {
         when(taskQuery.active()).thenReturn(taskQuery);
         when(taskQuery.list()).thenReturn(Collections.singletonList(mockTask));
         
-        lenient().when(mockTask.getId()).thenReturn("task-123");
-        lenient().when(mockTask.getProcessInstanceId()).thenReturn("pi-123");
+        when(mockTask.getId()).thenReturn("task-123");
+        when(mockTask.getProcessInstanceId()).thenReturn("pi-123");
     }
 
     private void mockTaskTime(double simulatedPercentageConsumed) {

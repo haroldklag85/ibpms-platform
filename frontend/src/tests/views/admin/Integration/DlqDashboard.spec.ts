@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import DlqDashboard from '../../../../views/admin/Integration/DlqDashboard.vue';
 import fs from 'fs';
-import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Mock del apiClient
 vi.mock('@/services/apiClient', () => ({
@@ -19,7 +19,7 @@ describe('Dead Letter Queue Dashboard (DLQ) CA-8', () => {
 
     beforeEach(() => {
         // Leemos el componente fuente para análisis estático
-        const componentPath = path.resolve(__dirname, '../../../../../src/views/admin/Integration/DlqDashboard.vue');
+        const componentPath = fileURLToPath(new URL('../../../../../src/views/admin/Integration/DlqDashboard.vue', import.meta.url));
         componentSource = fs.readFileSync(componentPath, 'utf-8');
     });
 
@@ -78,7 +78,7 @@ describe('Dead Letter Queue Dashboard (DLQ) CA-8', () => {
 
     it('TEST-F05: Debe verificar que la ruta está protegida con requiredRole ADMIN_IT', () => {
         // Leemos router.ts
-        const routerPath = path.resolve(__dirname, '../../../../../src/router/index.ts');
+        const routerPath = fileURLToPath(new URL('../../../../../src/router/index.ts', import.meta.url));
         const routerSource = fs.readFileSync(routerPath, 'utf-8');
 
         // Regex simple para atrapar la defincion de la ruta dlq, con o sin slash inicial

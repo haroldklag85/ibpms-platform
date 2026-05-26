@@ -74,21 +74,26 @@ INSERT INTO ibpms_workdesk_projection (id, source_system, original_task_id, titl
 ON CONFLICT (id) DO NOTHING;
 
 -- Seeds for Security Login (Emergency Login requires ibpms_security_user)
-INSERT INTO ibpms_security_user (id, username, email, password_hash, is_active, is_external_idp, created_at) VALUES 
-  (gen_random_uuid(), 'admin', 'admin@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP),
-  (gen_random_uuid(), 'analista', 'analista_n1@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP),
-  (gen_random_uuid(), 'perito_a', 'perito_a@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP),
-  (gen_random_uuid(), 'perito_b', 'perito_b@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP),
-  (gen_random_uuid(), 'director_1', 'director_1@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP)
+INSERT INTO ibpms_security_user (id, username, email, password_hash, status, is_external_idp, created_at) VALUES 
+  (gen_random_uuid(), 'admin', 'admin@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', 'ACTIVE', false, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'analista', 'analista_n1@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', 'ACTIVE', false, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'perito_a', 'perito_a@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', 'ACTIVE', false, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'perito_b', 'perito_b@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', 'ACTIVE', false, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'director_1', 'director_1@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', 'ACTIVE', false, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'disabled_user', 'disabled@alpha.com', '$2a$10$k2.ZiBNTPDArwE1iD5OMV.8r9VHoaUlP.alCjNB4rZ9lwZGPNFdg2', 'INACTIVE', false, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'mustchange_user', 'mustchange@alpha.com', '$2a$10$k2.ZiBNTPDArwE1iD5OMV.8r9VHoaUlP.alCjNB4rZ9lwZGPNFdg2', 'ACTIVE', false, CURRENT_TIMESTAMP)
 ON CONFLICT (email) DO UPDATE 
 SET password_hash = EXCLUDED.password_hash,
-    username = EXCLUDED.username;
+    username = EXCLUDED.username,
+    status = EXCLUDED.status;
+
+UPDATE ibpms_security_user SET must_change_password = true WHERE email = 'mustchange@alpha.com';
 
 -- Catálogo de Roles JPA (ibpms_security_role) — Requerido por FK de la tabla pivote
-INSERT INTO ibpms_security_role (id, name, description, is_template, is_active, source) VALUES
-  (gen_random_uuid(), 'ROLE_SUPER_ADMIN', 'Super Administrador Global con acceso total', false, true, 'LOCAL'),
-  (gen_random_uuid(), 'ROLE_OPERARIO', 'Operario de Bandeja Unificada', false, true, 'LOCAL'),
-  (gen_random_uuid(), 'ROLE_SUPERVISOR', 'Supervisor de Área con delegación', false, true, 'LOCAL')
+INSERT INTO ibpms_security_role (id, name, description, is_template, source) VALUES
+  (gen_random_uuid(), 'ROLE_SUPER_ADMIN', 'Super Administrador Global con acceso total', false, 'LOCAL'),
+  (gen_random_uuid(), 'ROLE_OPERARIO', 'Operario de Bandeja Unificada', false, 'LOCAL'),
+  (gen_random_uuid(), 'ROLE_SUPERVISOR', 'Supervisor de Área con delegación', false, 'LOCAL')
 ON CONFLICT (name) DO NOTHING;
 
 -- Mapeo ManyToMany: ibpms_security_user_roles (User ↔ Role)
@@ -115,6 +120,11 @@ ON CONFLICT DO NOTHING;
 INSERT INTO ibpms_security_user_roles (user_id, role_id)
 SELECT u.id, r.id FROM ibpms_security_user u, ibpms_security_role r
 WHERE u.email = 'director_1@alpha.com' AND r.name = 'ROLE_SUPERVISOR'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO ibpms_security_user_roles (user_id, role_id)
+SELECT u.id, r.id FROM ibpms_security_user u, ibpms_security_role r
+WHERE u.email IN ('disabled@alpha.com', 'mustchange@alpha.com') AND r.name = 'ROLE_OPERARIO'
 ON CONFLICT DO NOTHING;
 
 -- ====================================================================

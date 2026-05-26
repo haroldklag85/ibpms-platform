@@ -92,12 +92,17 @@ public class FormDesignController {
      * GAP 5 (CA-26): Si el Motor detona IllegalStateException informando que
      * hay 1 o más instancias de procesos activas, se escuda con un HTTP 409 Conflict.
      */
+    // @Traceability: US-005, CA-26
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> eliminarFormulario(@PathVariable UUID id) {
         try {
             formDesignService.eliminar(id);
             return ResponseEntity.noContent().build();
         } catch (IllegalStateException expectedRejection) {
+            if (expectedRejection.getMessage() != null && expectedRejection.getMessage().contains("Prohibido")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(java.util.Map.of("error", expectedRejection.getMessage()));
+            }
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(java.util.Map.of("error", "El Formulario está en uso por Trámites Activos", "details", expectedRejection.getMessage()));
         }
@@ -134,9 +139,10 @@ public class FormDesignController {
     /**
      * CA-26: Manejador de error semántico (Instancias activas).
      */
+    // @Traceability: US-005, CA-26
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<java.util.Map<String, String>> handleConflict(IllegalStateException ex) {
-        if (ex.getMessage() != null && ex.getMessage().contains("bqueado (CA-26)") || ex.getMessage().contains("bloqueado")) {
+        if (ex.getMessage() != null && (ex.getMessage().contains("bqueado (CA-26)") || ex.getMessage().contains("bloqueado") || ex.getMessage().contains("Prohibido"))) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(java.util.Map.of("error", ex.getMessage()));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("error", ex.getMessage()));

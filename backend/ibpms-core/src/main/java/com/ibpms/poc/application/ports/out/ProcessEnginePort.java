@@ -11,12 +11,12 @@ public interface ProcessEnginePort {
      * Requerido para validaciones de inmutabilidad CA-26.
      * @return Número de instancias activas.
      */
-    long countActiveProcessInstances();
+    long countActiveProcessInstances(String formKey);
 
     /**
      * Cuenta el número de tareas activas que potencialmente utilizan algún formulario.
      * Requerido para validar si es seguro aplicar soft-deletes (CA-26).
      * @return Número de tareas incompletas.
      */
-    long countActiveTasksWithForm();
+    long countActiveTasksWithForm(String formKey);
 }

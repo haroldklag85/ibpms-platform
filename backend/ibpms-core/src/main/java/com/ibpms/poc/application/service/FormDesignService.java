@@ -121,19 +121,19 @@ public class FormDesignService {
     /**
      * Soft-delete del formulario. Validado contra instancias activas en vuelo de Camunda.
      */
+    // @Traceability: US-005, CA-26
     @Traceability(US = "US-003", CA = {"CA-26"})
     public void eliminar(UUID id) {
-        formDesignPort.findById(id)
+        FormDesignDTO base = formDesignPort.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Formulario no encontrado"));
 
+        String technicalName = base.getTechnicalName();
         // CA-26: Validación E2E contra Borrado Activo usando el puerto abstracto
-        long activeProcessInstances = processEnginePort.countActiveProcessInstances();
-        long activeTasksWithForm = processEnginePort.countActiveTasksWithForm();
+        long activeProcessInstances = processEnginePort.countActiveProcessInstances(technicalName);
+        long activeTasksWithForm = processEnginePort.countActiveTasksWithForm(technicalName);
                 
         if (activeProcessInstances > 0 || activeTasksWithForm > 0) {
-             throw new IllegalStateException("Formulario bloqueado (CA-26). El Motor Camunda reporta " + 
-                     activeProcessInstances + " instancias de proceso activas y " + 
-                     activeTasksWithForm + " tareas en vuelo que podrían usar este diseño.");
+             throw new IllegalStateException("Prohibido: Este formulario está siendo usado por " + activeProcessInstances + " procesos activos.");
         }
 
         formDesignPort.updateStatusToDeleted(id);

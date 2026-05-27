@@ -96,6 +96,7 @@
           🗑 Reset
         </button>
 
+        <button @click="saveForm" class="bg-blue-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-blue-700 transition flex items-center gap-2">💾 Guardar Versión</button>
         <button @click="simulateMockSubmit" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
           🚀 Probar (Submit)
         </button>
@@ -885,6 +886,7 @@ const {
   isPublic,
   certificationState,
   currentSchemaVersion,
+  currentFormId,
   bpmnCoherenceResults,
   formKey,
   zodParseError,
@@ -1266,6 +1268,21 @@ const monacoOptions = computed(() => ({
 
 // ── Modals Triggers ──────────────────────────────────────────────
 // Eliminado old `generateTests` (CA-115). Se mantiene BDD Generator `generateVitestSpec`.
+
+const saveForm = async () => {
+  const formId = route.query.id as string;
+  if (!formId) {
+    showToast('No se puede guardar versión sin un ID de formulario', 'error');
+    return;
+  }
+  const res = await formStore.saveForm(formId);
+  if (res.success) {
+    showToast(res.message, 'success');
+    await formStore.fetchVersions();
+  } else {
+    showToast(res.message, 'error');
+  }
+};
 
 const simulateMockSubmit = async () => {
     modalTitle.value = "🚀 Execute End-to-End Validation Engine & Integration (CA-29)";

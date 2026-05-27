@@ -17,6 +17,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const isPublic = ref(false);
   const certificationState = ref<'none' | 'certified' | 'revoked'>('none');
   const currentSchemaVersion = ref(1);
+  const currentFormId = ref<string | null>(null);
   const bpmnCoherenceResults = ref<any[]>([]);
   const formKey = ref('');
   const zodParseError = ref<boolean | string>(false);
@@ -125,15 +126,13 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   };
 
   const fetchVersions = async () => {
+    const id = currentFormId.value || 'mock_id_or_draft';
     try {
-        const res = await apiClient.get('/api/v1/forms/mock_id_or_draft/versions');
+        const res = await apiClient.get(`/api/v1/forms/${id}/versions`);
         formVersions.value = res.data;
     } catch(e) {
-        // Mock fallback for UI Demo if API is not fully seeded
-        formVersions.value = [
-           { id: 'v2.1', version: '2.1', updatedAt: new Date().toISOString() },
-           { id: 'v1.0', version: '1.0', updatedAt: new Date(Date.now() - 86400000).toISOString() }
-        ];
+        formVersions.value = [];
+        throw e;
     }
   };
 
@@ -150,7 +149,10 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             
             if (response.data.isQaCertified) certificationState.value = 'certified';
             else if (response.data.certifiedSchemaHash) certificationState.value = 'revoked';
-            currentSchemaVersion.value = response.data.versionId || 1;
+            
+            currentFormId.value = formId;
+            currentSchemaVersion.value = response.data.versionId || response.data.version || 1;
+            formKey.value = response.data.technicalName || '';
 
             return { success: true, message: `Formulario ${formId} cargado desde API` };
         }
@@ -217,20 +219,58 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   };
 
   const restoreVersion = (ver: any) => {
+    let resolvedSchema: any = null;
     if (ver.schema) {
-        canvasFields.value = typeof ver.schema === 'string' ? JSON.parse(ver.schema) : ver.schema;
-        return { success: true, message: `Versión ${ver.version} restaurada exitosamente` };
+        resolvedSchema = ver.schema;
+    } else if (ver.formFields) {
+        resolvedSchema = ver.formFields;
+    } else if (ver.schemaVariables) {
+        resolvedSchema = ver.schemaVariables;
     }
+
+    if (resolvedSchema) {
+        try {
+            canvasFields.value = typeof resolvedSchema === 'string' 
+                ? JSON.parse(resolvedSchema) 
+                : resolvedSchema;
+            return { success: true, message: `Versión ${ver.version || ver.versionId || ''} restaurada exitosamente` };
+        } catch (e) {
+            return { success: false, message: 'Error al parsear el esquema de la versión' };
+        }
+    }
+
     const localDraft = localStorage.getItem('designer_draft_fallback');
     if (localDraft) {
         try {
             canvasFields.value = JSON.parse(localDraft);
-            return { success: true, message: `Recuperación Forense Exitosa (${ver.version})` };
+            return { success: true, message: `Recuperación Forense Exitosa (${ver.version || ''})` };
         } catch (e) {
             return { success: false, message: 'Memoria fría corrupta' };
         }
     } else {
         return { success: false, message: 'No hay huella forense en disco local' };
+    }
+  };
+
+  const saveForm = async (formId: string) => {
+    try {
+        const payload = {
+            name: formTitle.value,
+            technicalName: formKey.value || formTitle.value.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
+            pattern: formPattern.value || 'SIMPLE',
+            vueTemplate: computedCode.value,
+            zodSchema: '',
+            formFields: canvasFields.value
+        };
+        const response = await apiClient.post(`/api/v1/forms/${formId}`, payload);
+        if (response.data) {
+            currentSchemaVersion.value = response.data.versionId || response.data.version || 1;
+            currentFormId.value = response.data.id;
+            return { success: true, message: 'Diseño guardado/versionado exitosamente' };
+        }
+        return { success: false, message: 'La API no devolvió datos válidos' };
+    } catch (e: any) {
+        return { success: false, message: e.message || 'Error al guardar/versionar el formulario' };
     }
   };
 
@@ -937,6 +977,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     isPublic,
     certificationState,
     currentSchemaVersion,
+    currentFormId,
     bpmnCoherenceResults,
     formKey,
     zodParseError,
@@ -957,6 +998,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     checkBpmnCoherence,
     runFuzzerZod,
     restoreVersion,
+    saveForm,
     saveDraftToApi,
     cloneComponent,
     evaluateMockVis,

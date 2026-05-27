@@ -26,7 +26,7 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         ORDER BY 
           CASE WHEN w.impact_level >= 8 THEN 0 ELSE 1 END ASC, 
           w.sla_expiration_date ASC NULLS LAST, 
-          w.created_at ASC
+          w.id ASC
         """,
         countQuery = """
         SELECT COUNT(*) FROM ibpms_workdesk_projection w 
@@ -35,10 +35,11 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
           AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[])))
         """,
         nativeQuery = true)
+    // @Traceability: US-001, CA-29 Contadores de Facetas
     Page<WorkdeskProjectionEntity> findWorkdeskTasks(
            @Param("tenantId") String tenantId, 
            @Param("search") String search, 
-           @Param("assignees") java.util.List<String> assignees, 
+           @Param("assignees") String[] assignees, 
            Pageable pageable);
 
     @Query(value = """
@@ -50,7 +51,7 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         ORDER BY 
           CASE WHEN w.impact_level >= 8 THEN 0 ELSE 1 END ASC, 
           w.sla_expiration_date ASC NULLS LAST, 
-          w.created_at ASC
+          w.id ASC
         """,
         countQuery = """
         SELECT COUNT(*) FROM ibpms_workdesk_projection w 
@@ -71,6 +72,11 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
     @Query("SELECT new com.ibpms.poc.application.dto.FacetCountDto(w.status, COUNT(w)) " +
            "FROM WorkdeskProjectionEntity w WHERE w.tenantId = :tenantId GROUP BY w.status")
     java.util.List<com.ibpms.poc.application.dto.FacetCountDto> countByStatusPerTenant(@Param("tenantId") String tenantId);
+
+    // @Traceability: US-001, CA-29 Contadores de Facetas
+    @Query("SELECT new com.ibpms.poc.application.dto.FacetCountDto(w.sourceSystem, COUNT(w)) " +
+           "FROM WorkdeskProjectionEntity w WHERE w.tenantId = :tenantId GROUP BY w.sourceSystem")
+    java.util.List<com.ibpms.poc.application.dto.FacetCountDto> countBySourceSystemPerTenant(@Param("tenantId") String tenantId);
 
     // @Traceability(US = "US-001", CA = {"CA-16", "CA-21", "CA-28"})
     @Query(value = """

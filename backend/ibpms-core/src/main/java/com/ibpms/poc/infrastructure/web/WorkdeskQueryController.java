@@ -6,6 +6,7 @@ import com.ibpms.poc.application.dto.DelegationContextDTO;
 import com.ibpms.poc.application.service.TaskDelegationService;
 import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
 import com.ibpms.poc.application.service.WorkdeskQueryService;
+import com.ibpms.poc.application.util.SecurityContextUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -136,6 +137,8 @@ public class WorkdeskQueryController {
             });
 
             WorkdeskResponseDTO response = new WorkdeskResponseDTO(isDegraded, dtoPage);
+            // @Traceability: US-001, CA-29 Contadores de Facetas
+            response.setFacets(workdeskQueryService.getFacetsMap(tenantId));
             if (delegationContext != null) {
                 response.setDelegationContext(delegationContext);
             }
@@ -160,15 +163,21 @@ public class WorkdeskQueryController {
         @ApiResponse(responseCode = "429", description = "Límite de peticiones excedido (Rate Limiting)")
     })
     public ResponseEntity<?> getFacets() {
+        // @Traceability: US-001, CA-29
+        String tenantId;
         try {
+            tenantId = SecurityContextUtils.getTenantId();
+        } catch (IllegalStateException e) {
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            String tenantId = "default";
+            tenantId = "default";
             if (auth != null && auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
                 tenantId = jwt.getClaimAsString("tenant_id");
             } else if (auth != null && "analista_n1@ibpms.local".equals(auth.getName())) {
                 tenantId = "tenant_alpha";
             }
+        }
 
+        try {
             java.util.List<com.ibpms.poc.application.dto.FacetCountDto> facets = workdeskQueryService.getFacets(tenantId);
             return ResponseEntity.ok(facets);
         } catch (Exception e) {

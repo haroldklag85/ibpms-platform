@@ -294,7 +294,18 @@ export const useWorkdeskStore = defineStore('workdesk', {
             };
             // @Traceability(US = "US-001", CA = {"CA-07"})
             this.isDegraded = responseData.degraded === true;
-            this.facets = responseData.facets || [];
+            
+            // @Traceability: US-001, CA-29 Contadores de Facetas
+            if (responseData.facets && typeof responseData.facets === 'object' && !Array.isArray(responseData.facets)) {
+                const statusMap = responseData.facets.status || {};
+                this.facets = Object.entries(statusMap).map(([status, count]) => ({
+                    status,
+                    statusName: status === 'PENDING' ? 'Pendientes' : status === 'IN_PROGRESS' ? 'En Progreso' : status === 'OVERDUE' ? 'Vencidas' : status,
+                    count: Number(count)
+                }));
+            } else {
+                this.facets = responseData.facets || [];
+            }
             this.lastDelegationContext = responseData.delegationContext || null;
         } else {
              // Fallback defensive

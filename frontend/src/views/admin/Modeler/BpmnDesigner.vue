@@ -77,7 +77,7 @@
         <!-- Deploy (CA-21) -->
         <button data-testid="btn-deploy" v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)"
                 @click="showDeployModal = true" 
-                :disabled="isDeploying || !['VALIDATED', 'WARNING'].includes(preFlightStatus)" 
+                :disabled="isDeploying || preFlightStatus !== 'VALIDATED'" 
                 class="bg-indigo-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 transition">
           🚀 [VALIDAR Y DESPLEGAR]
         </button>
@@ -434,10 +434,7 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Justificación del Despliegue <span class="text-red-500">*</span></label>
             <textarea v-model="deployComment" rows="3" minlength="10" placeholder="Justificación del despliegue..." class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2.5 border text-sm"></textarea>
           </div>
-          <div class="flex items-center gap-2">
-            <input type="checkbox" id="forceDeploy" v-model="forceDeploy" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
-            <label for="forceDeploy" class="text-sm font-medium text-gray-700 dark:text-gray-300">Omitir advertencias ⚠️ del Pre-Flight</label>
-          </div>
+            <!-- @Traceability: US-005, CA-33 - Checkbox 'forceDeploy' eliminado. Hard-Stop obligatorio. -->
           <div class="flex justify-end space-x-3 pt-2">
             <button @click="showDeployModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
             <button data-testid="btn-confirm-deploy" @click="confirmDeploy" :disabled="isDeploying" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50">
@@ -733,6 +730,8 @@ const Vue3Lottie = defineAsyncComponent(() => import('vue3-lottie').then(m => m.
 
 const corruptNodeId = ref<string | null>(null);
 const authStore = useAuthStore();
+const integrationStore = useIntegrationStore(); // @Traceability: US-005, CA-40
+const timeStore = useTimeStore(); // Prevent runtime TypeError on undefined timeStore
 const activeRole = computed(() => authStore.roles?.[0] || 'BPMN_Designer'); // Reemplaza mockRole CA-21, CA-66
 
 // ── Types ────────────────────────────────────────────────────
@@ -831,7 +830,7 @@ const preFlightStatus = ref<'VALIDATED' | 'PENDING' | 'WARNING' | 'ERROR'>('PEND
 const isDeploying = ref(false);
 const showDeployModal = ref(false);
 const deployComment = ref(''); // CA-65
-const forceDeploy = ref(false); // CA-65
+// @Traceability: US-005, CA-33 - forceDeploy removido (Hard Stop)
 const deployStrategy = ref('coexist');
 const activeInstances = ref(12);
 const validationErrors = ref<string[]>([]);
@@ -958,7 +957,7 @@ const openDeployRequests = async () => {
   showDeployRequests.value = true;
   loadingDeployRequests.value = true;
   try {
-     const { data } = await integrationStore.getDeployRequests(processId.value);
+     const { data } = await integrationStore.get(`/api/v1/design/processes/${processId.value}/deploy-requests`);
      deployRequests.value = data || [];
   } catch (err) {
      showToast('Error obteniendo solicitudes', 'error');
@@ -971,10 +970,10 @@ const openDeployRequests = async () => {
 const handleDeployRequest = async (id: string, approve: boolean) => {
   try {
      if (approve) {
-        await integrationStore.approveDeployRequest(id, {});
+        await integrationStore.post(`/api/v1/design/processes/deploy-requests/${id}/review`, { approved: true, comment: 'Aprobado por UI' });
         showToast('Solicitud Aprobada. Proceso desplegado.', 'success');
      } else {
-        await integrationStore.rejectDeployRequest(id, { reason: 'Rechazado por UI' });
+        await integrationStore.post(`/api/v1/design/processes/deploy-requests/${id}/review`, { approved: false, comment: 'Rechazado por UI - Comentario suficientemente largo' });
         showToast('Solicitud Rechazada.', 'success');
      }
      await openDeployRequests();
@@ -1084,13 +1083,14 @@ const availableForms = ref<any[]>([]);
 
 const fetchForms = async () => {
   try {
-    const { data } = await integrationStore.getForms();
+    // @Traceability: US-005, CA-40
+    const { data } = await integrationStore.getForms(processId.value);
     // Assuming backend returns array of objects with { id o key, name, type }
     // Normalizing against old static mapping if backend structure differs slightly
     availableForms.value = data.map((f: any) => ({
       key: f.key || f.id || f.formId,
       name: f.name || f.title,
-      type: f.type || 'SIMPLE'
+      type: f.type === 'MASTER' ? 'MAESTRO' : (f.type || 'SIMPLE')
     }));
   } catch (err) {
     console.warn('Backend /forms indisponible. Fallback a MOCKS CA-30.');
@@ -1250,6 +1250,12 @@ const emptyBpmn = `<?xml version="1.0" encoding="UTF-8"?>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>`;
+
+// CA-04: Hook de abandono agresivo para purgar RAG
+const handleBeforeUnload = () => {
+   // const sessionId = localStorage.getItem('copilot_session_id');
+   // if(sessionId) apiClient.destroyCopilotSession(sessionId);
+};
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
@@ -1413,12 +1419,6 @@ onMounted(async () => {
     }
   }); // @Traceability: Retro-Remediación ADR-006
 
-  // CA-04: Hook de abandono agresivo para purgar RAG
-  // TODO: Implementar sessionId en Store para purga correcta sin violar IDOR
-  const handleBeforeUnload = () => {
-     // const sessionId = localStorage.getItem('copilot_session_id');
-     // if(sessionId) apiClient.destroyCopilotSession(sessionId);
-  };
   window.addEventListener('beforeunload', handleBeforeUnload);
 
   // Tick the "ago" counter every second
@@ -1578,7 +1578,7 @@ const confirmDeploy = async () => {
       formData.append('processId', processId.value);
       formData.append('strategy', deployStrategy.value);
       formData.append('deploy_comment', deployComment.value); // CA-65
-      formData.append('force_deploy', forceDeploy.value.toString()); // CA-65
+      // @Traceability: US-005, CA-33 force_deploy bypass eliminado.
       const xmlBlob = new Blob([xml!], { type: 'application/xml' });
       formData.append('file', xmlBlob, `${processId.value}.bpmn`);
 
@@ -1618,9 +1618,13 @@ const confirmDeploy = async () => {
 const requestDeploy = async () => {
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
-    // CA-25: Mandamos a API
-    await integrationStore.requestDeployment(processId.value, { xml });
-    showToast('📩 Solicitud de despliegue enviada de forma exitosa al Release Manager', 'success');
+    // CA-34: Enviar como multipart/form-data
+    const formData = new FormData();
+    formData.append('file', new Blob([xml], { type: 'text/xml' }), `${processId.value || 'process'}.bpmn`);
+    
+    // El Boundary es auto-calculado por fetch/axios si usamos FormData
+    await integrationStore.post(`/api/v1/design/processes/deploy-request`, formData);
+    showToast('🚀 Solicitud de despliegue enviada de forma exitosa al Release Manager', 'success');
     processStatus.value = 'PENDING';
   } catch(err: any) {
     showToast(err.response?.data?.error || 'Error al solicitar despliegue', 'error');
@@ -1695,11 +1699,27 @@ const archiveProcess = async (pId: string) => {
   }
 };
 
-const loadProcess = (p: any) => {
-  currentProcessName.value = p.name;
-  processStatus.value = p.status;
-  showCatalog.value = false;
-  showToast(`Cargado: ${p.name} v${p.version}`);
+// @Traceability: US-005, CA-40
+const loadProcess = async (p: any) => {
+  try {
+    currentProcessName.value = p.name;
+    processStatus.value = p.status;
+    processId.value = p.key;
+    processPattern.value = p.formPattern || 'SIMPLE';
+
+    const { data } = await integrationStore.get(`/api/v1/design/processes/${p.key}/xml`);
+    if (data && data.xml && modelerInstance) {
+      await modelerInstance.importXML(data.xml);
+      modelerInstance.get('canvas').zoom('fit-viewport');
+    }
+
+    showCatalog.value = false;
+    showToast(`Cargado: ${p.name} v${p.version}`);
+    await fetchForms();
+  } catch (err) {
+    console.error('Error loading process XML', err);
+    showToast('Error cargando el XML del proceso', 'error');
+  }
 };
 
 // CA-01 & CA-08: Solicitud SSE interactiva a la IA en tiempo real
@@ -1815,7 +1835,7 @@ const sendCopilotMessage = async () => {
   }
 };
 
-// ── Zoom Controls (CA-16) ────────────────────────────────────
+// @Traceability: US-005, CA-25 Zoom y Minimap
 const zoomIn = () => {
   if (modelerInstance) {
     const canvas = modelerInstance.get('canvas');

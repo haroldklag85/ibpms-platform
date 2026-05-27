@@ -1,29 +1,21 @@
-# Plan de Trabajo QA (Frontend) - US-005, CA-25 Zoom y Minimap
+# Plan de Trabajo Frontend - US-005, CA-25 Zoom y Minimap
 
-Este plan detalla las modificaciones y pruebas automatizadas a realizar en el frontend para validar las funcionalidades de Zoom, Minimap y Navegación Visual en la pantalla del Modelador BPMN (`BpmnDesigner.vue`).
+Este plan detalla las modificaciones a realizar en el componente `BpmnDesigner.vue` para asegurar la trazabilidad del Criterio de Aceptación CA-25 de la Historia de Usuario US-005 (Zoom, Minimap y Navegación Visual), así como los pasos para verificar que el empaquetado del frontend funciona correctamente.
 
 ## 1. Archivos a Modificar
-- [BpmnDesigner.spec.ts](file:///C:/Users/HaroltAndrésGómezAgu/ProyectoAntigravity/ibpms-platform/frontend/src/views/admin/Modeler/BpmnDesigner.spec.ts): Archivo que contiene la suite de pruebas unitarias/componentes del BPMN Designer.
+- **Archivo:** `frontend/src/views/admin/Modeler/BpmnDesigner.vue` (Línea ~1838)
+  - Modificar el comentario de controles de zoom.
+  - **Actual:** `// ── Zoom Controls (CA-16) ────────────────────────────────────`
+  - **Esperado:** `// @Traceability: US-005, CA-25 Zoom y Minimap`
 
 ## 2. Acciones del Plan
-1. **Habilitación de la Suite:**
-   - Remover `.skip` de la suite principal `describe('Pantalla 6: BPMN Designer (Frontend QA)', ...)` en `BpmnDesigner.spec.ts`.
-2. **Refactorización de Mocks de bpmn-js:**
-   - Declarar variables de espías (`mockZoom` y `mockOpen`) a nivel superior con el prefijo `mock` para poder ser referenciadas dentro del bloque de `vi.mock('bpmn-js/lib/Modeler', ...)`.
-   - Implementar `mockZoom` de manera que retorne `1.0` por defecto cuando no recibe argumentos (simulando obtener el zoom actual) y el valor pasado cuando se define.
-   - Modificar la propiedad `get` del `MockModeler` para que si se solicita `'canvas'` o `'minimap'`, retorne un objeto que asocie las llamadas a `zoom` y `open` con nuestros espías.
-3. **Desarrollo de las Pruebas Unitarias para CA-25:**
-   - **Prueba 1 (Existencia de Controles):** Verificar la existencia de los botones con title `Zoom In`, `Zoom Out` y `Fit Viewport` y validar sus contenidos (`+`, `-`, `O`).
-   - **Prueba 2 (Funcionalidad de Zoom In):** Simular el click en Zoom In y comprobar que llama a `canvas.zoom` con `1.3` (1.0 + 0.3).
-   - **Prueba 3 (Funcionalidad de Zoom Out):** Simular el click en Zoom Out y comprobar que llama a `canvas.zoom` con `0.7` (1.0 - 0.3).
-   - **Prueba 4 (Funcionalidad de Zoom Fit):** Simular el click en Zoom Fit y comprobar que llama a `canvas.zoom` con `'fit-viewport'`.
-   - **Prueba 5 (Minimap Abierto):** Comprobar que al montar el componente, se invoca la inicialización del minimap mediante `minimap.open()`.
-4. **Trazabilidad Obligatoria:**
-   - Incluir la marca de trazabilidad `// @Traceability: US-005, CA-25 Zoom y Minimap` antes de las nuevas pruebas.
-5. **TDD (Fase Roja y Fase Verde):**
-   - Correr las pruebas inicialmente forzándolas a fallar (por ejemplo, comentando momentáneamente los botones o modificando los incrementos esperados).
-   - Ejecutar la suite completa para confirmar que pasa en verde tras verificar el comportamiento del componente.
-
-## 3. Comandos de Verificación
-Para ejecutar las pruebas locales de Vitest:
-`npx vitest run src/views/admin/Modeler/BpmnDesigner.spec.ts` desde el subdirectorio `frontend`.
+1. **Fase de Planificación (PLANNING):**
+   - Documentar este plan en `implementation_plan.md`.
+   - Generar y guardar la solicitud de aprobación técnica en `.agentic-sync/approval_request_frontend.md`.
+   - Presentar el plan al Arquitecto Líder para su revisión y aprobación formal. Queda estrictamente prohibido modificar código o realizar commits antes de recibir esta aprobación.
+2. **Fase de Ejecución (EXECUTION) [Post-Aprobación]:**
+   - Modificar la línea 1838 de `frontend/src/views/admin/Modeler/BpmnDesigner.vue` reemplazando el comentario actual por el comentario de trazabilidad esperado.
+   - Ejecutar la suite de pruebas unitarias locales en el frontend para asegurar la integridad de la funcionalidad y que no haya regresiones:
+     `npm run test` (o específicamente `npx vitest run src/views/admin/Modeler/BpmnDesigner.spec.ts` en el directorio `frontend`).
+   - Ejecutar el build de producción en la carpeta `frontend/` mediante `npm run build` para garantizar que la compilación y empaquetado de Vite + TypeScript finalice de forma exitosa y sin errores.
+   - Consolidar los cambios realizando un commit con una descripción clara y realizar el push correspondiente.

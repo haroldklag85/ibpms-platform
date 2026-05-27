@@ -1,22 +1,21 @@
-# APROBACIÓN REQUERIDA: US-038 - Certificación Frontend (CA-06 a CA-12)
+# APROBACIÓN REQUERIDA: US-005 - Criterio CA-25 Zoom y Minimap (Frontend)
 
 **Para:** Arquitecto Líder
-**De:** Desarrollador Frontend (David)
-**Asunto:** Solicitud de Aprobación para Implementación de Trazabilidad y Anomalías
+**De:** Desarrollador Frontend (Antigravity)
+**Asunto:** Solicitud de Aprobación para Ajuste de Trazabilidad en Modeler
 
 ## Resumen de la Propuesta
-Se solicita aprobación para proceder con la implementación técnica de los criterios finales de la US-038, enfocándonos en la interfaz de delegación, el tablero de anomalías CISO y la visibilidad multi-rol en el header/workdesk.
+Se solicita aprobación para proceder con la actualización del comentario de trazabilidad de Zoom Controls en `BpmnDesigner.vue` y la validación correspondiente de la compilación de producción del frontend.
 
 ## Puntos Clave
-1. **Delegaciones (CA-07):** Migración de lógica mockeada a persistencia real en `/api/v1/security/delegations`.
-2. **Visibilidad Multi-Rol (CA-10/11):** Sincronización del Header y Workdesk con los claims del JWT para mostrar el contexto operativo real.
-3. **Anomalías (CA-12):** Dashboard reactivo para la resolución de conflictos de SoD detectados por el backend.
-4. **Resiliencia:** Verificación final mediante `frontend_build_audit`.
+1. **Comentario de Trazabilidad:** Reemplazar el comentario actual `// ── Zoom Controls (CA-16) ────────────────────────────────────` por `// @Traceability: US-005, CA-25 Zoom y Minimap` en `frontend/src/views/admin/Modeler/BpmnDesigner.vue` (línea ~1838).
+2. **Validación de Compilación:** Compilar el frontend ejecutando `npm run build` en el directorio `frontend/` para asegurar que no hay errores de TypeScript o empaquetado.
+3. **Calidad y Pruebas:** Verificar la suite de pruebas unitarias de Vitest para garantizar que `BpmnDesigner.spec.ts` sigue pasando en verde (10 pruebas en verde).
 
 ## Plan de Trabajo
-1. Refactorización de `rbacStore.js` para soportar delegaciones reales.
-2. Inyección de `topRolesTipText` en el Header de `MainLayout.vue`.
-3. Activación de la pestaña de Anomalías en `IdentityGovernance.vue`.
-4. Ejecución de build y commit en `DevDavid`.
+1. Actualización del comentario de controles de zoom con la marca de trazabilidad esperada.
+2. Compilación de producción del frontend (`npm run build`).
+3. Ejecución de pruebas unitarias de `BpmnDesigner.spec.ts` para asegurar integridad.
+4. Consolidar cambios mediante git commit y push en la rama correspondiente.
 
 ¿Procede la ejecución?

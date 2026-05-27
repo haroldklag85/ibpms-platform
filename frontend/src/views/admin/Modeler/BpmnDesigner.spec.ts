@@ -15,6 +15,13 @@ const mockZoom = vi.fn().mockImplementation((val?: any) => {
 });
 const mockOpen = vi.fn();
 
+const mockClipboard = {
+    get: vi.fn(),
+    set: vi.fn(),
+    clear: vi.fn(),
+    isEmpty: vi.fn()
+};
+
 vi.mock('bpmn-js/lib/Modeler', () => {
     return {
         default: class MockModeler {
@@ -34,6 +41,9 @@ vi.mock('bpmn-js/lib/Modeler', () => {
                         open: mockOpen
                     };
                 }
+                if (name === 'clipboard') {
+                    return mockClipboard;
+                }
                 return {
                     zoom: mockZoom,
                     open: mockOpen
@@ -46,6 +56,7 @@ vi.mock('bpmn-js/lib/Modeler', () => {
 });
 vi.mock('diagram-js-minimap', () => ({ default: {} }));
 
+
 describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
 
     beforeEach(() => {
@@ -53,6 +64,11 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             if (val === undefined) return 1.0;
             return val;
         });
+        mockClipboard.get = vi.fn();
+        mockClipboard.set = vi.fn();
+        mockClipboard.clear = vi.fn();
+        mockClipboard.isEmpty = vi.fn();
+        localStorage.clear();
     });
 
     afterEach(() => {
@@ -60,6 +76,7 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
         vi.restoreAllMocks();
         mockZoom.mockClear();
         mockOpen.mockClear();
+        localStorage.clear();
     });
 
     const createWrapper = () => {
@@ -223,6 +240,66 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             await flushPromises();
 
             expect(mockOpen).toHaveBeenCalled();
+
+            wrapper.unmount();
+        });
+    });
+
+    // @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos
+    describe('Pruebas para CA-29 (Copiar y Pegar Fragmentos entre Procesos)', () => {
+        it('Debe guardar los elementos en localStorage al copiar (Ctrl+C / clipboard.set)', async () => {
+            // @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const modeler = (window as any).__modelerInstance;
+            expect(modeler).toBeDefined();
+
+            const clipboard = modeler.get('clipboard');
+
+            const mockElements = {
+                type: 'bpmn:Task',
+                id: 'Task_1',
+                name: 'Copied Task'
+            };
+
+            // Ejecutar la acción de copiado (llamar a set)
+            clipboard.set(mockElements);
+
+            // Verificar que se guardó en localStorage bajo 'bpmn_shared_clipboard'
+            const stored = localStorage.getItem('bpmn_shared_clipboard');
+            expect(stored).not.toBeNull();
+
+            const parsed = JSON.parse(stored!);
+            expect(parsed).toEqual(mockElements);
+
+            wrapper.unmount();
+        });
+
+        it('Debe recuperar los elementos desde localStorage al pegar (Ctrl+V / clipboard.get)', async () => {
+            // @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const modeler = (window as any).__modelerInstance;
+            expect(modeler).toBeDefined();
+
+            const clipboard = modeler.get('clipboard');
+
+            const mockElements = {
+                type: 'bpmn:Task',
+                id: 'Task_1',
+                name: 'Copied Task'
+            };
+
+            // Simular que ya hay datos en localStorage
+            localStorage.setItem('bpmn_shared_clipboard', JSON.stringify(mockElements));
+
+            // Ejecutar la acción de pegado (llamar a get)
+            const result = clipboard.get();
+
+            // Verificar que se recuperó correctamente
+            expect(result).toEqual(mockElements);
 
             wrapper.unmount();
         });

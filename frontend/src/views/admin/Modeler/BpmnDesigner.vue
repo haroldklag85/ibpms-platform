@@ -1383,8 +1383,9 @@ onMounted(async () => {
       elementCount.value = count; // CA-31 update reactive state
       
       // CA-30 Alerta Complejidad
+      // @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable
       if (count > bpmnComplexityLimit.value) {
-        showToast(`⚠️ Mala Práctica: Diagrama excede [${bpmnComplexityLimit.value}] nodos. Riesgo de mantenimiento y rendimiento motor.`, 'error'); 
+        showToast(`⚠️ Mala Práctica de Diseño: Este proceso supera los ${bpmnComplexityLimit.value} nodos. Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor.`, 'error'); 
       }
 
       debouncedValidate(); // CA-3 Pre-Flight reactivo a cambios
@@ -1578,9 +1579,10 @@ const handleFileUpload = async (event: Event) => {
     modelerInstance.get('canvas').zoom('fit-viewport');
     
     // Test QA: Check complexity (> 100 bpmn nodes)
+    // @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable
     const nodeCount = (text.match(/<bpmn:/g) || []).length;
     if (nodeCount > 100) {
-      showToast('⚠️ Advertencia: Alta complejidad. Proceso con más de 100 nodos.', 'error');
+      showToast('⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos. Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor.', 'error');
     } else {
       showToast('Archivo BPMN importado correctamente');
     }

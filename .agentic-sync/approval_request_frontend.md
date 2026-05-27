@@ -1,22 +1,52 @@
-# Solicitud de Revisión de Plan de Trabajo — US-005, CA-29
+# Solicitud de Aprobación de Plan de Trabajo — Modificaciones Frontend (US-005, CA-30)
 
 **Para:** Arquitecto Líder
-**De:** Desarrollador Frontend Subagent
-**Asunto:** Implementación de Portapapeles Compartido (CA-29 de US-005)
+**De:** Desarrollador Frontend AI (Subagent)
+**Historia de Usuario:** US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
+**Criterio de Aceptación:** CA-30 (Límite de Complejidad Parametrizable y Advertencia de Mala Práctica)
 
-Estimado Arquitecto Líder,
+---
 
-He diseñado el plan de implementación para abordar el criterio de aceptación CA-29 (Copiar y Pegar Fragmentos entre Procesos) en el componente `BpmnDesigner.vue` de la plataforma iBPMS.
+## Resumen del Plan de Trabajo
 
-## Resumen del Plan
-1. **Decoración del Clipboard de bpmn-js:** En el gancho `onMounted()`, tras inicializar `modelerInstance`, recuperaremos el servicio de `clipboard` y decoraremos sus métodos `get` y `set`.
-   - **`set(data)`**: Serializará `data` de manera segura contra referencias circulares (eliminando claves `$parent` y `parent`) mediante un replacer en `JSON.stringify` y lo guardará en `localStorage` bajo la clave `bpmn_shared_clipboard`.
-   - **`get()`**: Recuperará y parseará los datos de `localStorage` si existen, o retornará los datos del clipboard original como fallback.
-2. **Exposición para Testabilidad:** Crearemos y expondremos la función `getModelerClipboard` a nivel del componente Vue usando `defineExpose` para permitir que el wrapper de Vitest acceda correctamente a la instancia decorada.
-3. **Trazabilidad:** Agregaremos los comentarios correspondientes: `// @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos`
-4. **Validación:**
-   - Ejecutaremos pruebas locales mediante Vitest.
-   - Ejecutaremos el build de producción frontend `npm run build` para asegurar la compilación.
-   - Realizaremos commit y push de los cambios directos a la rama `sprint-6`.
+### 1. Modificaciones de Código en `frontend/src/views/admin/Modeler/BpmnDesigner.vue`
+* **Bloque 1: Carga de Archivos (`handleFileUpload`)**
+  * **Ubicación aproximada:** Línea 1583.
+  * **Acción:** Reemplazar el mensaje actual por la redacción exacta exigida e incluir la marca de trazabilidad.
+  * **Código propuesto:**
+    ```typescript
+    // @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable
+    if (nodeCount > 100) {
+      showToast('⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos. Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor.', 'error');
+    } else {
+    ```
 
-Quedo a la espera de su aprobación formal para proceder con la fase de ejecución.
+* **Bloque 2: Cambios en Caliente (`commandStack.changed`)**
+  * **Ubicación aproximada:** Línea 1387.
+  * **Acción:** Reemplazar el mensaje actual por la redacción parametrizada exacta e incluir la marca de trazabilidad.
+  * **Código propuesto:**
+    ```typescript
+    // @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable
+    if (count > bpmnComplexityLimit.value) {
+      showToast(`⚠️ Mala Práctica de Diseño: Este proceso supera los ${bpmnComplexityLimit.value} nodos. Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor.`, 'error');
+    }
+    ```
+
+---
+
+## 2. Fase de Verificación y Compilación
+1. Ejecutar pruebas unitarias de Vitest:
+   `npx vitest run src/views/admin/Modeler/BpmnDesigner.spec.ts` en la carpeta `frontend/`.
+2. Producir el build de producción para certificar integridad de Typescript/Vue:
+   `npm run build` en la carpeta `frontend/`.
+
+---
+
+## 3. Control de Versiones
+1. Confirmar que no hay archivos temporales ni stashes.
+2. Hacer commit de los cambios en la rama `sprint-6`.
+3. Hacer push directo de la rama a control de versiones.
+
+---
+
+*Quedo a la espera de la aprobación formal del Arquitecto Líder para proceder con la implementación.*

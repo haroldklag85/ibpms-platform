@@ -1,41 +1,32 @@
-# Solicitud de Aprobación — Agente QA SDET (Iteración 2)
+# Solicitud de Aprobación de Plan de Trabajo (QA Automation)
 
-**Fecha:** 2026-05-15  
-**De:** Agente QA SDET  
-**Para:** Arquitecto Líder  
-**Asunto:** Plan de Certificación E2E + Fixes de Infraestructura — US-038 (CA-06 al CA-12, excluyendo CA-09)
+**Para:** Arquitecto Líder
+**De:** Ingeniero de Automatización QA (Frontend)
+**Fecha:** 2026-05-26
+**Asunto:** Suite de Pruebas Unitarias para US-005, CA-25 (Zoom, Minimap y Navegación Visual)
 
----
+## Resumen del Plan
+Se propone la siguiente estrategia para la habilitación de las pruebas unitarias y de componentes en `BpmnDesigner.spec.ts`:
 
-## Resumen Ejecutivo
+1. **Habilitación de la Suite:**
+   - Remover `.skip` de `describe('Pantalla 6: BPMN Designer (Frontend QA)', ...)` en `BpmnDesigner.spec.ts` (si existiera).
 
-### Infraestructura: 3 Bugs Críticos Resueltos
-El backend no arrancaba por 3 bloqueantes. Todos fueron corregidos quirúrgicamente:
+2. **Refactorización de Mocks de bpmn-js (Vitest):**
+   - Introducir espías (`mockZoom` y `mockOpen`) a nivel global en la cabecera de la especificación para interceptar y validar las llamadas de zoom y minimap.
+   - Configurar `mockZoom` para que retorne `1.0` por defecto cuando se consulte el nivel de zoom actual, y retorne el valor ingresado cuando se asigne un nuevo nivel.
 
-| Bug | Archivo | Fix |
-|-----|---------|-----|
-| Ambiguous Mapping `/admin/queues/dlq/purge` | `DlqAdminController.java` | `@Profile("deprecated")` |
-| Ambiguous Mapping `/auth/emergency-login` | `EmergencyLoginController.java` | `@Profile("deprecated")` |
-| RabbitMQ PRECONDITION_FAILED (`x-message-ttl`) | `RabbitMQConfig.java` L67 | Added `x-message-ttl: 2592000000L` |
+3. **Estructura de Casos de Prueba (CA-25):**
+   - **Prueba 1 (Existencia de Controles):** Validar la existencia física y etiquetas/títulos de los botones de Zoom In (`+`), Zoom Out (`-`) y Zoom Fit (`O`).
+   - **Prueba 2 (Funcionalidad de Zoom In):** Asegurar que al hacer click se llame a `canvas.zoom` con el valor incrementado a `1.3` (+0.3).
+   - **Prueba 3 (Funcionalidad de Zoom Out):** Asegurar que al hacer click se llame a `canvas.zoom` con el valor decrementado a `0.7` (-0.3).
+   - **Prueba 4 (Funcionalidad de Zoom Fit):** Asegurar que al hacer click se llame a `canvas.zoom` con el parámetro `'fit-viewport'`.
+   - **Prueba 5 (Minimap Abierto):** Comprobar que al montar el componente se ejecute `minimap.open()`.
 
-**Estado actual: Spring Boot corriendo en `localhost:8080` ✅**
+4. **Trazabilidad Obligatoria:**
+   - Adición del tag: `// @Traceability: US-005, CA-25 Zoom y Minimap` en la declaración de las pruebas.
 
-### Plan de Tests E2E
-Suite: `us-038-iteration2-sod-delegation.spec.ts` (6 tests, 3 bloques):
+5. **Estrategia TDD:**
+   - **Fase Roja:** Probar con aserciones erróneas o mock inactivo para verificar que fallan como se espera.
+   - **Fase Verde:** Corregir y ejecutar la suite para confirmar el 100% de éxito.
 
-| Bloque | CAs | Enfoque |
-|--------|-----|---------|
-| A: SoD + CISO | CA-06, CA-12 | API anomalies + UI Tablero CISO |
-| B: Delegaciones | CA-07, CA-08 | UI Form delegación + Revocación |
-| C: Badges | CA-10, CA-11 | UI MainLayout role badges |
-
-### Credenciales
-- `root@ibpms.local` / `Root#Temp4Sys`
-
-### Solicitud al Arquitecto
-1. ¿Aprueba los 3 fixes de infraestructura como requisitos previos?
-2. ¿Aprueba el plan de 6 CAs en 3 bloques?
-3. ¿Alguna modificación requerida al plan?
-
----
-*Archivo generado por el Agente QA SDET según protocolo del handoff L97-101.*
+Por favor, valide y apruebe esta propuesta para proceder con la ejecución técnica.

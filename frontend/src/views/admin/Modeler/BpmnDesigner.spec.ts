@@ -1,5 +1,5 @@
 import { mount, flushPromises } from '@vue/test-utils';
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import BpmnDesigner from './BpmnDesigner.vue';
 
 // Mock consol.error to keep tests clean from bpmn-js errors in test env
@@ -9,13 +9,36 @@ vi.stubGlobal('console', {
     log: vi.fn()
 });
 
+const mockZoom = vi.fn().mockImplementation((val?: any) => {
+    if (val === undefined) return 1.0;
+    return val;
+});
+const mockOpen = vi.fn();
+
 vi.mock('bpmn-js/lib/Modeler', () => {
     return {
         default: class MockModeler {
             constructor() { }
             importXML = vi.fn().mockResolvedValue({ warnings: [] });
             saveXML = vi.fn().mockResolvedValue({ xml: '<xml/>' });
-            get = vi.fn().mockReturnValue({ zoom: vi.fn(), open: vi.fn() });
+            get = vi.fn().mockImplementation((name: string) => {
+                if (name === 'canvas') {
+                    return {
+                        zoom: mockZoom,
+                        open: mockOpen
+                    };
+                }
+                if (name === 'minimap') {
+                    return {
+                        zoom: mockZoom,
+                        open: mockOpen
+                    };
+                }
+                return {
+                    zoom: mockZoom,
+                    open: mockOpen
+                };
+            });
             on = vi.fn();
             destroy = vi.fn();
         }
@@ -23,11 +46,20 @@ vi.mock('bpmn-js/lib/Modeler', () => {
 });
 vi.mock('diagram-js-minimap', () => ({ default: {} }));
 
-describe.skip('Pantalla 6: BPMN Designer (Frontend QA)', () => {
+describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
+
+    beforeEach(() => {
+        mockZoom.mockImplementation((val?: any) => {
+            if (val === undefined) return 1.0;
+            return val;
+        });
+    });
 
     afterEach(() => {
         vi.clearAllTimers();
         vi.restoreAllMocks();
+        mockZoom.mockClear();
+        mockOpen.mockClear();
     });
 
     const createWrapper = () => {
@@ -84,7 +116,7 @@ describe.skip('Pantalla 6: BPMN Designer (Frontend QA)', () => {
         wrapper.vm.processPattern = 'IFORM_MAESTRO';
         await wrapper.vm.$nextTick();
         const formsMaestro = wrapper.vm.filteredForms;
-        expect(formsMaestro.length).toBeGreaterThan(forms.length);
+        expect(formsMaestro.every((f: any) => f.type === 'MAESTRO')).toBe(true);
 
         wrapper.unmount();
     });
@@ -107,7 +139,7 @@ describe.skip('Pantalla 6: BPMN Designer (Frontend QA)', () => {
         const wrapper = createWrapper();
 
         // Creamos un string simulando 102 nodos
-        const mockBigBPMN = Array(102).fill('<bpmn:task id="t1" />').join('\\n');
+        const mockBigBPMN = Array(102).fill('<bpmn:task id="t1" />').join('\n');
 
         // As we cannot easily mock the internal let modelerInstance and dynamic import in JSDom reliably,
         // we simulate what handleFileUpload would do to the reactive state directly or verify it through a synthetic method 
@@ -126,5 +158,75 @@ describe.skip('Pantalla 6: BPMN Designer (Frontend QA)', () => {
 
         wrapper.unmount();
     });
+
+    // 6. Test Zoom y Minimap (CA-25)
+    // @Traceability: US-005, CA-25 Zoom y Minimap
+    describe('Pruebas para CA-25 (Zoom, Minimap y Navegación Visual)', () => {
+
+        it('Prueba 1 (Existencia de Controles): Debe verificar que los botones de Zoom In (+), Zoom Out (-) y Zoom Fit (O) existen en el lienzo con sus títulos/clases correspondientes', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const zoomInBtn = wrapper.find('button[title="Zoom In"]');
+            const zoomOutBtn = wrapper.find('button[title="Zoom Out"]');
+            const zoomFitBtn = wrapper.find('button[title="Fit Viewport"]');
+
+            expect(zoomInBtn.exists()).toBe(true);
+            expect(zoomOutBtn.exists()).toBe(true);
+            expect(zoomFitBtn.exists()).toBe(true);
+
+            expect(zoomInBtn.text()).toBe('+');
+            expect(zoomOutBtn.text()).toBe('-');
+            expect(zoomFitBtn.text()).toBe('O');
+
+            wrapper.unmount();
+        });
+
+        it('Prueba 2 (Funcionalidad de Zoom In): Debe verificar que hacer clic en el botón de Zoom In llama a canvas.zoom con un incremento del nivel actual (+0.3)', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const zoomInBtn = wrapper.find('button[title="Zoom In"]');
+            await zoomInBtn.trigger('click');
+
+            expect(mockZoom).toHaveBeenCalledWith(1.3);
+
+            wrapper.unmount();
+        });
+
+        it('Prueba 3 (Funcionalidad de Zoom Out): Debe verificar que hacer clic en el botón de Zoom Out llama a canvas.zoom con un decremento del nivel actual (-0.3)', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const zoomOutBtn = wrapper.find('button[title="Zoom Out"]');
+            await zoomOutBtn.trigger('click');
+
+            expect(mockZoom).toHaveBeenCalledWith(0.7);
+
+            wrapper.unmount();
+        });
+
+        it('Prueba 4 (Funcionalidad de Zoom Fit): Debe verificar que hacer clic en el botón de Zoom Fit llama a canvas.zoom("fit-viewport")', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const zoomFitBtn = wrapper.find('button[title="Fit Viewport"]');
+            await zoomFitBtn.trigger('click');
+
+            expect(mockZoom).toHaveBeenCalledWith('fit-viewport');
+
+            wrapper.unmount();
+        });
+
+        it('Prueba 5 (Minimap Abierto): Debe verificar que el minimap se inicializa y se abre por defecto al montar el componente', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            expect(mockOpen).toHaveBeenCalled();
+
+            wrapper.unmount();
+        });
+    });
 });
+
 

@@ -1,21 +1,22 @@
-# APROBACIÓN REQUERIDA: US-005 - Criterio CA-25 Zoom y Minimap (Frontend)
+# Solicitud de Revisión de Plan de Trabajo — US-005, CA-29
 
 **Para:** Arquitecto Líder
-**De:** Desarrollador Frontend (Antigravity)
-**Asunto:** Solicitud de Aprobación para Ajuste de Trazabilidad en Modeler
+**De:** Desarrollador Frontend Subagent
+**Asunto:** Implementación de Portapapeles Compartido (CA-29 de US-005)
 
-## Resumen de la Propuesta
-Se solicita aprobación para proceder con la actualización del comentario de trazabilidad de Zoom Controls en `BpmnDesigner.vue` y la validación correspondiente de la compilación de producción del frontend.
+Estimado Arquitecto Líder,
 
-## Puntos Clave
-1. **Comentario de Trazabilidad:** Reemplazar el comentario actual `// ── Zoom Controls (CA-16) ────────────────────────────────────` por `// @Traceability: US-005, CA-25 Zoom y Minimap` en `frontend/src/views/admin/Modeler/BpmnDesigner.vue` (línea ~1838).
-2. **Validación de Compilación:** Compilar el frontend ejecutando `npm run build` en el directorio `frontend/` para asegurar que no hay errores de TypeScript o empaquetado.
-3. **Calidad y Pruebas:** Verificar la suite de pruebas unitarias de Vitest para garantizar que `BpmnDesigner.spec.ts` sigue pasando en verde (10 pruebas en verde).
+He diseñado el plan de implementación para abordar el criterio de aceptación CA-29 (Copiar y Pegar Fragmentos entre Procesos) en el componente `BpmnDesigner.vue` de la plataforma iBPMS.
 
-## Plan de Trabajo
-1. Actualización del comentario de controles de zoom con la marca de trazabilidad esperada.
-2. Compilación de producción del frontend (`npm run build`).
-3. Ejecución de pruebas unitarias de `BpmnDesigner.spec.ts` para asegurar integridad.
-4. Consolidar cambios mediante git commit y push en la rama correspondiente.
+## Resumen del Plan
+1. **Decoración del Clipboard de bpmn-js:** En el gancho `onMounted()`, tras inicializar `modelerInstance`, recuperaremos el servicio de `clipboard` y decoraremos sus métodos `get` y `set`.
+   - **`set(data)`**: Serializará `data` de manera segura contra referencias circulares (eliminando claves `$parent` y `parent`) mediante un replacer en `JSON.stringify` y lo guardará en `localStorage` bajo la clave `bpmn_shared_clipboard`.
+   - **`get()`**: Recuperará y parseará los datos de `localStorage` si existen, o retornará los datos del clipboard original como fallback.
+2. **Exposición para Testabilidad:** Crearemos y expondremos la función `getModelerClipboard` a nivel del componente Vue usando `defineExpose` para permitir que el wrapper de Vitest acceda correctamente a la instancia decorada.
+3. **Trazabilidad:** Agregaremos los comentarios correspondientes: `// @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos`
+4. **Validación:**
+   - Ejecutaremos pruebas locales mediante Vitest.
+   - Ejecutaremos el build de producción frontend `npm run build` para asegurar la compilación.
+   - Realizaremos commit y push de los cambios directos a la rama `sprint-6`.
 
-¿Procede la ejecución?
+Quedo a la espera de su aprobación formal para proceder con la fase de ejecución.

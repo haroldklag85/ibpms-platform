@@ -1270,6 +1270,47 @@ onMounted(async () => {
       additionalModules: [minimapModule],
       keyboard: { bindTo: document } // CA-20 Copy/Paste enabled system-wide
     });
+
+    // @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos
+    try {
+      const clipboard = modelerInstance.get('clipboard');
+      if (clipboard) {
+        const originalSet = clipboard.set.bind(clipboard);
+        const originalGet = clipboard.get.bind(clipboard);
+
+        clipboard.set = (data: any) => {
+          originalSet(data);
+          const seen = new WeakSet();
+          const serialized = JSON.stringify(data, (key, value) => {
+            if (key === '$parent' || key === 'parent') {
+              return undefined;
+            }
+            if (typeof value === 'object' && value !== null) {
+              if (seen.has(value)) {
+                return undefined;
+              }
+              seen.add(value);
+            }
+            return value;
+          });
+          localStorage.setItem('bpmn_shared_clipboard', serialized);
+        };
+
+        clipboard.get = () => {
+          try {
+            const stored = localStorage.getItem('bpmn_shared_clipboard');
+            if (stored) {
+              return JSON.parse(stored);
+            }
+          } catch (e) {
+            console.error('Failed to parse shared clipboard from localStorage', e);
+          }
+          return originalGet();
+        };
+      }
+    } catch (e) {
+      console.error('Failed to decorate modeler clipboard', e);
+    }
     
     // CA-E2E: Expose for playwright test injection
     if (window.Cypress || typeof window !== 'undefined') {
@@ -1959,6 +2000,26 @@ const syncElementProperties = (key: string, value: any) => {
     modeling.updateProperties(shape, { [key]: value });
   }
 };
+
+// @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos
+const getModelerClipboard = () => {
+  return modelerInstance ? modelerInstance.get('clipboard') : null;
+};
+
+defineExpose({
+  getModelerClipboard,
+  saveDraft,
+  preFlightStatus,
+  onDiagramEdit,
+  processPattern,
+  filteredForms,
+  availableConnectors,
+  toast,
+  showToast,
+  zoomIn,
+  zoomOut,
+  zoomFit
+});
 </script>
 
 <style>

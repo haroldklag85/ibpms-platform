@@ -1,57 +1,80 @@
-# Plan de Trabajo QA - US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos (TDD Fase Roja)
+# Implementation Plan — Shared Clipboard (US-005, CA-29)
 
-Este plan detalla los pasos para modificar el archivo de pruebas unitarias `frontend/src/views/admin/Modeler/BpmnDesigner.spec.ts` agregando las pruebas requeridas para verificar el comportamiento de copiado y pegado de fragmentos de procesos en el Modeler utilizando `localStorage` en fase roja de TDD.
+This plan outlines the steps for implementing the shared clipboard between different BPMN modeler instances using `localStorage`.
 
-## 1. Archivos a Modificar
-- **Pruebas unitarias:** `frontend/src/views/admin/Modeler/BpmnDesigner.spec.ts`
+## 1. Objectives
+- Decorate `clipboard.get` and `clipboard.set` methods of the `bpmn-js` clipboard service inside `BpmnDesigner.vue`.
+- Save copies securely into `localStorage` under `bpmn_shared_clipboard` removing circular references (e.g., `$parent`, `parent`).
+- Expose the clipboard via `getModelerClipboard()` to make it testable.
+- Ensure the Vitest test suite runs successfully.
+- Build the frontend production bundle to ensure no compile-time errors.
+- Commit and push changes to branch `sprint-6` (no git stash).
 
-## 2. Modificaciones Propuestas
+## 2. Implementation Steps
 
-### M1: Actualizar el Mock de `bpmn-js/lib/Modeler`
-- Declarar un objeto mock global `mockClipboard` al inicio del archivo (con prefijo `mock` para evitar errores de hoisting de Vitest):
-  ```typescript
-  const mockClipboard = {
-      get: vi.fn(),
-      set: vi.fn(),
-      clear: vi.fn(),
-      isEmpty: vi.fn()
-  };
-  ```
-- Modificar el método `get` del `MockModeler` mockeado para que cuando se solicite el servicio `'clipboard'`, retorne `mockClipboard`:
-  ```typescript
-  if (name === 'clipboard') {
-      return mockClipboard;
-  }
-  ```
+### Step 1: Decorate the Modeler's Clipboard
+Inside `BpmnDesigner.vue` on the `onMounted` hook:
+1. Retrieve the `clipboard` service:
+   ```typescript
+   const clipboard = modelerInstance.get('clipboard');
+   ```
+2. Decorate `clipboard.set(data)`:
+   - Call the original set method.
+   - Use a custom replacer to serialize `data` to JSON safely (removing circular references `$parent` and `parent`).
+   - Store the serialized JSON in `localStorage` under `bpmn_shared_clipboard`.
+3. Decorate `clipboard.get()`:
+   - Try to retrieve `bpmn_shared_clipboard` from `localStorage`.
+   - Parse it and return the data.
+   - If not found or fails, fallback to the original get method.
 
-### M2: Reiniciar el Mock de Clipboard en `beforeEach`
-- En el bloque `beforeEach`, reasignar o limpiar las funciones mock de `mockClipboard` para asegurar aislamiento entre pruebas:
-  ```typescript
-  mockClipboard.get = vi.fn();
-  mockClipboard.set = vi.fn();
-  mockClipboard.clear = vi.fn();
-  mockClipboard.isEmpty = vi.fn();
-  ```
+### Step 2: Expose the Clipboard for Testability
+At the end of the script tag in `BpmnDesigner.vue`, expose a method `getModelerClipboard` returning the modeler's clipboard instance (or null if not initialized):
+```typescript
+const getModelerClipboard = () => {
+  return modelerInstance ? modelerInstance.get('clipboard') : null;
+};
+```
+If using `<script setup>`, ensure it is exposed (e.g., using `defineExpose({ ..., getModelerClipboard })` or since all properties in setup are scoped, let's verify if `defineExpose` is needed).
+Currently, in `BpmnDesigner.vue`, there is no `defineExpose`. Let's define `defineExpose` at the very end of the `<script setup>` block:
+```typescript
+defineExpose({
+  // other methods/refs if needed, but mainly:
+  getModelerClipboard,
+  saveDraft,
+  preFlightStatus,
+  onDiagramEdit,
+  processPattern,
+  filteredForms,
+  availableConnectors,
+  showToast,
+  toast,
+  zoomIn,
+  zoomOut,
+  zoomFit
+});
+```
+Wait! Let's check what variables are accessed by the wrapper in `BpmnDesigner.spec.ts`:
+Looking at `BpmnDesigner.spec.ts`:
+- `wrapper.vm.saveDraft()` (line 101)
+- `wrapper.vm.preFlightStatus` (line 115)
+- `wrapper.vm.onDiagramEdit()` (line 116)
+- `wrapper.vm.processPattern` (line 128)
+- `wrapper.vm.filteredForms` (line 130)
+- `wrapper.vm.availableConnectors` (line 146)
+- `wrapper.vm.showToast(...)` (line 169)
+- `wrapper.vm.toast` (line 173)
+So yes, exposing all these properties in `defineExpose` ensures they remain accessible to Vitest tests when the component is mounted!
+Wait, in Vue 3 `<script setup>`, properties are **not** exposed to the outside (like unit tests using `wrapper.vm`) by default, unless they are explicitly exposed via `defineExpose`. Wait, let's check if there is an existing `defineExpose` or if Vue is configured in a way that doesn't need it. There was no `defineExpose` in our search, so we will add it.
 
-### M3: Agregar Pruebas Unitarias para CA-29
-- Crear una nueva suite `describe('Pruebas para CA-29 (Copiar y Pegar Fragmentos entre Procesos)')`.
-- Agregar la marca de trazabilidad requerida:
-  `// @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos`
-- **Caso de Prueba 1:** "Debe guardar los elementos en localStorage al copiar (Ctrl+C / clipboard.set)".
-  - Montar el componente `BpmnDesigner` y esperar Promesas.
-  - Obtener el modeler desde `(window as any).__modelerInstance`.
-  - Invocar `clipboard.set` con un árbol de elementos de prueba.
-  - Verificar que el árbol se serialice y almacene en `localStorage` bajo `bpmn_shared_clipboard`.
-- **Caso de Prueba 2:** "Debe recuperar los elementos desde localStorage al pegar (Ctrl+V / clipboard.get)".
-  - Montar el componente y esperar Promesas.
-  - Obtener el modeler desde `(window as any).__modelerInstance`.
-  - Almacenar un árbol serializado en `localStorage` bajo `bpmn_shared_clipboard`.
-  - Invocar `clipboard.get` y verificar que retorne correctamente el objeto deserializado.
+### Step 3: Add Traceability Comments
+Add the comment:
+`// @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos`
+next to the decorated functions in `BpmnDesigner.vue`.
 
-## 3. Verificación de Fase Roja (TDD Red Phase)
-- Ejecutar la suite de pruebas unitarias (`npx vitest run src/views/admin/Modeler/BpmnDesigner.spec.ts` en `frontend/`).
-- Dado que la lógica del portapapeles aún no está implementada en `BpmnDesigner.vue`, ambas pruebas deben FALLAR inicialmente de manera limpia.
-
-## 4. Fase de Consolidación (Post-Aprobación del Arquitecto)
-- Confirmar que las pruebas compilan y fallan (Fase Roja).
-- Realizar commit de los cambios con un mensaje descriptivo y hacer push a la rama `sprint-6`.
+## 3. Verification Plan
+1. Run local tests:
+   `npx vitest run src/views/admin/Modeler/BpmnDesigner.spec.ts` in `frontend/`.
+2. Check that all tests pass, including the new ones for CA-29.
+3. Build the project:
+   `npm run build` in `frontend/`.
+4. Perform git commit and push to `sprint-6`.

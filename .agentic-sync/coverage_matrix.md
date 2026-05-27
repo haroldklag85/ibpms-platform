@@ -428,7 +428,7 @@
 | CA-74 | Diccionario Global y Fragmentos Reutilizables (Snippets) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA74.spec.ts |
 | CA-75 | El Peaje Analítico (Data Diet / Prevención de Campos Huérfanos) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-76 | El Sello Radiactivo de Privacidad (Data Classification PII) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
-| CA-77 | Integración Autocompletado Gobernado y Escudo Anti-DDoS | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-77 | Integración Autocompletado Gobernado y Escudo Anti-DDoS | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA77.spec.ts |
 | CA-78 | Factoría Reactiva Zod On-The-Fly y Renderizado Bidireccional | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-79 | Sandboxing Estricto y Aislamiento Perimetral (Anti-XSS/RCE) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-80 | Reactividad Controlada en Formularios Densos (Lazy Validation) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |

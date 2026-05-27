@@ -493,9 +493,13 @@
                
                <div v-if="editingField.enableAutocomplete" class="space-y-2">
                   <div>
-                     <label class="block text-[10px] font-bold text-gray-700 mb-1">Autocomplete URL</label>
-                     <input v-model="editingField.autocompleteUrl" class="w-full text-sm border-blue-300 rounded font-mono" placeholder="Ej: /api/v1/user-info" />
-                  </div>
+                      <label class="block text-[10px] font-bold text-gray-700 mb-1">Autocomplete URL</label>
+                      <select data-test="autocomplete-select" v-model="editingField.autocompleteUrl" class="w-full text-sm border-blue-300 rounded font-mono bg-blue-50">
+                        <option v-for="conn in approvedConnectors" :key="conn" :value="conn">
+                          {{ conn }}
+                        </option>
+                      </select>
+                   </div>
                   <div>
                      <label class="block text-[10px] font-bold text-gray-700 mb-1">Mappings JSON Array</label>
                      <textarea v-model="autocompleteMappingsText" class="w-full text-xs font-mono border-blue-300 rounded" rows="3" placeholder='[\n  {\n    "from": "nombre",\n    "to": "nombre_completo"\n  }\n]'></textarea>
@@ -881,7 +885,7 @@
 </template>
 
 <script setup lang="ts">
-// @Traceability: US-003 - CA-27, CA-30, CA-74
+// @Traceability: US-003 - CA-27, CA-30, CA-74, CA-77
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -927,10 +931,11 @@ const {
   localJsonCode,
   editingField,
   computedCode,
-  dictionaryItems
+  dictionaryItems,
+  approvedConnectors
 } = storeToRefs(formStore);
 
-const { simulatorContext, evaluateMockVis, cloneComponent, attemptTabChange, fetchDictionary, fetchSnippets, saveSnippet } = formStore;
+const { simulatorContext, evaluateMockVis, cloneComponent, attemptTabChange, fetchDictionary, fetchSnippets, saveSnippet, fetchApprovedConnectors } = formStore;
 
 // ── Types ────────────────────────────────────────────────────────
 interface FormField extends FormFieldMetadataDTO {
@@ -1049,6 +1054,7 @@ const applyDictionaryVariable = () => {
 onMounted(async () => {
     await fetchDictionary();
     await fetchSnippets();
+    await fetchApprovedConnectors();
     // CA-6: Initialize Shadow DOM
     if (designerHostRef.value) {
         const shadowRoot = designerHostRef.value.attachShadow({ mode: 'open' });

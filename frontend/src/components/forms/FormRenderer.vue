@@ -15,8 +15,7 @@ import { useDebounceFn } from '@vueuse/core';
 import FormWizard from './FormWizard.vue';
 import { useWizardValidation } from '@/composables/useWizardValidation';
 
-// @Traceability: Retro-Remediación ADR-006
-// @Traceability: US-003 - CA-30, CA-52
+// @Traceability: US-003 - CA-30, CA-52, CA-77
 const integrationStore = useIntegrationStore();
 
 const props = defineProps<{ schema: any[], mockContext?: Record<string, any> }>();
@@ -31,6 +30,34 @@ const isSubmitted = ref(false);
 const uploadedUuids = ref<string[]>([]);
 
 const isAsyncLoading = ref(false);
+
+const debouncedCache = new Map<string, any>();
+const getDebouncedAutocomplete = (node: any) => {
+  const cacheKey = node.id;
+  if (!debouncedCache.has(cacheKey)) {
+    const fn = useDebounceFn(async (queryVal: string) => {
+      if (!queryVal) return;
+      try {
+        isAsyncLoading.value = true;
+        const res = await apiClient.get(`${node.autocompleteUrl}?q=${queryVal}`);
+        if (res.data) {
+          const mappings = node.autocompleteMappings || [];
+          mappings.forEach((m: { from: string, to: string }) => {
+            if (m.from && m.to) {
+              formData.value[m.to] = res.data[m.from];
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Autocomplete runtime error (CA-77):", err);
+      } finally {
+        isAsyncLoading.value = false;
+      }
+    }, 500);
+    debouncedCache.set(cacheKey, fn);
+  }
+  return debouncedCache.get(cacheKey);
+};
 
 const markFileUploaded = (uuid: string) => {
    if (!uploadedUuids.value.includes(uuid)) {
@@ -260,14 +287,19 @@ onMounted(() => {
            let inputVNode: VNode | null = null;
 
            if (['text', 'password', 'email', 'url'].includes(node.type)) {
-               // TIN-4: Input Masking Native
+               // TIN-4: Input Masking Native / CA-77
                const attrs: any = {
                    type: node.type,
                    value: val || '',
                    placeholder: node.placeholder || '',
                    disabled,
                    class: 'form-input w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                   onInput: (e: any) => updateVal(e.target.value)
+                   onInput: (e: any) => {
+                       updateVal(e.target.value);
+                       if (node.enableAutocomplete && node.autocompleteUrl) {
+                           getDebouncedAutocomplete(node)(e.target.value);
+                       }
+                   }
                };
 
                if (node.enableAutocomplete && node.autocompleteUrl) {

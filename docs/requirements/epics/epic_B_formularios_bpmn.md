@@ -491,11 +491,12 @@ Feature: Web IDE Form Code Generation
     And esta etiqueta instruirá imperativamente al Backend para que ofusque/encripte este dato en reposo (AES-256) y lo censure si es enviado al motor analítico (BAM) o a los Agentes LLM.
     And los campos tipo "Password" enmascararán el valor en la UI (`***`) nativamente.
 
-  Scenario: Integración Autocompletado Gobernado y Escudo Anti-DDoS (CA-77)
+  Scenario: [REMEDIACIÓN] Integración Autocompletado Gobernado y Escudo Anti-DDoS (CA-77)
     Given el Arquitecto diseña un campo configurado como "Gatillo" de autocompletado externo (Ej: Buscar RUT)
     Then el IDE TIENE ESTRICTAMENTE PROHIBIDO permitir la inyección de URLs o código JavaScript crudo (`fetch` / `axios`) en las propiedades del campo (Prevención SSRF).
-    And obligará al usuario a seleccionar exclusivamente un "Conector Homologado" previamente registrado en el Hub de Integraciones (US-033).
-    And el Frontend aplicará un `Debounce` obligatorio de 500ms al teclear, delegando la petición al BFF (Backend) para evitar fugas de datos desde el cliente.
+    And obligará al usuario a seleccionar exclusivamente un "Conector Homologado" previamente registrado mediante un dropdown select en el panel de propiedades.
+    And el validador estricto `validateSchemaSecurity` del JSON rechazará la persistencia o cambio de pestaña si se inyectan URLs crudas o comandos de ejecución JS.
+    And el Frontend aplicará un `Debounce` obligatorio de 500ms al teclear mediante `useDebounceFn`, delegando la petición al proxy BFF para evitar fugas de datos desde el cliente.
 
   # ==============================================================================
   # C. ARQUITECTURA CORE: COMPILACIÓN BIDIRECCIONAL Y RENDERIZADO

@@ -1,4 +1,4 @@
-// @Traceability: US-003 - CA-27, CA-30, CA-52, CA-74
+// @Traceability: US-003 - CA-27, CA-30, CA-52, CA-74, CA-77
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/services/apiClient';
@@ -23,6 +23,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const formKey = ref('');
   const zodParseError = ref<boolean | string>(false);
   const dictionaryItems = ref<any[]>([]);
+  const approvedConnectors = ref<string[]>([]);
   
   // AI State
   const aiPrompt = ref('');
@@ -154,6 +155,55 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     const name = node.label || node.name || 'Nuevo Fragmento';
     const components = [JSON.parse(JSON.stringify(node))];
     await saveSnippet(name, components);
+  };
+
+  const fetchApprovedConnectors = async () => {
+    try {
+      const res = await apiClient.get('/api/v1/integrations/connectors');
+      if (Array.isArray(res.data)) {
+        approvedConnectors.value = res.data.map((item: any) => {
+          if (typeof item === 'string') return item;
+          return `/api/v1/integrations/connectors/${item.id || item}`;
+        });
+      } else {
+        approvedConnectors.value = [];
+      }
+    } catch (e) {
+      console.error('Error fetching approved connectors:', e);
+      approvedConnectors.value = [];
+    }
+  };
+
+  const validateSchemaSecurity = () => {
+    const flatF: any[] = [];
+    const collect = (list: any[]) => {
+      if (!list || !Array.isArray(list)) return;
+      list.forEach(f => {
+        flatF.push(f);
+        if (f.components) collect(f.components);
+      });
+    };
+    collect(canvasFields.value);
+
+    for (const f of flatF) {
+      if (f.enableAutocomplete) {
+        const url = f.autocompleteUrl || '';
+        if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//') || !url.startsWith('/api/v1/integrations/connectors/'))) {
+          return { success: false, message: `[SSRF Prevention] URL de autocompletado insegura: '${url}'. Debe usar un conector homologado.` };
+        }
+      }
+      
+      for (const key of Object.keys(f)) {
+        const val = f[key];
+        if (typeof val === 'string') {
+          const lowerVal = val.toLowerCase();
+          if (lowerVal.includes('fetch(') || lowerVal.includes('axios') || lowerVal.includes('xmlhttprequest') || lowerVal.includes('eval(') || lowerVal.includes('<script')) {
+            return { success: false, message: `[XSS/RCE Prevention] Intento de inyección de JS crudo detectado en propiedad '${key}': '${val}'` };
+          }
+        }
+      }
+    }
+    return { success: true, message: 'Esquema verificado exitosamente' };
   };
 
   const fetchVersions = async () => {
@@ -366,6 +416,11 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
         try {
             const parsed = JSON.parse(localJsonCode.value || JSON.stringify(canvasFields.value));
             canvasFields.value = parsed;
+            const validation = validateSchemaSecurity();
+            if (!validation.success) {
+                zodParseError.value = true;
+                return { success: false, message: 'BARRICADA JSON: ' + validation.message };
+            }
             zodParseError.value = false;
         } catch (e: any) {
             zodParseError.value = true;
@@ -689,7 +744,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
       } 
       
       if (activeCodeTab.value === 'SCRIPT') {
-        let scr = `<script setup lang="ts">\nimport { ref, inject, watch, onMounted, onUnmounted } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\n\n`;
+        let scr = `<script setup lang="ts">\nimport { ref, inject, watch, onMounted, onUnmounted } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\nimport { useDebounceFn } from '@vueuse/core';\n\n`;
         if (formPattern.value === 'IFORM_MAESTRO') {
           scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
         }
@@ -731,6 +786,24 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
            scr += `    isAsyncLoading.value = false;\n`;
            scr += `  }\n`;
            scr += `};\n\n`;
+
+           // Watch the field for debounced typing (CA-77)
+           scr += `watch(() => formData.value.${field.camundaVariable || field.id}, useDebounceFn(async (newVal) => {\n`;
+           scr += `  if (!newVal) return;\n`;
+           scr += `  try {\n`;
+           scr += `    isAsyncLoading.value = true;\n`;
+           scr += `    const res = await apiClient.get(\`${field.autocompleteUrl}?q=\${newVal}\`);\n`;
+           scr += `    if (res.data) {\n`;
+           mappings.forEach((m: { from: string, to: string }) => {
+               scr += `      formData.value.${m.to} = res.data.${m.from};\n`;
+           });
+           scr += `    }\n`;
+           scr += `  } catch (e) {\n`;
+           scr += `    console.error('Autocomplete watcher error (${field.id})', e);\n`;
+           scr += `  } finally {\n`;
+           scr += `    isAsyncLoading.value = false;\n`;
+           scr += `  }\n`;
+           scr += `}, 500));\n\n`;
         }
 
         scr += `const formData = ref<Record<string, any>>({\n`;
@@ -1066,6 +1139,9 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     computedCode,
     fetchDictionary,
     fetchSnippets,
-    saveSnippet
+    saveSnippet,
+    approvedConnectors,
+    fetchApprovedConnectors,
+    validateSchemaSecurity
   };
 });

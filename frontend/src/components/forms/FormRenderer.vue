@@ -16,6 +16,7 @@ import FormWizard from './FormWizard.vue';
 import { useWizardValidation } from '@/composables/useWizardValidation';
 
 // @Traceability: Retro-Remediación ADR-006
+// @Traceability: US-003 - CA-30
 const integrationStore = useIntegrationStore();
 
 const props = defineProps<{ schema: any[], mockContext?: Record<string, any> }>();

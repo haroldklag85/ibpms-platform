@@ -1,3 +1,4 @@
+// @Traceability: US-003 - CA-27
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useFormDesignerStore } from '@/stores/useFormDesignerStore'

@@ -1,3 +1,4 @@
+// @Traceability: US-003 - CA-27, CA-30
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/services/apiClient';

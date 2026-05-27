@@ -383,10 +383,10 @@
 | CA-24 | Auto-Guardado de Borrador en Workdesk | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA21_CA25 |
 | CA-25 | Reglas de Visibilidad Condicional | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA21_CA25 |
 | CA-26 | Prevención Contra Borrado de Formularios Activos | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
-| CA-27 | Control de Versiones de Diseño de Formulario | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
+| CA-27 | Control de Versiones de Diseño de Formulario | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA27.spec.ts |
 | CA-28 | Bitácora de Auditoría a Nivel de Campo | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
 | CA-29 | Dropdown Alimentado por Exportación CSV | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
-| CA-30 | Autocompletado mediante Integración API / BD Externa | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
+| CA-30 | Autocompletado mediante Integración API / BD Externa | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA30.spec.ts |
 | CA-31 | Componente de Firma Electrónica Manuscrita | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
 | CA-32 | Validaciones Cruzadas entre Múltiples Campos | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
 | CA-33 | Exportación a PDF del Formulario Diligenciado | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |

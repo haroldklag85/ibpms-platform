@@ -190,10 +190,13 @@ Feature: Web IDE Form Code Generation
     When el sistema detecta que existen instancias de procesos "en vuelo" que requieren de este formulario
     Then se cancela la eliminación y se muestra un mensaje de Error: "Prohibido: Este formulario está siendo usado por N procesos activos."
 
-  Scenario: Control de Versiones de Diseño de Formulario (CA-27)
-    Given el Arquitecto modifica un formulario guardado
-    Then al presionar guardar, el IDE genera una nueva versión inmutable (v2) del `.vue`/`JSON`
-    And permite consultar y restaurar versiones anteriores en caso de daño en el diseño.
+  Scenario: Control de Versiones de Diseño de Formulario (CA-27) [REMEDIACIÓN]
+    Given un formulario existente cargado en el IDE de la Pantalla 7 con identificador `currentFormId`
+    When el Arquitecto presiona el botón "💾 Guardar Versión" en la barra de herramientas del diseñador
+    Then el Frontend realiza un POST a `/api/v1/forms/{formId}` enviando el payload del diseño (esquema, campos, plantilla)
+    And el Backend genera una nueva versión inmutable (N+1) si el formulario está activo, retornando la información de versión
+    And la store del diseñador refresca la lista de versiones consultando `/api/v1/forms/{id}/versions` sin mocks
+    And al seleccionar una versión del historial, la función `restoreVersion` decodifica y restaura el esquema reactivo de los campos.
 
   Scenario: Bitácora de Auditoría a Nivel de Campo (CA-28)
     Given el usuario "maria.lopez" sobrescribe un valor que había puesto "juan.perez" en una etapa previa
@@ -205,11 +208,11 @@ Feature: Web IDE Form Code Generation
     Then en el panel de propiedades tiene la opción de "Cargar archivo .CSV"
     And al subir el archivo, el Dropdown se puebla automáticamente con las opciones (Ej: Países, Áreas, Tipos de Documento) en lugar de tipearlas una a una.
 
-  Scenario: Autocompletado mediante Integración API / BD Externa (CA-30)
-    Given el Arquitecto diseña un formulario en la Pantalla 7
-    When configura un campo (Ej: "Cédula") para que sea el gatillo (trigger) de una consulta externa
-    Then puede vincular ese campo a un Endpoint del Hub (Pantalla 11) o a datos de otros procesos
-    And al usuario final tipear la cédula y perder el foco (blur), el formulario autocompleta los campos destino (Ej: "Nombre", "Dirección") automáticamente.
+  Scenario: Autocompletado mediante Integración API / BD Externa (CA-30) [REMEDIACIÓN]
+    Given un campo en el Canvas configurado con `enableAutocomplete` habilitado, `autocompleteUrl` y mappings de atributos en formato JSON
+    When el código compilado genera un handler `@blur` que invoca a la función asíncrona generada `handleAutocomplete_[fieldId]()`
+    Then en tiempo de ejecución, al perder el foco (blur) el usuario, se realiza una petición GET al endpoint con el query parameter `?q=[valor]`
+    And el componente `FormRenderer.vue` intercepta la respuesta mapeando dinámicamente cada campo según las llaves configuradas en el formulario.
 
   Scenario: Componente de Firma Electrónica Manuscrita (CA-31)
     Given el Arquitecto requiere formalizar un acuerdo en el formulario

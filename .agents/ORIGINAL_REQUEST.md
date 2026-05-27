@@ -70,3 +70,37 @@ Integrity mode: development
 
 ### Funcional Verification
 - [ ] Se ejecuta con éxito la suite de pruebas E2E correspondiente a esta US: `npx playwright test us004-webhook-intake-pipeline.e2e.spec.ts` (asumiendo backend/frontend/servicios corriendo) o se documenta/verifica la viabilidad y cobertura en caso de que un ambiente E2E completo no esté disponible al momento.
+## Follow-up — 2026-05-25T20:25:15-05:00
+
+# Teamwork Project Prompt
+
+> Status: Launched
+> Goal: Craft prompt → get user approval → delegate to teamwork_preview
+
+Resolver la deuda técnica CA-07 (Gobernanza Estricta de Despliegue) mediante TDD. Se debe construir una prueba automatizada que demuestre la falta de barreras lógicas al desplegar un proceso BPMN ambiguo, y posteriormente implementar las reglas duras en el backend para bloquear dicho despliegue.
+
+Working directory: `C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform`
+Integrity mode: development
+
+## Requirements
+
+### R1. Creación de Prueba TDD (Fase Roja)
+Desarrollar una prueba de integración en el backend Java (ej. `DeploymentGovernanceIntegrationTest.java` o testeando `PreFlightAnalyzerService`) que simule la validación de un XML BPMN sintácticamente correcto, pero lógicamente ambiguo (por ejemplo: compuertas lógicas sin un flujo por defecto definido, o flujos divergentes sin convergencia clara). La prueba debe exigir que el motor rechace el despliegue con un error.
+
+### R2. Refuerzo de Reglas de Negocio (Fase Verde)
+Modificar el validador (ej. `PreFlightAnalyzerService` o el adaptador de Camunda) para detectar estas fallas topológicas y catalogarlas obligatoriamente como Errores Bloqueantes (`Hard-Stop`) y no como simples advertencias, impidiendo su paso al entorno productivo.
+
+### R3. Aplicación de LEY GLOBAL 3
+Asegurar la amnesia institucional inversa agregando la etiqueta obligatoria de trazabilidad en cada clase modificada: `// @Traceability: US-005, CA-07 Gobernanza Estricta de Despliegue`.
+
+## Acceptance Criteria
+
+### Verificación Automatizada (TDD)
+- [ ] La compilación de pruebas finaliza sin errores (`cd backend/ibpms-core && mvn test-compile`).
+- [ ] La ejecución de la prueba específica de CA-07 pasa de forma nativa demostrando que el despliegue ambiguo es rechazado y no lanzado a base de datos.
+
+### Integridad de Código
+- [ ] Los comentarios de trazabilidad de la US-005 están presentes en el código fuente de producción modificado.
+## Follow-up — 2026-05-26T01:36:15Z
+
+El usuario acaba de modificar el archivo `CamundaBpmnValidationAdapter.java` agregando la lógica de validación (Hard-Stop) para CA-07 y la etiqueta de trazabilidad requerida. Solo necesitas enfocarte en construir y ejecutar la prueba TDD (`DeploymentGovernanceIntegrationTest.java`) para asegurar que el despliegue es rechazado. Debería pasar directamente (Verde) gracias a los cambios del usuario.

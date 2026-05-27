@@ -129,7 +129,7 @@ public class BpmnDesignService {
      * CA-69: Request de despliegue con versionamiento y revisión.
      */
     @Traceability(US = "US-005", CA = {"CA-69"})
-    public Map<String, String> createDeployRequest(String processKey, String requestedBy) {
+    public Map<String, String> createDeployRequest(String processKey, String requestedBy, String xmlPayload) {
         // Validación 1: El proceso debe existir y estar en estado DRAFT o ACTIVE
         BpmnProcessDesign domain = designPort.findByTechnicalId(processKey)
                 .orElseThrow(() -> new IllegalArgumentException("Diseño BPMN no encontrado con technical_id: " + processKey));
@@ -138,7 +138,7 @@ public class BpmnDesignService {
         designPort.save(domain);
 
         DeployRequestPort.DeployRequestInfo info = new DeployRequestPort.DeployRequestInfo(
-            UUID.randomUUID(), processKey, requestedBy, LocalDateTime.now(), "PENDING", null, null, null
+            UUID.randomUUID(), processKey, requestedBy, LocalDateTime.now(), "PENDING", null, null, null, xmlPayload
         );
         deployRequestPort.save(info);
         
@@ -161,7 +161,7 @@ public class BpmnDesignService {
 
         DeployRequestPort.DeployRequestInfo approved = new DeployRequestPort.DeployRequestInfo(
             request.id(), request.processDefinitionKey(), request.requestedBy(), request.requestedAt(),
-            "APPROVED", adminUser, LocalDateTime.now(), comment
+            "APPROVED", adminUser, LocalDateTime.now(), comment, request.xmlPayload()
         );
         deployRequestPort.save(approved);
 
@@ -171,7 +171,7 @@ public class BpmnDesignService {
         domain.deploy();
         designPort.save(domain);
 
-        auditPort.logAction(domain.getId(), "DEPLOY_APPROVED", adminUser, domain.getCurrentVersion(), comment);
+        auditPort.logAction(domain.getId(), "DEPLOY_APPROVED", adminUser, domain.getCurrentVersion(), "{\"comment\":\"" + comment + "\"}");
 
         return Map.of(
             "message", "Despliegue aprobado y versión incrementada.",
@@ -193,7 +193,7 @@ public class BpmnDesignService {
 
         DeployRequestPort.DeployRequestInfo rejected = new DeployRequestPort.DeployRequestInfo(
             request.id(), request.processDefinitionKey(), request.requestedBy(), request.requestedAt(),
-            "REJECTED", adminUser, LocalDateTime.now(), comment
+            "REJECTED", adminUser, LocalDateTime.now(), comment, request.xmlPayload()
         );
         deployRequestPort.save(rejected);
 
@@ -201,18 +201,17 @@ public class BpmnDesignService {
                 .orElseThrow(() -> new IllegalArgumentException("Diseño BPMN no encontrado."));
         
         // Revertir estado a DRAFT o ACTIVE (en este caso lo volvemos a DRAFT para simplificar, o lo dejamos como antes)
-        // Por la lógica original, si lo rechazan, se puede seguir editando (DRAFT).
-        // Sin embargo, domain.archive() o algún cambio de estado. Por ahora lo dejamos en el estado actual
-        // o requerimos un método específico. Si el dominio no soporta revertir de PENDING_DEPLOY, añadiremos revert()
-        // Wait, the previous logic just marked the request REJECTED and left the design as PENDING_DEPLOY?
-        // Let's add revertRequestDeploy() to domain.
         
-        auditPort.logAction(domain.getId(), "DEPLOY_REJECTED", adminUser, domain.getCurrentVersion(), comment);
+        auditPort.logAction(domain.getId(), "DEPLOY_REJECTED", adminUser, domain.getCurrentVersion(), "{\"comment\":\"" + comment + "\"}");
 
         return Map.of(
-            "message", "Solicitud de despliegue rechazada.",
+            "message", "Despliegue rechazado.",
             "status", "REJECTED"
         );
+    }
+
+    public java.util.List<DeployRequestPort.DeployRequestInfo> getDeployRequests(String processKey) {
+        return deployRequestPort.findByProcessKey(processKey);
     }
 
     // --- Lock Pesimista Separado (CA-66, CA-64) ---

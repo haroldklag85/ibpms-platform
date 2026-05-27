@@ -91,6 +91,7 @@ Wait, let's list them:
 - [ ] negativos/cu-j02-neg-17-borrar-timelog.spec.ts
 
 ## Actions
+## Actions
 - Write tests per batch.
 - Run `npx playwright test --grep "CU-J02" --reporter=list` locally.
 - Commit.

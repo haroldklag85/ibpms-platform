@@ -888,7 +888,6 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
               const varName = match[1];
               const zTypeRaw = match[2];
               const mods = match[3];
-              const stage = match[4] ? match[4].trim() : "START_EVENT";
 
               const isReq = mods.includes('.min(') || !mods.includes('.optional()');
               const isMult = zTypeRaw.includes('z.array');
@@ -898,30 +897,27 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
               if (minMatch) minL = parseInt(minMatch[1], 10);
               const maxMatch = mods.match(/\.max\((\d+)/);
               if (maxMatch) maxL = parseInt(maxMatch[1], 10);
-              
-              let cType = 'text';
-              if(isMult) cType = 'select'; // Prefer select if multiple
 
-              const exist = currentFields.find(f => f.camundaVariable === varName || f.id === varName);
-              newCanvasFields.push({
-                 ...(exist || { id: varName.toUpperCase(), label: varName }),
-                 camundaVariable: varName,
-                 type: exist && exist.type !== cType && exist.type !== 'select' && exist.type !== 'async_select' && exist.type !== 'hidden' ? cType : (exist ? exist.type : cType),
-
-                 required: isReq,
-                 stage: stage,
-                 isMultiple: isMult || exist?.isMultiple,
-                 minLength: minL || exist?.minLength,
-                 maxLength: maxL || exist?.maxLength
-              });
+              // Actualización profunda sin romper jerarquía
+              const updateDeep = (nodes: any[]) => {
+                 for (const n of nodes) {
+                    if ((n.camundaVariable || n.id) === varName && !n.type.startsWith('button_') && n.type !== 'container') {
+                        n.required = isReq;
+                        if(minL !== undefined) n.minLength = minL;
+                        if(maxL !== undefined) n.maxLength = maxL;
+                    }
+                    if (n.children) updateDeep(n.children);
+                 }
+              };
+              updateDeep(currentFields);
           }
           
           if (newCode.includes('z.object({') && parseCount === 0 && newCode.includes(':')) {
               throw new Error('Sintaxis fallida o Regex roto');
           }
 
-          if (newCanvasFields.length > 0 || newCode.includes('z.object({')) {
-              canvasFields.value = newCanvasFields;
+          if (parseCount > 0) {
+              canvasFields.value = currentFields;
               zodParseError.value = false;
           }
         } catch (err) {

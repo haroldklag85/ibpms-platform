@@ -325,7 +325,8 @@ export const api = {
     getAiMetrics: () => apiClient.get('/analytics/ai-metrics'),
 
     // 9. Formularios (Pantalla 7 / CA-30)
-    getForms: () => apiClient.get('/design/form-definitions'),
+    // @Traceability: US-005, CA-40
+    getForms: (processKey?: string) => apiClient.get('/forms/active', { params: { processKey } }),
     getFormVersions: (id: string) => apiClient.get(`/design/form-definitions/${id}/versions`),
     saveFormVersion: (id: string, payload: any) => apiClient.post(`/design/form-definitions/${id}`, payload),
 

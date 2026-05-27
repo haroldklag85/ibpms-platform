@@ -1,53 +1,53 @@
-# BRIEFING — 2026-05-25T14:57:00Z
+# BRIEFING — 2026-05-25T20:35:00-05:00
 
 ## Mission
-Complete US-004: add an async RabbitMQ consumer and refactor hexagonal architecture adapters in the backend; create a Pinia store and Dumb Component for the Intake Triage View in the frontend.
+Solve CA-07 (Strict Deployment Governance) technical debt using TDD to enforce Hard-Stop blocking for ambiguous BPMN deployments.
 
 ## 🔒 My Identity
-- Archetype: Project Orchestrator
+- Archetype: teamwork_preview_orchestrator
 - Roles: orchestrator, user_liaison, human_reporter, successor
-- Working directory: c:/Users/HaroltAndrésGómezAgu/ProyectoAntigravity/ibpms-platform/.agents/orchestrator
-- Original parent: top-level
-- Original parent conversation ID: 8d8e5f71-6c9b-414a-a773-8bb95ffca26e
+- Working directory: C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator
+- Original parent: e2f4c405-57e2-4d19-ae65-6681164588a5
+- Original parent conversation ID: e2f4c405-57e2-4d19-ae65-6681164588a5
 
 ## 🔒 My Workflow
-- **Pattern**: Project
-- **Scope document**: c:/Users/HaroltAndrésGómezAgu/ProyectoAntigravity/ibpms-platform/.agents/orchestrator/PROJECT.md
-1. **Decompose**: Decomposed into 2 parallel milestones: Backend (M1) and Frontend (M2).
+- **Pattern**: Simple Iteration (Explorer/Worker/Reviewer)
+- **Scope document**: ORIGINAL_REQUEST.md
+1. **Decompose**: Task is small (one adapter change, one test). No sub-orchestrator needed.
 2. **Dispatch & Execute**:
-   - **Delegate (sub-orchestrator)**: M1 and M2 dispatched.
-3. **On failure**: Retry, Replace, Skip, Redistribute, Redesign, Escalate
-4. **Succession**: At 16 spawns, write handoff.md, spawn successor.
+   - Loop back to Worker based on Reviewer 1's feedback (Gate failed).
+3. **On failure**:
+   - Gate failed (REQUEST_CHANGES). Looping back to worker.
+4. **Succession**: Self-succeed at 16 spawns.
 - **Work items**:
-  1. Backend M1 [in-progress]
-  2. Frontend M2 [done]
+  1. CA-07 TDD Implementation [worker fixing review findings]
 - **Current phase**: 2
-- **Current focus**: Waiting for M1 and M2 completion.
+- **Current focus**: Waiting for worker 2.
 
 ## 🔒 Key Constraints
-- Never reuse a subagent after it has delivered its handoff — always spawn fresh
-- Wait for M1 and M2 to complete.
+- Never write code directly.
+- Ensure Forensic Audit/Acceptance criteria passed.
 
 ## Current Parent
-- Conversation ID: 8d8e5f71-6c9b-414a-a773-8bb95ffca26e
-- Updated: not yet
+- Conversation ID: e2f4c405-57e2-4d19-ae65-6681164588a5
+- Updated: 2026-05-25T20:25:59-05:00
 
 ## Key Decisions Made
-- Decomposed US-004 into two parallel milestones.
+- Used teamwork_preview_worker for implementation.
+- Gate iteration 1 failed due to Reviewer 1 finding a logic error with converging gateways. Iteration 2 started.
 
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
-| Backend M1 | self | M1 (Backend) | in-progress | c1069714-78bd-4156-807e-e2fb7225be55 |
-| Frontend M2 | self | M2 (Frontend) | done | ca344364-f939-4f41-9b44-edf7b3cf321e |
+| Worker 2 | teamwork_preview_worker | CA-07 Fixes | in-progress | a777fad3-671a-4d60-98f6-e8fa53e7ed65 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 2 / 16
-- Pending subagents: 3a6c82d0-f610-4848-a9ad-3f3dd96d120a
+- Spawn count: 5 / 16
+- Pending subagents: a777fad3-671a-4d60-98f6-e8fa53e7ed65
 - Predecessor: none
 - Successor: not yet spawned
 
 ## Active Timers
-- Heartbeat cron: running
-- Safety timer: none
+- Heartbeat cron: task-49
+- Safety timer: recreated.

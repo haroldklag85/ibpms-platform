@@ -68,8 +68,15 @@ public class BpmnDesignJpaAdapter implements BpmnDesignPort {
     }
 
     private BpmnProcessDesignEntity toEntity(BpmnProcessDesign domain) {
-        BpmnProcessDesignEntity entity = new BpmnProcessDesignEntity();
-        entity.setId(domain.getId());
+        BpmnProcessDesignEntity entity = null;
+        if (domain.getId() != null) {
+            entity = repository.findById(domain.getId()).orElse(null);
+        }
+        if (entity == null) {
+            entity = new BpmnProcessDesignEntity();
+            entity.setId(domain.getId());
+        }
+        
         entity.setName(domain.getName());
         entity.setTechnicalId(domain.getTechnicalId());
         entity.setFormPattern(domain.getFormPattern() != null ? BpmnProcessDesignEntity.FormPattern.valueOf(domain.getFormPattern().name()) : null);

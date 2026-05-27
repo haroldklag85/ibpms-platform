@@ -28,7 +28,8 @@ public class DeployRequestJpaAdapter implements DeployRequestPort {
                         e.getStatus() != null ? e.getStatus().name() : null,
                         e.getReviewedBy(),
                         e.getReviewedAt(),
-                        e.getReviewComment()
+                        e.getReviewComment(),
+                        e.getXmlPayload()
                 ));
     }
 
@@ -43,6 +44,7 @@ public class DeployRequestJpaAdapter implements DeployRequestPort {
         entity.setReviewedBy(info.reviewedBy());
         entity.setReviewedAt(info.reviewedAt());
         entity.setReviewComment(info.reviewComment());
+        entity.setXmlPayload(info.xmlPayload());
         
         DeployRequestEntity saved = repository.save(entity);
         return new DeployRequestInfo(
@@ -53,7 +55,26 @@ public class DeployRequestJpaAdapter implements DeployRequestPort {
                 saved.getStatus() != null ? saved.getStatus().name() : null,
                 saved.getReviewedBy(),
                 saved.getReviewedAt(),
-                saved.getReviewComment()
+                saved.getReviewComment(),
+                saved.getXmlPayload()
         );
+    }
+
+    @Override
+    public java.util.List<DeployRequestInfo> findByProcessKey(String processKey) {
+        return repository.findByProcessDefinitionKeyOrderByRequestedAtDesc(processKey)
+                .stream()
+                .map(e -> new DeployRequestInfo(
+                        e.getId(),
+                        e.getProcessDefinitionKey(),
+                        e.getRequestedBy(),
+                        e.getRequestedAt(),
+                        e.getStatus() != null ? e.getStatus().name() : null,
+                        e.getReviewedBy(),
+                        e.getReviewedAt(),
+                        e.getReviewComment(),
+                        e.getXmlPayload()
+                ))
+                .collect(java.util.stream.Collectors.toList());
     }
 }

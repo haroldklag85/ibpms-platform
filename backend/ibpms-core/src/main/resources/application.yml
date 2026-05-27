@@ -110,3 +110,40 @@ resilience4j.circuitbreaker:
       automaticTransitionFromOpenToHalfOpenEnabled: true
       waitDurationInOpenState: 15s       # En caso de falla, asume apertura de 15 segundos
       failureRateThreshold: 50           # Activa modo degradado si fallan el 50% de las llamadas
+
+---
+spring:
+  config:
+    activate:
+      on-profile: e2e
+  datasource:
+    url: jdbc:postgresql://localhost:5433/ibpms_e2e
+    username: ibpms
+    password: ibpms_e2e_pass
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 40
+      minimum-idle: 10
+      connection-timeout: 20000
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:seed-e2e.sql
+      continue-on-error: true
+  liquibase:
+    enabled: false
+  jpa:
+    defer-datasource-initialization: true
+  data:
+    redis:
+      host: localhost
+      port: 6380
+  rabbitmq:
+    host: localhost
+    port: 5673
+
+camunda:
+  bpm:
+    client:
+      base-url: http://localhost:8080/api/v1/engine-rest
+

@@ -6,8 +6,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
 import com.ibpms.poc.application.service.FormDesignService;
+import com.ibpms.poc.application.service.BpmnDesignService;
 import com.ibpms.poc.application.dto.FormDesignDTO;
 import com.ibpms.poc.application.dto.FormFieldMetadataDTO;
+import com.ibpms.poc.application.dto.BpmnProcessDesignDTO;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Map;
@@ -21,14 +24,16 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/v1/forms")
-@Traceability(US = "US-005", CA = {"CA-39"})
+@Traceability(US = "US-005", CA = {"CA-39", "CA-40"})
 public class FormCatalogController {
 
     private final FormDesignService formDesignService;
+    private final BpmnDesignService bpmnDesignService;
 
     // @Traceability: US-005, CA-39
-    public FormCatalogController(FormDesignService formDesignService) {
+    public FormCatalogController(FormDesignService formDesignService, BpmnDesignService bpmnDesignService) {
         this.formDesignService = formDesignService;
+        this.bpmnDesignService = bpmnDesignService;
     }
 
     /**
@@ -37,9 +42,18 @@ public class FormCatalogController {
      * (Mapeo desplazado a /active para evitar AmbiguousHandler con FormDirectoryController de la UI principal).
      */
     @GetMapping("/active")
-    public ResponseEntity<List<Map<String, Object>>> getActiveForms() {
+    public ResponseEntity<List<Map<String, Object>>> getActiveForms(
+            @RequestParam(value = "processKey", required = false) String processKey) {
+        // @Traceability: US-005, CA-40
+        String pattern = null;
+        if (processKey != null && !processKey.trim().isEmpty()) {
+            BpmnProcessDesignDTO process = bpmnDesignService.obtenerPorTechnicalId(processKey);
+            pattern = process.getFormPattern();
+        }
+
         List<FormDesignDTO> activeForms = formDesignService.listarCatalogo();
 
+        final String finalPattern = pattern;
         List<Map<String, Object>> response = activeForms.stream()
             .filter(form -> "ACTIVE".equalsIgnoreCase(form.getStatus()))
             .map(form -> {
@@ -63,6 +77,18 @@ public class FormCatalogController {
                     map.put("stages", stagesCount > 0 ? (int) stagesCount : 1);
                 }
                 return map;
+            })
+            .filter(map -> {
+                if (finalPattern == null) {
+                    return true;
+                }
+                if ("SIMPLE".equalsIgnoreCase(finalPattern)) {
+                    return "SIMPLE".equals(map.get("type"));
+                }
+                if ("IFORM_MAESTRO".equalsIgnoreCase(finalPattern)) {
+                    return "MASTER".equals(map.get("type"));
+                }
+                return true;
             })
             .collect(Collectors.toList());
 

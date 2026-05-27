@@ -149,9 +149,11 @@
         </div>
 
         <div class="flex-1 overflow-y-auto p-6 md:p-8 lg:p-12">
-          <!-- CA-6 Shadow DOM (Isolation css context class) -->
-          <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative" style="all: revert; box-sizing: border-box;">
-            <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans">{{ formTitle }}</h2>
+          <!-- CA-6 Shadow DOM (Isolation real via attachShadow & Teleport) -->
+          <div ref="designerHostRef" class="w-full min-h-full"></div>
+          <Teleport v-if="designerShadowContainer" :to="designerShadowContainer">
+            <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative" style="all: revert; box-sizing: border-box;">
+              <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans">{{ formTitle }}</h2>
 
             <div v-if="isHighDensityForm" class="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 shadow-sm rounded flex items-center gap-3">
                <span class="text-2xl">⚠️</span>
@@ -360,6 +362,7 @@
               </template>
             </VueDraggable>
           </div>
+          </Teleport>
         </div>
       </section>
 
@@ -915,6 +918,10 @@ const route = useRoute();
 const showPatternModal = ref(true);
 const isFullScreen = ref(false); // Estado para CA-9/CA-10
 
+// CA-6: Shadow DOM Host References
+const designerHostRef = ref<HTMLElement | null>(null);
+const designerShadowContainer = ref<HTMLElement | null>(null);
+
 // CA-15.1: Formularios Públicos
 
 const processKeyMock = formTitle.value.toUpperCase().replace(/\s+/g, '_').substring(0, 15);
@@ -975,6 +982,27 @@ const saveAsFragment = (node: any) => {
 };
 
 onMounted(async () => {
+    // CA-6: Initialize Shadow DOM
+    if (designerHostRef.value) {
+        const shadowRoot = designerHostRef.value.attachShadow({ mode: 'open' });
+        
+        // Inyectamos Tailwind (Vite dev server) o genérico
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/src/assets/index.tailwind.css'; // Fallback path
+        shadowRoot.appendChild(link);
+
+        const tailwindCdn = document.createElement('script');
+        tailwindCdn.src = 'https://cdn.tailwindcss.com?plugins=forms';
+        shadowRoot.appendChild(tailwindCdn);
+
+        const container = document.createElement('div');
+        container.className = 'workdesk-form-designer-canvas h-full';
+        shadowRoot.appendChild(container);
+        
+        designerShadowContainer.value = container;
+    }
+
     const formId = route.query.id as string;
     if (formId) {
         const res = await formStore.fetchForm(formId);

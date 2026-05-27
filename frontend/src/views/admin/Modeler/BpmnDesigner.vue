@@ -649,7 +649,10 @@
                   <span class="text-[10px] text-gray-500 dark:text-gray-400">📅 {{ p.lastEdited.split(' ')[0] || p.lastEdited }}</span>
                   <div class="flex items-center justify-between">
                      <span class="text-[10px] font-bold text-gray-500">v{{ p.version }} | {{ p.author?.split(' ')[0] || p.author }}</span>
-                     <span class="text-[10px] font-bold uppercase rounded-full px-2 py-0.5" :class="{'bg-green-100 text-green-800': p.status==='ACTIVO', 'bg-yellow-100 text-yellow-800': p.status==='BORRADOR', 'bg-gray-100 text-gray-700': p.status==='ARCHIVADO'}">{{ p.status }}</span>
+                     <!-- @Traceability: US-005, CA-31 Etiquetas de Estado en el Catálogo -->
+                     <span class="text-[10px] font-bold uppercase rounded-full px-2 py-0.5" :class="{'bg-green-100 text-green-800': p.status==='ACTIVO', 'bg-yellow-100 text-yellow-800': p.status==='BORRADOR', 'bg-gray-100 text-gray-700': p.status==='ARCHIVADO'}">
+                       {{ p.status === 'BORRADOR' ? '📝 BORRADOR' : (p.status === 'ACTIVO' ? `✅ ACTIVO (v${p.version})` : (p.status === 'ARCHIVADO' ? '📦 ARCHIVADO' : p.status)) }}
+                     </span>
                   </div>
                 </div>
               </div>

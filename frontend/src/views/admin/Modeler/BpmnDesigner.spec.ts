@@ -152,26 +152,30 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
     });
 
     // 5. Test Complejidad Bpmn
+    // @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable
     it('Debe generar un Toast de Advertencia al importar un archivo BPMN de alta complejidad (> 100 nodos)', async () => {
         const wrapper = createWrapper();
+        await flushPromises();
 
         // Creamos un string simulando 102 nodos
         const mockBigBPMN = Array(102).fill('<bpmn:task id="t1" />').join('\n');
 
-        // As we cannot easily mock the internal let modelerInstance and dynamic import in JSDom reliably,
-        // we simulate what handleFileUpload would do to the reactive state directly or verify it through a synthetic method 
-        // to pass the QA Coverage.
+        // Buscamos el input de importación y simulamos la carga del archivo
+        const input = wrapper.find('[data-testid="input-import-bpmn"]');
+        const file = new File([mockBigBPMN], 'complex.bpmn', { type: 'application/xml' });
 
-        // Simulating the internal complexity check
-        const nodeCount = (mockBigBPMN.match(/<bpmn:/g) || []).length;
-        if (nodeCount > 100) {
-            // @ts-ignore
-            wrapper.vm.showToast('⚠️ Advertencia: Alta complejidad. Proceso con más de 100 nodos.', 'error');
-        }
+        Object.defineProperty(input.element, 'files', {
+            value: [file],
+            writable: true
+        });
 
-        // Expected to be triggered correctly
+        await input.trigger('change');
+        await flushPromises();
+
+        // Expected to be triggered correctly with the new contractual messages
         expect(wrapper.vm.toast.type).toBe('error');
-        expect(wrapper.vm.toast.msg).toContain('Alta complejidad');
+        expect(wrapper.vm.toast.msg).toContain('⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos');
+        expect(wrapper.vm.toast.msg).toContain('Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor');
 
         wrapper.unmount();
     });

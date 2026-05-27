@@ -1,36 +1,21 @@
-# Solicitud de Aprobación Técnica - Pruebas Unitarias CA-29 (US-005)
+# Solicitud de Aprobación de Plan de Pruebas — US-005, CA-30
 
-**Para:** Arquitecto Líder
-**De:** Ingeniero de Automatización QA
-**Fecha:** 2026-05-26
-**Historia de Usuario:** US-005 (Desplegar y Versionar un Modelo de Proceso (BPMN))
-**Criterio de Aceptación:** CA-29 (Copiar y Pegar Fragmentos entre Procesos)
-**Fase:** TDD - Fase Roja (Red Phase)
+**Para**: Arquitecto Líder
+**De**: Ingeniero de Automatización QA
+**Fecha**: 2026-05-26
+**Asunto**: Aprobación de plan de pruebas para la validación de complejidad BPMN en Fase Roja de TDD (CA-30 de la US-005)
 
-## Resumen del Plan de Pruebas Propuesto
+## Resumen del Plan de Trabajo
 
-Se solicita la aprobación para modificar `frontend/src/views/admin/Modeler/BpmnDesigner.spec.ts` bajo la siguiente estrategia:
+1. **Objetivo**: Modificar la prueba de complejidad en `frontend/src/views/admin/Modeler/BpmnDesigner.spec.ts` para que valide estrictamente los nuevos mensajes contractuales en la fase roja de TDD.
+2. **Método de Prueba**:
+   - En lugar de inyectar estáticamente el mensaje mediante `wrapper.vm.showToast`, se simulará la carga real del archivo a través del evento de cambio (`change`) del input `input-import-bpmn` utilizando un archivo BPMN simulado con 102 nodos.
+   - El test asertará que `wrapper.vm.toast.msg` contenga:
+     - `"⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos"`
+     - `"Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor"`
+3. **Fase Roja**: Dado que el componente `BpmnDesigner.vue` aún conserva el mensaje de advertencia anterior, el test debe fallar inicialmente para cumplir con el principio TDD.
+4. **Trazabilidad**: Se incluirá la marca:
+   `// @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable`
+5. **Git Flow**: Commitear y empujar el test modificado directamente a la rama `sprint-6` una vez verificado el fallo esperado.
 
-1. **Modificación del Mock de Modeler:**
-   Añadir el mock de `clipboard` que simula la interfaz del portapapeles nativo de `diagram-js`:
-   ```typescript
-   const mockClipboard = {
-       get: vi.fn(),
-       set: vi.fn(),
-       clear: vi.fn(),
-       isEmpty: vi.fn()
-   };
-   ```
-   En el método `get` del modeler simulado, se retornará `mockClipboard` cuando el servicio solicitado sea `'clipboard'`.
-
-2. **Reinicio de Mocks:**
-   En `beforeEach`, se reinstanciarán los mocks de `mockClipboard` (`mockClipboard.set = vi.fn()`, etc.) para asegurar el aislamiento y evitar efectos secundarios entre pruebas.
-
-3. **Pruebas Unitarias en Fase Roja (CA-29):**
-   Añadir la sección `describe('Pruebas para CA-29 (Copiar y Pegar Fragmentos entre Procesos)')` con la marca de trazabilidad `// @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos` y dos casos de prueba:
-   - **Caso 1:** Guardado en `localStorage` al copiar (`clipboard.set`).
-   - **Caso 2:** Recuperación desde `localStorage` al pegar (`clipboard.get`).
-
-Estas pruebas fallarán inicialmente (Fase Roja) ya que el componente `BpmnDesigner.vue` no cuenta aún con la lógica del portapapeles ni la sincronización con `localStorage`.
-
-Por favor, proceda a la revisión y aprobación técnica del plan para iniciar la fase de ejecución.
+Solicito formalmente su revisión y aprobación para proceder con la ejecución de estas modificaciones.

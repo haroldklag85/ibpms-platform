@@ -5,7 +5,8 @@
 
 <script setup lang="ts">
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
-import { ref, onMounted, onBeforeUnmount, createApp, h, watch, type VNode, Teleport, reactive, computed } from 'vue';
+import apiClient from '@/services/apiClient';
+import { ref, onMounted, onBeforeUnmount, createApp, h, watch, watchEffect, type VNode, Teleport, reactive, computed } from 'vue';
 import jexl from 'jexl';
 import IMask from 'imask';
 import { z } from 'zod';
@@ -265,6 +266,26 @@ onMounted(() => {
                    class: 'form-input w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
                    onInput: (e: any) => updateVal(e.target.value)
                };
+
+               if (node.enableAutocomplete && node.autocompleteUrl) {
+                   attrs.onBlur = async (e: any) => {
+                       const queryVal = e.target.value;
+                       if (!queryVal) return;
+                       try {
+                           const res = await apiClient.get(`${node.autocompleteUrl}?q=${queryVal}`);
+                           if (res.data) {
+                               const mappings = node.autocompleteMappings || [];
+                               mappings.forEach((m: { from: string, to: string }) => {
+                                   if (m.from && m.to) {
+                                       formData.value[m.to] = res.data[m.from];
+                                   }
+                               });
+                           }
+                       } catch (err) {
+                           console.error("Autocomplete runtime error (CA-30):", err);
+                       }
+                   };
+               }
                
                let iMaskOptions: any = null;
                

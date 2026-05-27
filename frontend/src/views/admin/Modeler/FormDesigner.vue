@@ -481,6 +481,28 @@
                <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">{{ editingField.type === 'info_modal' ? 'Contenido HTML / Pleno (Cuerpo del Modal)' : 'Texto Fantasma de Ejemplo' }}</label>
                <component :is="editingField.type === 'info_modal' ? 'textarea' : 'input'" v-model="editingField.placeholder" class="w-full text-sm border-gray-300 rounded" :placeholder="editingField.type === 'info_modal' ? 'Escribe el contenido detallado aquí...' : 'Ej: Juan Pérez'" :rows="editingField.type === 'info_modal' ? 6 : null" />
             </div>
+            
+            <!-- CA-30: Autocomplete Integration Section -->
+            <div v-if="['text', 'password', 'email', 'url'].includes(editingField.type)" class="bg-[#f0f9ff] p-3 rounded border border-blue-200 space-y-3">
+               <h4 class="text-xs font-bold text-blue-800 flex items-center gap-1">🌐 Autocomplete (CA-30)</h4>
+               
+               <div class="flex items-center gap-2">
+                  <input type="checkbox" id="enableAutocomplete" v-model="editingField.enableAutocomplete" class="text-blue-600 rounded focus:ring-blue-500" />
+                  <label for="enableAutocomplete" class="text-xs font-medium text-gray-700 cursor-pointer">Enable Autocomplete</label>
+               </div>
+               
+               <div v-if="editingField.enableAutocomplete" class="space-y-2">
+                  <div>
+                     <label class="block text-[10px] font-bold text-gray-700 mb-1">Autocomplete URL</label>
+                     <input v-model="editingField.autocompleteUrl" class="w-full text-sm border-blue-300 rounded font-mono" placeholder="Ej: /api/v1/user-info" />
+                  </div>
+                  <div>
+                     <label class="block text-[10px] font-bold text-gray-700 mb-1">Mappings JSON Array</label>
+                     <textarea v-model="autocompleteMappingsText" class="w-full text-xs font-mono border-blue-300 rounded" rows="3" placeholder='[\n  {\n    "from": "nombre",\n    "to": "nombre_completo"\n  }\n]'></textarea>
+                     <p class="text-[9px] text-blue-600">Formato: [{"from": "llave_api", "to": "camunda_variable_o_id"}]</p>
+                  </div>
+               </div>
+            </div>
             <div v-if="editingField.type === 'async_select'" class="bg-purple-50 p-3 rounded border border-purple-200">
                <label class="block text-xs font-bold text-purple-800 mb-1">URL Endpoint Async</label>
                <input v-model="editingField.asyncUrl" class="w-full text-sm border-purple-300 rounded font-mono" placeholder="Ej: /api/v1/customers" />
@@ -911,6 +933,9 @@ interface FormField extends FormFieldMetadataDTO {
   predefinedFormat?: string; // CA-36
   mask?: string; // CA-36
   clearOnHide?: boolean; // CA-8
+  enableAutocomplete?: boolean; // CA-30
+  autocompleteUrl?: string; // CA-30
+  autocompleteMappings?: { from: string; to: string }[]; // CA-30
 }
 
 // ── State ────────────────────────────────────────────────────────
@@ -951,6 +976,24 @@ const availableFieldsFlat = computed(() => {
         return res;
     };
     return flat(canvasFields.value);
+});
+
+const autocompleteMappingsText = computed({
+  get() {
+    if (!editingField.value || !editingField.value.autocompleteMappings) return '';
+    return JSON.stringify(editingField.value.autocompleteMappings, null, 2);
+  },
+  set(val: string) {
+    if (!editingField.value) return;
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) {
+         editingField.value.autocompleteMappings = parsed;
+      }
+    } catch (e) {
+      // Ignorar error de sintaxis temporal mientras escribe
+    }
+  }
 });
 
 // CA-90 / REM-003-04: Límites de Rendimiento para Formularios de Alta Densidad

@@ -497,7 +497,8 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
            tpl += `${indent}  <input type="${field.type === 'password' ? 'password' : 'text'}" :value="formatMask(${vModelBase}, '${field.mask}')" @change="(e) => { ${vModelBase} = unmask((e.target as HTMLInputElement).value, '${field.type}'); validateField('${field.camundaVariable || field.id}'); }" placeholder="${field.placeholder || field.mask}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm font-mono"${dsb} />\n`;
         } else {
            const nativeType = (field.type === 'email' || field.type === 'url' || field.type === 'password') ? field.type : field.type;
-           tpl += `${indent}  <input type="${nativeType}" v-model.lazy="${vModelBase}" @blur="validateField('${field.camundaVariable || field.id}')" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+           const blurHandler = field.enableAutocomplete && field.autocompleteUrl ? `validateField('${field.camundaVariable || field.id}'); handleAutocomplete_${field.id}();` : `validateField('${field.camundaVariable || field.id}')`;
+           tpl += `${indent}  <input type="${nativeType}" v-model.lazy="${vModelBase}" @blur="${blurHandler}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
         }
         if (field.type === 'password') {
            // CA-64 Hints Multi-Estado
@@ -676,6 +677,28 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
         for (const field of asyncFields) {
            scr += `const asyncOpts_${field.id} = ref<string[]>([]);\n`;
            scr += `const fetchAsyncOpts_${field.id} = async (query: string) => {\n   if(query.trim().length === 0) { asyncOpts_${field.id}.value = []; return; }\n   try {\n      isAsyncLoading.value = true;\n      const res = await apiClient.get(\`${field.asyncUrl}?q=\${query}\`);\n      asyncOpts_${field.id}.value = Array.isArray(res.data) ? res.data.map(i => i.label || i.nombre || i.name || JSON.stringify(i)) : [];\n   } catch (e) { console.error('Typeahead Error (CA-30)', e); } finally { isAsyncLoading.value = false; }\n};\n\n`;
+        }
+
+        const autocompleteFields = flatFields(canvasFields.value).filter(f => f.enableAutocomplete && f.autocompleteUrl);
+        for (const field of autocompleteFields) {
+           const mappings = field.autocompleteMappings || [];
+           scr += `const handleAutocomplete_${field.id} = async () => {\n`;
+           scr += `  const val = formData.value.${field.camundaVariable || field.id};\n`;
+           scr += `  if (!val) return;\n`;
+           scr += `  try {\n`;
+           scr += `    isAsyncLoading.value = true;\n`;
+           scr += `    const res = await apiClient.get(\`${field.autocompleteUrl}?q=\${val}\`);\n`;
+           scr += `    if (res.data) {\n`;
+           mappings.forEach((m: { from: string, to: string }) => {
+               scr += `      formData.value.${m.to} = res.data.${m.from};\n`;
+           });
+           scr += `    }\n`;
+           scr += `  } catch (e) {\n`;
+           scr += `    console.error('Autocomplete Error (${field.id})', e);\n`;
+           scr += `  } finally {\n`;
+           scr += `    isAsyncLoading.value = false;\n`;
+           scr += `  }\n`;
+           scr += `};\n\n`;
         }
 
         scr += `const formData = ref<Record<string, any>>({\n`;

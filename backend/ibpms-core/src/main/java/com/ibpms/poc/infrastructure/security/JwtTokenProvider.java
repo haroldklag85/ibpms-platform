@@ -22,8 +22,11 @@ public class JwtTokenProvider {
     @Value("${jwt.secret:changeme-this-must-be-at-least-32-chars!!}")
     private String secretString;
 
-    @Value("${jwt.expiration-seconds:900}")
+    @Value("${jwt.expiration-seconds:3600}")
     private long expirationSeconds;
+
+    @Value("${jwt.clock-skew-seconds:0}")
+    private long clockSkewSeconds;
 
     private SecretKey secretKey;
 
@@ -69,6 +72,7 @@ public class JwtTokenProvider {
     public Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
+                .clockSkewSeconds(clockSkewSeconds)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

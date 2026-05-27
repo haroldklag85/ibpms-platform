@@ -348,6 +348,56 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             wrapper.unmount();
         });
     });
+
+    // @Traceability: US-005, CA-32 Archivar un Proceso sin Instancias Activas
+    describe('Pruebas para CA-32 (Archivar un Proceso sin Instancias Activas)', () => {
+        it('Debe habilitar el botón Archivar si no existen instancias activas', async () => {
+            const store = useIntegrationStore();
+            (store as any).getCatalogProcesses = vi.fn().mockResolvedValue({
+                data: [
+                    { id: '1', name: 'Proceso Activo Sin Instancias', status: 'ACTIVO', version: 1, activeInstances: 0, lastEdited: '2026-05-27', author: 'Autor A' }
+                ]
+            });
+
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Abrir el explorador de procesos para renderizar
+            wrapper.vm.showCatalog = true;
+            await flushPromises();
+            await wrapper.vm.$nextTick();
+
+            const archiveBtn = wrapper.find('button[title="Archivar Proceso (CA-32)"]');
+            expect(archiveBtn.exists()).toBe(true);
+            expect(archiveBtn.attributes('disabled')).toBeUndefined();
+
+            wrapper.unmount();
+        });
+
+        it('Debe deshabilitar el botón Archivar y mostrar el tooltip si existen instancias activas', async () => {
+            const store = useIntegrationStore();
+            (store as any).getCatalogProcesses = vi.fn().mockResolvedValue({
+                data: [
+                    { id: '1', name: 'Proceso Activo Con Instancias', status: 'ACTIVO', version: 1, activeInstances: 5, lastEdited: '2026-05-27', author: 'Autor A' }
+                ]
+            });
+
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Abrir el explorador de procesos para renderizar
+            wrapper.vm.showCatalog = true;
+            await flushPromises();
+            await wrapper.vm.$nextTick();
+
+            // El botón debería tener el título dinámico con la advertencia de instancias
+            const archiveBtn = wrapper.find('button[title="No se puede archivar: 5 instancias en ejecución"]');
+            expect(archiveBtn.exists()).toBe(true);
+            expect(archiveBtn.attributes('disabled')).toBeDefined();
+
+            wrapper.unmount();
+        });
+    });
 });
 
 

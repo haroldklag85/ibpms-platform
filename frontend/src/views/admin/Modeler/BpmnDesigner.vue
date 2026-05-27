@@ -657,7 +657,13 @@
                 </div>
               </div>
               <!-- Action Button CA-32 -->
-              <button v-if="p.status === 'ACTIVO'" @click.stop="archiveProcess(p.id)" class="absolute top-2 right-2 text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded hover:bg-gray-200 transition z-10 border border-gray-300 shadow-sm flex items-center gap-1" title="Archivar Proceso (CA-32)">
+              <!-- @Traceability: US-005, CA-32 Archivar un Proceso sin Instancias Activas -->
+              <button v-if="p.status === 'ACTIVO'" 
+                      :disabled="(p.activeInstances || p.activeInstancesCount || 0) > 0"
+                      @click.stop="archiveProcess(p.id || p.key)" 
+                      class="absolute top-2 right-2 text-[10px] font-bold px-2 py-1 rounded transition z-10 border shadow-sm flex items-center gap-1"
+                      :class="((p.activeInstances || p.activeInstancesCount || 0) > 0) ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'"
+                      :title="((p.activeInstances || p.activeInstancesCount || 0) > 0) ? `No se puede archivar: ${p.activeInstances || p.activeInstancesCount} instancias en ejecución` : 'Archivar Proceso (CA-32)'">
                 📦 Archivar
               </button>
             </div>

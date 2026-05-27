@@ -1,6 +1,7 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import BpmnDesigner from './BpmnDesigner.vue';
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 
 // Mock consol.error to keep tests clean from bpmn-js errors in test env
 vi.stubGlobal('console', {
@@ -304,6 +305,45 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
 
             // Verificar que se recuperó correctamente
             expect(result).toEqual(mockElements);
+
+            wrapper.unmount();
+        });
+    });
+
+    // @Traceability: US-005, CA-31 Etiquetas de Estado en el Catálogo de Procesos
+    describe('Pruebas para CA-31 (Etiquetas de Estado en el Catálogo de Procesos)', () => {
+        it('Debe renderizar las etiquetas visuales de estado exactas en el catálogo de procesos', async () => {
+            const store = useIntegrationStore();
+            // Asignar directamente la función mockeada para evitar errores de vi.spyOn por métodos dinámicos
+            (store as any).getCatalogProcesses = vi.fn().mockResolvedValue({
+                data: [
+                    { id: '1', name: 'Proceso Borrador', status: 'BORRADOR', version: 1, lastEdited: '2026-05-27', author: 'Autor A' },
+                    { id: '2', name: 'Proceso Activo', status: 'ACTIVO', version: 3, lastEdited: '2026-05-27', author: 'Autor B' },
+                    { id: '3', name: 'Proceso Archivado', status: 'ARCHIVADO', version: 2, lastEdited: '2026-05-27', author: 'Autor C' }
+                ]
+            });
+
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Abrir el explorador de procesos para renderizar (esto disparará el watch)
+            wrapper.vm.showCatalog = true;
+            await flushPromises();
+            await wrapper.vm.$nextTick();
+
+            const items = wrapper.findAll('.space-y-3 > div');
+            expect(items.length).toBe(3);
+
+            // Verificar estados formateados con emojis y versiones
+            // Para BORRADOR -> "📝 BORRADOR"
+            // Para ACTIVO -> "✅ ACTIVO (v3)"
+            // Para ARCHIVADO -> "📦 ARCHIVADO"
+            const statusSpans = wrapper.findAll('.space-y-3 > div span.uppercase');
+            expect(statusSpans.length).toBe(3);
+
+            expect(statusSpans[0].text()).toBe('📝 BORRADOR');
+            expect(statusSpans[1].text()).toBe('✅ ACTIVO (v3)');
+            expect(statusSpans[2].text()).toBe('📦 ARCHIVADO');
 
             wrapper.unmount();
         });

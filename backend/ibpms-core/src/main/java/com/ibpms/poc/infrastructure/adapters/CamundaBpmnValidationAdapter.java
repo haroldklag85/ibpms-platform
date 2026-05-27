@@ -56,6 +56,9 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
             checkTimerEvent(doc, result);
             checkMessageEvent(doc, result);
             checkCallActivity(doc, result);
+            checkZombieNodes(doc, result);
+            checkInfiniteLoops(doc, result);
+            checkGatewayConvergence(doc, result);
             checkMaxNodes(doc, maxNodes, result);
 
         } catch (Exception e) {
@@ -80,7 +83,8 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
 
             Collection<EndEvent> endEvents = modelInstance.getModelElementsByType(EndEvent.class);
             if (endEvents == null || endEvents.isEmpty()) {
-                response.addError("Diagram", "Falta End Event");
+                // @Traceability: US-005, CA-02
+                response.addError("Diagram", "El diagrama no es instanciable. Falta End Event.");
             }
 
             Collection<ServiceTask> serviceTasks = modelInstance.getModelElementsByType(ServiceTask.class);
@@ -122,8 +126,9 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
 
             Collection<ExclusiveGateway> gateways = modelInstance.getModelElementsByType(ExclusiveGateway.class);
             for (ExclusiveGateway gw : gateways) {
-                if (gw.getDefault() == null) {
-                    response.addWarning(gw.getId(), "ExclusiveGateway sin Flujo por Defecto (default property)");
+                if (gw.getOutgoing().size() > 1 && gw.getDefault() == null) {
+                    // @Traceability: US-005, CA-07 Gobernanza Estricta de Despliegue
+                    response.addError(gw.getId(), "Hard-Stop: ExclusiveGateway sin Flujo por Defecto (default property)");
                 }
             }
 
@@ -199,7 +204,8 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
                 }
             }
             if (!hasNomenclature) {
-                response.addError("Process", "Debe definir cómo se llamarán los casos de este proceso (Propiedad: ReglaNomenclatura).");
+                // @Traceability: US-005, CA-05
+                response.addError("Process", "Debe definir cómo se llamarán los casos de este proceso.");
             }
 
             Collection<TimerEventDefinition> timers = modelInstance.getModelElementsByType(TimerEventDefinition.class);
@@ -300,8 +306,15 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
         }
         for (int i = 0; i < gateways.getLength(); i++) {
             Element el = (Element) gateways.item(i);
+            
+            int outgoingCount = el.getElementsByTagNameNS(BPMN_NS, "outgoing").getLength();
+            if (outgoingCount == 0) {
+                outgoingCount = el.getElementsByTagName("bpmn:outgoing").getLength();
+            }
+            
             String defaultFlow = el.getAttribute("default");
-            if (defaultFlow == null || defaultFlow.isBlank()) {
+            if (outgoingCount > 1 && (defaultFlow == null || defaultFlow.isBlank())) {
+                // @Traceability: US-005, CA-07 Gobernanza Estricta de Despliegue
                 result.addIssue(PreFlightResultDTO.Severity.ERROR, "GATEWAY_NO_DEFAULT",
                         el.getAttribute("id"), "ExclusiveGateway sin default flow.");
             }
@@ -334,8 +347,9 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
             Element el = (Element) messages.item(i);
             String messageRef = el.getAttribute("messageRef");
             if (messageRef == null || messageRef.isBlank()) {
-                result.addIssue(PreFlightResultDTO.Severity.WARNING, "MESSAGE_NO_REF",
-                        null, "MessageEvent sin messageRef.");
+                // @Traceability: US-005, CA-09 Gobernanza Estricta de Despliegue
+                result.addIssue(PreFlightResultDTO.Severity.ERROR, "MESSAGE_NO_REF",
+                        null, "Hard-Stop: MessageEvent sin messageRef.");
             }
         }
     }
@@ -349,8 +363,9 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
             Element el = (Element) calls.item(i);
             String calledElement = el.getAttribute("calledElement");
             if (calledElement == null || calledElement.isBlank()) {
-                result.addIssue(PreFlightResultDTO.Severity.WARNING, "CALL_ACTIVITY_MISSING_KEY",
-                        el.getAttribute("id"), "CallActivity sin calledElement (processDefinitionKey).");
+                // @Traceability: US-005, CA-09 Gobernanza Estricta de Despliegue
+                result.addIssue(PreFlightResultDTO.Severity.ERROR, "CALL_ACTIVITY_MISSING_KEY",
+                        el.getAttribute("id"), "Hard-Stop: CallActivity sin calledElement (processDefinitionKey).");
             }
         }
     }
@@ -372,6 +387,159 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
         if (totalNodes > maxNodes) {
             result.addIssue(PreFlightResultDTO.Severity.WARNING, "MAX_NODES_EXCEEDED",
                     null, "El proceso tiene " + totalNodes + " nodos, excede el límite de " + maxNodes + ".");
+        }
+    }
+
+    private void checkZombieNodes(Document doc, PreFlightResultDTO result) {
+        String[] nodeTypes = { "userTask", "serviceTask", "businessRuleTask", "scriptTask", "sendTask", "receiveTask", "task",
+                "exclusiveGateway", "parallelGateway", "inclusiveGateway", "eventBasedGateway",
+                "intermediateCatchEvent", "intermediateThrowEvent", "callActivity", "subProcess", "startEvent", "endEvent" };
+
+        for (String type : nodeTypes) {
+            NodeList nodes = doc.getElementsByTagNameNS(BPMN_NS, type);
+            if (nodes.getLength() == 0) {
+                nodes = doc.getElementsByTagName("bpmn:" + type);
+            }
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Element el = (Element) nodes.item(i);
+
+                int incomingCount = el.getElementsByTagNameNS(BPMN_NS, "incoming").getLength();
+                if (incomingCount == 0) {
+                    incomingCount = el.getElementsByTagName("bpmn:incoming").getLength();
+                }
+
+                int outgoingCount = el.getElementsByTagNameNS(BPMN_NS, "outgoing").getLength();
+                if (outgoingCount == 0) {
+                    outgoingCount = el.getElementsByTagName("bpmn:outgoing").getLength();
+                }
+
+                // @Traceability: US-005, CA-22 Detección de Nodos Zombie
+                if (!type.equals("startEvent") && incomingCount == 0) {
+                    result.addIssue(PreFlightResultDTO.Severity.ERROR, "ZOMBIE_NODE_NO_INCOMING",
+                            el.getAttribute("id"), "Hard-Stop: Nodo Zombie sin flujo de entrada (incoming) detectado.");
+                }
+
+                if (!type.equals("endEvent") && outgoingCount == 0) {
+                    result.addIssue(PreFlightResultDTO.Severity.ERROR, "ZOMBIE_NODE_NO_OUTGOING",
+                            el.getAttribute("id"), "Hard-Stop: Nodo Colgado sin flujo de salida (outgoing) detectado.");
+                }
+            }
+        }
+    }
+
+    private void checkInfiniteLoops(Document doc, PreFlightResultDTO result) {
+        // @Traceability: US-005, CA-23 Detección de Bucles Topológicos
+        java.util.Map<String, String> nodeTypes = new java.util.HashMap<>();
+        String[] allTypes = { "userTask", "serviceTask", "businessRuleTask", "scriptTask", "sendTask", "receiveTask", "manualTask", "task",
+                "exclusiveGateway", "parallelGateway", "inclusiveGateway", "eventBasedGateway", "complexGateway",
+                "intermediateCatchEvent", "intermediateThrowEvent", "callActivity", "subProcess", "startEvent", "endEvent" };
+
+        for (String type : allTypes) {
+            NodeList nodes = doc.getElementsByTagNameNS(BPMN_NS, type);
+            if (nodes.getLength() == 0) {
+                nodes = doc.getElementsByTagName("bpmn:" + type);
+            }
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Element el = (Element) nodes.item(i);
+                nodeTypes.put(el.getAttribute("id"), type);
+            }
+        }
+
+        java.util.Map<String, java.util.List<String>> graph = new java.util.HashMap<>();
+        NodeList flows = doc.getElementsByTagNameNS(BPMN_NS, "sequenceFlow");
+        if (flows.getLength() == 0) {
+            flows = doc.getElementsByTagName("bpmn:sequenceFlow");
+        }
+
+        for (int i = 0; i < flows.getLength(); i++) {
+            Element flow = (Element) flows.item(i);
+            String source = flow.getAttribute("sourceRef");
+            String target = flow.getAttribute("targetRef");
+            
+            String targetType = nodeTypes.getOrDefault(target, "");
+
+            // Consider it a synchronous edge if target is NOT a wait state
+            boolean isWaitState = targetType.equals("userTask") || targetType.equals("receiveTask") || 
+                                  targetType.equals("intermediateCatchEvent") || targetType.equals("eventBasedGateway");
+            
+            if (!isWaitState) {
+                graph.computeIfAbsent(source, k -> new java.util.ArrayList<>()).add(target);
+            }
+        }
+
+        // DFS for cycle detection
+        java.util.Set<String> visited = new java.util.HashSet<>();
+        java.util.Set<String> recursionStack = new java.util.HashSet<>();
+
+        for (String node : graph.keySet()) {
+            if (hasCycle(node, graph, visited, recursionStack)) {
+                result.addIssue(PreFlightResultDTO.Severity.ERROR, "INFINITE_LOOP_DETECTED", null,
+                        "Hard-Stop: Bucle topológico infinito detectado. Inserte un estado de espera (UserTask, Timer) para evitar caídas del motor.");
+                break;
+            }
+        }
+    }
+
+    private boolean hasCycle(String node, java.util.Map<String, java.util.List<String>> graph, 
+                             java.util.Set<String> visited, java.util.Set<String> recursionStack) {
+        if (recursionStack.contains(node)) {
+            return true;
+        }
+        if (visited.contains(node)) {
+            return false;
+        }
+        
+        visited.add(node);
+        recursionStack.add(node);
+
+        java.util.List<String> neighbors = graph.getOrDefault(node, java.util.Collections.emptyList());
+        for (String neighbor : neighbors) {
+            if (hasCycle(neighbor, graph, visited, recursionStack)) {
+                return true;
+            }
+        }
+
+        recursionStack.remove(node);
+        return false;
+    }
+
+    private void checkGatewayConvergence(Document doc, PreFlightResultDTO result) {
+        // @Traceability: US-005, CA-27 Validaciones Topológicas Avanzadas (Convergencia)
+        String[] gatewayTypes = { "parallelGateway", "inclusiveGateway" };
+        
+        for (String type : gatewayTypes) {
+            org.w3c.dom.NodeList nodes = doc.getElementsByTagNameNS(BPMN_NS, type);
+            if (nodes.getLength() == 0) {
+                nodes = doc.getElementsByTagName("bpmn:" + type);
+            }
+            
+            int divergentCount = 0;
+            int convergentCount = 0;
+            
+            for (int i = 0; i < nodes.getLength(); i++) {
+                org.w3c.dom.Element el = (org.w3c.dom.Element) nodes.item(i);
+                
+                int incomingCount = el.getElementsByTagNameNS(BPMN_NS, "incoming").getLength();
+                if (incomingCount == 0) {
+                    incomingCount = el.getElementsByTagName("bpmn:incoming").getLength();
+                }
+                
+                int outgoingCount = el.getElementsByTagNameNS(BPMN_NS, "outgoing").getLength();
+                if (outgoingCount == 0) {
+                    outgoingCount = el.getElementsByTagName("bpmn:outgoing").getLength();
+                }
+                
+                if (outgoingCount > 1 && incomingCount <= 1) {
+                    divergentCount++;
+                } else if (incomingCount > 1 && outgoingCount <= 1) {
+                    convergentCount++;
+                }
+            }
+            
+            if (divergentCount > convergentCount) {
+                result.addIssue(PreFlightResultDTO.Severity.ERROR, "GATEWAY_CONVERGENCE_MISMATCH", null,
+                        "Hard-Stop: Existen pasarelas (" + type + ") divergentes sin convergencia declarada. Detectados " + divergentCount + " divergentes y " + convergentCount + " convergentes.");
+            }
         }
     }
 }

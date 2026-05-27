@@ -62,15 +62,16 @@ public class AttendNextTaskService implements AttendNextTaskUseCase {
     @Transactional
     @Traceability(US = "US-001", CA = {"CA-28", "CA-16"})
     public WorkdeskGlobalItemDTO attendNext(String userId) {
-        String tenantId = userId; // Mapeo POC
+        // @Traceability: US-005, CA-28
+        UserEntity user = userPort.findByUsername(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        final String tenantId = resolveTenantId(user, userId);
 
         // Validar toggle usando el UseCase
         if (!featureToggleUseCase.isFeatureEnabled(tenantId, "FORCE_ROUTING")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "FORCE_ROUTING toggle is OFF or missing");
         }
-
-        UserEntity user = userPort.findByUsername(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         String[] skills = null;
         if (user.getSkills() != null && !user.getSkills().isBlank()) {
@@ -135,7 +136,11 @@ public class AttendNextTaskService implements AttendNextTaskUseCase {
     @Transactional
     @Traceability(US = "US-001", CA = {"CA-21"})
     public WorkdeskGlobalItemDTO skipAndAttendNext(String userId, SkipReasonDTO skipReason) {
-        String tenantId = userId;
+        // @Traceability: US-005, CA-28
+        UserEntity user = userPort.findByUsername(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        final String tenantId = resolveTenantId(user, userId);
 
         if ("OTRO".equalsIgnoreCase(skipReason.skipReason()) &&
             (skipReason.skipReasonDetail() == null || skipReason.skipReasonDetail().length() < 10)) {
@@ -202,5 +207,17 @@ public class AttendNextTaskService implements AttendNextTaskUseCase {
         dto.setTypeBadge("BPMN".equals(e.getSourceSystem()) ? "⚡ Flujo" : "📅 Proyecto");
         dto.setFinancialImpactHigh(e.getImpactLevel() != null && e.getImpactLevel() >= 8);
         return dto;
+    }
+
+    private String resolveTenantId(UserEntity user, String userId) {
+        try {
+            return com.ibpms.poc.application.util.SecurityContextUtils.getTenantId();
+        } catch (IllegalStateException e) {
+            if (user.getEmail() != null && user.getEmail().contains("@")) {
+                return "tenant_" + user.getEmail().split("@")[1].split("\\.")[0];
+            } else {
+                return userId;
+            }
+        }
     }
 }

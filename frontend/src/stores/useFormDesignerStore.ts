@@ -1,4 +1,4 @@
-// @Traceability: US-003 - CA-27, CA-30, CA-52
+// @Traceability: US-003 - CA-27, CA-30, CA-52, CA-74
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/services/apiClient';
@@ -22,6 +22,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const bpmnCoherenceResults = ref<any[]>([]);
   const formKey = ref('');
   const zodParseError = ref<boolean | string>(false);
+  const dictionaryItems = ref<any[]>([]);
   
   // AI State
   const aiPrompt = ref('');
@@ -118,12 +119,41 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     }
   };
 
-  const saveAsFragment = (node: any) => {
+  const fetchDictionary = async () => {
+    try {
+      const res = await apiClient.get('/api/v1/design/dictionary');
+      dictionaryItems.value = res.data || [];
+    } catch (e) {
+      console.error('Error fetching global dictionary:', e);
+      dictionaryItems.value = [];
+    }
+  };
+
+  const fetchSnippets = async () => {
+    try {
+      const res = await apiClient.get('/api/v1/design/snippets');
+      const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
+      if (fragmentCategory && res.data) {
+        fragmentCategory.items = res.data;
+      }
+    } catch (e) {
+      console.error('Error fetching snippets:', e);
+    }
+  };
+
+  const saveSnippet = async (name: string, components: any[]) => {
+    await apiClient.post('/api/v1/design/snippets', { name, components });
     const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
     if (fragmentCategory) {
-       fragmentCategory.items.push(JSON.parse(JSON.stringify(node)));
-       localStorage.setItem('workdesk_fragments', JSON.stringify(fragmentCategory.items));
+      fragmentCategory.items.push({ name, components });
+      localStorage.setItem('workdesk_fragments', JSON.stringify(fragmentCategory.items));
     }
+  };
+
+  const saveAsFragment = async (node: any) => {
+    const name = node.label || node.name || 'Nuevo Fragmento';
+    const components = [JSON.parse(JSON.stringify(node))];
+    await saveSnippet(name, components);
   };
 
   const fetchVersions = async () => {
@@ -157,6 +187,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
 
             return { success: true, message: `Formulario ${formId} cargado desde API` };
         }
+        return { success: false, message: 'El formulario no contiene un esquema válido.' };
     } catch(e) {
         return { success: false, message: 'Error cargando formulario remoto desde API' };
     }
@@ -1015,6 +1046,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     localJsonCode,
     editingField,
     idCounter,
+    dictionaryItems,
     generateAiForm,
     saveAsFragment,
     fetchVersions,
@@ -1031,6 +1063,9 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     generateMockPath,
     generateVitestSpec,
     certifyForm,
-    computedCode
+    computedCode,
+    fetchDictionary,
+    fetchSnippets,
+    saveSnippet
   };
 });

@@ -425,7 +425,7 @@
 | CA-71 | Máquina del Tiempo JSON (Soft-Versioning Local) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-72 | Resiliencia Periférica Offline y Tolerancia a Conflictos | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-73 | El Escáner Mágico (AI Prompt-to-Form & Document-to-Form) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
-| CA-74 | Diccionario Global y Fragmentos Reutilizables (Snippets) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-74 | Diccionario Global y Fragmentos Reutilizables (Snippets) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA74.spec.ts |
 | CA-75 | El Peaje Analítico (Data Diet / Prevención de Campos Huérfanos) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-76 | El Sello Radiactivo de Privacidad (Data Classification PII) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-77 | Integración Autocompletado Gobernado y Escudo Anti-DDoS | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |

@@ -593,7 +593,12 @@
             </div>
             <div>
               <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1">Enlace con el Proceso (Camunda) <AppTooltip content="Con este nombre viajará el dato a través de las siguientes etapas." /></label>
-              <input v-model="editingField.camundaVariable" class="w-full text-sm border-indigo-300 rounded font-mono bg-indigo-50" placeholder="Ej: customerName" />
+              <input v-model="editingField.camundaVariable" list="dictionary-datalist" @change="applyDictionaryVariable" class="w-full text-sm border-indigo-300 rounded font-mono bg-indigo-50" placeholder="Ej: customerName" />
+              <datalist id="dictionary-datalist">
+                <option v-for="item in dictionaryItems" :key="item.id" :value="item.id">
+                  {{ item.label }} ({{ item.type || 'text' }})
+                </option>
+              </datalist>
             </div>
             <div class="flex items-center gap-2 pt-2 border-t mt-4">
                <input type="checkbox" v-model="editingField.required" id="reqCheck" class="text-indigo-600 rounded" />
@@ -876,7 +881,7 @@
 </template>
 
 <script setup lang="ts">
-// @Traceability: US-003 - CA-27, CA-30
+// @Traceability: US-003 - CA-27, CA-30, CA-74
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -921,10 +926,11 @@ const {
   activeCodeTab,
   localJsonCode,
   editingField,
-  computedCode
+  computedCode,
+  dictionaryItems
 } = storeToRefs(formStore);
 
-const { simulatorContext, evaluateMockVis, cloneComponent, attemptTabChange } = formStore;
+const { simulatorContext, evaluateMockVis, cloneComponent, attemptTabChange, fetchDictionary, fetchSnippets, saveSnippet } = formStore;
 
 // ── Types ────────────────────────────────────────────────────────
 interface FormField extends FormFieldMetadataDTO {
@@ -1027,7 +1033,22 @@ const saveAsFragment = (node: any) => {
     showToast(`Componente consolidado en Fragmentos`, 'success');
 };
 
+const applyDictionaryVariable = () => {
+    if (!editingField.value) return;
+    const item = dictionaryItems.value.find((d: any) => d.id === editingField.value.camundaVariable);
+    if (item) {
+        editingField.value.label = item.label;
+        editingField.value.isPII = !!item.isPII;
+        if (item.type) {
+            editingField.value.type = item.type;
+        }
+        showToast(`Variable corporativa '${item.id}' aplicada (Gobernanza MDM)`, 'success');
+    }
+};
+
 onMounted(async () => {
+    await fetchDictionary();
+    await fetchSnippets();
     // CA-6: Initialize Shadow DOM
     if (designerHostRef.value) {
         const shadowRoot = designerHostRef.value.attachShadow({ mode: 'open' });
@@ -1249,6 +1270,18 @@ const importCSVOptions = (event: any, fieldObj: FormField) => {
 
 const editField = (field: FormField) => {
   editingField.value = field;
+};
+
+const onCamundaVariableChange = (e: Event) => {
+  const val = (e.target as HTMLInputElement).value;
+  const found = dictionaryItems.value.find((item: any) => item.id === val);
+  if (found && editingField.value) {
+    editingField.value.label = found.label;
+    editingField.value.isPII = found.isPII ?? false;
+    if (found.type) {
+      editingField.value.type = found.type;
+    }
+  }
 };
 
 declare const monaco: any;

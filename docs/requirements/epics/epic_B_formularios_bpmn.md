@@ -467,11 +467,12 @@ Feature: Web IDE Form Code Generation
     And autogenerará el layout visual en Vue 3 y el esquema Zod de manera instantánea, mapeando tipos de datos, labels y campos requeridos.
     And el Arquitecto retomará el control manual sobre el lienzo generado para refinar la UI, reduciendo el "Time-to-Market" de la digitalización.
 
-  Scenario: Diccionario Global y Fragmentos Reutilizables (Snippets) (CA-74)
+  Scenario: [REMEDIACIÓN] Diccionario Global y Fragmentos Reutilizables (Snippets) (CA-74)
     Given la necesidad de estandarizar la recolección de datos en toda la empresa (Prevenir Torre de Babel)
     Then la plataforma TIENE PROHIBIDO leer variables de Camunda para autogenerar el formulario (El proceso no dicta el dato).
-    And el IDE desplegará un autocompletado conectado al "Diccionario de Datos Maestro", sugiriendo variables corporativas (Ej: `cliente_id`) que heredan validaciones Regex pre-aprobadas.
-    And el Arquitecto podrá seleccionar un grupo de campos y pulsar `[Guardar como Fragmento]`, empaquetándolos como un "Lego" reutilizable en la Paleta lateral.
+    And el IDE consultará al BFF REST API `/api/v1/design/dictionary` para desplegar un autocompletado en el input de camundaVariable sugiriendo variables corporativas.
+    And al seleccionar una variable corporativa, el componente visual heredará automáticamente propiedades pre-aprobadas como `label`, `isPII` y `type`.
+    And el Arquitecto podrá seleccionar campos y persistirlos como fragmentos de diseño en `/api/v1/design/snippets` mediante `POST`, actualizando dinámicamente la categoría "Mis Fragmentos" de la paleta.
 
   # ==============================================================================
   # B. GOBERNANZA DE DATOS (V.I.D.A.) Y SHIFT-LEFT SECURITY

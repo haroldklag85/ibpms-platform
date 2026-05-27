@@ -1,4 +1,4 @@
-// @Traceability: US-003 - CA-27, CA-30
+// @Traceability: US-003 - CA-27, CA-30, CA-52
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/services/apiClient';
@@ -430,11 +430,11 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     if (field.type.startsWith('button_')) {
         tpl += `${indent}<div class="mt-6 field-${field.id.toLowerCase()} no-print" v-if="(typeof isAuditMode === 'undefined' ? false : !isAuditMode) && (typeof stage === 'undefined' ? true : stage !== 'AUDIT')">\n`;
         if (field.type === 'button_submit') {
-          tpl += `${indent}  <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2" :disabled="typeof isAsyncLoading !== 'undefined' && isAsyncLoading">✅ ${field.label}</button>\n`;
+          tpl += `${indent}  <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2" :disabled="isAsyncLoading"><span v-if="isAsyncLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>✅ ${field.label}</button>\n`;
         } else if (field.type === 'button_draft') {
-          tpl += `${indent}  <button type="button" @click="saveDraft" class="w-full border-2 border-dashed border-gray-300 text-gray-700 py-2 rounded shadow-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2" :disabled="typeof isAsyncLoading !== 'undefined' && isAsyncLoading">💾 ${field.label}</button>\n`;
+          tpl += `${indent}  <button type="button" @click="saveDraft" class="w-full border-2 border-dashed border-gray-300 text-gray-700 py-2 rounded shadow-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2" :disabled="isAsyncLoading">💾 ${field.label}</button>\n`;
         } else if (field.type === 'button_reject') {
-          tpl += `${indent}  <button type="button" @click="rejectTask" class="w-full bg-red-600 text-white py-2 rounded shadow-sm font-bold hover:bg-red-700 transition mt-2 flex items-center justify-center gap-2" :disabled="typeof isAsyncLoading !== 'undefined' && isAsyncLoading">❌ ${field.label}</button>\n`;
+          tpl += `${indent}  <button type="button" @click="rejectTask" class="w-full bg-red-600 text-white py-2 rounded shadow-sm font-bold hover:bg-red-700 transition mt-2 flex items-center justify-center gap-2" :disabled="isAsyncLoading">❌ ${field.label}</button>\n`;
         }
         tpl += `${indent}</div>\n`;
         return tpl;
@@ -651,7 +651,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
         
         const hasSubmit = flatFields(canvasFields.value).some(f => f.type === 'button_submit');
         if (!hasSubmit && canvasFields.value.length > 0) {
-            tpl += `\n    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded shadow hover:bg-blue-700 transition mt-6">Enviar Tarea (Auto)</button>`;
+            tpl += `\n    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded shadow hover:bg-blue-700 transition mt-6 flex items-center justify-center gap-2" :disabled="isAsyncLoading"><span v-if="isAsyncLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>Enviar Tarea (Auto)</button>`;
         }
         tpl += `\n  </form>\n</template>`;
         return tpl;

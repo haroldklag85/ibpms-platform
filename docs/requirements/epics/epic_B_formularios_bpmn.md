@@ -326,11 +326,13 @@ Feature: Web IDE Form Code Generation
     Then el Analista 2 puede visualizar y editar toda la grilla si tiene permisos
     And cualquier fila modificada o eliminada que perteneciera al Analista 1 dejará un rastro en la Bitácora de Auditoría (CA-12).
 
-  Scenario: Feedback Visual en Llamadas a APIs (Estado Indeterminado) (CA-52)
-    Given el usuario final ingresa un dato en un campo que dispara una llamada de Autocompletado (CA-14)
-    When la interconexión con el sistema externo está procesándose
-    Then el botón global de [Enviar Formulario] se deshabilita temporalmente
-    And muestra un indicador de carga (spinner), evitando envíos prematuros o datos rotos.
+  Scenario: [REMEDIACIÓN] Feedback Visual en Llamadas a APIs (Estado Indeterminado) (CA-52)
+    # Origen: us_003_audit_report.md | Decisión: Deshabilitado reactivo de controles y spinner CSS animado
+    Given el usuario final ingresa un dato en un campo que dispara una llamada de Autocompletado (CA-14 / CA-30)
+    When la interconexión con el sistema externo mediante apiClient.get está procesándose (isAsyncLoading es true)
+    Then el botón global de finalización y envío del formulario se deshabilita reactivamente (:disabled="isAsyncLoading")
+    And muestra un indicador de carga con spinner CSS animado ("animate-spin"), evitando envíos prematuros o datos rotos
+    And este estado de carga expuesto se propaga reactivamente desde FormRenderer hasta TaskViewerModal.
 
   Scenario: Enmascaramiento de Inputs de Múltiple Tipo (Contraseñas / Sensibles) (CA-53)
     Given el Arquitecto requiere capturar información sensible (Ej: APIs Keys, Claves)

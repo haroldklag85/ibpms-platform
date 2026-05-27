@@ -406,7 +406,7 @@
 | CA-49 | Restricción de Cantidad Mínima y Máxima de Adjuntos | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA46_CA50 |
 | CA-50 | Traducción Silenciosa de Formatos (Mascara Front vs Dato Back) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA46_CA50 |
 | CA-51 | Grillas Editables con Protección y Auditoría Parcial | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
-| CA-52 | Feedback Visual en Llamadas a APIs (Estado Indeterminado) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
+| CA-52 | Feedback Visual en Llamadas a APIs (Estado Indeterminado) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA52.spec.ts |
 | CA-53 | Enmascaramiento de Inputs de Múltiple Tipo (Contraseñas / Sensibles) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
 | CA-54 | Limpieza Automática por Lógica Condicional | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
 | CA-55 | Grillas y Organización Multicolumna (Layouts) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |

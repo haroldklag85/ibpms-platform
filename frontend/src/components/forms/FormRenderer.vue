@@ -16,7 +16,7 @@ import FormWizard from './FormWizard.vue';
 import { useWizardValidation } from '@/composables/useWizardValidation';
 
 // @Traceability: Retro-Remediación ADR-006
-// @Traceability: US-003 - CA-30
+// @Traceability: US-003 - CA-30, CA-52
 const integrationStore = useIntegrationStore();
 
 const props = defineProps<{ schema: any[], mockContext?: Record<string, any> }>();
@@ -30,6 +30,8 @@ let shadowApp: any = null;
 const isSubmitted = ref(false);
 const uploadedUuids = ref<string[]>([]);
 
+const isAsyncLoading = ref(false);
+
 const markFileUploaded = (uuid: string) => {
    if (!uploadedUuids.value.includes(uuid)) {
       uploadedUuids.value.push(uuid);
@@ -40,7 +42,7 @@ const notifySubmit = () => {
    isSubmitted.value = true;
 };
 
-defineExpose({ notifySubmit, markFileUploaded });
+defineExpose({ notifySubmit, markFileUploaded, isAsyncLoading });
 
 onMounted(() => {
   if (hostRef.value) {
@@ -269,24 +271,27 @@ onMounted(() => {
                };
 
                if (node.enableAutocomplete && node.autocompleteUrl) {
-                   attrs.onBlur = async (e: any) => {
-                       const queryVal = e.target.value;
-                       if (!queryVal) return;
-                       try {
-                           const res = await apiClient.get(`${node.autocompleteUrl}?q=${queryVal}`);
-                           if (res.data) {
-                               const mappings = node.autocompleteMappings || [];
-                               mappings.forEach((m: { from: string, to: string }) => {
-                                   if (m.from && m.to) {
-                                       formData.value[m.to] = res.data[m.from];
-                                   }
-                               });
-                           }
-                       } catch (err) {
-                           console.error("Autocomplete runtime error (CA-30):", err);
-                       }
-                   };
-               }
+                    attrs.onBlur = async (e: any) => {
+                        const queryVal = e.target.value;
+                        if (!queryVal) return;
+                        try {
+                            isAsyncLoading.value = true;
+                            const res = await apiClient.get(`${node.autocompleteUrl}?q=${queryVal}`);
+                            if (res.data) {
+                                const mappings = node.autocompleteMappings || [];
+                                mappings.forEach((m: { from: string, to: string }) => {
+                                    if (m.from && m.to) {
+                                        formData.value[m.to] = res.data[m.from];
+                                    }
+                                });
+                            }
+                        } catch (err) {
+                            console.error("Autocomplete runtime error (CA-30):", err);
+                        } finally {
+                            isAsyncLoading.value = false;
+                        }
+                    };
+                }
                
                let iMaskOptions: any = null;
                

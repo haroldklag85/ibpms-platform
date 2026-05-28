@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibpms.poc.domain.model.agile.AgileTask;
 import com.ibpms.poc.application.port.out.AgileTaskPort;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,9 +16,10 @@ import java.util.UUID;
 import java.time.ZonedDateTime;
 
 /**
- * US-029: Persistencia progresiva de Borradores y Validación de Completitud.
+ * US-029 / US-003: Persistencia progresiva de Borradores y Validación de Completitud (CA-91).
  */
 @Service
+@Traceability(US = "US-003", CA = {"CA-91"})
 public class TaskDraftService {
 
     private final AgileTaskPort taskRepository;
@@ -61,6 +63,35 @@ public class TaskDraftService {
         } catch (JsonProcessingException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payload inválido", e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    // @Traceability(US="US-003", CA="CA-91", DESC="Recuperación de Borrador CQRS")
+    public Map<String, Object> getDraft(UUID taskId) {
+        AgileTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+
+        if (task.getDraftPayload() == null) {
+            return java.util.Collections.emptyMap();
+        }
+
+        try {
+            return objectMapper.readValue(task.getDraftPayload(), Map.class);
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al deserializar borrador", e);
+        }
+    }
+
+    @Transactional
+    // @Traceability(US="US-003", CA="CA-91", DESC="Purgar borrador post-submit")
+    public void deleteDraft(UUID taskId) {
+        AgileTask task = taskRepository.findByIdForUpdate(taskId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+
+        task.setDraftPayload(null);
+        task.setDraftPayloadHash(null);
+        task.setDraftExpiresAt(null);
+        taskRepository.save(task);
     }
 
     @Transactional

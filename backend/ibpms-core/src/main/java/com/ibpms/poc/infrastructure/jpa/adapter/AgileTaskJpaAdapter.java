@@ -18,6 +18,11 @@ public class AgileTaskJpaAdapter implements AgileTaskPort {
     }
 
     @Override
+    public Optional<AgileTask> findById(UUID taskId) {
+        return repository.findById(taskId);
+    }
+
+    @Override
     public Optional<AgileTask> findByIdForUpdate(UUID taskId) {
         return repository.findByIdForUpdate(taskId);
     }

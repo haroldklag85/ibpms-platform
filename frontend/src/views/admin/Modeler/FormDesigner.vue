@@ -880,13 +880,33 @@
             </div>
          </div>
       </div>
+     <!-- CA-85: Modal de Recuperación de Sesión (Amnesia Cero) -->
+      <div v-if="showRestoreModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
+         <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full border border-gray-100">
+            <div class="flex items-center gap-3 mb-4 text-indigo-600">
+               <span class="text-3xl">💾</span>
+               <h3 class="text-lg font-bold text-gray-900">Recuperación de Sesión</h3>
+            </div>
+            <p class="text-sm text-gray-600 mb-6 leading-relaxed">
+               Detectamos un borrador no guardado. ¿Desea restaurar su trabajo previo?
+            </p>
+            <div class="flex justify-end gap-3">
+               <button @click="discardRestore" class="px-4 py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 transition" data-test="discard-restore-btn">
+                  No, descartar
+               </button>
+               <button @click="applyRestore" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-xs font-bold shadow transition" data-test="apply-restore-btn">
+                  Sí, restaurar
+               </button>
+            </div>
+         </div>
+      </div>
     </Teleport>
 
   </div>
 </template>
 
 <script setup lang="ts">
-// @Traceability: US-003 - CA-27, CA-30, CA-74, CA-77, CA-83
+// @Traceability: US-003 - CA-27, CA-30, CA-74, CA-77, CA-83, CA-85
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -1089,10 +1109,8 @@ onMounted(async () => {
         const localStoreKey = 'form_draft_ca85_modeler';
         const savedCA85Msg = localStorage.getItem(localStoreKey);
         if (savedCA85Msg && canvasFields.value.length === 0) {
-            try {
-                canvasFields.value = JSON.parse(savedCA85Msg);
-                showToast('Borrador restaurado (CA-85 Amnesia Cero)', 'success');
-            } catch (e) {}
+            tempRestoreDraft.value = savedCA85Msg;
+            showRestoreModal.value = true;
         }
     }
 
@@ -1102,6 +1120,28 @@ onMounted(async () => {
         if (fragmentCategory) fragmentCategory.items = JSON.parse(savedFragments);
     }
 });
+
+// CA-85: Recovery Modal Refs and Handlers
+const showRestoreModal = ref(false);
+const tempRestoreDraft = ref('');
+
+const applyRestore = () => {
+    if (tempRestoreDraft.value) {
+        try {
+            canvasFields.value = JSON.parse(tempRestoreDraft.value);
+            showToast('Borrador restaurado (CA-85 Amnesia Cero)', 'success');
+        } catch (e) {}
+    }
+    showRestoreModal.value = false;
+    tempRestoreDraft.value = '';
+};
+
+const discardRestore = () => {
+    localStorage.removeItem('form_draft_ca85_modeler');
+    showRestoreModal.value = false;
+    tempRestoreDraft.value = '';
+    showToast('Borrador descartado', 'success');
+};
 
 // Runtime Render Preview Modal
 const showPreviewModal = ref(false);

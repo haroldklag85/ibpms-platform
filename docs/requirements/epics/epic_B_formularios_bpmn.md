@@ -551,11 +551,11 @@ Feature: Web IDE Form Code Generation
     And subrayará de rojo (Squiggly Line) la línea conflictiva
     And proyectará en la zona inferior un panel amigable con mensajes legibles para un humano (Ej: "Hay un error de sintaxis cerca de la línea 14").
 
-  Scenario: Auto-Guardado y Recuperación de Sesión en el Diseñador (CA-85)
+  Scenario: [REMEDIACIÓN] Auto-Guardado y Recuperación de Sesión en el Diseñador (CA-85)
     Given el Arquitecto está construyendo un formulario extenso en la Pantalla 7 (IDE Web)
     When ocurre una desconexión de red, apagón, o un cierre accidental de la pestaña
     Then el sistema debe garantizar la preservación del progreso inyectando el estado del lienzo en el `LocalStorage` del navegador de forma reactiva a cada cambio.
-    And al regresar a la Pantalla 7, la aplicación detectará el borrador huérfano y mostrará un banner amigable: "Detectamos un borrador no guardado. ¿Desea restaurar su trabajo previo?" permitiendo recuperar el Canvas intacto.
+    And al regresar a la Pantalla 7, la aplicación detectará el borrador huérfano y mostrará un modal de confirmación: "Detectamos un borrador no guardado. ¿Desea restaurar su trabajo previo?" permitiendo recuperar el Canvas intacto si el usuario lo acepta o descartarlo liberando el almacenamiento.
 
   Scenario: Catálogo y Explorador de Formularios (Form Manager Dashboard) (CA-86)
     Given la necesidad del Arquitecto de buscar, re-editar o consultar versiones de formularios pre-existentes

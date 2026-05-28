@@ -436,7 +436,7 @@
 | CA-82 | Autoguardado Volátil, Limpieza de Fantasmas y Smart Buttons | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-83 | Sandbox de Pruebas Zod In-Browser (Shift-Left QA) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA83.spec.ts |
 | CA-84 | Manejo Amigable de Errores de Sintaxis en el Mónaco IDE | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
-| CA-85 | Auto-Guardado y Recuperación de Sesión en el Diseñador | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-85 | Auto-Guardado y Recuperación de Sesión en el Diseñador | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA85.spec.ts |
 | CA-86 | Catálogo y Explorador de Formularios (Form Manager Dashboard) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-87 | Persistencia Versionada del Diseño JSON del Formulario | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-69 | handoff_backend_us003_rem_ca87 |
 | CA-88 | Separación Arquitectónica de Contextos IDE vs Workdesk | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-69 | handoff_frontend_us003_rem_ca88 |

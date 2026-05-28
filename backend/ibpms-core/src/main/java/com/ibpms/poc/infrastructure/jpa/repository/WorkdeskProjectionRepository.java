@@ -22,7 +22,11 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         SELECT * FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
           AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
-          AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[]))) 
+          AND (
+            (CAST(:view AS VARCHAR) = 'POOL' AND w.assignee IS NULL) OR
+            (CAST(:view AS VARCHAR) = 'PERSONAL' AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[])))) OR
+            (CAST(:view AS VARCHAR) IS NULL AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[])) OR w.assignee IS NULL))
+          )
         ORDER BY 
           CASE WHEN w.impact_level >= 8 THEN 0 ELSE 1 END ASC, 
           w.sla_expiration_date ASC NULLS LAST, 
@@ -32,7 +36,11 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         SELECT COUNT(*) FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
           AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
-          AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[])))
+          AND (
+            (CAST(:view AS VARCHAR) = 'POOL' AND w.assignee IS NULL) OR
+            (CAST(:view AS VARCHAR) = 'PERSONAL' AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[])))) OR
+            (CAST(:view AS VARCHAR) IS NULL AND (CAST(:assignees AS VARCHAR[]) IS NULL OR w.assignee = ANY(CAST(:assignees AS VARCHAR[])) OR w.assignee IS NULL))
+          )
         """,
         nativeQuery = true)
     // @Traceability: US-001, CA-29 Contadores de Facetas
@@ -40,6 +48,7 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
            @Param("tenantId") String tenantId, 
            @Param("search") String search, 
            @Param("assignees") String[] assignees, 
+           @Param("view") String view,
            Pageable pageable);
 
     @Query(value = """

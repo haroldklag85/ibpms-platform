@@ -55,7 +55,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
     forceRoutingEnabled: false,
     isAttending: false,
     // CA-22: Tabs Workdesk
-    activeView: 'PERSONAL' as 'PERSONAL' | 'POOL',
+    activeView: 'POOL' as 'PERSONAL' | 'POOL',
     _bulkDebounce: null as ReturnType<typeof setTimeout> | null
   }),
 
@@ -149,17 +149,15 @@ export const useWorkdeskStore = defineStore('workdesk', {
     async claimTask(taskId: string) {
       return this._withNetworkSafety(async () => {
         // Snapshot
-        const snapshot = structuredClone(this.items);
+        const snapshot = JSON.parse(JSON.stringify(this.items));
         const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
         let claimedTask: any = null;
         
         // Mutar Optimistically
         if (taskIdx !== -1) {
-            claimedTask = this.items.splice(taskIdx, 1)[0];
+            claimedTask = this.items[taskIdx];
             claimedTask._isConfirming = true; // Flag for UI "Confirmando con el servidor..."
-            if (this.activeView === 'PERSONAL') {
-                this.items.unshift(claimedTask);
-            }
+            claimedTask.assignee = 'analista'; // Asignar al usuario actual
         }
         
         const delays = [2000, 4000, 8000];
@@ -200,7 +198,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
     // @Traceability: US-002 - CA-10, CA-22
     async unclaimTask(taskId: string, internalMessage?: string) {
       return this._withNetworkSafety(async () => {
-        const snapshot = structuredClone(this.items);
+        const snapshot = JSON.parse(JSON.stringify(this.items));
         const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
         
         if (taskIdx !== -1) {
@@ -218,10 +216,28 @@ export const useWorkdeskStore = defineStore('workdesk', {
       });
     },
 
+    // @Traceability: US-017 - CA-01, CA-15
+    async completeTask(taskId: string, variables: any = {}) {
+      return this._withNetworkSafety(async () => {
+        const snapshot = JSON.parse(JSON.stringify(this.items));
+        const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
+        if (taskIdx !== -1) {
+            this.items.splice(taskIdx, 1);
+        }
+        try {
+            const { data } = await apiClient.post(`/workbox/tasks/${taskId}/complete`, variables);
+            return data;
+        } catch (err: any) {
+            this.items = snapshot;
+            throw err;
+        }
+      });
+    },
+
     // @Traceability: US-002 - CA-10, CA-22
     async bulkClaimTasks(taskIds: string[]) {
       return this._withNetworkSafety(async () => {
-        const snapshot = structuredClone(this.items);
+        const snapshot = JSON.parse(JSON.stringify(this.items));
         
         if (this.activeView === 'POOL') {
            this.items = this.items.filter(t => !taskIds.includes(t.unifiedId) && !taskIds.includes(t.originalTaskId));

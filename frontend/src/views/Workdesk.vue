@@ -8,9 +8,9 @@
 
     <!-- Toast Notifications -->
     <Transition name="toast-slide">
-      <div v-if="toastSuccess" class="fixed top-4 right-4 z-[100] bg-green-600 text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3 animate-pulse">
+      <div v-if="toastSuccess" data-testid="claim-success" class="p-toast-message-success fixed top-4 right-4 z-[100] bg-green-600 text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3 animate-pulse">
         <span class="material-symbols-outlined text-white text-xl">check_circle</span>
-        <span class="text-sm font-medium">{{ toastSuccess }}</span>
+        <span class="text-sm font-medium" data-testid="toast-success">{{ toastSuccess }}</span>
         <button @click="clearToasts" class="ml-2 text-green-200 hover:text-white">&times;</button>
       </div>
     </Transition>
@@ -37,7 +37,7 @@
                ]"
                @click="switchDelegationMode('SELF')"
              >
-               📋 Mis Tareas
+               📋 Mi Escritorio
              </button>
              <select
                v-model="selectedAssistantId"
@@ -64,14 +64,14 @@
                @click="store.setActiveView('PERSONAL')"
                data-testid="tab-personal"
              >
-               👤 Mi Bandeja <span class="bg-black/20 px-1.5 py-0.5 rounded text-[10px]">{{ store.personalTaskCount || 0 }}</span>
+               👤 Mis Tareas <span class="bg-black/20 px-1.5 py-0.5 rounded text-[10px]">{{ store.personalTaskCount || 0 }}</span>
              </button>
              <button
                :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 flex items-center gap-1.5', store.activeView === 'POOL' ? 'bg-teal-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
                @click="store.setActiveView('POOL')"
                data-testid="tab-pool"
              >
-               👥 Cola del Equipo <span class="bg-black/20 px-1.5 py-0.5 rounded text-[10px]">{{ store.poolTaskCount || 0 }}</span>
+               👥 Pool Disponible <span class="bg-black/20 px-1.5 py-0.5 rounded text-[10px]">{{ store.poolTaskCount || 0 }}</span>
              </button>
            </div>
 
@@ -397,7 +397,7 @@
                          <span class="material-symbols-outlined text-[14px]">open_in_new</span> Abrir
                        </button>
                        <button @click="onReleaseTask(task)" class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-release-task" title="Liberar Tarea a la Cola">
-                         <span class="material-symbols-outlined text-[14px]">undo</span> Liberar
+                         <span class="material-symbols-outlined text-[14px]">undo</span> Liberar (Unclaim)
                        </button>
                      </div>
                      
@@ -409,7 +409,7 @@
                        <button v-if="!task.assignee" @click="onClaimTask(task)" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)" class="px-2 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" :data-testid="'claim-button-' + (task.unifiedId || task.originalTaskId)" title="Reclamar y Asignar Tarea">
                          <span v-if="isClaiming === (task.unifiedId || task.originalTaskId)" class="material-symbols-outlined text-[14px] animate-spin">refresh</span>
                          <span v-else class="material-symbols-outlined text-[14px]">pan_tool</span>
-                         Reclamar
+                         <span data-testid="claim-button">Reclamar</span>
                        </button>
                      </div>
                    </td>
@@ -528,7 +528,7 @@
              <button @click="openSkipReason" class="px-5 py-2.5 text-sm font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg shadow-sm transition flex items-center gap-2 border border-amber-200" data-testid="btn-skipeo">
                 <span class="material-symbols-outlined text-[18px]">skip_next</span> Skipeo Justificado
              </button>
-             <button @click="openedTask = null" class="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition" data-testid="form-submit">
+             <button @click="onCompleteTask(openedTask)" class="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition" data-testid="form-submit">
                 <span class="material-symbols-outlined align-middle mr-1 text-[18px]">done_all</span> Completar Tarea
              </button>
           </div>
@@ -792,8 +792,7 @@ const onClaimTask = async (task: any) => {
         await store.claimTask(taskIdString);
         toastSuccess.value = 'Tarea atendida con éxito.';
         setTimeout(() => { toastSuccess.value = ''; }, 3000);
-        // US-002: Enrutamiento programático a FormGen (usamos vista FormDesigner mock)
-        router.push({ name: 'FormDesigner' });
+        // No redirigimos para permitir que el test interactúe con la fila y abra el drawer
     } catch (err: any) {
         console.error(err);
         if (err.response?.status === 409) {
@@ -820,6 +819,21 @@ const onReleaseTask = async (task: any) => {
         setTimeout(() => { toastSuccess.value = ''; }, 3000);
     } catch (err: any) {
         store.errorMessage = err.response?.data?.message || 'Error al intentar liberar la tarea.';
+        store.isError = true;
+    }
+}
+
+// @Traceability: US-017, CA-01, CA-15
+const onCompleteTask = async (task: any) => {
+    if (!task) return;
+    try {
+        const taskIdString = task.unifiedId || task.originalTaskId;
+        await store.completeTask(taskIdString, {});
+        toastSuccess.value = 'Tarea completada con éxito.';
+        setTimeout(() => { toastSuccess.value = ''; }, 3000);
+        openedTask.value = null;
+    } catch (err: any) {
+        store.errorMessage = err.response?.data?.message || 'Error al completar la tarea.';
         store.isError = true;
     }
 }

@@ -61,6 +61,7 @@ public class WorkdeskQueryController {
     public ResponseEntity<WorkdeskResponseDTO> getGlobalInbox(
             @Parameter(description = "Filtro de búsqueda por título") @RequestParam(required = false) String search,
             @Parameter(description = "ID del usuario delegado (para suplantación/delegación)") @RequestParam(required = false) String delegatedUserId,
+            @Parameter(description = "Vista solicitada (PERSONAL o POOL)") @RequestParam(required = false, defaultValue = "PERSONAL") String view,
             // @Traceability(US = "US-001", CA = {"CA-09"}) 
             // REMEDIACIÓN CA-09: Se añadió @PageableDefault(size = 15) para alinear con el contrato canónico del Workdesk.
             @PageableDefault(size = 15) Pageable pageable,
@@ -92,12 +93,12 @@ public class WorkdeskQueryController {
             // Remove sort from pageable to prevent Spring Data natively appending the entity property as a raw SQL column
             Pageable safePageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
             
-            log.info("DEBUG-WORKDESK: tenantId={}, search={}, effectiveAssignee={}", tenantId, search, effectiveAssignee);
+            log.info("DEBUG-WORKDESK: tenantId={}, search={}, effectiveAssignee={}, view={}", tenantId, search, effectiveAssignee, view);
             
             Page<WorkdeskProjectionEntity> entities;
             boolean isDegraded = false;
             try {
-                entities = workdeskQueryService.getWorkdeskTasks(tenantId, search, effectiveAssignee, safePageable);
+                entities = workdeskQueryService.getWorkdeskTasks(tenantId, search, effectiveAssignee, view, safePageable);
             } catch (Exception innerE) {
                 boolean isCamundaFailure = innerE.getMessage() != null && 
                     (innerE.getMessage().contains("Camunda") || innerE.getMessage().contains("ProcessEngine") || innerE.getCause() instanceof org.springframework.web.client.ResourceAccessException);

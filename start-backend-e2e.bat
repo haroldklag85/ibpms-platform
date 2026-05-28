@@ -13,7 +13,7 @@ taskkill /F /IM node.exe > nul 2>&1
 echo ===================================================
 echo [2/4] Limpiando Caché (Prevencion ClassNotFoundException)
 echo ===================================================
-cd backend\ibpms-core
+cd /d "%~dp0backend\ibpms-core"
 call ..\..\maven\apache-maven-3.9.6\bin\mvn.cmd clean
 if %errorlevel% neq 0 (
   echo [ERROR] Fallo en la limpieza de Maven.
@@ -25,7 +25,6 @@ echo ===================================================
 echo [3/4] Levantando Servidor con Perfil E2E Estatico
 echo ===================================================
 echo [INFO] Iniciando backend E2E...
-cd backend/ibpms-core
 call ..\..\maven\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run "-Dspring-boot.run.profiles=e2e" "-Dmaven.test.skip=true"
 echo Esperando a que el backend reporte UP (puede tardar ~30s)...
 :wait_backend

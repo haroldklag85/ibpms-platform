@@ -19,9 +19,9 @@ public class WorkdeskQueryService {
         this.delegationRepository = delegationRepository;
     }
 
-    @Cacheable(value = "workdesk_tasks", key = "#tenantId + '_' + (#effectiveAssignee != null ? #effectiveAssignee : '') + '_' + (#search != null ? #search : '') + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    @Cacheable(value = "workdesk_tasks", key = "#tenantId + '_' + (#effectiveAssignee != null ? #effectiveAssignee : '') + '_' + (#search != null ? #search : '') + '_' + (#view != null ? #view : '') + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     @Transactional(readOnly = true)
-    public Page<WorkdeskProjectionEntity> getWorkdeskTasks(String tenantId, String search, String effectiveAssignee, Pageable pageable) {
+    public Page<WorkdeskProjectionEntity> getWorkdeskTasks(String tenantId, String search, String effectiveAssignee, String view, Pageable pageable) {
         java.util.List<String> assignees = null;
         if (effectiveAssignee != null) {
             assignees = new java.util.ArrayList<>();
@@ -39,7 +39,7 @@ public class WorkdeskQueryService {
         }
         // @Traceability: US-001, CA-29 Contadores de Facetas
         String[] assigneesArray = assignees != null ? assignees.toArray(new String[0]) : null;
-        return projectionRepository.findWorkdeskTasks(tenantId, search, assigneesArray, pageable);
+        return projectionRepository.findWorkdeskTasks(tenantId, search, assigneesArray, view, pageable);
     }
 
     @Transactional(readOnly = true)

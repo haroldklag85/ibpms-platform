@@ -64,9 +64,9 @@ CREATE TABLE IF NOT EXISTS ibpms_workdesk_projection (
 
 INSERT INTO ibpms_workdesk_projection (id, source_system, original_task_id, title, assignee, candidate_group, sla_expiration_date, status, tenant_id, impact_level) VALUES
   -- Green SLA (>50% remaining)
-  ('wd_task_1', 'BPMN', 'task_1', 'Workdesk Task 1 (Green)', NULL, 'Adjusters', CURRENT_TIMESTAMP + INTERVAL '10 days', 'PENDING', 'tenant_alpha', 1),
+  ('wd_task_1', 'BPMN', 'task_1', 'Workdesk Task 1 (Green)', 'analista', 'Adjusters', CURRENT_TIMESTAMP + INTERVAL '10 days', 'PENDING', 'tenant_alpha', 1),
   -- Yellow SLA (15-50% remaining)
-  ('wd_task_2', 'BPMN', 'task_2', 'Workdesk Task 2 (Yellow)', NULL, 'Adjusters', CURRENT_TIMESTAMP + INTERVAL '2 days', 'PENDING', 'tenant_alpha', 2),
+  ('wd_task_2', 'BPMN', 'task_2', 'Workdesk Task 2 (Yellow)', 'analista', 'Adjusters', CURRENT_TIMESTAMP + INTERVAL '2 days', 'PENDING', 'tenant_alpha', 2),
   -- Red SLA (<15% remaining)
   ('wd_task_3', 'BPMN', 'task_3', 'Workdesk Task 3 (Red)', NULL, 'Adjusters', CURRENT_TIMESTAMP + INTERVAL '1 hours', 'PENDING', 'tenant_alpha', 3),
   -- Gray SLA (Expired)
@@ -125,6 +125,28 @@ ON CONFLICT DO NOTHING;
 INSERT INTO ibpms_security_user_roles (user_id, role_id)
 SELECT u.id, r.id FROM ibpms_security_user u, ibpms_security_role r
 WHERE u.email IN ('disabled@alpha.com', 'mustchange@alpha.com') AND r.name = 'ROLE_OPERARIO'
+ON CONFLICT DO NOTHING;
+
+-- ====================================================================
+-- SEED PERMISSIONS AND ROLE MAPPINGS
+-- ====================================================================
+INSERT INTO ibpms_security_permission (id, name, description) VALUES 
+  (gen_random_uuid(), 'ACCESS_WORKDESK', 'Acceso al Workdesk'),
+  (gen_random_uuid(), 'ACCESS_SERVICE_DELIVERY', 'Acceso a Service Delivery'),
+  (gen_random_uuid(), 'ACCESS_PROJECTS', 'Acceso a Proyectos'),
+  (gen_random_uuid(), 'ACCESS_BAM', 'Acceso a BAM / Analytics'),
+  (gen_random_uuid(), 'ACCESS_INTEGRATION', 'Acceso a Integration Hub'),
+  (gen_random_uuid(), 'ACCESS_ADMINISTRATION', 'Acceso a Gobernanza y Admin')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO ibpms_security_role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM ibpms_security_role r, ibpms_security_permission p
+WHERE r.name = 'ROLE_OPERARIO' AND p.name IN ('ACCESS_WORKDESK', 'ACCESS_SERVICE_DELIVERY', 'ACCESS_PROJECTS', 'ACCESS_BAM', 'ACCESS_INTEGRATION')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO ibpms_security_role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM ibpms_security_role r, ibpms_security_permission p
+WHERE r.name = 'ROLE_SUPERVISOR' AND p.name IN ('ACCESS_WORKDESK', 'ACCESS_SERVICE_DELIVERY', 'ACCESS_PROJECTS', 'ACCESS_BAM', 'ACCESS_INTEGRATION', 'ACCESS_ADMINISTRATION')
 ON CONFLICT DO NOTHING;
 
 -- ====================================================================

@@ -13,13 +13,19 @@
 | Severidad | Cantidad | IDs |
 |-----------|:--------:|-----|
 | 🔴 P0 (Bloqueante) | 0 | — |
-| 🟠 P1 (Alta) | 1 | BUG-S7-001 |
-| 🟡 P2 (Media) | 1 | BUG-S7-002 |
-| 🟢 P3 (Baja) | 1 | BUG-S7-003 |
+| 🟠 P1 (Alta) | 0 | — |
+| 🟡 P2 (Media) | 0 | — |
+| 🟢 P3 (Baja) | 0 | — |
 
 ---
 
 ## Bugs Activos
+
+_(Ninguno aún)_
+
+---
+
+## Bugs Resueltos
 
 ### BUG-S7-001: Probar [Submit] envía payload vacío — Validación Zod falla con "invalid_type: Required" en TODOS los campos
 
@@ -39,7 +45,7 @@
 - **Evidencia:** Captura de pantalla con modal de error proporcionada por tester humano
 - **Impacto:** Impide guardar/publicar formularios → **BLOQUEA Misiones 2, 3, 4 del J-02**
 - **Fecha:** 2026-05-27
-- **Estado:** 🔴 ABIERTO
+- **Estado:** ✅ RESUELTO
 
 ---
 
@@ -56,7 +62,7 @@
 - **Evidencia:** Captura 3 del tester — campo `REQUIERE_PERITAJE` muestra "○ Opción 1" / "○ Opción 2"
 - **Impacto:** UX degradada + posible impacto en lógica condicional que depende del valor literal
 - **Fecha:** 2026-05-27
-- **Estado:** 🟡 ABIERTO
+- **Estado:** ✅ RESUELTO
 
 ---
 
@@ -72,10 +78,4 @@
 - **Evidencia:** Capturas 2 y 4 del tester — título "Solicitud Onboarding (V1)" en vez de "Auditoría de Siniestro"
 - **Impacto:** Confusión UX — no es claro cuál es el nombre oficial del formulario
 - **Fecha:** 2026-05-27
-- **Estado:** 🟢 ABIERTO
-
----
-
-## Bugs Resueltos
-
-_(Ninguno aún)_
+- **Estado:** ✅ RESUELTO

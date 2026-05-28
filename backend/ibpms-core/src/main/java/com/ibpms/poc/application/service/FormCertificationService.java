@@ -182,11 +182,12 @@ public class FormCertificationService {
         newVersion.setCreatedBy(createdBy);
         newVersion.setHashSha256(computeSha256(schemaContent));
 
-        formDefinitionPort.save(newVersion);
+        // [LEY GLOBAL 3: Trazabilidad Inversa] - US-003 - CA-87: Asignar la entidad guardada con ID generado para evitar form_definition_id null
+        FormDefinition savedVersion = formDefinitionPort.save(newVersion);
 
         // CA-13: El sello NO se hereda. Nace sin certificar.
         FormCertification newCert = new FormCertification();
-        newCert.setFormDefinitionId(newVersion.getId());
+        newCert.setFormDefinitionId(savedVersion.getId());
         newCert.setIsQaCertified(false);
         newCert.setCertifiedSchemaHash(null);
         newCert.setCertifiedBy(null);
@@ -195,7 +196,7 @@ public class FormCertificationService {
         formCertificationPort.save(newCert);
 
         log.info("New schema version V{} created for form {} — born uncertified (CA-13)", newVersionId, formId);
-        return toDTO(newVersion, newCert);
+        return toDTO(savedVersion, newCert);
     }
 
     // ───────────────────────────────────────────────────────────

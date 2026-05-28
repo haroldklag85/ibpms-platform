@@ -35,9 +35,9 @@ public abstract class AbstractIntegrationTest {
         String redisHost = System.getenv().getOrDefault("REDIS_HOST", "localhost");
         String rabbitmqHost = System.getenv().getOrDefault("RABBITMQ_HOST", "localhost");
 
-        registry.add("spring.datasource.url", () -> "jdbc:postgresql://" + postgresHost + ":5433/ibpms_db");
-        registry.add("spring.datasource.username", () -> "ibpms_user");
-        registry.add("spring.datasource.password", () -> "ibpms_password");
+        registry.add("spring.datasource.url", () -> "jdbc:postgresql://" + postgresHost + ":5433/ibpms_e2e");
+        registry.add("spring.datasource.username", () -> "ibpms");
+        registry.add("spring.datasource.password", () -> "ibpms_e2e_pass");
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
 
         registry.add("spring.data.redis.host", () -> redisHost);
@@ -48,7 +48,7 @@ public abstract class AbstractIntegrationTest {
 
         // Cumplimiento Zero-Trust: Liquibase controla la DB, Hibernate en modo validación pura.
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
-        registry.add("spring.liquibase.enabled", () -> "true");
+        registry.add("spring.liquibase.enabled", () -> "false");
         registry.add("camunda.bpm.database.schema-update", () -> "true");
     }
 }

@@ -75,14 +75,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/process/*/start-anonymous").permitAll()
                         // CA-03 y CA-04 (US-038): Login Standard y Protocolo Break-Glass
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/sync", "/api/v1/auth/emergency-login").permitAll()
-                        // Apertura Temporal para desbloquear catálogo
-                        .requestMatchers(HttpMethod.GET, "/api/v1/design/processes/catalog").permitAll()
+                        // Apertura Temporal para desbloquear catálogo y procesos
+                        .requestMatchers("/api/v1/design/processes/**").permitAll()
                         // OpenAPI / Swagger Docs
                         .requestMatchers("/v3/api-docs/**", "/api/v1/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // DMN Simulation for Tests (Bypass para el test Sandbox DMN)
                         .requestMatchers(HttpMethod.POST, "/api/v1/dmn-models/simulate").permitAll()
                         // US-028: Form Certification & Definition endpoints (QA Integration Tests)
-                        .requestMatchers("/api/v1/design/forms/**", "/api/v1/design/form-definitions/**").permitAll()
+                        .requestMatchers("/api/v1/design/forms/*/versions").permitAll()
+                        .requestMatchers("/api/v1/design/form-definitions/**").permitAll()
                         .requestMatchers("/api/v1/forms/**").permitAll()
                         // CA-11: SSE Security Stream
                         .requestMatchers("/api/v1/security/stream").permitAll()

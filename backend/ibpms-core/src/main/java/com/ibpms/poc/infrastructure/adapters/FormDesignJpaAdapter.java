@@ -97,11 +97,12 @@ public class FormDesignJpaAdapter implements FormDesignPort {
             entity = formDesignRepository.findById(dto.getId()).orElse(new FormDesignEntity());
         } else {
             entity = new FormDesignEntity();
-            entity.setVersion(dto.getVersion());
             entity.setPattern(FormDesignEntity.Pattern.valueOf(dto.getPattern()));
             entity.setTechnicalName(dto.getTechnicalName());
         }
 
+        // [LEY GLOBAL 3: Trazabilidad Inversa] - US-003 - CA-87: Asegurar persistencia del version_id incrementado
+        entity.setVersion(dto.getVersion());
         entity.setName(dto.getName());
         entity.setVueTemplate(dto.getVueTemplate());
         entity.setZodSchema(dto.getZodSchema());

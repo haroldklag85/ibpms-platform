@@ -1002,6 +1002,21 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
                   zc += `  ${field.camundaVariable || field.id}: z.array(z.string())${field.required ? '.min(1, "Seleccione opción")' : '.optional()'}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
               } else if (field.type === 'file' || field.type === 'signature') {
                   zc += `  ${field.camundaVariable || field.id}: z.string().uuid({ message: "Se requiere un UUID de Puntero S3" })${field.required ? '.min(1, "Campo requerido")' : '.optional()'}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
+              } else if (zt === 'string') {
+                  // @Traceability: US-003 - CA-78
+                  let strMods = '';
+                  if (field.minLength !== undefined && field.minLength > 0) {
+                      strMods += `.min(${field.minLength})`;
+                  } else if (field.required) {
+                      strMods += `.min(1, "Campo requerido")`;
+                  }
+                  if (field.maxLength !== undefined && field.maxLength > 0) {
+                      strMods += `.max(${field.maxLength})`;
+                  }
+                  if (!field.required) {
+                      strMods += `.optional()`;
+                  }
+                  zc += `  ${field.camundaVariable || field.id}: z.string()${strMods}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
               } else {
                   zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required && field.type !== 'checkbox' ? '.min(1, "Campo requerido")' : '.optional()'}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
               }
@@ -1078,34 +1093,117 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
       } 
       else if (activeCodeTab.value === 'ZOD') {
         try {
-          const regex = /^\s*([a-zA-Z0-9_]+):\s*(z\.(?:string|number|any|boolean)\(\)|z\.array\(z\.string\(\)\))(.*?)(?:\/\/\s*\[([^\]]+)\])?/gm;
-          let match;
-          const newCanvasFields = [];
+          // @Traceability: US-003 - CA-78
+          // 1. Parse grid arrays (field_array) first
+          const gridRegex = /^\s*([a-zA-Z0-9_]+):\s*z\.array\(z\.object\(\{([\s\S]*?)\}\)\)(.*?)(?:\/\/\s*\[([^\]]+)\])?\s*$/gm;
+          let gridMatch;
           const currentFields = [...canvasFields.value];
           let parseCount = 0;
+
+          while ((gridMatch = gridRegex.exec(newCode)) !== null) {
+              parseCount++;
+              const gridVarName = gridMatch[1];
+              const innerFieldsBlock = gridMatch[2];
+              const gridMods = gridMatch[3];
+
+              let minRows: number | undefined;
+              let maxRows: number | undefined;
+              const minMatch = gridMods.match(/\.min\((\d+)/);
+              if (minMatch) minRows = parseInt(minMatch[1], 10);
+              const maxMatch = gridMods.match(/\.max\((\d+)/);
+              if (maxMatch) maxRows = parseInt(maxMatch[1], 10);
+
+              const updateGridDeep = (nodes: any[]) => {
+                 for (const n of nodes) {
+                    if ((n.camundaVariable || n.id) === gridVarName && n.type === 'field_array') {
+                        n.minRows = minRows;
+                        n.maxRows = maxRows;
+                        
+                        if (n.children && n.children.length > 0) {
+                            const innerRegex = /^\s*([a-zA-Z0-9_]+):\s*(z\.(?:string|number|any|boolean)\(\)|z\.array\(z\.string\(\)\))(.*?)(?:\/\/\s*\[([^\]]+)\])?\s*$/gm;
+                            let innerMatch;
+                            while ((innerMatch = innerRegex.exec(innerFieldsBlock)) !== null) {
+                                const innerVarName = innerMatch[1];
+                                const innerZTypeRaw = innerMatch[2];
+                                const innerMods = innerMatch[3];
+
+                                const innerIsReq = !innerMods.includes('.optional()');
+                                let innerMinL: number | undefined;
+                                let innerMaxL: number | undefined;
+                                const innerMinMatch = innerMods.match(/\.min\((\d+)/);
+                                if (innerMinMatch) innerMinL = parseInt(innerMinMatch[1], 10);
+                                const innerMaxMatch = innerMods.match(/\.max\((\d+)/);
+                                if (innerMaxMatch) innerMaxL = parseInt(innerMaxMatch[1], 10);
+
+                                for (const child of n.children) {
+                                    if ((child.camundaVariable || child.id) === innerVarName) {
+                                        child.required = innerIsReq;
+                                        if (innerMinL !== undefined) {
+                                            if (innerMinL === 1 && innerMods.includes('"Campo requerido"')) {
+                                                child.minLength = undefined;
+                                            } else {
+                                                child.minLength = innerMinL;
+                                            }
+                                        } else {
+                                            child.minLength = undefined;
+                                        }
+                                        if (innerMaxL !== undefined) {
+                                            child.maxLength = innerMaxL;
+                                        } else {
+                                            child.maxLength = undefined;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (n.children) updateGridDeep(n.children);
+                 }
+              };
+              updateGridDeep(currentFields);
+          }
+
+          // 2. Parse standard fields (excluding grid arrays to avoid matching grid subfields globally)
+          let standardCodeToParse = newCode;
+          standardCodeToParse = standardCodeToParse.replace(/z\.array\(z\.object\(\{[\s\S]*?\}\)\)(.*?)(?:\/\/\s*\[[^\]]+\])?/g, '');
+
+          const regex = /^\s*([a-zA-Z0-9_]+):\s*(z\.(?:string|number|any|boolean)\(\)|z\.array\(z\.string\(\)\))(.*?)(?:\/\/\s*\[([^\]]+)\])?\s*$/gm;
+          let match;
           
-          while ((match = regex.exec(newCode)) !== null) {
+          while ((match = regex.exec(standardCodeToParse)) !== null) {
               parseCount++;
               const varName = match[1];
               const zTypeRaw = match[2];
               const mods = match[3];
 
-              const isReq = mods.includes('.min(') || !mods.includes('.optional()');
-              const isMult = zTypeRaw.includes('z.array');
+              const isReq = !mods.includes('.optional()');
               
-              let minL, maxL;
+              let minL: number | undefined;
+              let maxL: number | undefined;
               const minMatch = mods.match(/\.min\((\d+)/);
               if (minMatch) minL = parseInt(minMatch[1], 10);
               const maxMatch = mods.match(/\.max\((\d+)/);
               if (maxMatch) maxL = parseInt(maxMatch[1], 10);
 
-              // Actualización profunda sin romper jerarquía
+              // Update root level and other container-nested fields
               const updateDeep = (nodes: any[]) => {
                  for (const n of nodes) {
-                    if ((n.camundaVariable || n.id) === varName && !n.type.startsWith('button_') && n.type !== 'container') {
+                    if ((n.camundaVariable || n.id) === varName && !n.type.startsWith('button_') && n.type !== 'container' && n.type !== 'field_array') {
                         n.required = isReq;
-                        if(minL !== undefined) n.minLength = minL;
-                        if(maxL !== undefined) n.maxLength = maxL;
+                        if (minL !== undefined) {
+                            if (minL === 1 && mods.includes('"Campo requerido"')) {
+                                n.minLength = undefined;
+                            } else {
+                                n.minLength = minL;
+                            }
+                        } else {
+                            n.minLength = undefined;
+                        }
+                        if (maxL !== undefined) {
+                            n.maxLength = maxL;
+                        } else {
+                            n.maxLength = undefined;
+                        }
                     }
                     if (n.children) updateDeep(n.children);
                  }

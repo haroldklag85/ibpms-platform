@@ -1258,10 +1258,41 @@ const simulateMockSubmit = async () => {
         return;
     }
 
-    // Mapeo inicial vacío del Payload que se "recibe" simulando llenado del Usuario o Camunda
-    const rawFormSubmission: Record<string, any> = {};
+    // BUG-S7-001 / BUG-A FIX: Construir payload con datos reales del usuario.
+    // Prioridad 1: fuzzerPayload (JSON tipado en QA Sandbox — fuente más rica)
+    // Prioridad 2: previewFormData (datos ingresados en el Virtual DOM Renderer)
+    // Fallback:    skeleton vacío tipado por tipo de campo (garantiza que Zod
+    //              reciba las claves correctas en lugar de un {} sin propiedades)
+    let rawFormSubmission: Record<string, any> = {};
 
-    // Evaluamos el safeParse en memoria real (SIN MOCKS ESTATICOS STINGS)
+    // Prioridad 1: intentar parsear el fuzzerPayload del usuario
+    try {
+        const parsedFuzzer = JSON.parse(fuzzerPayload.value);
+        if (parsedFuzzer && typeof parsedFuzzer === 'object' && Object.keys(parsedFuzzer).length > 0) {
+            rawFormSubmission = parsedFuzzer;
+        }
+    } catch (_) { /* JSON inválido — ignorar y continuar con siguiente fuente */ }
+
+    // Prioridad 2: datos del Preview modal si el fuzzer no tenía datos
+    if (Object.keys(rawFormSubmission).length === 0 &&
+        previewFormData.value && Object.keys(previewFormData.value).length > 0) {
+        rawFormSubmission = { ...previewFormData.value };
+    }
+
+    // Fallback: construir skeleton vacío tipado desde el canvas para que Zod
+    // identifique con precisión qué campos requeridos faltan (en lugar de {} vacío)
+    if (Object.keys(rawFormSubmission).length === 0) {
+        for (const field of availableFieldsFlat.value) {
+            if (field.type.startsWith('button_')) continue;
+            const key = field.camundaVariable || field.id;
+            if (field.type === 'number' || field.type === 'timer')  rawFormSubmission[key] = null;
+            else if (field.type === 'checkbox')                      rawFormSubmission[key] = false;
+            else if (field.isMultiple)                               rawFormSubmission[key] = [];
+            else                                                     rawFormSubmission[key] = '';
+        }
+    }
+
+    // Evaluamos el safeParse con el payload real del usuario (SIN MOCKS ESTÁTICOS STRINGS)
     const result = executableSchema.safeParse(rawFormSubmission);
 
     if(!result.success) {

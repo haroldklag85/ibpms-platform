@@ -139,7 +139,7 @@ const uploadFile = async (item: UploadedFile) => {
     formData.append('file', item.file);
     
     try {
-        const res = await integrationStore.post('/api/v1/documents/upload-temp', formData, {
+        const res = await integrationStore.post('/documents/upload-temp', formData, { // BUG-S7-001-HOTFIX
             headers: { 
                 'Content-Type': 'multipart/form-data',
                 'X-Task-Id': store.taskId 

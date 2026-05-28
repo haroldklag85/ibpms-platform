@@ -109,7 +109,7 @@ const fetchForms = async () => {
     isLoading.value = true;
     try {
         const queryParam = searchQuery.value ? `?search=${encodeURIComponent(searchQuery.value)}` : '';
-        const response = await integrationStore.get(`/api/v1/forms${queryParam}`);
+        const response = await integrationStore.get(`/forms${queryParam}`); // BUG-S7-001-HOTFIX: sin prefijo /api/v1
         forms.value = response.data || [];
     } catch (error) {
         showAlert('Error recuperando diccionario de formularios.', 'error');
@@ -122,7 +122,7 @@ const deleteForm = async (id: string) => {
     if (!confirm(`¿Advertencia de Integridad: Está seguro de eliminar el formulario [${id}]?`)) return;
     
     try {
-        await integrationStore.delete(`/api/v1/forms/${id}`);
+        await integrationStore.delete(`/forms/${id}`); // BUG-S7-001-HOTFIX: sin prefijo /api/v1
         showAlert(`El formulario ${id} fue disipado de la bóveda.`, 'success');
         fetchForms();
     } catch (error: any) {

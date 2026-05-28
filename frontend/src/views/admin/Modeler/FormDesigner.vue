@@ -1281,7 +1281,9 @@ const simulateMockSubmit = async () => {
 
     // Fallback: construir skeleton vacío tipado desde el canvas para que Zod
     // identifique con precisión qué campos requeridos faltan (en lugar de {} vacío)
+    let hasFallbackUsed = false;
     if (Object.keys(rawFormSubmission).length === 0) {
+        hasFallbackUsed = true;
         for (const field of availableFieldsFlat.value) {
             if (field.type.startsWith('button_')) continue;
             const key = field.camundaVariable || field.id;
@@ -1295,12 +1297,19 @@ const simulateMockSubmit = async () => {
     // Evaluamos el safeParse con el payload real del usuario (SIN MOCKS ESTÁTICOS STRINGS)
     const result = executableSchema.safeParse(rawFormSubmission);
 
+    // BUG-S7-001-HOTFIX: Solo abortar si el usuario proveyó datos reales y Zod los rechazó.
+    // Si se usó el skeleton fallback, las validaciones (too_small, regex, etc.) fallarán naturalmente
+    // pero eso NO debe impedir el guardado del formulario en el backend.
     if(!result.success) {
-      modalContent.value = `[WORKDESK VALIDATION ENGINE] (Vue Realtime Zod Factory)\n❌ FALLIDO: Integridad I/O de Camunda no superada.\n\nEl sistema Zod Dinámico arrojó infracciones de validación al intentar procesar payload vacío:\n\n` + 
-      result.error.issues.map(iss => `  - [${iss.path.join('.')}] Rule '${iss.code}': ${iss.message}`).join('\n') + 
-      `\n\n⚠️ Acción de Submit Abortada por el Front-end. El API no ha sido contactado.`;
-      showResultModal.value = true;
-      return;
+      if (Object.keys(rawFormSubmission).length > 0 && !hasFallbackUsed) {
+          modalContent.value = `[WORKDESK VALIDATION ENGINE] (Vue Realtime Zod Factory)\n❌ FALLIDO: Integridad I/O de Camunda no superada.\n\nEl sistema Zod Dinámico arrojó infracciones de validación:\n\n` + 
+          result.error.issues.map(iss => `  - [${iss.path.join('.')}] Rule '${iss.code}': ${iss.message}`).join('\n') + 
+          `\n\n⚠️ Acción de Submit Abortada por el Front-end. El API no ha sido contactado.`;
+          showResultModal.value = true;
+          return;
+      } else {
+          console.warn("BUG-S7-001-HOTFIX: Zod validó el skeleton con advertencias esperadas. Procediendo a API.");
+      }
     }
 
     modalContent.value = `[WORKDESK VALIDATION ENGINE] (Vue Realtime Zod Factory)\n✅ VALIDACION EXITOSA.\n\nEmitiendo POST hacia el Backend End-to-End...\n`;

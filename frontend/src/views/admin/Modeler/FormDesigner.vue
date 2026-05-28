@@ -62,7 +62,8 @@
             🛠️ Herramientas Avanzadas ▼
           </button>
           <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-xl hidden group-hover:block z-50 overflow-hidden">
-            <button @click="fetchVersions" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">🕰️ Historial JSON</button>
+            <button @click="openTimeMachine" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">🕰️ Historial JSON</button>
+            <button @click="fetchVersions" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition border-t border-gray-100">🕰️ Versiones Remotas</button>
             <button @click="exportToPdf" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">📄 Exportar a PDF</button>
             <button @click="showGlobalRulesModal = true" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">⚙️ Reglas Zod O-T-F</button>
             <button @click="generateVitestSpec" class="block w-full text-left px-4 py-2 hover:bg-green-50 text-xs text-green-700 font-bold transition border-t border-gray-100">🤖 Exportar Robo-Tests</button>
@@ -455,6 +456,27 @@
             </div>
          </div>
       </div>
+
+       <!-- CA-71: Máquina del Tiempo JSON (Historial de Instantáneas Locales) -->
+       <div v-if="showTimeMachineModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
+          <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-lg w-full">
+             <div class="flex items-center justify-between mb-6 border-b pb-4">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">🕰️ Historial de Instantáneas Locales</h2>
+                <button @click="showTimeMachineModal = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+             </div>
+             <div class="max-h-[60vh] overflow-y-auto space-y-3">
+                <div v-if="localSnapshots.length === 0" class="text-center text-gray-500 py-8 text-sm">No hay instantáneas locales guardadas aún.</div>
+                <div v-for="snap in localSnapshots" :key="snap.id" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition cursor-pointer flex justify-between items-center group">
+                   <div>
+                     <h4 class="font-bold text-indigo-700 text-sm flex items-center gap-2">Autoguardado Local</h4>
+                     <p class="text-[10px] text-gray-400 mt-1">Ref: {{ snap.id }}</p>
+                     <p class="text-xs text-gray-600 mt-1"><span class="font-semibold">Tiempo:</span> {{ formatRelativeTime(snap.timestamp) }}</p>
+                   </div>
+                   <button @click="restoreLocalSnapshot(snap)" class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-md font-bold opacity-0 group-hover:opacity-100 transition shadow-sm">Restaurar</button>
+                </div>
+             </div>
+          </div>
+       </div>
 
       <!-- Properties Modal (Field Editor) -->
       <div v-if="editingField" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4">
@@ -906,7 +928,7 @@
 </template>
 
 <script setup lang="ts">
-// @Traceability: US-003 - CA-27, CA-30, CA-70, CA-74, CA-77, CA-83, CA-85
+// @Traceability: US-003 - CA-27, CA-30, CA-70, CA-71, CA-74, CA-77, CA-83, CA-85
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -1147,6 +1169,12 @@ onMounted(async () => {
         const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
         if (fragmentCategory) fragmentCategory.items = JSON.parse(savedFragments);
     }
+
+    // CA-71: Load local snapshots and capture initial state
+    loadLocalSnapshots();
+    if (canvasFields.value && canvasFields.value.length > 0) {
+      saveLocalSnapshot(canvasFields.value);
+    }
 });
 
 // CA-85: Recovery Modal Refs and Handlers
@@ -1170,6 +1198,71 @@ const discardRestore = () => {
     tempRestoreDraft.value = '';
     showToast('Borrador descartado', 'success');
 };
+
+// @Traceability: US-003 - CA-71: Máquina del Tiempo JSON (Soft-Versioning Local)
+const localSnapshots = ref<any[]>([]);
+const showTimeMachineModal = ref(false);
+
+const loadLocalSnapshots = () => {
+  const saved = localStorage.getItem('form_local_snapshots');
+  if (saved) {
+    try {
+      localSnapshots.value = JSON.parse(saved);
+    } catch (e) {
+      localSnapshots.value = [];
+    }
+  } else {
+    localSnapshots.value = [];
+  }
+};
+
+const saveLocalSnapshot = (fields: any[]) => {
+  const schemaStr = JSON.stringify(fields);
+  // Avoid saving exact duplicates of the last snapshot
+  if (localSnapshots.value.length > 0 && JSON.stringify(localSnapshots.value[localSnapshots.value.length - 1].canvasFields) === schemaStr) {
+    return;
+  }
+  
+  const newSnapshot = {
+    id: 'snap_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    timestamp: Date.now(),
+    canvasFields: JSON.parse(schemaStr)
+  };
+  
+  localSnapshots.value.push(newSnapshot);
+  // Keep max 50 snapshots
+  if (localSnapshots.value.length > 50) {
+    localSnapshots.value.shift();
+  }
+  localStorage.setItem('form_local_snapshots', JSON.stringify(localSnapshots.value));
+};
+
+const openTimeMachine = () => {
+  loadLocalSnapshots();
+  showTimeMachineModal.value = true;
+};
+
+const restoreLocalSnapshot = (snap: any) => {
+  canvasFields.value = JSON.parse(JSON.stringify(snap.canvasFields));
+  showTimeMachineModal.value = false;
+  showToast('Instantánea local restaurada', 'success');
+};
+
+const formatRelativeTime = (timestamp: number) => {
+  const diffMs = Date.now() - timestamp;
+  const diffMins = Math.round(diffMs / 60000);
+  if (diffMins < 1) return 'Hace unos segundos';
+  if (diffMins === 1) return 'Hace 1 minuto';
+  if (diffMins < 60) return `Hace ${diffMins} minutos`;
+  
+  const diffHours = Math.round(diffMins / 60);
+  if (diffHours === 1) return 'Hace 1 hora';
+  return `Hace ${diffHours} horas`;
+};
+
+watch(canvasFields, (newVal) => {
+  saveLocalSnapshot(newVal);
+}, { deep: true });
 
 // Runtime Render Preview Modal
 const showPreviewModal = ref(false);

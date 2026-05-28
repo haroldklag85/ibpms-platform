@@ -64,8 +64,11 @@ public class TaskDraftApiController {
      * Completes a task.
      */
     @PostMapping("/tasks/{taskId}/complete")
-    public ResponseEntity<Void> completeTask(@PathVariable UUID taskId, @RequestBody Map<String, Object> payload) {
-        // [LEY GLOBAL 3: Trazabilidad Inversa] - US-003 - CA-91: Completar tarea con I/O Mapping
+    public ResponseEntity<Void> completeTask(
+            @PathVariable UUID taskId,
+            @RequestBody Map<String, Object> payload,
+            @RequestHeader(value = "If-Match", required = false) String ifMatch) {
+        // [LEY GLOBAL 3: Trazabilidad Inversa] - US-003 - CA-72: Completar tarea con I/O Mapping e If-Match
         String username = SecurityContextHolder.getContext().getAuthentication() != null 
                 ? SecurityContextHolder.getContext().getAuthentication().getName() 
                 : "system";
@@ -75,7 +78,7 @@ public class TaskDraftApiController {
                 ? (Map<String, Object>) payload.get("variables") 
                 : payload;
 
-        taskDraftService.completeTask(taskId, variables, username);
+        taskDraftService.completeTask(taskId, variables, username, ifMatch);
         return ResponseEntity.noContent().build();
     }
 }

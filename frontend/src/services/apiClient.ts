@@ -267,7 +267,8 @@ export const api = {
 
     // US-002: Workbox Tasks
     claimTask: (taskId: string) => apiClient.post(`/workbox/tasks/${taskId}/claim`),
-    completeTask: (taskId: string, payload: any) => apiClient.post(`/workbox/tasks/${taskId}/complete`, payload),
+    // @Traceability: US-003 - CA-72
+    completeTask: (taskId: string, payload: any, config?: any) => apiClient.post(`/workbox/tasks/${taskId}/complete`, payload, config),
     saveTaskDraft: (taskId: string, payload: any) => apiClient.put(`/workbox/tasks/${taskId}/draft`, payload),
 
     // 1. AI Correct (Partial Regeneration CA-28)

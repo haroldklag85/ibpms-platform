@@ -153,4 +153,70 @@ public class TaskDraftIntegrationTest extends AbstractIntegrationTest {
             .orElseThrow(() -> new AssertionError("Task not found"));
         assertEquals("COMPLETED", updatedTask.getStatus());
     }
+
+    @Test
+    public void testCompleteTaskConflict() {
+        // [LEY GLOBAL 3: Trazabilidad Inversa] - US-003 - CA-72: Pruebas de conflicto de bloqueo optimista
+        // Create another AgileTask in CLAIMED state
+        AgileTask task = AgileTask.builder()
+            .projectId(UUID.fromString("50000000-0000-0000-0000-000000000001"))
+            .title("Task for CA72 Optimistic Lock Conflict test")
+            .status("CLAIMED")
+            .position(3)
+            .createdBy("test-qa-user")
+            .build();
+
+        task = agileTaskRepositoryJpa.save(task);
+        UUID taskId = task.getId();
+
+        // Compute the initial optimistic hash (outdated version)
+        String outdatedVersionId = org.springframework.util.DigestUtils.md5DigestAsHex(
+            (task.getId() + "_" + task.getStatus() + "_" + task.getUpdatedAt().toInstant().toEpochMilli()).getBytes()
+        );
+
+        // Modify the task to change the updatedAt timestamp (simulating a concurrent update)
+        task.setUpdatedAt(task.getUpdatedAt().plusSeconds(10));
+        task = agileTaskRepositoryJpa.save(task);
+
+        String completePayload = """
+            {
+                "variables": {
+                    "approved": true,
+                    "comments": "Outdated completion try"
+                }
+            }
+            """;
+
+        // Try completing with the outdated If-Match header -> should return 409 Conflict
+        given()
+            .contentType(ContentType.JSON)
+            .header("Authorization", "Bearer " + token)
+            .header("If-Match", outdatedVersionId)
+            .body(completePayload)
+            .when()
+            .post("/api/v1/tasks/{taskId}/complete", taskId)
+            .then()
+            .statusCode(409);
+
+        // Compute the new current optimistic hash (valid version)
+        String currentVersionId = org.springframework.util.DigestUtils.md5DigestAsHex(
+            (task.getId() + "_" + task.getStatus() + "_" + task.getUpdatedAt().toInstant().toEpochMilli()).getBytes()
+        );
+
+        // Try completing with the correct If-Match header -> should return 204 No Content
+        given()
+            .contentType(ContentType.JSON)
+            .header("Authorization", "Bearer " + token)
+            .header("If-Match", currentVersionId)
+            .body(completePayload)
+            .when()
+            .post("/api/v1/tasks/{taskId}/complete", taskId)
+            .then()
+            .statusCode(204);
+
+        // Verify task status is updated to COMPLETED in the database
+        AgileTask updatedTask = agileTaskRepositoryJpa.findById(taskId)
+            .orElseThrow(() -> new AssertionError("Task not found"));
+        assertEquals("COMPLETED", updatedTask.getStatus());
+    }
 }

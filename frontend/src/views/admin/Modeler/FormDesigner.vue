@@ -906,7 +906,7 @@
 </template>
 
 <script setup lang="ts">
-// @Traceability: US-003 - CA-27, CA-30, CA-74, CA-77, CA-83, CA-85
+// @Traceability: US-003 - CA-27, CA-30, CA-70, CA-74, CA-77, CA-83, CA-85
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -987,9 +987,37 @@ const designerShadowContainer = ref<HTMLElement | null>(null);
 const processKeyMock = formTitle.value.toUpperCase().replace(/\s+/g, '_').substring(0, 15);
 formKey.value = (route.query.processKey || route.query.formKey || '') as string;
 
+// @Traceability: US-003 - CA-70: Modo Trámite Público Perimetral / Bypass JWT Seguro
+const publicToken = ref('');
 
+const generateSecureToken = () => {
+  if (typeof window !== 'undefined' && window.crypto) {
+    if (typeof window.crypto.randomUUID === 'function') {
+      return window.crypto.randomUUID();
+    }
+    const array = new Uint32Array(4);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, dec => dec.toString(16).padStart(8, '0')).join('-');
+  }
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
 
-const publicUrl = computed(() => `${window.location.origin}/public/start/${processKeyMock}`);
+const publicUrl = computed(() => {
+  const base = `${window.location.origin}/public/start/${processKeyMock}`;
+  if (isPublic.value) {
+    if (!publicToken.value) {
+      publicToken.value = generateSecureToken();
+    }
+    return `${base}?token=${publicToken.value}`;
+  }
+  return base;
+});
+
+watch(isPublic, (newVal) => {
+  if (!newVal) {
+    publicToken.value = '';
+  }
+});
 
 const copyPublicUrl = () => {
     navigator.clipboard.writeText(publicUrl.value);
@@ -1464,7 +1492,8 @@ defineExpose({
     currentSchemaVersion,
     fuzzerErrors,
     bpmnCoherenceResults,
-    formKey
+    formKey,
+    publicUrl
 });
 </script>
 

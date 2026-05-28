@@ -1,67 +1,68 @@
-# SOLICITUD DE REVISIÓN — Agente Frontend
-## BUG-S7-001 | Sprint 7 | Rama: sprint-7/bugfix-uat
-**Fecha:** 2026-05-28T01:41:00Z  
+# REPORTE DE EJECUCIÓN — Agente Frontend
+## BUG-S7-001-HOTFIX | Sprint 7 | Rama: sprint-7/bugfix-uat
+**Fecha:** 2026-05-28T03:12:00Z  
 **Agente:** Frontend Developer (Vue 3 / Vite)  
-**Destino:** Arquitecto Líder (revisión y aprobación)
+**Destino:** Arquitecto Líder (revisión post-ejecución)
 
 ---
 
 ## Resumen Ejecutivo
 
-He completado el análisis forense de los dos bugs reportados en el handoff `handoff_frontend_BUG-S7-001.md`. Tengo identificada la causa raíz con precisión quirúrgica y un plan de corrección mínimo de 6 líneas de cambio efectivo en 2 archivos.
+HOTFIX completado. **4 archivos** modificados, **build exitoso**, **push realizado**.
 
 ---
 
-## Diagnóstico Confirmado
+## Cambios Ejecutados
 
-### BUG-A — Payload vacío en "Probar Submit" (CA-Fix-01)
+### A. FormDesigner.vue — `simulateMockSubmit` (HOTFIX Modal)
+- Agregada bandera `hasFallbackUsed = false` antes del bloque de skeleton fallback
+- Asignación `hasFallbackUsed = true` cuando el skeleton se activa
+- Lógica condicional en `if(!result.success)`:
+  - Si `!hasFallbackUsed` y hay datos reales → ABORTAR (mostrar modal de error y `return`)
+  - Si `hasFallbackUsed` → `console.warn()` y **continuar** hacia `integrationStore.post('/forms', dto)`
+- **Efecto:** El botón "Probar Submit" ya NO bloquea el guardado del formulario cuando el canvas no tiene datos bindeados
 
-**Archivo:** `frontend/src/views/admin/Modeler/FormDesigner.vue`  
-**Función:** `simulateMockSubmit()`, línea 1262  
-**Causa raíz:** El objeto `rawFormSubmission` se declara como `{}` vacío y **nunca se rellena** con las claves de los campos del canvas antes de ejecutar `schema.safeParse(rawFormSubmission)`. Como resultado, Zod intenta validar un objeto sin ninguna propiedad, y como los campos requeridos no existen en él, reporta error `invalid_type: Required` para todos los campos — lo cual parece correcto en superficie pero el problema real es que el mensaje de error no identifica los campos correctos porque el payload no tiene estructura.
+### B. Doble Prefijo `/api/v1` — 3 Archivos (7 rutas)
 
-**Corrección planificada:** Poblar `rawFormSubmission` recorriendo `availableFieldsFlat.value` antes del `safeParse`, asignando valores vacíos según tipo (`''`, `null`, `false`, `[]`). Esto garantiza que Zod recibe las claves correctas y puede reportar con precisión qué campos requeridos están sin llenar.
+| Archivo | Rutas Corregidas |
+|---------|-----------------|
+| `FormList.vue` | `/forms` (L112), `/forms/${id}` (L125) |
+| `DlqDashboard.vue` | `/admin/queues/dlq/summary` (L220), `/admin/queues/dlq/messages` (L231), `/admin/queues/dlq/purge` (L259), `/admin/queues/dlq/retry` (L271) |
+| `EvidenceDropzone.vue` | `/documents/upload-temp` (L142) |
 
-### BUG-B — Doble prefijo `/api/v1` (CA-Fix-02)
-
-**Archivo:** `frontend/src/stores/useFormDesignerStore.ts`  
-**Causa raíz:** `apiClient` tiene `baseURL: '/api/v1'` configurado en `services/apiClient.ts` (línea 7). Sin embargo, el store pasa rutas que ya incluyen `/api/v1` al cliente, resultando en `http://localhost:5173/api/v1/api/v1/forms/draft`.
-
-**5 ocurrencias afectadas:**
-
-| Línea | Ruta actual (BUGGY) | Ruta corregida |
-|-------|---------------------|----------------|
-| 107 | `/api/v1/design/forms/generate` | `/design/forms/generate` |
-| 129 | `/api/v1/forms/mock_id_or_draft/versions` | `/forms/mock_id_or_draft/versions` |
-| 142 | `/api/v1/forms/${formId}` | `/forms/${formId}` |
-| 239 | `/api/v1/forms/draft` | `/forms/draft` |
-| 332 | `/api/v1/design/forms/${formId}/certify` | `/design/forms/${formId}/certify` |
+### Auditoría Adicional
+- Escaneé **todas** las llamadas `integrationStore.*()` en el frontend: las demás rutas ya están correctas (sin prefijo `/api/v1`).
 
 ---
 
-## Solicitud al Arquitecto Líder
+## Build Audit (Zero-Trust)
 
-Por favor revise y valide:
-
-1. ✅ ¿Confirma que las rutas correctas del backend para estas operaciones son las indicadas en la columna "Ruta corregida"?
-2. ✅ ¿El diseño de poblar `rawFormSubmission` con valores vacíos (no happy path) en "Probar Submit" es coherente con el contrato funcional de CA-Fix-01?
-3. ✅ ¿Hay algún endpoint que tenga una ruta de base diferente a `/api/v1` que deba mantenerse con el prefijo explícito?
+```
+✓ 1539 modules transformed.
+✓ built in 46.93s
+0 errores TypeScript
+```
 
 ---
 
-## Impacto Esperado
+## Git
 
-- **Archivos modificados:** 2 (`FormDesigner.vue`, `useFormDesignerStore.ts`)
-- **Líneas de código cambiadas:** ~11 líneas (corrección mínima sin efectos colaterales)
-- **Funcionalidades adyacentes en riesgo:** NINGUNA (cambios aislados a la función `simulateMockSubmit` y al prefijo de rutas)
-- **Riesgo de regresión:** BAJO (los cambios son correctivos, no arquitectónicos)
+| Campo | Valor |
+|-------|-------|
+| **Commit** | `5f6f75db` |
+| **Rama remota** | `sprint-7/bugfix-uat` |
+| **Files changed** | 4 (FormDesigner.vue, FormList.vue, DlqDashboard.vue, EvidenceDropzone.vue) |
+| **Insertions** | 21 |
+| **Deletions** | 12 |
 
 ---
 
 ## Estado del Agente Frontend
 
-- [x] Handoff leído y comprendido
-- [x] Código existente analizado forense
-- [x] Causa raíz identificada con certeza
-- [x] Plan documentado en `implementation_plan.md`
-- [ ] Esperando aprobación del Arquitecto Líder para pasar a EJECUCIÓN
+- [x] Handoff HOTFIX leído y comprendido
+- [x] Sección 3.A ejecutada (hasFallbackUsed + condicional)
+- [x] Sección 3.B ejecutada (7 rutas en 3 archivos)
+- [x] Auditoría completa de integrationStore (0 rutas restantes con doble prefijo)
+- [x] `npm run build` → SUCCESS (46.93s, 0 errores)
+- [x] `git commit` → `5f6f75db`
+- [x] `git push origin sprint-7/bugfix-uat` → SUCCESS

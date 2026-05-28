@@ -1,4 +1,4 @@
-// @Traceability: US-003 - CA-27, CA-30, CA-52, CA-74, CA-77
+// @Traceability: US-003 - CA-27, CA-30, CA-52, CA-74, CA-77, CA-83
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/services/apiClient';
@@ -446,6 +446,26 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             else if(f.type === 'url') mock[key] = 'https://example.com';
             else if(f.isMultiple) mock[key] = ['Option1'];
             else mock[key] = 'Dummy Data';
+        } else if (type === 'fuzz') {
+            if (f.type === 'email') {
+                mock[key] = 'invalid-email';
+            } else if (f.type === 'url') {
+                mock[key] = 'invalid-url';
+            } else if (f.type === 'number' || f.type === 'timer') {
+                mock[key] = 'not-a-number';
+            } else if (f.type === 'checkbox') {
+                mock[key] = 'not-a-boolean';
+            } else {
+                if (f.required) {
+                    mock[key] = '';
+                } else if (f.minLength && f.minLength > 0) {
+                    mock[key] = 'x'.repeat(Math.max(0, f.minLength - 1));
+                } else if (f.maxLength && f.maxLength > 0) {
+                    mock[key] = 'x'.repeat(f.maxLength + 1);
+                } else {
+                    mock[key] = 'fuzzed-data';
+                }
+            }
         } else {
             mock[key] = null;
         }

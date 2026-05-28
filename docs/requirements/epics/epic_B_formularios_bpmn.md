@@ -538,10 +538,10 @@ Feature: Web IDE Form Code Generation
     And si el usuario sube PDFs al `<Dropzone>` (Upload-First) pero cierra la pestaña sin hacer Submit, el Frontend disparará un `Beacon` asíncrono ordenando al Backend destruir esos archivos huérfanos.
     And dispondrá de "Smart Buttons" nativos (`[Completar]`, `[⚠️ Escalar Error BPMN]`) envueltos en interceptores de red globales `try/catch`.
 
-  Scenario: Sandbox de Pruebas Zod In-Browser (Shift-Left QA) (CA-83)
+  Scenario: [REMEDIACIÓN] Sandbox de Pruebas Zod In-Browser (Shift-Left QA) (CA-83)
     Given el diseño finalizado del iForm Maestro
-    Then el IDE proveerá una "Consola QA embebida" (Simulator).
-    And generará automáticamente Payloads extremos (Fuzzing) simulando Paths Felices y Tristes en la memoria RAM del navegador, certificando matemáticamente el contrato antes del despliegue.
+    Then el IDE proveerá una "Consola QA embebida" (Simulator) con opciones para autocompletar Happy, Sad y Fuzz payloads.
+    And la opción Fuzz generará automáticamente Payloads extremos (Fuzzing) con tipos erróneos y strings fuera de límites, simulando Paths Felices y Tristes en la memoria RAM del navegador, certificando matemáticamente el contrato antes del despliegue.
 
   Scenario: Manejo Amigable de Errores de Sintaxis en el Mónaco IDE (CA-84)
     Given el Arquitecto está editando el código Vue o Zod manualmente en el panel de Mónaco IDE

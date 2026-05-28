@@ -833,6 +833,7 @@
                      <span class="text-xs font-bold text-gray-700">JSON Payload (Modificable)</span>
                      <div class="flex gap-2">
                         <button @click="generateMockPath('happy')" class="text-[10px] bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200">Autocompletar Happy</button>
+                        <button @click="generateMockPath('fuzz')" class="text-[10px] bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200">Autocompletar Fuzz</button>
                         <button @click="generateMockPath('sad')" class="text-[10px] bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200">Autocompletar Sad</button>
                         <button @click="fuzzerPayload = '{\n  \n}'" class="text-[10px] bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200">🗑️ Limpiar</button>
                      </div>
@@ -885,7 +886,7 @@
 </template>
 
 <script setup lang="ts">
-// @Traceability: US-003 - CA-27, CA-30, CA-74, CA-77
+// @Traceability: US-003 - CA-27, CA-30, CA-74, CA-77, CA-83
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';

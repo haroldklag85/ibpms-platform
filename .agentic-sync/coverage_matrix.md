@@ -434,7 +434,7 @@
 | CA-80 | Reactividad Controlada en Formularios Densos (Lazy Validation) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-81 | Anclaje de Versión para Procesos In-Flight (Lazy Patching) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-82 | Autoguardado Volátil, Limpieza de Fantasmas y Smart Buttons | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
-| CA-83 | Sandbox de Pruebas Zod In-Browser (Shift-Left QA) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-83 | Sandbox de Pruebas Zod In-Browser (Shift-Left QA) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA83.spec.ts |
 | CA-84 | Manejo Amigable de Errores de Sintaxis en el Mónaco IDE | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-85 | Auto-Guardado y Recuperación de Sesión en el Diseñador | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-86 | Catálogo y Explorador de Formularios (Form Manager Dashboard) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |

@@ -426,7 +426,7 @@
 | CA-72 | Resiliencia Periférica Offline y Tolerancia a Conflictos | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-73 | El Escáner Mágico (AI Prompt-to-Form & Document-to-Form) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-74 | Diccionario Global y Fragmentos Reutilizables (Snippets) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA74.spec.ts |
-| CA-75 | El Peaje Analítico (Data Diet / Prevención de Campos Huérfanos) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-75 | El Peaje Analítico (Data Diet / Prevención de Campos Huérfanos) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA75.spec.ts |
 | CA-76 | El Sello Radiactivo de Privacidad (Data Classification PII) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-77 | Integración Autocompletado Gobernado y Escudo Anti-DDoS | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA77.spec.ts |
 | CA-78 | Factoría Reactiva Zod On-The-Fly y Renderizado Bidireccional | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |

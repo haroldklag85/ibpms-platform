@@ -626,8 +626,18 @@
                 </option>
               </datalist>
             </div>
+            <div v-if="!['container', 'tabs', 'accordion', 'button_submit', 'button_draft', 'button_reject'].includes(editingField.type)">
+              <label class="block text-xs font-bold text-gray-700 mb-1">Destino Estratégico (Peaje Analítico CA-75)</label>
+              <select v-model="editingField.destinoEstrategico" id="destinoEstrategicoSelect" data-testid="destinoEstrategicoSelect" class="w-full text-sm border-gray-300 rounded">
+                <option value="">-- Seleccione Destino --</option>
+                <option value="Regla DMN">Regla DMN</option>
+                <option value="Integración Externa">Integración Externa</option>
+                <option value="Documento PDF SGDEA">Documento PDF SGDEA</option>
+                <option value="Analítica Pasiva">Analítica Pasiva</option>
+              </select>
+            </div>
             <div class="flex items-center gap-2 pt-2 border-t mt-4">
-               <input type="checkbox" v-model="editingField.required" id="reqCheck" class="text-indigo-600 rounded" />
+               <input type="checkbox" v-model="editingField.required" id="reqCheck" :disabled="editingField.destinoEstrategico === 'Analítica Pasiva'" class="text-indigo-600 rounded" />
                <label for="reqCheck" class="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-1">🔴 ¿Es de llenado obligatorio? <AppTooltip content="Fuerza al validador Zod On-The-Fly a bloquear el envío si el campo es nulo o vacío." /></label>
             </div>
             <div v-if="formPattern === 'IFORM_MAESTRO'" class="flex items-center gap-2 pt-2 border-t">
@@ -928,7 +938,7 @@
 </template>
 
 <script setup lang="ts">
-// @Traceability: US-003 - CA-27, CA-30, CA-70, CA-71, CA-74, CA-77, CA-83, CA-85
+// @Traceability: US-003 - CA-27, CA-30, CA-70, CA-71, CA-74, CA-75, CA-77, CA-83, CA-85
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -1121,6 +1131,13 @@ const applyDictionaryVariable = () => {
         showToast(`Variable corporativa '${item.id}' aplicada (Gobernanza MDM)`, 'success');
     }
 };
+
+// @Traceability: US-003 - CA-75
+watch(editingField, (newField) => {
+  if (newField && newField.destinoEstrategico === 'Analítica Pasiva') {
+    newField.required = false;
+  }
+}, { immediate: true, deep: true });
 
 onMounted(async () => {
     await fetchDictionary();

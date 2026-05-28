@@ -1,4 +1,4 @@
-// @Traceability: US-003 - CA-27, CA-30, CA-52, CA-74, CA-77, CA-83
+// @Traceability: US-003 - CA-27, CA-30, CA-52, CA-74, CA-75, CA-77, CA-83
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/services/apiClient';
@@ -181,9 +181,14 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
       list.forEach(f => {
         flatF.push(f);
         if (f.components) collect(f.components);
+        if (f.children) collect(f.children);
       });
     };
     collect(canvasFields.value);
+
+    const isInputField = (f: any) => {
+      return !f.type.startsWith('button_') && !['container', 'tabs', 'accordion', 'tab_pane', 'accordion_panel', 'info_modal'].includes(f.type);
+    };
 
     for (const f of flatF) {
       if (f.enableAutocomplete) {
@@ -200,6 +205,13 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
           if (lowerVal.includes('fetch(') || lowerVal.includes('axios') || lowerVal.includes('xmlhttprequest') || lowerVal.includes('eval(') || lowerVal.includes('<script')) {
             return { success: false, message: `[XSS/RCE Prevention] Intento de inyección de JS crudo detectado en propiedad '${key}': '${val}'` };
           }
+        }
+      }
+
+      // @Traceability: US-003 - CA-75
+      if (isInputField(f)) {
+        if (f.destinoEstrategico === undefined || f.destinoEstrategico === null || String(f.destinoEstrategico).trim() === '') {
+          return { success: false, message: `[Peaje Analítico] Campo '${f.label || f.id}' sin destino estratégico definido.` };
         }
       }
     }
@@ -371,6 +383,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     cloned.id = `FIELD_${idCounter.value++}`;
     cloned.camundaVariable = cloned.id.toLowerCase();
     cloned.stage = activeStageSim.value === 'ALL' ? 'START_EVENT' : activeStageSim.value;
+    cloned.destinoEstrategico = '';
     if (cloned.type === 'container' || cloned.type === 'field_array') {
       cloned.children = [];
     }

@@ -151,7 +151,7 @@
         <div class="flex-1 overflow-y-auto p-6 md:p-8 lg:p-12">
           <!-- CA-6 Shadow DOM (Isolation css context class) -->
           <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative" style="all: revert; box-sizing: border-box;">
-            <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans">{{ formTitle }}</h2>
+            <input v-model="formTitle" class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans w-full bg-transparent outline-none hover:bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-200 transition-colors cursor-text" title="Clic para editar el nombre del formulario" />
 
             <div v-if="isHighDensityForm" class="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 shadow-sm rounded flex items-center gap-3">
                <span class="text-2xl">⚠️</span>
@@ -481,6 +481,10 @@
                <label class="block text-xs font-bold text-purple-800 mb-1">URL Endpoint Async</label>
                <input v-model="editingField.asyncUrl" class="w-full text-sm border-purple-300 rounded font-mono" placeholder="Ej: /api/v1/customers" />
                <p class="text-[10px] text-purple-600 mt-1">El input interrogará este endpoint con parámetros `?q=valor` en tiempo real (Typeahead AST).</p>
+            </div>
+            <div v-if="['select', 'radio'].includes(editingField.type)" class="mb-4">
+               <label class="block text-xs font-bold text-gray-700 mb-1">Opciones (Una por línea)</label>
+               <textarea :value="(editingField.options || []).join('\n')" @input="e => editingField.options = (e.target.value || '').split('\n').filter(o => o.trim())" rows="4" class="w-full text-sm border-gray-300 rounded" placeholder="Opción 1&#10;Opción 2&#10;Opción 3"></textarea>
             </div>
             <div v-if="editingField.type === 'select'" class="bg-green-50 p-3 rounded border border-green-200">
                <label class="block text-xs font-bold text-green-800 mb-1">📥 Cargar una lista grande de opciones (Archivo CSV)</label>

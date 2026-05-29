@@ -85,7 +85,7 @@ describe('CA-83: Sandbox de Pruebas Zod In-Browser / Fuzzing', () => {
   describe('2. FormDesigner Component Integration', () => {
     it('renders Autocompletar Fuzz button and populates payload on click', async () => {
       vi.mocked(apiClient.get).mockImplementation((url) => {
-        if (url.includes('/api/v1/forms/test-id')) {
+        if (url.includes('/forms/test-id')) {
           const fields = [
             { id: 'f_email_mal', type: 'email', label: 'Email Malformed', required: true, camundaVariable: 'emailMal' }
           ]

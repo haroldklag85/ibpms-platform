@@ -49,7 +49,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
 
   it('CA-12: Badge muestra "revoked" cuando certification state cambia', async () => {
     vi.mocked(apiClient.get).mockImplementation((url) => {
-       if (url.includes('/api/v1/forms/test-id')) {
+       if (url.includes('/forms/test-id')) {
           return Promise.resolve({ data: { schemaVariables: "[]", isQaCertified: false, certifiedSchemaHash: 'hash123' } });
        }
        return Promise.resolve({ data: [] });
@@ -65,7 +65,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
     expect(wrapper.text()).toContain('Modificación detectada')
     
     vi.mocked(apiClient.get).mockImplementation((url) => {
-       if (url.includes('/api/v1/forms/test-id')) {
+       if (url.includes('/forms/test-id')) {
           return Promise.resolve({ data: { schemaVariables: "[]", isQaCertified: true, versionId: 2 } });
        }
        return Promise.resolve({ data: [] });
@@ -80,7 +80,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
 
   it('CA-13: Indicador de versión muestra V{N} + estado', async () => {
     vi.mocked(apiClient.get).mockImplementation((url) => {
-       if (url.includes('/api/v1/forms/test-id')) {
+       if (url.includes('/forms/test-id')) {
           return Promise.resolve({ data: { schemaVariables: "[]", isQaCertified: true, versionId: 5 } });
        }
        return Promise.resolve({ data: [] });
@@ -100,7 +100,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
 
   it('CA-14: Errores de superRefine se pintan en naranja', async () => {
     vi.mocked(apiClient.get).mockImplementation((url) => {
-       if (url.includes('/api/v1/forms/test-id')) {
+       if (url.includes('/forms/test-id')) {
           return Promise.resolve({ data: { schemaVariables: "[]", isQaCertified: true, versionId: 1, formRules: JSON.stringify([{ fieldA: 'field2', fieldB: 'field3', operator: '==', errorMessage: 'err' }]) } });
        }
        return Promise.resolve({ data: [] });
@@ -126,7 +126,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
       data: ['testVar1', 'testVarUnmapped']
     });
     vi.mocked(apiClient.get).mockImplementation((url) => {
-       if (url.includes('/api/v1/forms/test-id')) {
+       if (url.includes('/forms/test-id')) {
           return Promise.resolve({ data: { schemaVariables: "[]", isQaCertified: true, versionId: 1, schema: JSON.stringify([{id: 'testVar1', type:'text'}]) } });
        }
        return Promise.resolve({ data: [] });
@@ -158,7 +158,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
     const mockSchemaVars = JSON.stringify([{id: 'testVar1', camundaVariable: 'testVar1', type:'text', label: 'Test Var', required: false}]);
     
     vi.mocked(apiClient.get).mockImplementation((url) => {
-       if (url.includes('/api/v1/forms/test-id')) {
+       if (url.includes('/forms/test-id')) {
           return Promise.resolve({ data: { schemaVariables: mockSchemaVars, isQaCertified: false, versionId: 1 } });
        }
        return Promise.resolve({ data: [] });
@@ -192,7 +192,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
     if (certifyBtn) {
        // Preparamos el mock de loadForm() que ocurrirá tras certificar
        vi.mocked(apiClient.get).mockImplementation((url) => {
-         if (url.includes('/api/v1/forms/test-id')) {
+         if (url.includes('/forms/test-id')) {
             return Promise.resolve({ data: { schemaVariables: "[]", isQaCertified: true, versionId: 2, schema: JSON.stringify([{id: 'testVar1', type:'text'}]) } });
          }
          return Promise.resolve({ data: [] });
@@ -216,7 +216,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
     const mockSchemaVars = JSON.stringify([{id: 'testVar1', camundaVariable: 'testVar1', type:'text', label: 'Test Var', required: false}]);
     
     vi.mocked(apiClient.get).mockImplementation((url) => {
-       if (url.includes('/api/v1/forms/test-id')) {
+       if (url.includes('/forms/test-id')) {
           return Promise.resolve({ data: { schemaVariables: mockSchemaVars, isQaCertified: false, versionId: 1 } });
        }
        return Promise.resolve({ data: [] });

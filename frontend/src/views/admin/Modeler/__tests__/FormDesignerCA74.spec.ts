@@ -57,7 +57,7 @@ describe('CA-74: Global Dictionary and Reusable Fragments (Snippets) Unit & Inte
 
     await store.fetchDictionary()
 
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/design/dictionary')
+    expect(apiClient.get).toHaveBeenCalledWith('/design/dictionary')
     expect(store.dictionaryItems).toEqual(mockDict)
   })
 
@@ -73,7 +73,7 @@ describe('CA-74: Global Dictionary and Reusable Fragments (Snippets) Unit & Inte
 
     await store.fetchSnippets()
 
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/design/snippets')
+    expect(apiClient.get).toHaveBeenCalledWith('/design/snippets')
     const fragmentCategory = store.toolboxCategories.find((c: any) => c.name === 'Mis Fragmentos')
     expect(fragmentCategory).toBeDefined()
     expect(fragmentCategory.items).toContainEqual(expect.objectContaining({
@@ -91,7 +91,7 @@ describe('CA-74: Global Dictionary and Reusable Fragments (Snippets) Unit & Inte
     // We test saveSnippet or saveAsFragment. If saveSnippet exists, call it.
     await store.saveSnippet('My Snippet', [componentToSave])
 
-    expect(apiClient.post).toHaveBeenCalledWith('/api/v1/design/snippets', {
+    expect(apiClient.post).toHaveBeenCalledWith('/design/snippets', {
       name: 'My Snippet',
       components: [componentToSave]
     })
@@ -102,7 +102,7 @@ describe('CA-74: Global Dictionary and Reusable Fragments (Snippets) Unit & Inte
       { id: 'user_email', label: 'User Email Address', type: 'email', isPII: true }
     ]
     vi.mocked(apiClient.get).mockImplementation((url) => {
-      if (url.includes('/api/v1/design/dictionary')) {
+      if (url.includes('/design/dictionary')) {
         return Promise.resolve({ data: mockDict }) as any
       }
       return Promise.resolve({ data: [] }) as any
@@ -134,7 +134,7 @@ describe('CA-74: Global Dictionary and Reusable Fragments (Snippets) Unit & Inte
       { id: 'user_email', label: 'User Email Address', type: 'email', isPII: true }
     ]
     vi.mocked(apiClient.get).mockImplementation((url) => {
-      if (url.includes('/api/v1/design/dictionary')) {
+      if (url.includes('/design/dictionary')) {
         return Promise.resolve({ data: mockDict }) as any
       }
       return Promise.resolve({ data: [] }) as any

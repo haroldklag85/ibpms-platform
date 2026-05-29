@@ -51,7 +51,7 @@ describe('US-003: CA-77 Integration and Anti-DDoS / SSRF Barricade', () => {
       '/api/v1/integrations/connectors/CRM_SALESFORCE'
     ];
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
-      if (url.includes('/api/v1/integrations/connectors')) {
+      if (url.includes('/integrations/connectors')) {
         return Promise.resolve({ data: mockConnectors });
       }
       return Promise.resolve({ data: [] });

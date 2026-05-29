@@ -75,7 +75,7 @@ describe('CA-27: Version Control for Form Designs (Unit Tests)', () => {
 
     expect(result.success).toBe(true)
     // Verify apiClient.post was called with the update/create version endpoint
-    expect(apiClient.post).toHaveBeenCalledWith('/api/v1/forms/original-uuid-v1', expect.objectContaining({
+    expect(apiClient.post).toHaveBeenCalledWith('/forms/original-uuid-v1', expect.objectContaining({
       name: 'Solicitud Onboarding',
       pattern: 'SIMPLE',
       formFields: store.canvasFields

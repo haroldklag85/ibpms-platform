@@ -319,6 +319,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             else if(f.type === 'email') mock[key] = 'test@example.com';
             else if(f.type === 'url') mock[key] = 'https://example.com';
             else if(f.isMultiple) mock[key] = ['Option1'];
+            else if(f.type === 'file' || f.type === 'signature') mock[key] = '550e8400-e29b-41d4-a716-446655440000';
             else mock[key] = 'Dummy Data';
         } else {
             mock[key] = null;
@@ -356,6 +357,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             else if(f.type === 'email') specStr += `      ${key}: 'test@test.com',\n`;
             else if(f.type === 'url') specStr += `      ${key}: 'https://test.com',\n`;
             else if(f.isMultiple) specStr += `      ${key}: ['Option1'],\n`;
+            else if(f.type === 'file' || f.type === 'signature') specStr += `      ${key}: '550e8400-e29b-41d4-a716-446655440000',\n`;
             else specStr += `      ${key}: 'Dummy Data',\n`;
         }
     });

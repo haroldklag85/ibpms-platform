@@ -544,6 +544,13 @@
                    <input type="number" v-model="editingField.maxFiles" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 5" />
                  </div>
                </div>
+               <div class="flex gap-2 mb-2 mt-2">
+                 <div class="flex-1">
+                   <label class="block text-xs font-bold text-gray-700 mb-1">UUID de la Bucket S3 (Testing)</label>
+                   <input type="text" v-model="editingField.s3BucketUuid" class="w-full text-sm border-gray-300 rounded" placeholder="Ej: 550e8400-e29b-41d4-a716-446655440000" />
+                   <p class="text-[10px] text-gray-500 mt-1">* En fase de testing (falta de conexión real a AWS).</p>
+                 </div>
+               </div>
                <p class="text-[10px] text-orange-600">Validará en frontend antes de subir por Axios.</p>
             </div>
             

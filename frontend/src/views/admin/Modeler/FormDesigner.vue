@@ -42,6 +42,18 @@
       </div>
       
       <div class="flex items-center gap-4">
+        <!-- @Traceability: US-003 - Metadata Editor Inputs for E2E Test Compatibility -->
+        <div class="flex gap-4 items-center bg-gray-50 px-3 py-1.5 rounded border border-gray-200">
+          <div class="flex items-center gap-1.5">
+            <label for="formKeyInput" class="text-xs font-bold text-gray-700">Nombre Técnico</label>
+            <input id="formKeyInput" v-model="formKey" class="text-xs border border-gray-300 rounded px-2 py-1 w-32 focus:border-indigo-500 focus:ring-indigo-500 font-mono" placeholder="form_tecnico" />
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label for="formTitleInput" class="text-xs font-bold text-gray-700">Título del Formulario</label>
+            <input id="formTitleInput" v-model="formTitle" class="text-xs border border-gray-300 rounded px-2 py-1 w-40 focus:border-indigo-500 focus:ring-indigo-500" placeholder="Título..." />
+          </div>
+        </div>
+
         <!-- CA-15.1: Permitir Trámite Público -->
         <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded border border-emerald-200" title="Permite recolectar datos sin autenticación previa (Bypass CA-15)">
            <label for="publicToggle" class="text-xs font-bold text-emerald-800 cursor-pointer">🌐 Trámite Público</label>
@@ -373,21 +385,21 @@
         
         <!-- Tabs -->
         <div class="flex bg-[#252526] text-xs font-mono font-medium text-gray-400 border-b border-[#3e3e42] shrink-0 overflow-x-auto">
-          <button @click="attemptTabChange('JSON')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-yellow-500': activeCodeTab === 'JSON' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
+          <button role="tab" @click="attemptTabChange('JSON')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-yellow-500': activeCodeTab === 'JSON' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
              <span class="text-yellow-400 font-bold">{ }</span> json
           </button>
-          <button @click="attemptTabChange('TEMPLATE')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-emerald-500': activeCodeTab === 'TEMPLATE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
+          <button role="tab" @click="attemptTabChange('TEMPLATE')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-emerald-500': activeCodeTab === 'TEMPLATE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
             <span class="text-emerald-400">&lt;&gt;</span> template
           </button>
-          <button @click="attemptTabChange('SCRIPT')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-blue-500': activeCodeTab === 'SCRIPT' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
+          <button role="tab" @click="attemptTabChange('SCRIPT')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-blue-500': activeCodeTab === 'SCRIPT' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
             <span class="text-blue-400">&lt;script setup&gt;</span>
             <AppTooltip content="Código Vue.js autogenerado con Composition API (Solo Lectura)." />
           </button>
-          <button @click="attemptTabChange('STYLE')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-pink-500': activeCodeTab === 'STYLE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
+          <button role="tab" @click="attemptTabChange('STYLE')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-pink-500': activeCodeTab === 'STYLE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
             <span class="text-pink-400">&lt;style scoped&gt;</span>
             <AppTooltip content="Estilizado CSS inyectado para Tailwind y clases utilitarias (Solo Lectura)." />
           </button>
-          <button @click="attemptTabChange('ZOD')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-indigo-500': activeCodeTab === 'ZOD' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
+          <button role="tab" @click="attemptTabChange('ZOD')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-indigo-500': activeCodeTab === 'ZOD' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
              <span class="text-indigo-400 font-bold">Z</span> zod
           </button>
           <div class="ml-auto px-4 flex items-center group relative cursor-help">
@@ -1628,9 +1640,11 @@ const simulateMockSubmit = async () => {
     modalContent.value = `[WORKDESK VALIDATION ENGINE] (Vue Realtime Zod Factory)\n✅ VALIDACION EXITOSA.\n\nEmitiendo POST hacia el Backend End-to-End...\n`;
 
     try {
+        // @Traceability: US-003, CA-01, CA-27 - Technical name normalization using formKey to avoid duplicate collisions
+        const rawTechnicalName = formKey.value || formTitle.value || '';
         const dto = {
            name: formTitle.value,
-           technicalName: formTitle.value.toUpperCase().replace(/\s+/g, '_').substring(0, 50),
+           technicalName: rawTechnicalName.toUpperCase().replace(/\s+/g, '_').substring(0, 50),
            pattern: formPattern.value,
            formFields: canvasFields.value
         };

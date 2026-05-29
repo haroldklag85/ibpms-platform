@@ -1819,6 +1819,44 @@ Scenario: Intervención de Emergencia sobre Bloqueo Pesimista (Break-Lock)  (CA-
     And si detecta pasarelas divergentes "huérfanas" de convergencia, debe levantar un ERROR "GATEWAY_CONVERGENCE_MISMATCH"
     And abortar el despliegue para prevenir la fuga de tokens y ejecuciones fantasma.
 
+  Scenario: [DEUDA TÉCNICA - FASE 1] Optimización de Rendimiento en Candados de Edición (CA-75)
+    # Origen: us005_roadmap_analysis.md — Tarea: Locks con Índices
+    Given que múltiples usuarios editan diagramas BPMN de forma concurrente
+    When el backend recibe las peticiones periódicas de heartbeat para verificar los candados de edición
+    Then el sistema debe consultar la tabla `ibpms_process_locks` a través de un índice compuesto sobre las columnas `(process_definition_key, locked_by)`
+    And evitar escaneos completos de tabla (table scans) en la base de datos PostgreSQL
+    And retornar el estado del candado cargando únicamente una proyección optimizada rápida en lugar de la entidad de Hibernate completa.
+
+  Scenario: [DEUDA TÉCNICA - FASE 1] Limpieza Automática de Historial del Motor y Sandbox (CA-76)
+    # Origen: us005_roadmap_analysis.md — Tarea: Limpieza de Historial
+    Given que el motor de Camunda ejecuta procesos en producción y simulaciones marcadas como `SANDBOX_TEST`
+    When se activa la ventana de mantenimiento nocturno configurada en `historyCleanupBatchWindow` del `application.yml`
+    Then el motor de Camunda debe ejecutar el purgado automático de logs históricos de instancias y variables
+    And eliminar los registros de simulación e historia cuyas edades superen el límite configurado de Time-To-Live (HTTL).
+
+  Scenario: [DEUDA TÉCNICA - FASE 2] Validación y Corrección en Caliente mediante Linter en Frontend (CA-77)
+    # Origen: us005_roadmap_analysis.md — Tarea: Linter en Frontend
+    Given que el Diseñador se encuentra dibujando un diagrama en el canvas del Modelador Frontend
+    When interactúa con el canvas y se gatilla el evento `commandStack.changed`
+    Then el frontend debe ejecutar localmente `@camunda/linting` con el conjunto de reglas de gobernanza
+    And resaltar visualmente y en tiempo real cualquier error o advertencia estructural (como nodos zombie o pasarelas sin camino default) antes de presionar el botón de solicitar despliegue.
+
+  Scenario: [DEUDA TÉCNICA - FASE 2] Aislamiento de Simulaciones mediante Multi-tenancy Nativo (CA-78)
+    # Origen: us005_roadmap_analysis.md — Tarea: Sandbox por Multi-tenancy
+    Given que un Arquitecto de Procesos inicia una ejecución en modo Sandbox (CA-20, CA-41)
+    When el motor crea y despliega temporalmente la instancia de simulación
+    Then el sistema debe asignar automáticamente el Tenant ID exclusivo `sandbox_tenant` a dicha instancia
+    And aislar lógicamente su ejecución, variables e historial del inquilino de producción en la base de datos relacional
+    And excluir estas tareas y contadores de la bandeja de entrada global (Workdesk) del analista operativo.
+
+  Scenario: [DEUDA TÉCNICA - FASE 3] Desacoplamiento Arquitectónico del Flujo de Aprobaciones (CA-79)
+    # Origen: us005_roadmap_analysis.md — Tarea: Desacoplamiento de Aprobaciones
+    Given una solicitud de despliegue en la tabla `ibpms_deploy_requests` aprobada por el Release Manager (CA-69)
+    When el estado de la aprobación se actualiza a aprobado (APPROVED)
+    Then el backend del sistema de aprobación debe publicar un evento asíncrono en RabbitMQ
+    And el microservicio adaptador de infraestructura debe consumir el evento para realizar la carga mediante REST API en el motor de Camunda
+    And evitar referencias directas de clave foránea a nivel de base de datos entre el catálogo de diseño y las tablas de aprobaciones de despliegue.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).
 

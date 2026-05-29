@@ -70,6 +70,10 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const dictionaryItems = ref<any[]>([]);
   const approvedConnectors = ref<string[]>([]);
   
+  // @Traceability: US-003 - CA-90
+  const MAX_FORM_FIELDS = 200;
+  const isHighDensityForm = computed(() => canvasFields.value.length > MAX_FORM_FIELDS);
+  
   // AI State
   const aiPrompt = ref('');
   const isScanningAi = ref(false);
@@ -153,7 +157,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     if (!promptText) return;
     isScanningAi.value = true;
     try {
-        const response = await apiClient.post('/api/v1/design/forms/generate', { prompt: promptText });
+        const response = await apiClient.post('/design/forms/generate', { prompt: promptText });
         if (response.data && response.data.schema) {
             canvasFields.value = typeof response.data.schema === 'string' ? JSON.parse(response.data.schema) : response.data.schema;
             return { success: true, message: 'Formulario generado por LMM con éxito' };
@@ -167,7 +171,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
 
   const fetchDictionary = async () => {
     try {
-      const res = await apiClient.get('/api/v1/design/dictionary');
+      const res = await apiClient.get('/design/dictionary');
       dictionaryItems.value = res.data || [];
     } catch (e) {
       console.error('Error fetching global dictionary:', e);
@@ -177,7 +181,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
 
   const fetchSnippets = async () => {
     try {
-      const res = await apiClient.get('/api/v1/design/snippets');
+      const res = await apiClient.get('/design/snippets');
       const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
       if (fragmentCategory && res.data) {
         fragmentCategory.items = res.data;
@@ -188,7 +192,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   };
 
   const saveSnippet = async (name: string, components: any[]) => {
-    await apiClient.post('/api/v1/design/snippets', { name, components });
+    await apiClient.post('/design/snippets', { name, components });
     const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
     if (fragmentCategory) {
       fragmentCategory.items.push({ name, components });
@@ -204,7 +208,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
 
   const fetchApprovedConnectors = async () => {
     try {
-      const res = await apiClient.get('/api/v1/integrations/connectors');
+      const res = await apiClient.get('/integrations/connectors');
       if (Array.isArray(res.data)) {
         approvedConnectors.value = res.data.map((item: any) => {
           if (typeof item === 'string') return item;
@@ -266,7 +270,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const fetchVersions = async () => {
     const id = currentFormId.value || 'mock_id_or_draft';
     try {
-        const res = await apiClient.get(`/api/v1/forms/${id}/versions`);
+        const res = await apiClient.get(`/forms/${id}/versions`);
         formVersions.value = res.data;
     } catch(e) {
         formVersions.value = [];
@@ -276,7 +280,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
 
   const fetchForm = async (formId: string) => {
     try {
-        const response = await apiClient.get(`/api/v1/forms/${formId}`);
+        const response = await apiClient.get(`/forms/${formId}`);
         if (response.data && response.data.schemaVariables) {
             canvasFields.value = typeof response.data.schemaVariables === 'string' 
                ? JSON.parse(response.data.schemaVariables) 
@@ -401,7 +405,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             zodSchema: '',
             formFields: canvasFields.value
         };
-        const response = await apiClient.post(`/api/v1/forms/${formId}`, payload);
+        const response = await apiClient.post(`/forms/${formId}`, payload);
         if (response.data) {
             currentSchemaVersion.value = response.data.versionId || response.data.version || 1;
             currentFormId.value = response.data.id;
@@ -415,7 +419,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
 
   const saveDraftToApi = async (title: string, rules: any) => {
       try {
-          await apiClient.post('/api/v1/forms/draft', { schema: canvasFields.value, title, formRules: rules });
+          await apiClient.post('/forms/draft', { schema: canvasFields.value, title, formRules: rules });
           console.log('✅ Diseño auto-guardado en API (Modelador)');
       } catch (e) {
           localStorage.setItem('designer_draft_fallback', JSON.stringify(canvasFields.value));
@@ -549,7 +553,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const certifyForm = async (formId: string, payload: string) => {
     // @Traceability: US-028 - CA-11 - Certificación de Contrato Zod
     try {
-        const response = await apiClient.post(`/api/v1/design/forms/${formId}/certify`, { payload });
+        const response = await apiClient.post(`/design/forms/${formId}/certify`, { payload });
         certificationState.value = 'certified';
         return { success: true, message: 'Contrato Zod Certificado con Éxito 🏆' };
     } catch(e: any) {
@@ -940,10 +944,10 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
            scr += `const clearSig = (id: string, varName: string, targetObj: any) => { const canvas = document.getElementById('canvas_' + id) as HTMLCanvasElement; if(canvas) { const ctx = canvas.getContext('2d'); ctx?.clearRect(0,0, canvas.width, canvas.height); targetObj[varName] = ''; } };\n\n`;
         }
 
-        scr += `// CA-24: Auto-Guardado Workdesk LocalStorage/API\nlet autoSyncDraftTimeout: any = null;\nwatch(formData, (newVal) => {\n  clearTimeout(autoSyncDraftTimeout);\n  autoSyncDraftTimeout = setTimeout(async () => {\n    try {\n      await apiClient.post('/api/v1/forms/draft', newVal);\n      console.log('✅ Borrador auto-guardado en backend');\n    } catch (e) {\n      localStorage.setItem('workdesk_draft', JSON.stringify(newVal));\n      console.warn('⚠️ Fallback a LocalStorage para auto-guardado');\n    }\n  }, 2000);\n}, { deep: true });\n\n`;
+        scr += `// CA-24: Auto-Guardado Workdesk LocalStorage/API\nlet autoSyncDraftTimeout: any = null;\nwatch(formData, (newVal) => {\n  clearTimeout(autoSyncDraftTimeout);\n  autoSyncDraftTimeout = setTimeout(async () => {\n    try {\n      await apiClient.post('/forms/draft', newVal);\n      console.log('✅ Borrador auto-guardado en backend');\n    } catch (e) {\n      localStorage.setItem('workdesk_draft', JSON.stringify(newVal));\n      console.warn('⚠️ Fallback a LocalStorage para auto-guardado');\n    }\n  }, 2000);\n}, { deep: true });\n\n`;
 
         if (hasFile) {
-           scr += `// CA-21, CA-39, CA-49: Conector Multipart File Upload + Constraints\nconst uploadFile = async (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const target = event.target;\n  const files = target?.files;\n  if (!files || files.length === 0) return;\n  if (files.length < minFiles) { alert('Mínimo ' + minFiles + ' archivo(s) requeridos.'); target.value = ''; return; }\n  if (files.length > maxFiles) { alert('Máximo ' + maxFiles + ' archivo(s) permitidos.'); target.value = ''; return; }\n  let urls: string[] = [];\n  for (let i = 0; i < files.length; i++) {\n     const file = files[i];\n     if (maxMb > 0 && file.size > maxMb * 1024 * 1024) { alert('El archivo \\'' + file.name + '\\' excede el límite de ' + maxMb + 'MB.'); target.value = ''; return; }\n     if (exts) { const ext = '.' + file.name.split('.').pop()?.toLowerCase(); if (!exts.toLowerCase().includes(ext)) { alert('Extensión ' + ext + ' no permitida. Solo: ' + exts); target.value = ''; return; } }\n     const data = new FormData();\n     data.append('file', file);\n     try {\n       const res = await apiClient.post('/api/v1/forms/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });\n       urls.push(res.data.url || 'subido_exitosamente_' + i);\n     } catch (error) {\n       alert('Error subiendo \\'' + file.name + '\\': ' + (error as any).message);\n       return;\n     }\n  }\n  targetObj[fieldId] = urls.length > 1 ? JSON.stringify(urls) : urls[0];\n  alert('Archivo(s) subido(s) exitosamente');\n};\n\n`;
+           scr += `// CA-21, CA-39, CA-49: Conector Multipart File Upload + Constraints\nconst uploadFile = async (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const target = event.target;\n  const files = target?.files;\n  if (!files || files.length === 0) return;\n  if (files.length < minFiles) { alert('Mínimo ' + minFiles + ' archivo(s) requeridos.'); target.value = ''; return; }\n  if (files.length > maxFiles) { alert('Máximo ' + maxFiles + ' archivo(s) permitidos.'); target.value = ''; return; }\n  let urls: string[] = [];\n  for (let i = 0; i < files.length; i++) {\n     const file = files[i];\n     if (maxMb > 0 && file.size > maxMb * 1024 * 1024) { alert('El archivo \\'' + file.name + '\\' excede el límite de ' + maxMb + 'MB.'); target.value = ''; return; }\n     if (exts) { const ext = '.' + file.name.split('.').pop()?.toLowerCase(); if (!exts.toLowerCase().includes(ext)) { alert('Extensión ' + ext + ' no permitida. Solo: ' + exts); target.value = ''; return; } }\n     const data = new FormData();\n     data.append('file', file);\n     try {\n       const res = await apiClient.post('/forms/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });\n       urls.push(res.data.url || 'subido_exitosamente_' + i);\n     } catch (error) {\n       alert('Error subiendo \\'' + file.name + '\\': ' + (error as any).message);\n       return;\n     }\n  }\n  targetObj[fieldId] = urls.length > 1 ? JSON.stringify(urls) : urls[0];\n  alert('Archivo(s) subido(s) exitosamente');\n};\n\n`;
            scr += `// CA-60: Manejador Drag & Drop Dropzone\nconst dropFile = (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const dt = event.dataTransfer;\n  if (dt && dt.files && dt.files.length > 0) {\n     uploadFile({ target: { files: dt.files } }, fieldId, targetObj, maxMb, exts, minFiles, maxFiles);\n  }\n};\n\n`;
         }
 
@@ -1025,7 +1029,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
         if (hasDraft) {
           scr += `\nconst saveDraft = async () => {\n  try {\n    const cleanData = JSON.parse(JSON.stringify(formData.value));\n    Object.keys(cleanData).forEach(k => { if (typeof cleanData[k] === 'string' && /^[\\d.,$]+$/.test(cleanData[k])) { const num = parseFloat(cleanData[k].replace(/[^\\d.-]/g, '')); if(!isNaN(num)) cleanData[k] = num; } });\n`;
           if (phantomLogic) scr += phantomLogic;
-          scr += `    await apiClient.post('/api/v1/forms/draft', cleanData, { headers: { 'If-Match': props.prefillData?.versionId || '' } });\n    alert('Borrador Guardado (Success)');\n  } catch (error: any) {\n    if (error.response?.status >= 500) {\n      localStorage.setItem('workdesk_draft_fallback', JSON.stringify(cleanData));\n      alert('⚠️ Error 5xx en servidor. Borrador protegido en LocalStorage (Offline Fallback CA-72).');\n    } else {\n      alert('Excepción de Red al Guardar Borrador: ' + error.message);\n    }\n  }\n};\n`;
+          scr += `    await apiClient.post('/forms/draft', cleanData, { headers: { 'If-Match': props.prefillData?.versionId || '' } });\n    alert('Borrador Guardado (Success)');\n  } catch (error: any) {\n    if (error.response?.status >= 500) {\n      localStorage.setItem('workdesk_draft_fallback', JSON.stringify(cleanData));\n      alert('⚠️ Error 5xx en servidor. Borrador protegido en LocalStorage (Offline Fallback CA-72).');\n    } else {\n      alert('Excepción de Red al Guardar Borrador: ' + error.message);\n    }\n  }\n};\n`;
         }
         if (hasReject) {
            scr += `\nconst rejectTask = async () => {\n  try {\n    await apiClient.post(\`/engine-rest/task/\${taskId}/bpmnError\`, { errorCode: 'REJECTED' });\n    alert('Excepción BPMN Disparada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Rechazar Tarea: ' + (error as any).message);\n  }\n};\n`;
@@ -1321,6 +1325,8 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     fuzzerErrors,
     superRefineCount,
     toolboxCategories,
+    MAX_FORM_FIELDS: 200,
+    isHighDensityForm,
     simulatorContext,
     activeCodeTab,
     localJsonCode,

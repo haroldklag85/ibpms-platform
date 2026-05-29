@@ -76,7 +76,7 @@ public class SecurityConfig {
                         // CA-03 y CA-04 (US-038): Login Standard y Protocolo Break-Glass
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/sync", "/api/v1/auth/emergency-login").permitAll()
                         // Apertura Temporal para desbloquear catálogo y procesos
-                        .requestMatchers("/api/v1/design/processes/**").permitAll()
+                        .requestMatchers("/api/v1/design/processes/**", "/api/v1/design/sandbox/**").permitAll()
                         // OpenAPI / Swagger Docs
                         .requestMatchers("/v3/api-docs/**", "/api/v1/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // DMN Simulation for Tests (Bypass para el test Sandbox DMN)

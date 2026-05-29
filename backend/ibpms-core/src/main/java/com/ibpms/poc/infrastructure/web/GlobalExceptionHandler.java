@@ -204,6 +204,39 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /** 429 — Recurso Agotado / Límite de Sandbox superado */
+    // @Traceability: US-005, CA-67
+    @ExceptionHandler(com.ibpms.poc.domain.exception.ResourceExhaustedException.class)
+    public ProblemDetail handleResourceExhausted(com.ibpms.poc.domain.exception.ResourceExhaustedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.TOO_MANY_REQUESTS);
+        problem.setType(URI.create("https://ibpms.com/errors/resource-exhausted"));
+        problem.setTitle("Límite de Sandbox superado");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 429 — Demasiadas Solicitudes (Rate Limiting) */
+    // @Traceability: US-005, CA-67
+    @ExceptionHandler(com.ibpms.poc.domain.exception.TooManyRequestsException.class)
+    public ProblemDetail handleTooManyRequests(com.ibpms.poc.domain.exception.TooManyRequestsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.TOO_MANY_REQUESTS);
+        problem.setType(URI.create("https://ibpms.com/errors/too-many-requests"));
+        problem.setTitle("Demasiadas solicitudes");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 413 — Payload Demasiado Grande */
+    // @Traceability: US-005, CA-67
+    @ExceptionHandler(com.ibpms.poc.domain.exception.PayloadTooLargeException.class)
+    public ProblemDetail handlePayloadTooLarge(com.ibpms.poc.domain.exception.PayloadTooLargeException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.PAYLOAD_TOO_LARGE);
+        problem.setType(URI.create("https://ibpms.com/errors/payload-too-large"));
+        problem.setTitle("Archivo demasiado grande");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
     /** 500 — Error interno genérico (CA-37) */
     // @Traceability: US-000 - CA-1
     // @Traceability: US-000 - CA-4

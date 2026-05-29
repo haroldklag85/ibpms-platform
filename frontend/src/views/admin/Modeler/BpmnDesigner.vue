@@ -543,6 +543,21 @@
       </div>
     </Transition>
 
+    <!-- ═══════ Panel: Linter de Gobernanza (CA-77) ═══════ -->
+    <Transition name="slide-up">
+      <div v-if="linterErrors.length > 0" class="absolute bottom-0 left-0 right-0 max-h-56 bg-amber-950 border-t-4 border-amber-600 flex flex-col z-50 shadow-2xl overflow-hidden shadow-amber-500/50" data-testid="linter-errors-panel">
+        <div class="flex items-center justify-between px-6 py-2 bg-amber-900/90 shrink-0">
+          <h4 class="text-sm font-bold text-white flex items-center gap-2">⚠️ Advertencias Estructurales del Linter (Gobernanza CA-77)</h4>
+          <button @click="linterErrors = []" class="text-amber-200 hover:text-white font-bold text-xl">&times;</button>
+        </div>
+        <div class="flex-1 p-5 overflow-y-auto space-y-2 text-sm font-mono bg-amber-950 text-amber-100">
+          <ul class="list-disc pl-5">
+             <li v-for="(err, i) in linterErrors" :key="i" class="mb-1">{{ err }}</li>
+          </ul>
+        </div>
+      </div>
+    </Transition>
+
     <!-- ═══════ Panel: Semantic Errors (CA-2 a CA-4) ═══════ -->
     <Transition name="slide-up">
       <div v-if="validationErrors.length > 0" class="absolute bottom-0 left-0 right-0 max-h-56 bg-red-900 border-t-4 border-red-500 flex flex-col z-50 shadow-2xl overflow-hidden shadow-red-500/50">
@@ -843,6 +858,8 @@ const deployComment = ref(''); // CA-65
 const deployStrategy = ref('coexist');
 const activeInstances = ref(12);
 const validationErrors = ref<string[]>([]);
+// @Traceability: US-005, CA-77 Validación y Corrección en Caliente mediante Linter en Frontend
+const linterErrors = ref<string[]>([]);
 
 // ── New Process Modal ────────────────────────────────────────
 const showNewProcessModal = ref(false);
@@ -1397,6 +1414,7 @@ onMounted(async () => {
         showToast(`⚠️ Mala Práctica de Diseño: Este proceso supera los ${bpmnComplexityLimit.value} nodos. Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor.`, 'error'); 
       }
 
+      runClientLinter(); // @Traceability: US-005, CA-77
       debouncedValidate(); // CA-3 Pre-Flight reactivo a cambios
     });
 
@@ -1520,8 +1538,73 @@ watch(processId, (newId) => {
 });
 
 // ── Validation (CA-3, CA-9 & CA-46) ─────────────────────────────────
+// @Traceability: US-005, CA-77 Validación y Corrección en Caliente mediante Linter en Frontend
+const runClientLinter = () => {
+  if (!modelerInstance) return;
+  const errors: string[] = [];
+
+  try {
+    const elementRegistry = modelerInstance.get('elementRegistry');
+    const elements = elementRegistry.getAll();
+
+    // 1. Presence of >=1 bpmn:StartEvent and >=1 bpmn:EndEvent
+    const startEvents = elements.filter((el: any) => el.type === 'bpmn:StartEvent');
+    const endEvents = elements.filter((el: any) => el.type === 'bpmn:EndEvent');
+
+    if (startEvents.length === 0) {
+      errors.push('Linter: El diagrama debe contener al menos un Evento de Inicio (StartEvent).');
+    }
+    if (endEvents.length === 0) {
+      errors.push('Linter: El diagrama debe contener al menos un Evento de Fin (EndEvent).');
+    }
+
+    // 2. Connection of incoming/outgoing flows for tasks/gateways (preventing zombie nodes)
+    elements.forEach((el: any) => {
+      const isTask = el.type && (el.type.endsWith('Task') || el.type === 'bpmn:Task');
+      const isGateway = el.type && (el.type.endsWith('Gateway') || el.type === 'bpmn:Gateway');
+
+      if (isTask || isGateway) {
+        const incomingCount = el.incoming ? el.incoming.length : 0;
+        const outgoingCount = el.outgoing ? el.outgoing.length : 0;
+
+        if (incomingCount === 0 || outgoingCount === 0) {
+          errors.push(`Linter: El nodo '${el.businessObject?.name || el.id}' (${el.type}) está desconectado o es un Nodo Zombie (requiere flujos entrantes y salientes).`);
+        }
+      }
+
+      // 3. Default flows for divergent Exclusive Gateways
+      if (el.type === 'bpmn:ExclusiveGateway') {
+        const outgoingCount = el.outgoing ? el.outgoing.length : 0;
+        if (outgoingCount > 1) {
+          const defaultFlow = el.businessObject?.default;
+          if (!defaultFlow) {
+            errors.push(`Linter: La compuerta exclusiva '${el.businessObject?.name || el.id}' es divergente y requiere un flujo por defecto (Default Flow).`);
+          }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error('Error running client linter:', err);
+  }
+
+  linterErrors.value = errors;
+  if (errors.length > 0) {
+    preFlightStatus.value = 'ERROR';
+    validationErrors.value = []; // Clear semantic errors to prevent visual clutter
+  }
+};
+
 const debouncedValidate = debounce(async () => {
   if (!modelerInstance) return;
+  
+  // Run client linter first
+  runClientLinter();
+  if (linterErrors.value.length > 0) {
+    preFlightStatus.value = 'ERROR';
+    return; // Block backend pre-flight request if linter fails
+  }
+
   preFlightStatus.value = 'PENDING';
   
   // Clear previous CA-46 highlights
@@ -2029,7 +2112,8 @@ defineExpose({
   showToast,
   zoomIn,
   zoomOut,
-  zoomFit
+  zoomFit,
+  linterErrors // @Traceability: US-005, CA-77
 });
 </script>
 

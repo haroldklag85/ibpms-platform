@@ -23,6 +23,13 @@ const mockClipboard = {
     isEmpty: vi.fn()
 };
 
+const mockElementRegistry = {
+    getAll: vi.fn().mockReturnValue([]),
+    filter: vi.fn().mockImplementation(function(fn: any) {
+        return mockElementRegistry.getAll().filter(fn);
+    })
+};
+
 vi.mock('bpmn-js/lib/Modeler', () => {
     return {
         default: class MockModeler {
@@ -44,6 +51,9 @@ vi.mock('bpmn-js/lib/Modeler', () => {
                 }
                 if (name === 'clipboard') {
                     return mockClipboard;
+                }
+                if (name === 'elementRegistry') {
+                    return mockElementRegistry;
                 }
                 return {
                     zoom: mockZoom,
@@ -69,6 +79,10 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
         mockClipboard.set = vi.fn();
         mockClipboard.clear = vi.fn();
         mockClipboard.isEmpty = vi.fn();
+        mockElementRegistry.getAll = vi.fn().mockReturnValue([]);
+        mockElementRegistry.filter = vi.fn().mockImplementation(function(fn: any) {
+            return mockElementRegistry.getAll().filter(fn);
+        });
         localStorage.clear();
     });
 
@@ -398,6 +412,105 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             wrapper.unmount();
         });
     });
+
+    // @Traceability: US-005, CA-77 Validación y Corrección en Caliente mediante Linter en Frontend
+    describe('Pruebas para CA-77 (Linter en Frontend)', () => {
+        it('Debe ejecutar el linter y detectar la ausencia de StartEvent y EndEvent', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const modeler = (window as any).__modelerInstance;
+            const elementRegistry = modeler.get('elementRegistry');
+
+            // Forzar que no retorne ningún StartEvent o EndEvent
+            vi.spyOn(elementRegistry, 'getAll').mockReturnValue([]);
+
+            // Buscar la suscripción a commandStack.changed en los mocks
+            const eventCall = modeler.on.mock.calls.find((call: any) => call[0] === 'commandStack.changed');
+            expect(eventCall).toBeDefined();
+            const eventCallback = eventCall[1];
+
+            // Ejecutar el callback
+            eventCallback();
+            await wrapper.vm.$nextTick();
+
+            // Debe levantar errores del linter y cambiar status a ERROR
+            expect(wrapper.vm.linterErrors).toContain('Linter: El diagrama debe contener al menos un Evento de Inicio (StartEvent).');
+            expect(wrapper.vm.linterErrors).toContain('Linter: El diagrama debe contener al menos un Evento de Fin (EndEvent).');
+            expect(wrapper.vm.preFlightStatus).toBe('ERROR');
+
+            wrapper.unmount();
+        });
+
+        it('Debe detectar nodos zombie (UserTask o Compuerta sin entrada o salida)', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const modeler = (window as any).__modelerInstance;
+            const elementRegistry = modeler.get('elementRegistry');
+
+            // Mock de un UserTask desconectado (Zombie)
+            const mockUserTask = {
+                type: 'bpmn:UserTask',
+                id: 'UserTask_Zombie',
+                incoming: [],
+                outgoing: [],
+                businessObject: { name: 'Tarea Zombie' }
+            };
+
+            vi.spyOn(elementRegistry, 'getAll').mockReturnValue([
+                { type: 'bpmn:StartEvent', incoming: [], outgoing: [1] },
+                { type: 'bpmn:EndEvent', incoming: [1], outgoing: [] },
+                mockUserTask
+            ]);
+
+            const eventCall = modeler.on.mock.calls.find((call: any) => call[0] === 'commandStack.changed');
+            const eventCallback = eventCall[1];
+
+            eventCallback();
+            await wrapper.vm.$nextTick();
+
+            expect(wrapper.vm.linterErrors).toContain("Linter: El nodo 'Tarea Zombie' (bpmn:UserTask) está desconectado o es un Nodo Zombie (requiere flujos entrantes y salientes).");
+            expect(wrapper.vm.preFlightStatus).toBe('ERROR');
+
+            wrapper.unmount();
+        });
+
+        it('Debe detectar pasarelas exclusivas divergentes sin flujo por defecto', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const modeler = (window as any).__modelerInstance;
+            const elementRegistry = modeler.get('elementRegistry');
+
+            // Mock de una pasarela exclusiva divergente sin default flow
+            const mockGateway = {
+                type: 'bpmn:ExclusiveGateway',
+                id: 'Gateway_Divergente',
+                incoming: [1],
+                outgoing: [2, 3],
+                businessObject: { name: 'Compuerta Divergente', default: null }
+            };
+
+            vi.spyOn(elementRegistry, 'getAll').mockReturnValue([
+                { type: 'bpmn:StartEvent', incoming: [], outgoing: [1] },
+                { type: 'bpmn:EndEvent', incoming: [2, 3], outgoing: [] },
+                mockGateway
+            ]);
+
+            const eventCall = modeler.on.mock.calls.find((call: any) => call[0] === 'commandStack.changed');
+            const eventCallback = eventCall[1];
+
+            eventCallback();
+            await wrapper.vm.$nextTick();
+
+            expect(wrapper.vm.linterErrors).toContain("Linter: La compuerta exclusiva 'Compuerta Divergente' es divergente y requiere un flujo por defecto (Default Flow).");
+            expect(wrapper.vm.preFlightStatus).toBe('ERROR');
+
+            wrapper.unmount();
+        });
+    });
 });
+
 
 

@@ -18,9 +18,11 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
     // SLA-First sorting (CA-01) + Impacto Masivo >= 8 (CA-17) + created_at desempate.
     // @Traceability(US="US-036", CA={"CA-23", "BUG-PG-CAST"}, DESC="Híbrido: Delegación In-Flight con Safe Postgres Casting para prevenir PSQLException en nulos")
     // MERGE: Se conserva soporte a List<assignees> (origin/DevDavid) y protección CAST de nulos nativos (HEAD).
+    // @Traceability: US-005, CA-78 Sandbox Multi-tenancy (Exclude sandbox_tenant from inbox)
     @Query(value = """
         SELECT * FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
+          AND w.tenant_id != 'sandbox_tenant'
           AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
           AND (
             (CAST(:view AS VARCHAR) = 'POOL' AND w.assignee IS NULL) OR
@@ -35,6 +37,7 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         countQuery = """
         SELECT COUNT(*) FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
+          AND w.tenant_id != 'sandbox_tenant'
           AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
           AND (
             (CAST(:view AS VARCHAR) = 'POOL' AND w.assignee IS NULL) OR
@@ -54,6 +57,7 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
     @Query(value = """
         SELECT * FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
+          AND w.tenant_id != 'sandbox_tenant'
           AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
           AND (CAST(:assignee AS VARCHAR) IS NULL OR w.assignee = CAST(:assignee AS VARCHAR) OR w.assignee IS NULL) 
           AND w.source_system = :sourceSystem
@@ -65,6 +69,7 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
         countQuery = """
         SELECT COUNT(*) FROM ibpms_workdesk_projection w 
         WHERE w.tenant_id = :tenantId 
+          AND w.tenant_id != 'sandbox_tenant'
           AND (CAST(:search AS VARCHAR) IS NULL OR w.title ILIKE CONCAT('%%', CAST(:search AS VARCHAR), '%%')) 
           AND (CAST(:assignee AS VARCHAR) IS NULL OR w.assignee = CAST(:assignee AS VARCHAR) OR w.assignee IS NULL)
           AND w.source_system = :sourceSystem
@@ -79,18 +84,19 @@ public interface WorkdeskProjectionRepository extends JpaRepository<WorkdeskProj
 
     // CA-22, CA-29: Faceted Filters & Counters
     @Query("SELECT new com.ibpms.poc.application.dto.FacetCountDto(w.status, COUNT(w)) " +
-           "FROM WorkdeskProjectionEntity w WHERE w.tenantId = :tenantId GROUP BY w.status")
+           "FROM WorkdeskProjectionEntity w WHERE w.tenantId = :tenantId AND w.tenantId != 'sandbox_tenant' GROUP BY w.status")
     java.util.List<com.ibpms.poc.application.dto.FacetCountDto> countByStatusPerTenant(@Param("tenantId") String tenantId);
 
     // @Traceability: US-001, CA-29 Contadores de Facetas
     @Query("SELECT new com.ibpms.poc.application.dto.FacetCountDto(w.sourceSystem, COUNT(w)) " +
-           "FROM WorkdeskProjectionEntity w WHERE w.tenantId = :tenantId GROUP BY w.sourceSystem")
+           "FROM WorkdeskProjectionEntity w WHERE w.tenantId = :tenantId AND w.tenantId != 'sandbox_tenant' GROUP BY w.sourceSystem")
     java.util.List<com.ibpms.poc.application.dto.FacetCountDto> countBySourceSystemPerTenant(@Param("tenantId") String tenantId);
 
     // @Traceability(US = "US-001", CA = {"CA-16", "CA-21", "CA-28"})
     @Query(value = """
         SELECT * FROM ibpms_workdesk_projection w
         WHERE w.tenant_id = :tenantId
+          AND w.tenant_id != 'sandbox_tenant'
           AND w.assignee IS NULL
           AND (CAST(:skills AS VARCHAR[]) IS NULL OR w.category_tag = ANY(CAST(:skills AS VARCHAR[])))
         ORDER BY w.impact_level DESC, w.sla_expiration_date ASC NULLS LAST

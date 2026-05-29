@@ -399,15 +399,32 @@
         </div>
 
         <!-- Monaco Editor Container -->
-        <div class="flex-1 relative" :class="{'border-4 border-red-500 rounded-lg shadow-inner': zodParseError}">
-           <VueMonacoEditor 
-             v-model:value="computedCode"
-             :language="editorLanguage"
-             theme="vs-dark"
-             :options="monacoOptions"
-             @mount="onMonacoMount"
-             class="absolute inset-0"
-           />
+        <div class="flex-1 relative flex flex-col min-h-0" :class="{'border-4 border-red-500 rounded-lg shadow-inner': zodParseError}">
+           <div class="flex-1 relative">
+             <VueMonacoEditor 
+               v-model:value="computedCode"
+               :language="editorLanguage"
+               theme="vs-dark"
+               :options="monacoOptions"
+               @mount="onMonacoMount"
+               class="absolute inset-0"
+             />
+           </div>
+           
+           <!-- CA-84 Panel de Errores de Sintaxis Monaco -->
+           <div v-if="editorErrors.length > 0" id="editorProblemsPanel" class="editor-problems-panel bg-[#252526] border-t border-[#3e3e42] p-4 text-xs font-mono text-red-400 shrink-0 max-h-[180px] overflow-y-auto z-30">
+             <div class="flex items-center justify-between text-gray-400 font-bold uppercase tracking-wider mb-2 text-[10px]">
+               <span>⚠️ Panel de Diagnósticos (CA-84)</span>
+               <span class="text-red-500 font-bold">{{ editorErrors.length }} Error(es)</span>
+             </div>
+             <div v-for="(err, idx) in editorErrors" :key="idx" class="flex gap-2 py-1 items-start">
+               <span class="text-red-500 font-bold">●</span>
+               <span class="flex-1">
+                 <span v-if="err.line" class="text-yellow-500 font-bold">[Línea {{ err.line }}]:</span> 
+                 {{ err.message }}
+               </span>
+             </div>
+           </div>
         </div>
       </aside>
 
@@ -975,6 +992,7 @@ const {
   bpmnCoherenceResults,
   formKey,
   zodParseError,
+  editorErrors,
   aiPrompt,
   isScanningAi,
   fuzzerErrors,
@@ -1471,7 +1489,31 @@ const onCamundaVariableChange = (e: Event) => {
 
 declare const monaco: any;
 
+const editorInstance = ref<any>(null);
+const monacoInstance = ref<any>(null);
+
+// @Traceability: US-003 - CA-84
+watch([editorErrors, editorInstance, monacoInstance], () => {
+  if (editorInstance.value && monacoInstance.value) {
+    const model = editorInstance.value.getModel();
+    if (!model) return;
+    
+    const markers = editorErrors.value.map((err: any) => ({
+      startLineNumber: err.line || 1,
+      startColumn: 1,
+      endLineNumber: err.line || 1,
+      endColumn: 1000,
+      message: err.message,
+      severity: monacoInstance.value.MarkerSeverity.Error
+    }));
+    
+    monacoInstance.value.editor.setModelMarkers(model, 'syntax-checker', markers);
+  }
+}, { deep: true, immediate: true });
+
 const onMonacoMount = (_editorIns: any, monacoIns: any) => {
+  editorInstance.value = _editorIns;
+  monacoInstance.value = monacoIns;
   // Intellisense Injection CA-115
   monacoIns.languages.typescript.typescriptDefaults.setCompilerOptions({
       target: monacoIns.languages.typescript.ScriptTarget.ESNext,

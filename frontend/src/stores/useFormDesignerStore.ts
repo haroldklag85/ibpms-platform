@@ -7,6 +7,50 @@ import { useAuthStore } from '@/stores/authStore';
 // @ts-ignore
 import jexl from 'jexl';
 
+// @Traceability: US-003 - CA-84
+const checkSintaxisDelimitadores = (code: string): { success: boolean; message: string; line?: number } => {
+  const stack: { char: string; index: number; line: number }[] = [];
+  let currentLine = 1;
+  for (let i = 0; i < code.length; i++) {
+    const char = code[i];
+    if (char === '\n') {
+      currentLine++;
+    }
+    if (char === '(' || char === '{' || char === '[') {
+      stack.push({ char, index: i, line: currentLine });
+    } else if (char === ')' || char === '}' || char === ']') {
+      if (stack.length === 0) {
+        return {
+          success: false,
+          message: `Caracter de cierre inesperado '${char}'`,
+          line: currentLine
+        };
+      }
+      const top = stack.pop()!;
+      if (
+        (char === ')' && top.char !== '(') ||
+        (char === '}' && top.char !== '{') ||
+        (char === ']' && top.char !== '[')
+      ) {
+        return {
+          success: false,
+          message: `Se esperaba un caracter de cierre para '${top.char}' de la línea ${top.line}, pero se encontró '${char}'`,
+          line: currentLine
+        };
+      }
+    }
+  }
+  if (stack.length > 0) {
+    const top = stack[stack.length - 1];
+    return {
+      success: false,
+      message: `Delimitador sin cerrar: '${top.char}' abierto en la línea ${top.line}`,
+      line: top.line
+    };
+  }
+  return { success: true, message: '' };
+};
+
 export const useFormDesignerStore = defineStore('formDesigner', () => {
   // State
   const canvasFields = ref<any[]>([]);
@@ -22,6 +66,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const bpmnCoherenceResults = ref<any[]>([]);
   const formKey = ref('');
   const zodParseError = ref<boolean | string>(false);
+  const editorErrors = ref<{ message: string, line?: number }[]>([]);
   const dictionaryItems = ref<any[]>([]);
   const approvedConnectors = ref<string[]>([]);
   
@@ -427,16 +472,31 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const attemptTabChange = (targetTab: 'TEMPLATE' | 'SCRIPT' | 'ZOD' | 'STYLE' | 'JSON') => {
     if (activeCodeTab.value === 'JSON') {
         try {
+            editorErrors.value = [];
             const parsed = JSON.parse(localJsonCode.value || JSON.stringify(canvasFields.value));
             canvasFields.value = parsed;
             const validation = validateSchemaSecurity();
             if (!validation.success) {
                 zodParseError.value = true;
+                editorErrors.value = [{ message: 'BARRICADA JSON: ' + validation.message, line: 1 }];
                 return { success: false, message: 'BARRICADA JSON: ' + validation.message };
             }
             zodParseError.value = false;
+            editorErrors.value = [];
         } catch (e: any) {
             zodParseError.value = true;
+            let line: number | undefined;
+            const lineMatch = e.message.match(/at line (\d+)/i) || e.message.match(/position (\d+)/i);
+            if (lineMatch) {
+              if (e.message.includes('position')) {
+                const pos = parseInt(lineMatch[1], 10);
+                const codeUpToPos = (localJsonCode.value || '').substring(0, pos);
+                line = codeUpToPos.split('\n').length;
+              } else {
+                line = parseInt(lineMatch[1], 10);
+              }
+            }
+            editorErrors.value = [{ message: 'BARRICADA JSON: Estructura malformada. ' + e.message, line }];
             return { success: false, message: 'BARRICADA JSON: Estructura malformada. ' + e.message };
         }
     } else if (targetTab === 'JSON') {
@@ -1093,6 +1153,13 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
       } 
       else if (activeCodeTab.value === 'ZOD') {
         try {
+          editorErrors.value = [];
+          const delimCheck = checkSintaxisDelimitadores(newCode);
+          if (!delimCheck.success) {
+            zodParseError.value = delimCheck.message;
+            editorErrors.value = [{ message: delimCheck.message, line: delimCheck.line }];
+            return;
+          }
           // @Traceability: US-003 - CA-78
           // 1. Parse grid arrays (field_array) first
           const gridRegex = /^\s*([a-zA-Z0-9_]+):\s*z\.array\(z\.object\(\{([\s\S]*?)\}\)\)(.*?)(?:\/\/\s*\[([^\]]+)\])?\s*$/gm;
@@ -1218,9 +1285,17 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
           if (parseCount > 0) {
               canvasFields.value = currentFields;
               zodParseError.value = false;
+              editorErrors.value = [];
+          } else {
+              zodParseError.value = 'No se detectó un esquema Zod válido.';
+              editorErrors.value = [{ message: 'No se detectó un esquema Zod válido o está mal formateado.', line: 1 }];
           }
-        } catch (err) {
-          zodParseError.value = true;
+        } catch (err: any) {
+          zodParseError.value = err.message || true;
+          editorErrors.value = [{
+            message: err.message || 'Sintaxis fallida o Regex roto',
+            line: 1
+          }];
         }
       }
     }
@@ -1240,6 +1315,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     bpmnCoherenceResults,
     formKey,
     zodParseError,
+    editorErrors,
     aiPrompt,
     isScanningAi,
     fuzzerErrors,

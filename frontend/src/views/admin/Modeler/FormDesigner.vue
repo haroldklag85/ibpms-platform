@@ -938,7 +938,7 @@
 </template>
 
 <script setup lang="ts">
-// @Traceability: US-003 - CA-27, CA-30, CA-70, CA-71, CA-74, CA-75, CA-77, CA-83, CA-85
+// @Traceability: US-003 - CA-27, CA-30, CA-70, CA-71, CA-74, CA-75, CA-77, CA-79, CA-83, CA-85
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';

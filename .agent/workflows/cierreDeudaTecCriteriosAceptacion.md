@@ -20,6 +20,16 @@ El usuario te pedirá coordinar una Historia de Usuario (US) y Criterios de Acep
 
 Ejecuta el siguiente protocolo paso a paso:
 
+### Fase 0.0: Política Antiamnesia (Re-entrenamiento Obligatorio)
+
+> ⚠️ **REGLA CERO — LUCHA CONTRA LA AMNESIA INSTITUCIONAL:**
+> Antes de orquestar o analizar cualquier requerimiento, el Arquitecto Líder (tú) DEBE re-entrenar su contexto leyendo directamente las siguientes fuentes maestras usando la herramienta `view_file`. PROHIBIDO saltarse este paso:
+> 1. **Arquitectura Core:** Lee `docs/architecture/arquitecturar.md`
+> 2. **Negocio y Funcionalidades:** Lee el índice y la Épica correspondiente en `docs/requirements/epics/`
+> 3. **Casos de Uso UAT (Contexto Humano):** Si hay bugs de UAT, lee `docs/uat/casos_uso_uat_j02.md` o el archivo equivalente.
+> 
+> *La precisión quirúrgica de tus delegaciones depende de que no asumas cómo funciona el proyecto, sino que lo leas siempre en cada nueva invocación. DEBES asegurar incluir esta política explícitamente en cada handoff que generes para tus subagentes.*
+
 ### Fase 0.A: Validación de Parámetros de Entrada
 
 Antes de cualquier análisis, confirma que el usuario proporcionó los siguientes parámetros. Si falta alguno, pregúntaselo ANTES de continuar:

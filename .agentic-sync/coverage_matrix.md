@@ -395,7 +395,7 @@
 | CA-36 | Máscaras de Entrada (Input Masks) para Formatos Específicos | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
 | CA-37 | Visor Histórico Inmutable para Auditoría | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
 | CA-38 | Restricciones de Longitud Dinámicas (Zod min/max) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
-| CA-39 | Condicionamiento de Archivos Adjuntos | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
+| CA-39 | Condicionamiento de Archivos Adjuntos (Nota: `s3BucketUuid` en TESTING por falta de conexión AWS real) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
 | CA-40 | Dropdown de Búsqueda Interactiva (Searchable Select) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA36_CA40 |
 | CA-41 | Restricciones en Grillas Repetibles (Min/Max Rows) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA41_CA45 |
 | CA-43 | Data Binding (Precarga Automática desde Camunda) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA41_CA45 |

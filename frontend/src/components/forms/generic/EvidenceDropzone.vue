@@ -139,7 +139,8 @@ const uploadFile = async (item: UploadedFile) => {
     formData.append('file', item.file);
     
     try {
-        const res = await integrationStore.post('/api/v1/documents/upload-temp', formData, {
+        // @implNote Traceability: [DevDavid Merge] - Fix path duplicado (BUG-S7-001-HOTFIX)
+        const res = await integrationStore.post('/documents/upload-temp', formData, {
             headers: { 
                 'Content-Type': 'multipart/form-data',
                 'X-Task-Id': store.taskId 

@@ -217,7 +217,8 @@ const warningRateStatus = computed(() => {
 
 const fetchSummary = async () => {
     try {
-        const res = await integrationStore.get('/api/v1/admin/queues/dlq/summary');
+        // @implNote Traceability: [DevDavid Merge] FIX path duplicado /api/v1 (BUG-S7-001-HOTFIX)
+        const res = await integrationStore.get('/admin/queues/dlq/summary');
         summary.value = res.data;
     } catch {
         // Fallback or leave as 0
@@ -228,7 +229,8 @@ const fetchDLQ = async () => {
     isLoading.value = true;
     try {
         await fetchSummary();
-        const res = await integrationStore.get('/api/v1/admin/queues/dlq/messages?page=1&size=50');
+        // @implNote Traceability: [DevDavid Merge] FIX path duplicado /api/v1 (BUG-S7-001-HOTFIX)
+        const res = await integrationStore.get('/admin/queues/dlq/messages?page=1&size=50');
         messages.value = res.data;
     } catch (e: any) {
         messages.value = [];
@@ -256,7 +258,8 @@ const retryAll = () => { isRetryModalOpen.value = true; };
 
 const executePurge = async () => {
     try {
-        await integrationStore.delete('/api/v1/admin/queues/dlq/purge', {
+        // @implNote Traceability: [DevDavid Merge] FIX path duplicado /api/v1 (BUG-S7-001-HOTFIX)
+        await integrationStore.delete('/admin/queues/dlq/purge', {
             data: { justification: purgeJustification.value }
         });
         isPurgeModalOpen.value = false;
@@ -268,7 +271,8 @@ const executePurge = async () => {
 
 const executeRetry = async () => {
     try {
-        await integrationStore.post('/api/v1/admin/queues/dlq/retry');
+        // @implNote Traceability: [DevDavid Merge] FIX path duplicado /api/v1 (BUG-S7-001-HOTFIX)
+        await integrationStore.post('/admin/queues/dlq/retry');
         isRetryModalOpen.value = false;
         fetchDLQ();
     } catch (e) {

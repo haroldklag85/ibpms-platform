@@ -1,0 +1,82 @@
+diff --git a/frontend/src/services/apiClient.ts b/frontend/src/services/apiClient.ts
+index e548ab0..1cd0cf5 100644
+--- a/frontend/src/services/apiClient.ts
++++ b/frontend/src/services/apiClient.ts
+@@ -158,6 +158,10 @@ apiClient.interceptors.response.use(
+         }
+ 
+         if (error.response && error.response.status === 401) {
++            const url = error.config?.url || '';
++            if (url.includes('/auth/')) {
++                return Promise.reject(error);
++            }
+             console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
+             const event = new CustomEvent('global-error-dispatch', { detail: { type: 'SESSION_EXPIRED' } });
+             window.dispatchEvent(event);
+diff --git a/frontend/src/components/auth/BreakGlassLogin.vue b/frontend/src/components/auth/BreakGlassLogin.vue
+index 99a531e..4f53589 100644
+--- a/frontend/src/components/auth/BreakGlassLogin.vue
++++ b/frontend/src/components/auth/BreakGlassLogin.vue
+@@ -46,6 +46,7 @@
+         <textarea 
+           v-model="emergencyForm.justification"
+           required 
+           rows="3"
++          data-testid="justification-input"
+           placeholder="Describa el motivo de la activación del protocolo (Ej: Caída masiva de EntraID / Redis Outage)..."
+           class="w-full bg-white border-2 border-red-100 rounded-xl p-3 text-xs font-medium text-gray-900 focus:border-red-500 focus:ring-0 transition-all placeholder:text-red-200 resize-none"
+         ></textarea>
+@@ -71,9 +72,9 @@
+-    <div v-if="error" data-testid="login-error-banner" class="mt-4 p-3 bg-red-100 border-l-4 border-red-600 rounded flex items-start gap-3">
+-       <span class="material-symbols-outlined text-red-600 text-[18px]">error</span>
+-       <p class="text-[11px] text-red-800 font-bold leading-tight">{{ error }}</p>
+-    </div>
++    <div v-if="error" data-testid="login-error-banner" :class="['mt-4 p-3 border-l-4 rounded flex items-start gap-3', bannerStyles.container]">
++       <span class="material-symbols-outlined text-[18px]" :class="bannerStyles.icon">error</span>
++       <p class="text-[11px] font-bold leading-tight" :class="bannerStyles.text">{{ error }}</p>
++    </div>
+   </div>
+ </template>
+ 
+ <script setup lang="ts">
+-import { ref } from 'vue';
++import { ref, computed } from 'vue';
+ import { useAuthStore } from '@/stores/authStore';
+ import { useRouter } from 'vue-router';
+ import apiClient from '@/services/apiClient';
+@@ -87,6 +88,32 @@
+ const loading = ref(false);
+ const error = ref('');
+ 
++const bannerStyles = computed(() => {
++  const err = error.value.toLowerCase();
++  if (err.includes('no existe') || err.includes('cuenta asociada')) {
++    return {
++      container: 'bg-amber-100 border-amber-600',
++      text: 'text-amber-800',
++      icon: 'text-amber-600'
++    };
++  } else if (err.includes('desactivada') || err.includes('deshabilitada')) {
++    return {
++      container: 'bg-gray-100 border-gray-600',
++      text: 'text-gray-800',
++      icon: 'text-gray-600'
++    };
++  } else if (err.includes('conexión') || err.includes('backend esté activo') || err.includes('caído')) {
++    return {
++      container: 'bg-red-950 border-red-800',
++      text: 'text-red-200',
++      icon: 'text-red-400'
++    };
++  } else {
++    return {
++      container: 'bg-red-100 border-red-600',
++      text: 'text-red-800',
++      icon: 'text-red-600'
++    };
++  }
++});
++
+ const emergencyForm = ref({
+   email: '',
+   password: '',

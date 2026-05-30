@@ -1,0 +1,11 @@
+--- frontend/src/services/apiClient.ts
++++ frontend/src/services/apiClient.ts
+@@ -160,4 +160,8 @@
+         if (error.response && error.response.status === 401) {
++            const url = error.config?.url || '';
++            if (url.includes('/auth/emergency-login') || url.includes('/auth/login')) {
++                return Promise.reject(error);
++            }
+             console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
+             const event = new CustomEvent('global-error-dispatch', { detail: { type: 'SESSION_EXPIRED' } });
+             window.dispatchEvent(event);

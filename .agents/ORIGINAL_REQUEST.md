@@ -95,6 +95,31 @@ Asegurar la amnesia institucional inversa agregando la etiqueta obligatoria de t
 
 ## Acceptance Criteria
 
+## Follow-up — 2026-05-25T20:25:15-05:00
+
+# Teamwork Project Prompt
+
+> Status: Launched
+> Goal: Craft prompt → get user approval → delegate to teamwork_preview
+
+Resolver la deuda técnica CA-07 (Gobernanza Estricta de Despliegue) mediante TDD. Se debe construir una prueba automatizada que demuestre la falta de barreras lógicas al desplegar un proceso BPMN ambiguo, y posteriormente implementar las reglas duras en el backend para bloquear dicho despliegue.
+
+Working directory: `C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform`
+Integrity mode: development
+
+## Requirements
+
+### R1. Creación de Prueba TDD (Fase Roja)
+Desarrollar una prueba de integración en el backend Java (ej. `DeploymentGovernanceIntegrationTest.java` o testeando `PreFlightAnalyzerService`) que simule la validación de un XML BPMN sintácticamente correcto, pero lógicamente ambiguo (por ejemplo: compuertas lógicas sin un flujo por defecto definido, o flujos divergentes sin convergencia clara). La prueba debe exigir que el motor rechace el despliegue con un error.
+
+### R2. Refuerzo de Reglas de Negocio (Fase Verde)
+Modificar el validador (ej. `PreFlightAnalyzerService` o el adaptador de Camunda) para detectar estas fallas topológicas y catalogarlas obligatoriamente como Errores Bloqueantes (`Hard-Stop`) y no como simples advertencias, impidiendo su paso al entorno productivo.
+
+### R3. Aplicación de LEY GLOBAL 3
+Asegurar la amnesia institucional inversa agregando la etiqueta obligatoria de trazabilidad en cada clase modificada: `// @Traceability: US-005, CA-07 Gobernanza Estricta de Despliegue`.
+
+## Acceptance Criteria
+
 ### Verificación Automatizada (TDD)
 - [ ] La compilación de pruebas finaliza sin errores (`cd backend/ibpms-core && mvn test-compile`).
 - [ ] La ejecución de la prueba específica de CA-07 pasa de forma nativa demostrando que el despliegue ambiguo es rechazado y no lanzado a base de datos.
@@ -104,3 +129,31 @@ Asegurar la amnesia institucional inversa agregando la etiqueta obligatoria de t
 ## Follow-up — 2026-05-26T01:36:15Z
 
 El usuario acaba de modificar el archivo `CamundaBpmnValidationAdapter.java` agregando la lógica de validación (Hard-Stop) para CA-07 y la etiqueta de trazabilidad requerida. Solo necesitas enfocarte en construir y ejecutar la prueba TDD (`DeploymentGovernanceIntegrationTest.java`) para asegurar que el despliegue es rechazado. Debería pasar directamente (Verde) gracias a los cambios del usuario.
+
+## Follow-up — 2026-05-30T00:47:14Z
+
+Resolve the recurring login bug in the iBPMS authentication and Break-Glass flow, ensuring that incorrect credentials, disabled user accounts, and connection issues provide proper and styled feedback to the user, and ensure the Playwright E2E tests pass successfully.
+
+Working directory: C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform
+Integrity mode: development
+
+## Requirements
+
+### R1. Fix Promise Hanging on 401 Auth Errors
+Modify the Axios response interceptor in `frontend/src/services/apiClient.ts` to bypass 401 interception/suspension for credential-checking endpoints (such as `/auth/login`, `/auth/emergency-login`, `/auth/break-glass`, `/auth/change-password`). These should return `Promise.reject(error)` so that caller `catch` blocks can execute.
+
+### R2. Handle Justification Field in E2E Tests and Form
+Add `data-testid="justification-input"` to the justification textarea in `frontend/src/components/auth/BreakGlassLogin.vue`. Update the Playwright E2E tests in `frontend/e2e/emergency-login-feedback.spec.ts` (ESC-01, ESC-02, ESC-03, ESC-04, ESC-05, ESC-06, ESC-07) to fill this field with a valid non-empty string before submitting the form.
+
+### R3. Dynamic Error Banner Styling
+Implement dynamic styling/colors on the error banner in `BreakGlassLogin.vue` based on the error code or type to match the visual expectations of the test suite:
+- Amber (`bg-amber-50 border-amber-500 text-amber-800`) when user does not exist (`USER_NOT_FOUND`).
+- Red (`bg-red-50 border-red-600 text-red-800`) when password is incorrect (`INVALID_PASSWORD`).
+- Gray (`bg-gray-100 border-gray-400 text-gray-700`) when account is disabled (`ACCOUNT_DISABLED`).
+- Dark Red (`bg-red-900 border-red-700 text-red-50`) for network connection failures.
+
+## Acceptance Criteria
+
+### E2E Test Suite Pass
+- [ ] Running `npx playwright test e2e/emergency-login-feedback.spec.ts` from `ibpms-platform/frontend` succeeds with 7/7 tests passing.
+- [ ] No manual browser intervention is required for the tests to pass.

@@ -8,28 +8,33 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
         await page.goto(LOGIN_URL);
         await page.fill('[data-testid="email-input"]', 'no-existe@alpha.com');
         await page.fill('[data-testid="password-input"]', 'cualquiera');
+        await page.fill('[data-testid="justification-input"]', 'some justification string');
         await page.click('[data-testid="login-submit"]');
         
         const banner = page.locator('[data-testid="login-error-banner"]');
         await expect(banner).toBeVisible({ timeout: 5000 });
         await expect(banner).toContainText('No existe una cuenta asociada');
+        await expect(banner).toHaveClass(/bg-amber-50/);
     });
 
     test('ESC-02: Muestra banner rojo cuando la contraseña es incorrecta', async ({ page }) => {
         await page.goto(LOGIN_URL);
         await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
         await page.fill('[data-testid="password-input"]', 'WrongPassword999');
+        await page.fill('[data-testid="justification-input"]', 'some justification string');
         await page.click('[data-testid="login-submit"]');
         
         const banner = page.locator('[data-testid="login-error-banner"]');
         await expect(banner).toBeVisible({ timeout: 5000 });
         await expect(banner).toContainText('contraseña proporcionada es incorrecta');
+        await expect(banner).toHaveClass(/bg-red-50/);
     });
 
     test('ESC-03: Login exitoso redirige a /workdesk sin banner', async ({ page }) => {
         await page.goto(LOGIN_URL);
         await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
         await page.fill('[data-testid="password-input"]', 'Test123!');
+        await page.fill('[data-testid="justification-input"]', 'some justification string');
         await page.click('[data-testid="login-submit"]');
         
         await expect(page).toHaveURL(/\/(workdesk|dashboard)/, { timeout: 10000 });
@@ -47,11 +52,13 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
         await page.goto(LOGIN_URL);
         await page.fill('[data-testid="email-input"]', 'analista_n1@alpha.com');
         await page.fill('[data-testid="password-input"]', 'Test123!');
+        await page.fill('[data-testid="justification-input"]', 'some justification string');
         await page.click('[data-testid="login-submit"]');
         
         const banner = page.locator('[data-testid="login-error-banner"]');
         await expect(banner).toBeVisible({ timeout: 5000 });
         await expect(banner).toContainText('cuenta de usuario está desactivada');
+        await expect(banner).toHaveClass(/bg-gray-100/);
     });
 
     test('ESC-05: El banner se limpia al reintentar', async ({ page }) => {
@@ -60,6 +67,7 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
         // Primer intento fallido
         await page.fill('[data-testid="email-input"]', 'no-existe@alpha.com');
         await page.fill('[data-testid="password-input"]', 'x');
+        await page.fill('[data-testid="justification-input"]', 'some justification string');
         await page.click('[data-testid="login-submit"]');
         
         const banner = page.locator('[data-testid="login-error-banner"]');
@@ -68,6 +76,7 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
         // Segundo intento exitoso
         await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
         await page.fill('[data-testid="password-input"]', 'Test123!');
+        await page.fill('[data-testid="justification-input"]', 'some justification string');
         await page.click('[data-testid="login-submit"]');
         
         await expect(page).toHaveURL(/\/(workdesk|dashboard)/, { timeout: 10000 });
@@ -77,6 +86,7 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
         await page.goto(LOGIN_URL);
         await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
         await page.fill('[data-testid="password-input"]', 'WrongPassword999');
+        await page.fill('[data-testid="justification-input"]', 'some justification string');
         await page.click('[data-testid="login-submit"]');
         
         const banner = page.locator('[data-testid="login-error-banner"]');
@@ -98,11 +108,13 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
         await page.goto(LOGIN_URL);
         await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
         await page.fill('[data-testid="password-input"]', 'Test123!');
+        await page.fill('[data-testid="justification-input"]', 'some justification string');
         await page.click('[data-testid="login-submit"]');
         
         const banner = page.locator('[data-testid="login-error-banner"]');
         await expect(banner).toBeVisible({ timeout: 5000 });
         await expect(banner).toContainText('Error de conexión con el servidor. Verifique que el backend esté activo.');
+        await expect(banner).toHaveClass(/bg-red-900/);
     });
 
 });

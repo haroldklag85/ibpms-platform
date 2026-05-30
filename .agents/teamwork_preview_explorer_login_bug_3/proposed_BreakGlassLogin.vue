@@ -69,8 +69,8 @@
       </button>
     </form>
 
-    <div v-if="error" data-testid="login-error-banner" :class="['mt-4 p-3 border-l-4 rounded flex items-start gap-3', errorClasses]">
-       <span class="material-symbols-outlined text-[18px]">error</span>
+    <div v-if="error" data-testid="login-error-banner" :class="['mt-4 p-3 border-l-4 rounded flex items-start gap-3', bannerClasses]">
+       <span :class="['material-symbols-outlined text-[18px]', iconClasses]">error</span>
        <p class="text-[11px] font-bold leading-tight">{{ error }}</p>
     </div>
   </div>
@@ -94,17 +94,36 @@ const emergencyForm = ref({
   justification: ''
 });
 
-const errorClasses = computed(() => {
-  if (errorCode.value === 'USER_NOT_FOUND') {
-    return 'bg-amber-50 border-amber-500 text-amber-800';
-  } else if (errorCode.value === 'INVALID_PASSWORD') {
-    return 'bg-red-50 border-red-600 text-red-800';
-  } else if (errorCode.value === 'ACCOUNT_DISABLED') {
-    return 'bg-gray-100 border-gray-400 text-gray-700';
-  } else if (errorCode.value === 'NETWORK_ERROR') {
-    return 'bg-red-900 border-red-700 text-red-50';
+const bannerClasses = computed(() => {
+  const errStr = error.value;
+  const code = errorCode.value;
+  
+  if (code === 'USER_NOT_FOUND' || errStr.includes('No existe una cuenta asociada')) {
+    return 'bg-amber-100 border-amber-600 text-amber-800';
   }
-  return 'bg-red-50 border-red-600 text-red-800';
+  if (code === 'ACCOUNT_DISABLED' || errStr.includes('desactivada') || errStr.includes('deshabilitada')) {
+    return 'bg-gray-100 border-gray-600 text-gray-800';
+  }
+  if (code === 'NETWORK_ERROR' || errStr.includes('Error de conexión con el servidor')) {
+    return 'bg-red-900 border-red-950 text-red-100';
+  }
+  return 'bg-red-100 border-red-600 text-red-800';
+});
+
+const iconClasses = computed(() => {
+  const errStr = error.value;
+  const code = errorCode.value;
+  
+  if (code === 'USER_NOT_FOUND' || errStr.includes('No existe una cuenta asociada')) {
+    return 'text-amber-600';
+  }
+  if (code === 'ACCOUNT_DISABLED' || errStr.includes('desactivada') || errStr.includes('deshabilitada')) {
+    return 'text-gray-600';
+  }
+  if (code === 'NETWORK_ERROR' || errStr.includes('Error de conexión con el servidor')) {
+    return 'text-red-400';
+  }
+  return 'text-red-600';
 });
 
 const handleEmergencyLogin = async () => {
@@ -124,16 +143,11 @@ const handleEmergencyLogin = async () => {
       router.push('/workdesk');
     } else {
       error.value = 'Respuesta de servidor inválida.';
-      errorCode.value = 'INVALID_RESPONSE';
     }
   } catch (err: any) {
     console.error('Error Break-Glass:', err);
     error.value = err.response?.data?.message || 'Error de conexión con el servidor. Verifique que el backend esté activo.';
-    if (!err.response || err.code === 'ERR_NETWORK') {
-      errorCode.value = 'NETWORK_ERROR';
-    } else {
-      errorCode.value = err.response?.data?.code || '';
-    }
+    errorCode.value = err.response?.data?.code || (err.response ? '' : 'NETWORK_ERROR');
   } finally {
     loading.value = false;
   }

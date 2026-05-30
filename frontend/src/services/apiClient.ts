@@ -158,6 +158,14 @@ apiClient.interceptors.response.use(
         }
 
         if (error.response && error.response.status === 401) {
+            const url = error.config?.url || '';
+            const isCredentialCheck = url.includes('/auth/login') || 
+                                      url.includes('/auth/emergency-login') || 
+                                      url.includes('/auth/break-glass') || 
+                                      url.includes('/auth/change-password');
+            if (isCredentialCheck) {
+                return Promise.reject(error);
+            }
             console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
             const event = new CustomEvent('global-error-dispatch', { detail: { type: 'SESSION_EXPIRED' } });
             window.dispatchEvent(event);

@@ -1,9 +1,9 @@
 package com.ibpms.poc.domain.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
-@ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+// @Traceability: US-003 - ADR-001 - Pure Domain Exception
+@Traceability(US = "US-003", CA = {"CA-91"})
 public class TooManyRequestsException extends RuntimeException {
     public TooManyRequestsException(String message) {
         super(message);

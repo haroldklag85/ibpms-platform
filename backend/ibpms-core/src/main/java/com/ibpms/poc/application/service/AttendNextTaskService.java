@@ -10,7 +10,7 @@ import com.ibpms.poc.application.port.in.AttendNextTaskUseCase;
 import com.ibpms.poc.application.port.out.TaskSkipPort;
 import com.ibpms.poc.application.port.out.UserPort;
 import com.ibpms.poc.application.port.out.WorkdeskProjectionPort;
-import com.ibpms.poc.application.ports.in.UpdateFeatureToggleUseCase;
+import com.ibpms.poc.application.port.in.UpdateFeatureToggleUseCase;
 import com.ibpms.poc.application.port.out.AuditLogPort;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
 import com.ibpms.poc.infrastructure.jpa.entity.TaskSkipEntity;

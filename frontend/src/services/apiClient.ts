@@ -20,6 +20,9 @@ apiClient.interceptors.request.use(
         if (authStore.token && config.headers) {
             config.headers.Authorization = `Bearer ${authStore.token}`;
         }
+        if (authStore.activeRole && config.headers) {
+            config.headers['X-Active-Role'] = authStore.activeRole;
+        }
         // @Traceability: US-038 - CA-09 (Trazabilidad Quirúrgica)
         if (config.headers && !config.headers['X-Correlation-ID']) {
             config.headers['X-Correlation-ID'] = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -50,8 +53,9 @@ apiClient.interceptors.response.use(
         
         const config = error.config as InternalAxiosRequestConfig & { _retryCount?: number };
         
-        // J-04: Optimistic UI / Backoff Exponencial para 429 y 503
-        if (config && error.response && [429, 503].includes(error.response.status)) {
+        // J-04: Optimistic UI / Backoff Exponencial para 429, 502 y 503
+        // @Traceability: US-003 - ADR-014 - Reintento de 502
+        if (config && error.response && [429, 502, 503].includes(error.response.status)) {
             config._retryCount = config._retryCount || 0;
             if (config._retryCount < 3) {
                 config._retryCount += 1;

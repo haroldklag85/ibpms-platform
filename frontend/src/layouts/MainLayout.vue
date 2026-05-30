@@ -1,5 +1,20 @@
 <template>
   <div class="h-screen flex bg-slate-50 font-['Inter'] text-slate-900 overflow-hidden">
+    <!-- Global Role Switching Loader Overlay (A6) -->
+    <div v-if="isRoleSwitching" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center text-white">
+      <span class="material-symbols-outlined animate-spin text-5xl text-indigo-400 mb-4">sync</span>
+      <p class="text-lg font-semibold tracking-wide">Reconfigurando entorno de trabajo...</p>
+    </div>
+
+    <!-- Toast de Notificaciones del Layout (A5) -->
+    <Transition name="toast-slide">
+      <div v-if="layoutToast" class="fixed top-4 right-4 z-[10000] bg-amber-500 text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3">
+        <span class="material-symbols-outlined text-white text-xl">warning</span>
+        <span class="text-sm font-medium">{{ layoutToast }}</span>
+        <button @click="layoutToast = ''" class="ml-2 text-amber-200 hover:text-white">&times;</button>
+      </div>
+    </Transition>
+
     <ImpersonationBanner v-if="authStore.isImpersonating" />
     <ImpersonationSelector v-if="showImpersonationSelector" @close="showImpersonationSelector = false" />
     <CQRSConnectionToast />
@@ -34,6 +49,13 @@
       
       <!-- Navigation Menu Dinámico (CA-6) -->
       <nav class="flex-1 overflow-y-auto overflow-x-hidden px-3 no-scrollbar flex flex-col gap-1 w-full relative">
+         <!-- Enlace Directo al Portal (Pantalla 0) -->
+         <router-link to="/" class="nav-item group/link" active-class="nav-active" title="Portal">
+            <span class="material-symbols-outlined nav-icon">home</span>
+            <span v-if="!isSidebarCollapsed" class="nav-text flex-1">Portal</span>
+            <div v-if="isSidebarCollapsed" class="tooltip-mockup">Portal</div>
+         </router-link>
+
          <!-- Loading Phases -->
          <div v-if="menuStore.isLoading" class="p-4">
             <!-- Skeleton Phase (0-5s) -->
@@ -254,6 +276,24 @@ const menuStore = useMenuStore();
 const { t, locale } = useI18n();
 
 const showImpersonationSelector = ref(false);
+const isRoleSwitching = ref(false);
+const layoutToast = ref('');
+
+const handleRoleSwitchStart = () => {
+    isRoleSwitching.value = true;
+};
+const handleRoleSwitchEnd = () => {
+    isRoleSwitching.value = false;
+};
+const handleLayoutToast = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    layoutToast.value = customEvent.detail?.message || '';
+    setTimeout(() => {
+        if (layoutToast.value === customEvent.detail?.message) {
+            layoutToast.value = '';
+        }
+    }, 4000);
+};
 
 const toggleLocale = () => {
     locale.value = locale.value === 'es' ? 'en' : 'es';
@@ -324,12 +364,18 @@ onMounted(() => {
     // CA-6: Hidratación dinámica del árbol Topológico de Rutas
     menuStore.fetchMenuLayout();
     window.addEventListener('role-switched', handleRoleSwitch);
+    window.addEventListener('role-switching-start', handleRoleSwitchStart);
+    window.addEventListener('role-switching-end', handleRoleSwitchEnd);
+    window.addEventListener('layout-toast-dispatch', handleLayoutToast);
     window.addEventListener('resize', handleResize);
     handleResize();
 });
 
 onUnmounted(() => {
     window.removeEventListener('role-switched', handleRoleSwitch);
+    window.removeEventListener('role-switching-start', handleRoleSwitchStart);
+    window.removeEventListener('role-switching-end', handleRoleSwitchEnd);
+    window.removeEventListener('layout-toast-dispatch', handleLayoutToast);
     window.removeEventListener('resize', handleResize);
     if (loadingTimer1) clearTimeout(loadingTimer1);
     if (loadingTimer2) clearTimeout(loadingTimer2);

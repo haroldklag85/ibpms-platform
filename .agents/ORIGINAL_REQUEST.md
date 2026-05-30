@@ -157,3 +157,42 @@ Implement dynamic styling/colors on the error banner in `BreakGlassLogin.vue` ba
 ### E2E Test Suite Pass
 - [ ] Running `npx playwright test e2e/emergency-login-feedback.spec.ts` from `ibpms-platform/frontend` succeeds with 7/7 tests passing.
 - [ ] No manual browser intervention is required for the tests to pass.
+
+## Follow-up — 2026-05-30T02:37:48Z
+
+Cerrar la deuda técnica y las desviaciones arquitectónicas de la Arquitectura Hexagonal y DDD (ADR-001) identificadas en el backend de la plataforma `ibpms-platform`, garantizando que la capa de dominio sea totalmente pura y desacoplada de la infraestructura de persistencia (JPA/Hibernate y Spring Data).
+
+Working directory: c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform
+Integrity mode: development
+
+## Requirements
+
+### R1. Purificación de Modelos de Dominio (Pure POJOs)
+- Remover todas las anotaciones de persistencia (`jakarta.persistence.*`, `@Entity`, `@Table`, `@Column`, `@Id`, etc.) de los modelos de dominio en `com.ibpms.poc.domain.model` (incluyendo `AllowedDomain`, `OrphanPayload`, `TriageTask`, `WebhookTransaction` y el subpaquete `agile`: `AgileProject`, `AgileTask`, `AgileTimebox`, `AgileSlaChangelog`).
+- Crear las clases de entidad JPA equivalentes con el sufijo `JpaEntity` (ej. `AllowedDomainJpaEntity.java`) ubicadas en `com.ibpms.poc.infrastructure.jpa.entity`, mapeadas a las mismas tablas PostgreSQL y columnas originales.
+- Implementar los mapeadores bidireccionales en infraestructura utilizando **MapStruct** para convertir entre las entidades JPA y los POJOs de dominio.
+
+### R2. Desacoplamiento de Puertos de Dominio
+- Eliminar el acoplamiento de Spring Data (`org.springframework.data.domain.Page` y `Pageable`) del puerto de dominio [TriageTaskRepository.java](file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/backend/ibpms-core/src/main/java/com/ibpms/poc/domain/port/TriageTaskRepository.java).
+- Definir firmas que utilicen una lista simple `List<TriageTask>` con parámetros `int page` y `int size` o una abstracción de paginación pura de dominio.
+- Realizar la conversión al tipo `Page`/`Pageable` de Spring Data dentro del adaptador de infraestructura correspondiente.
+
+### R3. Consolidación de Adaptadores e Infraestructura
+- Unificar todos los paquetes de adaptadores de infraestructura (`com.ibpms.poc.infrastructure.adapters`) renombrándolos y moviéndolos hacia el namespace singular `com.ibpms.poc.infrastructure.adapter`.
+- Actualizar todas las importaciones y dependencias del backend para reflejar la unificación singular de adaptadores.
+
+### R4. Eliminación de Redundancia de APIs
+- Borrar por completo el archivo `TaskDraftController.java` ubicado en `com.ibpms.poc.api.controller` para eliminar el endpoint duplicado de borradores `/api/v1/workbox/tasks/{taskId}/draft`.
+- Consolidar la API REST de borradores en la ruta única e interactiva `/api/v1/drafts/{taskId}` del controlador [TaskDraftApiController.java](file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/web/TaskDraftApiController.java).
+
+## Acceptance Criteria
+
+### [Quality & Clean Code]
+- [ ] No existen referencias ni importaciones de `jakarta.persistence.*`, `@Entity`, `@Table` o dependencias de Spring Data en la capa de dominio `com.ibpms.poc.domain.model` o `com.ibpms.poc.domain.port`.
+- [ ] Los adaptadores de infraestructura están consolidados bajo el namespace singular `com.ibpms.poc.infrastructure.adapter`.
+- [ ] Se eliminó `TaskDraftController.java` y no existen mapeos duplicados para `/draft` en el backend.
+- [ ] Todo el código modificado cuenta con los comentarios reglamentarios de trazabilidad en su cabecera: `// @Traceability: US-003 - ADR-001`.
+
+### [Verification]
+- [ ] El backend compila con éxito mediante Maven (`mvn clean compile`).
+- [ ] La suite de pruebas de integración y unitarias pasa exitosamente (`mvn test`) sin regresiones.

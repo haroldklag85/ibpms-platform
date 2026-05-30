@@ -1,20 +1,18 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web.security;
 
+import com.ibpms.poc.AbstractLocalE2ETest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
 @SuppressWarnings("null")
-public class AuthControllerIntegrationTest {
+public class AuthControllerIntegrationTest extends AbstractLocalE2ETest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -27,16 +25,14 @@ public class AuthControllerIntegrationTest {
         
         String emergencyPayload = """
                 {
-                   "username": "sys_emergency_admin",
-                   "password": "EmergencySecretPassword2026!"
+                   "email": "root@ibpms.local",
+                   "password": "Root#Temp4Sys"
                 }
                 """;
 
         mockMvc.perform(post("/api/v1/auth/emergency-login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(emergencyPayload))
-                // Si el bypass de OAUTH2 y JWT funciona para este endpoint crudo, retornará algo (200 OK o 4XX Client Error si auth falla, pero NO 401/403 Security Header block)
-                // Para el propósito del test, asumimos que devuelve 200 con el Bearer Token Break-Glass.
                 .andExpect(status().isOk());
     }
 }

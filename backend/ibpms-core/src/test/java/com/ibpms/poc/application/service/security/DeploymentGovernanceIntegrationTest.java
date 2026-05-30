@@ -1,7 +1,7 @@
 package com.ibpms.poc.application.service.security;
 
 import com.ibpms.poc.application.dto.DeploymentValidationResponse;
-import com.ibpms.poc.infrastructure.adapters.CamundaBpmnValidationAdapter;
+import com.ibpms.poc.infrastructure.adapter.CamundaBpmnValidationAdapter;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.junit.jupiter.api.BeforeEach;

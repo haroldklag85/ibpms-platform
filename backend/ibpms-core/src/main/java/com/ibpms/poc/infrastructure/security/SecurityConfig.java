@@ -91,6 +91,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/agile/**").permitAll()
                         // @Traceability(US="US-CORE", CA="CA-CAMUNDA", DESC="ADR-003: Bypass JWT para interacción con motor REST embebido de Camunda 7")
                         .requestMatchers("/engine-rest/**", "/api/v1/engine-rest/**").permitAll()
+                        .requestMatchers("/api/v1/security/audit/**").hasRole("SUPER_ADMIN")
                         .anyRequest().authenticated());
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(getJwtAuthenticationConverter())));

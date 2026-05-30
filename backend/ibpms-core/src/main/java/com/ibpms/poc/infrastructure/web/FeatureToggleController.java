@@ -26,9 +26,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Feature Toggles", description = "Gestión administrativa de Feature Toggles")
 public class FeatureToggleController {
 
-    private final com.ibpms.poc.application.ports.in.UpdateFeatureToggleUseCase updateFeatureToggleUseCase;
+    private final com.ibpms.poc.application.port.in.UpdateFeatureToggleUseCase updateFeatureToggleUseCase;
 
-    public FeatureToggleController(com.ibpms.poc.application.ports.in.UpdateFeatureToggleUseCase updateFeatureToggleUseCase) {
+    public FeatureToggleController(com.ibpms.poc.application.port.in.UpdateFeatureToggleUseCase updateFeatureToggleUseCase) {
         this.updateFeatureToggleUseCase = updateFeatureToggleUseCase;
     }
 
@@ -51,6 +51,10 @@ public class FeatureToggleController {
         return ResponseEntity.ok(Map.of("enabled", enabled));
     }
 
+    /**
+     * @Traceability: Remediación Bug DataIntegrityViolationException (changed_by NULL). T-24.
+     * Se extrae la identidad del usuario para inyectarla en la capa de servicio y cumplir el protocolo Zero-Mock.
+     */
     @org.springframework.web.bind.annotation.PutMapping("/{key}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "Actualizar Feature Toggle", description = "Permite a un SUPER_ADMIN activar/desactivar features globalmente.")
@@ -61,9 +65,10 @@ public class FeatureToggleController {
         }
         
         String tenantId = resolveTenantId(authentication);
+        String changedBy = (authentication != null && authentication.getName() != null) ? authentication.getName() : "SYSTEM";
         
         Boolean reqEnabled = body.get("enabled");
-        boolean enabled = updateFeatureToggleUseCase.updateFeatureToggle(tenantId, key, reqEnabled);
+        boolean enabled = updateFeatureToggleUseCase.updateFeatureToggle(tenantId, key, reqEnabled, changedBy);
         
         return ResponseEntity.ok(Map.of("key", key, "enabled", enabled, "tenantId", tenantId));
     }

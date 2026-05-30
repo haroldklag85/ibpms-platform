@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import org.springframework.http.HttpStatus;
@@ -74,6 +75,17 @@ public class GlobalExceptionHandler {
         problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/bad-request")));
         problem.setTitle("Petición inválida");
         problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 400 — JSON mal formado o no leíble */
+    @ApiResponse(responseCode = "400", description = "JSON mal formado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ProblemDetail handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setType(URI.create("https://ibpms.com/errors/bad-request"));
+        problem.setTitle("Petición inválida");
+        problem.setDetail("La solicitud contiene JSON mal formado: " + (ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage()));
         return problem;
     }
 

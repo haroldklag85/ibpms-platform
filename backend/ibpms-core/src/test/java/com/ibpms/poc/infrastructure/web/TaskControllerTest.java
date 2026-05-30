@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import com.ibpms.poc.application.port.in.CompletarTareaUseCase;
@@ -11,6 +12,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.context.annotation.Import;
+import com.ibpms.poc.infrastructure.security.SecurityConfig;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -18,7 +21,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = TaskController.class)
-public class TaskControllerTest {
+@Import(SecurityConfig.class)
+public class TaskControllerTest extends BaseWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -48,7 +52,7 @@ public class TaskControllerTest {
     private org.camunda.bpm.engine.TaskService taskService;
 
     @MockBean
-    private com.ibpms.poc.infrastructure.jpa.repository.FormFieldValueAuditRepository formFieldValueAuditRepository;
+    private com.ibpms.poc.application.service.FormFieldValueAuditService auditService;
 
     @BeforeEach
     void setUp() {

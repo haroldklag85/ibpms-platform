@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import com.ibpms.poc.application.dto.AiMetricsDTO;
@@ -10,17 +11,17 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.context.annotation.Import;
+import com.ibpms.poc.infrastructure.security.SecurityConfig;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.springframework.test.context.ActiveProfiles;
-
 @WebMvcTest(controllers = AnalyticsController.class)
-@ActiveProfiles("test")
-public class AnalyticsControllerTest {
+@Import(SecurityConfig.class)
+public class AnalyticsControllerTest extends BaseWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;

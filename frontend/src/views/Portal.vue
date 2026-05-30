@@ -46,7 +46,7 @@
       <div class="bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
         <h4 class="text-yellow-900 font-bold mb-2">Bandeja de Entrada</h4>
         <p class="text-sm text-yellow-700 mb-4">Tienes tareas urgentes por revisar.</p>
-        <button class="bg-yellow-600 text-white hover:bg-yellow-700 font-medium py-2 px-4 rounded transition shadow-sm">
+        <button @click="router.push('/workdesk')" class="bg-yellow-600 text-white hover:bg-yellow-700 font-medium py-2 px-4 rounded transition shadow-sm">
           Ir a Bandeja
         </button>
       </div>
@@ -59,14 +59,14 @@
         <div class="bg-indigo-50 border border-indigo-200 p-6 rounded-lg">
           <h4 class="text-indigo-900 font-bold mb-2">Administración del Sistema</h4>
           <p class="text-sm text-indigo-700 mb-4">Acceso a configuraciones globales, gestión de usuarios y auditoría.</p>
-          <button class="bg-indigo-600 text-white hover:bg-indigo-700 font-medium py-2 px-4 rounded transition shadow-sm">
+          <button @click="router.push('/admin')" class="bg-indigo-600 text-white hover:bg-indigo-700 font-medium py-2 px-4 rounded transition shadow-sm">
             Ir a Configuración Global
           </button>
         </div>
         <div class="bg-red-50 border border-red-200 p-6 rounded-lg">
           <h4 class="text-red-900 font-bold mb-2">Auditoría Rápida</h4>
           <p class="text-sm text-red-700 mb-4">Revisa eventos de seguridad recientes.</p>
-          <button class="bg-red-600 text-white hover:bg-red-700 font-medium py-2 px-4 rounded transition shadow-sm">
+          <button @click="router.push('/admin/incidents')" class="bg-red-600 text-white hover:bg-red-700 font-medium py-2 px-4 rounded transition shadow-sm">
             Ver Logs
           </button>
         </div>
@@ -80,11 +80,13 @@
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
+import { useRouter } from 'vue-router';
 
 // @Traceability: Retro-Remediación ADR-006
 const integrationStore = useIntegrationStore();
 
 const authStore = useAuthStore();
+const router = useRouter();
 const processDefinitions = ref<any[]>([]);
 const frequentProcesses = ref<any[]>([]);
 const loading = ref(true);

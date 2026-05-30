@@ -31,8 +31,11 @@ public class WorkdeskQueryControllerDelegationTest {
     @WithMockUser(username = "usr_admin_alpha", roles = {"ADMIN"})
     void shouldReturn403WhenDelegationHasNoRelation_CU_J04_NEG_04() throws Exception {
         // Mock ResponseStatusException for validateDelegationHierarchy to simulate HTTP 403
-        when(taskDelegationService.validateDelegationHierarchy("usr_admin_alpha", "unauthorized_user", "usr_admin_alpha"))
-                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: No tiene autorización jerárquica para visualizar el escritorio de este usuario."));
+        when(taskDelegationService.validateDelegationHierarchy(
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString()
+        )).thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: No tiene autorización jerárquica para visualizar el escritorio de este usuario."));
 
         mockMvc.perform(get("/api/v1/workdesk/global-inbox")
                 .param("delegatedUserId", "unauthorized_user")

@@ -2,8 +2,8 @@ package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.application.dto.CreateFormDesignDTO;
 import com.ibpms.poc.application.dto.FormDesignDTO;
-import com.ibpms.poc.application.ports.out.FormDesignPort;
-import com.ibpms.poc.application.ports.out.ProcessEnginePort;
+import com.ibpms.poc.application.port.out.FormDesignPort;
+import com.ibpms.poc.application.port.out.ProcessEnginePort;
 import com.ibpms.poc.application.port.out.FormDefinitionPort;
 import com.ibpms.poc.domain.model.FormDefinition;
 import com.ibpms.poc.crosscutting.annotations.Traceability;

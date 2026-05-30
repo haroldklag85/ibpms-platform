@@ -13,40 +13,40 @@ Se ha mapeado por completo el catálogo de 46 archivos `.vue` en el directorio d
 
 ### Catálogo de 32 Componentes de Vista Principal
 
-| Componente Vista (`.vue`) | Ruta Asociada | Objetivo de Negocio / Alcance Técnico | Estado / Uso |
-| :--- | :--- | :--- | :--- |
-| `src/views/Login.vue` | `/login` | Autenticación de usuarios a través de credenciales de Active Directory, decodificación de tokens JWT, almacenamiento de sesión en Pinia y sincronización del perfil del usuario. | **Activo** |
-| `src/views/Portal.vue` | `/` | Portal principal de aterrizaje del usuario. Muestra resúmenes de actividades, KPI operativos y accesos directos al buzón de tareas. | **Activo** |
-| `src/views/Workdesk.vue` | `/workdesk` | Bandeja de entrada universal (Workbox) que permite a los analistas ver, reclamar, liberar y ejecutar tareas humanas provenientes de Camunda BPM. | **Activo** |
-| `src/views/IntakeTriageView.vue` | `/intake-triage` | Consola operativa para clasificar, priorizar y enrutar las solicitudes entrantes (intakes) de clientes. | **Activo** |
-| `src/views/kanban/KanbanView.vue` | `/kanban` | Vista ágil de las tareas del equipo organizadas en tableros Kanban interactivos para seguimiento visual. | **Activo** |
-| `src/views/admin/SettingsView.vue` | `/admin` | Panel de configuración administrativa para gestionar integraciones globales, webhooks y usuarios. | **Activo** |
-| `src/views/admin/GenericForm/GenericFormView.vue` | *Ninguna (Sin ruta)* | Gestión de Tareas, restauración de borradores CA-85, confirmación de cambios pendientes. | **Inactivo / Sin ruta / huérfano** |
-| `src/views/admin/IncidentCenter.vue` | `/admin/incidents` | Centro de monitoreo y remediación de incidentes técnicos en procesos activos del motor BPMN. | **Activo** |
-| `src/views/admin/Modeler/BpmnDesigner.vue` | `/admin/modeler/bpmn` | Diseñador visual de flujos de procesos BPMN implementado en base a `bpmn-js` con soporte para despliegues controlados. | **Activo** |
-| `src/views/admin/Modeler/FormList.vue` | `/admin/modeler/forms` | Repositorio y catálogo de formularios dinámicos creados y versionados para su renderización dinámica. | **Activo** |
-| `src/views/admin/Modeler/FormDesigner.vue` | `/admin/modeler/forms/designer` | IDE de diseño visual Drag-and-Drop de formularios dinámicos con generación automática de esquemas Zod en tiempo real. | **Activo** |
-| `src/views/admin/Modeler/DmnIntelligence.vue` | `/admin/modeler/dmn` | Interfaz de modelado de tablas de decisión DMN y configuración de reglas de decisión automatizadas con NLP. | **Activo** |
-| `src/views/admin/Modeler/InstancesManager.vue` | *Ninguna (Sin ruta)* | Gestor de instancias de procesos que permite la inspección de variables locales y re-enrutado de tokens. | **Inactivo / Sin ruta** |
-| `src/views/inbox/InboxView.vue` | `/inbox` | Buzón personal secundario del analista para notificaciones del sistema y mensajería interna. | **Activo** |
-| `src/views/admin/ServiceDelivery/IntakeManual.vue` | `/admin/intake` | Formulario de entrada manual para que agentes internos registren solicitudes a nombre de clientes. | **Activo** |
-| `src/views/admin/ServiceDelivery/Customer360.vue` | `/admin/customer360` | Consola de visualización de información integrada del cliente (Customer 360), historial y SLA de trámites activos. | **Activo** |
-| `src/views/public/CustomerPortal.vue` | `/portal/tracking` | Portal público sin credenciales para que los clientes finales realicen seguimiento a sus radicados y solicitudes. | **Activo** |
-| `src/views/public/PublicIntake.vue` | `/public/start/:processKey` | Página pública para iniciar solicitudes anónimas o trámites huérfanos sin autenticación (CA-15). | **Activo** |
-| `src/views/admin/ProjectBuilder/ProjectBuilder.vue` | `/admin/project-builder` | Herramienta de definición de Estructuras de Descomposición de Trabajo (WBS) y fases de proyectos de entrega. | **Activo** |
-| `src/views/admin/ProjectBuilder/ProjectManager.vue` | `/admin/projects/manager` | Consola de gestión de cronogramas, control de hitos de entrega y asignación de recursos. | **Activo** |
-| `src/views/admin/ProjectBuilder/AgileHub.vue` | `/admin/projects/agile-hub/:projectId?` | Consola de tareas de PMO que integra backlogs de proyecto, asignaciones de sprint y tableros ágiles. | **Activo** |
-| `src/views/admin/Analytics/DashboardBAM.vue` | `/admin/analytics/bam` | Dashboard de BAM (Business Activity Monitoring) para análisis de cuellos de botella e indicadores de productividad. | **Activo** |
-| `src/views/admin/Integration/ConnectorCatalog.vue` | `/admin/integration/catalog` | Catálogo central de conectores SOAP, REST, bases de datos y RabbitMQ. | **Activo** |
-| `src/views/admin/Integration/ConnectorBuilder.vue` | `/admin/integration/builder` | Interfaz de construcción de cabeceras, endpoints, credenciales y scripts de transformación de datos para conectores. | **Activo** |
-| `src/views/admin/Integration/VisualMapper.vue` | `/admin/integration/mapper` | Diseñador gráfico de mapeo de variables entre campos BPMN y esquemas XML/JSON externos. | **Activo** |
-| `src/views/admin/Integration/DlqDashboard.vue` | `/admin/integration/dlq` | Consola de monitoreo de la cola de fallos (Dead Letter Queue) de mensajería asíncrona. | **Activo** |
-| `src/views/admin/SGDEA/DocumentGrid.vue` | `/sgdea/vault` | Repositorio oficial y visor de expedientes y documentos adjuntos en cumplimiento de estándares de archivo digital. | **Activo** |
-| `src/views/admin/AI/PromptLibrary.vue` | `/ai/prompts` | Biblioteca de plantillas y configuraciones de prompts para el motor cognitivo de inteligencia artificial. | **Activo** |
-| `src/views/admin/AI/SacConfigManager.vue` | `/admin/mailboxes` | Consola de administración de la sincronización de buzones institucionales vía MS Graph API. | **Activo** |
-| `src/views/admin/Security/IdentityGovernance.vue` | `/admin/security/identity` | Tablero de control de sincronización de Active Directory, revocación de sesiones concurrentes e informes ISO 27001. | **Activo** |
-| `src/views/admin/PMO/PmoSettings.vue` | `/admin/pmo/settings` | Ajustes globales para parámetros de proyectos, cronogramas de feriados de países y reglas de escalamiento. | **Activo** |
-| `src/views/admin/RbacManager/RbacManagerView.vue` | *Ninguna (Sin ruta)* | Interfaz de administración granular de roles RBAC sustituida por IdentityGovernance.vue en producción. | **Inactivo / Sin ruta / huérfano** |
+| Componente Vista (`.vue`) | Ruta Asociada | URL de Desarrollo Local | Objetivo de Negocio / Alcance Técnico | Estado / Uso |
+| :--- | :--- | :--- | :--- | :--- |
+| `src/views/Login.vue` | `/login` | `http://localhost:5173/login` | Autenticación de usuarios a través de credenciales de Active Directory, decodificación de tokens JWT, almacenamiento de sesión en Pinia y sincronización del perfil del usuario. | **Activo** |
+| `src/views/Portal.vue` | `/` | `http://localhost:5173/` | Portal principal de aterrizaje del usuario. Muestra resúmenes de actividades, KPI operativos y accesos directos al buzón de tareas. | **Activo** |
+| `src/views/Workdesk.vue` | `/workdesk` | `http://localhost:5173/workdesk` | Bandeja de entrada universal (Workbox) que permite a los analistas ver, reclamar, liberar y ejecutar tareas humanas provenientes de Camunda BPM. | **Activo** |
+| `src/views/IntakeTriageView.vue` | `/intake-triage` | `http://localhost:5173/intake-triage` | Consola operativa para clasificar, priorizar y enrutar las solicitudes entrantes (intakes) de clientes. | **Activo** |
+| `src/views/kanban/KanbanView.vue` | `/kanban` | `http://localhost:5173/kanban` | Vista ágil de las tareas del equipo organizadas en tableros Kanban interactivos para seguimiento visual. | **Activo** |
+| `src/views/admin/SettingsView.vue` | `/admin` | `http://localhost:5173/admin` | Panel de configuración administrativa para gestionar integraciones globales, webhooks y usuarios. | **Activo** |
+| `src/views/admin/GenericForm/GenericFormView.vue` | *Ninguna (Sin ruta)* | `N/D` | Gestión de Tareas, restauración de borradores CA-85, confirmación de cambios pendientes. | **Inactivo / Sin ruta / huérfano** |
+| `src/views/admin/IncidentCenter.vue` | `/admin/incidents` | `http://localhost:5173/admin/incidents` | Centro de monitoreo y remediación de incidentes técnicos en procesos activos del motor BPMN. | **Activo** |
+| `src/views/admin/Modeler/BpmnDesigner.vue` | `/admin/modeler/bpmn` | `http://localhost:5173/admin/modeler/bpmn` | Diseñador visual de flujos de procesos BPMN implementado en base a `bpmn-js` con soporte para despliegues controlados. | **Activo** |
+| `src/views/admin/Modeler/FormList.vue` | `/admin/modeler/forms` | `http://localhost:5173/admin/modeler/forms` | Repositorio y catálogo de formularios dinámicos creados y versionados para su renderización dinámica. | **Activo** |
+| `src/views/admin/Modeler/FormDesigner.vue` | `/admin/modeler/forms/designer` | `http://localhost:5173/admin/modeler/forms/designer` | IDE de diseño visual Drag-and-Drop de formularios dinámicos con generación automática de esquemas Zod en tiempo real. | **Activo** |
+| `src/views/admin/Modeler/DmnIntelligence.vue` | `/admin/modeler/dmn` | `http://localhost:5173/admin/modeler/dmn` | Interfaz de modelado de tablas de decisión DMN y configuración de reglas de decisión automatizadas con NLP. | **Activo** |
+| `src/views/admin/Modeler/InstancesManager.vue` | *Ninguna (Sin ruta)* | `N/D` | Gestor de instancias de procesos que permite la inspección de variables locales y re-enrutado de tokens. | **Inactivo / Sin ruta** |
+| `src/views/inbox/InboxView.vue` | `/inbox` | `http://localhost:5173/inbox` | Buzón personal secundario del analista para notificaciones del sistema y mensajería interna. | **Activo** |
+| `src/views/admin/ServiceDelivery/IntakeManual.vue` | `/admin/intake` | `http://localhost:5173/admin/intake` | Formulario de entrada manual para que agentes internos registren solicitudes a nombre de clientes. | **Activo** |
+| `src/views/admin/ServiceDelivery/Customer360.vue` | `/admin/customer360` | `http://localhost:5173/admin/customer360` | Consola de visualización de información integrada del cliente (Customer 360), historial y SLA de trámites activos. | **Activo** |
+| `src/views/public/CustomerPortal.vue` | `/portal/tracking` | `http://localhost:5173/portal/tracking` | Portal público sin credenciales para que los clientes finales realicen seguimiento a sus radicados y solicitudes. | **Activo** |
+| `src/views/public/PublicIntake.vue` | `/public/start/:processKey` | `http://localhost:5173/public/start/:processKey` | Página pública para iniciar solicitudes anónimas o trámites huérfanos sin autenticación (CA-15). | **Activo** |
+| `src/views/admin/ProjectBuilder/ProjectBuilder.vue` | `/admin/project-builder` | `http://localhost:5173/admin/project-builder` | Herramienta de definición de Estructuras de Descomposición de Trabajo (WBS) y fases de proyectos de entrega. | **Activo** |
+| `src/views/admin/ProjectBuilder/ProjectManager.vue` | `/admin/projects/manager` | `http://localhost:5173/admin/projects/manager` | Consola de gestión de cronogramas, control de hitos de entrega y asignación de recursos. | **Activo** |
+| `src/views/admin/ProjectBuilder/AgileHub.vue` | `/admin/projects/agile-hub/:projectId?` | `http://localhost:5173/admin/projects/agile-hub/:projectId?` | Consola de tareas de PMO que integra backlogs de proyecto, asignaciones de sprint y tableros ágiles. | **Activo** |
+| `src/views/admin/Analytics/DashboardBAM.vue` | `/admin/analytics/bam` | `http://localhost:5173/admin/analytics/bam` | Dashboard de BAM (Business Activity Monitoring) para análisis de cuellos de botella e indicadores de productividad. | **Activo** |
+| `src/views/admin/Integration/ConnectorCatalog.vue` | `/admin/integration/catalog` | `http://localhost:5173/admin/integration/catalog` | Catálogo central de conectores SOAP, REST, bases de datos y RabbitMQ. | **Activo** |
+| `src/views/admin/Integration/ConnectorBuilder.vue` | `/admin/integration/builder` | `http://localhost:5173/admin/integration/builder` | Interfaz de construcción de cabeceras, endpoints, credenciales y scripts de transformación de datos para conectores. | **Activo** |
+| `src/views/admin/Integration/VisualMapper.vue` | `/admin/integration/mapper` | `http://localhost:5173/admin/integration/mapper` | Diseñador gráfico de mapeo de variables entre campos BPMN y esquemas XML/JSON externos. | **Activo** |
+| `src/views/admin/Integration/DlqDashboard.vue` | `/admin/integration/dlq` | `http://localhost:5173/admin/integration/dlq` | Consola de monitoreo de la cola de fallos (Dead Letter Queue) de mensajería asíncrona. | **Activo** |
+| `src/views/admin/SGDEA/DocumentGrid.vue` | `/sgdea/vault` | `http://localhost:5173/sgdea/vault` | Repositorio oficial y visor de expedientes y documentos adjuntos en cumplimiento de estándares de archivo digital. | **Activo** |
+| `src/views/admin/AI/PromptLibrary.vue` | `/ai/prompts` | `http://localhost:5173/ai/prompts` | Biblioteca de plantillas y configuraciones de prompts para el motor cognitivo de inteligencia artificial. | **Activo** |
+| `src/views/admin/AI/SacConfigManager.vue` | `/admin/mailboxes` | `http://localhost:5173/admin/mailboxes` | Consola de administración de la sincronización de buzones institucionales vía MS Graph API. | **Activo** |
+| `src/views/admin/Security/IdentityGovernance.vue` | `/admin/security/identity` | `http://localhost:5173/admin/security/identity` | Tablero de control de sincronización de Active Directory, revocación de sesiones concurrentes e informes ISO 27001. | **Activo** |
+| `src/views/admin/PMO/PmoSettings.vue` | `/admin/pmo/settings` | `http://localhost:5173/admin/pmo/settings` | Ajustes globales para parámetros de proyectos, cronogramas de feriados de países y reglas de escalamiento. | **Activo** |
+| `src/views/admin/RbacManager/RbacManagerView.vue` | *Ninguna (Sin ruta)* | `N/D` | Interfaz de administración granular de roles RBAC sustituida por IdentityGovernance.vue en producción. | **Inactivo / Sin ruta / huérfano** |
 
 ### Catálogo de 14 Subcomponentes Auxiliares y Reutilizables (No enrutados de forma directa)
 

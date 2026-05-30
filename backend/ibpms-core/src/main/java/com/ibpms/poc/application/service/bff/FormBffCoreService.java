@@ -16,7 +16,7 @@ import com.ibpms.poc.domain.port.FormEventRepository;
 
 import java.time.Instant;
 import com.ibpms.poc.application.port.out.FormDefinitionPort;
-import com.ibpms.poc.application.ports.out.FormDesignPort;
+import com.ibpms.poc.application.port.out.FormDesignPort;
 import com.ibpms.poc.application.dto.FormDesignDTO;
 import com.ibpms.poc.domain.model.FormDefinition;
 import java.time.ZoneId;

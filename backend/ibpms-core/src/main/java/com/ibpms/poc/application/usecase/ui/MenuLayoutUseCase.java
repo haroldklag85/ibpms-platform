@@ -1,7 +1,7 @@
 package com.ibpms.poc.application.usecase.ui;
 
 import com.ibpms.poc.application.dto.ui.MenuItemDTO;
-import com.ibpms.poc.application.ports.out.MenuTopologyPort;
+import com.ibpms.poc.application.port.out.MenuTopologyPort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

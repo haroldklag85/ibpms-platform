@@ -1,6 +1,6 @@
 package com.ibpms.poc.application.service.security;
 
-import com.ibpms.poc.application.ports.out.RoleHierarchyPort;
+import com.ibpms.poc.application.port.out.RoleHierarchyPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

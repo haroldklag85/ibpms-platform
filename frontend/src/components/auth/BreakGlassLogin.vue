@@ -121,7 +121,7 @@ const handleEmergencyLogin = async () => {
 
     if (res.data && res.data.token) {
       authStore.login(res.data.token);
-      router.push('/workdesk');
+      router.push('/');
     } else {
       error.value = 'Respuesta de servidor inválida.';
       errorCode.value = 'INVALID_RESPONSE';

@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.application.service.security;
 
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
@@ -43,10 +44,10 @@ public class EntraIdSyncService {
     @Transactional
     public UserEntity provisionUser(String username, Map<String, String> claims) {
         List<String> missingFields = new java.util.ArrayList<>();
-        if (!claims.containsKey("email") || claims.get("email").isBlank()) missingFields.add("email");
-        if (!claims.containsKey("name") || claims.get("name").isBlank()) missingFields.add("name");
-        if (!claims.containsKey("Sucursal_ID") || claims.get("Sucursal_ID").isBlank()) missingFields.add("Sucursal_ID");
-        if (!claims.containsKey("Codigo_Jefe") || claims.get("Codigo_Jefe").isBlank()) missingFields.add("Codigo_Jefe");
+        if (!claims.containsKey("email") || claims.get("email") == null || claims.get("email").isBlank()) missingFields.add("email");
+        if (!claims.containsKey("name") || claims.get("name") == null || claims.get("name").isBlank()) missingFields.add("name");
+        if (!claims.containsKey("Sucursal_ID") || claims.get("Sucursal_ID") == null || claims.get("Sucursal_ID").isBlank()) missingFields.add("Sucursal_ID");
+        if (!claims.containsKey("Codigo_Jefe") || claims.get("Codigo_Jefe") == null || claims.get("Codigo_Jefe").isBlank()) missingFields.add("Codigo_Jefe");
 
         if (!missingFields.isEmpty()) {
             throw new com.ibpms.poc.application.service.security.exceptions.PreconditionRequiredException("Claims obligatorios faltantes para JIT Provisioning.", missingFields);

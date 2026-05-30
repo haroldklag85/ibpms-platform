@@ -3,7 +3,7 @@ package com.ibpms.poc.application.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
-import com.ibpms.poc.domain.entity.FormEventStoreEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.FormEventStoreEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.FormEventStoreRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

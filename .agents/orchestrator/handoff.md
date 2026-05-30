@@ -1,22 +1,28 @@
-# Handoff Report: Implement CA-07 Strict Deployment Governance
+# Handoff Report: Hexagonal Architecture & DDD Refactoring (ADR-001)
 
 ## Milestone State
-- CA-07 TDD Implementation: DONE
+- **Milestone 1: Domain purification** (Pure POJOs + JPA Entities + MapStruct Mappers): **DONE**
+- **Milestone 2: Decouple TriageTaskRepository** (Remove Spring Data Page/Pageable from domain ports): **DONE**
+- **Milestone 3: Consolidate adapters namespace** (Rename plural adapters to singular adapter): **DONE**
+- **Milestone 4: Consolidate TaskDraft controllers** (Delete TaskDraftController and add Bucket4J rate limiting to TaskDraftApiController): **DONE**
+- **Milestone 5: Verification and test suite execution**: **DONE** (Forensic Auditor 2 verdict: CLEAN)
+
+## Active Subagents
+- None. All subagents have finished and are retired.
+  - Worker 5 (Remediation): Completed (Conv ID: `024fe494-b28b-45bf-9775-b451daaa1d34`)
+  - Forensic Auditor 2 (Verification): Completed (Conv ID: `942b1432-336d-4928-b38c-dc47367e044c`, Verdict: CLEAN)
+
+## Pending Decisions
+- None. No unresolved questions or blocked items remain.
+
+## Remaining Work
+- None. All requirements and acceptance criteria from `ORIGINAL_REQUEST.md` have been fully met and successfully verified.
 
 ## Key Artifacts
-- **Test:** `src/test/java/com/ibpms/poc/application/service/security/DeploymentGovernanceIntegrationTest.java`
-- **Adapter Logic:** `src/main/java/com/ibpms/poc/infrastructure/adapters/CamundaBpmnValidationAdapter.java`
-
-## What Changed
-1. **Red Phase (Test Construction)**: Created `DeploymentGovernanceIntegrationTest.java` that builds a diverging `ExclusiveGateway` (two outgoing flows) without a default flow. The test asserted that this structure causes the validation to fail entirely with a "Hard-Stop" error.
-2. **Review Feedback & User Override**: A rigorous code review identified that blocking all gateways without default flows falsely punishes "converging" gateways. The user promptly supplied the logic fix ensuring only gateways with `getOutgoing().size() > 1` (diverging) and no default flow receive the Hard-Stop.
-3. **Green Phase (Validation)**: Executed the test natively against the final user-supplied logic. It passes cleanly. The adapter correctly issues a Hard-Stop error instead of a warning, mitigating the ambiguous deployment risk.
-
-## Acceptance Criteria
-- [x] Compilation: `mvn test-compile` finishes cleanly.
-- [x] Execution: Test passes, demonstrating that ambiguous deployment is rejected.
-- [x] Standards: `// @Traceability: US-005, CA-07 Gobernanza Estricta de Despliegue` is present in both `validateBpmnStream` and `validateDraftXml`.
-- [x] Forensic Audit: A forensic subagent independently verified the integrity of the implementation (no hard-coded assertions, no facade logic).
-
-## Conclusion
-The Technical Debt CA-07 (Strict Deployment Governance) is successfully resolved using TDD. The pipeline now rejects ambiguous gateways natively.
+- **Progress Tracking**: `c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\progress.md`
+- **Briefing State**: `c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\BRIEFING.md`
+- **Project Scope & Architecture**: `c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\PROJECT.md`
+- **Remediation Handoff**: `c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\worker_remediation_1\handoff.md`
+- **Audit Reports**:
+  - `c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\auditor_verification_2\audit_report.md`
+  - `c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\auditor_verification_2\handoff.md`

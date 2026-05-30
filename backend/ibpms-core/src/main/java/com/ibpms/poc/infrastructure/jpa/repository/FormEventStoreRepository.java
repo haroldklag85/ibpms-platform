@@ -1,7 +1,7 @@
 package com.ibpms.poc.infrastructure.jpa.repository;
 
 import com.ibpms.poc.crosscutting.annotations.Traceability;
-import com.ibpms.poc.domain.entity.FormEventStoreEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.FormEventStoreEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

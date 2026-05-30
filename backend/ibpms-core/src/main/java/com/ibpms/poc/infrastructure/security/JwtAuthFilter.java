@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.security;
 
 import jakarta.servlet.FilterChain;
@@ -37,13 +38,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final com.ibpms.poc.infrastructure.jpa.repository.security.RoleDelegationRepository roleDelegationRepository;
 
     // @Traceability(US="US-036", CA="CA-08", DESC="ADR-001 Inyección de Puertos y Servicios de Dominio (EntraIdSyncService)")
-    public JwtAuthFilter(JwtTokenProvider jwtTokenProvider, 
-                         com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository userRepository,
-                         com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository roleRepository,
-                         com.ibpms.poc.application.service.JwtBlacklistService jwtBlacklistService,
-                         com.ibpms.poc.application.service.security.RoleHierarchyService roleHierarchyService,
-                         com.ibpms.poc.application.service.security.EntraIdSyncService entraIdSyncService,
-                         com.ibpms.poc.infrastructure.jpa.repository.security.RoleDelegationRepository roleDelegationRepository) {
+    public JwtAuthFilter(@org.springframework.context.annotation.Lazy JwtTokenProvider jwtTokenProvider, 
+                         @org.springframework.context.annotation.Lazy com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository userRepository,
+                         @org.springframework.context.annotation.Lazy com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository roleRepository,
+                         @org.springframework.context.annotation.Lazy com.ibpms.poc.application.service.JwtBlacklistService jwtBlacklistService,
+                         @org.springframework.context.annotation.Lazy com.ibpms.poc.application.service.security.RoleHierarchyService roleHierarchyService,
+                         @org.springframework.context.annotation.Lazy com.ibpms.poc.application.service.security.EntraIdSyncService entraIdSyncService,
+                         @org.springframework.context.annotation.Lazy com.ibpms.poc.infrastructure.jpa.repository.security.RoleDelegationRepository roleDelegationRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -140,8 +141,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // CA-02: Filtro de la Mochila Pesada (Anti-Token Bloat HTTP 431)
                 List<String> rawRoles = jwtTokenProvider.getRoles(token);
                 List<String> roles = rawRoles.stream()
-                        .filter(r -> r.startsWith("ibpms_rol_"))
-                        .map(r -> r.replace("ibpms_rol_", ""))
+                        .filter(r -> r.startsWith("ibpms_rol_") || r.startsWith("ROLE_"))
+                        .map(r -> r.replace("ibpms_rol_", "").replace("ROLE_", ""))
                         .collect(Collectors.toList());
                 
                 // @Traceability: Retro-Remediación RBAC J-04 (T-20.4)

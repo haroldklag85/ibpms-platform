@@ -48,7 +48,7 @@ public abstract class AbstractIntegrationTest {
 
         // Cumplimiento Zero-Trust: Liquibase controla la DB, Hibernate en modo validación pura.
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
-        registry.add("spring.liquibase.enabled", () -> "false");
+        registry.add("spring.liquibase.enabled", () -> "true");
         registry.add("camunda.bpm.database.schema-update", () -> "true");
     }
 }

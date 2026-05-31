@@ -166,7 +166,8 @@ apiClient.interceptors.response.use(
             const isCredentialCheck = url.includes('/auth/login') || 
                                       url.includes('/auth/emergency-login') || 
                                       url.includes('/auth/break-glass') || 
-                                      url.includes('/auth/change-password');
+                                      url.includes('/auth/change-password') ||
+                                      url.includes('/auth/effective-roles');
             if (isCredentialCheck) {
                 return Promise.reject(error);
             }

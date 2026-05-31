@@ -11,6 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
     // CA-2 y CA-3: Estados de Gobernanza Visual
     const isHydrating = ref(false);
     const isGlobal404 = ref(false);
+    const showLogoutConfirm = ref(false);
 
     // Sprint 5 (Iteración 1) - Inicialización forzosa de ActiveRole
     const activeRole = ref<string | null>(null);
@@ -175,14 +176,17 @@ export const useAuthStore = defineStore('auth', () => {
              try {
                 const { data } = await apiClient.get('/auth/effective-roles');
                 effectiveRoles.value = data || [];
-             } catch(e) {
+             } catch(e: any) {
                 console.warn('Could not fetch effective-roles', e);
+                if (e?.response?.status === 401 || e?.status === 401) {
+                    throw e;
+                }
              }
 
              // Enchufamos el SSE
              initSecurityListener();
         } catch (error: any) {
-             if (error?.status === 401) {
+             if (error?.response?.status === 401 || error?.status === 401) {
                  logout();
              }
              throw error;
@@ -230,6 +234,7 @@ export const useAuthStore = defineStore('auth', () => {
         effectiveRoles,
         isHydrating,
         isGlobal404,
+        showLogoutConfirm,
         delegatedAssistants,
         login,
         logout,

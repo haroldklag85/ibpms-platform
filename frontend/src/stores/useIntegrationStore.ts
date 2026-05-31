@@ -18,6 +18,12 @@ export const useIntegrationStore = defineStore('integrationStore', {
     },
     patch(url: string, data?: any, config?: any) {
       return apiClient.patch(url, data, config);
+    },
+    getProcessHealth(config?: any) {
+      return this.get('/analytics/process-health', config);
+    },
+    getAiMetrics(config?: any) {
+      return this.get('/analytics/ai-metrics', config);
     }
   }
 });

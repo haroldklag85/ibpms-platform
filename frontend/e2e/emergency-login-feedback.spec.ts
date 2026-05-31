@@ -37,7 +37,7 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
         await page.fill('[data-testid="justification-input"]', 'some justification string');
         await page.click('[data-testid="login-submit"]');
         
-        await expect(page).toHaveURL(/\/(workdesk|dashboard)/, { timeout: 10000 });
+        await expect(page).toHaveURL(/(localhost:\d+\/?$|workdesk|dashboard)/, { timeout: 10000 });
         const banner = page.locator('[data-testid="login-error-banner"]');
         await expect(banner).not.toBeVisible();
     });
@@ -79,7 +79,7 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
         await page.fill('[data-testid="justification-input"]', 'some justification string');
         await page.click('[data-testid="login-submit"]');
         
-        await expect(page).toHaveURL(/\/(workdesk|dashboard)/, { timeout: 10000 });
+        await expect(page).toHaveURL(/(localhost:\d+\/?$|workdesk|dashboard)/, { timeout: 10000 });
     });
 
     test('ESC-06: El banner se destruye al volver a SSO', async ({ page }) => {

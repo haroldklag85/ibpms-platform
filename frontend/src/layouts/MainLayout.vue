@@ -199,21 +199,21 @@
              <button 
                  @click="preferencesStore.uiDensity = 'COMPACT'" 
                  :class="{'bg-white shadow text-indigo-600': preferencesStore.uiDensity === 'COMPACT', 'text-slate-400': preferencesStore.uiDensity !== 'COMPACT'}"
-                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" :title="t('header.compact')"
+                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Tabla Compacta"
              >
                 <span class="material-symbols-outlined text-[16px]">compress</span>
              </button>
              <button 
                  @click="preferencesStore.uiDensity = 'STANDARD'" 
                  :class="{'bg-white shadow text-indigo-600': preferencesStore.uiDensity === 'STANDARD', 'text-slate-400': preferencesStore.uiDensity !== 'STANDARD'}"
-                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" :title="t('header.standard')"
+                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Tabla Estándar"
              >
                 <span class="material-symbols-outlined text-[16px]">view_agenda</span>
              </button>
              <button 
                  @click="preferencesStore.uiDensity = 'COMFORTABLE'" 
                  :class="{'bg-white shadow text-indigo-600': preferencesStore.uiDensity === 'COMFORTABLE', 'text-slate-400': preferencesStore.uiDensity !== 'COMFORTABLE'}"
-                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Cómodo"
+                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Vista de Tarjetas"
              >
                 <span class="material-symbols-outlined text-[16px]">expand</span>
              </button>
@@ -246,7 +246,7 @@
           <transition name="fade" mode="out-in">
             <!-- @Traceability(US = "US-001", CA = {"CA-12"}) Acierto UX: Keep-Alive retiene scroll y filtros en RAM para 0ms de carga en regresos -->
             <keep-alive include="Workdesk">
-              <component :is="Component" />
+              <component :is="Component" :key="route.fullPath + '-' + authStore.activeRole" />
             </keep-alive>
           </transition>
         </router-view>
@@ -433,8 +433,7 @@ const toggleSidebar = () => {
 };
 
 const logout = () => {
-  authStore.logout();
-  router.push('/login');
+  authStore.showLogoutConfirm = true;
 };
 </script>
 

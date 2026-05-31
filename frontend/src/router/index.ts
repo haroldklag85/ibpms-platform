@@ -58,26 +58,31 @@ const router = createRouter({
                     path: 'admin/incidents',
                     name: 'IncidentCenter',
                     component: () => import('@/views/admin/IncidentCenter.vue'),
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
                 },
                 {
                     path: 'admin/modeler/bpmn',
                     name: 'BpmnDesigner',
                     component: () => import('@/views/admin/Modeler/BpmnDesigner.vue'),
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
                 },
                 {
                     path: 'admin/modeler/forms',
                     name: 'FormList',
                     component: () => import('@/views/admin/Modeler/FormList.vue'),
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
                 },
                 {
                     path: 'admin/modeler/forms/designer',
                     name: 'FormDesigner',
                     component: () => import('@/views/admin/Modeler/FormDesigner.vue'),
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
                 },
                 {
                     path: 'admin/modeler/dmn',
                     name: 'DmnIntelligence',
                     component: () => import('@/views/admin/Modeler/DmnIntelligence.vue'),
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
                 },
                 // --- Pantallas Reinsertadas de Grupos 2 y 3 ---
                 {
@@ -134,7 +139,7 @@ const router = createRouter({
                     path: 'admin/analytics/bam',
                     name: 'DashboardBAM',
                     component: () => import('@/views/admin/Analytics/DashboardBAM.vue'),
-                    meta: { requiresAuth: true }
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'Global Admin'] }
                 },
                 // --- Bloque F: Integration Hub (Pantalla 11) ---
                 {
@@ -147,7 +152,7 @@ const router = createRouter({
                     path: 'admin/integration/builder',
                     name: 'ConnectorBuilder',
                     component: () => import('@/views/admin/Integration/ConnectorBuilder.vue'),
-                    meta: { requiresAuth: true }
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
                 },
                 {
                     path: 'admin/integration/mapper',

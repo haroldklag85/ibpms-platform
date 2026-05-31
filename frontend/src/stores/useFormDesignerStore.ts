@@ -294,7 +294,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     const stages = new Set<string>();
     const flatF = flatFields(canvasFields.value);
     flatF.forEach(f => {
-      if (f.stage && f.stage !== 'START_EVENT' && f.stage !== 'ALL') {
+      if (f.stage && f.stage !== 'START_EVENT' && f.stage !== 'ALL' && f.stage !== 'ANALYSIS' && f.stage !== 'DECISION') {
         stages.add(f.stage);
       }
     });

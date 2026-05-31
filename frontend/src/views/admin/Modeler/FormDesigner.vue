@@ -142,6 +142,8 @@
           <span>Simulation Stage:</span>
           <select v-model="activeStageSim" class="bg-white border-blue-300 rounded text-xs py-0.5 focus:ring-blue-500 font-mono">
             <option value="START_EVENT">START_EVENT</option>
+            <option value="ANALYSIS">ANALYSIS</option>
+            <option value="DECISION">DECISION</option>
             <option v-for="stage in availableStages" :key="stage" :value="stage">{{ stage }}</option>
             <option value="ALL">Mostrar Todos (Ideation)</option>
           </select>
@@ -923,6 +925,7 @@ const integrationStore = useIntegrationStore();
 const authStore = useAuthStore();
 const formStore = useFormDesignerStore();
 const {
+  availableStages,
   canvasFields,
   formTitle,
   formPattern,

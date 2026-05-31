@@ -19,7 +19,7 @@
           </label>
           <p class="pl-1">o arrastra y suelta</p>
         </div>
-        <p class="text-xs text-gray-500">PNG, JPG, PDF, DOCX, XLSX, PPTX, TXT, CSV hasta 25MB</p>
+        <p class="text-xs text-gray-500">PNG, JPG, PDF, DOCX, XLSX, PPTX, TXT, CSV hasta 10MB</p>
       </div>
     </div>
     
@@ -91,7 +91,7 @@ const handleFileSelect = (e: Event) => {
   }
 }
 
-const MAX_FILE_SIZE_MB = 25
+const MAX_FILE_SIZE_MB = 10
 const ALLOWED_EXTS = ['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.docx', '.xlsx', '.pptx', '.txt', '.csv']
 const MAX_FILES = 5
 

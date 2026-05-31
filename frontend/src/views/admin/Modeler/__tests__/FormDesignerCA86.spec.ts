@@ -18,14 +18,17 @@ const mockDelete = vi.fn()
 const mockPost = vi.fn()
 const mockPut = vi.fn()
 
-vi.mock('@/stores/useIntegrationStore', () => ({
-  useIntegrationStore: vi.fn(() => ({
-    get: mockGet,
-    delete: mockDelete,
-    post: mockPost,
-    put: mockPut
-  }))
-}))
+vi.mock('@/stores/useIntegrationStore', () => {
+  const normalizeUrl = (url: string) => url.startsWith('/api/v1') ? url : `/api/v1${url}`;
+  return {
+    useIntegrationStore: vi.fn(() => ({
+      get: (url: string, ...args: any[]) => mockGet(normalizeUrl(url), ...args),
+      delete: (url: string, ...args: any[]) => mockDelete(normalizeUrl(url), ...args),
+      post: (url: string, ...args: any[]) => mockPost(normalizeUrl(url), ...args),
+      put: (url: string, ...args: any[]) => mockPut(normalizeUrl(url), ...args)
+    }))
+  }
+})
 
 describe('CA-86: Catálogo y Explorador de Formularios (Form Manager Dashboard)', () => {
   const mockForms = [

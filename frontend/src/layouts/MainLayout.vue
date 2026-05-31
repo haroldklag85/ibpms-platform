@@ -94,7 +94,7 @@
          </template>
          
          <template v-else v-for="(group, gIdx) in menuStore.layout" :key="'g'+gIdx">
-            <template v-if="true">
+            <template v-if="!group.roles || authStore.hasAnyRole(group.roles)">
                
                <!-- Separador Visual / Título del Grupo -->
                <div v-if="gIdx > 0" class="h-px bg-slate-800 my-4 mx-2"></div>
@@ -199,21 +199,21 @@
              <button 
                  @click="preferencesStore.uiDensity = 'COMPACT'" 
                  :class="{'bg-white shadow text-indigo-600': preferencesStore.uiDensity === 'COMPACT', 'text-slate-400': preferencesStore.uiDensity !== 'COMPACT'}"
-                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Tabla Compacta"
+                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Compacto"
              >
                 <span class="material-symbols-outlined text-[16px]">compress</span>
              </button>
              <button 
                  @click="preferencesStore.uiDensity = 'STANDARD'" 
                  :class="{'bg-white shadow text-indigo-600': preferencesStore.uiDensity === 'STANDARD', 'text-slate-400': preferencesStore.uiDensity !== 'STANDARD'}"
-                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Tabla Estándar"
+                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Estándar"
              >
                 <span class="material-symbols-outlined text-[16px]">view_agenda</span>
              </button>
              <button 
                  @click="preferencesStore.uiDensity = 'COMFORTABLE'" 
                  :class="{'bg-white shadow text-indigo-600': preferencesStore.uiDensity === 'COMFORTABLE', 'text-slate-400': preferencesStore.uiDensity !== 'COMFORTABLE'}"
-                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Vista de Tarjetas"
+                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Cómodo"
              >
                 <span class="material-symbols-outlined text-[16px]">expand</span>
              </button>

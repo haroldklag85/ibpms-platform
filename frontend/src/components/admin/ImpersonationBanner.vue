@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useTimeStore } from '@/stores/timeStore';
 import { useI18n } from 'vue-i18n';
@@ -53,8 +53,15 @@ const handleExit = () => {
   authStore.exitImpersonation();
 };
 
+let timer: ReturnType<typeof setInterval> | null = null;
+
 onMounted(() => {
   updateTime();
+  timer = setInterval(updateTime, 1000);
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
 });
 
 watch(() => timeStore.currentTick, (tick) => {

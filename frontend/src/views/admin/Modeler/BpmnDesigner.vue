@@ -1545,6 +1545,7 @@ const runClientLinter = () => {
 
   try {
     const elementRegistry = modelerInstance.get('elementRegistry');
+    if (!elementRegistry || typeof elementRegistry.getAll !== 'function') return;
     const elements = elementRegistry.getAll();
 
     // 1. Presence of >=1 bpmn:StartEvent and >=1 bpmn:EndEvent
@@ -1610,9 +1611,11 @@ const debouncedValidate = debounce(async () => {
   // Clear previous CA-46 highlights
   const canvas = modelerInstance.get('canvas');
   const elementRegistry = modelerInstance.get('elementRegistry');
-  elementRegistry.getAll().forEach((el: any) => {
-    try { canvas.removeMarker(el.id, 'highlight-warning'); } catch(e) {}
-  });
+  if (elementRegistry && typeof elementRegistry.getAll === 'function') {
+    elementRegistry.getAll().forEach((el: any) => {
+      try { canvas.removeMarker(el.id, 'highlight-warning'); } catch(e) {}
+    });
+  }
 
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });

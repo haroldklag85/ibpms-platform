@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { setActivePinia, createPinia } from 'pinia';
 import PmoSettings from '@/views/admin/PMO/PmoSettings.vue';
 import apiClient from '@/services/apiClient';
 import { nextTick } from 'vue';
@@ -7,6 +8,7 @@ import { nextTick } from 'vue';
 describe('PmoSettings.vue', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    setActivePinia(createPinia());
   });
 
   it('CA-3/CA-5: onMounted fetches business-hours and holidays correctly', async () => {
@@ -26,7 +28,9 @@ describe('PmoSettings.vue', () => {
       return Promise.resolve({ data: null });
     });
 
-    const wrapper = mount(PmoSettings);
+    const wrapper = mount(PmoSettings, {
+      global: { plugins: [createPinia()] }
+    });
     
     // Wait for onMounted promises to resolve
     await flushPromises();
@@ -47,7 +51,9 @@ describe('PmoSettings.vue', () => {
     // For the POST apply call
     const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({ status: 202, data: {} });
 
-    const wrapper = mount(PmoSettings);
+    const wrapper = mount(PmoSettings, {
+      global: { plugins: [createPinia()] }
+    });
     await flushPromises();
 
     // Toggle applyRetroactive
@@ -84,7 +90,9 @@ describe('PmoSettings.vue', () => {
 
     const deleteSpy = vi.spyOn(apiClient, 'delete').mockResolvedValue({ status: 204 });
 
-    const wrapper = mount(PmoSettings);
+    const wrapper = mount(PmoSettings, {
+      global: { plugins: [createPinia()] }
+    });
     await flushPromises();
 
     // Should render the holiday

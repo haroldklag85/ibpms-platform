@@ -192,12 +192,12 @@
         <span class="material-symbols-outlined text-amber-600 text-2xl animate-pulse shrink-0">warning</span>
         <div>
           <div class="flex items-center justify-between">
-            <p class="text-amber-900 font-bold text-sm">Sincronización Degradada</p>
+            <p class="text-amber-900 font-bold text-sm">Sincronización BPMN degradada temporalmente</p>
             <button @click="store.isDegraded = false" class="text-amber-500 hover:text-amber-700 ml-2" title="Descartar">
               <span class="material-symbols-outlined text-[16px]">close</span>
             </button>
           </div>
-          <p class="text-amber-700 text-xs mt-1">Las tareas de procesos podrían no estar actualizadas. Kanban opera normal.</p>
+          <p class="text-amber-700 text-xs mt-1">Las tareas Kanban operan con normalidad</p>
         </div>
       </div>
     </Transition>

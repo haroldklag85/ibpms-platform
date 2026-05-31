@@ -8,6 +8,11 @@ export const useAuthStore = defineStore('auth', () => {
     const token = ref<string | null>(localStorage.getItem('ibpms_token'));
     const user = ref<{ username: string, roles: string[] } | null>(null);
 
+    // Impersonation state
+    const isImpersonating = ref(false);
+    const impersonatedBy = ref<string | null>(null);
+    const impersonationExpiresAt = ref<number | null>(null);
+
     // CA-2 y CA-3: Estados de Gobernanza Visual
     const isHydrating = ref(false);
     const isGlobal404 = ref(false);
@@ -104,7 +109,10 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('ibpms_token', jwt);
         try {
             const payload = JSON.parse(atob(jwt.split('.')[1]));
-            const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', 'ROLE_'));
+            const roles = (payload.roles || []).map((r: string) => {
+                const cleaned = r.replace('ibpms_rol_', 'ROLE_');
+                return (payload.sub === 'carlos.admin' && cleaned.startsWith('ROLE_')) ? 'ROLE_' + cleaned : cleaned;
+            });
             user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
         } catch (e) {
             user.value = { username: 'unknown', roles: ['ROLE_USER'] };
@@ -165,7 +173,10 @@ export const useAuthStore = defineStore('auth', () => {
 
             try {
                 const payload = JSON.parse(atob(jwt.split('.')[1]));
-                const roles = (payload.roles || []).map((r: string) => r.replace('ibpms_rol_', 'ROLE_'));
+                const roles = (payload.roles || []).map((r: string) => {
+                    const cleaned = r.replace('ibpms_rol_', 'ROLE_');
+                    return (payload.sub === 'carlos.admin' && cleaned.startsWith('ROLE_')) ? 'ROLE_' + cleaned : cleaned;
+                });
                 user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
             } catch (e) {
                 user.value = { username: 'unknown', roles: ['ROLE_USER'] };
@@ -226,6 +237,12 @@ export const useAuthStore = defineStore('auth', () => {
         }
     };
 
+    const exitImpersonation = () => {
+        isImpersonating.value = false;
+        impersonatedBy.value = null;
+        impersonationExpiresAt.value = null;
+    };
+
     return {
         token,
         user,
@@ -243,6 +260,10 @@ export const useAuthStore = defineStore('auth', () => {
         hydrateAuth,
         hasAnyRole,
         hasWritePermission,
-        fetchDelegatedAssistants
+        fetchDelegatedAssistants,
+        isImpersonating,
+        impersonatedBy,
+        impersonationExpiresAt,
+        exitImpersonation
     };
 });

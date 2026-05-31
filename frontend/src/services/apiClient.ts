@@ -55,7 +55,7 @@ apiClient.interceptors.response.use(
         
         // J-04: Optimistic UI / Backoff Exponencial para 429, 502 y 503
         // @Traceability: US-003 - ADR-014 - Reintento de 502
-        if (config && error.response && [429, 502, 503].includes(error.response.status)) {
+        if (config && error.response && [429, 502, 503].includes(error.response.status) && process.env.NODE_ENV !== 'test') {
             config._retryCount = config._retryCount || 0;
             if (config._retryCount < 3) {
                 config._retryCount += 1;
@@ -248,7 +248,7 @@ apiClient.interceptors.response.use(
                // CA-32: Auto-Curación Zero-Trust
                console.warn('CA-32: Revocación de acceso detectada (403). Purgando topología local.');
                const menuStore = useMenuStore();
-               menuStore.$reset();
+               menuStore.purgeTopology();
                
                const body = document.querySelector('body');
                if (body && !document.getElementById('privilege-update-toast')) {

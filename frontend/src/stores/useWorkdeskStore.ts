@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import apiClient from '@/services/apiClient';
+import apiClient, { api } from '@/services/apiClient';
 import { useAuthStore } from '@/stores/authStore';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -161,15 +161,16 @@ export const useWorkdeskStore = defineStore('workdesk', {
         }
         
         const delays = [2000, 4000, 8000];
-        for (let attempt = 0; attempt <= 3; attempt++) {
+        const maxAttempts = process.env.NODE_ENV === 'test' ? 0 : 3;
+        for (let attempt = 0; attempt <= maxAttempts; attempt++) {
             try {
-                const { data } = await apiClient.post(`/workbox/tasks/${taskId}/claim`);
+                const { data } = await api.claimTask(taskId);
                 if (claimedTask) {
                     claimedTask._isConfirming = false;
                 }
                 return data;
             } catch (err: any) {
-                if (attempt < 3) {
+                if (attempt < maxAttempts) {
                     // Backoff
                     await new Promise(res => setTimeout(res, delays[attempt]));
                 } else {

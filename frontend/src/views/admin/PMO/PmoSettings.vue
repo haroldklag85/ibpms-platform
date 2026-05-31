@@ -173,6 +173,8 @@
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
 
+const integrationStore = useIntegrationStore();
+
 // ── ESTADO CA-3: Config Horas ──
 const slaForm = ref({
    startHour: '08:00',

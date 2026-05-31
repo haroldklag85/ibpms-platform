@@ -142,8 +142,7 @@
           <span>Simulation Stage:</span>
           <select v-model="activeStageSim" class="bg-white border-blue-300 rounded text-xs py-0.5 focus:ring-blue-500 font-mono">
             <option value="START_EVENT">START_EVENT</option>
-            <option value="ANALYSIS">ANALYSIS</option>
-            <option value="DECISION">DECISION</option>
+            <option v-for="stage in availableStages" :key="stage" :value="stage">{{ stage }}</option>
             <option value="ALL">Mostrar Todos (Ideation)</option>
           </select>
         </div>
@@ -224,6 +223,46 @@
                     <button v-if="element.type === 'button_reject'" class="w-full px-4 py-2 bg-red-600 text-white font-bold rounded-lg mt-3 cursor-pointer shadow-md">❌ {{ element.label }}</button>
 
                     
+                    <div v-if="element.type === 'field_array'" class="border border-emerald-200 bg-emerald-50/50 rounded-lg p-4 mt-2 min-h-[120px]">
+                      <h4 class="text-[10px] font-bold text-emerald-700 uppercase mb-2">📋 Grilla Repetible: {{ element.label }}</h4>
+                      <VueDraggable
+                         v-model="element.children"
+                         :group="{ name: 'form-builder', pull: true, put: true }"
+                         item-key="id"
+                         class="min-h-[100px] transition-all"
+                         :class="{'border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center': !element.children || element.children.length === 0}"
+                         animation="200"
+                         ghost-class="ghost-dropzone"
+                      >
+                         <template #item="{ element: child, index: childIdx }">
+                            <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                               <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
+                                 <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
+                                 <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
+                                 <button @click="removeField(element.children, childIdx)" class="px-2 py-1 text-red-500 hover:bg-red-50">🗑️</button>
+                               </div>
+                               <label class="text-xs font-bold text-gray-700 block">{{ child.label }} <span v-if="child.required" class="text-red-500">*</span></label>
+                               <input v-if="child.type === 'text'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                               <textarea v-if="child.type === 'textarea'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" rows="1"></textarea>
+                               <input v-if="child.type === 'number'" type="number" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                               <input v-if="child.type === 'date'" type="date" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" disabled />
+                               <input v-if="child.type === 'time'" type="time" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" disabled />
+                               <select v-if="child.type === 'select'" class="form-select text-xs w-full mt-1 border-gray-300 rounded shadow-sm">
+                                 <option disabled selected>{{ child.placeholder }}</option>
+                               </select>
+                               <div v-if="child.type === 'checkbox'" class="flex items-center gap-1 mt-1">
+                                  <input type="checkbox" class="rounded text-indigo-600 border-gray-300" disabled />
+                                  <span class="text-[10px] text-gray-700">{{ child.placeholder || child.label }}</span>
+                               </div>
+                               <button v-if="child.type === 'button_submit'" class="w-full px-2 py-1 bg-indigo-600 text-white font-bold rounded mt-2 text-[10px]">✅ {{ child.label }}</button>
+                            </div>
+                         </template>
+                         <template #footer>
+                            <div v-if="!element.children || element.children.length === 0" class="text-gray-400 font-bold text-xs pointer-events-none mt-2">Arrastre componentes aquí para conformar las columnas de la Grilla</div>
+                         </template>
+                      </VueDraggable>
+                    </div>
+
                     <div v-if="element.type === 'container'" class="border border-indigo-200 bg-indigo-50/50 rounded-lg p-4 mt-2 min-h-[120px]">
                       <VueDraggable
                          v-model="element.children"

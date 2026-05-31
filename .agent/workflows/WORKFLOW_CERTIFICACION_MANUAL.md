@@ -33,3 +33,28 @@ Si un paso no coincide con el Resultado Esperado:
 
 ### 4. Cierre y Aprobación
 El Agente QA valida las respuestas del humano y firma la misión como `PASS`, `PASS CON OBSERVACIONES` (bugs no bloqueantes), o `FAIL`.
+
+### 5. Informe Técnico QA (Regla Obligatoria)
+
+**Regla:** Durante la ejecución de cualquier Journey, el Agente QA **DEBE** crear o actualizar un documento de Informe Técnico QA que registre con detalle quirúrgico todos los hallazgos reportados por el Tester Humano.
+
+- **Ubicación del archivo:** `docs/qa/INFORME_TECNICO_QA_[JOURNEY_ID]_[SPRINT_ID].md`
+- **Momento de creación:** Al inicio de la primera misión del Journey o cuando el Tester Humano reporte el primer hallazgo.
+- **Actualización:** El informe se actualiza **cada vez** que el Tester Humano reporte resultados de una misión (PASS, bloqueo o rechazo).
+
+**Contenido obligatorio por cada misión documentada:**
+
+| Sección | Descripción |
+|---------|-------------|
+| **Pasos ejecutados** | Tabla con cada paso, resultado (PASS/BLOQUEADO/FAIL) y observaciones textuales del humano |
+| **Bugs descubiertos** | ID del bug, severidad, causa raíz técnica (archivo + línea), commit del fix si fue resuelto |
+| **Observaciones de entorno** | Limitaciones que no son bugs (ej: falta de servicio IA, permisos, etc.) |
+| **Evidencia técnica** | Errores de consola DevTools, códigos HTTP, mensajes de error exactos reportados por el humano |
+| **Línea de tiempo Git** | Commits relevantes con hash, fecha y descripción, obtenidos de `git log` |
+| **Veredicto de misión** | PASS, PASS CON OBSERVACIONES, BLOQUEADA, o FAIL — con justificación |
+
+**Restricciones:**
+- El informe solo documenta lo que el Tester Humano reporta directamente. **NO se inventan, asumen ni imaginan resultados.**
+- Los handoffs al Arquitecto Líder se documentan dentro del informe pero **NO se recomiendan proactivamente** — la función principal del agente es ejecutar pruebas, no prescribir soluciones.
+- El informe es un documento vivo que se actualiza a lo largo de todo el Journey.
+

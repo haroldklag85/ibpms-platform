@@ -208,7 +208,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
         
         try {
         const payload = internalMessage ? { mensajeInterno: internalMessage } : {};
-        const { data } = await apiClient.post(`/api/v1/workbox/tasks/${taskId}/unclaim`, payload);
+        const { data } = await apiClient.post(`/workbox/tasks/${taskId}/unclaim`, payload);
         return data;
         } catch (err: any) {
           this.items = snapshot;
@@ -245,7 +245,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
         }
 
         try {
-           const { data } = await apiClient.post('/api/v1/workbox/tasks/bulk-claim', taskIds);
+           const { data } = await apiClient.post('/workbox/tasks/bulk-claim', taskIds);
            return data;
         } catch (err: any) {
            this.items = snapshot;

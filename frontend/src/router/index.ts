@@ -41,7 +41,7 @@ const router = createRouter({
                     path: 'intake-triage',
                     name: 'IntakeTriage',
                     component: () => import('@/views/IntakeTriageView.vue'), // Pantalla 16
-                    meta: { title: 'Triaje Intake', roles: ['Global Admin', 'ROLE_SUPER_ADMIN'] } 
+                    meta: { title: 'Triaje Intake', roles: ['ROLE_SUPER_ADMIN'] } 
                 },
                 {
                     path: 'kanban',
@@ -52,7 +52,13 @@ const router = createRouter({
                     path: 'admin',
                     name: 'AdminSettings',
                     component: () => import('@/views/admin/SettingsView.vue'),
-                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'Global Admin'] }
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
+                },
+                {
+                    path: 'admin/generic-form',
+                    name: 'GenericForm',
+                    component: () => import('@/views/admin/GenericForm/GenericFormView.vue'),
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
                 },
                 {
                     path: 'admin/incidents',
@@ -84,6 +90,12 @@ const router = createRouter({
                     component: () => import('@/views/admin/Modeler/DmnIntelligence.vue'),
                     meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
                 },
+                {
+                    path: 'admin/modeler/instances',
+                    name: 'InstancesManager',
+                    component: () => import('@/views/admin/Modeler/InstancesManager.vue'),
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
+                },
                 // --- Pantallas Reinsertadas de Grupos 2 y 3 ---
                 {
                     path: 'inbox',
@@ -96,7 +108,7 @@ const router = createRouter({
                     path: 'admin/intake',
                     name: 'IntakeManual',
                     component: () => import('@/views/admin/ServiceDelivery/IntakeManual.vue'),
-                    meta: { requiresAuth: true }
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN'] }
                 },
                 {
                     path: 'admin/customer360',
@@ -116,7 +128,7 @@ const router = createRouter({
                     path: 'admin/project-builder',
                     name: 'ProjectBuilder',
                     component: () => import('@/views/admin/ProjectBuilder/ProjectBuilder.vue'),
-                    meta: { requiresAuth: true }
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
                 },
                 {
                     path: 'admin/projects',
@@ -146,7 +158,7 @@ const router = createRouter({
                     path: 'admin/integration/catalog',
                     name: 'ConnectorCatalog',
                     component: () => import('@/views/admin/Integration/ConnectorCatalog.vue'),
-                    meta: { requiresAuth: true }
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
                 },
                 {
                     path: 'admin/integration/builder',
@@ -158,7 +170,7 @@ const router = createRouter({
                     path: 'admin/integration/mapper',
                     name: 'VisualMapper',
                     component: () => import('@/views/admin/Integration/VisualMapper.vue'),
-                    meta: { requiresAuth: true }
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
                 },
                 {
                     path: 'admin/integration/dlq',
@@ -171,34 +183,34 @@ const router = createRouter({
                     path: 'sgdea/vault',
                     name: 'SGD_Vault',
                     component: () => import('@/views/admin/SGDEA/DocumentGrid.vue'),
-                    meta: { title: 'Bóveda Documental', requiresAuth: true }
+                    meta: { title: 'Bóveda Documental', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
                 },
                 {
                     path: 'ai/prompts',
                     name: 'AI_PromptLibrary',
                     component: () => import('@/views/admin/AI/PromptLibrary.vue'),
-                    meta: { title: 'Librería de Prompts', requiresAuth: true, roles: ['Global Admin', 'prompt_engineer'] } 
+                    meta: { title: 'Librería de Prompts', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] } 
                 },
                 // --- Epic 13: SacConfigManager (Pantalla 15) ---
                 {
                     path: 'admin/mailboxes',
                     name: 'SacConfigManager',
                     component: () => import('@/views/admin/AI/SacConfigManager.vue'),
-                    meta: { title: 'Buzones Inbound Graph', requiresAuth: true, roles: ['Global Admin'] }
+                    meta: { title: 'Buzones Inbound Graph', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
                 },
                 // --- Bloque J: Identity Governance (Pantalla 14) ---
                 {
                     path: 'admin/security/identity',
                     name: 'IdentityGovernance',
                     component: () => import('@/views/admin/Security/IdentityGovernance.vue'),
-                    meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'SUPER_ADMIN', 'Global Admin', 'ibpms_rol_SUPER_ADMIN'] }
+                    meta: { title: 'Gobernanza de Identidades', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
                 },
                 // --- Bloque K: PMO SLA Management (Pantalla 19) CA-1 a CA-6 ---
                 {
                     path: 'admin/pmo/settings',
                     name: 'PmoSettings',
                     component: () => import('@/views/admin/PMO/PmoSettings.vue'),
-                    meta: { title: 'Configuración PMO / SLA', requiresAuth: true, roles: ['Global Admin', 'ROLE_SUPER_ADMIN'] }
+                    meta: { title: 'Configuración PMO / SLA', requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
                 },
                 // --- Ruta Comodín (Catch-All 404) dentro del Layout ---
                 {

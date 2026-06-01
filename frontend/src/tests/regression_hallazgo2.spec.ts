@@ -22,6 +22,19 @@ describe('Regression - Hallazgo 2: Unprotected Modeler and Admin Routes Security
         { path: '/admin/modeler/dmn', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] },
         { path: '/admin/analytics/bam', allowedRoles: ['ROLE_SUPER_ADMIN', 'Global Admin'] },
         { path: '/admin/integration/builder', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] },
+        { path: '/admin/intake', allowedRoles: ['ROLE_SUPER_ADMIN'] },
+        { path: '/admin/generic-form', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] },
+        { path: '/admin/project-builder', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] },
+        { path: '/admin/integration/mapper', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] },
+        { path: '/admin/modeler/instances', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] },
+        { path: '/admin/pmo/settings', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] },
+        { path: '/admin', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] },
+        { path: '/ai/prompts', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] },
+        { path: '/admin/integration/catalog', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] },
+        { path: '/admin/mailboxes', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] },
+        { path: '/sgdea/vault', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] },
+        { path: '/admin/security/identity', allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] },
+        { path: '/intake-triage', allowedRoles: ['ROLE_SUPER_ADMIN'] }
     ];
 
     routesToTest.forEach(({ path, allowedRoles }) => {

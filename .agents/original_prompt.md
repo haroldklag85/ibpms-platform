@@ -111,3 +111,36 @@ This test must initially fail to compile or fail to execute (observing the red p
 - [ ] `DmnGovernanceUseCase.java` contains no references or imports to any packages inside `com.ibpms.poc.infrastructure.jpa`.
 - [ ] `DmnModel.java` has zero annotations from packages `jakarta.persistence` or `org.hibernate`.
 - [ ] All database schemas and transactional operations behave exactly as before.
+
+## 2026-06-01T19:58:55Z
+
+El objetivo es alinear la topología visual del menú lateral izquierdo (Sidebar) de la aplicación iBPMS con los cuatro nuevos macro-módulos temáticos (Grupo A al D) especificados en el diseño de enrutamiento, modificando el controlador del backend (`MenuLayoutController.java`) y validando mediante pruebas de integración/unidad en Spring Boot y Vitest.
+
+Working directory: c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform
+Integrity mode: development
+
+## Requirements
+
+### R1. Reestructuración del Layout de Menú en el Backend
+Modificar la definición del árbol de menús en `MenuLayoutController.java` para que devuelva exactamente los siguientes grupos y elementos basados en la topología de permisos del usuario:
+- **Grupo A: Operación Diaria (Buzón y Triaje)**:
+  - Elementos: `Portal` (`/`), `Workdesk` (`/workdesk`), `Tablero Kanban` (`/kanban`), `Customer 360` (`/admin/customer360`), `Gestor Proyectos` (`/admin/projects/manager`), `Hub Ágil` (`/admin/projects/agile-hub/:projectId?`), `Triaje` (`/intake-triage`), `Intake Manual` (`/admin/intake`), `BAM Dashboard` (`/admin/analytics/bam`).
+- **Grupo B: Gobierno, Seguridad e Incidentes**:
+  - Elementos: `Gobernanza de Identidad` (`/admin/security/identity`), `PMO` (`/admin/pmo/settings`), `Configuración Global` (`/admin`).
+- **Grupo C: Diseño y Modelado Low-Code**:
+  - Elementos: `Modelador BPMN` (`/admin/modeler/bpmn`), `Catálogo Formularios` (`/admin/modeler/forms`), `Diseñador Formularios` (`/admin/modeler/forms/designer`), `DMN Intelligence` (`/admin/modeler/dmn`), `Librería Prompts` (`/ai/prompts`), `Formulario Genérico` (`/admin/generic-form`), `Visual Mapper` (`/admin/integration/mapper`), `Project Builder` (`/admin/project-builder`).
+- **Grupo D: Integraciones y Automatización**:
+  - Elementos: `Catálogo` (`/admin/integration/catalog`), `Builder` (`/admin/integration/builder`), `DLQ Dashboard` (`/admin/integration/dlq`), `Buzones SAC` (`/admin/mailboxes`), `SGD Bóveda` (`/sgdea/vault`), `Centro Incidentes` (`/admin/incidents`), `Gestión de Instancias` (`/admin/modeler/instances`).
+
+### R2. Asegurar Sincronización en el Frontend
+- Modificar el frontend (`MainLayout.vue`, `useMenuStore.ts` y archivos de idioma/i18n) para asegurar que los títulos de los grupos del acordeón se muestren correctamente como "Grupo A: Operación Diaria", "Grupo B: Gobierno, Seguridad e Incidentes", "Grupo C: Diseño y Modelado Low-Code" y "Grupo D: Integraciones y Automatización".
+- Mapear correctamente los iconos del frontend para que los acordeones muestren los iconos MDI o Material design correspondientes.
+
+## Acceptance Criteria
+
+### Verificación de Pruebas y Compilación
+- [ ] Crear la prueba de integración en el backend `com.ibpms.poc.infrastructure.web.ui.MenuLayoutControllerTest.java` para verificar que el endpoint `GET /api/v1/users/me/menu-layout` retorne la nueva estructura estructurada con los grupos A, B, C y D.
+- [ ] Compilar y verificar que las pruebas del backend pasen exitosamente (`mvn clean test`).
+- [ ] Compilar y verificar que las pruebas del frontend pasen exitosamente (`npx vitest run`).
+- [ ] Garantizar que no se modifiquen aserciones de pruebas históricas (Ley Global 4).
+- [ ] Ejecutar `npm run build` en el frontend y corroborar compilación exitosa sin advertencias ni errores.

@@ -130,10 +130,11 @@ spring:
       mode: always
       data-locations: classpath:seed-e2e.sql
       continue-on-error: true
+
   liquibase:
-    enabled: false
+    enabled: true
   jpa:
-    defer-datasource-initialization: true
+    defer-datasource-initialization: false
   data:
     redis:
       host: localhost

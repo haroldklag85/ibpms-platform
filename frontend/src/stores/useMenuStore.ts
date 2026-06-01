@@ -11,6 +11,7 @@ export interface MenuItem {
 
 export interface MenuGroup {
     title: string;
+    icon?: string;
     roles?: string[];
     items: MenuItem[];
 }
@@ -75,15 +76,19 @@ export const useMenuStore = defineStore('menu', () => {
                  for (const item of data) {
                      const children = item.items !== undefined ? item.items : item.children;
                      if (children !== undefined) {
-                         if (children.length > 0 || item.title === 'Workdesk') {
-                             mappedLayout.push({
+                         if (children.length > 0 || item.title === 'Workdesk' || item.title === 'groupA') {
+                             const mappedGroup: MenuGroup = {
                                  title: item.title,
                                  items: children.map((c: any) => ({
                                      label: c.title || c.label,
                                      icon: mapIcon(c.icon),
                                      path: c.path
                                  }))
-                             });
+                             };
+                             if (item.icon) {
+                                 mappedGroup.icon = mapIcon(item.icon);
+                             }
+                             mappedLayout.push(mappedGroup);
                          }
                      } else if (item.path) {
                          // Es un link directo (no tiene children y tiene path válido)

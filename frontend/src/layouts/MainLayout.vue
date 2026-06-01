@@ -98,14 +98,16 @@
                
                <!-- Separador Visual / Título del Grupo -->
                <div v-if="gIdx > 0" class="h-px bg-slate-800 my-4 mx-2"></div>
-               <p v-if="!isSidebarCollapsed && group.title === 'Workdesk'" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 fade-in">{{ group.title }}</p>
+               <p v-if="!isSidebarCollapsed && (group.title === 'Workdesk' || group.title === 'groupA')" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 fade-in">
+                  {{ te('sidebar.' + group.title) ? t('sidebar.' + group.title) : group.title }}
+               </p>
 
                <!-- Renderizado Plano (Si es Workdesk/Operación) o Acordeón para otros -->
-               <template v-if="group.title === 'Workdesk'">
-                   <router-link v-for="(item, iIdx) in group.items" :key="'w'+iIdx" :to="item.path" class="nav-item group/link" active-class="nav-active" :title="item.label">
+               <template v-if="group.title === 'Workdesk' || group.title === 'groupA'">
+                   <router-link v-for="(item, iIdx) in group.items" :key="'w'+iIdx" :to="item.path" class="nav-item group/link" active-class="nav-active" :title="te('sidebar.' + item.label) ? t('sidebar.' + item.label) : item.label">
                       <span class="material-symbols-outlined nav-icon">{{ item.icon }}</span>
-                      <span v-if="!isSidebarCollapsed" class="nav-text flex-1">{{ item.label }}</span>
-                      <div v-if="isSidebarCollapsed" class="tooltip-mockup">{{ item.label }}</div>
+                      <span v-if="!isSidebarCollapsed" class="nav-text flex-1">{{ te('sidebar.' + item.label) ? t('sidebar.' + item.label) : item.label }}</span>
+                      <div v-if="isSidebarCollapsed" class="tooltip-mockup">{{ te('sidebar.' + item.label) ? t('sidebar.' + item.label) : item.label }}</div>
                    </router-link>
                </template>
 
@@ -115,18 +117,24 @@
                       @click="toggleGroup(group.title)" 
                       class="nav-item cursor-pointer group/admin relative flex items-center"
                       :class="{ 'bg-slate-800/50 text-white': isGroupExpanded(group.title) && !isSidebarCollapsed }"
-                      :title="group.title"
+                      :title="te('sidebar.' + group.title) ? t('sidebar.' + group.title) : group.title"
                    >
-                      <span class="material-symbols-outlined nav-icon" :class="{ 'text-indigo-400': isGroupExpanded(group.title) }">account_tree</span>
-                      <span v-if="!isSidebarCollapsed" class="nav-text flex-1" :class="{ 'font-semibold': isGroupExpanded(group.title) }">{{ group.title }}</span>
+                      <span class="material-symbols-outlined nav-icon" :class="{ 'text-indigo-400': isGroupExpanded(group.title) }">
+                         {{ group.icon || 'account_tree' }}
+                      </span>
+                      <span v-if="!isSidebarCollapsed" class="nav-text flex-1" :class="{ 'font-semibold': isGroupExpanded(group.title) }">
+                         {{ te('sidebar.' + group.title) ? t('sidebar.' + group.title) : group.title }}
+                      </span>
                       <span v-if="!isSidebarCollapsed" class="material-symbols-outlined text-[16px] text-slate-500 transition-transform duration-200" :class="{ 'rotate-180': isGroupExpanded(group.title) }">expand_more</span>
-                      <div v-if="isSidebarCollapsed" class="tooltip-mockup">{{ group.title }}</div>
+                      <div v-if="isSidebarCollapsed" class="tooltip-mockup">
+                         {{ te('sidebar.' + group.title) ? t('sidebar.' + group.title) : group.title }}
+                      </div>
                    </div>
 
                    <!-- Sub-Items del Acordeón -->
                    <div v-show="isGroupExpanded(group.title) && !isSidebarCollapsed" class="flex flex-col gap-1 pl-9 pr-2 mt-1 fade-in">
                       <router-link v-for="(item, iIdx) in group.items" :key="'i'+iIdx" :to="item.path" class="sub-nav-item" active-class="sub-nav-active">
-                          <span class="material-symbols-outlined text-[14px] mr-2">{{ item.icon }}</span> {{ item.label }}
+                          <span class="material-symbols-outlined text-[14px] mr-2">{{ item.icon }}</span> {{ te('sidebar.' + item.label) ? t('sidebar.' + item.label) : item.label }}
                       </router-link>
                    </div>
                </template>
@@ -273,7 +281,7 @@ const route = useRoute();
 const preferencesStore = usePreferencesStore();
 const authStore = useAuthStore();
 const menuStore = useMenuStore();
-const { t, locale } = useI18n();
+const { t, te, locale } = useI18n();
 
 const showImpersonationSelector = ref(false);
 const isRoleSwitching = ref(false);

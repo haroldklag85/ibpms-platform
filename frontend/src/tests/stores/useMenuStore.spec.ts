@@ -61,4 +61,29 @@ describe('useMenuStore', () => {
       expect(store.layout[1].title).toBe('Contenedor Lleno');
       expect(store.layout[1].items[0].label).toBe('Item 1');
   });
+
+  it('assigns group-level icon using mapIcon and includes groupA in layout hydration', async () => {
+      const store = useMenuStore();
+      const mockData = [
+          { 
+              title: 'groupA', 
+              icon: 'mdi-desktop-mac', 
+              children: [{ title: 'Item A', path: '/itema', icon: 'mdi-cog' }] 
+          },
+          { 
+              title: 'groupB', 
+              icon: 'mdi-shield-alert', 
+              children: [{ title: 'Item B', path: '/itemb', icon: 'mdi-cog' }] 
+          }
+      ];
+      (apiClient.get as any).mockResolvedValue({ data: mockData });
+
+      await store.fetchMenuLayout();
+
+      expect(store.layout.length).toBe(2);
+      expect(store.layout[0].title).toBe('groupA');
+      expect(store.layout[0].icon).toBe('desktop_mac');
+      expect(store.layout[1].title).toBe('groupB');
+      expect(store.layout[1].icon).toBe('gpp_maybe');
+  });
 });

@@ -298,6 +298,14 @@
 			<artifactId>tika-core</artifactId>
 			<version>2.9.1</version>
 		</dependency>
+
+		<!-- ArchUnit para validación automatizada de Arquitectura Hexagonal y DDD -->
+		<dependency>
+			<groupId>com.tngtech.archunit</groupId>
+			<artifactId>archunit-junit5</artifactId>
+			<version>1.2.1</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>

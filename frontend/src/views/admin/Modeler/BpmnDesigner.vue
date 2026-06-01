@@ -743,6 +743,7 @@ import { useTimeStore } from '@/stores/timeStore';
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
+import { useRoute } from 'vue-router';
 import { debounce } from 'lodash-es';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 import InstancesManager from './InstancesManager.vue';
@@ -756,6 +757,7 @@ const corruptNodeId = ref<string | null>(null);
 const authStore = useAuthStore();
 const integrationStore = useIntegrationStore(); // @Traceability: US-005, CA-40
 const timeStore = useTimeStore(); // Prevent runtime TypeError on undefined timeStore
+const route = useRoute();
 const activeRole = computed(() => authStore.roles?.[0] || 'BPMN_Designer'); // Reemplaza mockRole CA-21, CA-66
 
 // ── Types ────────────────────────────────────────────────────
@@ -1422,6 +1424,10 @@ onMounted(async () => {
     modelerInstance.on('import.done', (event: any) => {
        const { error } = event;
        if (!error) {
+           // @Traceability: US-005, CA-40 Inicialización del contador para bloqueo de Patrón
+           const count = modelerInstance.get('elementRegistry').filter((e: any) => e.type !== 'bpmn:Process').length;
+           elementCount.value = count;
+
            const canvas = modelerInstance.get('canvas');
            const rootElement = canvas.getRootElement();
            // Si el XML parseado escupe isExecutable="false"
@@ -1463,6 +1469,11 @@ onMounted(async () => {
     // Initialization Calls (CA-6 / CA-7)
     fetchLockState();
     fetchVersions();
+
+    // @Traceability: US-005, CA-40 Abrir catálogo si no se identifica un proceso activo
+    if (!route || !route.query || !route.query.processId) {
+      showCatalog.value = true;
+    }
     
     watch(showVersions, (val) => {
       if (val) fetchVersions();

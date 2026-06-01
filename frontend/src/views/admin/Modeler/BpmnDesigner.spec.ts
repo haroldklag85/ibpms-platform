@@ -40,7 +40,10 @@ vi.mock('bpmn-js/lib/Modeler', () => {
                 if (name === 'canvas') {
                     return {
                         zoom: mockZoom,
-                        open: mockOpen
+                        open: mockOpen,
+                        getRootElement: () => ({ id: 'Process_1', businessObject: { isExecutable: true } }),
+                        addMarker: vi.fn(),
+                        removeMarker: vi.fn()
                     };
                 }
                 if (name === 'minimap') {
@@ -67,10 +70,17 @@ vi.mock('bpmn-js/lib/Modeler', () => {
 });
 vi.mock('diagram-js-minimap', () => ({ default: {} }));
 
+let mockRouteQuery: any = { processId: 'credito-consumo-v1' };
+vi.mock('vue-router', () => ({
+    useRoute: () => ({
+        query: mockRouteQuery
+    })
+}));
 
 describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
 
     beforeEach(() => {
+        mockRouteQuery = { processId: 'credito-consumo-v1' };
         mockZoom.mockImplementation((val?: any) => {
             if (val === undefined) return 1.0;
             return val;
@@ -506,6 +516,47 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
 
             expect(wrapper.vm.linterErrors).toContain("Linter: La compuerta exclusiva 'Compuerta Divergente' es divergente y requiere un flujo por defecto (Default Flow).");
             expect(wrapper.vm.preFlightStatus).toBe('ERROR');
+
+            wrapper.unmount();
+        });
+    });
+
+    // @Traceability: US-005, CA-40 Inicialización de Patrón de Proceso y Apertura de Catálogo
+    describe('Pruebas para CA-40 (Inmutabilidad de Patrón y Carga Inicial)', () => {
+        it('Debe inicializar elementCount en import.done para bloquear/deshabilitar el selector de Patrón de Proceso si no está vacío', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const modeler = (window as any).__modelerInstance;
+            const elementRegistry = modeler.get('elementRegistry');
+
+            // Simular un diagrama que tiene 5 elementos
+            vi.spyOn(elementRegistry, 'filter').mockReturnValue(new Array(5));
+
+            // Obtener el callback de import.done registrado en el modeler
+            const importDoneCall = modeler.on.mock.calls.find((call: any) => call[0] === 'import.done');
+            expect(importDoneCall).toBeDefined();
+            const importDoneCallback = importDoneCall[1];
+
+            // Ejecutar el callback de importación sin errores
+            importDoneCallback({ error: null });
+            await wrapper.vm.$nextTick();
+
+            // elementCount debe ser 5
+            expect(wrapper.vm.elementCount).toBe(5);
+
+            wrapper.unmount();
+        });
+
+        it('Debe abrir el explorador de procesos (Catálogo) por defecto en el mounted si no existe un proceso activo en la query de la URL', async () => {
+            // Cambiar mockRouteQuery para que no tenga processId
+            mockRouteQuery = {};
+
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // showCatalog debe ser true
+            expect(wrapper.vm.showCatalog).toBe(true);
 
             wrapper.unmount();
         });

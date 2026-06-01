@@ -1,49 +1,50 @@
-# Implementation Plan - Backend Refactoring (ADR-001 Validation)
+# Implementation Plan - DMN Governance Refactoring (ADR-001 Validation)
 
-This plan details the steps required to eliminate technical debt in the backend code of `ibpms-platform` by purifying the domain models, decoupling the repository ports from Spring Data, unifying the infrastructure adapters namespace, and removing duplicate endpoints.
+This plan details the steps required to refactor the DMN governance module of US-007 to comply with ADR-001 (Hexagonal Architecture / DDD), ensuring the domain layer is completely decoupled from the JPA persistence layer using ports and adapters.
 
 ## Milestones
 
-### Milestone 1: Domain Model Purification
-- **Scope**: Cleanse `com.ibpms.poc.domain.model` package (and its `agile` subpackage) from all JPA annotations (`@Entity`, `@Table`, `@Id`, `@Column`, etc.).
-- **Entities to Purify**:
-  - `AllowedDomain`
-  - `OrphanPayload`
-  - `TriageTask`
-  - `WebhookTransaction`
-  - `agile/AgileProject`
-  - `agile/AgileTask`
-  - `agile/AgileTimebox`
-  - `agile/AgileSlaChangelog`
-- **Infrastructure Equivalent**: Create corresponding `JpaEntity` classes under `com.ibpms.poc.infrastructure.jpa.entity` mapping to same database schema.
-- **Mapping Layer**: Implement MapStruct mappers under `com.ibpms.poc.infrastructure.jpa.mapper` to translate back and forth between JPA entities and Domain POJOs.
-- **Traceability**: Add `// @Traceability: US-003 - ADR-001` in all created and modified source files.
+### Milestone 1: Implement Failing Architecture Test (TDD Phase 1)
+- **Scope**: Ensure that any infrastructure or persistence leaks in the domain layer are caught early.
+- **Task**: Modify/create `DmnArchitectureComplianceTest.java` under `src/test/java` in `com.ibpms.poc.application.usecase.dmn` package.
+- **Verification**: Run `mvn test -Dtest=DmnArchitectureComplianceTest -pl ibpms-core` and verify it fails due to imports in `DmnGovernanceUseCase.java`.
+- **Traceability**: Add `// @Traceability: US-007 - ADR-001` in the header of the test class.
 
-### Milestone 2: Port Decoupling
-- **Scope**: Remove Spring Data dependency (`Page` and `Pageable`) from `TriageTaskRepository.java`.
-- **Modifications**:
-  - Update `TriageTaskRepository.java` signature to return `List<TriageTask>` using simple pagination parameters or domain abstractions.
-  - Implement conversion to and from Spring Data pagination classes inside the JPA repository implementation.
-  - Fix calling services (e.g. `TriageTaskService.java`) to adapt to the new clean signature.
-- **Traceability**: Add `// @Traceability: US-003 - ADR-001`.
+### Milestone 2: Create Domain Models & Ports
+- **Scope**: Purify the domain by defining the domain model and its corresponding database repository port.
+- **Tasks**:
+  - Create `DmnModel.java` as a pure POJO inside `com.ibpms.poc.domain.model` package (without any JPA or Hibernate annotations).
+  - Create `DmnModelRepositoryPort.java` inside `com.ibpms.poc.domain.port` package defining required persistence operations.
+- **Traceability**: Add `// @Traceability: US-007 - ADR-001` in headers of all created files.
 
-### Milestone 3: Infrastructure Adapters Package Consolidation
-- **Scope**: Rename package `com.ibpms.poc.infrastructure.adapters` to `com.ibpms.poc.infrastructure.adapter`.
-- **Modifications**:
-  - Move files from `infrastructure/adapters` directory to `infrastructure/adapter` directory.
-  - Global import updates across the entire application and tests.
-- **Traceability**: Add `// @Traceability: US-003 - ADR-001`.
+### Milestone 3: Refactor Use Case to Decouple Persistence
+- **Scope**: Decouple the `DmnGovernanceUseCase` from direct infrastructure references.
+- **Tasks**:
+  - Refactor `DmnGovernanceUseCase.java` to use `DmnModelRepositoryPort` instead of `DmnModelRepository`.
+  - Replace occurrences of `DmnModelEntity` with the domain model `DmnModel`.
+  - Remove all infrastructure/JPA package imports.
+- **Traceability**: Add `// @Traceability: US-007 - ADR-001` in headers of modified files.
 
-### Milestone 4: Controller Duplication Removal
-- **Scope**: Delete `TaskDraftController.java` from `com.ibpms.poc.api.controller`.
-- **Modifications**:
-  - Ensure all drafts API paths are fully handled by `TaskDraftApiController.java` under `/api/v1/drafts/{taskId}` (which maps to the exact same logic or is consolidated).
-  - Verify that no remaining references to the old endpoint or class exist.
-- **Traceability**: Add `// @Traceability: US-003 - ADR-001`.
+### Milestone 4: Consolidate Infrastructure Adapters and Mappers
+- **Scope**: Implement persistence adapters and MapStruct mappers to bridge the domain-infrastructure gap.
+- **Tasks**:
+  - Rename `DmnModelEntity.java` to `DmnModelJpaEntity.java` under `com.ibpms.poc.infrastructure.jpa.entity.dmn`.
+  - Create `DmnModelMapper.java` under `com.ibpms.poc.infrastructure.jpa.mapper` using MapStruct.
+  - Create `DmnModelJpaAdapter.java` under `com.ibpms.poc.infrastructure.adapter` implementing `DmnModelRepositoryPort` and delegating to `DmnModelRepository`.
+  - Update `DmnModelRepository` to extend `JpaRepository<DmnModelJpaEntity, String>`.
+- **Traceability**: Add `// @Traceability: US-007 - ADR-001` in headers of all created/modified files.
 
-### Milestone 5: Verification & Testing
-- **Scope**: Run complete maven build and test suite, verify compilation and runtime behavior.
-- **Commands**:
-  - `mvn clean compile`
-  - `mvn test`
-- **Traceability Verification**: Ensure all modified files contain the required comment block.
+### Milestone 5: Web & Test Integration
+- **Scope**: Update web controllers and tests to match the new hexagonal layout.
+- **Tasks**:
+  - Update `DmnGovernanceController.java` to handle the new return/parameter types from the use case.
+  - Update other use cases or controllers referencing `DmnModelEntity` (like `AiDmnGeneratorUseCase`, `DmnSimulatorUseCase`, etc., if applicable).
+  - Refactor unit/integration tests (`DmnGovernanceControllerTest.java`, `DmnSimulationIntegrationTest.java`, etc.) to use domain models and correct adapters/mocks.
+- **Traceability**: Add `// @Traceability: US-007 - ADR-001` in headers of all modified files.
+
+### Milestone 6: Verification & Compliance (Green Phase)
+- **Scope**: Run the test suite and verification tools to ensure that all requirements and constraints are met.
+- **Verification**:
+  - Run `mvn test -pl ibpms-core` to verify all tests pass.
+  - Verify that `DmnArchitectureComplianceTest` passes.
+  - Run `teamwork_preview_auditor` to check for integrity and traceability violations.

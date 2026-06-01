@@ -1,4 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.web;
+
+import com.ibpms.poc.AbstractIntegrationTest;
+
 
 import com.ibpms.poc.application.service.TaskDelegationService;
 import org.junit.jupiter.api.Test;
@@ -19,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class WorkdeskQueryControllerDelegationTest {
+public class WorkdeskQueryControllerDelegationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -1,4 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.messaging;
+
+import com.ibpms.poc.AbstractIntegrationTest;
+
 
 import com.ibpms.poc.application.service.cache.AiDmnCacheService;
 import org.junit.jupiter.api.Test;
@@ -24,7 +28,7 @@ import static org.mockito.Mockito.verify;
 // @Traceability: US-007, CA-16
 @SpringBootTest
 @ActiveProfiles("test")
-public class FormSchemaChangedRabbitListenerTest {
+public class FormSchemaChangedRabbitListenerTest extends AbstractIntegrationTest {
 
     @MockBean
     private AiDmnCacheService aiDmnCacheService;

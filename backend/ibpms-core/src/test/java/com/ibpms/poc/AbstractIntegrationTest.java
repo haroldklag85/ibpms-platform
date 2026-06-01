@@ -1,3 +1,4 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc;
 
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,10 +19,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
  * 
  * Uso: Hacer que tus clases de test hereden de {@link AbstractIntegrationTest}.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
+
 
     @org.springframework.boot.test.web.server.LocalServerPort
     protected int port;
@@ -47,7 +49,7 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.rabbitmq.port", () -> 5673); // Puerto estático RabbitMQ e2e
 
         // Cumplimiento Zero-Trust: Liquibase controla la DB, Hibernate en modo validación pura.
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.liquibase.enabled", () -> "true");
         registry.add("camunda.bpm.database.schema-update", () -> "true");
     }

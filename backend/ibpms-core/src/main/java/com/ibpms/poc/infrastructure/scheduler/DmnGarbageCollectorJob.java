@@ -1,7 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.scheduler;
 
-import com.ibpms.poc.infrastructure.jpa.entity.dmn.DmnModelEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.dmn.DmnModelRepository;
+import com.ibpms.poc.domain.model.DmnModel;
+import com.ibpms.poc.domain.port.DmnModelRepositoryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,9 +19,9 @@ import java.util.List;
 public class DmnGarbageCollectorJob {
 
     private static final Logger log = LoggerFactory.getLogger(DmnGarbageCollectorJob.class);
-    private final DmnModelRepository dmnRepository;
+    private final DmnModelRepositoryPort dmnRepository;
 
-    public DmnGarbageCollectorJob(DmnModelRepository dmnRepository) {
+    public DmnGarbageCollectorJob(DmnModelRepositoryPort dmnRepository) {
         this.dmnRepository = dmnRepository;
     }
 
@@ -33,11 +34,13 @@ public class DmnGarbageCollectorJob {
     public void purgeStaleDmnDrafts() {
         LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
         
-        List<DmnModelEntity> staleDrafts = dmnRepository.findByStatusAndUpdatedAtBefore("DRAFT", twentyFourHoursAgo);
+        List<DmnModel> staleDrafts = dmnRepository.findByStatusAndUpdatedAtBefore("DRAFT", twentyFourHoursAgo);
         
         if (!staleDrafts.isEmpty()) {
             log.info("[SRE-GC] Detectados {} DMNs temporales obsoletos (>24h). Secuenciando purga física...", staleDrafts.size());
-            dmnRepository.deleteAll(staleDrafts);
+            for (DmnModel draft : staleDrafts) {
+                dmnRepository.delete(draft);
+            }
             log.info("[SRE-GC] Purga completada. Almacenamiento PostgreSQL liberado exitosamente.");
         } else {
             log.debug("[SRE-GC] No existen DMNs borradores listos para purgar.");

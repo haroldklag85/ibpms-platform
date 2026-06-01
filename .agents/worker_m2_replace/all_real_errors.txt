@@ -1,0 +1,2035 @@
+Total unique real failures: 103
+=== com.ibpms.poc.FormCompletionSagaTest.testHappyPathSaga ===
+  Msg  : Failed to load ApplicationContext for [WebMergedContextConfiguration@2524f1d4 testClass = com.ibpms.poc.FormCompletionSagaTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@4c6716f9 key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@968eb081, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@69dfa79d, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@4626ba1b, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+  Cause: Caused by: java.io.FileNotFoundException: class path resource [com/ibpms/poc/AbstractIntegrationTest.class] cannot be opened because it does not exist
+  Trace:
+    java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@2524f1d4 testClass = com.ibpms.poc.FormCompletionSagaTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@4c6716f9 key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@968eb081, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@69dfa79d, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@4626ba1b, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+    	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:180)
+    	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+    	at org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener.postProcessFields(MockitoTestExecutionListener.java:122)
+    	at org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener.injectFields(MockitoTestExecutionListener.java:106)
+    	at org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener.prepareTestInstance(MockitoTestExecutionListener.java:63)
+    	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+    	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+    	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+    	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+
+=== com.ibpms.poc.application.service.FormCompletionServiceTest.testAntiIdorVerificationIsTriggeredForUUID ===
+  Msg  : com/ibpms/poc/domain/model/FormEvent$FormEventBuilder
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.FormEvent$FormEventBuilder
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/FormEvent$FormEventBuilder
+    	at com.ibpms.poc.domain.model.FormEvent.builder(FormEvent.java:11)
+    	at com.ibpms.poc.application.service.FormCompletionService.completeTask(FormCompletionService.java:144)
+    	at com.ibpms.poc.application.service.FormCompletionServiceTest.testAntiIdorVerificationIsTriggeredForUUID(FormCompletionServiceTest.java:139)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.FormEvent$FormEventBuilder
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+
+=== com.ibpms.poc.application.service.FormCompletionServiceTest.testCompleteTaskSuccess ===
+  Msg  : com/ibpms/poc/domain/model/FormEvent$FormEventBuilder
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.FormEvent$FormEventBuilder
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/FormEvent$FormEventBuilder
+    	at com.ibpms.poc.domain.model.FormEvent.builder(FormEvent.java:11)
+    	at com.ibpms.poc.application.service.FormCompletionService.completeTask(FormCompletionService.java:144)
+    	at com.ibpms.poc.application.service.FormCompletionServiceTest.testCompleteTaskSuccess(FormCompletionServiceTest.java:89)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.FormEvent$FormEventBuilder
+    	... 6 more
+
+=== com.ibpms.poc.application.service.FormCompletionServiceTest.testSagaRollbackOnCamundaFailure ===
+  Msg  : Unexpected exception type thrown, expected: <com.ibpms.poc.application.service.SagaCompensationException> but was: <java.lang.NoClassDefFoundError>
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.FormEvent$FormEventBuilder
+  Trace:
+    org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <com.ibpms.poc.application.service.SagaCompensationException> but was: <java.lang.NoClassDefFoundError>
+    	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+    	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+    	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+    	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+    	at com.ibpms.poc.application.service.FormCompletionServiceTest.testSagaRollbackOnCamundaFailure(FormCompletionServiceTest.java:165)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/FormEvent$FormEventBuilder
+
+=== com.ibpms.poc.application.service.KanbanColumnServiceTest.createColumn_WhenCountIs7_ShouldThrowConflict ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.application.port.out.KanbanColumnPort.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.application.port.out.KanbanColumnPort]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanColumn
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.application.port.out.KanbanColumnPort.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.KanbanColumnServiceTest.deleteColumn_ShouldInvokePort ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.application.port.out.KanbanColumnPort.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.application.port.out.KanbanColumnPort]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanColumn
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.application.port.out.KanbanColumnPort.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.KanbanColumnServiceTest.createColumn_WhenCountLessThan7_ShouldSave ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.application.port.out.KanbanColumnPort.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.application.port.out.KanbanColumnPort]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanColumn
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.application.port.out.KanbanColumnPort.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.KanbanTaskServiceTest.moveTask_BlockedWithoutReason_ShouldThrowException ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.application.service.KanbanTaskServiceTest.setUp(KanbanTaskServiceTest.java:47)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+    	... 4 more
+
+=== com.ibpms.poc.application.service.KanbanTaskServiceTest.moveTask_InvalidTransition_ShouldThrowException ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.application.service.KanbanTaskServiceTest.setUp(KanbanTaskServiceTest.java:47)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.application.service.KanbanTaskServiceTest.moveTask_DoneIsImmutable_ShouldThrowException ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.application.service.KanbanTaskServiceTest.setUp(KanbanTaskServiceTest.java:47)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.application.service.KanbanTaskServiceTest.moveTask_ValidTransition_ShouldSaveAndEmitEvent ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.application.service.KanbanTaskServiceTest.setUp(KanbanTaskServiceTest.java:47)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.application.service.RejectionLogServiceTest.getRejectionHistory_returnsFormattedListForBff ===
+  Msg  : 
+Mockito cannot mock this class: class com.ibpms.poc.domain.model.FormEvent.
+Can not mock final classes with the following settings :
+ - explicit serialization (e.g. withSettings().serializable())
+ - extra interfaces (e.g. withSettings().extraInterfaces(...))
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [class com.ibpms.poc.domain.model.FormEvent]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.FormEvent$FormEventBuilder
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: class com.ibpms.poc.domain.model.FormEvent.
+    Can not mock final classes with the following settings :
+     - explicit serialization (e.g. withSettings().serializable())
+     - extra interfaces (e.g. withSettings().extraInterfaces(...))
+    
+    You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+    You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+    
+
+=== com.ibpms.poc.application.service.TimeTrackingServiceTest.startTimer_InProgress_ShouldSave ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.application.service.TimeTrackingServiceTest.setUp(TimeTrackingServiceTest.java:43)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+    	... 4 more
+
+=== com.ibpms.poc.application.service.TimeTrackingServiceTest.startTimer_InDone_ShouldThrowException ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.application.service.TimeTrackingServiceTest.setUp(TimeTrackingServiceTest.java:43)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.application.service.TimeTrackingServiceTest.startTimer_WithActiveTimer_ShouldThrowConflict ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.application.service.TimeTrackingServiceTest.setUp(TimeTrackingServiceTest.java:43)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.application.service.TimeTrackingServiceTest.stopTimer_ShouldCalculateDuration ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.application.service.TimeTrackingServiceTest.setUp(TimeTrackingServiceTest.java:43)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.application.service.TimeTrackingServiceTest.startTimer_InTodo_ShouldThrowException ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.application.service.TimeTrackingServiceTest.setUp(TimeTrackingServiceTest.java:43)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.application.service.rag.EphemeralVectorRagTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.application.service.rag.RagPurgeIntegrationTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.application.service.security.AiJailbreakStrikesTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.application.service.security.DeploymentGovernanceIntegrationAdversarialTest.shouldPassValidationWhenExclusiveGatewayHasDefaultFlow ===
+  Msg  : Cannot create reference to model element org.camunda.bpm.model.bpmn.impl.instance.SequenceFlowImpl@5a168998: element is not part of model. Please connect element to the model first.
+  Cause: org.camunda.bpm.model.xml.ModelReferenceException: Cannot create reference to model element org.camunda.bpm.model.bpmn.impl.instance.SequenceFlowImpl@5a168998: element is not part of model. Please connect element to the model first.
+  Trace:
+    org.camunda.bpm.model.xml.ModelReferenceException: Cannot create reference to model element org.camunda.bpm.model.bpmn.impl.instance.SequenceFlowImpl@5a168998: element is not part of model. Please connect element to the model first.
+    	at org.camunda.bpm.model.xml.impl.type.reference.ElementReferenceCollectionImpl.performAddOperation(ElementReferenceCollectionImpl.java:64)
+    	at org.camunda.bpm.model.xml.impl.type.reference.ElementReferenceCollectionImpl$1.add(ElementReferenceCollectionImpl.java:179)
+    	at org.camunda.bpm.model.xml.impl.type.reference.ElementReferenceCollectionImpl$1.add(ElementReferenceCollectionImpl.java:136)
+    	at com.ibpms.poc.application.service.security.DeploymentGovernanceIntegrationAdversarialTest.shouldPassValidationWhenExclusiveGatewayHasDefaultFlow(DeploymentGovernanceIntegrationAdversarialTest.java:42)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+=== com.ibpms.poc.application.service.security.DeploymentGovernanceIntegrationTest.shouldFailValidationWhenExclusiveGatewayLacksDefaultFlow ===
+  Msg  : com/ibpms/poc/application/dto/DeploymentValidationResponse
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.DeploymentValidationResponse
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/dto/DeploymentValidationResponse
+    	at com.ibpms.poc.infrastructure.adapter.CamundaBpmnValidationAdapter.validateBpmnStream(CamundaBpmnValidationAdapter.java:79)
+    	at com.ibpms.poc.application.service.security.DeploymentGovernanceIntegrationTest.shouldFailValidationWhenExclusiveGatewayLacksDefaultFlow(DeploymentGovernanceIntegrationTest.java:46)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.DeploymentValidationResponse
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+
+=== com.ibpms.poc.application.service.triage.TriagePurgeSchedulerTest.purgeRejectedTriages_DeletesOlderThan30Days ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.TriageTaskRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.TriageTask
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.triage.TriageTaskServiceTest.testApproveTask_Success_TriggersNewProcessAndTerminatesOld ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.TriageTaskRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.TriageTask
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.triage.TriageTaskServiceTest.testRejectTask_Success_SavesReasonAndTerminatesProcess ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.TriageTaskRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.TriageTask
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.triage.TriageTaskServiceTest.testRejectTask_ThrowsBadRequest_WhenReasonMissing ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.TriageTaskRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.TriageTask
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.triage.TriageTaskServiceTest.testApproveTask_ThrowsBadRequest_WhenProcessTypeMissing ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.TriageTaskRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.TriageTask
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.AutoResponderBlockTest.legitimateEmailPassesCheck ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.AutoResponderBlockTest.autoRespondersAreBlocked(String)[1] ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.AutoResponderBlockTest.autoRespondersAreBlocked(String)[2] ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.AutoResponderBlockTest.autoRespondersAreBlocked(String)[3] ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.AutoResponderBlockTest.autoRespondersAreBlocked(String)[4] ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.AutoResponderBlockTest.autoRespondersAreBlocked(String)[5] ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.MalformedPayloadTest.unauthorizedDomainCreatesOrphanRecord ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.PayloadSizeLimitTest.payloadExceedingLimitRejected ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.PayloadSizeLimitTest.payloadWithinLimitPasses ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.PayloadSizeLimitTest.attachmentPushesOverLimit ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.PreTriageTaskCreationTest.validWebhookCreatesPreTriageTask ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.PreTriageTaskCreationTest.engineFailureReturns500 ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.PreTriageTaskCreationTest.camundaReceivesMinifiedDto ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.PurgeRejectedPayloadsTest.purgeDeletesOldPayloads ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.TriageTaskRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.TriageTask
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.PurgeRejectedPayloadsTest.purgeOnEmptyRepositorySucceeds ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.TriageTaskRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.TriageTask
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.TriageTaskRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.WhitelistDomainTest.unregisteredDomainBlocked ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.service.webhook.WhitelistDomainTest.registeredDomainPasses ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.domain.port.WebhookTransactionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.WebhookTransaction
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.domain.port.WebhookTransactionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.application.util.SecurityContextUtilsTest.getAssignee_shouldReturnNameFromAuthentication ===
+  Msg  : com/ibpms/poc/application/util/SecurityContextUtils
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/util/SecurityContextUtils
+    	at com.ibpms.poc.application.util.SecurityContextUtilsTest.getAssignee_shouldReturnNameFromAuthentication(SecurityContextUtilsTest.java:31)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+    	... 4 more
+
+=== com.ibpms.poc.application.util.SecurityContextUtilsTest.getAssignee_shouldReturnSystemWhenUnauthenticated ===
+  Msg  : com/ibpms/poc/application/util/SecurityContextUtils
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/util/SecurityContextUtils
+    	at com.ibpms.poc.application.util.SecurityContextUtilsTest.getAssignee_shouldReturnSystemWhenUnauthenticated(SecurityContextUtilsTest.java:38)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+    	... 4 more
+
+=== com.ibpms.poc.application.util.SecurityContextUtilsTest.getTenantId_shouldThrowExceptionWhenNoTenantFound ===
+  Msg  : com/ibpms/poc/application/util/SecurityContextUtils
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/util/SecurityContextUtils
+    	at com.ibpms.poc.application.util.SecurityContextUtilsTest.getTenantId_shouldThrowExceptionWhenNoTenantFound(SecurityContextUtilsTest.java:59)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+    	... 4 more
+
+=== com.ibpms.poc.application.util.SecurityContextUtilsTest.getTenantId_shouldReturnTenantFromJwtClaim ===
+  Msg  : com/ibpms/poc/application/util/SecurityContextUtils
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/util/SecurityContextUtils
+    	at com.ibpms.poc.application.util.SecurityContextUtilsTest.getTenantId_shouldReturnTenantFromJwtClaim(SecurityContextUtilsTest.java:49)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+    	... 4 more
+
+=== com.ibpms.poc.domain.model.ExpedienteTest.testCompletarExpedienteYaCompletado ===
+  Msg  : com/ibpms/poc/domain/model/Expediente
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.Expediente
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/Expediente
+    	at com.ibpms.poc.domain.model.ExpedienteTest.testCompletarExpedienteYaCompletado(ExpedienteTest.java:53)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.Expediente
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+    	... 4 more
+
+=== com.ibpms.poc.domain.model.ExpedienteTest.testIniciarNuevo ===
+  Msg  : com/ibpms/poc/domain/model/Expediente
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.Expediente
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/Expediente
+    	at com.ibpms.poc.domain.model.ExpedienteTest.testIniciarNuevo(ExpedienteTest.java:21)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.Expediente
+    	... 4 more
+
+=== com.ibpms.poc.domain.model.ExpedienteTest.testVincularProceso ===
+  Msg  : com/ibpms/poc/domain/model/Expediente
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.Expediente
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/Expediente
+    	at com.ibpms.poc.domain.model.ExpedienteTest.testVincularProceso(ExpedienteTest.java:37)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.Expediente
+    	... 4 more
+
+=== com.ibpms.poc.domain.model.FormEventTest.testFormEventImmutabilityAndBuilder ===
+  Msg  : com/ibpms/poc/domain/model/FormEvent$FormEventBuilder
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.FormEvent$FormEventBuilder
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/FormEvent$FormEventBuilder
+    	at com.ibpms.poc.domain.model.FormEvent.builder(FormEvent.java:11)
+    	at com.ibpms.poc.domain.model.FormEventTest.testFormEventImmutabilityAndBuilder(FormEventTest.java:16)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.FormEvent$FormEventBuilder
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+
+=== com.ibpms.poc.domain.model.kanban.KanbanStateTest.testValidTransitions ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.domain.model.kanban.KanbanStateTest.testValidTransitions(KanbanStateTest.java:10)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+    	... 4 more
+
+=== com.ibpms.poc.domain.model.kanban.KanbanStateTest.testInvalidTransitions ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.domain.model.kanban.KanbanStateTest.testInvalidTransitions(KanbanStateTest.java:18)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.domain.model.kanban.KanbanStateTest.testIsImmutable ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.domain.model.kanban.KanbanStateTest.testIsImmutable(KanbanStateTest.java:28)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.domain.model.kanban.KanbanTaskTest.testIsImmutableWhenDone ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.domain.model.kanban.KanbanTaskTest.testIsImmutableWhenDone(KanbanTaskTest.java:11)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+    	... 4 more
+
+=== com.ibpms.poc.domain.model.kanban.KanbanTaskTest.testValidateTransitionInvalid ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.domain.model.kanban.KanbanTaskTest.testValidateTransitionInvalid(KanbanTaskTest.java:18)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.domain.model.kanban.KanbanTaskTest.testValidateTransitionWhenImmutable ===
+  Msg  : com/ibpms/poc/domain/model/kanban/KanbanState
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/kanban/KanbanState
+    	at com.ibpms.poc.domain.model.kanban.KanbanTaskTest.testValidateTransitionWhenImmutable(KanbanTaskTest.java:27)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.kanban.KanbanState
+    	... 4 more
+
+=== com.ibpms.poc.infrastructure.adapter.BpmnGatewayConvergenceGovernanceCA27Test.testDivergentParallelGatewayWithoutConvergenceShouldReturnError ===
+  Msg  : com/ibpms/poc/application/dto/PreFlightResultDTO
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/dto/PreFlightResultDTO
+    	at com.ibpms.poc.infrastructure.adapter.CamundaBpmnValidationAdapter.validateDraftXml(CamundaBpmnValidationAdapter.java:45)
+    	at com.ibpms.poc.infrastructure.adapter.BpmnGatewayConvergenceGovernanceCA27Test.testDivergentParallelGatewayWithoutConvergenceShouldReturnError(BpmnGatewayConvergenceGovernanceCA27Test.java:62)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+
+=== com.ibpms.poc.infrastructure.adapter.BpmnInfiniteLoopGovernanceCA23Test.shouldFailWhenSynchronousInfiniteLoopIsPresent ===
+  Msg  : com/ibpms/poc/application/dto/PreFlightResultDTO
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/dto/PreFlightResultDTO
+    	at com.ibpms.poc.infrastructure.adapter.CamundaBpmnValidationAdapter.validateDraftXml(CamundaBpmnValidationAdapter.java:45)
+    	at com.ibpms.poc.infrastructure.adapter.BpmnInfiniteLoopGovernanceCA23Test.shouldFailWhenSynchronousInfiniteLoopIsPresent(BpmnInfiniteLoopGovernanceCA23Test.java:56)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+    	... 5 more
+
+=== com.ibpms.poc.infrastructure.adapter.BpmnStructuralGovernanceCA09Test.testCallActivityMissingKeyShouldReturnError ===
+  Msg  : com/ibpms/poc/application/dto/PreFlightResultDTO
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/dto/PreFlightResultDTO
+    	at com.ibpms.poc.infrastructure.adapter.CamundaBpmnValidationAdapter.validateDraftXml(CamundaBpmnValidationAdapter.java:45)
+    	at com.ibpms.poc.infrastructure.adapter.BpmnStructuralGovernanceCA09Test.testCallActivityMissingKeyShouldReturnError(BpmnStructuralGovernanceCA09Test.java:36)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+    	... 5 more
+
+=== com.ibpms.poc.infrastructure.adapter.BpmnStructuralGovernanceCA09Test.testMessageEventMissingRefShouldReturnError ===
+  Msg  : com/ibpms/poc/application/dto/PreFlightResultDTO
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/dto/PreFlightResultDTO
+    	at com.ibpms.poc.infrastructure.adapter.CamundaBpmnValidationAdapter.validateDraftXml(CamundaBpmnValidationAdapter.java:45)
+    	at com.ibpms.poc.infrastructure.adapter.BpmnStructuralGovernanceCA09Test.testMessageEventMissingRefShouldReturnError(BpmnStructuralGovernanceCA09Test.java:56)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+    	... 5 more
+
+=== com.ibpms.poc.infrastructure.adapter.BpmnZombieNodeGovernanceCA22Test.testZombieNodeValidationFails ===
+  Msg  : com/ibpms/poc/application/dto/PreFlightResultDTO
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/dto/PreFlightResultDTO
+    	at com.ibpms.poc.infrastructure.adapter.CamundaBpmnValidationAdapter.validateDraftXml(CamundaBpmnValidationAdapter.java:45)
+    	at com.ibpms.poc.infrastructure.adapter.BpmnZombieNodeGovernanceCA22Test.testZombieNodeValidationFails(BpmnZombieNodeGovernanceCA22Test.java:41)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+    	... 5 more
+
+=== com.ibpms.poc.infrastructure.adapter.BpmnZombieNodeGovernanceCA22Test.testHangingNodeValidationFails ===
+  Msg  : com/ibpms/poc/application/dto/PreFlightResultDTO
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/dto/PreFlightResultDTO
+    	at com.ibpms.poc.infrastructure.adapter.CamundaBpmnValidationAdapter.validateDraftXml(CamundaBpmnValidationAdapter.java:45)
+    	at com.ibpms.poc.infrastructure.adapter.BpmnZombieNodeGovernanceCA22Test.testHangingNodeValidationFails(BpmnZombieNodeGovernanceCA22Test.java:78)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.PreFlightResultDTO
+    	... 5 more
+
+=== com.ibpms.poc.infrastructure.adapter.DmnBindingValidationTest.shouldFailWhenDecisionRefBindingIsMissing ===
+  Msg  : com/ibpms/poc/application/dto/DeploymentValidationResponse
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.DeploymentValidationResponse
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/dto/DeploymentValidationResponse
+    	at com.ibpms.poc.infrastructure.adapter.CamundaBpmnValidationAdapter.validateBpmnStream(CamundaBpmnValidationAdapter.java:79)
+    	at com.ibpms.poc.infrastructure.adapter.DmnBindingValidationTest.shouldFailWhenDecisionRefBindingIsMissing(DmnBindingValidationTest.java:63)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.DeploymentValidationResponse
+    	... 5 more
+
+=== com.ibpms.poc.infrastructure.adapter.DmnBindingValidationTest.shouldFailWhenDecisionRefBindingIsLatest ===
+  Msg  : com/ibpms/poc/application/dto/DeploymentValidationResponse
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.DeploymentValidationResponse
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/dto/DeploymentValidationResponse
+    	at com.ibpms.poc.infrastructure.adapter.CamundaBpmnValidationAdapter.validateBpmnStream(CamundaBpmnValidationAdapter.java:79)
+    	at com.ibpms.poc.infrastructure.adapter.DmnBindingValidationTest.shouldFailWhenDecisionRefBindingIsLatest(DmnBindingValidationTest.java:111)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.DeploymentValidationResponse
+    	... 5 more
+
+=== com.ibpms.poc.infrastructure.adapter.ProcessLockJpaAdapterTest.findLock_ReturnsInfoWhenExists ===
+  Msg  : com/ibpms/poc/application/port/out/ProcessLockPort$ProcessLockInfo
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.port.out.ProcessLockPort$ProcessLockInfo
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/port/out/ProcessLockPort$ProcessLockInfo
+    	at com.ibpms.poc.infrastructure.adapter.ProcessLockJpaAdapter.findLock(ProcessLockJpaAdapter.java:23)
+    	at com.ibpms.poc.infrastructure.adapter.ProcessLockJpaAdapterTest.findLock_ReturnsInfoWhenExists(ProcessLockJpaAdapterTest.java:43)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.port.out.ProcessLockPort$ProcessLockInfo
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+
+=== com.ibpms.poc.infrastructure.adapter.SecurityRoleJpaAdapterTest.findByIsVipRestrictedTrue_ReturnsDomains ===
+  Msg  : com/ibpms/poc/domain/model/security/SecurityRole
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.security.SecurityRole
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/domain/model/security/SecurityRole
+    	at com.ibpms.poc.infrastructure.adapter.SecurityRoleJpaAdapter.findByIsVipRestrictedTrue(SecurityRoleJpaAdapter.java:24)
+    	at com.ibpms.poc.infrastructure.adapter.SecurityRoleJpaAdapterTest.findByIsVipRestrictedTrue_ReturnsDomains(SecurityRoleJpaAdapterTest.java:38)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.security.SecurityRole
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+
+=== com.ibpms.poc.infrastructure.camunda.OrphanedTaskCleanupIntegrationTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.camunda.SlaTimerEngineIntegrationTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.event.KanbanTaskSyncListenerTest.whenTaskHasNoAssignee_thenSyncsToCQRS_AndBroadcastsUpdateWebsocket ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.FacetCountDto
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.infrastructure.event.KanbanTaskSyncListenerTest.whenTaskIsAssignedOrCompleted_thenSyncsToCQRS_AndBroadcastsWebsocket ===
+  Msg  : 
+Mockito cannot mock this class: interface com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [interface com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.dto.FacetCountDto
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: interface com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.infrastructure.jpa.entity.bpm.GenericTaskLogIntegrationTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.jpa.repository.WorkdeskAttendNextRepositoryTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepositoryTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepositoryHierarchyTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.messaging.FormSchemaChangedRabbitListenerTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.mq.MessagePriorityTest.testMessagePriorityEnumValues ===
+  Msg  : com/ibpms/poc/infrastructure/mq/MessagePriority
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.infrastructure.mq.MessagePriority
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/infrastructure/mq/MessagePriority
+    	at com.ibpms.poc.infrastructure.mq.MessagePriorityTest.testMessagePriorityEnumValues(MessagePriorityTest.java:11)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.infrastructure.mq.MessagePriority
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+    	... 4 more
+
+=== com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicatorTest.bufferMessage_ShouldStoreInMemoryIfBufferNotFull ===
+  Msg  : com/ibpms/poc/infrastructure/mq/health/RabbitHealthIndicator$FallbackMessage
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicator$FallbackMessage
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/infrastructure/mq/health/RabbitHealthIndicator$FallbackMessage
+    	at com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicator.bufferMessage(RabbitHealthIndicator.java:67)
+    	at com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicatorTest.bufferMessage_ShouldStoreInMemoryIfBufferNotFull(RabbitHealthIndicatorTest.java:72)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicator$FallbackMessage
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+
+=== com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicatorTest.health_ShouldDrainBufferWhenCircuitRecovers ===
+  Msg  : com/ibpms/poc/infrastructure/mq/health/RabbitHealthIndicator$FallbackMessage
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicator$FallbackMessage
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/infrastructure/mq/health/RabbitHealthIndicator$FallbackMessage
+    	at com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicator.bufferMessage(RabbitHealthIndicator.java:67)
+    	at com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicatorTest.health_ShouldDrainBufferWhenCircuitRecovers(RabbitHealthIndicatorTest.java:106)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicator$FallbackMessage
+    	... 5 more
+
+=== com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicatorTest.bufferMessage_ShouldPersistToDatabaseIfBufferIsFull ===
+  Msg  : com/ibpms/poc/infrastructure/mq/health/RabbitHealthIndicator$FallbackMessage
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicator$FallbackMessage
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/infrastructure/mq/health/RabbitHealthIndicator$FallbackMessage
+    	at com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicator.bufferMessage(RabbitHealthIndicator.java:67)
+    	at com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicatorTest.bufferMessage_ShouldPersistToDatabaseIfBufferIsFull(RabbitHealthIndicatorTest.java:86)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.infrastructure.mq.health.RabbitHealthIndicator$FallbackMessage
+    	... 5 more
+
+=== com.ibpms.poc.infrastructure.security.WorkdeskRLSTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.web.AgileTimeboxControllerTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTestContextBootstrapper.processMergedContextConfiguration(WebMvcTestContextBootstrapper.java:36)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+
+=== com.ibpms.poc.infrastructure.web.AnalyticsControllerTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTestContextBootstrapper.processMergedContextConfiguration(WebMvcTestContextBootstrapper.java:36)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+
+=== com.ibpms.poc.infrastructure.web.DeploymentControllerTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTestContextBootstrapper.processMergedContextConfiguration(WebMvcTestContextBootstrapper.java:36)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+
+=== com.ibpms.poc.infrastructure.web.FormBffIntegrationTest.testFormContextVersionAnchoringInFlightTask ===
+  Msg  : Failed to load ApplicationContext for [WebMergedContextConfiguration@25e9273c testClass = com.ibpms.poc.infrastructure.web.FormBffIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@7b6f4bd5 key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@a013b20b, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@69dfa79d, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@4626ba1b, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+  Cause: Caused by: java.io.FileNotFoundException: class path resource [com/ibpms/poc/AbstractIntegrationTest.class] cannot be opened because it does not exist
+  Trace:
+    java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@25e9273c testClass = com.ibpms.poc.infrastructure.web.FormBffIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@7b6f4bd5 key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@a013b20b, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@69dfa79d, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@4626ba1b, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+    	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:180)
+    	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+    	at org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener.postProcessFields(MockitoTestExecutionListener.java:122)
+    	at org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener.injectFields(MockitoTestExecutionListener.java:106)
+    	at org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener.prepareTestInstance(MockitoTestExecutionListener.java:63)
+    	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+    	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+    	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+    	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+
+=== com.ibpms.poc.infrastructure.web.GenerativeSreIntegrationTest.testRateLimiting_GenerativeEndpoint_Throws429AfterThreshold ===
+  Msg  : Failed to load ApplicationContext for [WebMergedContextConfiguration@6184c699 testClass = com.ibpms.poc.infrastructure.web.GenerativeSreIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test", "sre-test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@659f247c key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@69dfa79d, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@4626ba1b, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+  Cause: Caused by: java.io.FileNotFoundException: class path resource [com/ibpms/poc/AbstractIntegrationTest.class] cannot be opened because it does not exist
+  Trace:
+    java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@6184c699 testClass = com.ibpms.poc.infrastructure.web.GenerativeSreIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test", "sre-test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@659f247c key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@69dfa79d, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@4626ba1b, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+    	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:180)
+    	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+    	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+    	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+    	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+    	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+    	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+    	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+    	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+
+=== com.ibpms.poc.infrastructure.web.ProcessLifecycleControllerTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTestContextBootstrapper.processMergedContextConfiguration(WebMvcTestContextBootstrapper.java:36)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+
+=== com.ibpms.poc.infrastructure.web.ProjectTemplateControllerTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTestContextBootstrapper.processMergedContextConfiguration(WebMvcTestContextBootstrapper.java:36)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+
+=== com.ibpms.poc.infrastructure.web.ai.BpmnCopilotControllerTest.wipeCopilotMemory_usesTenantFromJwt ===
+  Msg  : com/ibpms/poc/application/util/SecurityContextUtils
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/util/SecurityContextUtils
+    	at com.ibpms.poc.infrastructure.web.ai.BpmnCopilotControllerTest.mockSecurityContext(BpmnCopilotControllerTest.java:61)
+    	at com.ibpms.poc.infrastructure.web.ai.BpmnCopilotControllerTest.wipeCopilotMemory_usesTenantFromJwt(BpmnCopilotControllerTest.java:68)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+    	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+    	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+    	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+
+=== com.ibpms.poc.infrastructure.web.ai.BpmnCopilotControllerTest.wipeCopilotMemory_rejectsCrossTenant ===
+  Msg  : com/ibpms/poc/application/util/SecurityContextUtils
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+  Trace:
+    java.lang.NoClassDefFoundError: com/ibpms/poc/application/util/SecurityContextUtils
+    	at com.ibpms.poc.infrastructure.web.ai.BpmnCopilotControllerTest.mockSecurityContext(BpmnCopilotControllerTest.java:61)
+    	at com.ibpms.poc.infrastructure.web.ai.BpmnCopilotControllerTest.wipeCopilotMemory_rejectsCrossTenant(BpmnCopilotControllerTest.java:77)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.application.util.SecurityContextUtils
+    	... 5 more
+
+=== com.ibpms.poc.infrastructure.web.ai.BpmnCopilotSseIntegrationTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.web.bpm.SlaAdminControllerTest.getHolidays_returnsList ===
+  Msg  : No value at JSON path "$[0].description"
+  Cause: Caused by: com.jayway.jsonpath.PathNotFoundException: Filter: [0]['description'] can only be applied to arrays. Current context is: <List><item><id/><holidayDate>2026</holidayDate><holidayDate>12</holidayDate><holidayDate>25</holidayDate><description>Navidad</description></item></List>
+  Trace:
+    java.lang.AssertionError: No value at JSON path "$[0].description"
+    	at org.springframework.test.util.JsonPathExpectationsHelper.evaluateJsonPath(JsonPathExpectationsHelper.java:302)
+    	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:99)
+    	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:111)
+    	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+    	at com.ibpms.poc.infrastructure.web.bpm.SlaAdminControllerTest.getHolidays_returnsList(SlaAdminControllerTest.java:130)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: com.jayway.jsonpath.PathNotFoundException: Filter: [0]['description'] can only be applied to arrays. Current context is: <List><item><id/><holidayDate>2026</holidayDate><holidayDate>12</holidayDate><holidayDate>25</holidayDate><description>Navidad</description></item></List>
+
+=== com.ibpms.poc.infrastructure.web.bpm.SlaAdminControllerTest.updateBusinessHours_returnsPersisted ===
+  Msg  : No value at JSON path "$.startTime"
+  Cause: Caused by: com.jayway.jsonpath.PathNotFoundException: Expected to find an object with property ['startTime'] in path $ but found 'java.lang.String'. This is not a json object according to the JsonProvider: 'com.jayway.jsonpath.spi.json.JsonSmartJsonProvider'.
+  Trace:
+    java.lang.AssertionError: No value at JSON path "$.startTime"
+    	at org.springframework.test.util.JsonPathExpectationsHelper.evaluateJsonPath(JsonPathExpectationsHelper.java:302)
+    	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:99)
+    	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:111)
+    	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+    	at com.ibpms.poc.infrastructure.web.bpm.SlaAdminControllerTest.updateBusinessHours_returnsPersisted(SlaAdminControllerTest.java:97)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: com.jayway.jsonpath.PathNotFoundException: Expected to find an object with property ['startTime'] in path $ but found 'java.lang.String'. This is not a json object according to the JsonProvider: 'com.jayway.jsonpath.spi.json.JsonSmartJsonProvider'.
+
+=== com.ibpms.poc.infrastructure.web.bpm.SlaAdminControllerTest.addHoliday_savesEntity ===
+  Msg  : No value at JSON path "$.description"
+  Cause: Caused by: com.jayway.jsonpath.PathNotFoundException: Expected to find an object with property ['description'] in path $ but found 'java.lang.String'. This is not a json object according to the JsonProvider: 'com.jayway.jsonpath.spi.json.JsonSmartJsonProvider'.
+  Trace:
+    java.lang.AssertionError: No value at JSON path "$.description"
+    	at org.springframework.test.util.JsonPathExpectationsHelper.evaluateJsonPath(JsonPathExpectationsHelper.java:302)
+    	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:99)
+    	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:111)
+    	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+    	at com.ibpms.poc.infrastructure.web.bpm.SlaAdminControllerTest.addHoliday_savesEntity(SlaAdminControllerTest.java:115)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+    Caused by: com.jayway.jsonpath.PathNotFoundException: Expected to find an object with property ['description'] in path $ but found 'java.lang.String'. This is not a json object according to the JsonProvider: 'com.jayway.jsonpath.spi.json.JsonSmartJsonProvider'.
+
+=== com.ibpms.poc.infrastructure.web.bpmn.DataMappingIntegrityTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.web.dmn.DmnGovernanceControllerTest.listDefinitions_emptyWhenNoDmn ===
+  Msg  : 
+Mockito cannot mock this class: class com.ibpms.poc.application.usecase.dmn.DmnGovernanceUseCase.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [class com.ibpms.poc.application.usecase.dmn.DmnGovernanceUseCase]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.DmnModel
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: class com.ibpms.poc.application.usecase.dmn.DmnGovernanceUseCase.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.infrastructure.web.dmn.DmnGovernanceControllerTest.listDefinitions_filtersByTenant ===
+  Msg  : 
+Mockito cannot mock this class: class com.ibpms.poc.application.usecase.dmn.DmnGovernanceUseCase.
+
+If you're not sure why you're getting this error, please open an issue on GitHub.
+
+
+Java               : 21
+JVM vendor name    : Oracle Corporation
+JVM vendor version : 21.0.10+8-LTS-217
+JVM name           : Java HotSpot(TM) 64-Bit Server VM
+JVM version        : 21.0.10+8-LTS-217
+JVM info           : mixed mode, sharing
+OS name            : Windows 11
+OS version         : 10.0
+
+
+You are seeing this disclaimer because Mockito is configured to create inlined mocks.
+You can learn about inline mocks and their limitations under item #39 of the Mockito class javadoc.
+
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [class com.ibpms.poc.application.usecase.dmn.DmnGovernanceUseCase]
+  Cause: Caused by: java.lang.ClassNotFoundException: com.ibpms.poc.domain.model.DmnModel
+  Trace:
+    org.mockito.exceptions.base.MockitoException: 
+    
+    Mockito cannot mock this class: class com.ibpms.poc.application.usecase.dmn.DmnGovernanceUseCase.
+    
+    If you're not sure why you're getting this error, please open an issue on GitHub.
+    
+    
+    Java               : 21
+    JVM vendor name    : Oracle Corporation
+    JVM vendor version : 21.0.10+8-LTS-217
+
+=== com.ibpms.poc.infrastructure.web.dmn.DmnSimulationIntegrationTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.web.dmn.DmnValidationIntegrationTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+
+=== com.ibpms.poc.infrastructure.web.messaging.AdminQueueControllerTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTestContextBootstrapper.processMergedContextConfiguration(WebMvcTestContextBootstrapper.java:36)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+
+=== com.ibpms.poc.infrastructure.web.security.AuditReportControllerTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTestContextBootstrapper.processMergedContextConfiguration(WebMvcTestContextBootstrapper.java:36)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+
+=== com.ibpms.poc.infrastructure.web.security.AuthControllerIntegrationTest. ===
+  Msg  : Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Cause: java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+  Trace:
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+    	at org.springframework.util.Assert.state(Assert.java:76)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+    	at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+    	at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+

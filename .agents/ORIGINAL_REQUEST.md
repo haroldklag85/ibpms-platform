@@ -196,3 +196,50 @@ Integrity mode: development
 ### [Verification]
 - [ ] El backend compila con éxito mediante Maven (`mvn clean compile`).
 - [ ] La suite de pruebas de integración y unitarias pasa exitosamente (`mvn test`) sin regresiones.
+
+## Follow-up — 2026-06-01T00:14:49Z
+
+Refactor the DMN governance module of US-007 to comply with ADR-001 (Hexagonal Architecture / DDD). Ensure the domain layer is completely decoupled from the JPA persistence layer using ports and adapters.
+
+Working directory: C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform
+Integrity mode: development
+
+## Requirements
+
+### R1. Implement Failing Architecture Test (TDD Phase 1)
+Create a new JUnit test class `DmnArchitectureComplianceTest.java` in `com.ibpms.poc.application.usecase.dmn` package under `src/test/java`.
+The test must statically check `DmnGovernanceUseCase.java` (using file reading or class inspection) to assert it contains **no imports or usage** of:
+- `com.ibpms.poc.infrastructure.jpa.entity.dmn.DmnModelEntity`
+- `com.ibpms.poc.infrastructure.jpa.repository.dmn.DmnModelRepository`
+- Any persistence/JPA annotations (e.g. `jakarta.persistence.*`, `org.springframework.data.jpa.*`).
+This test must initially fail to compile or fail to execute (observing the red phase of TDD).
+
+### R2. Purify Use Cases and Domain Layers
+- Create a pure POJO `DmnModel.java` in `com.ibpms.poc.domain.model` package. It should have the properties: `id`, `xmlContent`, `status`, `name`, `createdAt`, `updatedAt`, `authorJwtHash`, `tenantId`, `chatHistoryJson`, and `isManual`. It must contain no JPA, Hibernate, or Spring persistence annotations.
+- Create a domain port interface `DmnModelRepositoryPort.java` in `com.ibpms.poc.domain.port` package defining methods:
+  - `Optional<DmnModel> findById(String id)`
+  - `DmnModel save(DmnModel dmnModel)`
+  - `void delete(DmnModel dmnModel)`
+  - `List<DmnModel> findByTenantId(String tenantId)`
+  - `List<DmnModel> findByStatusAndUpdatedAtBefore(String status, LocalDateTime cutoff)`
+- Refactor `DmnGovernanceUseCase.java` to use `DmnModelRepositoryPort` instead of `DmnModelRepository`, and return/accept `DmnModel` instead of `DmnModelEntity`.
+- Remove all infrastructure imports (like `DmnModelEntity` and `DmnModelRepository`) from `DmnGovernanceUseCase.java`.
+
+### R3. Consolidate Infrastructure Adapters and Mappers
+- Rename `DmnModelEntity.java` to `DmnModelJpaEntity.java` under `com.ibpms.poc.infrastructure.jpa.entity.dmn`.
+- Create `DmnModelMapper.java` under `com.ibpms.poc.infrastructure.jpa.mapper` using MapStruct (`@Mapper(componentModel = "spring")`) to map between `DmnModel` and `DmnModelJpaEntity`.
+- Create `DmnModelJpaAdapter.java` under `com.ibpms.poc.infrastructure.adapter` implementing `DmnModelRepositoryPort` and delegating to `DmnModelRepository` (which remains in the infrastructure layer).
+- Update `DmnModelRepository` to extend `JpaRepository<DmnModelJpaEntity, String>`.
+- Update any other classes that references `DmnModelEntity` to use the appropriate layers, such as `DmnGovernanceController` and unit/integration tests.
+
+## Acceptance Criteria
+
+### Test Phase
+- [ ] Running `mvn test -Dtest=DmnArchitectureComplianceTest -pl ibpms-core` fails initially before code refactoring.
+- [ ] Running `mvn test -pl ibpms-core` compiles and passes all tests (including the compliance test and all prior integration/unit tests) after the refactoring is done.
+- [ ] The Java project compiles without Lombok or MapStruct annotation processor warnings or errors.
+
+### Decoupling Verification
+- [ ] `DmnGovernanceUseCase.java` contains no references or imports to any packages inside `com.ibpms.poc.infrastructure.jpa`.
+- [ ] `DmnModel.java` has zero annotations from packages `jakarta.persistence` or `org.hibernate`.
+- [ ] All database schemas and transactional operations behave exactly as before.

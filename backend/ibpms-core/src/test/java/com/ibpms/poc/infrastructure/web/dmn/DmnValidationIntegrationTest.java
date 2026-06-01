@@ -1,7 +1,7 @@
-// @Traceability: US-003 - ADR-001
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.web.dmn;
 
-import com.ibpms.poc.AbstractIntegrationTest;
+import com.ibpms.poc.AbstractLocalE2ETest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SuppressWarnings("null")
-public class DmnValidationIntegrationTest extends AbstractIntegrationTest {
+public class DmnValidationIntegrationTest extends AbstractLocalE2ETest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -46,17 +46,13 @@ public class DmnValidationIntegrationTest extends AbstractIntegrationTest {
                              "  <rule id=\"rule_0\"><inputEntry><text>true</text></inputEntry></rule>\n" +
                              "</decisionTable>";
 
-        // El Controlador debe interceptar el XML, parsearlo y reemplazar "UNIQUE" con "FIRST".
-        // Asumiendo que nuestro endpoint ficticio devuelve el XML resultante o un objeto de confirmación
         mockMvc.perform(post("/api/v1/dmn/upload")
                 .header("X-Mock-Tester", "QA_Agent_51")
                 .contentType(MediaType.APPLICATION_XML)
                 .content(originalDmn))
                .andExpect(status().is2xxSuccessful())
-               // En un escenario real, aserccionamos contra Base de Datos, pero aquí chequeamos el payload reflejado
                .andExpect(result -> {
                    String content = result.getResponse().getContentAsString();
-                   // Aserción Matemática: La variable UNIQUE desapareció para siempre del XML.
                    assert !content.contains("hitPolicy=\"UNIQUE\"");
                    assert content.contains("hitPolicy=\"FIRST\"");
                });

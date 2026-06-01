@@ -1,4 +1,4 @@
-// @Traceability: US-003 - ADR-001
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.adapter;
 
 import com.ibpms.poc.application.dto.DeploymentValidationResponse;
@@ -153,17 +153,19 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
                 if (decisionRef != null && !decisionRef.isBlank()) {
                     if (binding == null || binding.isBlank()) {
                         // @Traceability: US-005, CA-12 Late vs Deployment Binding (DMN)
-                        response.addError(brt.getId(),
-                            "Hard-Stop: BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
+                        String msg = "Hard-Stop: BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
                             "' enlaza a DMN (" + decisionRef + ") sin camunda:decisionRefBinding configurado. " +
                             "El motor asumirá 'latest' por defecto, lo cual viola la protección de derechos adquiridos (CA-12). " +
-                            "Obligatorio: Configure 'deployment' en el Modeler para garantizar que los casos en vuelo se evalúen con la versión DMN vigente al nacer el caso.");
+                            "Obligatorio: Configure 'deployment' en el Modeler para garantizar que los casos en vuelo se evalúen con la versión DMN vigente al nacer el caso.";
+                        response.addError(brt.getId(), msg);
+                        response.addWarning(brt.getId(), msg);
                     } else if ("latest".equals(binding)) {
                         // @Traceability: US-005, CA-12 Late vs Deployment Binding (DMN)
-                        response.addError(brt.getId(),
-                            "Hard-Stop: BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
+                        String msg = "Hard-Stop: BusinessRuleTask '" + (brt.getName() != null ? brt.getName() : brt.getId()) +
                             "' usa Late Binding (LATEST). Los casos en vuelo se evaluarán con la última versión DMN publicada. " +
-                            "Esto viola compromisos contractuales. Cambie a 'deployment'.");
+                            "Esto viola compromisos contractuales. Cambie a 'deployment'.";
+                        response.addError(brt.getId(), msg);
+                        response.addWarning(brt.getId(), msg);
                     }
                     
                     // GAP-12: Validación de Catch-All en DMN

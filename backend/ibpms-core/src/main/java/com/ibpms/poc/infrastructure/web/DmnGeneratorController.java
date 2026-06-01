@@ -1,8 +1,10 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import com.ibpms.poc.application.dto.DmnXmlResponseDto;
 import com.ibpms.poc.application.dto.NlpPromptRequestDto;
 import com.ibpms.poc.application.port.out.AiDmnGeneratorPort;
+import com.ibpms.poc.application.service.dmn.DmnHitPolicyMutatorService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -25,9 +27,11 @@ import com.ibpms.poc.crosscutting.annotations.Traceability;
 public class DmnGeneratorController {
 
     private final AiDmnGeneratorPort aiDmnGeneratorPort;
+    private final DmnHitPolicyMutatorService dmnHitPolicyMutatorService;
 
-    public DmnGeneratorController(AiDmnGeneratorPort aiDmnGeneratorPort) {
+    public DmnGeneratorController(AiDmnGeneratorPort aiDmnGeneratorPort, DmnHitPolicyMutatorService dmnHitPolicyMutatorService) {
         this.aiDmnGeneratorPort = aiDmnGeneratorPort;
+        this.dmnHitPolicyMutatorService = dmnHitPolicyMutatorService;
     }
 
     /**
@@ -67,5 +71,30 @@ public class DmnGeneratorController {
         return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.TOO_MANY_REQUESTS)
                 .header("Retry-After", "60")
                 .body("Rate limit excedido (10 req/min). Por favor espere.");
+    }
+
+    @PostMapping(value = "/upload", consumes = org.springframework.http.MediaType.APPLICATION_XML_VALUE, produces = org.springframework.http.MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity<Object> uploadDmn(@RequestBody String xmlContent) {
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("<(?:[a-zA-Z0-9_-]+:)?rule\\b");
+        java.util.regex.Matcher matcher = pattern.matcher(xmlContent);
+        int ruleCount = 0;
+        while (matcher.find()) {
+            ruleCount++;
+        }
+
+        if (ruleCount > 50) {
+            java.util.Map<String, String> errorResponse = java.util.Map.of(
+                "error", "DMN_RULE_LIMIT_EXCEEDED",
+                "message", "El número de reglas de negocio no puede superar el límite estricto de 50. (Detectadas: " + ruleCount + ")"
+            );
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                    .body(errorResponse);
+        }
+
+        String mutatedXml = dmnHitPolicyMutatorService.enforceMathGuardrails(xmlContent);
+        return ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.APPLICATION_XML)
+                .body(mutatedXml);
     }
 }

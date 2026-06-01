@@ -1,4 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.security;
+
+import com.ibpms.poc.AbstractIntegrationTest;
+
 
 import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository;
@@ -18,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional
-public class WorkdeskRLSTest {
+public class WorkdeskRLSTest extends AbstractIntegrationTest {
 
     @Autowired
     private WorkdeskProjectionRepository repository;

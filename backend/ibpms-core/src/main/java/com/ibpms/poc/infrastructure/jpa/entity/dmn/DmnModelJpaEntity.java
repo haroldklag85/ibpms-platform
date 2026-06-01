@@ -1,3 +1,4 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.entity.dmn;
 
 import jakarta.persistence.*;
@@ -12,7 +13,7 @@ import com.ibpms.poc.crosscutting.annotations.Traceability;
 @Entity
 @Table(name = "ibpms_dmn_models")
 @Traceability(US = "US-007", CA = {"CA-05", "CA-06", "CA-12", "CA-32"})
-public class DmnModelEntity {
+public class DmnModelJpaEntity {
 
     @Id
     @Column(length = 100)
@@ -50,9 +51,9 @@ public class DmnModelEntity {
     @Column(name = "is_manual")
     private Boolean isManual;
 
-    public DmnModelEntity() {}
+    public DmnModelJpaEntity() {}
 
-    public DmnModelEntity(String id, String xmlContent, String status, String tenantId, String authorJwtHash) {
+    public DmnModelJpaEntity(String id, String xmlContent, String status, String tenantId, String authorJwtHash) {
         this.id = id;
         this.xmlContent = xmlContent;
         this.status = status;

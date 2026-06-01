@@ -1,4 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.config;
+
+import com.ibpms.poc.AbstractIntegrationTest;
+
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -19,7 +23,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  */
 @SpringBootTest
 // @Testcontainers // Desactivado por ADR-010 (Enfoque E2E Estático)
-public abstract class TestcontainersBaseIT {
+public abstract class TestcontainersBaseIT extends AbstractIntegrationTest {
 
     /**
      * Contenedor PostgreSQL 16 Alpine.

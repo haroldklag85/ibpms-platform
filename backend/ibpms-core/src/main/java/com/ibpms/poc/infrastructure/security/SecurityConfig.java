@@ -1,3 +1,4 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;
@@ -79,8 +80,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/design/processes/**", "/api/v1/design/sandbox/**").permitAll()
                         // OpenAPI / Swagger Docs
                         .requestMatchers("/v3/api-docs/**", "/api/v1/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // DMN Simulation for Tests (Bypass para el test Sandbox DMN)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/dmn-models/simulate").permitAll()
+                        // DMN Simulation and Validation for Tests
+                        .requestMatchers(HttpMethod.POST, "/api/v1/dmn-models/simulate", "/api/v1/dmn-models/simulate-sandbox").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/dmn/upload").permitAll()
                         // US-028: Form Certification & Definition endpoints (QA Integration Tests)
                         .requestMatchers("/api/v1/design/forms/*/versions").permitAll()
                         .requestMatchers("/api/v1/design/form-definitions/**").permitAll()

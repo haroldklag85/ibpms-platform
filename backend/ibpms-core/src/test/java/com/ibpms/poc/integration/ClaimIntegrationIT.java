@@ -1,4 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.integration;
+
+import com.ibpms.poc.AbstractIntegrationTest;
+
 
 import com.ibpms.poc.domain.model.agile.AgileTask;
 import com.ibpms.poc.infrastructure.persistence.AgileTaskRepositoryJpa;
@@ -21,7 +25,7 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Testcontainers
-public class ClaimIntegrationIT {
+public class ClaimIntegrationIT extends AbstractIntegrationTest {
 
     @LocalServerPort
     private int port;

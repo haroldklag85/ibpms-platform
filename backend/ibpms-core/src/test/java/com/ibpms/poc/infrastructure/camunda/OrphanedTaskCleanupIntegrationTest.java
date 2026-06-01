@@ -1,4 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.camunda;
+
+import com.ibpms.poc.AbstractIntegrationTest;
+
 
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.task.Task;
@@ -10,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-public class OrphanedTaskCleanupIntegrationTest {
+public class OrphanedTaskCleanupIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private TaskService taskService;

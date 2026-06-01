@@ -1,0 +1,2 @@
+## 2026-06-01T02:14:23Z
+You are Worker 9. Your task is to verify and complete the DMN Governance Hexagonal refactoring and resolve integration test failures. Please read the instruction file at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\worker_verification_9\instruction.md and follow it carefully. Write your handoff report to C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\worker_verification_9\handoff.md and report back via message when complete.

@@ -1,4 +1,4 @@
-// @Traceability: US-003 - ADR-001
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc;
 
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,7 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
  * Clase base para Pruebas de Integración End-to-End conectadas a la infraestructura estática
  * (docker-compose.e2e.yml) sin usar Testcontainers (Cumplimiento de Hardware Limits y ADR-010 V2).
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 public abstract class AbstractLocalE2ETest {
@@ -34,7 +34,7 @@ public abstract class AbstractLocalE2ETest {
         registry.add("spring.rabbitmq.port", () -> 5673);
 
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
-        registry.add("spring.liquibase.enabled", () -> "false");
+        registry.add("spring.liquibase.enabled", () -> "true");
         registry.add("camunda.bpm.database.schema-update", () -> "true");
     }
 }

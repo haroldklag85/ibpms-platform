@@ -1,6 +1,7 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.repository.dmn;
 
-import com.ibpms.poc.infrastructure.jpa.entity.dmn.DmnModelEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.dmn.DmnModelJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,11 +16,11 @@ import com.ibpms.poc.crosscutting.annotations.Traceability;
  */
 @Repository
 @Traceability(US = "US-007", CA = {"CA-13"})
-public interface DmnModelRepository extends JpaRepository<DmnModelEntity, String> {
+public interface DmnModelRepository extends JpaRepository<DmnModelJpaEntity, String> {
     
     // Recupera los DMN que se quedaron abandonados en estado borrador.
-    List<DmnModelEntity> findByStatusAndUpdatedAtBefore(String status, LocalDateTime cutoff);
+    List<DmnModelJpaEntity> findByStatusAndUpdatedAtBefore(String status, LocalDateTime cutoff);
     
     // Lista los DMN por tenant
-    List<DmnModelEntity> findByTenantId(String tenantId);
+    List<DmnModelJpaEntity> findByTenantId(String tenantId);
 }

@@ -12,8 +12,9 @@
     <!-- ═══════ Top Toolbar ═══════ -->
     <header class="flex flex-wrap justify-between items-center px-6 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shrink-0 gap-3">
       <div class="flex items-center space-x-3">
+        <!-- @Traceability: US-005, CA-77 Panel de Propiedades Contextual (Unificación Botón Explorador) -->
         <button @click="showCatalog = true" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 flex items-center space-x-1">
-          <span>📜</span><span>Catálogo</span>
+          <span>📜</span><span>Explorador de procesos</span>
         </button>
         <span class="text-gray-300">|</span>
         <h1 class="text-lg font-bold text-gray-900 dark:text-white">{{ currentProcessName || 'Proceso Sin Título' }}</h1>

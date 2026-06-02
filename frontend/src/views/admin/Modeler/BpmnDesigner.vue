@@ -1243,6 +1243,7 @@ const selectProcessFromWelcome = async (p: any) => {
 const completeProcessCreationInWelcome = async () => {
   createNewProcess();
   showWelcomeModal.value = false;
+  showCatalog.value = false;
 };
 
 // ── Toast ────────────────────────────────────────────────────
@@ -1436,7 +1437,7 @@ onMounted(async () => {
   // @Traceability: US-005, CA-40
   const hasNoProcessId = !route || !route.query || !route.query.processId;
   showWelcomeModal.value = hasNoProcessId;
-  showCatalog.value = hasNoProcessId;
+  showCatalog.value = false;
 
   setupHeartbeat(); // CA-66
   try {
@@ -1646,12 +1647,12 @@ onMounted(async () => {
           await loadProcess(targetProcess);
         } else {
           showWelcomeModal.value = true;
-          showCatalog.value = true;
+          showCatalog.value = false;
         }
       } catch (err) {
         console.error('Error fetching catalog on mounted', err);
         showWelcomeModal.value = true;
-        showCatalog.value = true;
+        showCatalog.value = false;
       }
     }
     
@@ -1990,6 +1991,7 @@ const createNewProcess = () => {
   processStatus.value = 'BORRADOR';
   showNewProcessModal.value = false;
   showWelcomeModal.value = false;
+  showCatalog.value = false;
   if (modelerInstance) {
     if (newProcessOrigin.value === 'TEMPLATE' && selectedTemplateId.value) {
       const tpl = templatesList.value.find(t => t.id === selectedTemplateId.value);

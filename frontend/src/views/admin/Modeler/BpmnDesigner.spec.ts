@@ -595,15 +595,15 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             wrapper.unmount();
         });
 
-        it('Debe abrir el explorador de procesos (Catálogo) por defecto en el mounted si no existe un proceso activo en la query de la URL', async () => {
+        it('No debe abrir el explorador de procesos (Catálogo) por defecto en el mounted si no existe un proceso activo en la query de la URL', async () => {
             // Cambiar mockRouteQuery para que no tenga processId
             mockRouteQuery = {};
 
             const wrapper = createWrapper();
             await flushPromises();
 
-            // showCatalog debe ser true
-            expect(wrapper.vm.showCatalog).toBe(true);
+            // showCatalog debe ser false
+            expect(wrapper.vm.showCatalog).toBe(false);
 
             wrapper.unmount();
         });
@@ -652,6 +652,7 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             // Simular la selección de un proceso
             await wrapper.vm.selectProcessFromWelcome({ id: 'some-proc-id', name: 'Selected Process' });
             expect(wrapper.vm.showWelcomeModal).toBe(false);
+            expect(wrapper.vm.showCatalog).toBe(false);
             wrapper.unmount();
         });
 
@@ -664,6 +665,7 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             // Simular completar la creación
             await wrapper.vm.completeProcessCreationInWelcome();
             expect(wrapper.vm.showWelcomeModal).toBe(false);
+            expect(wrapper.vm.showCatalog).toBe(false);
             wrapper.unmount();
         });
     });

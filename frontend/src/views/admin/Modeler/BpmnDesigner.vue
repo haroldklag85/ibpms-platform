@@ -1031,12 +1031,13 @@ let heartbeatInterval: any = null;
 const setupHeartbeat = () => {
   if (heartbeatInterval) clearInterval(heartbeatInterval);
   watch(() => timeStore.currentTick, async (tick) => {
-  if (tick % 30000 < 1000) {
-    if (processId.value && document.hasFocus() && !isLocked.value) {
-      try { await integrationStore.heartbeatProcessLock(processId.value); } catch (e) {}
+    if (tick % 30000 < 1000) {
+      // @Traceability: US-005, CA-40
+      if (!showWelcomeModal.value && processId.value && document.hasFocus() && !isLocked.value) {
+        try { await integrationStore.heartbeatProcessLock(processId.value); } catch (e) {}
+      }
     }
-  }
-}); // @Traceability: Retro-Remediación ADR-006
+  }); // @Traceability: Retro-Remediación ADR-006
 };
 
 // @Traceability: US-005, CA-64
@@ -1373,6 +1374,11 @@ const handleBeforeUnload = () => {
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
+  // @Traceability: US-005, CA-40
+  const hasNoProcessId = !route || !route.query || !route.query.processId;
+  showWelcomeModal.value = hasNoProcessId;
+  showCatalog.value = hasNoProcessId;
+
   setupHeartbeat(); // CA-66
   try {
     const { default: BpmnModeler } = await import('bpmn-js/lib/Modeler');
@@ -1435,7 +1441,10 @@ onMounted(async () => {
     modelerInstance.get('canvas').zoom('fit-viewport');
 
     // Initial Load CA-30 Forms & CA-45 Connectors & CA-70 Topics
-    fetchForms();
+    // @Traceability: US-005, CA-40
+    if (!showWelcomeModal.value) {
+      fetchForms();
+    }
     fetchConnectors();
     fetchTopics();
     fetchDmnDefinitions(); // CA-12 DMNs
@@ -1553,14 +1562,14 @@ onMounted(async () => {
     try { modelerInstance.get('minimap').open(); } catch(_) {}
 
     // Initialization Calls (CA-6 / CA-7)
-    fetchLockState();
-    fetchVersions();
+    // @Traceability: US-005, CA-40
+    if (!showWelcomeModal.value) {
+      fetchLockState();
+      fetchVersions();
+    }
 
-    // @Traceability: US-005, CA-40 Abrir welcome modal si no se identifica un proceso activo
-    if (!route || !route.query || !route.query.processId) {
-      showWelcomeModal.value = true;
-      showCatalog.value = true;
-    } else {
+    // @Traceability: US-005, CA-40
+    if (!showWelcomeModal.value) {
       try {
         const targetId = route.query.processId;
         const { data } = await integrationStore.getCatalogProcesses();
@@ -1593,7 +1602,8 @@ onMounted(async () => {
   // Auto-save timer (CA-19)
   watch(() => timeStore.currentTick, async (tick) => {
     if (tick % 30000 < 1000) {
-      if (modelerInstance && !isLocked.value) {
+      // @Traceability: US-005, CA-40
+      if (!showWelcomeModal.value && modelerInstance && !isLocked.value) {
         const { xml } = await modelerInstance.saveXML({ format: true });
         if (xml !== lastSavedXml.value) {
           await saveDraft();
@@ -1617,7 +1627,10 @@ onBeforeUnmount(() => {
   // TODO: integrationStore.destroyCopilotSession(sessionId);
   window.removeEventListener('beforeunload', handleBeforeUnload);
 
-  if (modelerInstance) modelerInstance.destroy();
+  if (modelerInstance) {
+    modelerInstance.destroy();
+    modelerInstance = null;
+  }
   if (autoSaveInterval) clearInterval(autoSaveInterval);
 });
 
@@ -1648,8 +1661,11 @@ watch(processId, (newId) => {
   }
 
   // Refetch process governance if ID mutates (CA-6 / CA-7)
-  fetchLockState();
-  fetchVersions();
+  // @Traceability: US-005, CA-40
+  if (!showWelcomeModal.value) {
+    fetchLockState();
+    fetchVersions();
+  }
 });
 
 // ── Validation (CA-3, CA-9 & CA-46) ─────────────────────────────────
@@ -1712,6 +1728,8 @@ const runClientLinter = () => {
 };
 
 const debouncedValidate = debounce(async () => {
+  // @Traceability: US-005, CA-40
+  if (showWelcomeModal.value) return;
   if (!modelerInstance) return;
   
   // Run client linter first
@@ -1955,6 +1973,9 @@ const archiveProcess = async (pId: string) => {
 
 // @Traceability: US-005, CA-40
 const loadProcess = async (p: any) => {
+  // @Traceability: US-005, CA-40
+  showWelcomeModal.value = false;
+  showCatalog.value = false;
   try {
     currentProcessName.value = p.name;
     processStatus.value = p.status;
@@ -1967,10 +1988,11 @@ const loadProcess = async (p: any) => {
       modelerInstance.get('canvas').zoom('fit-viewport');
     }
 
-    showCatalog.value = false;
-    showWelcomeModal.value = false;
     showToast(`Cargado: ${p.name} v${p.version}`);
+    // @Traceability: US-005, CA-40
     await fetchForms();
+    await fetchLockState();
+    await fetchVersions();
   } catch (err) {
     console.error('Error loading process XML', err);
     showToast('Error cargando el XML del proceso', 'error');
@@ -2110,8 +2132,11 @@ const zoomFit = () => {
 // ── Native Attribute Modifiers (CA-26, CA-27) ──────────────────
 const updateGlobalSla = () => {
   if (!modelerInstance) return;
+  // @Traceability: US-005, CA-40
+  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
+  if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
-  const rootElement = modelerInstance.get('canvas').getRootElement();
+  const rootElement = canvas.getRootElement();
   if (rootElement && rootElement.businessObject) {
     modeling.updateProperties(rootElement, { "camunda:dueDate": `P${globalSla.value}H` }); // Estandarizado a formato ISO 8601 Horas
   }
@@ -2162,9 +2187,11 @@ const updateElementConnector = () => {
 
 const updateProcessProperty = (name: string, value: string) => {
   if (!modelerInstance) return;
+  // @Traceability: US-005, CA-40
+  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
+  if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
   const bpmnFactory = modelerInstance.get('bpmnFactory');
-  const canvas = modelerInstance.get('canvas');
   const rootElement = canvas.getRootElement();
   const bo = rootElement.businessObject;
 

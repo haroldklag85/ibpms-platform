@@ -198,6 +198,17 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /** 405 — Método No Permitido */
+    @ApiResponse(responseCode = "405", description = "El método HTTP no está soportado por este recurso", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ProblemDetail handleMethodNotSupported(org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.METHOD_NOT_ALLOWED);
+        problem.setType(URI.create("https://ibpms.com/errors/method-not-allowed"));
+        problem.setTitle("Método No Permitido");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
     @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
     public ProblemDetail handleMissingParams(org.springframework.web.bind.MissingServletRequestParameterException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);

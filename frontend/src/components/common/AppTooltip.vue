@@ -23,8 +23,8 @@
         </div>
         <!-- Flecha Inferior (Tail) -->
         <div 
-           class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px]"
-           :class="isError ? 'border-t-red-50' : 'border-t-gray-800'"
+           class="absolute w-0 h-0"
+           :style="arrowStyle"
         ></div>
     </div>
   </Teleport>
@@ -45,17 +45,49 @@ const props = defineProps<{
   isError?: boolean;
 }>();
 
+// @Traceability: US-005, CA-05
 const isHovered = ref(false);
 const triggerRef = ref<HTMLElement | null>(null);
 const tooltipStyle = ref({ top: '0px', left: '0px', transform: 'translate(-50%, -100%)' });
+const arrowStyle = ref<Record<string, string>>({});
 
 const show = () => {
   if (triggerRef.value) {
     const rect = triggerRef.value.getBoundingClientRect();
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    
+    // Default centering
+    let shiftPercent = 50;
+    const tooltipWidth = 256; // Matches w-64
+    const halfWidth = tooltipWidth / 2;
+    const triggerCenter = rect.left + rect.width / 2;
+
+    // Check right overflow
+    if (triggerCenter + halfWidth > viewportWidth - 10) {
+      const availableSpaceOnRight = viewportWidth - 10 - triggerCenter;
+      shiftPercent = Math.max(10, Math.min(90, 100 - (availableSpaceOnRight / tooltipWidth) * 100));
+    }
+    // Check left overflow
+    else if (triggerCenter - halfWidth < 10) {
+      const availableSpaceOnLeft = triggerCenter - 10;
+      shiftPercent = Math.max(10, Math.min(90, (availableSpaceOnLeft / tooltipWidth) * 100));
+    }
+
     tooltipStyle.value = {
-      top: `${rect.top - 10 + window.scrollY}px`,
-      left: `${rect.left + rect.width / 2 + window.scrollX}px`,
-      transform: 'translate(-50%, -100%)'
+      top: `${rect.top - 10 + scrollY}px`,
+      left: `${triggerCenter + scrollX}px`,
+      transform: `translate(-${shiftPercent}%, -100%)`
+    };
+
+    arrowStyle.value = {
+      top: '100%',
+      left: `${shiftPercent}%`,
+      transform: 'translateX(-50%)',
+      borderLeft: '6px solid transparent',
+      borderRight: '6px solid transparent',
+      borderTop: `6px solid ${props.isError ? '#fef2f2' : '#1f2937'}`
     };
   }
   isHovered.value = true;

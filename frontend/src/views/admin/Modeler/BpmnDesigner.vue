@@ -1074,6 +1074,7 @@ const declaredVariables = ref<{ name: string, type: 'String' | 'Number' | 'Boole
 const newVarName = ref('');
 const newVarType = ref<'String' | 'Number' | 'Boolean'>('String');
 const formFieldsCache = ref<Record<string, { name: string, type: string }[]>>({});
+const processVariables = ref<any[]>([]);
 // @Traceability: US-005, CA-05
 const editorRef = ref<HTMLDivElement | null>(null);
 const showAutocompletePopover = ref(false);
@@ -1240,7 +1241,9 @@ const syncNomenclatureToHtml = (val: string) => {
       }
     }
   });
-  editorRef.value.innerHTML = html;
+  if (editorRef.value.innerHTML !== html) {
+    editorRef.value.innerHTML = html;
+  }
 };
 
 // @Traceability: US-005, CA-05
@@ -1303,6 +1306,9 @@ const onEditorInput = (event: Event) => {
 
 // @Traceability: US-005, CA-05
 const onEditorKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+  }
   if (event.key === 'Escape') {
     showAutocompletePopover.value = false;
   }
@@ -1322,6 +1328,11 @@ watch(processNomenclature, (newVal) => {
     syncNomenclatureToHtml(newVal);
   }
 });
+
+// @Traceability: US-005, CA-05
+watch(mergedVariables, () => {
+  syncNomenclatureToHtml(processNomenclature.value);
+}, { deep: true });
 
 // @Traceability: US-005, CA-05
 const selectVariable = (varName: string) => {
@@ -1399,7 +1410,7 @@ const selectedConnector = ref('');
 
 // CA-49: Data Mapper State
 const connectorSchema = ref<any[]>([]);
-const processVariables = ref<any[]>([]);
+
 const connectorMappings = ref<Record<string, string>>({});
 const mappingErrors = ref<Record<string, boolean>>({});
 const loadingSchema = ref(false);

@@ -47,6 +47,7 @@
           v-model="emergencyForm.justification"
           required 
           rows="3"
+          data-testid="justification-input"
           placeholder="Describa el motivo de la activación del protocolo (Ej: Caída masiva de EntraID / Redis Outage)..."
           class="w-full bg-white border-2 border-red-100 rounded-xl p-3 text-xs font-medium text-gray-900 focus:border-red-500 focus:ring-0 transition-all placeholder:text-red-200 resize-none"
         ></textarea>
@@ -68,15 +69,15 @@
       </button>
     </form>
 
-    <div v-if="error" data-testid="login-error-banner" class="mt-4 p-3 bg-red-100 border-l-4 border-red-600 rounded flex items-start gap-3">
-       <span class="material-symbols-outlined text-red-600 text-[18px]">error</span>
-       <p class="text-[11px] text-red-800 font-bold leading-tight">{{ error }}</p>
+    <div v-if="error" data-testid="login-error-banner" :class="['mt-4 p-3 border-l-4 rounded flex items-start gap-3', errorClasses]">
+       <span class="material-symbols-outlined text-[18px]">error</span>
+       <p class="text-[11px] font-bold leading-tight">{{ error }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import apiClient from '@/services/apiClient';
@@ -85,6 +86,7 @@ const authStore = useAuthStore();
 const router = useRouter();
 const loading = ref(false);
 const error = ref('');
+const errorCode = ref('');
 
 const emergencyForm = ref({
   email: '',
@@ -92,9 +94,23 @@ const emergencyForm = ref({
   justification: ''
 });
 
+const errorClasses = computed(() => {
+  if (errorCode.value === 'USER_NOT_FOUND') {
+    return 'bg-amber-50 border-amber-500 text-amber-800';
+  } else if (errorCode.value === 'INVALID_PASSWORD') {
+    return 'bg-red-50 border-red-600 text-red-800';
+  } else if (errorCode.value === 'ACCOUNT_DISABLED') {
+    return 'bg-gray-100 border-gray-400 text-gray-700';
+  } else if (errorCode.value === 'NETWORK_ERROR') {
+    return 'bg-red-900 border-red-700 text-red-50';
+  }
+  return 'bg-red-50 border-red-600 text-red-800';
+});
+
 const handleEmergencyLogin = async () => {
   loading.value = true;
   error.value = '';
+  errorCode.value = '';
   
   try {
     const res = await apiClient.post('/auth/emergency-login', {
@@ -108,10 +124,16 @@ const handleEmergencyLogin = async () => {
       router.push('/');
     } else {
       error.value = 'Respuesta de servidor inválida.';
+      errorCode.value = 'INVALID_RESPONSE';
     }
   } catch (err: any) {
     console.error('Error Break-Glass:', err);
     error.value = err.response?.data?.message || 'Error de conexión con el servidor. Verifique que el backend esté activo.';
+    if (!err.response || err.code === 'ERR_NETWORK') {
+      errorCode.value = 'NETWORK_ERROR';
+    } else {
+      errorCode.value = err.response?.data?.code || '';
+    }
   } finally {
     loading.value = false;
   }

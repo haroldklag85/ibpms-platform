@@ -8,6 +8,11 @@ import org.camunda.bpm.spring.boot.starter.configuration.impl.AbstractCamundaCon
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import org.camunda.bpm.engine.impl.cfg.multitenancy.TenantIdProvider;
+import org.camunda.bpm.engine.impl.cfg.multitenancy.TenantIdProviderCaseInstanceContext;
+import org.camunda.bpm.engine.impl.cfg.multitenancy.TenantIdProviderHistoricDecisionInstanceContext;
+import org.camunda.bpm.engine.impl.cfg.multitenancy.TenantIdProviderProcessInstanceContext;
+
 /**
  * Inyectador Arquitectónico de Camunda: Sustituye el CalendarManager base
  * alojando nuestro Resolutor SLA Híbrido en las claves "dueDate" y "duration".
@@ -39,5 +44,26 @@ public class CamundaEngineConfiguration extends AbstractCamundaConfiguration {
         calendarManager.addBusinessCalendar("cycle", customCalendar);
         
         processEngineConfiguration.setBusinessCalendarManager(calendarManager);
+
+        // @Traceability: US-005, CA-78 Sandbox Multi-tenancy
+        processEngineConfiguration.setTenantIdProvider(new TenantIdProvider() {
+            @Override
+            public String provideTenantIdForProcessInstance(TenantIdProviderProcessInstanceContext ctx) {
+                if (ctx.getProcessDefinition().getTenantId() != null) {
+                    return ctx.getProcessDefinition().getTenantId();
+                }
+                return null;
+            }
+
+            @Override
+            public String provideTenantIdForCaseInstance(TenantIdProviderCaseInstanceContext ctx) {
+                return null;
+            }
+
+            @Override
+            public String provideTenantIdForHistoricDecisionInstance(TenantIdProviderHistoricDecisionInstanceContext ctx) {
+                return null;
+            }
+        });
     }
 }

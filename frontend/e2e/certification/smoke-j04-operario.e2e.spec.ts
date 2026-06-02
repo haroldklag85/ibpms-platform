@@ -12,6 +12,7 @@ test.describe('Smoke J-04: Operario MVP — Happy Path', () => {
     await page.click('[data-testid="break-glass-toggle"]');
     await page.fill('[data-testid="email-input"]', USERS.ANALISTA_N1.email);
     await page.fill('[data-testid="password-input"]', USERS.ANALISTA_N1.password);
+    await page.locator('textarea').fill('Acceso de emergencia UAT');
     await page.click('[data-testid="login-submit"]');
     
     // 2. Navegar a Workdesk

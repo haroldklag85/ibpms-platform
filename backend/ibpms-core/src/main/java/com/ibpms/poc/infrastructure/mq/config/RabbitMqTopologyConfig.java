@@ -20,13 +20,19 @@ public class RabbitMqTopologyConfig {
     public static final String QUEUE_BPMN_EVENTS = "ibpms.bpmn.events";
     public static final String QUEUE_TASK_RESCUE = "ibpms.task.rescue";
 
-    // @Traceability: Remediación Colisión Beans RabbitMQ J-02 (T-24)
-    // Exchanges y DLQ manejados por RabbitMQConfig.java
+    /**
+     * @Traceability: Remediación Colisión Beans RabbitMQ J-02 (T-24)
+     * Resolución de Conflicto (Opción A - Híbrida): 
+     * Se delega la declaración de Exchanges base y DLQ a RabbitMQConfig.java para evitar colisión de Beans.
+     * Se preservan las colas operativas (email, ai, webhook, bpmn) incorporadas por DevDavid,
+     * las cuales inyectan los Exchanges de forma segura.
+     * Garantiza adherencia al ADR-001 y ADR-015, manteniendo el ruteo hacia 'dlq.global' intacto.
+     */
 
     private Map<String, Object> dlxArgs() {
         Map<String, Object> args = new HashMap<>();
         args.put("x-dead-letter-exchange", DLX_EXCHANGE);
-        args.put("x-dead-letter-routing-key", "dlq.global");
+        args.put("x-dead-letter-routing-key", "dlq.global"); // Ruta correcta consolidada
         args.put("x-max-priority", 10);
         return args;
     }

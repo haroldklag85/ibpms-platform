@@ -20,6 +20,9 @@ apiClient.interceptors.request.use(
         if (authStore.token && config.headers) {
             config.headers.Authorization = `Bearer ${authStore.token}`;
         }
+        if (authStore.activeRole && config.headers) {
+            config.headers['X-Active-Role'] = authStore.activeRole;
+        }
         // @Traceability: US-038 - CA-09 (Trazabilidad Quirúrgica)
         if (config.headers && !config.headers['X-Correlation-ID']) {
             config.headers['X-Correlation-ID'] = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -50,8 +53,9 @@ apiClient.interceptors.response.use(
         
         const config = error.config as InternalAxiosRequestConfig & { _retryCount?: number };
         
-        // J-04: Optimistic UI / Backoff Exponencial para 429 y 503
-        if (config && error.response && [429, 503].includes(error.response.status)) {
+        // J-04: Optimistic UI / Backoff Exponencial para 429, 502 y 503
+        // @Traceability: US-003 - ADR-014 - Reintento de 502
+        if (config && error.response && [429, 502, 503].includes(error.response.status) && process.env.NODE_ENV !== 'test') {
             config._retryCount = config._retryCount || 0;
             if (config._retryCount < 3) {
                 config._retryCount += 1;
@@ -158,6 +162,15 @@ apiClient.interceptors.response.use(
         }
 
         if (error.response && error.response.status === 401) {
+            const url = error.config?.url || '';
+            const isCredentialCheck = url.includes('/auth/login') || 
+                                      url.includes('/auth/emergency-login') || 
+                                      url.includes('/auth/break-glass') || 
+                                      url.includes('/auth/change-password') ||
+                                      url.includes('/auth/effective-roles');
+            if (isCredentialCheck) {
+                return Promise.reject(error);
+            }
             console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
             const event = new CustomEvent('global-error-dispatch', { detail: { type: 'SESSION_EXPIRED' } });
             window.dispatchEvent(event);
@@ -235,7 +248,7 @@ apiClient.interceptors.response.use(
                // CA-32: Auto-Curación Zero-Trust
                console.warn('CA-32: Revocación de acceso detectada (403). Purgando topología local.');
                const menuStore = useMenuStore();
-               menuStore.$reset();
+               menuStore.purgeTopology();
                
                const body = document.querySelector('body');
                if (body && !document.getElementById('privilege-update-toast')) {
@@ -267,7 +280,8 @@ export const api = {
 
     // US-002: Workbox Tasks
     claimTask: (taskId: string) => apiClient.post(`/workbox/tasks/${taskId}/claim`),
-    completeTask: (taskId: string, payload: any) => apiClient.post(`/workbox/tasks/${taskId}/complete`, payload),
+    // @Traceability: US-003 - CA-72
+    completeTask: (taskId: string, payload: any, config?: any) => apiClient.post(`/workbox/tasks/${taskId}/complete`, payload, config),
     saveTaskDraft: (taskId: string, payload: any) => apiClient.put(`/workbox/tasks/${taskId}/draft`, payload),
 
     // 1. AI Correct (Partial Regeneration CA-28)
@@ -325,7 +339,8 @@ export const api = {
     getAiMetrics: () => apiClient.get('/analytics/ai-metrics'),
 
     // 9. Formularios (Pantalla 7 / CA-30)
-    getForms: () => apiClient.get('/design/form-definitions'),
+    // @Traceability: US-005, CA-40
+    getForms: (processKey?: string) => apiClient.get('/forms/active', { params: { processKey } }),
     getFormVersions: (id: string) => apiClient.get(`/design/form-definitions/${id}/versions`),
     saveFormVersion: (id: string, payload: any) => apiClient.post(`/design/form-definitions/${id}`, payload),
 

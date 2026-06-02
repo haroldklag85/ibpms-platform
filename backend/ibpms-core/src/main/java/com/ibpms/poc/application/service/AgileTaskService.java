@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.domain.model.agile.AgileTask;
@@ -344,8 +345,14 @@ public class AgileTaskService {
 
         for (String idStr : taskIds) {
             try {
-                self.claimSingleTaskIsolated(UUID.fromString(idStr), assignee);
+                if (self != null) {
+                    self.claimSingleTaskIsolated(UUID.fromString(idStr), assignee);
+                } else {
+                    claimSingleTaskIsolated(UUID.fromString(idStr), assignee);
+                }
                 claimed.add(idStr);
+            } catch (org.springframework.web.server.ResponseStatusException e) {
+                conflicts.add(java.util.Map.of("taskId", idStr, "reason", e.getReason() != null ? e.getReason() : e.getMessage()));
             } catch (Exception e) {
                 conflicts.add(java.util.Map.of("taskId", idStr, "reason", e.getMessage() != null ? e.getMessage() : "Concurrency conflict or not found"));
             }

@@ -16,7 +16,7 @@ ALTER TABLE ibpms_bpmn_process_design ADD COLUMN IF NOT EXISTS is_public BOOLEAN
 CREATE TABLE IF NOT EXISTS ibpms_security_token_blacklist (
     id UUID PRIMARY KEY,
     token_signature VARCHAR(64) NOT NULL,
-    user_id VARCHAR(100) NOT NULL,
+    user_id UUID NOT NULL,
     revoked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL,
     reason TEXT

@@ -1,5 +1,20 @@
 <template>
   <div class="h-screen flex bg-slate-50 font-['Inter'] text-slate-900 overflow-hidden">
+    <!-- Global Role Switching Loader Overlay (A6) -->
+    <div v-if="isRoleSwitching" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center text-white">
+      <span class="material-symbols-outlined animate-spin text-5xl text-indigo-400 mb-4">sync</span>
+      <p class="text-lg font-semibold tracking-wide">Reconfigurando entorno de trabajo...</p>
+    </div>
+
+    <!-- Toast de Notificaciones del Layout (A5) -->
+    <Transition name="toast-slide">
+      <div v-if="layoutToast" class="fixed top-4 right-4 z-[10000] bg-amber-500 text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3">
+        <span class="material-symbols-outlined text-white text-xl">warning</span>
+        <span class="text-sm font-medium">{{ layoutToast }}</span>
+        <button @click="layoutToast = ''" class="ml-2 text-amber-200 hover:text-white">&times;</button>
+      </div>
+    </Transition>
+
     <ImpersonationBanner v-if="authStore.isImpersonating" />
     <ImpersonationSelector v-if="showImpersonationSelector" @close="showImpersonationSelector = false" />
     <CQRSConnectionToast />
@@ -34,6 +49,13 @@
       
       <!-- Navigation Menu Dinámico (CA-6) -->
       <nav class="flex-1 overflow-y-auto overflow-x-hidden px-3 no-scrollbar flex flex-col gap-1 w-full relative">
+         <!-- Enlace Directo al Portal (Pantalla 0) -->
+         <router-link to="/" class="nav-item group/link" active-class="nav-active" title="Portal">
+            <span class="material-symbols-outlined nav-icon">home</span>
+            <span v-if="!isSidebarCollapsed" class="nav-text flex-1">Portal</span>
+            <div v-if="isSidebarCollapsed" class="tooltip-mockup">Portal</div>
+         </router-link>
+
          <!-- Loading Phases -->
          <div v-if="menuStore.isLoading" class="p-4">
             <!-- Skeleton Phase (0-5s) -->
@@ -72,18 +94,20 @@
          </template>
          
          <template v-else v-for="(group, gIdx) in menuStore.layout" :key="'g'+gIdx">
-            <template v-if="true">
+            <template v-if="!group.roles || authStore.hasAnyRole(group.roles)">
                
                <!-- Separador Visual / Título del Grupo -->
                <div v-if="gIdx > 0" class="h-px bg-slate-800 my-4 mx-2"></div>
-               <p v-if="!isSidebarCollapsed && group.title === 'Workdesk'" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 fade-in">{{ group.title }}</p>
+               <p v-if="!isSidebarCollapsed && (group.title === 'Workdesk' || group.title === 'groupA')" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 fade-in">
+                  {{ te('sidebar.' + group.title) ? t('sidebar.' + group.title) : group.title }}
+               </p>
 
                <!-- Renderizado Plano (Si es Workdesk/Operación) o Acordeón para otros -->
-               <template v-if="group.title === 'Workdesk'">
-                   <router-link v-for="(item, iIdx) in group.items" :key="'w'+iIdx" :to="item.path" class="nav-item group/link" active-class="nav-active" :title="item.label">
+               <template v-if="group.title === 'Workdesk' || group.title === 'groupA'">
+                   <router-link v-for="(item, iIdx) in group.items" :key="'w'+iIdx" :to="item.path" class="nav-item group/link" active-class="nav-active" :title="te('sidebar.' + item.label) ? t('sidebar.' + item.label) : item.label">
                       <span class="material-symbols-outlined nav-icon">{{ item.icon }}</span>
-                      <span v-if="!isSidebarCollapsed" class="nav-text flex-1">{{ item.label }}</span>
-                      <div v-if="isSidebarCollapsed" class="tooltip-mockup">{{ item.label }}</div>
+                      <span v-if="!isSidebarCollapsed" class="nav-text flex-1">{{ te('sidebar.' + item.label) ? t('sidebar.' + item.label) : item.label }}</span>
+                      <div v-if="isSidebarCollapsed" class="tooltip-mockup">{{ te('sidebar.' + item.label) ? t('sidebar.' + item.label) : item.label }}</div>
                    </router-link>
                </template>
 
@@ -93,18 +117,24 @@
                       @click="toggleGroup(group.title)" 
                       class="nav-item cursor-pointer group/admin relative flex items-center"
                       :class="{ 'bg-slate-800/50 text-white': isGroupExpanded(group.title) && !isSidebarCollapsed }"
-                      :title="group.title"
+                      :title="te('sidebar.' + group.title) ? t('sidebar.' + group.title) : group.title"
                    >
-                      <span class="material-symbols-outlined nav-icon" :class="{ 'text-indigo-400': isGroupExpanded(group.title) }">account_tree</span>
-                      <span v-if="!isSidebarCollapsed" class="nav-text flex-1" :class="{ 'font-semibold': isGroupExpanded(group.title) }">{{ group.title }}</span>
+                      <span class="material-symbols-outlined nav-icon" :class="{ 'text-indigo-400': isGroupExpanded(group.title) }">
+                         {{ group.icon || 'account_tree' }}
+                      </span>
+                      <span v-if="!isSidebarCollapsed" class="nav-text flex-1" :class="{ 'font-semibold': isGroupExpanded(group.title) }">
+                         {{ te('sidebar.' + group.title) ? t('sidebar.' + group.title) : group.title }}
+                      </span>
                       <span v-if="!isSidebarCollapsed" class="material-symbols-outlined text-[16px] text-slate-500 transition-transform duration-200" :class="{ 'rotate-180': isGroupExpanded(group.title) }">expand_more</span>
-                      <div v-if="isSidebarCollapsed" class="tooltip-mockup">{{ group.title }}</div>
+                      <div v-if="isSidebarCollapsed" class="tooltip-mockup">
+                         {{ te('sidebar.' + group.title) ? t('sidebar.' + group.title) : group.title }}
+                      </div>
                    </div>
 
                    <!-- Sub-Items del Acordeón -->
                    <div v-show="isGroupExpanded(group.title) && !isSidebarCollapsed" class="flex flex-col gap-1 pl-9 pr-2 mt-1 fade-in">
                       <router-link v-for="(item, iIdx) in group.items" :key="'i'+iIdx" :to="item.path" class="sub-nav-item" active-class="sub-nav-active">
-                          <span class="material-symbols-outlined text-[14px] mr-2">{{ item.icon }}</span> {{ item.label }}
+                          <span class="material-symbols-outlined text-[14px] mr-2">{{ item.icon }}</span> {{ te('sidebar.' + item.label) ? t('sidebar.' + item.label) : item.label }}
                       </router-link>
                    </div>
                </template>
@@ -177,14 +207,14 @@
              <button 
                  @click="preferencesStore.uiDensity = 'COMPACT'" 
                  :class="{'bg-white shadow text-indigo-600': preferencesStore.uiDensity === 'COMPACT', 'text-slate-400': preferencesStore.uiDensity !== 'COMPACT'}"
-                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" :title="t('header.compact')"
+                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Compacto"
              >
                 <span class="material-symbols-outlined text-[16px]">compress</span>
              </button>
              <button 
                  @click="preferencesStore.uiDensity = 'STANDARD'" 
                  :class="{'bg-white shadow text-indigo-600': preferencesStore.uiDensity === 'STANDARD', 'text-slate-400': preferencesStore.uiDensity !== 'STANDARD'}"
-                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" :title="t('header.standard')"
+                 class="p-1 rounded text-xs px-2 font-medium hover:text-indigo-500 transition-all focus:outline-none" title="Estándar"
              >
                 <span class="material-symbols-outlined text-[16px]">view_agenda</span>
              </button>
@@ -220,11 +250,11 @@
       
       <!-- Lienzo donde se renderizan las vistas secundarias (Router View) -->
       <div class="flex-1 overflow-auto bg-transparent relative">
-        <router-view v-slot="{ Component }">
+        <router-view v-slot="{ Component, route }">
           <transition name="fade" mode="out-in">
             <!-- @Traceability(US = "US-001", CA = {"CA-12"}) Acierto UX: Keep-Alive retiene scroll y filtros en RAM para 0ms de carga en regresos -->
             <keep-alive include="Workdesk">
-              <component :is="Component" />
+              <component :is="Component" :key="route?.fullPath ? route.fullPath + '-' + authStore.activeRole : ''" />
             </keep-alive>
           </transition>
         </router-view>
@@ -251,9 +281,27 @@ const route = useRoute();
 const preferencesStore = usePreferencesStore();
 const authStore = useAuthStore();
 const menuStore = useMenuStore();
-const { t, locale } = useI18n();
+const { t, te, locale } = useI18n();
 
 const showImpersonationSelector = ref(false);
+const isRoleSwitching = ref(false);
+const layoutToast = ref('');
+
+const handleRoleSwitchStart = () => {
+    isRoleSwitching.value = true;
+};
+const handleRoleSwitchEnd = () => {
+    isRoleSwitching.value = false;
+};
+const handleLayoutToast = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    layoutToast.value = customEvent.detail?.message || '';
+    setTimeout(() => {
+        if (layoutToast.value === customEvent.detail?.message) {
+            layoutToast.value = '';
+        }
+    }, 4000);
+};
 
 const toggleLocale = () => {
     locale.value = locale.value === 'es' ? 'en' : 'es';
@@ -324,12 +372,18 @@ onMounted(() => {
     // CA-6: Hidratación dinámica del árbol Topológico de Rutas
     menuStore.fetchMenuLayout();
     window.addEventListener('role-switched', handleRoleSwitch);
+    window.addEventListener('role-switching-start', handleRoleSwitchStart);
+    window.addEventListener('role-switching-end', handleRoleSwitchEnd);
+    window.addEventListener('layout-toast-dispatch', handleLayoutToast);
     window.addEventListener('resize', handleResize);
     handleResize();
 });
 
 onUnmounted(() => {
     window.removeEventListener('role-switched', handleRoleSwitch);
+    window.removeEventListener('role-switching-start', handleRoleSwitchStart);
+    window.removeEventListener('role-switching-end', handleRoleSwitchEnd);
+    window.removeEventListener('layout-toast-dispatch', handleLayoutToast);
     window.removeEventListener('resize', handleResize);
     if (loadingTimer1) clearTimeout(loadingTimer1);
     if (loadingTimer2) clearTimeout(loadingTimer2);
@@ -387,8 +441,7 @@ const toggleSidebar = () => {
 };
 
 const logout = () => {
-  authStore.logout();
-  router.push('/login');
+  authStore.showLogoutConfirm = true;
 };
 </script>
 

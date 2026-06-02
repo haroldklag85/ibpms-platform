@@ -42,6 +42,18 @@
       </div>
       
       <div class="flex items-center gap-4">
+        <!-- @Traceability: US-003 - Metadata Editor Inputs for E2E Test Compatibility -->
+        <div class="flex gap-4 items-center bg-gray-50 px-3 py-1.5 rounded border border-gray-200">
+          <div class="flex items-center gap-1.5">
+            <label for="formKeyInput" class="text-xs font-bold text-gray-700">Nombre Técnico</label>
+            <input id="formKeyInput" v-model="formKey" class="text-xs border border-gray-300 rounded px-2 py-1 w-32 focus:border-indigo-500 focus:ring-indigo-500 font-mono" placeholder="form_tecnico" />
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label for="formTitleInput" class="text-xs font-bold text-gray-700">Título del Formulario</label>
+            <input id="formTitleInput" v-model="formTitle" class="text-xs border border-gray-300 rounded px-2 py-1 w-40 focus:border-indigo-500 focus:ring-indigo-500" placeholder="Título..." />
+          </div>
+        </div>
+
         <!-- CA-15.1: Permitir Trámite Público -->
         <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded border border-emerald-200" title="Permite recolectar datos sin autenticación previa (Bypass CA-15)">
            <label for="publicToggle" class="text-xs font-bold text-emerald-800 cursor-pointer">🌐 Trámite Público</label>
@@ -62,7 +74,8 @@
             🛠️ Herramientas Avanzadas ▼
           </button>
           <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-xl hidden group-hover:block z-50 overflow-hidden">
-            <button @click="fetchVersions" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">🕰️ Historial JSON</button>
+            <button @click="openTimeMachine" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">🕰️ Historial JSON</button>
+            <button @click="fetchVersions" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition border-t border-gray-100">🕰️ Versiones Remotas</button>
             <button @click="exportToPdf" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">📄 Exportar a PDF</button>
             <button @click="showGlobalRulesModal = true" class="block w-full text-left px-4 py-2 hover:bg-gray-50 text-xs text-gray-700 transition">⚙️ Reglas Zod O-T-F</button>
             <button @click="generateVitestSpec" class="block w-full text-left px-4 py-2 hover:bg-green-50 text-xs text-green-700 font-bold transition border-t border-gray-100">🤖 Exportar Robo-Tests</button>
@@ -96,6 +109,7 @@
           🗑 Reset
         </button>
 
+        <button @click="saveForm" class="bg-blue-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-blue-700 transition flex items-center gap-2">💾 Guardar Versión</button>
         <button @click="simulateMockSubmit" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-xs font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
           🚀 Probar (Submit)
         </button>
@@ -150,9 +164,12 @@
         </div>
 
         <div class="flex-1 overflow-y-auto p-6 md:p-8 lg:p-12">
-          <!-- CA-6 Shadow DOM (Isolation css context class) -->
-          <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative" style="all: revert; box-sizing: border-box;">
-            <input v-model="formTitle" class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans w-full bg-transparent outline-none hover:bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-200 transition-colors cursor-text" title="Clic para editar el nombre del formulario" />
+          <!-- CA-6 Shadow DOM (Isolation real via attachShadow & Teleport) -->
+          <div ref="designerHostRef" class="w-full min-h-full"></div>
+          <Teleport v-if="designerShadowContainer" :to="designerShadowContainer">
+            <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative" style="all: revert; box-sizing: border-box;">
+              <!-- @implNote Traceability: [DevDavid Merge] Integrando input editable preservando Teleport Shadow DOM -->
+              <input v-model="formTitle" class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans w-full bg-transparent outline-none hover:bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-200 transition-colors cursor-text" title="Clic para editar el nombre del formulario" />
 
             <div v-if="isHighDensityForm" class="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 shadow-sm rounded flex items-center gap-3">
                <span class="text-2xl">⚠️</span>
@@ -401,6 +418,7 @@
               </template>
             </VueDraggable>
           </div>
+          </Teleport>
         </div>
       </section>
 
@@ -409,21 +427,21 @@
         
         <!-- Tabs -->
         <div class="flex bg-[#252526] text-xs font-mono font-medium text-gray-400 border-b border-[#3e3e42] shrink-0 overflow-x-auto">
-          <button @click="attemptTabChange('JSON')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-yellow-500': activeCodeTab === 'JSON' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
+          <button role="tab" @click="attemptTabChange('JSON')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-yellow-500': activeCodeTab === 'JSON' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
              <span class="text-yellow-400 font-bold">{ }</span> json
           </button>
-          <button @click="attemptTabChange('TEMPLATE')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-emerald-500': activeCodeTab === 'TEMPLATE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
+          <button role="tab" @click="attemptTabChange('TEMPLATE')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-emerald-500': activeCodeTab === 'TEMPLATE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
             <span class="text-emerald-400">&lt;&gt;</span> template
           </button>
-          <button @click="attemptTabChange('SCRIPT')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-blue-500': activeCodeTab === 'SCRIPT' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
+          <button role="tab" @click="attemptTabChange('SCRIPT')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-blue-500': activeCodeTab === 'SCRIPT' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
             <span class="text-blue-400">&lt;script setup&gt;</span>
             <AppTooltip content="Código Vue.js autogenerado con Composition API (Solo Lectura)." />
           </button>
-          <button @click="attemptTabChange('STYLE')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-pink-500': activeCodeTab === 'STYLE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
+          <button role="tab" @click="attemptTabChange('STYLE')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-pink-500': activeCodeTab === 'STYLE' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2 whitespace-nowrap">
             <span class="text-pink-400">&lt;style scoped&gt;</span>
             <AppTooltip content="Estilizado CSS inyectado para Tailwind y clases utilitarias (Solo Lectura)." />
           </button>
-          <button @click="attemptTabChange('ZOD')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-indigo-500': activeCodeTab === 'ZOD' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
+          <button role="tab" @click="attemptTabChange('ZOD')" :class="{ 'bg-[#1e1e1e] text-white border-t-2 border-indigo-500': activeCodeTab === 'ZOD' }" class="px-4 py-2 hover:bg-[#2d2d2d] transition flex items-center gap-2">
              <span class="text-indigo-400 font-bold">Z</span> zod
           </button>
           <div class="ml-auto px-4 flex items-center group relative cursor-help">
@@ -435,15 +453,32 @@
         </div>
 
         <!-- Monaco Editor Container -->
-        <div class="flex-1 relative" :class="{'border-4 border-red-500 rounded-lg shadow-inner': zodParseError}">
-           <VueMonacoEditor 
-             v-model:value="computedCode"
-             :language="editorLanguage"
-             theme="vs-dark"
-             :options="monacoOptions"
-             @mount="onMonacoMount"
-             class="absolute inset-0"
-           />
+        <div class="flex-1 relative flex flex-col min-h-0" :class="{'border-4 border-red-500 rounded-lg shadow-inner': zodParseError}">
+           <div class="flex-1 relative">
+             <VueMonacoEditor 
+               v-model:value="computedCode"
+               :language="editorLanguage"
+               theme="vs-dark"
+               :options="monacoOptions"
+               @mount="onMonacoMount"
+               class="absolute inset-0"
+             />
+           </div>
+           
+           <!-- CA-84 Panel de Errores de Sintaxis Monaco -->
+           <div v-if="editorErrors.length > 0" id="editorProblemsPanel" class="editor-problems-panel bg-[#252526] border-t border-[#3e3e42] p-4 text-xs font-mono text-red-400 shrink-0 max-h-[180px] overflow-y-auto z-30">
+             <div class="flex items-center justify-between text-gray-400 font-bold uppercase tracking-wider mb-2 text-[10px]">
+               <span>⚠️ Panel de Diagnósticos (CA-84)</span>
+               <span class="text-red-500 font-bold">{{ editorErrors.length }} Error(es)</span>
+             </div>
+             <div v-for="(err, idx) in editorErrors" :key="idx" class="flex gap-2 py-1 items-start">
+               <span class="text-red-500 font-bold">●</span>
+               <span class="flex-1">
+                 <span v-if="err.line" class="text-yellow-500 font-bold">[Línea {{ err.line }}]:</span> 
+                 {{ err.message }}
+               </span>
+             </div>
+           </div>
         </div>
       </aside>
 
@@ -493,6 +528,27 @@
          </div>
       </div>
 
+       <!-- CA-71: Máquina del Tiempo JSON (Historial de Instantáneas Locales) -->
+       <div v-if="showTimeMachineModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4 backdrop-blur-sm">
+          <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-lg w-full">
+             <div class="flex items-center justify-between mb-6 border-b pb-4">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">🕰️ Historial de Instantáneas Locales</h2>
+                <button @click="showTimeMachineModal = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+             </div>
+             <div class="max-h-[60vh] overflow-y-auto space-y-3">
+                <div v-if="localSnapshots.length === 0" class="text-center text-gray-500 py-8 text-sm">No hay instantáneas locales guardadas aún.</div>
+                <div v-for="snap in localSnapshots" :key="snap.id" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition cursor-pointer flex justify-between items-center group">
+                   <div>
+                     <h4 class="font-bold text-indigo-700 text-sm flex items-center gap-2">Autoguardado Local</h4>
+                     <p class="text-[10px] text-gray-400 mt-1">Ref: {{ snap.id }}</p>
+                     <p class="text-xs text-gray-600 mt-1"><span class="font-semibold">Tiempo:</span> {{ formatRelativeTime(snap.timestamp) }}</p>
+                   </div>
+                   <button @click="restoreLocalSnapshot(snap)" class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-md font-bold opacity-0 group-hover:opacity-100 transition shadow-sm">Restaurar</button>
+                </div>
+             </div>
+          </div>
+       </div>
+
       <!-- Properties Modal (Field Editor) -->
       <div v-if="editingField" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[900] p-4">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
@@ -517,6 +573,32 @@
             <div v-if="['text', 'textarea', 'number', 'email', 'url', 'password', 'info_modal'].includes(editingField.type)">
                <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">{{ editingField.type === 'info_modal' ? 'Contenido HTML / Pleno (Cuerpo del Modal)' : 'Texto Fantasma de Ejemplo' }}</label>
                <component :is="editingField.type === 'info_modal' ? 'textarea' : 'input'" v-model="editingField.placeholder" class="w-full text-sm border-gray-300 rounded" :placeholder="editingField.type === 'info_modal' ? 'Escribe el contenido detallado aquí...' : 'Ej: Juan Pérez'" :rows="editingField.type === 'info_modal' ? 6 : null" />
+            </div>
+            
+            <!-- CA-30: Autocomplete Integration Section -->
+            <div v-if="['text', 'password', 'email', 'url'].includes(editingField.type)" class="bg-[#f0f9ff] p-3 rounded border border-blue-200 space-y-3">
+               <h4 class="text-xs font-bold text-blue-800 flex items-center gap-1">🌐 Autocomplete (CA-30)</h4>
+               
+               <div class="flex items-center gap-2">
+                  <input type="checkbox" id="enableAutocomplete" v-model="editingField.enableAutocomplete" class="text-blue-600 rounded focus:ring-blue-500" />
+                  <label for="enableAutocomplete" class="text-xs font-medium text-gray-700 cursor-pointer">Enable Autocomplete</label>
+               </div>
+               
+               <div v-if="editingField.enableAutocomplete" class="space-y-2">
+                  <div>
+                      <label class="block text-[10px] font-bold text-gray-700 mb-1">Autocomplete URL</label>
+                      <select data-test="autocomplete-select" v-model="editingField.autocompleteUrl" class="w-full text-sm border-blue-300 rounded font-mono bg-blue-50">
+                        <option v-for="conn in approvedConnectors" :key="conn" :value="conn">
+                          {{ conn }}
+                        </option>
+                      </select>
+                   </div>
+                  <div>
+                     <label class="block text-[10px] font-bold text-gray-700 mb-1">Mappings JSON Array</label>
+                     <textarea v-model="autocompleteMappingsText" class="w-full text-xs font-mono border-blue-300 rounded" rows="3" placeholder='[\n  {\n    "from": "nombre",\n    "to": "nombre_completo"\n  }\n]'></textarea>
+                     <p class="text-[9px] text-blue-600">Formato: [{"from": "llave_api", "to": "camunda_variable_o_id"}]</p>
+                  </div>
+               </div>
             </div>
             <div v-if="editingField.type === 'async_select'" class="bg-purple-50 p-3 rounded border border-purple-200">
                <label class="block text-xs font-bold text-purple-800 mb-1">URL Endpoint Async</label>
@@ -619,10 +701,25 @@
             </div>
             <div>
               <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1">Enlace con el Proceso (Camunda) <AppTooltip content="Con este nombre viajará el dato a través de las siguientes etapas." /></label>
-              <input v-model="editingField.camundaVariable" class="w-full text-sm border-indigo-300 rounded font-mono bg-indigo-50" placeholder="Ej: customerName" />
+              <input v-model="editingField.camundaVariable" list="dictionary-datalist" @change="applyDictionaryVariable" class="w-full text-sm border-indigo-300 rounded font-mono bg-indigo-50" placeholder="Ej: customerName" />
+              <datalist id="dictionary-datalist">
+                <option v-for="item in dictionaryItems" :key="item.id" :value="item.id">
+                  {{ item.label }} ({{ item.type || 'text' }})
+                </option>
+              </datalist>
+            </div>
+            <div v-if="!['container', 'tabs', 'accordion', 'button_submit', 'button_draft', 'button_reject'].includes(editingField.type)">
+              <label class="block text-xs font-bold text-gray-700 mb-1">Destino Estratégico (Peaje Analítico CA-75)</label>
+              <select v-model="editingField.destinoEstrategico" id="destinoEstrategicoSelect" data-testid="destinoEstrategicoSelect" class="w-full text-sm border-gray-300 rounded">
+                <option value="">-- Seleccione Destino --</option>
+                <option value="Regla DMN">Regla DMN</option>
+                <option value="Integración Externa">Integración Externa</option>
+                <option value="Documento PDF SGDEA">Documento PDF SGDEA</option>
+                <option value="Analítica Pasiva">Analítica Pasiva</option>
+              </select>
             </div>
             <div class="flex items-center gap-2 pt-2 border-t mt-4">
-               <input type="checkbox" v-model="editingField.required" id="reqCheck" class="text-indigo-600 rounded" />
+               <input type="checkbox" v-model="editingField.required" id="reqCheck" :disabled="editingField.destinoEstrategico === 'Analítica Pasiva'" class="text-indigo-600 rounded" />
                <label for="reqCheck" class="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-1">🔴 ¿Es de llenado obligatorio? <AppTooltip content="Fuerza al validador Zod On-The-Fly a bloquear el envío si el campo es nulo o vacío." /></label>
             </div>
             <div v-if="formPattern === 'IFORM_MAESTRO'" class="flex items-center gap-2 pt-2 border-t">
@@ -850,6 +947,7 @@
                      <span class="text-xs font-bold text-gray-700">JSON Payload (Modificable)</span>
                      <div class="flex gap-2">
                         <button @click="generateMockPath('happy')" class="text-[10px] bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200">Autocompletar Happy</button>
+                        <button @click="generateMockPath('fuzz')" class="text-[10px] bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200">Autocompletar Fuzz</button>
                         <button @click="generateMockPath('sad')" class="text-[10px] bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200">Autocompletar Sad</button>
                         <button @click="fuzzerPayload = '{\n  \n}'" class="text-[10px] bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200">🗑️ Limpiar</button>
                      </div>
@@ -896,12 +994,33 @@
             </div>
          </div>
       </div>
+     <!-- CA-85: Modal de Recuperación de Sesión (Amnesia Cero) -->
+      <div v-if="showRestoreModal" class="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
+         <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full border border-gray-100">
+            <div class="flex items-center gap-3 mb-4 text-indigo-600">
+               <span class="text-3xl">💾</span>
+               <h3 class="text-lg font-bold text-gray-900">Recuperación de Sesión</h3>
+            </div>
+            <p class="text-sm text-gray-600 mb-6 leading-relaxed">
+               Detectamos un borrador no guardado. ¿Desea restaurar su trabajo previo?
+            </p>
+            <div class="flex justify-end gap-3">
+               <button @click="discardRestore" class="px-4 py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 transition" data-test="discard-restore-btn">
+                  No, descartar
+               </button>
+               <button @click="applyRestore" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-xs font-bold shadow transition" data-test="apply-restore-btn">
+                  Sí, restaurar
+               </button>
+            </div>
+         </div>
+      </div>
     </Teleport>
 
   </div>
 </template>
 
 <script setup lang="ts">
+// @Traceability: US-003 - CA-27, CA-30, CA-70, CA-71, CA-74, CA-75, CA-77, CA-79, CA-83, CA-85
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -935,9 +1054,11 @@ const {
   isPublic,
   certificationState,
   currentSchemaVersion,
+  currentFormId,
   bpmnCoherenceResults,
   formKey,
   zodParseError,
+  editorErrors,
   aiPrompt,
   isScanningAi,
   fuzzerErrors,
@@ -946,10 +1067,12 @@ const {
   activeCodeTab,
   localJsonCode,
   editingField,
-  computedCode
+  computedCode,
+  dictionaryItems,
+  approvedConnectors
 } = storeToRefs(formStore);
 
-const { simulatorContext, evaluateMockVis, cloneComponent, attemptTabChange } = formStore;
+const { simulatorContext, evaluateMockVis, cloneComponent, attemptTabChange, fetchDictionary, fetchSnippets, saveSnippet, fetchApprovedConnectors } = formStore;
 
 // ── Types ────────────────────────────────────────────────────────
 interface FormField extends FormFieldMetadataDTO {
@@ -959,6 +1082,9 @@ interface FormField extends FormFieldMetadataDTO {
   predefinedFormat?: string; // CA-36
   mask?: string; // CA-36
   clearOnHide?: boolean; // CA-8
+  enableAutocomplete?: boolean; // CA-30
+  autocompleteUrl?: string; // CA-30
+  autocompleteMappings?: { from: string; to: string }[]; // CA-30
 }
 
 // ── State ────────────────────────────────────────────────────────
@@ -968,14 +1094,46 @@ const route = useRoute();
 const showPatternModal = ref(true);
 const isFullScreen = ref(false); // Estado para CA-9/CA-10
 
+// CA-6: Shadow DOM Host References
+const designerHostRef = ref<HTMLElement | null>(null);
+const designerShadowContainer = ref<HTMLElement | null>(null);
+
 // CA-15.1: Formularios Públicos
 
 const processKeyMock = formTitle.value.toUpperCase().replace(/\s+/g, '_').substring(0, 15);
 formKey.value = (route.query.processKey || route.query.formKey || '') as string;
 
+// @Traceability: US-003 - CA-70: Modo Trámite Público Perimetral / Bypass JWT Seguro
+const publicToken = ref('');
 
+const generateSecureToken = () => {
+  if (typeof window !== 'undefined' && window.crypto) {
+    if (typeof window.crypto.randomUUID === 'function') {
+      return window.crypto.randomUUID();
+    }
+    const array = new Uint32Array(4);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, dec => dec.toString(16).padStart(8, '0')).join('-');
+  }
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
 
-const publicUrl = computed(() => `${window.location.origin}/public/start/${processKeyMock}`);
+const publicUrl = computed(() => {
+  const base = `${window.location.origin}/public/start/${processKeyMock}`;
+  if (isPublic.value) {
+    if (!publicToken.value) {
+      publicToken.value = generateSecureToken();
+    }
+    return `${base}?token=${publicToken.value}`;
+  }
+  return base;
+});
+
+watch(isPublic, (newVal) => {
+  if (!newVal) {
+    publicToken.value = '';
+  }
+});
 
 const copyPublicUrl = () => {
     navigator.clipboard.writeText(publicUrl.value);
@@ -995,6 +1153,24 @@ const availableFieldsFlat = computed(() => {
         return res;
     };
     return flat(canvasFields.value);
+});
+
+const autocompleteMappingsText = computed({
+  get() {
+    if (!editingField.value || !editingField.value.autocompleteMappings) return '';
+    return JSON.stringify(editingField.value.autocompleteMappings, null, 2);
+  },
+  set(val: string) {
+    if (!editingField.value) return;
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) {
+         editingField.value.autocompleteMappings = parsed;
+      }
+    } catch (e) {
+      // Ignorar error de sintaxis temporal mientras escribe
+    }
+  }
 });
 
 // CA-90 / REM-003-04: Límites de Rendimiento para Formularios de Alta Densidad
@@ -1027,12 +1203,60 @@ const saveAsFragment = (node: any) => {
     showToast(`Componente consolidado en Fragmentos`, 'success');
 };
 
+const applyDictionaryVariable = () => {
+    if (!editingField.value) return;
+    const item = dictionaryItems.value.find((d: any) => d.id === editingField.value.camundaVariable);
+    if (item) {
+        editingField.value.label = item.label;
+        editingField.value.isPII = !!item.isPII;
+        if (item.type) {
+            editingField.value.type = item.type;
+        }
+        showToast(`Variable corporativa '${item.id}' aplicada (Gobernanza MDM)`, 'success');
+    }
+};
+
+// @Traceability: US-003 - CA-75
+watch(editingField, (newField) => {
+  if (newField && newField.destinoEstrategico === 'Analítica Pasiva') {
+    newField.required = false;
+  }
+}, { immediate: true, deep: true });
+
 onMounted(async () => {
+    await fetchDictionary();
+    await fetchSnippets();
+    await fetchApprovedConnectors();
+    // CA-6: Initialize Shadow DOM
+    if (designerHostRef.value) {
+        const shadowRoot = designerHostRef.value.attachShadow({ mode: 'open' });
+        
+        // Inyectamos Tailwind (Vite dev server) o genérico
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/src/assets/index.tailwind.css'; // Fallback path
+        shadowRoot.appendChild(link);
+
+        const tailwindCdn = document.createElement('script');
+        tailwindCdn.src = 'https://cdn.tailwindcss.com?plugins=forms';
+        shadowRoot.appendChild(tailwindCdn);
+
+        const container = document.createElement('div');
+        container.className = 'workdesk-form-designer-canvas h-full';
+        shadowRoot.appendChild(container);
+        
+        designerShadowContainer.value = container;
+    }
+
     const formId = route.query.id as string;
     if (formId) {
         const res = await formStore.fetchForm(formId);
         if (res.success) {
             showToast(res.message, 'success');
+            // @Traceability: US-003 - CA-86
+            if (route.query.showHistory === 'true') {
+                await fetchVersions();
+            }
         } else {
             showToast(res.message, 'error');
         }
@@ -1040,10 +1264,8 @@ onMounted(async () => {
         const localStoreKey = 'form_draft_ca85_modeler';
         const savedCA85Msg = localStorage.getItem(localStoreKey);
         if (savedCA85Msg && canvasFields.value.length === 0) {
-            try {
-                canvasFields.value = JSON.parse(savedCA85Msg);
-                showToast('Borrador restaurado (CA-85 Amnesia Cero)', 'success');
-            } catch (e) {}
+            tempRestoreDraft.value = savedCA85Msg;
+            showRestoreModal.value = true;
         }
     }
 
@@ -1052,7 +1274,100 @@ onMounted(async () => {
         const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
         if (fragmentCategory) fragmentCategory.items = JSON.parse(savedFragments);
     }
+
+    // CA-71: Load local snapshots and capture initial state
+    loadLocalSnapshots();
+    if (canvasFields.value && canvasFields.value.length > 0) {
+      saveLocalSnapshot(canvasFields.value);
+    }
 });
+
+// CA-85: Recovery Modal Refs and Handlers
+const showRestoreModal = ref(false);
+const tempRestoreDraft = ref('');
+
+const applyRestore = () => {
+    if (tempRestoreDraft.value) {
+        try {
+            canvasFields.value = JSON.parse(tempRestoreDraft.value);
+            showToast('Borrador restaurado (CA-85 Amnesia Cero)', 'success');
+        } catch (e) {}
+    }
+    showRestoreModal.value = false;
+    tempRestoreDraft.value = '';
+};
+
+const discardRestore = () => {
+    localStorage.removeItem('form_draft_ca85_modeler');
+    showRestoreModal.value = false;
+    tempRestoreDraft.value = '';
+    showToast('Borrador descartado', 'success');
+};
+
+// @Traceability: US-003 - CA-71: Máquina del Tiempo JSON (Soft-Versioning Local)
+const localSnapshots = ref<any[]>([]);
+const showTimeMachineModal = ref(false);
+
+const loadLocalSnapshots = () => {
+  const saved = localStorage.getItem('form_local_snapshots');
+  if (saved) {
+    try {
+      localSnapshots.value = JSON.parse(saved);
+    } catch (e) {
+      localSnapshots.value = [];
+    }
+  } else {
+    localSnapshots.value = [];
+  }
+};
+
+const saveLocalSnapshot = (fields: any[]) => {
+  const schemaStr = JSON.stringify(fields);
+  // Avoid saving exact duplicates of the last snapshot
+  if (localSnapshots.value.length > 0 && JSON.stringify(localSnapshots.value[localSnapshots.value.length - 1].canvasFields) === schemaStr) {
+    return;
+  }
+  
+  const newSnapshot = {
+    id: 'snap_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    timestamp: Date.now(),
+    canvasFields: JSON.parse(schemaStr)
+  };
+  
+  localSnapshots.value.push(newSnapshot);
+  // Keep max 50 snapshots
+  if (localSnapshots.value.length > 50) {
+    localSnapshots.value.shift();
+  }
+  localStorage.setItem('form_local_snapshots', JSON.stringify(localSnapshots.value));
+};
+
+const openTimeMachine = () => {
+  loadLocalSnapshots();
+  showTimeMachineModal.value = true;
+};
+
+const restoreLocalSnapshot = (snap: any) => {
+  canvasFields.value = JSON.parse(JSON.stringify(snap.canvasFields));
+  showTimeMachineModal.value = false;
+  showToast('Instantánea local restaurada', 'success');
+};
+
+const formatRelativeTime = (timestamp: number) => {
+  const diffMs = Date.now() - timestamp;
+  const diffMins = Math.round(diffMs / 60000);
+  if (diffMins < 1) return 'Hace unos segundos';
+  if (diffMins === 1) return 'Hace 1 minuto';
+  if (diffMins < 60) return `Hace ${diffMins} minutos`;
+  
+  const diffHours = Math.round(diffMins / 60);
+  if (diffHours === 1) return 'Hace 1 hora';
+  return `Hace ${diffHours} horas`;
+};
+
+watch(canvasFields, (newVal) => {
+  saveLocalSnapshot(newVal);
+}, { deep: true });
 
 // Runtime Render Preview Modal
 const showPreviewModal = ref(false);
@@ -1230,9 +1545,45 @@ const editField = (field: FormField) => {
   editingField.value = field;
 };
 
+const onCamundaVariableChange = (e: Event) => {
+  const val = (e.target as HTMLInputElement).value;
+  const found = dictionaryItems.value.find((item: any) => item.id === val);
+  if (found && editingField.value) {
+    editingField.value.label = found.label;
+    editingField.value.isPII = found.isPII ?? false;
+    if (found.type) {
+      editingField.value.type = found.type;
+    }
+  }
+};
+
 declare const monaco: any;
 
+const editorInstance = ref<any>(null);
+const monacoInstance = ref<any>(null);
+
+// @Traceability: US-003 - CA-84
+watch([editorErrors, editorInstance, monacoInstance], () => {
+  if (editorInstance.value && monacoInstance.value) {
+    const model = editorInstance.value.getModel();
+    if (!model) return;
+    
+    const markers = editorErrors.value.map((err: any) => ({
+      startLineNumber: err.line || 1,
+      startColumn: 1,
+      endLineNumber: err.line || 1,
+      endColumn: 1000,
+      message: err.message,
+      severity: monacoInstance.value.MarkerSeverity.Error
+    }));
+    
+    monacoInstance.value.editor.setModelMarkers(model, 'syntax-checker', markers);
+  }
+}, { deep: true, immediate: true });
+
 const onMonacoMount = (_editorIns: any, monacoIns: any) => {
+  editorInstance.value = _editorIns;
+  monacoInstance.value = monacoIns;
   // Intellisense Injection CA-115
   monacoIns.languages.typescript.typescriptDefaults.setCompilerOptions({
       target: monacoIns.languages.typescript.ScriptTarget.ESNext,
@@ -1291,6 +1642,21 @@ const monacoOptions = computed(() => ({
 
 // ── Modals Triggers ──────────────────────────────────────────────
 // Eliminado old `generateTests` (CA-115). Se mantiene BDD Generator `generateVitestSpec`.
+
+const saveForm = async () => {
+  const formId = route.query.id as string;
+  if (!formId) {
+    showToast('No se puede guardar versión sin un ID de formulario', 'error');
+    return;
+  }
+  const res = await formStore.saveForm(formId);
+  if (res.success) {
+    showToast(res.message, 'success');
+    await formStore.fetchVersions();
+  } else {
+    showToast(res.message, 'error');
+  }
+};
 
 const simulateMockSubmit = async () => {
     modalTitle.value = "🚀 Execute End-to-End Validation Engine & Integration (CA-29)";
@@ -1368,9 +1734,11 @@ const simulateMockSubmit = async () => {
     modalContent.value = `[WORKDESK VALIDATION ENGINE] (Vue Realtime Zod Factory)\n✅ VALIDACION EXITOSA.\n\nEmitiendo POST hacia el Backend End-to-End...\n`;
 
     try {
+        // @Traceability: US-003, CA-01, CA-27 - Technical name normalization using formKey to avoid duplicate collisions
+        const rawTechnicalName = formKey.value || formTitle.value || '';
         const dto = {
            name: formTitle.value,
-           technicalName: formTitle.value.toUpperCase().replace(/\s+/g, '_').substring(0, 50),
+           technicalName: rawTechnicalName.toUpperCase().replace(/\s+/g, '_').substring(0, 50),
            pattern: formPattern.value,
            formFields: canvasFields.value
         };
@@ -1388,7 +1756,8 @@ defineExpose({
     currentSchemaVersion,
     fuzzerErrors,
     bpmnCoherenceResults,
-    formKey
+    formKey,
+    publicUrl
 });
 </script>
 

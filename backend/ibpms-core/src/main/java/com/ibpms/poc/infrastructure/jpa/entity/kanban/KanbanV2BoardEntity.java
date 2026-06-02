@@ -12,8 +12,8 @@ import java.util.UUID;
 public class KanbanV2BoardEntity {
 
     @Id
-    @Column(name = "id")
-    private UUID id;
+    @Column(name = "id", length = 50)
+    private String id;
 
     @Column(name = "title", nullable = false, length = 100)
     private String title;
@@ -25,8 +25,8 @@ public class KanbanV2BoardEntity {
     private Integer orderIndex;
 
     // Getters and Setters
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public Integer getWipLimit() { return wipLimit; }

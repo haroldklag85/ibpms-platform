@@ -8,9 +8,9 @@
 
     <!-- Toast Notifications -->
     <Transition name="toast-slide">
-      <div v-if="toastSuccess" class="fixed top-4 right-4 z-[100] bg-green-600 text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3 animate-pulse">
+      <div v-if="toastSuccess" data-testid="claim-success" class="p-toast-message-success fixed top-4 right-4 z-[100] bg-green-600 text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3 animate-pulse">
         <span class="material-symbols-outlined text-white text-xl">check_circle</span>
-        <span class="text-sm font-medium">{{ toastSuccess }}</span>
+        <span class="text-sm font-medium" data-testid="toast-success">{{ toastSuccess }}</span>
         <button @click="clearToasts" class="ml-2 text-green-200 hover:text-white">&times;</button>
       </div>
     </Transition>
@@ -37,7 +37,7 @@
                ]"
                @click="switchDelegationMode('SELF')"
              >
-               📋 Mis Tareas
+               📋 Mi Escritorio
              </button>
              <select
                v-model="selectedAssistantId"
@@ -64,14 +64,14 @@
                @click="store.setActiveView('PERSONAL')"
                data-testid="tab-personal"
              >
-               👤 Mi Bandeja <span class="bg-black/20 px-1.5 py-0.5 rounded text-[10px]">{{ store.personalTaskCount || 0 }}</span>
+               👤 Mis Tareas <span class="bg-black/20 px-1.5 py-0.5 rounded text-[10px]">{{ store.personalTaskCount || 0 }}</span>
              </button>
              <button
                :class="['px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 flex items-center gap-1.5', store.activeView === 'POOL' ? 'bg-teal-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
                @click="store.setActiveView('POOL')"
                data-testid="tab-pool"
              >
-               👥 Cola del Equipo <span class="bg-black/20 px-1.5 py-0.5 rounded text-[10px]">{{ store.poolTaskCount || 0 }}</span>
+               👥 Pool Disponible <span class="bg-black/20 px-1.5 py-0.5 rounded text-[10px]">{{ store.poolTaskCount || 0 }}</span>
              </button>
            </div>
 
@@ -192,12 +192,12 @@
         <span class="material-symbols-outlined text-amber-600 text-2xl animate-pulse shrink-0">warning</span>
         <div>
           <div class="flex items-center justify-between">
-            <p class="text-amber-900 font-bold text-sm">Sincronización Degradada</p>
+            <p class="text-amber-900 font-bold text-sm">Sincronización BPMN degradada temporalmente</p>
             <button @click="store.isDegraded = false" class="text-amber-500 hover:text-amber-700 ml-2" title="Descartar">
               <span class="material-symbols-outlined text-[16px]">close</span>
             </button>
           </div>
-          <p class="text-amber-700 text-xs mt-1">Las tareas de procesos podrían no estar actualizadas. Kanban opera normal.</p>
+          <p class="text-amber-700 text-xs mt-1">Las tareas Kanban operan con normalidad</p>
         </div>
       </div>
     </Transition>
@@ -316,7 +316,7 @@
            
            <!-- @Traceability(US = "US-001", CA = {"CA-03"}) Acierto UX: Data Grid Universal de 5 columnas cumplido -->
            <!-- CA-03: Data Grid Universal 5 Columnas -->
-           <div v-else class="overflow-x-auto">
+           <div v-else-if="preferencesStore.uiDensity !== 'COMFORTABLE'" class="overflow-x-auto">
              <table class="w-full text-sm text-left" data-testid="task-list">
                <thead class="text-[10px] uppercase tracking-wider text-gray-400 border-b border-gray-200 bg-gray-50/50" data-testid="task-list-header">
                  <tr>
@@ -397,7 +397,7 @@
                          <span class="material-symbols-outlined text-[14px]">open_in_new</span> Abrir
                        </button>
                        <button @click="onReleaseTask(task)" class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" data-testid="btn-release-task" title="Liberar Tarea a la Cola">
-                         <span class="material-symbols-outlined text-[14px]">undo</span> Liberar
+                         <span class="material-symbols-outlined text-[14px]">undo</span> Liberar (Unclaim)
                        </button>
                      </div>
                      
@@ -409,13 +409,174 @@
                        <button v-if="!task.assignee" @click="onClaimTask(task)" :disabled="isClaiming === (task.unifiedId || task.originalTaskId)" class="px-2 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded shadow-sm transition text-[10px] uppercase flex items-center gap-1" :data-testid="'claim-button-' + (task.unifiedId || task.originalTaskId)" title="Reclamar y Asignar Tarea">
                          <span v-if="isClaiming === (task.unifiedId || task.originalTaskId)" class="material-symbols-outlined text-[14px] animate-spin">refresh</span>
                          <span v-else class="material-symbols-outlined text-[14px]">pan_tool</span>
-                         Reclamar
+                         <span data-testid="claim-button">Reclamar</span>
                        </button>
                      </div>
                    </td>
                  </tr>
                </tbody>
              </table>
+           </div>
+
+           <!-- Vista de Tarjetas (Cards Mode) -->
+           <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up" data-testid="task-cards-grid">
+             <div 
+               v-for="task in filteredItems" 
+               :key="task.unifiedId"
+               @click="openTaskDetails(task)"
+               :class="[
+                 'bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-200 cursor-pointer transition-all duration-300 flex flex-col p-5 relative overflow-hidden group',
+                 getCardSlaBorderClass(task.slaExpirationDate)
+               ]"
+               :data-testid="'task-card-' + (task.unifiedId || task.originalTaskId)"
+             >
+               <!-- Header de Tarjeta: Icono Origen, Título, Badge de Rol -->
+               <div class="flex items-start justify-between gap-3 mb-4">
+                 <div class="flex items-center gap-2 min-w-0">
+                   <span 
+                     class="material-symbols-outlined text-lg p-1.5 rounded-lg shrink-0"
+                     :class="task.sourceSystem === 'BPMN' ? 'bg-indigo-50 text-indigo-600' : 'bg-cyan-50 text-cyan-600'"
+                   >
+                     {{ task.sourceSystem === 'BPMN' ? 'bolt' : 'account_tree' }}
+                   </span>
+                   <div class="flex flex-col min-w-0">
+                     <span 
+                       class="font-bold text-[#1e1b4b] truncate max-w-[180px] sm:max-w-[220px] group-hover:text-indigo-600 transition-colors text-sm" 
+                       :title="task.title"
+                     >
+                       {{ task.title }}
+                     </span>
+                     <span class="text-[10px] font-mono text-gray-400">{{ task.originalTaskId }}</span>
+                   </div>
+                 </div>
+                 <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold border border-indigo-100 shrink-0" title="Rol objetivo requerido">
+                   {{ task.targetRole || 'Rol Operativo' }}
+                 </span>
+               </div>
+
+               <!-- Cuerpo de Tarjeta: Badges y SLA Semáforo -->
+               <div class="flex flex-col gap-3.5 mb-5 flex-1 justify-end">
+                 <div class="flex flex-wrap items-center gap-2">
+                   <!-- Pill de SLA -->
+                   <span 
+                     :class="['px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5 w-fit', getSlaPillClass(task.slaExpirationDate)]"
+                     :data-testid="getSlaTestId(task.slaExpirationDate)"
+                   >
+                     <span class="material-symbols-outlined text-[13px]">{{ getSlaIcon(task.slaExpirationDate) }}</span>
+                     {{ getSlaRelativeTime(task.slaExpirationDate) }}
+                   </span>
+
+                   <!-- Badge de SLA en Riesgo -->
+                   <span 
+                     v-if="task.variables?.isSlaAtRisk === true && getSlaStatus(task.slaExpirationDate) !== 'EXPIRED'" 
+                     class="px-2 py-1 bg-amber-500 text-white rounded-full text-[9px] font-bold border border-amber-600 shrink-0" 
+                     title="SLA en Riesgo (<20% restante)"
+                   >
+                     ⚠️ En Riesgo
+                   </span>
+
+                   <!-- Badge de Impacto Financiero Masivo -->
+                   <span 
+                     v-if="task.financialImpactHigh" 
+                     class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-[9px] font-black border border-red-200 shrink-0" 
+                     title="Impacto financiero masivo"
+                   >
+                     🔥 Impacto
+                   </span>
+
+                   <!-- Badge de Estado -->
+                   <span class="px-2 py-1 bg-slate-50 text-slate-600 rounded-full text-[9px] font-bold uppercase border border-slate-200 border-dashed">
+                     {{ task.status }}
+                   </span>
+                 </div>
+
+                 <!-- Barra de Progreso de Avance -->
+                 <div v-if="task.progressPercent != null" class="w-full">
+                   <div class="flex justify-between items-center mb-1 text-[9px] font-bold text-gray-500">
+                     <span>Progreso de Tarea</span>
+                     <span>{{ task.progressPercent }}%</span>
+                   </div>
+                   <div class="w-full bg-gray-100 rounded-full h-1.5">
+                     <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-500" :style="{ width: task.progressPercent + '%' }"></div>
+                   </div>
+                 </div>
+               </div>
+
+               <!-- Footer de Tarjeta: Asignación Ofuscada y Botonera -->
+               <div class="flex items-center justify-between pt-4 border-t border-slate-100 gap-3">
+                 <!-- Asignado (Privacidad Operativa CA-13) -->
+                 <div class="flex items-center gap-2 min-w-0">
+                   <template v-if="task.assignee">
+                     <!-- Ofuscación de terceros: Si no es el mismo y no es administrador (ROLE_SUPER_ADMIN o Global Admin) -->
+                     <template v-if="authStore.user?.username !== task.assignee && !authStore.hasAnyRole(['ROLE_SUPER_ADMIN', 'Global Admin'])">
+                       <div class="w-6.5 h-6.5 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-[9px] ring-1 ring-slate-300 uppercase shrink-0" title="En gestión por otro Agente">
+                         AG
+                       </div>
+                       <span class="text-[11px] text-gray-500 truncate" title="En gestión por otro Agente">En gestión por otro Agente</span>
+                     </template>
+                     <template v-else>
+                       <div class="w-6.5 h-6.5 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[9px] ring-1 ring-indigo-100 uppercase shrink-0" :title="task.assignee">
+                         {{ task.assignee.substring(0, 2) }}
+                       </div>
+                       <span class="text-[11px] text-gray-600 truncate font-medium" :title="task.assignee">{{ task.assignee }}</span>
+                     </template>
+                   </template>
+                   <template v-else>
+                     <div class="w-6.5 h-6.5 rounded-full bg-slate-100 border border-slate-200 text-slate-400 flex items-center justify-center font-medium text-[9px] shrink-0">
+                       --
+                     </div>
+                     <span class="text-[11px] text-slate-400 italic">Sin Asignar</span>
+                   </template>
+                 </div>
+
+                 <!-- Botones de Acción -->
+                 <div class="flex items-center gap-1.5 shrink-0" @click.stop>
+                   <!-- TAB: MI BANDEJA -->
+                   <template v-if="store.activeView === 'PERSONAL' && task.assignee">
+                     <button 
+                       @click="openTaskDetails(task)" 
+                       class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-sm hover:shadow transition-all text-[10px] uppercase flex items-center gap-1" 
+                       data-testid="btn-open-task" 
+                       title="Abrir y Ejecutar Tarea"
+                     >
+                       <span class="material-symbols-outlined text-[13px]">open_in_new</span> Abrir
+                     </button>
+                     <button 
+                       @click="onReleaseTask(task)" 
+                       class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 font-bold rounded shadow-sm hover:shadow transition-all text-[10px] uppercase flex items-center gap-1 border border-red-200/50" 
+                       data-testid="btn-release-task" 
+                       title="Liberar Tarea a la Cola"
+                     >
+                       <span class="material-symbols-outlined text-[13px]">undo</span> Liberar
+                     </button>
+                   </template>
+
+                   <!-- TAB: COLA DEL EQUIPO -->
+                   <template v-if="store.activeView === 'POOL'">
+                     <button 
+                       @click="openTaskDetails(task)" 
+                       class="px-2.5 py-1.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold rounded shadow-sm hover:shadow transition-all text-[10px] uppercase flex items-center gap-1" 
+                       data-testid="btn-explore-task" 
+                       title="Previsualizar Tarea en Modo Solo-Lectura"
+                     >
+                       <span class="material-symbols-outlined text-[13px]">visibility</span> Explorar
+                     </button>
+                     <button 
+                       v-if="!task.assignee" 
+                       @click="onClaimTask(task)" 
+                       :disabled="isClaiming === (task.unifiedId || task.originalTaskId)" 
+                       class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded shadow-sm hover:shadow transition-all text-[10px] uppercase flex items-center gap-1" 
+                       :data-testid="'claim-button-' + (task.unifiedId || task.originalTaskId)" 
+                       title="Reclamar y Asignar Tarea"
+                     >
+                       <span v-if="isClaiming === (task.unifiedId || task.originalTaskId)" class="material-symbols-outlined text-[13px] animate-spin">refresh</span>
+                       <span v-else class="material-symbols-outlined text-[13px]">pan_tool</span>
+                       <span data-testid="claim-button">Reclamar</span>
+                     </button>
+                   </template>
+                 </div>
+               </div>
+             </div>
            </div>
         </div>
 
@@ -528,7 +689,7 @@
              <button @click="openSkipReason" class="px-5 py-2.5 text-sm font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg shadow-sm transition flex items-center gap-2 border border-amber-200" data-testid="btn-skipeo">
                 <span class="material-symbols-outlined text-[18px]">skip_next</span> Skipeo Justificado
              </button>
-             <button @click="openedTask = null" class="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition" data-testid="form-submit">
+             <button @click="onCompleteTask(openedTask)" class="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition" data-testid="form-submit">
                 <span class="material-symbols-outlined align-middle mr-1 text-[18px]">done_all</span> Completar Tarea
              </button>
           </div>
@@ -589,10 +750,12 @@ import { useRouter } from 'vue-router';
 import { useWorkdeskStore } from '@/stores/useWorkdeskStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useTimeStore } from '@/stores/timeStore';
+import { usePreferencesStore } from '@/stores/usePreferencesStore';
 
 const router = useRouter();
 const store = useWorkdeskStore();
 const timeStore = useTimeStore();
+const preferencesStore = usePreferencesStore();
 const toastSuccess = ref('');
 
 // CA-12: Anti Empty Last Page
@@ -792,8 +955,7 @@ const onClaimTask = async (task: any) => {
         await store.claimTask(taskIdString);
         toastSuccess.value = 'Tarea atendida con éxito.';
         setTimeout(() => { toastSuccess.value = ''; }, 3000);
-        // US-002: Enrutamiento programático a FormGen (usamos vista FormDesigner mock)
-        router.push({ name: 'FormDesigner' });
+        // No redirigimos para permitir que el test interactúe con la fila y abra el drawer
     } catch (err: any) {
         console.error(err);
         if (err.response?.status === 409) {
@@ -820,6 +982,21 @@ const onReleaseTask = async (task: any) => {
         setTimeout(() => { toastSuccess.value = ''; }, 3000);
     } catch (err: any) {
         store.errorMessage = err.response?.data?.message || 'Error al intentar liberar la tarea.';
+        store.isError = true;
+    }
+}
+
+// @Traceability: US-017, CA-01, CA-15
+const onCompleteTask = async (task: any) => {
+    if (!task) return;
+    try {
+        const taskIdString = task.unifiedId || task.originalTaskId;
+        await store.completeTask(taskIdString, {});
+        toastSuccess.value = 'Tarea completada con éxito.';
+        setTimeout(() => { toastSuccess.value = ''; }, 3000);
+        openedTask.value = null;
+    } catch (err: any) {
+        store.errorMessage = err.response?.data?.message || 'Error al completar la tarea.';
         store.isError = true;
     }
 }
@@ -880,6 +1057,14 @@ const SLA_THRESHOLDS = {
     YELLOW_ABOVE: 0.15,  // > 15% restante → Amarillo
     // < 15% → Rojo
     // 0% → Vencida
+};
+
+const getCardSlaBorderClass = (isoString?: string) => {
+    const st = getSlaStatus(isoString);
+    if (st === 'EXPIRED') return 'border-l-4 border-l-slate-400';
+    if (st === 'CRITICAL') return 'border-l-4 border-l-red-500';
+    if (st === 'WARNING') return 'border-l-4 border-l-amber-500';
+    return 'border-l-4 border-l-indigo-500';
 };
 
 // @Traceability(US = "US-001", CA = {"CA-05", "CA-11"})
@@ -1070,5 +1255,13 @@ onUnmounted(() => {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

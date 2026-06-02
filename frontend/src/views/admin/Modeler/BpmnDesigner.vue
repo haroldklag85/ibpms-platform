@@ -77,7 +77,7 @@
         <!-- Deploy (CA-21) -->
         <button data-testid="btn-deploy" v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)"
                 @click="showDeployModal = true" 
-                :disabled="isDeploying || !['VALIDATED', 'WARNING'].includes(preFlightStatus)" 
+                :disabled="isDeploying || preFlightStatus !== 'VALIDATED'" 
                 class="bg-indigo-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 transition">
           🚀 [VALIDAR Y DESPLEGAR]
         </button>
@@ -434,10 +434,7 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Justificación del Despliegue <span class="text-red-500">*</span></label>
             <textarea v-model="deployComment" rows="3" minlength="10" placeholder="Justificación del despliegue..." class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2.5 border text-sm"></textarea>
           </div>
-          <div class="flex items-center gap-2">
-            <input type="checkbox" id="forceDeploy" v-model="forceDeploy" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
-            <label for="forceDeploy" class="text-sm font-medium text-gray-700 dark:text-gray-300">Omitir advertencias ⚠️ del Pre-Flight</label>
-          </div>
+            <!-- @Traceability: US-005, CA-33 - Checkbox 'forceDeploy' eliminado. Hard-Stop obligatorio. -->
           <div class="flex justify-end space-x-3 pt-2">
             <button @click="showDeployModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
             <button data-testid="btn-confirm-deploy" @click="confirmDeploy" :disabled="isDeploying" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50">
@@ -542,6 +539,21 @@
         <div class="px-4 py-2 bg-gray-800 flex gap-2 shrink-0">
           <input v-model="copilotInput" @keyup.enter="sendCopilotMessage" type="text" placeholder="Pregunta al Copiloto sobre tu proceso..." class="flex-1 bg-gray-700 text-white text-sm rounded px-3 py-1.5 border border-gray-600 focus:border-emerald-500 focus:ring-0" />
           <button @click="sendCopilotMessage" :disabled="copilotLoading" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold disabled:opacity-50 transition">Enviar</button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- ═══════ Panel: Linter de Gobernanza (CA-77) ═══════ -->
+    <Transition name="slide-up">
+      <div v-if="linterErrors.length > 0" class="absolute bottom-0 left-0 right-0 max-h-56 bg-amber-950 border-t-4 border-amber-600 flex flex-col z-50 shadow-2xl overflow-hidden shadow-amber-500/50" data-testid="linter-errors-panel">
+        <div class="flex items-center justify-between px-6 py-2 bg-amber-900/90 shrink-0">
+          <h4 class="text-sm font-bold text-white flex items-center gap-2">⚠️ Advertencias Estructurales del Linter (Gobernanza CA-77)</h4>
+          <button @click="linterErrors = []" class="text-amber-200 hover:text-white font-bold text-xl">&times;</button>
+        </div>
+        <div class="flex-1 p-5 overflow-y-auto space-y-2 text-sm font-mono bg-amber-950 text-amber-100">
+          <ul class="list-disc pl-5">
+             <li v-for="(err, i) in linterErrors" :key="i" class="mb-1">{{ err }}</li>
+          </ul>
         </div>
       </div>
     </Transition>
@@ -652,12 +664,21 @@
                   <span class="text-[10px] text-gray-500 dark:text-gray-400">📅 {{ p.lastEdited.split(' ')[0] || p.lastEdited }}</span>
                   <div class="flex items-center justify-between">
                      <span class="text-[10px] font-bold text-gray-500">v{{ p.version }} | {{ p.author?.split(' ')[0] || p.author }}</span>
-                     <span class="text-[10px] font-bold uppercase rounded-full px-2 py-0.5" :class="{'bg-green-100 text-green-800': p.status==='ACTIVO', 'bg-yellow-100 text-yellow-800': p.status==='BORRADOR', 'bg-gray-100 text-gray-700': p.status==='ARCHIVADO'}">{{ p.status }}</span>
+                     <!-- @Traceability: US-005, CA-31 Etiquetas de Estado en el Catálogo -->
+                     <span class="text-[10px] font-bold uppercase rounded-full px-2 py-0.5" :class="{'bg-green-100 text-green-800': p.status==='ACTIVO', 'bg-yellow-100 text-yellow-800': p.status==='BORRADOR', 'bg-gray-100 text-gray-700': p.status==='ARCHIVADO'}">
+                       {{ p.status === 'BORRADOR' ? '📝 BORRADOR' : (p.status === 'ACTIVO' ? `✅ ACTIVO (v${p.version})` : (p.status === 'ARCHIVADO' ? '📦 ARCHIVADO' : p.status)) }}
+                     </span>
                   </div>
                 </div>
               </div>
               <!-- Action Button CA-32 -->
-              <button v-if="p.status === 'ACTIVO'" @click.stop="archiveProcess(p.id)" class="absolute top-2 right-2 text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded hover:bg-gray-200 transition z-10 border border-gray-300 shadow-sm flex items-center gap-1" title="Archivar Proceso (CA-32)">
+              <!-- @Traceability: US-005, CA-32 Archivar un Proceso sin Instancias Activas -->
+              <button v-if="p.status === 'ACTIVO'" 
+                      :disabled="(p.activeInstances || p.activeInstancesCount || 0) > 0"
+                      @click.stop="archiveProcess(p.id || p.key)" 
+                      class="absolute top-2 right-2 text-[10px] font-bold px-2 py-1 rounded transition z-10 border shadow-sm flex items-center gap-1"
+                      :class="((p.activeInstances || p.activeInstancesCount || 0) > 0) ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'"
+                      :title="((p.activeInstances || p.activeInstancesCount || 0) > 0) ? `No se puede archivar: ${p.activeInstances || p.activeInstancesCount} instancias en ejecución` : 'Archivar Proceso (CA-32)'">
                 📦 Archivar
               </button>
             </div>
@@ -714,14 +735,90 @@
       @success="msg => showToast('✅ ' + msg, 'success')"
     />
 
+    <!-- ═══════ Welcome Modal (CA-40) ═══════ -->
+    <div v-if="showWelcomeModal" data-testid="welcome-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+        <!-- Header -->
+        <div class="px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between">
+          <div>
+            <h3 class="text-xl font-bold">✨ Bienvenido al Diseñador iBPMS</h3>
+            <p class="text-xs text-blue-100 mt-1">Selecciona un proceso existente o crea uno nuevo para comenzar.</p>
+          </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto">
+          <!-- Left: Existing Processes Catalog -->
+          <div class="flex flex-col h-full border-r border-gray-200 dark:border-gray-700 pr-6">
+            <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+              📂 Procesos Recientes
+            </h4>
+            <div class="flex-1 overflow-y-auto flex flex-col gap-3 min-h-[250px]">
+              <div v-if="loadingCatalog" class="flex items-center justify-center py-10">
+                <span class="text-xs text-gray-500 font-bold animate-pulse">Cargando catálogo...</span>
+              </div>
+              <div v-else-if="catalogProcesses.length === 0" class="text-center text-xs text-gray-500 py-10 font-bold">
+                No hay procesos en el catálogo.
+              </div>
+              <div v-else v-for="p in catalogProcesses" :key="p.id" @click="selectProcessFromWelcome(p)" class="p-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer transition flex flex-col gap-1">
+                <span class="font-bold text-xs text-gray-900 dark:text-gray-100">{{ p.name }}</span>
+                <div class="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
+                  <span>v{{ p.version }} | {{ p.author?.split(' ')[0] }}</span>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase" :class="{'bg-green-100 text-green-800': p.status==='ACTIVO', 'bg-yellow-100 text-yellow-800': p.status==='BORRADOR', 'bg-gray-100 text-gray-700': p.status==='ARCHIVADO'}">
+                    {{ p.status }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right: New Process Form -->
+          <div class="flex flex-col justify-between">
+            <div>
+              <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-4">
+                ✨ Crear Nuevo Proceso
+              </h4>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del Proceso</label>
+                  <input v-model="newProcessName" type="text" placeholder="Ej. Proceso de Facturación" class="w-full rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2.5 text-xs focus:ring-blue-500 focus:border-blue-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Patrón de Proceso</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button @click="newProcessPattern = 'SIMPLE'" :class="newProcessPattern === 'SIMPLE' ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10 border-blue-300' : 'border-gray-200 dark:border-gray-700'" class="p-3 border rounded-lg text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                      <span class="text-lg">🟢</span>
+                      <p class="text-xs font-bold mt-1 text-gray-800 dark:text-white">Simple</p>
+                    </button>
+                    <button @click="newProcessPattern = 'IFORM_MAESTRO'" :class="newProcessPattern === 'IFORM_MAESTRO' ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10 border-blue-300' : 'border-gray-200 dark:border-gray-700'" class="p-3 border rounded-lg text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                      <span class="text-lg">🔵</span>
+                      <p class="text-xs font-bold mt-1 text-gray-800 dark:text-white">iForm</p>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="pt-6 border-t border-gray-100 dark:border-gray-700 mt-6 flex justify-end">
+              <button @click="completeProcessCreationInWelcome" :disabled="!newProcessName.trim()" class="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-md transition">
+                Crear y Diseñar Proceso
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
+// @Traceability: US-005, CA-40
 import { useTimeStore } from '@/stores/timeStore';
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
+import { useRoute } from 'vue-router';
 import { debounce } from 'lodash-es';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 import InstancesManager from './InstancesManager.vue';
@@ -733,6 +830,9 @@ const Vue3Lottie = defineAsyncComponent(() => import('vue3-lottie').then(m => m.
 
 const corruptNodeId = ref<string | null>(null);
 const authStore = useAuthStore();
+const integrationStore = useIntegrationStore(); // @Traceability: US-005, CA-40
+const timeStore = useTimeStore(); // Prevent runtime TypeError on undefined timeStore
+const route = useRoute();
 const activeRole = computed(() => authStore.roles?.[0] || 'BPMN_Designer'); // Reemplaza mockRole CA-21, CA-66
 
 // ── Types ────────────────────────────────────────────────────
@@ -831,10 +931,12 @@ const preFlightStatus = ref<'VALIDATED' | 'PENDING' | 'WARNING' | 'ERROR'>('PEND
 const isDeploying = ref(false);
 const showDeployModal = ref(false);
 const deployComment = ref(''); // CA-65
-const forceDeploy = ref(false); // CA-65
+// @Traceability: US-005, CA-33 - forceDeploy removido (Hard Stop)
 const deployStrategy = ref('coexist');
 const activeInstances = ref(12);
 const validationErrors = ref<string[]>([]);
+// @Traceability: US-005, CA-77 Validación y Corrección en Caliente mediante Linter en Frontend
+const linterErrors = ref<string[]>([]);
 
 // ── New Process Modal ────────────────────────────────────────
 const showNewProcessModal = ref(false);
@@ -929,12 +1031,13 @@ let heartbeatInterval: any = null;
 const setupHeartbeat = () => {
   if (heartbeatInterval) clearInterval(heartbeatInterval);
   watch(() => timeStore.currentTick, async (tick) => {
-  if (tick % 30000 < 1000) {
-    if (processId.value && document.hasFocus() && !isLocked.value) {
-      try { await integrationStore.heartbeatProcessLock(processId.value); } catch (e) {}
+    if (tick % 30000 < 1000) {
+      // @Traceability: US-005, CA-40
+      if (!showWelcomeModal.value && processId.value && document.hasFocus() && !isLocked.value) {
+        try { await integrationStore.heartbeatProcessLock(processId.value); } catch (e) {}
+      }
     }
-  }
-}); // @Traceability: Retro-Remediación ADR-006
+  }); // @Traceability: Retro-Remediación ADR-006
 };
 
 // @Traceability: US-005, CA-64
@@ -958,7 +1061,7 @@ const openDeployRequests = async () => {
   showDeployRequests.value = true;
   loadingDeployRequests.value = true;
   try {
-     const { data } = await integrationStore.getDeployRequests(processId.value);
+     const { data } = await integrationStore.get(`/api/v1/design/processes/${processId.value}/deploy-requests`);
      deployRequests.value = data || [];
   } catch (err) {
      showToast('Error obteniendo solicitudes', 'error');
@@ -971,10 +1074,10 @@ const openDeployRequests = async () => {
 const handleDeployRequest = async (id: string, approve: boolean) => {
   try {
      if (approve) {
-        await integrationStore.approveDeployRequest(id, {});
+        await integrationStore.post(`/api/v1/design/processes/deploy-requests/${id}/review`, { approved: true, comment: 'Aprobado por UI' });
         showToast('Solicitud Aprobada. Proceso desplegado.', 'success');
      } else {
-        await integrationStore.rejectDeployRequest(id, { reason: 'Rechazado por UI' });
+        await integrationStore.post(`/api/v1/design/processes/deploy-requests/${id}/review`, { approved: false, comment: 'Rechazado por UI - Comentario suficientemente largo' });
         showToast('Solicitud Rechazada.', 'success');
      }
      await openDeployRequests();
@@ -1053,11 +1156,12 @@ const restoreVersion = async (v: number) => {
 
 // ── Catalog (CA-14) ──────────────────────────────────────────
 const showCatalog = ref(false);
+const showWelcomeModal = ref(false);
 const catalogProcesses = ref<any[]>([]);
 const loadingCatalog = ref(false);
 
-watch(showCatalog, async (val) => {
-  if (val) {
+watch([showCatalog, showWelcomeModal], async ([newShowCatalog, newShowWelcomeModal]) => {
+  if (newShowCatalog || newShowWelcomeModal) {
     loadingCatalog.value = true;
     try {
       const { data } = await integrationStore.getCatalogProcesses();
@@ -1072,6 +1176,16 @@ watch(showCatalog, async (val) => {
   }
 });
 
+const selectProcessFromWelcome = async (p: any) => {
+  await loadProcess(p);
+  showWelcomeModal.value = false;
+};
+
+const completeProcessCreationInWelcome = async () => {
+  createNewProcess();
+  showWelcomeModal.value = false;
+};
+
 // ── Toast ────────────────────────────────────────────────────
 const toast = ref<{ msg: string; type: 'success' | 'error' }>({ msg: '', type: 'success' });
 const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -1084,13 +1198,14 @@ const availableForms = ref<any[]>([]);
 
 const fetchForms = async () => {
   try {
-    const { data } = await integrationStore.getForms();
+    // @Traceability: US-005, CA-40
+    const { data } = await integrationStore.getForms(processId.value);
     // Assuming backend returns array of objects with { id o key, name, type }
     // Normalizing against old static mapping if backend structure differs slightly
     availableForms.value = data.map((f: any) => ({
       key: f.key || f.id || f.formId,
       name: f.name || f.title,
-      type: f.type || 'SIMPLE'
+      type: f.type === 'MASTER' ? 'MAESTRO' : (f.type || 'SIMPLE')
     }));
   } catch (err) {
     console.warn('Backend /forms indisponible. Fallback a MOCKS CA-30.');
@@ -1251,8 +1366,19 @@ const emptyBpmn = `<?xml version="1.0" encoding="UTF-8"?>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>`;
 
+// CA-04: Hook de abandono agresivo para purgar RAG
+const handleBeforeUnload = () => {
+   // const sessionId = localStorage.getItem('copilot_session_id');
+   // if(sessionId) apiClient.destroyCopilotSession(sessionId);
+};
+
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
+  // @Traceability: US-005, CA-40
+  const hasNoProcessId = !route || !route.query || !route.query.processId;
+  showWelcomeModal.value = hasNoProcessId;
+  showCatalog.value = hasNoProcessId;
+
   setupHeartbeat(); // CA-66
   try {
     const { default: BpmnModeler } = await import('bpmn-js/lib/Modeler');
@@ -1264,6 +1390,47 @@ onMounted(async () => {
       additionalModules: [minimapModule],
       keyboard: { bindTo: document } // CA-20 Copy/Paste enabled system-wide
     });
+
+    // @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos
+    try {
+      const clipboard = modelerInstance.get('clipboard');
+      if (clipboard) {
+        const originalSet = clipboard.set.bind(clipboard);
+        const originalGet = clipboard.get.bind(clipboard);
+
+        clipboard.set = (data: any) => {
+          originalSet(data);
+          const seen = new WeakSet();
+          const serialized = JSON.stringify(data, (key, value) => {
+            if (key === '$parent' || key === 'parent') {
+              return undefined;
+            }
+            if (typeof value === 'object' && value !== null) {
+              if (seen.has(value)) {
+                return undefined;
+              }
+              seen.add(value);
+            }
+            return value;
+          });
+          localStorage.setItem('bpmn_shared_clipboard', serialized);
+        };
+
+        clipboard.get = () => {
+          try {
+            const stored = localStorage.getItem('bpmn_shared_clipboard');
+            if (stored) {
+              return JSON.parse(stored);
+            }
+          } catch (e) {
+            console.error('Failed to parse shared clipboard from localStorage', e);
+          }
+          return originalGet();
+        };
+      }
+    } catch (e) {
+      console.error('Failed to decorate modeler clipboard', e);
+    }
     
     // CA-E2E: Expose for playwright test injection
     if (window.Cypress || typeof window !== 'undefined') {
@@ -1274,7 +1441,10 @@ onMounted(async () => {
     modelerInstance.get('canvas').zoom('fit-viewport');
 
     // Initial Load CA-30 Forms & CA-45 Connectors & CA-70 Topics
-    fetchForms();
+    // @Traceability: US-005, CA-40
+    if (!showWelcomeModal.value) {
+      fetchForms();
+    }
     fetchConnectors();
     fetchTopics();
     fetchDmnDefinitions(); // CA-12 DMNs
@@ -1336,10 +1506,12 @@ onMounted(async () => {
       elementCount.value = count; // CA-31 update reactive state
       
       // CA-30 Alerta Complejidad
+      // @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable
       if (count > bpmnComplexityLimit.value) {
-        showToast(`⚠️ Mala Práctica: Diagrama excede [${bpmnComplexityLimit.value}] nodos. Riesgo de mantenimiento y rendimiento motor.`, 'error'); 
+        showToast(`⚠️ Mala Práctica de Diseño: Este proceso supera los ${bpmnComplexityLimit.value} nodos. Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor.`, 'error'); 
       }
 
+      runClientLinter(); // @Traceability: US-005, CA-77
       debouncedValidate(); // CA-3 Pre-Flight reactivo a cambios
     });
 
@@ -1347,6 +1519,10 @@ onMounted(async () => {
     modelerInstance.on('import.done', (event: any) => {
        const { error } = event;
        if (!error) {
+           // @Traceability: US-005, CA-40 Inicialización del contador para bloqueo de Patrón
+           const count = modelerInstance.get('elementRegistry').filter((e: any) => e.type !== 'bpmn:Process').length;
+           elementCount.value = count;
+
            const canvas = modelerInstance.get('canvas');
            const rootElement = canvas.getRootElement();
            // Si el XML parseado escupe isExecutable="false"
@@ -1386,8 +1562,31 @@ onMounted(async () => {
     try { modelerInstance.get('minimap').open(); } catch(_) {}
 
     // Initialization Calls (CA-6 / CA-7)
-    fetchLockState();
-    fetchVersions();
+    // @Traceability: US-005, CA-40
+    if (!showWelcomeModal.value) {
+      fetchLockState();
+      fetchVersions();
+    }
+
+    // @Traceability: US-005, CA-40
+    if (!showWelcomeModal.value) {
+      try {
+        const targetId = route.query.processId;
+        const { data } = await integrationStore.getCatalogProcesses();
+        catalogProcesses.value = data || [];
+        const targetProcess = catalogProcesses.value.find(p => p.key === targetId || p.id === targetId);
+        if (targetProcess) {
+          await loadProcess(targetProcess);
+        } else {
+          showWelcomeModal.value = true;
+          showCatalog.value = true;
+        }
+      } catch (err) {
+        console.error('Error fetching catalog on mounted', err);
+        showWelcomeModal.value = true;
+        showCatalog.value = true;
+      }
+    }
     
     watch(showVersions, (val) => {
       if (val) fetchVersions();
@@ -1403,7 +1602,8 @@ onMounted(async () => {
   // Auto-save timer (CA-19)
   watch(() => timeStore.currentTick, async (tick) => {
     if (tick % 30000 < 1000) {
-      if (modelerInstance && !isLocked.value) {
+      // @Traceability: US-005, CA-40
+      if (!showWelcomeModal.value && modelerInstance && !isLocked.value) {
         const { xml } = await modelerInstance.saveXML({ format: true });
         if (xml !== lastSavedXml.value) {
           await saveDraft();
@@ -1413,12 +1613,6 @@ onMounted(async () => {
     }
   }); // @Traceability: Retro-Remediación ADR-006
 
-  // CA-04: Hook de abandono agresivo para purgar RAG
-  // TODO: Implementar sessionId en Store para purga correcta sin violar IDOR
-  const handleBeforeUnload = () => {
-     // const sessionId = localStorage.getItem('copilot_session_id');
-     // if(sessionId) apiClient.destroyCopilotSession(sessionId);
-  };
   window.addEventListener('beforeunload', handleBeforeUnload);
 
   // Tick the "ago" counter every second
@@ -1433,7 +1627,10 @@ onBeforeUnmount(() => {
   // TODO: integrationStore.destroyCopilotSession(sessionId);
   window.removeEventListener('beforeunload', handleBeforeUnload);
 
-  if (modelerInstance) modelerInstance.destroy();
+  if (modelerInstance) {
+    modelerInstance.destroy();
+    modelerInstance = null;
+  }
   if (autoSaveInterval) clearInterval(autoSaveInterval);
 });
 
@@ -1464,21 +1661,94 @@ watch(processId, (newId) => {
   }
 
   // Refetch process governance if ID mutates (CA-6 / CA-7)
-  fetchLockState();
-  fetchVersions();
+  // @Traceability: US-005, CA-40
+  if (!showWelcomeModal.value) {
+    fetchLockState();
+    fetchVersions();
+  }
 });
 
 // ── Validation (CA-3, CA-9 & CA-46) ─────────────────────────────────
-const debouncedValidate = debounce(async () => {
+// @Traceability: US-005, CA-77 Validación y Corrección en Caliente mediante Linter en Frontend
+const runClientLinter = () => {
   if (!modelerInstance) return;
+  const errors: string[] = [];
+
+  try {
+    const elementRegistry = modelerInstance.get('elementRegistry');
+    if (!elementRegistry || typeof elementRegistry.getAll !== 'function') return;
+    const elements = elementRegistry.getAll();
+
+    // 1. Presence of >=1 bpmn:StartEvent and >=1 bpmn:EndEvent
+    const startEvents = elements.filter((el: any) => el.type === 'bpmn:StartEvent');
+    const endEvents = elements.filter((el: any) => el.type === 'bpmn:EndEvent');
+
+    if (startEvents.length === 0) {
+      errors.push('Linter: El diagrama debe contener al menos un Evento de Inicio (StartEvent).');
+    }
+    if (endEvents.length === 0) {
+      errors.push('Linter: El diagrama debe contener al menos un Evento de Fin (EndEvent).');
+    }
+
+    // 2. Connection of incoming/outgoing flows for tasks/gateways (preventing zombie nodes)
+    elements.forEach((el: any) => {
+      const isTask = el.type && (el.type.endsWith('Task') || el.type === 'bpmn:Task');
+      const isGateway = el.type && (el.type.endsWith('Gateway') || el.type === 'bpmn:Gateway');
+
+      if (isTask || isGateway) {
+        const incomingCount = el.incoming ? el.incoming.length : 0;
+        const outgoingCount = el.outgoing ? el.outgoing.length : 0;
+
+        if (incomingCount === 0 || outgoingCount === 0) {
+          errors.push(`Linter: El nodo '${el.businessObject?.name || el.id}' (${el.type}) está desconectado o es un Nodo Zombie (requiere flujos entrantes y salientes).`);
+        }
+      }
+
+      // 3. Default flows for divergent Exclusive Gateways
+      if (el.type === 'bpmn:ExclusiveGateway') {
+        const outgoingCount = el.outgoing ? el.outgoing.length : 0;
+        if (outgoingCount > 1) {
+          const defaultFlow = el.businessObject?.default;
+          if (!defaultFlow) {
+            errors.push(`Linter: La compuerta exclusiva '${el.businessObject?.name || el.id}' es divergente y requiere un flujo por defecto (Default Flow).`);
+          }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error('Error running client linter:', err);
+  }
+
+  linterErrors.value = errors;
+  if (errors.length > 0) {
+    preFlightStatus.value = 'ERROR';
+    validationErrors.value = []; // Clear semantic errors to prevent visual clutter
+  }
+};
+
+const debouncedValidate = debounce(async () => {
+  // @Traceability: US-005, CA-40
+  if (showWelcomeModal.value) return;
+  if (!modelerInstance) return;
+  
+  // Run client linter first
+  runClientLinter();
+  if (linterErrors.value.length > 0) {
+    preFlightStatus.value = 'ERROR';
+    return; // Block backend pre-flight request if linter fails
+  }
+
   preFlightStatus.value = 'PENDING';
   
   // Clear previous CA-46 highlights
   const canvas = modelerInstance.get('canvas');
   const elementRegistry = modelerInstance.get('elementRegistry');
-  elementRegistry.getAll().forEach((el: any) => {
-    try { canvas.removeMarker(el.id, 'highlight-warning'); } catch(e) {}
-  });
+  if (elementRegistry && typeof elementRegistry.getAll === 'function') {
+    elementRegistry.getAll().forEach((el: any) => {
+      try { canvas.removeMarker(el.id, 'highlight-warning'); } catch(e) {}
+    });
+  }
 
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
@@ -1537,9 +1807,10 @@ const handleFileUpload = async (event: Event) => {
     modelerInstance.get('canvas').zoom('fit-viewport');
     
     // Test QA: Check complexity (> 100 bpmn nodes)
+    // @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable
     const nodeCount = (text.match(/<bpmn:/g) || []).length;
     if (nodeCount > 100) {
-      showToast('⚠️ Advertencia: Alta complejidad. Proceso con más de 100 nodos.', 'error');
+      showToast('⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos. Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor.', 'error');
     } else {
       showToast('Archivo BPMN importado correctamente');
     }
@@ -1578,7 +1849,7 @@ const confirmDeploy = async () => {
       formData.append('processId', processId.value);
       formData.append('strategy', deployStrategy.value);
       formData.append('deploy_comment', deployComment.value); // CA-65
-      formData.append('force_deploy', forceDeploy.value.toString()); // CA-65
+      // @Traceability: US-005, CA-33 force_deploy bypass eliminado.
       const xmlBlob = new Blob([xml!], { type: 'application/xml' });
       formData.append('file', xmlBlob, `${processId.value}.bpmn`);
 
@@ -1618,9 +1889,13 @@ const confirmDeploy = async () => {
 const requestDeploy = async () => {
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
-    // CA-25: Mandamos a API
-    await integrationStore.requestDeployment(processId.value, { xml });
-    showToast('📩 Solicitud de despliegue enviada de forma exitosa al Release Manager', 'success');
+    // CA-34: Enviar como multipart/form-data
+    const formData = new FormData();
+    formData.append('file', new Blob([xml], { type: 'text/xml' }), `${processId.value || 'process'}.bpmn`);
+    
+    // El Boundary es auto-calculado por fetch/axios si usamos FormData
+    await integrationStore.post(`/api/v1/design/processes/deploy-request`, formData);
+    showToast('🚀 Solicitud de despliegue enviada de forma exitosa al Release Manager', 'success');
     processStatus.value = 'PENDING';
   } catch(err: any) {
     showToast(err.response?.data?.error || 'Error al solicitar despliegue', 'error');
@@ -1647,6 +1922,7 @@ const createNewProcess = () => {
   processPattern.value = newProcessPattern.value;
   processStatus.value = 'BORRADOR';
   showNewProcessModal.value = false;
+  showWelcomeModal.value = false;
   if (modelerInstance) {
     if (newProcessOrigin.value === 'TEMPLATE' && selectedTemplateId.value) {
       const tpl = templatesList.value.find(t => t.id === selectedTemplateId.value);
@@ -1695,11 +1971,32 @@ const archiveProcess = async (pId: string) => {
   }
 };
 
-const loadProcess = (p: any) => {
-  currentProcessName.value = p.name;
-  processStatus.value = p.status;
+// @Traceability: US-005, CA-40
+const loadProcess = async (p: any) => {
+  // @Traceability: US-005, CA-40
+  showWelcomeModal.value = false;
   showCatalog.value = false;
-  showToast(`Cargado: ${p.name} v${p.version}`);
+  try {
+    currentProcessName.value = p.name;
+    processStatus.value = p.status;
+    processId.value = p.key;
+    processPattern.value = p.formPattern || 'SIMPLE';
+
+    const { data } = await integrationStore.get(`/api/v1/design/processes/${p.key}/xml`);
+    if (data && data.xml && modelerInstance) {
+      await modelerInstance.importXML(data.xml);
+      modelerInstance.get('canvas').zoom('fit-viewport');
+    }
+
+    showToast(`Cargado: ${p.name} v${p.version}`);
+    // @Traceability: US-005, CA-40
+    await fetchForms();
+    await fetchLockState();
+    await fetchVersions();
+  } catch (err) {
+    console.error('Error loading process XML', err);
+    showToast('Error cargando el XML del proceso', 'error');
+  }
 };
 
 // CA-01 & CA-08: Solicitud SSE interactiva a la IA en tiempo real
@@ -1815,7 +2112,7 @@ const sendCopilotMessage = async () => {
   }
 };
 
-// ── Zoom Controls (CA-16) ────────────────────────────────────
+// @Traceability: US-005, CA-25 Zoom y Minimap
 const zoomIn = () => {
   if (modelerInstance) {
     const canvas = modelerInstance.get('canvas');
@@ -1835,8 +2132,11 @@ const zoomFit = () => {
 // ── Native Attribute Modifiers (CA-26, CA-27) ──────────────────
 const updateGlobalSla = () => {
   if (!modelerInstance) return;
+  // @Traceability: US-005, CA-40
+  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
+  if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
-  const rootElement = modelerInstance.get('canvas').getRootElement();
+  const rootElement = canvas.getRootElement();
   if (rootElement && rootElement.businessObject) {
     modeling.updateProperties(rootElement, { "camunda:dueDate": `P${globalSla.value}H` }); // Estandarizado a formato ISO 8601 Horas
   }
@@ -1887,9 +2187,11 @@ const updateElementConnector = () => {
 
 const updateProcessProperty = (name: string, value: string) => {
   if (!modelerInstance) return;
+  // @Traceability: US-005, CA-40
+  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
+  if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
   const bpmnFactory = modelerInstance.get('bpmnFactory');
-  const canvas = modelerInstance.get('canvas');
   const rootElement = canvas.getRootElement();
   const bo = rootElement.businessObject;
 
@@ -1939,6 +2241,30 @@ const syncElementProperties = (key: string, value: any) => {
     modeling.updateProperties(shape, { [key]: value });
   }
 };
+
+// @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos
+const getModelerClipboard = () => {
+  return modelerInstance ? modelerInstance.get('clipboard') : null;
+};
+
+defineExpose({
+  getModelerClipboard,
+  saveDraft,
+  preFlightStatus,
+  onDiagramEdit,
+  processPattern,
+  filteredForms,
+  availableConnectors,
+  toast,
+  showToast,
+  zoomIn,
+  zoomOut,
+  zoomFit,
+  linterErrors, // @Traceability: US-005, CA-77
+  showWelcomeModal,
+  selectProcessFromWelcome,
+  completeProcessCreationInWelcome
+});
 </script>
 
 <style>

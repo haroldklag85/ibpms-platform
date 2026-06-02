@@ -49,7 +49,7 @@ ping 127.0.0.1 -n 11 > nul
 echo ===================================================
 echo [5/5] Ejecutando Certificacion E2E (Playwright)
 echo ===================================================
-call npx playwright test -c playwright.e2e.config.ts
+call npx playwright test e2e/certification/us005-bpmn-modeler-persistence.e2e.spec.ts -c playwright.e2e.config.ts
 set PLAYWRIGHT_EXIT=%errorlevel%
 cd ..
 

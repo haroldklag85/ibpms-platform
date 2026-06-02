@@ -15,6 +15,15 @@ import com.ibpms.poc.domain.model.FormEvent;
 import com.ibpms.poc.domain.port.FormEventRepository;
 
 import java.time.Instant;
+import com.ibpms.poc.application.port.out.FormDefinitionPort;
+import com.ibpms.poc.application.port.out.FormDesignPort;
+import com.ibpms.poc.application.dto.FormDesignDTO;
+import com.ibpms.poc.domain.model.FormDefinition;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -28,19 +37,26 @@ public class FormBffCoreService {
     private final RejectionLogService rejectionLogService;
     private final FormEventRepository formEventRepository;
     private final ObjectMapper objectMapper;
+    private final FormDefinitionPort formDefinitionPort;
+    private final FormDesignPort formDesignPort;
 
     public FormBffCoreService(TaskService taskService, 
                               RejectionLogService rejectionLogService,
                               FormEventRepository formEventRepository,
-                              ObjectMapper objectMapper) {
+                              ObjectMapper objectMapper,
+                              FormDefinitionPort formDefinitionPort,
+                              FormDesignPort formDesignPort) {
         this.taskService = taskService;
         this.rejectionLogService = rejectionLogService;
         this.formEventRepository = formEventRepository;
         this.objectMapper = objectMapper;
+        this.formDefinitionPort = formDefinitionPort;
+        this.formDesignPort = formDesignPort;
     }
 
     /**
-     * CA-01: Inyección Megalítica de Contexto (Patrón BFF).
+     * CA-01 / CA-81: Inyección Megalítica de Contexto (Patrón BFF) con Anclaje de Versión In-Flight.
+     * // @Traceability: US-003 - CA-81
      */
     public Map<String, Object> generateMegaDtoFormContext(String taskId, String userId) {
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
@@ -54,14 +70,66 @@ public class FormBffCoreService {
         // Conectar form prefillData con las variables reales de Camunda para resolver (B-J04-02)
         Map<String, Object> realVariables = taskService.getVariables(taskId);
 
-        log.info("BFF Form Context (CA-01): Ensamblando contexto real para Tarea {}", taskId);
+        // CA-81: Anclaje de Versión para Procesos In-Flight (Lazy Patching)
+        String formKey = task.getFormKey();
+        UUID formId = null;
+        if (formKey != null) {
+            try {
+                formId = UUID.fromString(formKey);
+            } catch (IllegalArgumentException e) {
+                // Si es un technicalName, buscamos el formId correspondiente
+                Optional<FormDesignDTO> designOpt = formDesignPort.findTopByTechnicalNameOrderByVersionDesc(formKey);
+                if (designOpt.isPresent()) {
+                    formId = designOpt.get().getId();
+                }
+            }
+        }
+
+        FormDefinition anchoredDef = null;
+        if (formId != null) {
+            List<FormDefinition> versions = formDefinitionPort.findByFormIdOrderByVersionIdDesc(formId);
+            Date taskCreateTime = task.getCreateTime();
+            if (taskCreateTime != null && !versions.isEmpty()) {
+                Instant taskInstant = taskCreateTime.toInstant();
+                for (FormDefinition def : versions) {
+                    if (def.getCreatedAt() != null) {
+                        Instant defInstant = def.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant();
+                        if (!defInstant.isAfter(taskInstant)) {
+                            anchoredDef = def;
+                            break;
+                        }
+                    }
+                }
+            }
+            // Fallback: si no hay versión antes del taskCreateTime, tomar la versión más antigua (primera versión)
+            if (anchoredDef == null && !versions.isEmpty()) {
+                anchoredDef = versions.get(versions.size() - 1);
+            }
+        }
+
+        Map<String, Object> layoutMap = null;
+        String schemaVer = "v1.2.0";
+        if (anchoredDef != null) {
+            schemaVer = String.valueOf(anchoredDef.getVersionId());
+            try {
+                layoutMap = objectMapper.readValue(anchoredDef.getSchemaContent(), Map.class);
+            } catch (Exception e) {
+                log.error("Failed to parse anchored form schema JSON (CA-81)", e);
+            }
+        }
+
+        if (layoutMap == null) {
+            layoutMap = Map.of("type", "grid", "components", "[]");
+        }
+
+        log.info("BFF Form Context (CA-01/CA-81): Ensamblando contexto real para Tarea {} con versión {}", taskId, schemaVer);
         return Map.of(
             "taskId", task.getId(),
             "taskName", task.getName(),
-            "schema_version", "v1.2.0", // Prevención choques generacionales
-            "layout", Map.of("type", "grid", "components", "[]"), // Zod Schema Placeholder (To be dynamic based on FormDefinition)
+            "schema_version", schemaVer,
+            "layout", layoutMap,
             "prefillData", realVariables.isEmpty() ? Map.of() : realVariables,
-            "rejection_history", rejectionHistory // Trazabilidad incluida para el Frontend
+            "rejection_history", rejectionHistory
         );
     }
 

@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.application.port.in.AuditLogUseCase;
@@ -54,7 +55,7 @@ class KanbanTaskServiceTest {
 
         assertEquals(KanbanState.IN_PROGRESS, task.getStatus());
         verify(kanbanTaskPort).save(task);
-        verify(messagingTemplate).convertAndSend(eq("/topic/kanban/" + task.getBoardId() + "/tasks"), eq("TASK_STATE_CHANGED"));
+        verify(messagingTemplate).convertAndSend(eq("/topic/kanban/" + task.getBoardId() + "/tasks"), eq(task));
         verify(auditLogService).commit(eq("user1"), eq(task));
     }
 

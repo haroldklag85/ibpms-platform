@@ -13,11 +13,11 @@ spring:
       mode: always
       data-locations: classpath:seed-e2e.sql
       continue-on-error: true
-  # Desactivar Liquibase en e2e (Hibernate ddl-auto:update maneja esquemas)
+  # Activar Liquibase en e2e para crear tablas no-mapeadas como ibpms_tenant
   liquibase:
-    enabled: false
+    enabled: true
   jpa:
-    defer-datasource-initialization: true
+    defer-datasource-initialization: false
   data:
     redis:
       host: localhost

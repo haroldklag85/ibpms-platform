@@ -93,5 +93,20 @@ public class GlobalExceptionHandlerTest {
         assertFalse(problem.getDetail().contains(secretErrorDetail));
         assertFalse(problem.getDetail().contains("NullPointerException"));
         assertTrue(problem.getDetail().contains("Error interno del servidor"));
+     }
+
+    @Test
+    void test_MethodNotSupported_Yields_405() {
+        org.springframework.web.HttpRequestMethodNotSupportedException ex =
+                new org.springframework.web.HttpRequestMethodNotSupportedException("POST", List.of("GET", "PUT"));
+
+        // Act
+        ProblemDetail problem = exceptionHandler.handleMethodNotSupported(ex);
+
+        // Assert
+        assertEquals(HttpStatus.METHOD_NOT_ALLOWED.value(), problem.getStatus());
+        assertEquals("Método No Permitido", problem.getTitle());
+        assertTrue(problem.getDetail().contains("POST"));
     }
 }
+

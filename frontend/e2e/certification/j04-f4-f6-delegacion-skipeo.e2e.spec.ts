@@ -5,10 +5,13 @@ test.describe('J-04 F4-F6: Delegación, Force Route y Skipeo', () => {
 
   test.describe('F4: Delegación (Director)', () => {
     test.beforeEach(async ({ page }) => {
+      page.on('console', msg => console.log('BROWSER CONSOLE (' + msg.type() + '):', msg.text()));
+      page.on('pageerror', err => console.log('BROWSER PAGE ERROR:', err.message));
       await page.goto('/login');
       await page.click('[data-testid="break-glass-toggle"]');
       await page.fill('[data-testid="email-input"]', USERS.DIRECTOR_1.email);
       await page.fill('[data-testid="password-input"]', USERS.DIRECTOR_1.password);
+      await page.locator('textarea').fill('Acceso de emergencia UAT');
       await page.click('[data-testid="login-submit"]');
       await page.waitForURL(/workdesk/);
     });
@@ -48,6 +51,7 @@ test.describe('J-04 F4-F6: Delegación, Force Route y Skipeo', () => {
       await page.click('[data-testid="break-glass-toggle"]');
       await page.fill('[data-testid="email-input"]', USERS.ANALISTA_N1.email);
       await page.fill('[data-testid="password-input"]', USERS.ANALISTA_N1.password);
+      await page.locator('textarea').fill('Acceso de emergencia UAT');
       await page.click('[data-testid="login-submit"]');
       await page.waitForURL(/workdesk/);
     });

@@ -38,6 +38,7 @@ public class BpmnDesignAuditLogEntity {
     @Column(name = "version_affected", nullable = false)
     private int versionAffected;
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private String details;
 

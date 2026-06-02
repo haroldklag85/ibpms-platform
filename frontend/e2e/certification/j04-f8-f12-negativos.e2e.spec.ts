@@ -9,6 +9,7 @@ test.describe('J-04 F8-F12 + Negativos: Degradación BPMN, Negativos y Observabi
       await page.click('[data-testid="break-glass-toggle"]');
       await page.fill('[data-testid="email-input"]', USERS.ANALISTA_N1.email);
       await page.fill('[data-testid="password-input"]', USERS.ANALISTA_N1.password);
+      await page.locator('textarea').fill('Acceso de emergencia UAT');
       await page.click('[data-testid="login-submit"]');
       await page.waitForURL(/workdesk/);
     });
@@ -38,6 +39,7 @@ test.describe('J-04 F8-F12 + Negativos: Degradación BPMN, Negativos y Observabi
       await page.click('[data-testid="break-glass-toggle"]');
       await page.fill('[data-testid="email-input"]', USERS.DIRECTOR_1.email);
       await page.fill('[data-testid="password-input"]', USERS.DIRECTOR_1.password);
+      await page.locator('textarea').fill('Acceso de emergencia UAT');
       await page.click('[data-testid="login-submit"]');
       await page.waitForURL(/workdesk/);
 
@@ -79,11 +81,19 @@ test.describe('J-04 F8-F12 + Negativos: Degradación BPMN, Negativos y Observabi
 
     // NEG-04 moved here from Negativos block: pure API test, no UI beforeEach dependency
     test('NEG-04 | Delegación IDOR -> 403/404 (API)', async ({ request }) => {
+      // Login as Perito A first to get a valid token
+      const loginRes = await request.post(`${API.BASE_URL}/api/v1/auth/login`, {
+        data: { email: USERS.PERITO_A.email, password: USERS.PERITO_A.password }
+      });
+      expect(loginRes.status()).toBe(200);
+      const { token } = await loginRes.json();
+
       // Perito A attempts to activate delegation for a donor that is NOT Perito A
       // Uses valid UUID format to avoid 400 Bad Request from Spring path param parsing
       const fakeDonorId = '00000000-0000-0000-0000-000000000099';
       const fakeRecipientId = '00000000-0000-0000-0000-000000000088';
       const delegationReq = await request.post(`${API.BASE_URL}/api/v1/admin/users/${fakeDonorId}/delegate`, {
+        headers: { Authorization: `Bearer ${token}` },
         data: {
           recipientId: fakeRecipientId,
           startDate: '2026-06-01T00:00:00',
@@ -121,6 +131,7 @@ test.describe('J-04 F8-F12 + Negativos: Degradación BPMN, Negativos y Observabi
       await page.click('[data-testid="break-glass-toggle"]');
       await page.fill('[data-testid="email-input"]', USERS.ANALISTA_N1.email);
       await page.fill('[data-testid="password-input"]', USERS.ANALISTA_N1.password);
+      await page.locator('textarea').fill('Acceso de emergencia UAT');
       await page.click('[data-testid="login-submit"]');
     });
 

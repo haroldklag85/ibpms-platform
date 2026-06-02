@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,8 +13,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.context.annotation.Import;
+import com.ibpms.poc.infrastructure.security.SecurityConfig;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -27,8 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = AgileTimeboxController.class)
-@ActiveProfiles("test")
-class AgileTimeboxControllerTest {
+@Import(SecurityConfig.class)
+class AgileTimeboxControllerTest extends BaseWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;

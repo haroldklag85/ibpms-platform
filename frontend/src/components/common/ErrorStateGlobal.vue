@@ -11,6 +11,9 @@ const isOptimisticLock = ref(false)
 
 const handleGlobalError = (event: Event) => {
     const customEvent = event as CustomEvent
+    if (customEvent.detail?.type === 'SESSION_EXPIRED') {
+        return
+    }
     isGlobalError.value = true
     globalErrorData.value = customEvent.detail
 }

@@ -6,6 +6,7 @@ import com.ibpms.poc.application.dto.DelegationContextDTO;
 import com.ibpms.poc.application.service.TaskDelegationService;
 import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
 import com.ibpms.poc.application.service.WorkdeskQueryService;
+import com.ibpms.poc.application.util.SecurityContextUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -60,6 +61,7 @@ public class WorkdeskQueryController {
     public ResponseEntity<WorkdeskResponseDTO> getGlobalInbox(
             @Parameter(description = "Filtro de búsqueda por título") @RequestParam(required = false) String search,
             @Parameter(description = "ID del usuario delegado (para suplantación/delegación)") @RequestParam(required = false) String delegatedUserId,
+            @Parameter(description = "Vista solicitada (PERSONAL o POOL)") @RequestParam(required = false, defaultValue = "PERSONAL") String view,
             // @Traceability(US = "US-001", CA = {"CA-09"}) 
             // REMEDIACIÓN CA-09: Se añadió @PageableDefault(size = 15) para alinear con el contrato canónico del Workdesk.
             @PageableDefault(size = 15) Pageable pageable,
@@ -91,12 +93,12 @@ public class WorkdeskQueryController {
             // Remove sort from pageable to prevent Spring Data natively appending the entity property as a raw SQL column
             Pageable safePageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
             
-            log.info("DEBUG-WORKDESK: tenantId={}, search={}, effectiveAssignee={}", tenantId, search, effectiveAssignee);
+            log.info("DEBUG-WORKDESK: tenantId={}, search={}, effectiveAssignee={}, view={}", tenantId, search, effectiveAssignee, view);
             
             Page<WorkdeskProjectionEntity> entities;
             boolean isDegraded = false;
             try {
-                entities = workdeskQueryService.getWorkdeskTasks(tenantId, search, effectiveAssignee, safePageable);
+                entities = workdeskQueryService.getWorkdeskTasks(tenantId, search, effectiveAssignee, view, safePageable);
             } catch (Exception innerE) {
                 boolean isCamundaFailure = innerE.getMessage() != null && 
                     (innerE.getMessage().contains("Camunda") || innerE.getMessage().contains("ProcessEngine") || innerE.getCause() instanceof org.springframework.web.client.ResourceAccessException);
@@ -136,6 +138,8 @@ public class WorkdeskQueryController {
             });
 
             WorkdeskResponseDTO response = new WorkdeskResponseDTO(isDegraded, dtoPage);
+            // @Traceability: US-001, CA-29 Contadores de Facetas
+            response.setFacets(workdeskQueryService.getFacetsMap(tenantId));
             if (delegationContext != null) {
                 response.setDelegationContext(delegationContext);
             }
@@ -160,15 +164,21 @@ public class WorkdeskQueryController {
         @ApiResponse(responseCode = "429", description = "Límite de peticiones excedido (Rate Limiting)")
     })
     public ResponseEntity<?> getFacets() {
+        // @Traceability: US-001, CA-29
+        String tenantId;
         try {
+            tenantId = SecurityContextUtils.getTenantId();
+        } catch (IllegalStateException e) {
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            String tenantId = "default";
+            tenantId = "default";
             if (auth != null && auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
                 tenantId = jwt.getClaimAsString("tenant_id");
             } else if (auth != null && "analista_n1@ibpms.local".equals(auth.getName())) {
                 tenantId = "tenant_alpha";
             }
+        }
 
+        try {
             java.util.List<com.ibpms.poc.application.dto.FacetCountDto> facets = workdeskQueryService.getFacets(tenantId);
             return ResponseEntity.ok(facets);
         } catch (Exception e) {

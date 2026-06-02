@@ -190,10 +190,13 @@ Feature: Web IDE Form Code Generation
     When el sistema detecta que existen instancias de procesos "en vuelo" que requieren de este formulario
     Then se cancela la eliminación y se muestra un mensaje de Error: "Prohibido: Este formulario está siendo usado por N procesos activos."
 
-  Scenario: Control de Versiones de Diseño de Formulario (CA-27)
-    Given el Arquitecto modifica un formulario guardado
-    Then al presionar guardar, el IDE genera una nueva versión inmutable (v2) del `.vue`/`JSON`
-    And permite consultar y restaurar versiones anteriores en caso de daño en el diseño.
+  Scenario: Control de Versiones de Diseño de Formulario (CA-27) [REMEDIACIÓN]
+    Given un formulario existente cargado en el IDE de la Pantalla 7 con identificador `currentFormId`
+    When el Arquitecto presiona el botón "💾 Guardar Versión" en la barra de herramientas del diseñador
+    Then el Frontend realiza un POST a `/api/v1/forms/{formId}` enviando el payload del diseño (esquema, campos, plantilla)
+    And el Backend genera una nueva versión inmutable (N+1) si el formulario está activo, retornando la información de versión
+    And la store del diseñador refresca la lista de versiones consultando `/api/v1/forms/{id}/versions` sin mocks
+    And al seleccionar una versión del historial, la función `restoreVersion` decodifica y restaura el esquema reactivo de los campos.
 
   Scenario: Bitácora de Auditoría a Nivel de Campo (CA-28)
     Given el usuario "maria.lopez" sobrescribe un valor que había puesto "juan.perez" en una etapa previa
@@ -205,11 +208,11 @@ Feature: Web IDE Form Code Generation
     Then en el panel de propiedades tiene la opción de "Cargar archivo .CSV"
     And al subir el archivo, el Dropdown se puebla automáticamente con las opciones (Ej: Países, Áreas, Tipos de Documento) en lugar de tipearlas una a una.
 
-  Scenario: Autocompletado mediante Integración API / BD Externa (CA-30)
-    Given el Arquitecto diseña un formulario en la Pantalla 7
-    When configura un campo (Ej: "Cédula") para que sea el gatillo (trigger) de una consulta externa
-    Then puede vincular ese campo a un Endpoint del Hub (Pantalla 11) o a datos de otros procesos
-    And al usuario final tipear la cédula y perder el foco (blur), el formulario autocompleta los campos destino (Ej: "Nombre", "Dirección") automáticamente.
+  Scenario: Autocompletado mediante Integración API / BD Externa (CA-30) [REMEDIACIÓN]
+    Given un campo en el Canvas configurado con `enableAutocomplete` habilitado, `autocompleteUrl` y mappings de atributos en formato JSON
+    When el código compilado genera un handler `@blur` que invoca a la función asíncrona generada `handleAutocomplete_[fieldId]()`
+    Then en tiempo de ejecución, al perder el foco (blur) el usuario, se realiza una petición GET al endpoint con el query parameter `?q=[valor]`
+    And el componente `FormRenderer.vue` intercepta la respuesta mapeando dinámicamente cada campo según las llaves configuradas en el formulario.
 
   Scenario: Componente de Firma Electrónica Manuscrita (CA-31)
     Given el Arquitecto requiere formalizar un acuerdo en el formulario
@@ -323,11 +326,13 @@ Feature: Web IDE Form Code Generation
     Then el Analista 2 puede visualizar y editar toda la grilla si tiene permisos
     And cualquier fila modificada o eliminada que perteneciera al Analista 1 dejará un rastro en la Bitácora de Auditoría (CA-12).
 
-  Scenario: Feedback Visual en Llamadas a APIs (Estado Indeterminado) (CA-52)
-    Given el usuario final ingresa un dato en un campo que dispara una llamada de Autocompletado (CA-14)
-    When la interconexión con el sistema externo está procesándose
-    Then el botón global de [Enviar Formulario] se deshabilita temporalmente
-    And muestra un indicador de carga (spinner), evitando envíos prematuros o datos rotos.
+  Scenario: [REMEDIACIÓN] Feedback Visual en Llamadas a APIs (Estado Indeterminado) (CA-52)
+    # Origen: us_003_audit_report.md | Decisión: Deshabilitado reactivo de controles y spinner CSS animado
+    Given el usuario final ingresa un dato en un campo que dispara una llamada de Autocompletado (CA-14 / CA-30)
+    When la interconexión con el sistema externo mediante apiClient.get está procesándose (isAsyncLoading es true)
+    Then el botón global de finalización y envío del formulario se deshabilita reactivamente (:disabled="isAsyncLoading")
+    And muestra un indicador de carga con spinner CSS animado ("animate-spin"), evitando envíos prematuros o datos rotos
+    And este estado de carga expuesto se propaga reactivamente desde FormRenderer hasta TaskViewerModal.
 
   Scenario: Enmascaramiento de Inputs de Múltiple Tipo (Contraseñas / Sensibles) (CA-53)
     Given el Arquitecto requiere capturar información sensible (Ej: APIs Keys, Claves)
@@ -462,11 +467,12 @@ Feature: Web IDE Form Code Generation
     And autogenerará el layout visual en Vue 3 y el esquema Zod de manera instantánea, mapeando tipos de datos, labels y campos requeridos.
     And el Arquitecto retomará el control manual sobre el lienzo generado para refinar la UI, reduciendo el "Time-to-Market" de la digitalización.
 
-  Scenario: Diccionario Global y Fragmentos Reutilizables (Snippets) (CA-74)
+  Scenario: [REMEDIACIÓN] Diccionario Global y Fragmentos Reutilizables (Snippets) (CA-74)
     Given la necesidad de estandarizar la recolección de datos en toda la empresa (Prevenir Torre de Babel)
     Then la plataforma TIENE PROHIBIDO leer variables de Camunda para autogenerar el formulario (El proceso no dicta el dato).
-    And el IDE desplegará un autocompletado conectado al "Diccionario de Datos Maestro", sugiriendo variables corporativas (Ej: `cliente_id`) que heredan validaciones Regex pre-aprobadas.
-    And el Arquitecto podrá seleccionar un grupo de campos y pulsar `[Guardar como Fragmento]`, empaquetándolos como un "Lego" reutilizable en la Paleta lateral.
+    And el IDE consultará al BFF REST API `/api/v1/design/dictionary` para desplegar un autocompletado en el input de camundaVariable sugiriendo variables corporativas.
+    And al seleccionar una variable corporativa, el componente visual heredará automáticamente propiedades pre-aprobadas como `label`, `isPII` y `type`.
+    And el Arquitecto podrá seleccionar campos y persistirlos como fragmentos de diseño en `/api/v1/design/snippets` mediante `POST`, actualizando dinámicamente la categoría "Mis Fragmentos" de la paleta.
 
   # ==============================================================================
   # B. GOBERNANZA DE DATOS (V.I.D.A.) Y SHIFT-LEFT SECURITY
@@ -485,11 +491,12 @@ Feature: Web IDE Form Code Generation
     And esta etiqueta instruirá imperativamente al Backend para que ofusque/encripte este dato en reposo (AES-256) y lo censure si es enviado al motor analítico (BAM) o a los Agentes LLM.
     And los campos tipo "Password" enmascararán el valor en la UI (`***`) nativamente.
 
-  Scenario: Integración Autocompletado Gobernado y Escudo Anti-DDoS (CA-77)
+  Scenario: [REMEDIACIÓN] Integración Autocompletado Gobernado y Escudo Anti-DDoS (CA-77)
     Given el Arquitecto diseña un campo configurado como "Gatillo" de autocompletado externo (Ej: Buscar RUT)
     Then el IDE TIENE ESTRICTAMENTE PROHIBIDO permitir la inyección de URLs o código JavaScript crudo (`fetch` / `axios`) en las propiedades del campo (Prevención SSRF).
-    And obligará al usuario a seleccionar exclusivamente un "Conector Homologado" previamente registrado en el Hub de Integraciones (US-033).
-    And el Frontend aplicará un `Debounce` obligatorio de 500ms al teclear, delegando la petición al BFF (Backend) para evitar fugas de datos desde el cliente.
+    And obligará al usuario a seleccionar exclusivamente un "Conector Homologado" previamente registrado mediante un dropdown select en el panel de propiedades.
+    And el validador estricto `validateSchemaSecurity` del JSON rechazará la persistencia o cambio de pestaña si se inyectan URLs crudas o comandos de ejecución JS.
+    And el Frontend aplicará un `Debounce` obligatorio de 500ms al teclear mediante `useDebounceFn`, delegando la petición al proxy BFF para evitar fugas de datos desde el cliente.
 
   # ==============================================================================
   # C. ARQUITECTURA CORE: COMPILACIÓN BIDIRECCIONAL Y RENDERIZADO
@@ -531,10 +538,10 @@ Feature: Web IDE Form Code Generation
     And si el usuario sube PDFs al `<Dropzone>` (Upload-First) pero cierra la pestaña sin hacer Submit, el Frontend disparará un `Beacon` asíncrono ordenando al Backend destruir esos archivos huérfanos.
     And dispondrá de "Smart Buttons" nativos (`[Completar]`, `[⚠️ Escalar Error BPMN]`) envueltos en interceptores de red globales `try/catch`.
 
-  Scenario: Sandbox de Pruebas Zod In-Browser (Shift-Left QA) (CA-83)
+  Scenario: [REMEDIACIÓN] Sandbox de Pruebas Zod In-Browser (Shift-Left QA) (CA-83)
     Given el diseño finalizado del iForm Maestro
-    Then el IDE proveerá una "Consola QA embebida" (Simulator).
-    And generará automáticamente Payloads extremos (Fuzzing) simulando Paths Felices y Tristes en la memoria RAM del navegador, certificando matemáticamente el contrato antes del despliegue.
+    Then el IDE proveerá una "Consola QA embebida" (Simulator) con opciones para autocompletar Happy, Sad y Fuzz payloads.
+    And la opción Fuzz generará automáticamente Payloads extremos (Fuzzing) con tipos erróneos y strings fuera de límites, simulando Paths Felices y Tristes en la memoria RAM del navegador, certificando matemáticamente el contrato antes del despliegue.
 
   Scenario: Manejo Amigable de Errores de Sintaxis en el Mónaco IDE (CA-84)
     Given el Arquitecto está editando el código Vue o Zod manualmente en el panel de Mónaco IDE
@@ -544,11 +551,11 @@ Feature: Web IDE Form Code Generation
     And subrayará de rojo (Squiggly Line) la línea conflictiva
     And proyectará en la zona inferior un panel amigable con mensajes legibles para un humano (Ej: "Hay un error de sintaxis cerca de la línea 14").
 
-  Scenario: Auto-Guardado y Recuperación de Sesión en el Diseñador (CA-85)
+  Scenario: [REMEDIACIÓN] Auto-Guardado y Recuperación de Sesión en el Diseñador (CA-85)
     Given el Arquitecto está construyendo un formulario extenso en la Pantalla 7 (IDE Web)
     When ocurre una desconexión de red, apagón, o un cierre accidental de la pestaña
     Then el sistema debe garantizar la preservación del progreso inyectando el estado del lienzo en el `LocalStorage` del navegador de forma reactiva a cada cambio.
-    And al regresar a la Pantalla 7, la aplicación detectará el borrador huérfano y mostrará un banner amigable: "Detectamos un borrador no guardado. ¿Desea restaurar su trabajo previo?" permitiendo recuperar el Canvas intacto.
+    And al regresar a la Pantalla 7, la aplicación detectará el borrador huérfano y mostrará un modal de confirmación: "Detectamos un borrador no guardado. ¿Desea restaurar su trabajo previo?" permitiendo recuperar el Canvas intacto si el usuario lo acepta o descartarlo liberando el almacenamiento.
 
   Scenario: Catálogo y Explorador de Formularios (Form Manager Dashboard) (CA-86)
     Given la necesidad del Arquitecto de buscar, re-editar o consultar versiones de formularios pre-existentes
@@ -1779,6 +1786,76 @@ Scenario: Intervención de Emergencia sobre Bloqueo Pesimista (Break-Lock)  (CA-
     And el Pre-Flight Analyzer validará que cada Service Task del BPMN tenga un Topic que exista en el catálogo. Si el Topic no existe, emitirá Error ❌: "La tarea '{taskName}' refiere al topic '{topicName}' que no está registrado en el catálogo de Workers."
     And el Administrador IT podrá registrar nuevos Topics desde una sección administrable en la Pantalla 11 (Hub de Integraciones).
 
+  Scenario: [REMEDIACIÓN] Hard-Stop Estructural de Gobernanza (CA-71)
+    # Origen: us005_audit_report.md — Ticket: REM-005-CA07 y CA09
+    Given el analizador Pre-Flight de Despliegue BPMN
+    When un Arquitecto intenta desplegar un diagrama con ambigüedades estructurales (ej. pasarelas divergentes sin flujos por defecto o procesos sin start/end events)
+    Then el motor debe detectar la ambigüedad y arrojar un `PreFlightResultDTO` con severidad `ERROR`
+    And bloquear físicamente el despliegue hacia producción retornando HTTP 422
+    And garantizando que ningún proceso lógicamente roto pueda instanciarse.
+
+  Scenario: [REMEDIACIÓN] Detección de Nodos Zombie o Colgados (CA-72)
+    # Origen: us005_audit_report.md — Ticket: REM-005-CA22
+    Given la validación topológica del motor BPMN en la etapa de diseño
+    When se evalúa un nodo (UserTask, ServiceTask, Event) dentro del flujo
+    Then el analizador debe verificar que todos los nodos (excepto StartEvent) posean al menos un flujo `incoming`
+    And debe verificar que todos los nodos (excepto EndEvent) posean al menos un flujo `outgoing`
+    And en caso de omisión, debe emitir un ERROR de "Nodo Zombie / Colgado" bloqueando el despliegue.
+
+  Scenario: [REMEDIACIÓN] Detección Topológica de Bucles Infinitos Síncronos (CA-73)
+    # Origen: us005_audit_report.md — Ticket: REM-005-CA23
+    Given la validación topológica de seguridad (Anti-DoS) del motor
+    When el motor procesa el grafo completo de SequenceFlows y Tareas
+    Then debe discriminar aristas que apunten a "Wait States" (UserTask, Timer, ReceiveTask, CatchEvent)
+    And aplicar Búsqueda en Profundidad (DFS) sobre el sub-grafo residual síncrono
+    And si detecta un ciclo cerrado en tiempo de compilación/diseño, levantar un ERROR "INFINITE_LOOP_DETECTED"
+    And abortar el despliegue para evitar caídas de CPU y denegación de servicio (DoS) en el contenedor.
+
+  Scenario: [REMEDIACIÓN] Hard-Stop para Pasarelas Divergentes sin Convergencia (CA-74)
+    # Origen: us005_audit_report.md — Ticket: REM-005-CA27
+    Given la validación topológica del motor BPMN
+    When un Arquitecto modela una pasarela paralela o inclusiva divergente (flujos de salida > 1)
+    Then el analizador debe auditar si existe al menos una pasarela convergente correspondiente
+    And si detecta pasarelas divergentes "huérfanas" de convergencia, debe levantar un ERROR "GATEWAY_CONVERGENCE_MISMATCH"
+    And abortar el despliegue para prevenir la fuga de tokens y ejecuciones fantasma.
+
+  Scenario: [DEUDA TÉCNICA - FASE 1] Optimización de Rendimiento en Candados de Edición (CA-75)
+    # Origen: us005_roadmap_analysis.md — Tarea: Locks con Índices
+    Given que múltiples usuarios editan diagramas BPMN de forma concurrente
+    When el backend recibe las peticiones periódicas de heartbeat para verificar los candados de edición
+    Then el sistema debe consultar la tabla `ibpms_process_locks` a través de un índice compuesto sobre las columnas `(process_definition_key, locked_by)`
+    And evitar escaneos completos de tabla (table scans) en la base de datos PostgreSQL
+    And retornar el estado del candado cargando únicamente una proyección optimizada rápida en lugar de la entidad de Hibernate completa.
+
+  Scenario: [DEUDA TÉCNICA - FASE 1] Limpieza Automática de Historial del Motor y Sandbox (CA-76)
+    # Origen: us005_roadmap_analysis.md — Tarea: Limpieza de Historial
+    Given que el motor de Camunda ejecuta procesos en producción y simulaciones marcadas como `SANDBOX_TEST`
+    When se activa la ventana de mantenimiento nocturno configurada en `historyCleanupBatchWindow` del `application.yml`
+    Then el motor de Camunda debe ejecutar el purgado automático de logs históricos de instancias y variables
+    And eliminar los registros de simulación e historia cuyas edades superen el límite configurado de Time-To-Live (HTTL).
+
+  Scenario: [DEUDA TÉCNICA - FASE 2] Validación y Corrección en Caliente mediante Linter en Frontend (CA-77)
+    # Origen: us005_roadmap_analysis.md — Tarea: Linter en Frontend
+    Given que el Diseñador se encuentra dibujando un diagrama en el canvas del Modelador Frontend
+    When interactúa con el canvas y se gatilla el evento `commandStack.changed`
+    Then el frontend debe ejecutar localmente `@camunda/linting` con el conjunto de reglas de gobernanza
+    And resaltar visualmente y en tiempo real cualquier error o advertencia estructural (como nodos zombie o pasarelas sin camino default) antes de presionar el botón de solicitar despliegue.
+
+  Scenario: [DEUDA TÉCNICA - FASE 2] Aislamiento de Simulaciones mediante Multi-tenancy Nativo (CA-78)
+    # Origen: us005_roadmap_analysis.md — Tarea: Sandbox por Multi-tenancy
+    Given que un Arquitecto de Procesos inicia una ejecución en modo Sandbox (CA-20, CA-41)
+    When el motor crea y despliega temporalmente la instancia de simulación
+    Then el sistema debe asignar automáticamente el Tenant ID exclusivo `sandbox_tenant` a dicha instancia
+    And aislar lógicamente su ejecución, variables e historial del inquilino de producción en la base de datos relacional
+    And excluir estas tareas y contadores de la bandeja de entrada global (Workdesk) del analista operativo.
+
+  Scenario: [DEUDA TÉCNICA - FASE 3] Desacoplamiento Arquitectónico del Flujo de Aprobaciones (CA-79)
+    # Origen: us005_roadmap_analysis.md — Tarea: Desacoplamiento de Aprobaciones
+    Given una solicitud de despliegue en la tabla `ibpms_deploy_requests` aprobada por el Release Manager (CA-69)
+    When el estado de la aprobación se actualiza a aprobado (APPROVED)
+    Then el backend del sistema de aprobación debe publicar un evento asíncrono en RabbitMQ
+    And el microservicio adaptador de infraestructura debe consumir el evento para realizar la carga mediante REST API en el motor de Camunda
+    And evitar referencias directas de clave foránea a nivel de base de datos entre el catálogo de diseño y las tablas de aprobaciones de despliegue.
 
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).

@@ -8,9 +8,9 @@ import com.ibpms.poc.domain.model.EventType;
 import com.ibpms.poc.domain.model.FormEvent;
 import com.ibpms.poc.domain.port.FormEventRepository;
 import com.ibpms.poc.domain.port.TaskDraftRepository;
-import com.ibpms.poc.application.ports.out.TaskQueryPort;
-import com.ibpms.poc.application.ports.out.TaskQueryPort.TaskInfo;
-import com.ibpms.poc.application.ports.out.FormDefinitionPort;
+import com.ibpms.poc.application.port.out.TaskQueryPort;
+import com.ibpms.poc.application.port.out.TaskQueryPort.TaskInfo;
+import com.ibpms.poc.application.port.out.FormDefinitionPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

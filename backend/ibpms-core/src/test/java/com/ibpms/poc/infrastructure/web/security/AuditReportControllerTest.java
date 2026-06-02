@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web.security;
 
 import com.ibpms.poc.application.service.security.AuditReportService;
@@ -6,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
-import com.ibpms.poc.infrastructure.jpa.repository.security.ServiceAccountRepository;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.web.servlet.MockMvc;
+import com.ibpms.poc.infrastructure.web.BaseWebMvcTest;
 
 import java.util.List;
 
@@ -18,7 +19,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuditReportController.class)
-class AuditReportControllerTest {
+@org.springframework.context.annotation.Import(com.ibpms.poc.infrastructure.security.SecurityConfig.class)
+class AuditReportControllerTest extends BaseWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -28,9 +30,6 @@ class AuditReportControllerTest {
 
     @MockBean
     private JwtDecoder jwtDecoder;
-
-    @MockBean
-    private ServiceAccountRepository serviceAccountRepository;
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN", username = "testuser")

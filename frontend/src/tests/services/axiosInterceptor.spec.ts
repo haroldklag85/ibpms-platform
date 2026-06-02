@@ -3,13 +3,21 @@ import { setActivePinia, createPinia } from 'pinia';
 import apiClient from '@/services/apiClient';
 import { useMenuStore } from '@/stores/useMenuStore';
 
+vi.unmock('@/services/apiClient');
+
 // Mock simple para axios
 vi.mock('axios', async (importOriginal) => {
     const actual = await importOriginal<typeof import('axios')>();
+    const responseHandlers: any[] = [];
     const mockAxiosInstance = {
         interceptors: {
             request: { use: vi.fn() },
-            response: { use: vi.fn() }
+            response: {
+                use: vi.fn((fulfilled, rejected) => {
+                    responseHandlers.push({ fulfilled, rejected });
+                }),
+                handlers: responseHandlers
+            }
         },
         get: vi.fn(),
         post: vi.fn(),

@@ -1,1 +1,2 @@
-// Renamed to useIntakeTriageStore.ts
+import { useIntakeTriageStore } from './useIntakeTriageStore';
+export const useIntakeStore = useIntakeTriageStore;

@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import org.junit.jupiter.api.DisplayName;
@@ -17,12 +18,28 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.context.annotation.Import;
+import com.ibpms.poc.infrastructure.security.SecurityConfig;
 
-import org.springframework.test.context.ActiveProfiles;
+@WebMvcTest(controllers = {DeploymentController.class, ProcessLifecycleControllerTest.TestArchiveController.class}) // Temporalmente alojado aquí por contexto
+@Import({SecurityConfig.class, ProcessLifecycleControllerTest.TestConfig.class})
+class ProcessLifecycleControllerTest extends BaseWebMvcTest {
 
-@WebMvcTest(controllers = DeploymentController.class) // Temporalmente alojado aquí por contexto
-@ActiveProfiles("test")
-class ProcessLifecycleControllerTest {
+    @org.springframework.boot.test.context.TestConfiguration
+    public static class TestConfig {
+        @org.springframework.context.annotation.Bean
+        public TestArchiveController testArchiveController() {
+            return new TestArchiveController();
+        }
+    }
+
+    @org.springframework.web.bind.annotation.RestController
+    public static class TestArchiveController {
+        @org.springframework.web.bind.annotation.PutMapping("/api/v1/design/processes/{id}/archive")
+        public org.springframework.http.ResponseEntity<?> archive(@org.springframework.web.bind.annotation.PathVariable String id) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+        }
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -32,6 +49,9 @@ class ProcessLifecycleControllerTest {
 
     @MockBean
     private ProcesoBpmPort bpmPort;
+
+    @MockBean
+    private com.ibpms.poc.application.port.in.DesplegarDefinicionUseCase desplegarDefinicionUseCase;
 
     // ── QA Instruction 5: Test Sandbox ──
     @Test

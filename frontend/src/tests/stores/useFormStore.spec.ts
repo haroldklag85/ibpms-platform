@@ -5,6 +5,8 @@ import { api } from '@/services/apiClient';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { z } from 'zod';
 
+import { ref } from 'vue';
+
 vi.mock('@/services/apiClient', () => ({
     api: {
         saveTaskDraft: vi.fn(),
@@ -12,14 +14,37 @@ vi.mock('@/services/apiClient', () => ({
     }
 }));
 
+const currentTickRef = ref(1700000000000); // stable initial timestamp ending in 000
+
+vi.mock('@/stores/timeStore', () => ({
+    useTimeStore: () => ({
+        get currentTick() {
+            return currentTickRef.value;
+        },
+        startEngine: vi.fn(),
+        stopEngine: vi.fn(),
+        getInactivityMs: vi.fn()
+    })
+}));
+
 describe('useFormStore', () => {
     let store: ReturnType<typeof useFormStore>;
+
+    const tickSeconds = async (seconds: number) => {
+        for (let i = 0; i < seconds; i++) {
+            currentTickRef.value += 1000;
+            vi.advanceTimersByTime(1000);
+            await Promise.resolve();
+            await Promise.resolve();
+        }
+    };
 
     beforeEach(() => {
         setActivePinia(createPinia());
         store = useFormStore();
         vi.clearAllMocks();
         vi.useFakeTimers();
+        currentTickRef.value = 1700000000000;
     });
 
     afterEach(() => {
@@ -65,7 +90,7 @@ describe('useFormStore', () => {
         expect(api.completeTask).not.toHaveBeenCalled(); // No debe llamarse aun
 
         // Avanzamos timer 2 segundos
-        vi.advanceTimersByTime(2000);
+        await tickSeconds(2);
         expect(store.undoTimeLeft).toBe(3);
 
         // Disparamos Undo
@@ -74,7 +99,7 @@ describe('useFormStore', () => {
         expect(store.isUndoAvailable).toBe(false);
 
         // Avanzamos hasta final para asegurar que completeTask nunca se llamó
-        vi.advanceTimersByTime(5000);
+        await tickSeconds(5);
         expect(api.completeTask).not.toHaveBeenCalled();
     });
 
@@ -82,8 +107,8 @@ describe('useFormStore', () => {
         (api.completeTask as any).mockResolvedValue({ status: 200 });
         store.submitForm('t-ok', { doc: 'doc1' }, true);
 
-        // Avanzamos 5.1s
-        vi.advanceTimersByTime(5100);
+        // Avanzamos 6s (suficiente para expirar los 5s)
+        await tickSeconds(6);
 
         // Como usamos una internal async on commit, wait it out en microtasks
         await Promise.resolve();

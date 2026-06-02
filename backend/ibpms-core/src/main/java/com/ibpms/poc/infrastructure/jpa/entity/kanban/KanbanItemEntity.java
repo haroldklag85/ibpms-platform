@@ -9,8 +9,8 @@ import java.util.UUID;
 public class KanbanItemEntity {
 
     @Id
-    @Column(name = "id")
-    private UUID id;
+    @Column(name = "id", length = 50)
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
@@ -35,8 +35,8 @@ public class KanbanItemEntity {
     private Integer slaHours;
 
     // Getters and Setters
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public KanbanV2BoardEntity getBoard() { return board; }
     public void setBoard(KanbanV2BoardEntity board) { this.board = board; }
     public String getTitle() { return title; }

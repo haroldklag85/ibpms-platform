@@ -4,7 +4,7 @@ import * as path from 'path';
 import { USERS } from './fixtures/e2e-data';
 
 async function globalSetup(config: FullConfig) {
-  const baseURL = process.env.E2E_BASE_URL || 'http://localhost:5173';
+  const baseURL = process.env.E2E_BASE_URL || 'http://localhost:5174';
   
   const requestContext = await request.newContext({
     baseURL: 'http://127.0.0.1:8080'

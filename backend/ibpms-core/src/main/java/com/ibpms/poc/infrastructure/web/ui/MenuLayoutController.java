@@ -37,39 +37,80 @@ public class MenuLayoutController {
 
         List<MenuItemDTO> menu = new java.util.ArrayList<>();
 
-        if (activeModules.contains("WORKDESK") || activeModules.contains("SERVICE_DELIVERY")) {
-            MenuItemDTO delivery = new MenuItemDTO("Service Delivery", "mdi-account-group", null);
-            if (activeModules.contains("WORKDESK")) delivery.addChild(new MenuItemDTO("Workdesk", "mdi-view-dashboard-variant", "/workdesk"));
-            if (activeModules.contains("SERVICE_DELIVERY")) delivery.addChild(new MenuItemDTO("Formularios", "mdi-text-box-plus", "/admin/modeler/forms"));
-            menu.add(delivery);
+        // ==========================================
+        // GRUPO A: dailyOperation (icon: mdi-desktop-mac)
+        // ==========================================
+        MenuItemDTO dailyOperation = new MenuItemDTO("groupA", "mdi-desktop-mac", null);
+        if (activeModules.contains("WORKDESK")) {
+            dailyOperation.addChild(new MenuItemDTO("portal", "mdi-home", "/"));
+            dailyOperation.addChild(new MenuItemDTO("workdesk", "mdi-view-dashboard-variant", "/workdesk"));
+            dailyOperation.addChild(new MenuItemDTO("kanban", "mdi-view-week", "/kanban"));
         }
-
-        if (activeModules.contains("PROJECTS") || activeModules.contains("MODELER")) {
-            MenuItemDTO builder = new MenuItemDTO("Project Builder", "mdi-hammer-wrench", null);
-            if (activeModules.contains("PROJECTS")) builder.addChild(new MenuItemDTO("Proyectos", "mdi-folder-lock", "/admin/projects/manager"));
-            if (activeModules.contains("MODELER")) builder.addChild(new MenuItemDTO("Modelador BPMN", "mdi-sitemap", "/admin/modeler/bpmn"));
-            menu.add(builder);
+        if (activeModules.contains("SERVICE_DELIVERY")) {
+            dailyOperation.addChild(new MenuItemDTO("customer360", "mdi-account-details", "/admin/customer360"));
         }
-
+        if (activeModules.contains("PROJECTS")) {
+            dailyOperation.addChild(new MenuItemDTO("projectManager", "mdi-folder-lock", "/admin/projects/manager"));
+            dailyOperation.addChild(new MenuItemDTO("agileHub", "mdi-chart-timeline-variant", "/admin/projects/agile-hub"));
+        }
+        if (activeModules.contains("SERVICE_DELIVERY")) {
+            dailyOperation.addChild(new MenuItemDTO("intakeTriage", "mdi-filter", "/intake-triage"));
+            dailyOperation.addChild(new MenuItemDTO("intakeManual", "mdi-text-box-plus", "/admin/intake"));
+        }
         if (activeModules.contains("BAM")) {
-            MenuItemDTO analytics = new MenuItemDTO("Analytics & BAM", "mdi-chart-bar", null);
-            analytics.addChild(new MenuItemDTO("Reportes Básicos", "mdi-chart-timeline-variant", "/admin/analytics/bam"));
-            analytics.addChild(new MenuItemDTO("BAM Dashboard", "mdi-monitor-dashboard", "/admin/analytics/bam"));
-            menu.add(analytics);
+            dailyOperation.addChild(new MenuItemDTO("bamDashboard", "mdi-monitor-dashboard", "/admin/analytics/bam"));
         }
 
-        if (activeModules.contains("INTEGRATION")) {
-            MenuItemDTO integration = new MenuItemDTO("Integration Hub", "mdi-api", null);
-            integration.addChild(new MenuItemDTO("Catálogo", "mdi-book-open-page-variant", "/admin/integration/catalog"));
-            integration.addChild(new MenuItemDTO("Builder", "mdi-puzzle-edit", "/admin/integration/builder"));
-            menu.add(integration);
+        if (!dailyOperation.getChildren().isEmpty()) {
+            menu.add(dailyOperation);
         }
 
+        // ==========================================
+        // GRUPO B: governanceSecurity (icon: mdi-shield-alert)
+        // ==========================================
         if (activeModules.contains("ADMINISTRATION")) {
-            MenuItemDTO governance = new MenuItemDTO("Gobernanza", "mdi-shield-alert", null);
-            governance.addChild(new MenuItemDTO("Gobernanza de Identidad", "mdi-account-details", "/admin/security/identity"));
-            governance.addChild(new MenuItemDTO("PMO", "mdi-alert-octagon", "/admin/pmo/settings"));
-            menu.add(governance);
+            MenuItemDTO governanceSecurity = new MenuItemDTO("groupB", "mdi-shield-alert", null);
+            governanceSecurity.addChild(new MenuItemDTO("identityGovernance", "mdi-card-account-details", "/admin/security/identity"));
+            governanceSecurity.addChild(new MenuItemDTO("pmoSettings", "mdi-timer-settings", "/admin/pmo/settings"));
+            governanceSecurity.addChild(new MenuItemDTO("settings", "mdi-cog-box", "/admin"));
+            if (!governanceSecurity.getChildren().isEmpty()) {
+                menu.add(governanceSecurity);
+            }
+        }
+
+        // ==========================================
+        // GRUPO C: lowCodeDesign (icon: mdi-hammer-wrench)
+        // ==========================================
+        if (activeModules.contains("MODELER")) {
+            MenuItemDTO lowCodeDesign = new MenuItemDTO("groupC", "mdi-hammer-wrench", null);
+            lowCodeDesign.addChild(new MenuItemDTO("bpmnDesigner", "mdi-sitemap", "/admin/modeler/bpmn"));
+            lowCodeDesign.addChild(new MenuItemDTO("formsList", "mdi-text-box-plus", "/admin/modeler/forms"));
+            lowCodeDesign.addChild(new MenuItemDTO("formDesigner", "mdi-text-box-plus", "/admin/modeler/forms/designer"));
+            lowCodeDesign.addChild(new MenuItemDTO("dmnCopilot", "mdi-gavel", "/admin/modeler/dmn"));
+            lowCodeDesign.addChild(new MenuItemDTO("promptLibrary", "mdi-brain", "/ai/prompts"));
+            lowCodeDesign.addChild(new MenuItemDTO("genericForm", "mdi-text-box-plus", "/admin/generic-form"));
+            lowCodeDesign.addChild(new MenuItemDTO("visualMapper", "mdi-sitemap", "/admin/integration/mapper"));
+            lowCodeDesign.addChild(new MenuItemDTO("projectBuilder", "mdi-rocket", "/admin/project-builder"));
+            if (!lowCodeDesign.getChildren().isEmpty()) {
+                menu.add(lowCodeDesign);
+            }
+        }
+
+        // ==========================================
+        // GRUPO D: integrationAutomation (icon: mdi-api)
+        // ==========================================
+        if (activeModules.contains("INTEGRATION")) {
+            MenuItemDTO integrationAutomation = new MenuItemDTO("groupD", "mdi-api", null);
+            integrationAutomation.addChild(new MenuItemDTO("connectorCatalog", "mdi-book-open-page-variant", "/admin/integration/catalog"));
+            integrationAutomation.addChild(new MenuItemDTO("connectorBuilder", "mdi-puzzle-edit", "/admin/integration/builder"));
+            integrationAutomation.addChild(new MenuItemDTO("dlqDashboard", "mdi-alert-octagon", "/admin/integration/dlq"));
+            integrationAutomation.addChild(new MenuItemDTO("inboundMailboxes", "mdi-calendar-alert", "/admin/mailboxes"));
+            integrationAutomation.addChild(new MenuItemDTO("documentVault", "mdi-safe", "/sgdea/vault"));
+            integrationAutomation.addChild(new MenuItemDTO("incidentCenter", "mdi-shield-alert", "/admin/incidents"));
+            integrationAutomation.addChild(new MenuItemDTO("instancesManager", "mdi-timer-settings", "/admin/modeler/instances"));
+            if (!integrationAutomation.getChildren().isEmpty()) {
+                menu.add(integrationAutomation);
+            }
         }
 
         return ResponseEntity.ok(menu);

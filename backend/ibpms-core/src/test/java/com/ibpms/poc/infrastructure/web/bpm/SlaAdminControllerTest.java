@@ -1,3 +1,4 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.web.bpm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -5,8 +6,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ibpms.poc.application.service.bpm.SlaService;
 import com.ibpms.poc.infrastructure.jpa.entity.bpm.BusinessHoursEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.bpm.HolidayEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.bpm.BusinessHoursRepository;
-import com.ibpms.poc.infrastructure.jpa.repository.bpm.HolidayRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,12 +34,6 @@ public class SlaAdminControllerTest {
 
     @Mock
     private SlaService slaService;
-
-    @Mock
-    private HolidayRepository holidayRepository;
-
-    @Mock
-    private BusinessHoursRepository businessHoursRepository;
 
     @InjectMocks
     private SlaAdminController slaAdminController;
@@ -79,7 +72,7 @@ public class SlaAdminControllerTest {
     @Test
     @DisplayName("GET /business-hours - Should return 200 OK with default values when empty")
     void getBusinessHours_emptyDB_returnsDefaults() throws Exception {
-        when(businessHoursRepository.findAll()).thenReturn(Collections.emptyList());
+        when(slaService.getBusinessHours()).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/api/v1/admin/sla/business-hours"))
                 .andExpect(status().isOk());
@@ -94,8 +87,8 @@ public class SlaAdminControllerTest {
         entity.setTimezone("America/New_York");
         entity.setWorkOnWeekends(true);
 
-        when(businessHoursRepository.findAll()).thenReturn(Collections.emptyList());
-        when(businessHoursRepository.save(any(BusinessHoursEntity.class))).thenReturn(entity);
+        when(slaService.getBusinessHours()).thenReturn(Collections.emptyList());
+        when(slaService.saveBusinessHours(any(BusinessHoursEntity.class))).thenReturn(entity);
 
         mockMvc.perform(put("/api/v1/admin/sla/business-hours")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -113,7 +106,7 @@ public class SlaAdminControllerTest {
         holiday.setHolidayDate(LocalDate.of(2026, 12, 25));
         holiday.setDescription("Navidad");
 
-        when(holidayRepository.save(any(HolidayEntity.class))).thenReturn(holiday);
+        when(slaService.addHoliday(any(HolidayEntity.class))).thenReturn(holiday);
 
         mockMvc.perform(post("/api/v1/admin/sla/holidays")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -130,7 +123,7 @@ public class SlaAdminControllerTest {
         holiday.setDescription("Navidad");
         holiday.setHolidayDate(LocalDate.of(2026, 12, 25));
 
-        when(holidayRepository.findAll()).thenReturn(Collections.singletonList(holiday));
+        when(slaService.getHolidays()).thenReturn(Collections.singletonList(holiday));
 
         mockMvc.perform(get("/api/v1/admin/sla/holidays"))
                 .andExpect(status().isOk())
@@ -141,11 +134,12 @@ public class SlaAdminControllerTest {
     @DisplayName("DELETE /holidays/{id} - deletes holiday")
     void deleteHoliday_removesEntity() throws Exception {
         UUID id = UUID.randomUUID();
-        doNothing().when(holidayRepository).deleteById(id);
+        doNothing().when(slaService).deleteHoliday(id);
 
         mockMvc.perform(delete("/api/v1/admin/sla/holidays/" + id))
                 .andExpect(status().isNoContent());
 
-        verify(holidayRepository, times(1)).deleteById(id);
+        verify(slaService, times(1)).deleteHoliday(id);
     }
 }
+

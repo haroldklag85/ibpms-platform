@@ -10,6 +10,9 @@ public class WorkdeskResponseDTO {
     private PaginationDTO pagination;
     private DelegationContextDTO delegationContext;
 
+    // @Traceability: US-001, CA-29 Contadores de Facetas
+    private java.util.Map<String, java.util.Map<String, Long>> facets;
+
     public WorkdeskResponseDTO(boolean degraded, Page<WorkdeskGlobalItemDTO> pageData) {
         this.degraded = degraded;
         this.data = pageData.getContent();

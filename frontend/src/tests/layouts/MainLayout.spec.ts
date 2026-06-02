@@ -141,4 +141,253 @@ describe('MainLayout.vue', () => {
         // Por defecto sidebar está colapsado, el tooltip contiene el texto
         expect(wrapper.vm.topRolesTipText).toBe('Super admin | Operador');
     });
+
+    it('defensively binds fallback key when route is undefined in slot scope', async () => {
+        const wrapper = mount(MainLayout, {
+            global: {
+                plugins: [
+                    createTestingPinia({
+                        createSpy: vi.fn,
+                        initialState: {
+                            auth: { activeRole: 'ROLE_USER', user: { roles: ['ROLE_USER'] } },
+                            menu: { layout: [] },
+                            preferences: { uiDensity: 'STANDARD' }
+                        }
+                    })
+                ],
+                stubs: {
+                    RouterView: { template: '<div><slot :Component="{}" /></div>' },
+                    RouterLink: RouterLinkStub
+                }
+            }
+        });
+        const authStore = useAuthStore();
+        authStore.activeRole = 'ROLE_USER';
+        await wrapper.vm.$nextTick();
+        
+        const findKeyInSubTree = (vnode: any): any => {
+            if (!vnode) return undefined;
+            if (vnode.type && typeof vnode.type === 'object' && Object.keys(vnode.type).length === 0) {
+                return vnode.key;
+            }
+            if (vnode.component) {
+                const res = findKeyInSubTree(vnode.component.subTree);
+                if (res !== undefined) return res;
+            }
+            if (Array.isArray(vnode.children)) {
+                for (const child of vnode.children) {
+                    const res = findKeyInSubTree(child);
+                    if (res !== undefined) return res;
+                }
+            }
+            if (vnode.dynamicChildren) {
+                for (const child of vnode.dynamicChildren) {
+                    const res = findKeyInSubTree(child);
+                    if (res !== undefined) return res;
+                }
+            }
+            return undefined;
+        };
+
+        const resolvedKey = findKeyInSubTree((wrapper.vm as any).$.subTree);
+        expect(resolvedKey).toBe('');
+    });
+
+    it('binds dynamic key correctly when route is provided in slot scope', async () => {
+        const wrapper = mount(MainLayout, {
+            global: {
+                plugins: [
+                    createTestingPinia({
+                        createSpy: vi.fn,
+                        initialState: {
+                            auth: { activeRole: 'ROLE_ADMIN', user: { roles: ['ROLE_ADMIN'] } },
+                            menu: { layout: [] },
+                            preferences: { uiDensity: 'STANDARD' }
+                        }
+                    })
+                ],
+                stubs: {
+                    RouterView: { template: '<div><slot :Component="{}" :route="{ fullPath: \'/admin/users\' }" /></div>' },
+                    RouterLink: RouterLinkStub
+                }
+            }
+        });
+        const authStore = useAuthStore();
+        authStore.activeRole = 'ROLE_ADMIN';
+        await wrapper.vm.$nextTick();
+
+        const findKeyInSubTree = (vnode: any): any => {
+            if (!vnode) return undefined;
+            if (vnode.type && typeof vnode.type === 'object' && Object.keys(vnode.type).length === 0) {
+                return vnode.key;
+            }
+            if (vnode.component) {
+                const res = findKeyInSubTree(vnode.component.subTree);
+                if (res !== undefined) return res;
+            }
+            if (Array.isArray(vnode.children)) {
+                for (const child of vnode.children) {
+                    const res = findKeyInSubTree(child);
+                    if (res !== undefined) return res;
+                }
+            }
+            if (vnode.dynamicChildren) {
+                for (const child of vnode.dynamicChildren) {
+                    const res = findKeyInSubTree(child);
+                    if (res !== undefined) return res;
+                }
+            }
+            return undefined;
+        };
+
+        const resolvedKey = findKeyInSubTree((wrapper.vm as any).$.subTree);
+        expect(resolvedKey).toBe('/admin/users-ROLE_ADMIN');
+    });
+
+    it('handles route with undefined fullPath gracefully and falls back to empty string key', async () => {
+        const wrapper = mount(MainLayout, {
+            global: {
+                plugins: [
+                    createTestingPinia({
+                        createSpy: vi.fn,
+                        initialState: {
+                            auth: { activeRole: 'ROLE_ADMIN', user: { roles: ['ROLE_ADMIN'] } },
+                            menu: { layout: [] },
+                            preferences: { uiDensity: 'STANDARD' }
+                        }
+                    })
+                ],
+                stubs: {
+                    RouterView: { template: '<div><slot :Component="{}" :route="{}" /></div>' },
+                    RouterLink: RouterLinkStub
+                }
+            }
+        });
+        await wrapper.vm.$nextTick();
+
+        const findKeyInSubTree = (vnode: any): any => {
+            if (!vnode) return undefined;
+            if (vnode.type && typeof vnode.type === 'object' && Object.keys(vnode.type).length === 0) {
+                return vnode.key;
+            }
+            if (vnode.component) {
+                const res = findKeyInSubTree(vnode.component.subTree);
+                if (res !== undefined) return res;
+            }
+            if (Array.isArray(vnode.children)) {
+                for (const child of vnode.children) {
+                    const res = findKeyInSubTree(child);
+                    if (res !== undefined) return res;
+                }
+            }
+            if (vnode.dynamicChildren) {
+                for (const child of vnode.dynamicChildren) {
+                    const res = findKeyInSubTree(child);
+                    if (res !== undefined) return res;
+                }
+            }
+            return undefined;
+        };
+
+        const resolvedKey = findKeyInSubTree((wrapper.vm as any).$.subTree);
+        expect(resolvedKey).toBe('');
+    });
+
+    it('handles route with empty fullPath and falls back to empty string key', async () => {
+        const wrapper = mount(MainLayout, {
+            global: {
+                plugins: [
+                    createTestingPinia({
+                        createSpy: vi.fn,
+                        initialState: {
+                            auth: { activeRole: 'ROLE_ADMIN', user: { roles: ['ROLE_ADMIN'] } },
+                            menu: { layout: [] },
+                            preferences: { uiDensity: 'STANDARD' }
+                        }
+                    })
+                ],
+                stubs: {
+                    RouterView: { template: '<div><slot :Component="{}" :route="{ fullPath: \'\' }" /></div>' },
+                    RouterLink: RouterLinkStub
+                }
+            }
+        });
+        await wrapper.vm.$nextTick();
+
+        const findKeyInSubTree = (vnode: any): any => {
+            if (!vnode) return undefined;
+            if (vnode.type && typeof vnode.type === 'object' && Object.keys(vnode.type).length === 0) {
+                return vnode.key;
+            }
+            if (vnode.component) {
+                const res = findKeyInSubTree(vnode.component.subTree);
+                if (res !== undefined) return res;
+            }
+            if (Array.isArray(vnode.children)) {
+                for (const child of vnode.children) {
+                    const res = findKeyInSubTree(child);
+                    if (res !== undefined) return res;
+                }
+            }
+            if (vnode.dynamicChildren) {
+                for (const child of vnode.dynamicChildren) {
+                    const res = findKeyInSubTree(child);
+                    if (res !== undefined) return res;
+                }
+            }
+            return undefined;
+        };
+
+        const resolvedKey = findKeyInSubTree((wrapper.vm as any).$.subTree);
+        expect(resolvedKey).toBe('');
+    });
+
+    it('handles undefined activeRole gracefully without throwing TypeError', async () => {
+        const wrapper = mount(MainLayout, {
+            global: {
+                plugins: [
+                    createTestingPinia({
+                        createSpy: vi.fn,
+                        initialState: {
+                            auth: { activeRole: undefined, user: { roles: [] } },
+                            menu: { layout: [] },
+                            preferences: { uiDensity: 'STANDARD' }
+                        }
+                    })
+                ],
+                stubs: {
+                    RouterView: { template: '<div><slot :Component="{}" :route="{ fullPath: \'/admin/users\' }" /></div>' },
+                    RouterLink: RouterLinkStub
+                }
+            }
+        });
+        await wrapper.vm.$nextTick();
+
+        const findKeyInSubTree = (vnode: any): any => {
+            if (!vnode) return undefined;
+            if (vnode.type && typeof vnode.type === 'object' && Object.keys(vnode.type).length === 0) {
+                return vnode.key;
+            }
+            if (vnode.component) {
+                const res = findKeyInSubTree(vnode.component.subTree);
+                if (res !== undefined) return res;
+            }
+            if (Array.isArray(vnode.children)) {
+                for (const child of vnode.children) {
+                    const res = findKeyInSubTree(child);
+                    if (res !== undefined) return res;
+                }
+            }
+            if (vnode.dynamicChildren) {
+                for (const child of vnode.dynamicChildren) {
+                    const res = findKeyInSubTree(child);
+                    if (res !== undefined) return res;
+                }
+            }
+            return undefined;
+        };
+
+        const resolvedKey = findKeyInSubTree((wrapper.vm as any).$.subTree);
+        expect(resolvedKey).toBe('/admin/users-undefined');
+    });
 });

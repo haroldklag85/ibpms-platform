@@ -9,7 +9,7 @@
  *   - Muestra los mensajes de error correctos por campo
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import RbacDelegationLog from '../RbacDelegationLog.vue'
 
 // ── Helpers de fecha ─────────────────────────────────────────────────────────
@@ -45,14 +45,15 @@ vi.mock('@/services/apiClient', () => ({
 // ── Suite ────────────────────────────────────────────────────────────────────
 
 describe('RbacDelegationLog.vue — US-036 CA-9 Validación de Fechas', () => {
-  let wrapper: VueWrapper<any>;
-  let rbacStore: ReturnType<typeof useRbacStore>;
+  let wrapper: any;
+  let rbacStore: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
     wrapper = mount(RbacDelegationLog, {
       global: { stubs: { teleport: true } },
     })
+    await flushPromises()
   })
 
   // ── CA-9 FE-01: Campo receptor vacío bloquea el submit ──────────────────────

@@ -1,4 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.integration.kanban;
+
+import com.ibpms.poc.AbstractIntegrationTest;
+
 
 import com.ibpms.poc.infrastructure.jpa.entity.KanbanBoardEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.KanbanTaskEntity;
@@ -22,7 +26,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class KanbanStateTransitionIT {
+public class KanbanStateTransitionIT extends AbstractIntegrationTest {
 
     @LocalServerPort
     private int port;

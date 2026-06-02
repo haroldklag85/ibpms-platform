@@ -2,8 +2,8 @@ package com.ibpms.poc.application.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ibpms.poc.application.ports.out.GenericProcessDefinitionPort;
-import com.ibpms.poc.application.ports.out.GenericTaskPort;
+import com.ibpms.poc.application.port.out.GenericProcessDefinitionPort;
+import com.ibpms.poc.application.port.out.GenericTaskPort;
 import com.ibpms.poc.application.rest.dto.GenericFormContextResponse;
 import com.ibpms.poc.application.rest.dto.GenericFormSubmitRequest;
 import com.ibpms.poc.crosscutting.annotations.Traceability;

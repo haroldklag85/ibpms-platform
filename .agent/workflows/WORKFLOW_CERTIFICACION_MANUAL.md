@@ -1,3 +1,7 @@
+---
+description: 
+---
+
 # Workflow: Certificación UAT Manual (HCT - Human Certification Testing)
 
 **Gobernanza:** Zero-Trust E2E Testing
@@ -27,7 +31,7 @@ La certificación se construye y avanza mediante **Misiones** iterativas para ev
 Si un paso no coincide con el Resultado Esperado:
 1. **NO se detiene la ejecución general** (a menos que sea un bloqueante P0 crítico que rompa la UI/BD).
 2. El tester **documenta la anomalía** inmediatamente en el Tracker oficial:
-   👉 `docs/sprints/sprint_6_bugs.md`
+   👉 `docs/sprints/sprint_X_bugs.md`
 3. El tester informa al Agente QA (yo) en el chat sobre el bug encontrado.
 4. El tester continúa con el siguiente bloque/paso si el entorno lo permite (para maximizar el tiempo de reporting en una sola sesión).
 

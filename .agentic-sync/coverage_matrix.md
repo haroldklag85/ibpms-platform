@@ -383,10 +383,10 @@
 | CA-24 | Auto-Guardado de Borrador en Workdesk | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA21_CA25 |
 | CA-25 | Reglas de Visibilidad Condicional | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA21_CA25 |
 | CA-26 | Prevención Contra Borrado de Formularios Activos | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
-| CA-27 | Control de Versiones de Diseño de Formulario | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
+| CA-27 | Control de Versiones de Diseño de Formulario | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA27.spec.ts |
 | CA-28 | Bitácora de Auditoría a Nivel de Campo | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
 | CA-29 | Dropdown Alimentado por Exportación CSV | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
-| CA-30 | Autocompletado mediante Integración API / BD Externa | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA26_CA30 |
+| CA-30 | Autocompletado mediante Integración API / BD Externa | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA30.spec.ts |
 | CA-31 | Componente de Firma Electrónica Manuscrita | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
 | CA-32 | Validaciones Cruzadas entre Múltiples Campos | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
 | CA-33 | Exportación a PDF del Formulario Diligenciado | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA31_CA35 |
@@ -406,7 +406,7 @@
 | CA-49 | Restricción de Cantidad Mínima y Máxima de Adjuntos | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA46_CA50 |
 | CA-50 | Traducción Silenciosa de Formatos (Mascara Front vs Dato Back) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA46_CA50 |
 | CA-51 | Grillas Editables con Protección y Auditoría Parcial | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
-| CA-52 | Feedback Visual en Llamadas a APIs (Estado Indeterminado) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
+| CA-52 | Feedback Visual en Llamadas a APIs (Estado Indeterminado) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA52.spec.ts |
 | CA-53 | Enmascaramiento de Inputs de Múltiple Tipo (Contraseñas / Sensibles) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
 | CA-54 | Limpieza Automática por Lógica Condicional | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
 | CA-55 | Grillas y Organización Multicolumna (Layouts) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-2 | handoff_*_US003_CA51_CA55 |
@@ -425,18 +425,18 @@
 | CA-71 | Máquina del Tiempo JSON (Soft-Versioning Local) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-72 | Resiliencia Periférica Offline y Tolerancia a Conflictos | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-73 | El Escáner Mágico (AI Prompt-to-Form & Document-to-Form) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
-| CA-74 | Diccionario Global y Fragmentos Reutilizables (Snippets) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
-| CA-75 | El Peaje Analítico (Data Diet / Prevención de Campos Huérfanos) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-74 | Diccionario Global y Fragmentos Reutilizables (Snippets) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA74.spec.ts |
+| CA-75 | El Peaje Analítico (Data Diet / Prevención de Campos Huérfanos) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA75.spec.ts |
 | CA-76 | El Sello Radiactivo de Privacidad (Data Classification PII) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
-| CA-77 | Integración Autocompletado Gobernado y Escudo Anti-DDoS | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-77 | Integración Autocompletado Gobernado y Escudo Anti-DDoS | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA77.spec.ts |
 | CA-78 | Factoría Reactiva Zod On-The-Fly y Renderizado Bidireccional | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-79 | Sandboxing Estricto y Aislamiento Perimetral (Anti-XSS/RCE) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-80 | Reactividad Controlada en Formularios Densos (Lazy Validation) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-81 | Anclaje de Versión para Procesos In-Flight (Lazy Patching) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-82 | Autoguardado Volátil, Limpieza de Fantasmas y Smart Buttons | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
-| CA-83 | Sandbox de Pruebas Zod In-Browser (Shift-Left QA) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-83 | Sandbox de Pruebas Zod In-Browser (Shift-Left QA) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA83.spec.ts |
 | CA-84 | Manejo Amigable de Errores de Sintaxis en el Mónaco IDE | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
-| CA-85 | Auto-Guardado y Recuperación de Sesión en el Diseñador | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
+| CA-85 | Auto-Guardado y Recuperación de Sesión en el Diseñador | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | S-6 | FormDesignerCA85.spec.ts |
 | CA-86 | Catálogo y Explorador de Formularios (Form Manager Dashboard) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | — | Pendiente |
 | CA-87 | Persistencia Versionada del Diseño JSON del Formulario | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | S-69 | handoff_backend_us003_rem_ca87 |
 | CA-88 | Separación Arquitectónica de Contextos IDE vs Workdesk | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-69 | handoff_frontend_us003_rem_ca88 |

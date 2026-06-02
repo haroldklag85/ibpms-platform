@@ -1,7 +1,7 @@
 package com.ibpms.poc.application.service;
 
-import com.ibpms.poc.application.ports.in.UpdateFeatureToggleUseCase;
-import com.ibpms.poc.application.ports.out.FeatureTogglePort;
+import com.ibpms.poc.application.port.in.UpdateFeatureToggleUseCase;
+import com.ibpms.poc.application.port.out.FeatureTogglePort;
 import com.ibpms.poc.infrastructure.jpa.entity.FeatureToggleEntity;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.stereotype.Service;
@@ -56,7 +56,7 @@ public class FeatureToggleService implements UpdateFeatureToggleUseCase {
     @Override
     @Transactional
     @Traceability(US = "US-001", CA = {"CA-08", "CA-16"})
-    public boolean updateFeatureToggle(String tenantId, String toggleKey, Boolean enabled) {
+    public boolean updateFeatureToggle(String tenantId, String toggleKey, Boolean enabled, String changedBy) {
         FeatureToggleEntity toggle = featureTogglePort.findByTenantIdAndToggleKey(tenantId, toggleKey)
                 .orElseGet(() -> {
                     FeatureToggleEntity newToggle = new FeatureToggleEntity();
@@ -69,18 +69,20 @@ public class FeatureToggleService implements UpdateFeatureToggleUseCase {
         boolean newValue = enabled != null ? enabled : false;
         
         toggle.setEnabled(newValue);
+        toggle.setChangedBy(changedBy);
+        toggle.setChangedAt(LocalDateTime.now());
         featureTogglePort.save(toggle);
         
         if (auditLogPort != null) {
-            String detailsJson = String.format("{\"key\": \"%s\", \"previousValue\": %b, \"newValue\": %b, \"changedBy\": \"SYSTEM\", \"timestamp\": \"%s\"}",
-                    toggleKey, previousValue, newValue, LocalDateTime.now().toString());
+            String detailsJson = String.format("{\"key\": \"%s\", \"previousValue\": %b, \"newValue\": %b, \"changedBy\": \"%s\", \"timestamp\": \"%s\"}",
+                    toggleKey, previousValue, newValue, changedBy, LocalDateTime.now().toString());
             
             auditLogPort.saveAuditLog(
                     java.util.UUID.randomUUID().toString(),
                     "FEATURE_TOGGLE",
                     toggleKey,
                     "FEATURE_TOGGLE_CHANGED",
-                    "SYSTEM",
+                    changedBy,
                     LocalDateTime.now(),
                     null,
                     false,

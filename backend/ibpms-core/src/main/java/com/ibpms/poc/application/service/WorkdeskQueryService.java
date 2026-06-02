@@ -19,9 +19,9 @@ public class WorkdeskQueryService {
         this.delegationRepository = delegationRepository;
     }
 
-    @Cacheable(value = "workdesk_tasks", key = "#tenantId + '_' + (#effectiveAssignee != null ? #effectiveAssignee : '') + '_' + (#search != null ? #search : '') + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    @Cacheable(value = "workdesk_tasks", key = "#tenantId + '_' + (#effectiveAssignee != null ? #effectiveAssignee : '') + '_' + (#search != null ? #search : '') + '_' + (#view != null ? #view : '') + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     @Transactional(readOnly = true)
-    public Page<WorkdeskProjectionEntity> getWorkdeskTasks(String tenantId, String search, String effectiveAssignee, Pageable pageable) {
+    public Page<WorkdeskProjectionEntity> getWorkdeskTasks(String tenantId, String search, String effectiveAssignee, String view, Pageable pageable) {
         java.util.List<String> assignees = null;
         if (effectiveAssignee != null) {
             assignees = new java.util.ArrayList<>();
@@ -37,7 +37,9 @@ public class WorkdeskQueryService {
                 // Ignore if not a UUID
             }
         }
-        return projectionRepository.findWorkdeskTasks(tenantId, search, assignees, pageable);
+        // @Traceability: US-001, CA-29 Contadores de Facetas
+        String[] assigneesArray = assignees != null ? assignees.toArray(new String[0]) : null;
+        return projectionRepository.findWorkdeskTasks(tenantId, search, assigneesArray, view, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -50,5 +52,29 @@ public class WorkdeskQueryService {
     @Transactional(readOnly = true)
     public java.util.List<com.ibpms.poc.application.dto.FacetCountDto> getFacets(String tenantId) {
         return projectionRepository.countByStatusPerTenant(tenantId);
+    }
+
+    // @Traceability: US-001, CA-29 Contadores de Facetas
+    @Transactional(readOnly = true)
+    public java.util.Map<String, java.util.Map<String, Long>> getFacetsMap(String tenantId) {
+        java.util.Map<String, java.util.Map<String, Long>> facetsMap = new java.util.HashMap<>();
+        
+        // Status facets
+        java.util.List<com.ibpms.poc.application.dto.FacetCountDto> statusCounts = projectionRepository.countByStatusPerTenant(tenantId);
+        java.util.Map<String, Long> statusMap = new java.util.HashMap<>();
+        for (com.ibpms.poc.application.dto.FacetCountDto fc : statusCounts) {
+            statusMap.put(fc.getStatus(), fc.getCount());
+        }
+        facetsMap.put("status", statusMap);
+        
+        // Origin facets
+        java.util.List<com.ibpms.poc.application.dto.FacetCountDto> originCounts = projectionRepository.countBySourceSystemPerTenant(tenantId);
+        java.util.Map<String, Long> originMap = new java.util.HashMap<>();
+        for (com.ibpms.poc.application.dto.FacetCountDto fc : originCounts) {
+            originMap.put(fc.getStatus(), fc.getCount());
+        }
+        facetsMap.put("origin", originMap);
+        
+        return facetsMap;
     }
 }

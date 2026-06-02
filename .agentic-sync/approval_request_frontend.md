@@ -1,68 +1,52 @@
-# REPORTE DE EJECUCIÓN — Agente Frontend
-## BUG-S7-001-HOTFIX | Sprint 7 | Rama: sprint-7/bugfix-uat
-**Fecha:** 2026-05-28T03:12:00Z  
-**Agente:** Frontend Developer (Vue 3 / Vite)  
-**Destino:** Arquitecto Líder (revisión post-ejecución)
+# Solicitud de Aprobación de Plan de Trabajo — Modificaciones Frontend (US-005, CA-30)
+
+**Para:** Arquitecto Líder
+**De:** Desarrollador Frontend AI (Subagent)
+**Historia de Usuario:** US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
+**Criterio de Aceptación:** CA-30 (Límite de Complejidad Parametrizable y Advertencia de Mala Práctica)
 
 ---
 
-## Resumen Ejecutivo
+## Resumen del Plan de Trabajo
 
-HOTFIX completado. **4 archivos** modificados, **build exitoso**, **push realizado**.
+### 1. Modificaciones de Código en `frontend/src/views/admin/Modeler/BpmnDesigner.vue`
+* **Bloque 1: Carga de Archivos (`handleFileUpload`)**
+  * **Ubicación aproximada:** Línea 1583.
+  * **Acción:** Reemplazar el mensaje actual por la redacción exacta exigida e incluir la marca de trazabilidad.
+  * **Código propuesto:**
+    ```typescript
+    // @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable
+    if (nodeCount > 100) {
+      showToast('⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos. Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor.', 'error');
+    } else {
+    ```
 
----
-
-## Cambios Ejecutados
-
-### A. FormDesigner.vue — `simulateMockSubmit` (HOTFIX Modal)
-- Agregada bandera `hasFallbackUsed = false` antes del bloque de skeleton fallback
-- Asignación `hasFallbackUsed = true` cuando el skeleton se activa
-- Lógica condicional en `if(!result.success)`:
-  - Si `!hasFallbackUsed` y hay datos reales → ABORTAR (mostrar modal de error y `return`)
-  - Si `hasFallbackUsed` → `console.warn()` y **continuar** hacia `integrationStore.post('/forms', dto)`
-- **Efecto:** El botón "Probar Submit" ya NO bloquea el guardado del formulario cuando el canvas no tiene datos bindeados
-
-### B. Doble Prefijo `/api/v1` — 3 Archivos (7 rutas)
-
-| Archivo | Rutas Corregidas |
-|---------|-----------------|
-| `FormList.vue` | `/forms` (L112), `/forms/${id}` (L125) |
-| `DlqDashboard.vue` | `/admin/queues/dlq/summary` (L220), `/admin/queues/dlq/messages` (L231), `/admin/queues/dlq/purge` (L259), `/admin/queues/dlq/retry` (L271) |
-| `EvidenceDropzone.vue` | `/documents/upload-temp` (L142) |
-
-### Auditoría Adicional
-- Escaneé **todas** las llamadas `integrationStore.*()` en el frontend: las demás rutas ya están correctas (sin prefijo `/api/v1`).
+* **Bloque 2: Cambios en Caliente (`commandStack.changed`)**
+  * **Ubicación aproximada:** Línea 1387.
+  * **Acción:** Reemplazar el mensaje actual por la redacción parametrizada exacta e incluir la marca de trazabilidad.
+  * **Código propuesto:**
+    ```typescript
+    // @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable
+    if (count > bpmnComplexityLimit.value) {
+      showToast(`⚠️ Mala Práctica de Diseño: Este proceso supera los ${bpmnComplexityLimit.value} nodos. Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor.`, 'error');
+    }
+    ```
 
 ---
 
-## Build Audit (Zero-Trust)
-
-```
-✓ 1539 modules transformed.
-✓ built in 46.93s
-0 errores TypeScript
-```
+## 2. Fase de Verificación y Compilación
+1. Ejecutar pruebas unitarias de Vitest:
+   `npx vitest run src/views/admin/Modeler/BpmnDesigner.spec.ts` en la carpeta `frontend/`.
+2. Producir el build de producción para certificar integridad de Typescript/Vue:
+   `npm run build` en la carpeta `frontend/`.
 
 ---
 
-## Git
-
-| Campo | Valor |
-|-------|-------|
-| **Commit** | `5f6f75db` |
-| **Rama remota** | `sprint-7/bugfix-uat` |
-| **Files changed** | 4 (FormDesigner.vue, FormList.vue, DlqDashboard.vue, EvidenceDropzone.vue) |
-| **Insertions** | 21 |
-| **Deletions** | 12 |
+## 3. Control de Versiones
+1. Confirmar que no hay archivos temporales ni stashes.
+2. Hacer commit de los cambios en la rama `sprint-6`.
+3. Hacer push directo de la rama a control de versiones.
 
 ---
 
-## Estado del Agente Frontend
-
-- [x] Handoff HOTFIX leído y comprendido
-- [x] Sección 3.A ejecutada (hasFallbackUsed + condicional)
-- [x] Sección 3.B ejecutada (7 rutas en 3 archivos)
-- [x] Auditoría completa de integrationStore (0 rutas restantes con doble prefijo)
-- [x] `npm run build` → SUCCESS (46.93s, 0 errores)
-- [x] `git commit` → `5f6f75db`
-- [x] `git push origin sprint-7/bugfix-uat` → SUCCESS
+*Quedo a la espera de la aprobación formal del Arquitecto Líder para proceder con la implementación.*

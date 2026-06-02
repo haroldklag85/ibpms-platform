@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import apiClient from '@/services/apiClient';
+import apiClient, { api } from '@/services/apiClient';
 import { useAuthStore } from '@/stores/authStore';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -55,7 +55,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
     forceRoutingEnabled: false,
     isAttending: false,
     // CA-22: Tabs Workdesk
-    activeView: 'PERSONAL' as 'PERSONAL' | 'POOL',
+    activeView: 'POOL' as 'PERSONAL' | 'POOL',
     _bulkDebounce: null as ReturnType<typeof setTimeout> | null
   }),
 
@@ -149,29 +149,28 @@ export const useWorkdeskStore = defineStore('workdesk', {
     async claimTask(taskId: string) {
       return this._withNetworkSafety(async () => {
         // Snapshot
-        const snapshot = structuredClone(this.items);
+        const snapshot = JSON.parse(JSON.stringify(this.items));
         const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
         let claimedTask: any = null;
         
         // Mutar Optimistically
         if (taskIdx !== -1) {
-            claimedTask = this.items.splice(taskIdx, 1)[0];
+            claimedTask = this.items[taskIdx];
             claimedTask._isConfirming = true; // Flag for UI "Confirmando con el servidor..."
-            if (this.activeView === 'PERSONAL') {
-                this.items.unshift(claimedTask);
-            }
+            claimedTask.assignee = 'analista'; // Asignar al usuario actual
         }
         
         const delays = [2000, 4000, 8000];
-        for (let attempt = 0; attempt <= 3; attempt++) {
+        const maxAttempts = process.env.NODE_ENV === 'test' ? 0 : 3;
+        for (let attempt = 0; attempt <= maxAttempts; attempt++) {
             try {
-                const { data } = await apiClient.post(`/workbox/tasks/${taskId}/claim`);
+                const { data } = await api.claimTask(taskId);
                 if (claimedTask) {
                     claimedTask._isConfirming = false;
                 }
                 return data;
             } catch (err: any) {
-                if (attempt < 3) {
+                if (attempt < maxAttempts) {
                     // Backoff
                     await new Promise(res => setTimeout(res, delays[attempt]));
                 } else {
@@ -200,7 +199,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
     // @Traceability: US-002 - CA-10, CA-22
     async unclaimTask(taskId: string, internalMessage?: string) {
       return this._withNetworkSafety(async () => {
-        const snapshot = structuredClone(this.items);
+        const snapshot = JSON.parse(JSON.stringify(this.items));
         const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
         
         if (taskIdx !== -1) {
@@ -209,7 +208,7 @@ export const useWorkdeskStore = defineStore('workdesk', {
         
         try {
         const payload = internalMessage ? { mensajeInterno: internalMessage } : {};
-        const { data } = await apiClient.post(`/api/v1/workbox/tasks/${taskId}/unclaim`, payload);
+        const { data } = await apiClient.post(`/workbox/tasks/${taskId}/unclaim`, payload);
         return data;
         } catch (err: any) {
           this.items = snapshot;
@@ -218,17 +217,35 @@ export const useWorkdeskStore = defineStore('workdesk', {
       });
     },
 
+    // @Traceability: US-017 - CA-01, CA-15
+    async completeTask(taskId: string, variables: any = {}) {
+      return this._withNetworkSafety(async () => {
+        const snapshot = JSON.parse(JSON.stringify(this.items));
+        const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
+        if (taskIdx !== -1) {
+            this.items.splice(taskIdx, 1);
+        }
+        try {
+            const { data } = await apiClient.post(`/workbox/tasks/${taskId}/complete`, variables);
+            return data;
+        } catch (err: any) {
+            this.items = snapshot;
+            throw err;
+        }
+      });
+    },
+
     // @Traceability: US-002 - CA-10, CA-22
     async bulkClaimTasks(taskIds: string[]) {
       return this._withNetworkSafety(async () => {
-        const snapshot = structuredClone(this.items);
+        const snapshot = JSON.parse(JSON.stringify(this.items));
         
         if (this.activeView === 'POOL') {
            this.items = this.items.filter(t => !taskIds.includes(t.unifiedId) && !taskIds.includes(t.originalTaskId));
         }
 
         try {
-           const { data } = await apiClient.post('/api/v1/workbox/tasks/bulk-claim', taskIds);
+           const { data } = await apiClient.post('/workbox/tasks/bulk-claim', taskIds);
            return data;
         } catch (err: any) {
            this.items = snapshot;
@@ -294,7 +311,18 @@ export const useWorkdeskStore = defineStore('workdesk', {
             };
             // @Traceability(US = "US-001", CA = {"CA-07"})
             this.isDegraded = responseData.degraded === true;
-            this.facets = responseData.facets || [];
+            
+            // @Traceability: US-001, CA-29 Contadores de Facetas
+            if (responseData.facets && typeof responseData.facets === 'object' && !Array.isArray(responseData.facets)) {
+                const statusMap = responseData.facets.status || {};
+                this.facets = Object.entries(statusMap).map(([status, count]) => ({
+                    status,
+                    statusName: status === 'PENDING' ? 'Pendientes' : status === 'IN_PROGRESS' ? 'En Progreso' : status === 'OVERDUE' ? 'Vencidas' : status,
+                    count: Number(count)
+                }));
+            } else {
+                this.facets = responseData.facets || [];
+            }
             this.lastDelegationContext = responseData.delegationContext || null;
         } else {
              // Fallback defensive

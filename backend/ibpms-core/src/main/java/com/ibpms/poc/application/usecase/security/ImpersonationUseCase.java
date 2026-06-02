@@ -1,6 +1,6 @@
 package com.ibpms.poc.application.usecase.security;
 
-import com.ibpms.poc.application.ports.out.ImpersonationPort;
+import com.ibpms.poc.application.port.out.ImpersonationPort;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 

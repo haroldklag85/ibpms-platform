@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
 
+import com.ibpms.poc.application.port.out.FormCertificationPort;
+import com.ibpms.poc.infrastructure.web.dto.FormDefinitionDTO;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -23,15 +26,19 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/forms")
-@Traceability(US = "US-003", CA = {"CA-01", "CA-26", "CA-27"})
+@Traceability(US = "US-003", CA = {"CA-01", "CA-26", "CA-27", "CA-87"})
 public class FormDesignController {
 
     private final FormDesignService formDesignService;
     private final FormConcurrencyLockService lockService;
+    private final FormCertificationPort formCertificationPort;
 
-    public FormDesignController(FormDesignService formDesignService, FormConcurrencyLockService lockService) {
+    public FormDesignController(FormDesignService formDesignService, 
+                                FormConcurrencyLockService lockService,
+                                FormCertificationPort formCertificationPort) {
         this.formDesignService = formDesignService;
         this.lockService = lockService;
+        this.formCertificationPort = formCertificationPort;
     }
 
     /**
@@ -58,11 +65,17 @@ public class FormDesignController {
     }
 
     /**
-     * CA-27: Clonador DB y Control de Versiones.
+     * CA-27 / CA-87: Clonador DB y Control de Versiones persistidas en ibpms_form_definitions.
      */
     @GetMapping("/{id}/versions")
-    public ResponseEntity<List<FormDesignDTO>> listarVersiones(@PathVariable UUID id) {
-        return ResponseEntity.ok(formDesignService.listarVersiones(id));
+    @Traceability(US = "US-003", CA = {"CA-87"})
+    public ResponseEntity<List<FormDefinitionDTO>> listarVersiones(@PathVariable UUID id) {
+        // [LEY GLOBAL 3: Trazabilidad Inversa] - US-003 - CA-87: Listar versiones inmutables persistidas
+        List<com.ibpms.poc.domain.model.FormDefinition> definitions = formDesignService.listarVersionesDeDefinicion(id);
+        List<FormDefinitionDTO> dtos = definitions.stream()
+                .map(v -> FormDefinitionDTO.from(v, formCertificationPort.findByFormDefinitionId(v.getId()).orElse(null)))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     /**
@@ -92,12 +105,17 @@ public class FormDesignController {
      * GAP 5 (CA-26): Si el Motor detona IllegalStateException informando que
      * hay 1 o más instancias de procesos activas, se escuda con un HTTP 409 Conflict.
      */
+    // @Traceability: US-005, CA-26
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> eliminarFormulario(@PathVariable UUID id) {
         try {
             formDesignService.eliminar(id);
             return ResponseEntity.noContent().build();
         } catch (IllegalStateException expectedRejection) {
+            if (expectedRejection.getMessage() != null && expectedRejection.getMessage().contains("Prohibido")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(java.util.Map.of("error", expectedRejection.getMessage()));
+            }
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(java.util.Map.of("error", "El Formulario está en uso por Trámites Activos", "details", expectedRejection.getMessage()));
         }
@@ -132,11 +150,16 @@ public class FormDesignController {
     }
 
     /**
-     * CA-26: Manejador de error semántico (Instancias activas).
+     * CA-26 / CA-87: Manejador de error semántico (Instancias activas o colisión de versiones).
      */
+    // @Traceability: US-005, US-003, CA-26, CA-87
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<java.util.Map<String, String>> handleConflict(IllegalStateException ex) {
-        if (ex.getMessage() != null && ex.getMessage().contains("bqueado (CA-26)") || ex.getMessage().contains("bloqueado")) {
+        // [LEY GLOBAL 3: Trazabilidad Inversa] - US-003 - CA-87: Retornar HTTP 409 Conflict ante colisión de hash SHA-256
+        if (ex.getMessage() != null && (ex.getMessage().contains("bqueado (CA-26)") || 
+                                        ex.getMessage().contains("bloqueado") || 
+                                        ex.getMessage().contains("Prohibido") ||
+                                        ex.getMessage().contains("collision"))) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(java.util.Map.of("error", ex.getMessage()));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("error", ex.getMessage()));

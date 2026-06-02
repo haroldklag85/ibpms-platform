@@ -5,6 +5,7 @@ import apiClient from '@/services/apiClient'
 export const useRbacStore = defineStore('rbac', () => {
     // Estado
     const roles = ref([])
+    const users = ref([])
     const isLoading = ref(false)
     // CA-12: Anomalías de Seguridad (Tablero CISO)
     const anomalies = ref([])
@@ -74,6 +75,20 @@ export const useRbacStore = defineStore('rbac', () => {
             roles.value = fetchedRoles
         } catch (error) {
             console.error("Error cargando roles", error)
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    async function fetchUsers() {
+        isLoading.value = true
+        try {
+            const response = await apiClient.get('/admin/security/users')
+            users.value = response?.data || []
+            return response?.data || []
+        } catch (error) {
+            console.error("Error fetching users", error)
+            return []
         } finally {
             isLoading.value = false
         }
@@ -174,13 +189,7 @@ export const useRbacStore = defineStore('rbac', () => {
 
     async function createServiceAccount(payload) {
         try {
-            const apiPayload = {
-                name: payload.appName,
-                description: payload.description,
-                roleId: payload.roleId,
-                daysToExpire: 365
-            };
-            const response = await apiClient.post('/admin/service-accounts', apiPayload)
+            const response = await apiClient.post('/admin/security/m2m', payload)
             await fetchServiceAccounts()
             return response.data // Debe incluir el secret_key generado solo esta vez
         } catch (error) {
@@ -225,7 +234,7 @@ export const useRbacStore = defineStore('rbac', () => {
     async function revokeUserSession(userId) {
         try {
             // CA-14: Exorcismo JWT (Kill Session Extremo)
-            await apiClient.post(`/admin/users/${userId}/kill-session`)
+            await apiClient.post(`/admin/security/users/${userId}/revoke-session`)
             await fetchUsers()
         } catch (error) {
             console.error("Error revocando sesión de usuario", error)
@@ -236,7 +245,7 @@ export const useRbacStore = defineStore('rbac', () => {
     // --- CA-15: Public Process Management ---
     async function fetchSystemProcesses() {
         try {
-            const response = await apiClient.get('/design/processes/catalog')
+            const response = await apiClient.get('/design/processes')
             systemProcesses.value = response.data
         } catch (error) {
             console.error("Error obteniendo procesos del sistema", error)
@@ -265,20 +274,25 @@ export const useRbacStore = defineStore('rbac', () => {
 
     async function generateCisoReport() {
         try {
-            // CA-16/CA-24: Consumir endpoint real POST para generación on-demand
-            const response = await apiClient.post('/security/audit/reports/iso27001', {}, {
+            // CA-16/CA-24: Consumir endpoint real GET para generación on-demand
+            const response = await apiClient.get('/admin/security/reports/iso27001', {
                 responseType: 'blob'
             })
             
             // Descarga automática del blob (ISO 27001 Compliance)
-            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
-            const link = document.createElement('a')
-            link.href = url
-            link.setAttribute('download', `ibpms_iso27001_report_${new Date().toISOString().split('T')[0]}.csv`)
-            document.body.appendChild(link)
-            link.click()
-            link.remove()
-            window.URL.revokeObjectURL(url)
+            const responseData = response?.data
+            if (responseData) {
+                const url = typeof window.URL.createObjectURL === 'function' ? window.URL.createObjectURL(new Blob([responseData], { type: 'text/csv' })) : ''
+                const link = document.createElement('a')
+                link.href = url
+                link.setAttribute('download', `ibpms_iso27001_report_${new Date().toISOString().split('T')[0]}.csv`)
+                document.body.appendChild(link)
+                link.click()
+                link.remove()
+                if (url && typeof window.URL.revokeObjectURL === 'function') {
+                    window.URL.revokeObjectURL(url)
+                }
+            }
             
             await fetchCisoReports()
         } catch (error) {
@@ -290,7 +304,7 @@ export const useRbacStore = defineStore('rbac', () => {
     // --- CA-17: Audit Logs ---
     async function fetchAuditLogs() {
         try {
-            const response = await apiClient.get('/admin/roles/audit-logs')
+            const response = await apiClient.get('/admin/security/audit-logs')
             auditLogs.value = response.data
         } catch (error) {
             console.error("Error obteniendo logs de auditoría", error)
@@ -299,6 +313,7 @@ export const useRbacStore = defineStore('rbac', () => {
 
     return {
         roles,
+        users,
         anomalies,
         auditLogs,
         isLoading,
@@ -307,6 +322,7 @@ export const useRbacStore = defineStore('rbac', () => {
         serviceAccounts,
         delegations,
         fetchRoles,
+        fetchUsers,
         fetchAnomalies,
         resolveAnomaly,
         fetchEntraIdGroups,

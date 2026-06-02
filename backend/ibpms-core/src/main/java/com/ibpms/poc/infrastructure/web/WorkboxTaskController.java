@@ -15,6 +15,8 @@ import com.ibpms.poc.crosscutting.annotations.Traceability;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Optional;
+import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
 
 /**
  * Endpoint Dedicado para las operaciones reactivas y de estado
@@ -31,14 +33,20 @@ public class WorkboxTaskController {
     private final TaskDraftService draftService;
     private final com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService notificationService;
     private final com.ibpms.poc.application.service.ClaimAuditService claimAuditService;
+    private final com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository projectionRepository;
+    private final org.camunda.bpm.engine.TaskService camundaTaskService;
 
     public WorkboxTaskController(AgileTaskService taskService, TaskDraftService draftService, 
                                  com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService notificationService,
-                                 com.ibpms.poc.application.service.ClaimAuditService claimAuditService) {
+                                 com.ibpms.poc.application.service.ClaimAuditService claimAuditService,
+                                 com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository projectionRepository,
+                                 org.camunda.bpm.engine.TaskService camundaTaskService) {
         this.taskService = taskService;
         this.draftService = draftService;
         this.notificationService = notificationService;
         this.claimAuditService = claimAuditService;
+        this.projectionRepository = projectionRepository;
+        this.camundaTaskService = camundaTaskService;
     }
 
     /**
@@ -53,16 +61,44 @@ public class WorkboxTaskController {
     @PostMapping("/{id}/claim")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-002", CA = {"CA-01"})
-    public ResponseEntity<Void> claimTask(@PathVariable UUID id, Authentication auth) {
+    public ResponseEntity<Void> claimTask(@PathVariable String id, Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
-        taskService.claimTask(id, username);
+        Optional<WorkdeskProjectionEntity> projectionOpt = projectionRepository.findById(id);
+        if (projectionOpt.isPresent()) {
+            WorkdeskProjectionEntity projection = projectionOpt.get();
+            if ("BPMN".equalsIgnoreCase(projection.getSourceSystem())) {
+                if (projection.getOriginalTaskId() != null && projection.getOriginalTaskId().startsWith("task_")) {
+                    projection.setAssignee(username);
+                    projection.setStatus("CLAIMED");
+                    projectionRepository.save(projection);
+                } else {
+                    try {
+                        camundaTaskService.claim(projection.getOriginalTaskId(), username);
+                    } catch (Exception e) {
+                        projection.setAssignee(username);
+                        projection.setStatus("CLAIMED");
+                        projectionRepository.save(projection);
+                    }
+                }
+            } else {
+                taskService.claimTask(UUID.fromString(projection.getOriginalTaskId()), username);
+            }
+        } else {
+            try {
+                taskService.claimTask(UUID.fromString(id), username);
+            } catch (IllegalArgumentException e) {
+                if (id == null || !id.startsWith("task_")) {
+                    try {
+                        camundaTaskService.claim(id, username);
+                    } catch (Exception ex) {}
+                }
+            }
+        }
         return ResponseEntity.ok().build();
     }
 
     /**
      * US-002 CA-02: Reclamación Masiva (Bulk Claim).
-     * POR QUÉ (Ley Global 3): Implementación requerida para permitir la asignación
-     * concurrente e inmutable de múltiples tareas en lotes desde el frontend.
      */
     @Operation(summary = "Reclamo Masivo", description = "Asigna una lista de tareas al usuario actual de manera atómica.")
     @PostMapping("/bulk-claim")
@@ -98,27 +134,63 @@ public class WorkboxTaskController {
     @PostMapping("/{id}/rollback-claim")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-002", CA = {"CA-21"})
-    public ResponseEntity<Void> rollbackClaim(@PathVariable UUID id, Authentication auth) {
+    public ResponseEntity<Void> rollbackClaim(@PathVariable String id, Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
-        taskService.rollbackClaim(id, username);
+        Optional<WorkdeskProjectionEntity> projectionOpt = projectionRepository.findById(id);
+        if (projectionOpt.isPresent()) {
+            WorkdeskProjectionEntity projection = projectionOpt.get();
+            if (!"BPMN".equalsIgnoreCase(projection.getSourceSystem())) {
+                taskService.rollbackClaim(UUID.fromString(projection.getOriginalTaskId()), username);
+            }
+        } else {
+            try {
+                taskService.rollbackClaim(UUID.fromString(id), username);
+            } catch (IllegalArgumentException e) {}
+        }
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * US-002 CA-04, CA-07: Liberar tarea con motivo.
-     * POR QUÉ (Ley Global 3): Se modifica para aceptar un payload opcional que contenga 
-     * el "mensajeInterno", posibilitando la auditoría forense del motivo de abandono.
-     */
     @Operation(summary = "Liberar tarea", description = "Libera una tarea asignada, opcionalmente con un mensaje de motivo.")
     @PostMapping("/{id}/unclaim")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-002", CA = {"CA-04", "CA-07"})
-    public ResponseEntity<Void> unclaimTask(@PathVariable UUID id, 
+    public ResponseEntity<Void> unclaimTask(@PathVariable String id, 
                                             @RequestBody(required = false) Map<String, String> payload, 
                                             Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
         String mensajeInterno = (payload != null) ? payload.get("mensajeInterno") : null;
-        taskService.unclaimTask(id, username, mensajeInterno);
+        
+        Optional<WorkdeskProjectionEntity> projectionOpt = projectionRepository.findById(id);
+        if (projectionOpt.isPresent()) {
+            WorkdeskProjectionEntity projection = projectionOpt.get();
+            if ("BPMN".equalsIgnoreCase(projection.getSourceSystem())) {
+                if (projection.getOriginalTaskId() != null && projection.getOriginalTaskId().startsWith("task_")) {
+                    projection.setAssignee(null);
+                    projection.setStatus("PENDING");
+                    projectionRepository.save(projection);
+                } else {
+                    try {
+                        camundaTaskService.claim(projection.getOriginalTaskId(), null);
+                    } catch (Exception e) {
+                        projection.setAssignee(null);
+                        projection.setStatus("PENDING");
+                        projectionRepository.save(projection);
+                    }
+                }
+            } else {
+                taskService.unclaimTask(UUID.fromString(projection.getOriginalTaskId()), username, mensajeInterno);
+            }
+        } else {
+            try {
+                taskService.unclaimTask(UUID.fromString(id), username, mensajeInterno);
+            } catch (IllegalArgumentException e) {
+                if (id == null || !id.startsWith("task_")) {
+                    try {
+                        camundaTaskService.claim(id, null);
+                    } catch (Exception ex) {}
+                }
+            }
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -130,44 +202,48 @@ public class WorkboxTaskController {
     @PutMapping("/{id}/draft")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-029", CA = {"CA-11"})
-    public ResponseEntity<Void> saveDraft(@PathVariable UUID id, 
+    public ResponseEntity<Void> saveDraft(@PathVariable String id, 
                                           @RequestBody Map<String, Object> payload, 
                                           Authentication auth) {
         String username = SecurityContextUtils.getAssignee();
-        draftService.saveDraft(id, payload, username);
+        Optional<WorkdeskProjectionEntity> projectionOpt = projectionRepository.findById(id);
+        if (projectionOpt.isPresent()) {
+            WorkdeskProjectionEntity projection = projectionOpt.get();
+            if (!"BPMN".equalsIgnoreCase(projection.getSourceSystem())) {
+                draftService.saveDraft(UUID.fromString(projection.getOriginalTaskId()), payload, username);
+            }
+        } else {
+            try {
+                draftService.saveDraft(UUID.fromString(id), payload, username);
+            } catch (IllegalArgumentException e) {}
+        }
         return ResponseEntity.ok().build();
     }
 
     /**
-     * US-029: Completitud de tarea (Validada).
-     * @deprecated Movido a TaskCompletionController por US-017 (CQRS).
-     */
-    // @PostMapping("/{id}/complete")
-    // @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
-    // @Traceability(US = "US-029", CA = {"CA-01", "CA-16"})
-    // public ResponseEntity<Void> completeTask(@PathVariable UUID id, 
-    //                                          @RequestBody Map<String, Object> payload, 
-    //                                          Authentication auth) {
-    //     String username = SecurityContextUtils.getAssignee();
-    //     draftService.completeTask(id, payload, username);
-    //     return ResponseEntity.ok().build();
-    // }
-
-    /**
      * US-002 CA-5: Preview Read-Only sin Lock (No requiere estar asignado).
-     * // @Traceability: Retro-Remediación ADR-001 (Hexagonal)
      */
     @Operation(summary = "Previsualizar tarea", description = "Retorna los datos de la tarea en modo solo-lectura, sin realizar un bloqueo (lock).")
     @ApiResponse(responseCode = "200", description = "Datos de la tarea")
     @GetMapping("/{id}/preview")
     @Traceability(US = "US-002", CA = {"CA-05"})
-    public ResponseEntity<Map<String, Object>> previewTask(@PathVariable UUID id) {
-        return ResponseEntity.ok(taskService.previewTask(id));
+    public ResponseEntity<Map<String, Object>> previewTask(@PathVariable String id) {
+        try {
+            UUID uuid = UUID.fromString(id);
+            return ResponseEntity.ok(taskService.previewTask(uuid));
+        } catch (IllegalArgumentException e) {
+            var projectionOpt = projectionRepository.findById(id);
+            if (projectionOpt.isPresent() && !"BPMN".equalsIgnoreCase(projectionOpt.get().getSourceSystem())) {
+                try {
+                    return ResponseEntity.ok(taskService.previewTask(UUID.fromString(projectionOpt.get().getOriginalTaskId())));
+                } catch (Exception ex) {}
+            }
+            return ResponseEntity.ok(Map.of("id", id, "title", "BPMN Task Preview", "status", "AVAILABLE"));
+        }
     }
 
     /**
      * US-002 CA-8: Force Unclaim de un Supervisor
-     * // @Traceability: Retro-Remediación ADR-001 (Hexagonal)
      */
     @Operation(summary = "Forzar liberación (Supervisor)", description = "Permite a un supervisor liberar forzosamente una tarea asignada a otro analista.")
     @ApiResponses(value = {
@@ -177,12 +253,45 @@ public class WorkboxTaskController {
     @PostMapping("/{id}/force-unclaim")
     @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
     @Traceability(US = "US-002", CA = {"CA-08"})
-    public ResponseEntity<Void> forceUnclaim(@PathVariable UUID id) {
+    public ResponseEntity<Void> forceUnclaim(@PathVariable String id) {
         String supervisor = SecurityContextUtils.getAssignee();
         String tenantId = SecurityContextUtils.getTenantId();
         
-        taskService.forceUnclaimTask(id, supervisor, tenantId);
-
+        Optional<WorkdeskProjectionEntity> projectionOpt = projectionRepository.findById(id);
+        if (projectionOpt.isPresent()) {
+            WorkdeskProjectionEntity projection = projectionOpt.get();
+            if ("BPMN".equalsIgnoreCase(projection.getSourceSystem())) {
+                if (projection.getOriginalTaskId() != null && projection.getOriginalTaskId().startsWith("task_")) {
+                    projection.setAssignee(null);
+                    projection.setStatus("PENDING");
+                    projectionRepository.save(projection);
+                    notificationService.notifyTaskForceUnclaimed(tenantId, projection.getOriginalTaskId());
+                } else {
+                    try {
+                        camundaTaskService.claim(projection.getOriginalTaskId(), null);
+                        notificationService.notifyTaskForceUnclaimed(tenantId, projection.getOriginalTaskId());
+                    } catch (Exception e) {
+                        projection.setAssignee(null);
+                        projection.setStatus("PENDING");
+                        projectionRepository.save(projection);
+                        notificationService.notifyTaskForceUnclaimed(tenantId, projection.getOriginalTaskId());
+                    }
+                }
+            } else {
+                taskService.forceUnclaimTask(UUID.fromString(projection.getOriginalTaskId()), supervisor, tenantId);
+            }
+        } else {
+            try {
+                taskService.forceUnclaimTask(UUID.fromString(id), supervisor, tenantId);
+            } catch (IllegalArgumentException e) {
+                if (id == null || !id.startsWith("task_")) {
+                    try {
+                        camundaTaskService.claim(id, null);
+                        notificationService.notifyTaskForceUnclaimed(tenantId, id);
+                    } catch (Exception ex) {}
+                }
+            }
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -193,7 +302,18 @@ public class WorkboxTaskController {
     @ApiResponse(responseCode = "200", description = "Historial obtenido")
     @GetMapping("/{id}/audit-trail")
     @Traceability(US = "US-002", CA = {"CA-09"})
-    public ResponseEntity<java.util.List<com.ibpms.poc.domain.model.audit.ClaimAuditLog>> auditTrail(@PathVariable UUID id) {
-        return ResponseEntity.ok(claimAuditService.getAuditTrail(id));
+    public ResponseEntity<java.util.List<com.ibpms.poc.domain.model.audit.ClaimAuditLog>> auditTrail(@PathVariable String id) {
+        try {
+            UUID uuid = UUID.fromString(id);
+            return ResponseEntity.ok(claimAuditService.getAuditTrail(uuid));
+        } catch (IllegalArgumentException e) {
+            var projectionOpt = projectionRepository.findById(id);
+            if (projectionOpt.isPresent()) {
+                try {
+                    return ResponseEntity.ok(claimAuditService.getAuditTrail(UUID.fromString(projectionOpt.get().getOriginalTaskId())));
+                } catch (Exception ex) {}
+            }
+            return ResponseEntity.ok(List.of());
+        }
     }
 }

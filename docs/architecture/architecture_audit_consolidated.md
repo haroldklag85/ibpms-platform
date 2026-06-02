@@ -1,5 +1,8 @@
 # Auditoría Consolidada de Arquitectura: Brechas, Patrones y Alineación C4 (iBPMS)
 
+> [!CAUTION]
+> **HALLAZGOS GRADUADOS AL SSOT:** Las brechas y decisiones de diseño consolidadas en este documento de auditoría arquitectónica fueron solventadas y graduadas como Criterios de Aceptación formales en los archivos de Épica correspondientes (`docs/requirements/epics/`). Este archivo es ahora histórico y de solo lectura.
+
 > **Origen:** Este documento consolida `architecture_review.md` y `c4_audit_report.md` (eliminados tras la fusión).
 > **Última Auditoría:** 2026-04-09 — Saneamiento arquitectónico integral.
 

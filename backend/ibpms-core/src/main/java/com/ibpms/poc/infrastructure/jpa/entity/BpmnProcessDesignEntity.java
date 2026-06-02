@@ -52,6 +52,7 @@ public class BpmnProcessDesignEntity {
     @Column(name = "xml_draft", columnDefinition = "TEXT")
     private String xmlDraft;
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "generic_form_whitelist", columnDefinition = "jsonb")
     private String genericFormWhitelist;
 

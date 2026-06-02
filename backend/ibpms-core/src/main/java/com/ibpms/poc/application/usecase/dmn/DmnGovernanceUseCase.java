@@ -1,7 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.application.usecase.dmn;
 
-import com.ibpms.poc.infrastructure.jpa.entity.dmn.DmnModelEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.dmn.DmnModelRepository;
+import com.ibpms.poc.domain.model.DmnModel;
+import com.ibpms.poc.domain.port.DmnModelRepositoryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -21,9 +22,9 @@ import com.ibpms.poc.crosscutting.annotations.Traceability;
 public class DmnGovernanceUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(DmnGovernanceUseCase.class);
-    private final DmnModelRepository dmnRepository;
+    private final DmnModelRepositoryPort dmnRepository;
 
-    public DmnGovernanceUseCase(DmnModelRepository dmnRepository) {
+    public DmnGovernanceUseCase(DmnModelRepositoryPort dmnRepository) {
         this.dmnRepository = dmnRepository;
     }
 
@@ -33,8 +34,8 @@ public class DmnGovernanceUseCase {
      * Actualiza el XML de un DMN, SOLO si no está SELLADO y SOLO si el Tenant coincide.
      */
     @Transactional
-    public DmnModelEntity updateDmnContent(String dmnId, String newXml, String invokerTenantId, boolean isManual) {
-        DmnModelEntity dmn = dmnRepository.findById(dmnId)
+    public DmnModel updateDmnContent(String dmnId, String newXml, String invokerTenantId, boolean isManual) {
+        DmnModel dmn = dmnRepository.findById(dmnId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DMN Model not found"));
 
         if (!dmn.getTenantId().equals(invokerTenantId)) {
@@ -80,7 +81,7 @@ public class DmnGovernanceUseCase {
      */
     @Transactional
     public void rollbackDraft(String dmnId, String invokerTenantId) {
-        DmnModelEntity dmn = dmnRepository.findById(dmnId)
+        DmnModel dmn = dmnRepository.findById(dmnId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DMN Model not found"));
 
         if (!dmn.getTenantId().equals(invokerTenantId)) {
@@ -92,8 +93,6 @@ public class DmnGovernanceUseCase {
         }
 
         log.info("[SRE-ROLLBACK] Eliminando el Draft {} y revirtiendo el canvas al estado estable V1.", dmnId);
-        // Estrategia: Destruir la fila DRAFT. El frontend cargará de nuevo el SEALED con el id padre.
-        // Asumiendo que V2_DRAFT es una fila aparte. O en este caso (V1 MOC) simplemente lo borramos.
         dmnRepository.delete(dmn);
     }
 
@@ -102,7 +101,7 @@ public class DmnGovernanceUseCase {
      * CA-13: Catálogo DMN Paginado
      */
     public java.util.Map<String, Object> getDmnCatalog(String invokerTenantId, int page, int size) {
-        java.util.List<DmnModelEntity> models = dmnRepository.findByTenantId(invokerTenantId);
+        java.util.List<DmnModel> models = dmnRepository.findByTenantId(invokerTenantId);
         
         java.util.List<java.util.Map<String, Object>> content = models.stream().map(dmn -> {
             return java.util.Map.<String, Object>of(
@@ -127,7 +126,7 @@ public class DmnGovernanceUseCase {
      * CA-14: Obtener detalle de un DMN específico
      */
     public java.util.Map<String, Object> getDmnById(String id, String invokerTenantId) {
-        DmnModelEntity dmn = dmnRepository.findById(id)
+        DmnModel dmn = dmnRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DMN Model not found"));
 
         if (!dmn.getTenantId().equals(invokerTenantId)) {

@@ -1,3 +1,4 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;
@@ -75,14 +76,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/process/*/start-anonymous").permitAll()
                         // CA-03 y CA-04 (US-038): Login Standard y Protocolo Break-Glass
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/sync", "/api/v1/auth/emergency-login").permitAll()
-                        // Apertura Temporal para desbloquear catálogo
-                        .requestMatchers(HttpMethod.GET, "/api/v1/design/processes/catalog").permitAll()
+                        // Apertura Temporal para desbloquear catálogo y procesos
+                        .requestMatchers("/api/v1/design/processes/**", "/api/v1/design/sandbox/**").permitAll()
                         // OpenAPI / Swagger Docs
                         .requestMatchers("/v3/api-docs/**", "/api/v1/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // DMN Simulation for Tests (Bypass para el test Sandbox DMN)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/dmn-models/simulate").permitAll()
+                        // DMN Simulation and Validation for Tests
+                        .requestMatchers(HttpMethod.POST, "/api/v1/dmn-models/simulate", "/api/v1/dmn-models/simulate-sandbox").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/dmn/upload").permitAll()
                         // US-028: Form Certification & Definition endpoints (QA Integration Tests)
-                        .requestMatchers("/api/v1/design/forms/**", "/api/v1/design/form-definitions/**").permitAll()
+                        .requestMatchers("/api/v1/design/forms/*/versions").permitAll()
+                        .requestMatchers("/api/v1/design/form-definitions/**").permitAll()
                         .requestMatchers("/api/v1/forms/**").permitAll()
                         // CA-11: SSE Security Stream
                         .requestMatchers("/api/v1/security/stream").permitAll()
@@ -90,6 +93,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/agile/**").permitAll()
                         // @Traceability(US="US-CORE", CA="CA-CAMUNDA", DESC="ADR-003: Bypass JWT para interacción con motor REST embebido de Camunda 7")
                         .requestMatchers("/engine-rest/**", "/api/v1/engine-rest/**").permitAll()
+                        .requestMatchers("/api/v1/security/audit/**").hasRole("SUPER_ADMIN")
                         .anyRequest().authenticated());
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(getJwtAuthenticationConverter())));
@@ -104,7 +108,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://127.0.0.1:5173"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         // @Traceability: US-005, CA-63
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Sandbox-Mode"));

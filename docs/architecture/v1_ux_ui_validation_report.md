@@ -1,5 +1,8 @@
 # Análisis y Validación de Usabilidad UX/UI (iBPMS V1)
 
+> [!CAUTION]
+> **HALLAZGOS GRADUADOS AL SSOT:** Los GAPs y directrices de usabilidad de este reporte de usabilidad UX/UI fueron solventados y graduados a los requerimientos y Criterios de Aceptación formales en los archivos de Épica correspondientes (`docs/requirements/epics/`). Este archivo es ahora histórico y de solo lectura.
+
 **Objetivo:** Auditar los "Wireframes Conceptuales V1" (`v1_wireframes.md`) bajo el prisma riguroso de las leyes psicológicas de Experiencia de Usuario (UX) y las Heurísticas de Jakob Nielsen. Este documento dicta el estándar para la transición de Baja Fidelidad (Lo-Fi conceptual) a Alta Fidelidad (Hi-Fi en Figma) y finalmente al desarrollo en Vue 3.
 
 ---

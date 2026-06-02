@@ -1,3 +1,4 @@
+// @Traceability: US-003 - CA-27, CA-30, CA-52, CA-74, CA-75, CA-77, CA-83
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/services/apiClient';
@@ -5,6 +6,50 @@ import { ZodBuilder } from '@/views/admin/Modeler/ZodBuilder';
 import { useAuthStore } from '@/stores/authStore';
 // @ts-ignore
 import jexl from 'jexl';
+
+// @Traceability: US-003 - CA-84
+const checkSintaxisDelimitadores = (code: string): { success: boolean; message: string; line?: number } => {
+  const stack: { char: string; index: number; line: number }[] = [];
+  let currentLine = 1;
+  for (let i = 0; i < code.length; i++) {
+    const char = code[i];
+    if (char === '\n') {
+      currentLine++;
+    }
+    if (char === '(' || char === '{' || char === '[') {
+      stack.push({ char, index: i, line: currentLine });
+    } else if (char === ')' || char === '}' || char === ']') {
+      if (stack.length === 0) {
+        return {
+          success: false,
+          message: `Caracter de cierre inesperado '${char}'`,
+          line: currentLine
+        };
+      }
+      const top = stack.pop()!;
+      if (
+        (char === ')' && top.char !== '(') ||
+        (char === '}' && top.char !== '{') ||
+        (char === ']' && top.char !== '[')
+      ) {
+        return {
+          success: false,
+          message: `Se esperaba un caracter de cierre para '${top.char}' de la línea ${top.line}, pero se encontró '${char}'`,
+          line: currentLine
+        };
+      }
+    }
+  }
+  if (stack.length > 0) {
+    const top = stack[stack.length - 1];
+    return {
+      success: false,
+      message: `Delimitador sin cerrar: '${top.char}' abierto en la línea ${top.line}`,
+      line: top.line
+    };
+  }
+  return { success: true, message: '' };
+};
 
 export const useFormDesignerStore = defineStore('formDesigner', () => {
   // State
@@ -17,9 +62,17 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const isPublic = ref(false);
   const certificationState = ref<'none' | 'certified' | 'revoked'>('none');
   const currentSchemaVersion = ref(1);
+  const currentFormId = ref<string | null>(null);
   const bpmnCoherenceResults = ref<any[]>([]);
   const formKey = ref('');
   const zodParseError = ref<boolean | string>(false);
+  const editorErrors = ref<{ message: string, line?: number }[]>([]);
+  const dictionaryItems = ref<any[]>([]);
+  const approvedConnectors = ref<string[]>([]);
+  
+  // @Traceability: US-003 - CA-90
+  const MAX_FORM_FIELDS = 200;
+  const isHighDensityForm = computed(() => canvasFields.value.length > MAX_FORM_FIELDS);
   
   // AI State
   const aiPrompt = ref('');
@@ -104,7 +157,6 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     if (!promptText) return;
     isScanningAi.value = true;
     try {
-        // BUG-S7-001 / BUG-B FIX: baseURL del apiClient ya incluye /api/v1 — rutas relativas sin prefijo
         const response = await apiClient.post('/design/forms/generate', { prompt: promptText });
         if (response.data && response.data.schema) {
             canvasFields.value = typeof response.data.schema === 'string' ? JSON.parse(response.data.schema) : response.data.schema;
@@ -117,30 +169,118 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     }
   };
 
-  const saveAsFragment = (node: any) => {
-    const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
-    if (fragmentCategory) {
-       fragmentCategory.items.push(JSON.parse(JSON.stringify(node)));
-       localStorage.setItem('workdesk_fragments', JSON.stringify(fragmentCategory.items));
+  const fetchDictionary = async () => {
+    try {
+      const res = await apiClient.get('/design/dictionary');
+      dictionaryItems.value = res.data || [];
+    } catch (e) {
+      console.error('Error fetching global dictionary:', e);
+      dictionaryItems.value = [];
     }
   };
 
-  const fetchVersions = async () => {
+  const fetchSnippets = async () => {
     try {
-        const res = await apiClient.get('/forms/mock_id_or_draft/versions'); // BUG-S7-001 / BUG-B FIX
+      const res = await apiClient.get('/design/snippets');
+      const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
+      if (fragmentCategory && res.data) {
+        fragmentCategory.items = res.data;
+      }
+    } catch (e) {
+      console.error('Error fetching snippets:', e);
+    }
+  };
+
+  const saveSnippet = async (name: string, components: any[]) => {
+    await apiClient.post('/design/snippets', { name, components });
+    const fragmentCategory = toolboxCategories.value.find(c => c.name === 'Mis Fragmentos');
+    if (fragmentCategory) {
+      fragmentCategory.items.push({ name, components });
+      localStorage.setItem('workdesk_fragments', JSON.stringify(fragmentCategory.items));
+    }
+  };
+
+  const saveAsFragment = async (node: any) => {
+    const name = node.label || node.name || 'Nuevo Fragmento';
+    const components = [JSON.parse(JSON.stringify(node))];
+    await saveSnippet(name, components);
+  };
+
+  const fetchApprovedConnectors = async () => {
+    try {
+      const res = await apiClient.get('/integrations/connectors');
+      if (Array.isArray(res.data)) {
+        approvedConnectors.value = res.data.map((item: any) => {
+          if (typeof item === 'string') return item;
+          return `/api/v1/integrations/connectors/${item.id || item}`;
+        });
+      } else {
+        approvedConnectors.value = [];
+      }
+    } catch (e) {
+      console.error('Error fetching approved connectors:', e);
+      approvedConnectors.value = [];
+    }
+  };
+
+  const validateSchemaSecurity = () => {
+    const flatF: any[] = [];
+    const collect = (list: any[]) => {
+      if (!list || !Array.isArray(list)) return;
+      list.forEach(f => {
+        flatF.push(f);
+        if (f.components) collect(f.components);
+        if (f.children) collect(f.children);
+      });
+    };
+    collect(canvasFields.value);
+
+    const isInputField = (f: any) => {
+      return !f.type.startsWith('button_') && !['container', 'tabs', 'accordion', 'tab_pane', 'accordion_panel', 'info_modal'].includes(f.type);
+    };
+
+    for (const f of flatF) {
+      if (f.enableAutocomplete) {
+        const url = f.autocompleteUrl || '';
+        if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//') || !url.startsWith('/api/v1/integrations/connectors/'))) {
+          return { success: false, message: `[SSRF Prevention] URL de autocompletado insegura: '${url}'. Debe usar un conector homologado.` };
+        }
+      }
+      
+      for (const key of Object.keys(f)) {
+        const val = f[key];
+        if (typeof val === 'string') {
+          const lowerVal = val.toLowerCase();
+          if (lowerVal.includes('fetch(') || lowerVal.includes('axios') || lowerVal.includes('xmlhttprequest') || lowerVal.includes('eval(') || lowerVal.includes('<script')) {
+            return { success: false, message: `[XSS/RCE Prevention] Intento de inyección de JS crudo detectado en propiedad '${key}': '${val}'` };
+          }
+        }
+      }
+
+      // @Traceability: US-003 - CA-75
+      if (isInputField(f)) {
+        if (f.destinoEstrategico === undefined || f.destinoEstrategico === null || String(f.destinoEstrategico).trim() === '') {
+          return { success: false, message: `[Peaje Analítico] Campo '${f.label || f.id}' sin destino estratégico definido.` };
+        }
+      }
+    }
+    return { success: true, message: 'Esquema verificado exitosamente' };
+  };
+
+  const fetchVersions = async () => {
+    const id = currentFormId.value || 'mock_id_or_draft';
+    try {
+        const res = await apiClient.get(`/forms/${id}/versions`);
         formVersions.value = res.data;
     } catch(e) {
-        // Mock fallback for UI Demo if API is not fully seeded
-        formVersions.value = [
-           { id: 'v2.1', version: '2.1', updatedAt: new Date().toISOString() },
-           { id: 'v1.0', version: '1.0', updatedAt: new Date(Date.now() - 86400000).toISOString() }
-        ];
+        formVersions.value = [];
+        throw e;
     }
   };
 
   const fetchForm = async (formId: string) => {
     try {
-        const response = await apiClient.get(`/forms/${formId}`); // BUG-S7-001 / BUG-B FIX
+        const response = await apiClient.get(`/forms/${formId}`);
         if (response.data && response.data.schemaVariables) {
             canvasFields.value = typeof response.data.schemaVariables === 'string' 
                ? JSON.parse(response.data.schemaVariables) 
@@ -151,10 +291,14 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             
             if (response.data.isQaCertified) certificationState.value = 'certified';
             else if (response.data.certifiedSchemaHash) certificationState.value = 'revoked';
-            currentSchemaVersion.value = response.data.versionId || 1;
+            
+            currentFormId.value = formId;
+            currentSchemaVersion.value = response.data.versionId || response.data.version || 1;
+            formKey.value = response.data.technicalName || '';
 
             return { success: true, message: `Formulario ${formId} cargado desde API` };
         }
+        return { success: false, message: 'El formulario no contiene un esquema válido.' };
     } catch(e) {
         return { success: false, message: 'Error cargando formulario remoto desde API' };
     }
@@ -218,15 +362,31 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   };
 
   const restoreVersion = (ver: any) => {
+    let resolvedSchema: any = null;
     if (ver.schema) {
-        canvasFields.value = typeof ver.schema === 'string' ? JSON.parse(ver.schema) : ver.schema;
-        return { success: true, message: `Versión ${ver.version} restaurada exitosamente` };
+        resolvedSchema = ver.schema;
+    } else if (ver.formFields) {
+        resolvedSchema = ver.formFields;
+    } else if (ver.schemaVariables) {
+        resolvedSchema = ver.schemaVariables;
     }
+
+    if (resolvedSchema) {
+        try {
+            canvasFields.value = typeof resolvedSchema === 'string' 
+                ? JSON.parse(resolvedSchema) 
+                : resolvedSchema;
+            return { success: true, message: `Versión ${ver.version || ver.versionId || ''} restaurada exitosamente` };
+        } catch (e) {
+            return { success: false, message: 'Error al parsear el esquema de la versión' };
+        }
+    }
+
     const localDraft = localStorage.getItem('designer_draft_fallback');
     if (localDraft) {
         try {
             canvasFields.value = JSON.parse(localDraft);
-            return { success: true, message: `Recuperación Forense Exitosa (${ver.version})` };
+            return { success: true, message: `Recuperación Forense Exitosa (${ver.version || ''})` };
         } catch (e) {
             return { success: false, message: 'Memoria fría corrupta' };
         }
@@ -235,9 +395,31 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     }
   };
 
+  const saveForm = async (formId: string) => {
+    try {
+        const payload = {
+            name: formTitle.value,
+            technicalName: formKey.value || formTitle.value.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
+            pattern: formPattern.value || 'SIMPLE',
+            vueTemplate: computedCode.value,
+            zodSchema: '',
+            formFields: canvasFields.value
+        };
+        const response = await apiClient.post(`/forms/${formId}`, payload);
+        if (response.data) {
+            currentSchemaVersion.value = response.data.versionId || response.data.version || 1;
+            currentFormId.value = response.data.id;
+            return { success: true, message: 'Diseño guardado/versionado exitosamente' };
+        }
+        return { success: false, message: 'La API no devolvió datos válidos' };
+    } catch (e: any) {
+        return { success: false, message: e.message || 'Error al guardar/versionar el formulario' };
+    }
+  };
+
   const saveDraftToApi = async (title: string, rules: any) => {
       try {
-          await apiClient.post('/forms/draft', { schema: canvasFields.value, title, formRules: rules }); // BUG-S7-001 / BUG-B FIX
+          await apiClient.post('/forms/draft', { schema: canvasFields.value, title, formRules: rules });
           console.log('✅ Diseño auto-guardado en API (Modelador)');
       } catch (e) {
           localStorage.setItem('designer_draft_fallback', JSON.stringify(canvasFields.value));
@@ -250,6 +432,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     cloned.id = `FIELD_${idCounter.value++}`;
     cloned.camundaVariable = cloned.id.toLowerCase();
     cloned.stage = activeStageSim.value === 'ALL' ? 'START_EVENT' : activeStageSim.value;
+    cloned.destinoEstrategico = '';
     if (cloned.type === 'container' || cloned.type === 'field_array') {
       cloned.children = [];
     }
@@ -304,11 +487,31 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const attemptTabChange = (targetTab: 'TEMPLATE' | 'SCRIPT' | 'ZOD' | 'STYLE' | 'JSON') => {
     if (activeCodeTab.value === 'JSON') {
         try {
+            editorErrors.value = [];
             const parsed = JSON.parse(localJsonCode.value || JSON.stringify(canvasFields.value));
             canvasFields.value = parsed;
+            const validation = validateSchemaSecurity();
+            if (!validation.success) {
+                zodParseError.value = true;
+                editorErrors.value = [{ message: 'BARRICADA JSON: ' + validation.message, line: 1 }];
+                return { success: false, message: 'BARRICADA JSON: ' + validation.message };
+            }
             zodParseError.value = false;
+            editorErrors.value = [];
         } catch (e: any) {
             zodParseError.value = true;
+            let line: number | undefined;
+            const lineMatch = e.message.match(/at line (\d+)/i) || e.message.match(/position (\d+)/i);
+            if (lineMatch) {
+              if (e.message.includes('position')) {
+                const pos = parseInt(lineMatch[1], 10);
+                const codeUpToPos = (localJsonCode.value || '').substring(0, pos);
+                line = codeUpToPos.split('\n').length;
+              } else {
+                line = parseInt(lineMatch[1], 10);
+              }
+            }
+            editorErrors.value = [{ message: 'BARRICADA JSON: Estructura malformada. ' + e.message, line }];
             return { success: false, message: 'BARRICADA JSON: Estructura malformada. ' + e.message };
         }
     } else if (targetTab === 'JSON') {
@@ -341,6 +544,15 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             else if (f.isMultiple) mock[key] = ['Option1'];
             else if (f.type === 'file' || f.type === 'signature') mock[key] = '550e8400-e29b-41d4-a716-446655440000';
             else mock[key] = 'Dummy Data';
+          } else if (type === 'fuzz') {
+            if (f.type === 'email') mock[key] = 'invalid-email';
+            else if (f.type === 'url') mock[key] = 'invalid-url';
+            else if (f.type === 'number' || f.type === 'timer') mock[key] = 'not-a-number';
+            else if (f.type === 'checkbox') mock[key] = 'not-a-boolean';
+            else if (f.required) mock[key] = '';
+            else if (f.minLength && f.minLength > 0) mock[key] = 'x'.repeat(Math.max(0, f.minLength - 1));
+            else if (f.maxLength && f.maxLength > 0) mock[key] = 'x'.repeat(f.maxLength + 1);
+            else mock[key] = 'fuzzed-data';
           } else {
             mock[key] = null;
           }
@@ -355,7 +567,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const certifyForm = async (formId: string, payload: string) => {
     // @Traceability: US-028 - CA-11 - Certificación de Contrato Zod
     try {
-        const response = await apiClient.post(`/design/forms/${formId}/certify`, { payload }); // BUG-S7-001 / BUG-B FIX
+        const response = await apiClient.post(`/design/forms/${formId}/certify`, { payload });
         certificationState.value = 'certified';
         return { success: true, message: 'Contrato Zod Certificado con Éxito 🏆' };
     } catch(e: any) {
@@ -381,7 +593,6 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             else if(f.type === 'email') specStr += `      ${key}: 'test@test.com',\n`;
             else if(f.type === 'url') specStr += `      ${key}: 'https://test.com',\n`;
             else if(f.isMultiple) specStr += `      ${key}: ['Option1'],\n`;
-            else if(f.type === 'file' || f.type === 'signature') specStr += `      ${key}: '550e8400-e29b-41d4-a716-446655440000',\n`;
             else specStr += `      ${key}: 'Dummy Data',\n`;
         }
     });
@@ -416,11 +627,11 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     if (field.type.startsWith('button_')) {
         tpl += `${indent}<div class="mt-6 field-${field.id.toLowerCase()} no-print" v-if="(typeof isAuditMode === 'undefined' ? false : !isAuditMode) && (typeof stage === 'undefined' ? true : stage !== 'AUDIT')">\n`;
         if (field.type === 'button_submit') {
-          tpl += `${indent}  <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2" :disabled="typeof isAsyncLoading !== 'undefined' && isAsyncLoading">✅ ${field.label}</button>\n`;
+          tpl += `${indent}  <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2" :disabled="isAsyncLoading"><span v-if="isAsyncLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>✅ ${field.label}</button>\n`;
         } else if (field.type === 'button_draft') {
-          tpl += `${indent}  <button type="button" @click="saveDraft" class="w-full border-2 border-dashed border-gray-300 text-gray-700 py-2 rounded shadow-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2" :disabled="typeof isAsyncLoading !== 'undefined' && isAsyncLoading">💾 ${field.label}</button>\n`;
+          tpl += `${indent}  <button type="button" @click="saveDraft" class="w-full border-2 border-dashed border-gray-300 text-gray-700 py-2 rounded shadow-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2" :disabled="isAsyncLoading">💾 ${field.label}</button>\n`;
         } else if (field.type === 'button_reject') {
-          tpl += `${indent}  <button type="button" @click="rejectTask" class="w-full bg-red-600 text-white py-2 rounded shadow-sm font-bold hover:bg-red-700 transition mt-2 flex items-center justify-center gap-2" :disabled="typeof isAsyncLoading !== 'undefined' && isAsyncLoading">❌ ${field.label}</button>\n`;
+          tpl += `${indent}  <button type="button" @click="rejectTask" class="w-full bg-red-600 text-white py-2 rounded shadow-sm font-bold hover:bg-red-700 transition mt-2 flex items-center justify-center gap-2" :disabled="isAsyncLoading">❌ ${field.label}</button>\n`;
         }
         tpl += `${indent}</div>\n`;
         return tpl;
@@ -484,7 +695,8 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
            tpl += `${indent}  <input type="${field.type === 'password' ? 'password' : 'text'}" :value="formatMask(${vModelBase}, '${field.mask}')" @change="(e) => { ${vModelBase} = unmask((e.target as HTMLInputElement).value, '${field.type}'); validateField('${field.camundaVariable || field.id}'); }" placeholder="${field.placeholder || field.mask}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm font-mono"${dsb} />\n`;
         } else {
            const nativeType = (field.type === 'email' || field.type === 'url' || field.type === 'password') ? field.type : field.type;
-           tpl += `${indent}  <input type="${nativeType}" v-model.lazy="${vModelBase}" @blur="validateField('${field.camundaVariable || field.id}')" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
+           const blurHandler = field.enableAutocomplete && field.autocompleteUrl ? `validateField('${field.camundaVariable || field.id}'); handleAutocomplete_${field.id}();` : `validateField('${field.camundaVariable || field.id}')`;
+           tpl += `${indent}  <input type="${nativeType}" v-model.lazy="${vModelBase}" @blur="${blurHandler}" placeholder="${field.placeholder || ''}" class="form-input mt-1 w-full rounded-md border-gray-300 shadow-sm"${dsb} />\n`;
         }
         if (field.type === 'password') {
            // CA-64 Hints Multi-Estado
@@ -636,14 +848,14 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
         
         const hasSubmit = flatFields(canvasFields.value).some(f => f.type === 'button_submit');
         if (!hasSubmit && canvasFields.value.length > 0) {
-            tpl += `\n    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded shadow hover:bg-blue-700 transition mt-6">Enviar Tarea (Auto)</button>`;
+            tpl += `\n    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded shadow hover:bg-blue-700 transition mt-6 flex items-center justify-center gap-2" :disabled="isAsyncLoading"><span v-if="isAsyncLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>Enviar Tarea (Auto)</button>`;
         }
         tpl += `\n  </form>\n</template>`;
         return tpl;
       } 
       
       if (activeCodeTab.value === 'SCRIPT') {
-        let scr = `<script setup lang="ts">\nimport { ref, inject, watch, onMounted, onUnmounted } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\n\n`;
+        let scr = `<script setup lang="ts">\nimport { ref, inject, watch, onMounted, onUnmounted } from 'vue';\nimport { z } from 'zod';\nimport { taskSchema } from './schema.zod.ts';\nimport apiClient from '@/services/apiClient';\nimport { useDebounceFn } from '@vueuse/core';\n\n`;
         if (formPattern.value === 'IFORM_MAESTRO') {
           scr += `// IFORM_MAESTRO: Inyección de Etapa BPMN actual (Dual-Pattern CA-2)\nconst stage = inject('camunda_process_stage', 'START_EVENT');\n\n`;
         }
@@ -663,6 +875,46 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
         for (const field of asyncFields) {
            scr += `const asyncOpts_${field.id} = ref<string[]>([]);\n`;
            scr += `const fetchAsyncOpts_${field.id} = async (query: string) => {\n   if(query.trim().length === 0) { asyncOpts_${field.id}.value = []; return; }\n   try {\n      isAsyncLoading.value = true;\n      const res = await apiClient.get(\`${field.asyncUrl}?q=\${query}\`);\n      asyncOpts_${field.id}.value = Array.isArray(res.data) ? res.data.map(i => i.label || i.nombre || i.name || JSON.stringify(i)) : [];\n   } catch (e) { console.error('Typeahead Error (CA-30)', e); } finally { isAsyncLoading.value = false; }\n};\n\n`;
+        }
+
+        const autocompleteFields = flatFields(canvasFields.value).filter(f => f.enableAutocomplete && f.autocompleteUrl);
+        for (const field of autocompleteFields) {
+           const mappings = field.autocompleteMappings || [];
+           scr += `const handleAutocomplete_${field.id} = async () => {\n`;
+           scr += `  const val = formData.value.${field.camundaVariable || field.id};\n`;
+           scr += `  if (!val) return;\n`;
+           scr += `  try {\n`;
+           scr += `    isAsyncLoading.value = true;\n`;
+           scr += `    const res = await apiClient.get(\`${field.autocompleteUrl}?q=\${val}\`);\n`;
+           scr += `    if (res.data) {\n`;
+           mappings.forEach((m: { from: string, to: string }) => {
+               scr += `      formData.value.${m.to} = res.data.${m.from};\n`;
+           });
+           scr += `    }\n`;
+           scr += `  } catch (e) {\n`;
+           scr += `    console.error('Autocomplete Error (${field.id})', e);\n`;
+           scr += `  } finally {\n`;
+           scr += `    isAsyncLoading.value = false;\n`;
+           scr += `  }\n`;
+           scr += `};\n\n`;
+
+           // Watch the field for debounced typing (CA-77)
+           scr += `watch(() => formData.value.${field.camundaVariable || field.id}, useDebounceFn(async (newVal) => {\n`;
+           scr += `  if (!newVal) return;\n`;
+           scr += `  try {\n`;
+           scr += `    isAsyncLoading.value = true;\n`;
+           scr += `    const res = await apiClient.get(\`${field.autocompleteUrl}?q=\${newVal}\`);\n`;
+           scr += `    if (res.data) {\n`;
+           mappings.forEach((m: { from: string, to: string }) => {
+               scr += `      formData.value.${m.to} = res.data.${m.from};\n`;
+           });
+           scr += `    }\n`;
+           scr += `  } catch (e) {\n`;
+           scr += `    console.error('Autocomplete watcher error (${field.id})', e);\n`;
+           scr += `  } finally {\n`;
+           scr += `    isAsyncLoading.value = false;\n`;
+           scr += `  }\n`;
+           scr += `}, 500));\n\n`;
         }
 
         scr += `const formData = ref<Record<string, any>>({\n`;
@@ -706,10 +958,10 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
            scr += `const clearSig = (id: string, varName: string, targetObj: any) => { const canvas = document.getElementById('canvas_' + id) as HTMLCanvasElement; if(canvas) { const ctx = canvas.getContext('2d'); ctx?.clearRect(0,0, canvas.width, canvas.height); targetObj[varName] = ''; } };\n\n`;
         }
 
-        scr += `// CA-24: Auto-Guardado Workdesk LocalStorage/API\nlet autoSyncDraftTimeout: any = null;\nwatch(formData, (newVal) => {\n  clearTimeout(autoSyncDraftTimeout);\n  autoSyncDraftTimeout = setTimeout(async () => {\n    try {\n      await apiClient.post('/forms/draft', newVal); // BUG-S7-001/BUG-B FIX: sin prefijo /api/v1\n      console.log('✅ Borrador auto-guardado en backend');\n    } catch (e) {\n      localStorage.setItem('workdesk_draft', JSON.stringify(newVal));\n      console.warn('⚠️ Fallback a LocalStorage para auto-guardado');\n    }\n  }, 2000);\n}, { deep: true });\n\n`;
+        scr += `// CA-24: Auto-Guardado Workdesk LocalStorage/API\nlet autoSyncDraftTimeout: any = null;\nwatch(formData, (newVal) => {\n  clearTimeout(autoSyncDraftTimeout);\n  autoSyncDraftTimeout = setTimeout(async () => {\n    try {\n      await apiClient.post('/forms/draft', newVal);\n      console.log('✅ Borrador auto-guardado en backend');\n    } catch (e) {\n      localStorage.setItem('workdesk_draft', JSON.stringify(newVal));\n      console.warn('⚠️ Fallback a LocalStorage para auto-guardado');\n    }\n  }, 2000);\n}, { deep: true });\n\n`;
 
         if (hasFile) {
-           scr += `// CA-21, CA-39, CA-49: Conector Multipart File Upload + Constraints\nconst uploadFile = async (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const target = event.target;\n  const files = target?.files;\n  if (!files || files.length === 0) return;\n  if (files.length < minFiles) { alert('Mínimo ' + minFiles + ' archivo(s) requeridos.'); target.value = ''; return; }\n  if (files.length > maxFiles) { alert('Máximo ' + maxFiles + ' archivo(s) permitidos.'); target.value = ''; return; }\n  let urls: string[] = [];\n  for (let i = 0; i < files.length; i++) {\n     const file = files[i];\n     if (maxMb > 0 && file.size > maxMb * 1024 * 1024) { alert('El archivo \\'' + file.name + '\\' excede el límite de ' + maxMb + 'MB.'); target.value = ''; return; }\n     if (exts) { const ext = '.' + file.name.split('.').pop()?.toLowerCase(); if (!exts.toLowerCase().includes(ext)) { alert('Extensión ' + ext + ' no permitida. Solo: ' + exts); target.value = ''; return; } }\n     const data = new FormData();\n     data.append('file', file);\n     try {\n       const res = await apiClient.post('/forms/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } }); // BUG-S7-001/BUG-B FIX: sin prefijo /api/v1\n       urls.push(res.data.url || 'subido_exitosamente_' + i);\n     } catch (error) {\n       alert('Error subiendo \\'' + file.name + '\\': ' + (error as any).message);\n       return;\n     }\n  }\n  targetObj[fieldId] = urls.length > 1 ? JSON.stringify(urls) : urls[0];\n  alert('Archivo(s) subido(s) exitosamente');\n};\n\n`;
+           scr += `// CA-21, CA-39, CA-49: Conector Multipart File Upload + Constraints\nconst uploadFile = async (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const target = event.target;\n  const files = target?.files;\n  if (!files || files.length === 0) return;\n  if (files.length < minFiles) { alert('Mínimo ' + minFiles + ' archivo(s) requeridos.'); target.value = ''; return; }\n  if (files.length > maxFiles) { alert('Máximo ' + maxFiles + ' archivo(s) permitidos.'); target.value = ''; return; }\n  let urls: string[] = [];\n  for (let i = 0; i < files.length; i++) {\n     const file = files[i];\n     if (maxMb > 0 && file.size > maxMb * 1024 * 1024) { alert('El archivo \\'' + file.name + '\\' excede el límite de ' + maxMb + 'MB.'); target.value = ''; return; }\n     if (exts) { const ext = '.' + file.name.split('.').pop()?.toLowerCase(); if (!exts.toLowerCase().includes(ext)) { alert('Extensión ' + ext + ' no permitida. Solo: ' + exts); target.value = ''; return; } }\n     const data = new FormData();\n     data.append('file', file);\n     try {\n       const res = await apiClient.post('/forms/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });\n       urls.push(res.data.url || 'subido_exitosamente_' + i);\n     } catch (error) {\n       alert('Error subiendo \\'' + file.name + '\\': ' + (error as any).message);\n       return;\n     }\n  }\n  targetObj[fieldId] = urls.length > 1 ? JSON.stringify(urls) : urls[0];\n  alert('Archivo(s) subido(s) exitosamente');\n};\n\n`;
            scr += `// CA-60: Manejador Drag & Drop Dropzone\nconst dropFile = (event: any, fieldId: string, targetObj: any, maxMb: number, exts: string, minFiles: number, maxFiles: number) => {\n  const dt = event.dataTransfer;\n  if (dt && dt.files && dt.files.length > 0) {\n     uploadFile({ target: { files: dt.files } }, fieldId, targetObj, maxMb, exts, minFiles, maxFiles);\n  }\n};\n\n`;
         }
 
@@ -791,7 +1043,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
         if (hasDraft) {
           scr += `\nconst saveDraft = async () => {\n  try {\n    const cleanData = JSON.parse(JSON.stringify(formData.value));\n    Object.keys(cleanData).forEach(k => { if (typeof cleanData[k] === 'string' && /^[\\d.,$]+$/.test(cleanData[k])) { const num = parseFloat(cleanData[k].replace(/[^\\d.-]/g, '')); if(!isNaN(num)) cleanData[k] = num; } });\n`;
           if (phantomLogic) scr += phantomLogic;
-          scr += `    await apiClient.post('/forms/draft', cleanData, { headers: { 'If-Match': props.prefillData?.versionId || '' } }); // BUG-S7-001/BUG-B FIX: sin prefijo /api/v1\n    alert('Borrador Guardado (Success)');\n  } catch (error: any) {\n    if (error.response?.status >= 500) {\n      localStorage.setItem('workdesk_draft_fallback', JSON.stringify(cleanData));\n      alert('⚠️ Error 5xx en servidor. Borrador protegido en LocalStorage (Offline Fallback CA-72).');\n    } else {\n      alert('Excepción de Red al Guardar Borrador: ' + error.message);\n    }\n  }\n};\n`;
+          scr += `    await apiClient.post('/forms/draft', cleanData, { headers: { 'If-Match': props.prefillData?.versionId || '' } });\n    alert('Borrador Guardado (Success)');\n  } catch (error: any) {\n    if (error.response?.status >= 500) {\n      localStorage.setItem('workdesk_draft_fallback', JSON.stringify(cleanData));\n      alert('⚠️ Error 5xx en servidor. Borrador protegido en LocalStorage (Offline Fallback CA-72).');\n    } else {\n      alert('Excepción de Red al Guardar Borrador: ' + error.message);\n    }\n  }\n};\n`;
         }
         if (hasReject) {
            scr += `\nconst rejectTask = async () => {\n  try {\n    await apiClient.post(\`/engine-rest/task/\${taskId}/bpmnError\`, { errorCode: 'REJECTED' });\n    alert('Excepción BPMN Disparada (Success)');\n  } catch (error) {\n    alert('Excepción de Red al Rechazar Tarea: ' + (error as any).message);\n  }\n};\n`;
@@ -828,6 +1080,21 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
                   zc += `  ${field.camundaVariable || field.id}: z.array(z.string())${field.required ? '.min(1, "Seleccione opción")' : '.optional()'}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
               } else if (field.type === 'file' || field.type === 'signature') {
                   zc += `  ${field.camundaVariable || field.id}: z.string().uuid({ message: "Se requiere un UUID de Puntero S3" })${field.required ? '.min(1, "Campo requerido")' : '.optional()'}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
+              } else if (zt === 'string') {
+                  // @Traceability: US-003 - CA-78
+                  let strMods = '';
+                  if (field.minLength !== undefined && field.minLength > 0) {
+                      strMods += `.min(${field.minLength})`;
+                  } else if (field.required) {
+                      strMods += `.min(1, "Campo requerido")`;
+                  }
+                  if (field.maxLength !== undefined && field.maxLength > 0) {
+                      strMods += `.max(${field.maxLength})`;
+                  }
+                  if (!field.required) {
+                      strMods += `.optional()`;
+                  }
+                  zc += `  ${field.camundaVariable || field.id}: z.string()${strMods}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
               } else {
                   zc += `  ${field.camundaVariable || field.id}: z.${zt}()${field.required && field.type !== 'checkbox' ? '.min(1, "Campo requerido")' : '.optional()'}${piiMod}, // [${field.stage || 'GLOBAL'}]\n`;
               }
@@ -904,55 +1171,149 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
       } 
       else if (activeCodeTab.value === 'ZOD') {
         try {
-          const regex = /^\s*([a-zA-Z0-9_]+):\s*(z\.(?:string|number|any|boolean)\(\)|z\.array\(z\.string\(\)\))(.*?)(?:\/\/\s*\[([^\]]+)\])?/gm;
-          let match;
-          const newCanvasFields = [];
+          editorErrors.value = [];
+          const delimCheck = checkSintaxisDelimitadores(newCode);
+          if (!delimCheck.success) {
+            zodParseError.value = delimCheck.message;
+            editorErrors.value = [{ message: delimCheck.message, line: delimCheck.line }];
+            return;
+          }
+          // @Traceability: US-003 - CA-78
+          // 1. Parse grid arrays (field_array) first
+          const gridRegex = /^\s*([a-zA-Z0-9_]+):\s*z\.array\(z\.object\(\{([\s\S]*?)\}\)\)(.*?)(?:\/\/\s*\[([^\]]+)\])?\s*$/gm;
+          let gridMatch;
           const currentFields = [...canvasFields.value];
           let parseCount = 0;
+
+          while ((gridMatch = gridRegex.exec(newCode)) !== null) {
+              parseCount++;
+              const gridVarName = gridMatch[1];
+              const innerFieldsBlock = gridMatch[2];
+              const gridMods = gridMatch[3];
+
+              let minRows: number | undefined;
+              let maxRows: number | undefined;
+              const minMatch = gridMods.match(/\.min\((\d+)/);
+              if (minMatch) minRows = parseInt(minMatch[1], 10);
+              const maxMatch = gridMods.match(/\.max\((\d+)/);
+              if (maxMatch) maxRows = parseInt(maxMatch[1], 10);
+
+              const updateGridDeep = (nodes: any[]) => {
+                 for (const n of nodes) {
+                    if ((n.camundaVariable || n.id) === gridVarName && n.type === 'field_array') {
+                        n.minRows = minRows;
+                        n.maxRows = maxRows;
+                        
+                        if (n.children && n.children.length > 0) {
+                            const innerRegex = /^\s*([a-zA-Z0-9_]+):\s*(z\.(?:string|number|any|boolean)\(\)|z\.array\(z\.string\(\)\))(.*?)(?:\/\/\s*\[([^\]]+)\])?\s*$/gm;
+                            let innerMatch;
+                            while ((innerMatch = innerRegex.exec(innerFieldsBlock)) !== null) {
+                                const innerVarName = innerMatch[1];
+                                const innerZTypeRaw = innerMatch[2];
+                                const innerMods = innerMatch[3];
+
+                                const innerIsReq = !innerMods.includes('.optional()');
+                                let innerMinL: number | undefined;
+                                let innerMaxL: number | undefined;
+                                const innerMinMatch = innerMods.match(/\.min\((\d+)/);
+                                if (innerMinMatch) innerMinL = parseInt(innerMinMatch[1], 10);
+                                const innerMaxMatch = innerMods.match(/\.max\((\d+)/);
+                                if (innerMaxMatch) innerMaxL = parseInt(innerMaxMatch[1], 10);
+
+                                for (const child of n.children) {
+                                    if ((child.camundaVariable || child.id) === innerVarName) {
+                                        child.required = innerIsReq;
+                                        if (innerMinL !== undefined) {
+                                            if (innerMinL === 1 && innerMods.includes('"Campo requerido"')) {
+                                                child.minLength = undefined;
+                                            } else {
+                                                child.minLength = innerMinL;
+                                            }
+                                        } else {
+                                            child.minLength = undefined;
+                                        }
+                                        if (innerMaxL !== undefined) {
+                                            child.maxLength = innerMaxL;
+                                        } else {
+                                            child.maxLength = undefined;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (n.children) updateGridDeep(n.children);
+                 }
+              };
+              updateGridDeep(currentFields);
+          }
+
+          // 2. Parse standard fields (excluding grid arrays to avoid matching grid subfields globally)
+          let standardCodeToParse = newCode;
+          standardCodeToParse = standardCodeToParse.replace(/z\.array\(z\.object\(\{[\s\S]*?\}\)\)(.*?)(?:\/\/\s*\[[^\]]+\])?/g, '');
+
+          const regex = /^\s*([a-zA-Z0-9_]+):\s*(z\.(?:string|number|any|boolean)\(\)|z\.array\(z\.string\(\)\))(.*?)(?:\/\/\s*\[([^\]]+)\])?\s*$/gm;
+          let match;
           
-          while ((match = regex.exec(newCode)) !== null) {
+          while ((match = regex.exec(standardCodeToParse)) !== null) {
               parseCount++;
               const varName = match[1];
               const zTypeRaw = match[2];
               const mods = match[3];
-              const stage = match[4] ? match[4].trim() : "START_EVENT";
 
-              const isReq = mods.includes('.min(') || !mods.includes('.optional()');
-              const isMult = zTypeRaw.includes('z.array');
+              const isReq = !mods.includes('.optional()');
               
-              let minL, maxL;
+              let minL: number | undefined;
+              let maxL: number | undefined;
               const minMatch = mods.match(/\.min\((\d+)/);
               if (minMatch) minL = parseInt(minMatch[1], 10);
               const maxMatch = mods.match(/\.max\((\d+)/);
               if (maxMatch) maxL = parseInt(maxMatch[1], 10);
-              
-              let cType = 'text';
-              if(isMult) cType = 'select'; // Prefer select if multiple
 
-              const exist = currentFields.find(f => f.camundaVariable === varName || f.id === varName);
-              newCanvasFields.push({
-                 ...(exist || { id: varName.toUpperCase(), label: varName }),
-                 camundaVariable: varName,
-                 type: exist && exist.type !== cType && exist.type !== 'select' && exist.type !== 'async_select' && exist.type !== 'hidden' ? cType : (exist ? exist.type : cType),
-
-                 required: isReq,
-                 stage: stage,
-                 isMultiple: isMult || exist?.isMultiple,
-                 minLength: minL || exist?.minLength,
-                 maxLength: maxL || exist?.maxLength
-              });
+              // Update root level and other container-nested fields
+              const updateDeep = (nodes: any[]) => {
+                 for (const n of nodes) {
+                    if ((n.camundaVariable || n.id) === varName && !n.type.startsWith('button_') && n.type !== 'container' && n.type !== 'field_array') {
+                        n.required = isReq;
+                        if (minL !== undefined) {
+                            if (minL === 1 && mods.includes('"Campo requerido"')) {
+                                n.minLength = undefined;
+                            } else {
+                                n.minLength = minL;
+                            }
+                        } else {
+                            n.minLength = undefined;
+                        }
+                        if (maxL !== undefined) {
+                            n.maxLength = maxL;
+                        } else {
+                            n.maxLength = undefined;
+                        }
+                    }
+                    if (n.children) updateDeep(n.children);
+                 }
+              };
+              updateDeep(currentFields);
           }
           
           if (newCode.includes('z.object({') && parseCount === 0 && newCode.includes(':')) {
               throw new Error('Sintaxis fallida o Regex roto');
           }
 
-          if (newCanvasFields.length > 0 || newCode.includes('z.object({')) {
-              canvasFields.value = newCanvasFields;
+          if (parseCount > 0) {
+              canvasFields.value = currentFields;
               zodParseError.value = false;
+              editorErrors.value = [];
+          } else {
+              zodParseError.value = 'No se detectó un esquema Zod válido.';
+              editorErrors.value = [{ message: 'No se detectó un esquema Zod válido o está mal formateado.', line: 1 }];
           }
-        } catch (err) {
-          zodParseError.value = true;
+        } catch (err: any) {
+          zodParseError.value = err.message || true;
+          editorErrors.value = [{
+            message: err.message || 'Sintaxis fallida o Regex roto',
+            line: 1
+          }];
         }
       }
     }
@@ -969,19 +1330,24 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     isPublic,
     certificationState,
     currentSchemaVersion,
+    currentFormId,
     bpmnCoherenceResults,
     formKey,
     zodParseError,
+    editorErrors,
     aiPrompt,
     isScanningAi,
     fuzzerErrors,
     superRefineCount,
     toolboxCategories,
+    MAX_FORM_FIELDS: 200,
+    isHighDensityForm,
     simulatorContext,
     activeCodeTab,
     localJsonCode,
     editingField,
     idCounter,
+    dictionaryItems,
     generateAiForm,
     saveAsFragment,
     fetchVersions,
@@ -989,6 +1355,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     checkBpmnCoherence,
     runFuzzerZod,
     restoreVersion,
+    saveForm,
     saveDraftToApi,
     cloneComponent,
     evaluateMockVis,
@@ -997,6 +1364,12 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     generateMockPath,
     generateVitestSpec,
     certifyForm,
-    computedCode
+    computedCode,
+    fetchDictionary,
+    fetchSnippets,
+    saveSnippet,
+    approvedConnectors,
+    fetchApprovedConnectors,
+    validateSchemaSecurity
   };
 });

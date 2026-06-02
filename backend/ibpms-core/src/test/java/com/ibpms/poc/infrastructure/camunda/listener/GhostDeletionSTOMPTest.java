@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.camunda.listener;
 
 import org.camunda.bpm.engine.delegate.DelegateTask;
@@ -44,12 +45,12 @@ public class GhostDeletionSTOMPTest {
 
         // Assert
         ArgumentCaptor<Map<String, Object>> payloadCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(messagingTemplate).convertAndSend(eq("/topic/workdesk/ghost-deletes"), payloadCaptor.capture());
+        verify(messagingTemplate).convertAndSend(eq("/topic/workdesk/default"), payloadCaptor.capture());
 
         Map<String, Object> payload = payloadCaptor.getValue();
         assertThat(payload).containsEntry("taskId", "task-123");
         assertThat(payload).containsEntry("assignee", "userA");
-        assertThat(payload).containsEntry("status", "CLAIMED");
+        assertThat(payload).containsEntry("action", "GHOST_CLAIM");
     }
 
     @Test

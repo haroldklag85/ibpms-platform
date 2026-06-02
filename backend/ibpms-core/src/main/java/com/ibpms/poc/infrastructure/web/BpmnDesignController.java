@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import com.ibpms.poc.application.service.BpmnDesignService;
+import org.springframework.http.MediaType;
+import com.ibpms.poc.infrastructure.web.dto.DeployRequestReviewDto;
 import com.ibpms.poc.infrastructure.web.annotation.SandboxOperation;
 import com.ibpms.poc.application.port.out.ExternalTaskTopicPort;
 import com.ibpms.poc.application.port.out.DataMappingPort;
@@ -146,9 +148,10 @@ public class BpmnDesignController {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(validation);
             }
 
-            if (!validation.getWarnings().isEmpty() && !forceDeploy) {
+            // @Traceability: US-005, CA-33 Reglas de Linting del Pre-Flight (Bloqueo Duro)
+            if (!validation.getWarnings().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
-                    "error", "El Pre-Flight tiene advertencias. Use force_deploy=true para omitirlas.",
+                    "error", "Hard-Stop (CA-33): El Pre-Flight tiene advertencias que deben ser resueltas obligatoriamente antes de desplegar.",
                     "warnings", validation.getWarnings()
                 ));
             }
@@ -226,13 +229,17 @@ public class BpmnDesignController {
      */
     @GetMapping("/catalog")
     public ResponseEntity<List<Map<String, Object>>> getAllLatestProcesses() {
-        List<Map<String, Object>> processes = bpmnDesignService.listarTodos().stream().map(dto -> Map.of(
-            "key", dto.getTechnicalId(),
-            "name", dto.getName(),
-            "version", (Object) dto.getCurrentVersion(),
-            "deployDate", dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : "",
-            "status", dto.getStatus()
-        )).collect(java.util.stream.Collectors.toList());
+        // @Traceability: US-005, CA-40
+        List<Map<String, Object>> processes = bpmnDesignService.listarTodos().stream().map(dto -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("key", dto.getTechnicalId());
+            map.put("name", dto.getName());
+            map.put("version", dto.getCurrentVersion());
+            map.put("deployDate", dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : "");
+            map.put("status", dto.getStatus());
+            map.put("formPattern", dto.getFormPattern() != null ? dto.getFormPattern() : "SIMPLE");
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
         
         return ResponseEntity.ok(processes);
     }
@@ -344,30 +351,61 @@ public class BpmnDesignController {
         ));
     }
 
-    // @Traceability: US-005, CA-69 (Solicitud de despliegue)
-    @PostMapping("/deploy-requests")
-    public ResponseEntity<?> requestDeploy(@RequestBody Map<String, String> payload, java.security.Principal principal) {
-        String processKey = payload.get("processDefinitionKey");
+    // @Traceability: US-005, CA-69, CA-34 (Solicitud de despliegue)
+    @PostMapping(value = "/deploy-request", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> requestDeploy(
+            @RequestParam("file") MultipartFile file,
+            java.security.Principal principal) {
+        
         String requestedBy = principal.getName();
-        return ResponseEntity.ok(bpmnDesignService.createDeployRequest(processKey, requestedBy));
+        
+        try {
+            String xmlPayload = new String(file.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            
+            // Extraer el processDefinitionKey del XML (de manera simplificada para el test)
+            // Asumiremos que el frontend nos pasa un XML válido y podemos extraer el id del bpmn2:process
+            // O podemos requerir un part processDefinitionKey
+            String processKey = extractProcessIdFromXml(xmlPayload);
+            
+            if (processKey == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No se encontró process id en el XML"));
+            }
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(bpmnDesignService.createDeployRequest(processKey, requestedBy, xmlPayload));
+        } catch (java.io.IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    // @Traceability: US-005, CA-69, CA-21 (Aprobación de Despliegue por Release Manager)
-    @PostMapping("/deploy-requests/{id}/approve")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('BPMN_Release_Manager')")
-    public ResponseEntity<?> approveDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload, java.security.Principal principal) {
-        String adminUser = principal.getName();
-        String comment = payload.get("comment");
-        return ResponseEntity.ok(bpmnDesignService.approveDeployRequest(id, adminUser, comment));
+    private String extractProcessIdFromXml(String xml) {
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("<bpmn2?:process[^>]+id=\"([^\"]+)\"");
+        java.util.regex.Matcher matcher = pattern.matcher(xml);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
     }
 
-    // @Traceability: US-005, CA-69 (Rechazo de Despliegue)
-    @PostMapping("/deploy-requests/{id}/reject")
+    @PostMapping("/deploy-requests/{id}/review")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('BPMN_Release_Manager')")
-    public ResponseEntity<?> rejectDeployRequest(@PathVariable("id") UUID id, @RequestBody Map<String, String> payload, java.security.Principal principal) {
+    public ResponseEntity<?> reviewDeployRequest(@PathVariable("id") UUID id, @RequestBody DeployRequestReviewDto payload, java.security.Principal principal) {
         String adminUser = principal.getName();
-        String comment = payload.get("comment");
-        return ResponseEntity.ok(bpmnDesignService.rejectDeployRequest(id, adminUser, comment));
+        String comment = payload.getComment();
+        
+        if (!payload.getApproved()) {
+            if (comment == null || comment.length() < 20) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Para rechazar, el comentario debe tener al menos 20 caracteres."));
+            }
+            return ResponseEntity.ok(bpmnDesignService.rejectDeployRequest(id, adminUser, comment));
+        } else {
+            return ResponseEntity.ok(bpmnDesignService.approveDeployRequest(id, adminUser, comment));
+        }
+    }
+
+    @GetMapping("/{processDefinitionKey}/deploy-requests")
+    public ResponseEntity<?> getDeployRequests(@PathVariable("processDefinitionKey") String key) {
+        return ResponseEntity.ok(bpmnDesignService.getDeployRequests(key));
     }
 
     // @Traceability: US-005, CA-70 (External Task Topics)

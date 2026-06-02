@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.bpm.scheduler;
 
 import org.camunda.bpm.engine.TaskService;
@@ -37,12 +38,12 @@ public class SlaEarlyWarningSchedulerTest {
 
     @BeforeEach
     void setUp() {
-        when(taskService.createTaskQuery()).thenReturn(taskQuery);
-        when(taskQuery.active()).thenReturn(taskQuery);
-        when(taskQuery.list()).thenReturn(Collections.singletonList(mockTask));
+        lenient().when(taskService.createTaskQuery()).thenReturn(taskQuery);
+        lenient().when(taskQuery.active()).thenReturn(taskQuery);
+        lenient().when(taskQuery.list()).thenReturn(Collections.singletonList(mockTask));
         
-        when(mockTask.getId()).thenReturn("task-123");
-        when(mockTask.getProcessInstanceId()).thenReturn("pi-123");
+        lenient().when(mockTask.getId()).thenReturn("task-123");
+        lenient().when(mockTask.getProcessInstanceId()).thenReturn("pi-123");
     }
 
     private void mockTaskTime(double simulatedPercentageConsumed) {

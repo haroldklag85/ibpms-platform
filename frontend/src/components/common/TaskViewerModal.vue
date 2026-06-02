@@ -1,3 +1,4 @@
+// @Traceability: US-003 - CA-52
 <script setup lang="ts">
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, computed, watch } from 'vue';
@@ -100,6 +101,11 @@ const isLastWizardStage = ref(true);
 const handleStageChange = (payload: { isLastStage: boolean }) => {
   isLastWizardStage.value = payload.isLastStage;
 };
+
+const formRendererRef = ref<any>(null);
+const isRendererLoading = computed(() => {
+  return formRendererRef.value?.isAsyncLoading === true;
+});
 
 const validateForm = () => {
   try {
@@ -213,10 +219,10 @@ const handleEscalate = () => {
       <div class="p-6 flex-1 overflow-y-auto space-y-6">
         
         <!-- Si tiene Snapshot de Formulario (CA-78) -->
-        <div v-if="context.formSnapshot && context.formSnapshot.length > 0" class="bg-indigo-50/30 p-4 rounded-xl border border-indigo-100 mb-4">
-           <h3 class="text-xs font-bold text-indigo-800 mb-4 border-b border-indigo-100 pb-2 flex items-center gap-2"><span class="material-symbols-outlined text-[14px]">history</span> Snapshot In-Flight (CA-78)</h3>
-           <FormRenderer :schema="context.formSnapshot" v-model="formData" @stage-change="handleStageChange" />
-        </div>
+         <div v-if="context.formSnapshot && context.formSnapshot.length > 0" class="bg-indigo-50/30 p-4 rounded-xl border border-indigo-100 mb-4">
+            <h3 class="text-xs font-bold text-indigo-800 mb-4 border-b border-indigo-100 pb-2 flex items-center gap-2"><span class="material-symbols-outlined text-[14px]">history</span> Snapshot In-Flight (CA-78)</h3>
+            <FormRenderer ref="formRendererRef" :schema="context.formSnapshot" v-model="formData" @stage-change="handleStageChange" />
+         </div>
 
         <!-- Slider de Progreso (Solamente en AGILE y si NO hay formSnapshot) -->
         <div v-if="context.sourceEngine === 'AGILE' && (!context.formSnapshot || context.formSnapshot.length === 0)" class="space-y-2">
@@ -300,11 +306,12 @@ const handleEscalate = () => {
         <!-- Completar Definitivo -->
         <button 
           @click="handleComplete"
-          :disabled="!isLastWizardStage"
+          :disabled="!isLastWizardStage || isRendererLoading"
           class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
+          <span v-if="isRendererLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
           <span>{{ context.sourceEngine === 'BPMN' ? 'Completar Tarea' : 'Cerrar Tarea (100%)' }}</span>
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          <svg v-if="!isRendererLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
         </button>
       </footer>
 

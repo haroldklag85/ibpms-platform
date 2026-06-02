@@ -1,13 +1,13 @@
-# BRIEFING — 2026-05-23T23:40:00Z
+# BRIEFING — 2026-05-30T05:05:00Z
 
 ## Mission
-Ensure the HTTP 403 and 415 regressions in Sandbox E2E tests are resolved and properly audited.
+Cerrar la deuda técnica y las desviaciones arquitectónicas de la Arquitectura Hexagonal y DDD (ADR-001) identificadas en el backend de la plataforma `ibpms-platform`.
 
 ## 🔒 My Identity
 - Archetype: sentinel
-- Working directory: C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\
-- Orchestrator: 47b85cb6-9636-48a6-93d7-9ae90c463207
-- Victory Auditor: 77b7d288-57e6-4335-8548-49757c35c2a4
+- Working directory: c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\
+- Orchestrator: 2ca6693e-1d93-4cb1-be73-632c2b01ac2b
+- Victory Auditor: TBD
 
 ## 🔒 Key Constraints
 - No technical decisions — relay only
@@ -15,17 +15,18 @@ Ensure the HTTP 403 and 415 regressions in Sandbox E2E tests are resolved and pr
 - Must not write code, analyze problems, or make any technical decisions. Keep context ultra-light.
 
 ## User Context
-- **Last user request**: Fix HTTP 403 and 415 in Sandbox deployment E2E tests, modifying Java backend role bypass and frontend Playwright test payload.
+- **Last user request**: Purify domain models, decouple ports, consolidate adapters package to singular, and eliminate TaskDraftController.
 - **Pending clarifications**: none
 - **Delivered results**: none
 
 ## Project Status
-- **Phase**: auditing
+- **Phase**: in progress
 
 ## Victory Audit Status
-- **Triggered**: yes
+- **Triggered**: no
 - **Verdict**: pending
 - **Retry count**: 0
 
 ## Artifact Index
-- C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\ORIGINAL_REQUEST.md — Verbatim record of user request
+- c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\ORIGINAL_REQUEST.md — Verbatim user request
+- c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\BRIEFING.md — Working memory index

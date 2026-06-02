@@ -5,7 +5,8 @@
 
 <script setup lang="ts">
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
-import { ref, onMounted, onBeforeUnmount, createApp, h, watch, type VNode, Teleport, reactive, computed } from 'vue';
+import apiClient from '@/services/apiClient';
+import { ref, onMounted, onBeforeUnmount, createApp, h, watch, watchEffect, type VNode, Teleport, reactive, computed } from 'vue';
 import jexl from 'jexl';
 import IMask from 'imask';
 import { z } from 'zod';
@@ -14,12 +15,26 @@ import { useDebounceFn } from '@vueuse/core';
 import FormWizard from './FormWizard.vue';
 import { useWizardValidation } from '@/composables/useWizardValidation';
 
-// @Traceability: Retro-Remediación ADR-006
+// @Traceability: US-003 - CA-30, CA-52, CA-77, CA-79, CA-80
 const integrationStore = useIntegrationStore();
 
-const props = defineProps<{ schema: any[], mockContext?: Record<string, any> }>();
+// @Traceability: US-003 - CA-82
+const props = defineProps<{ schema: any[], mockContext?: Record<string, any>, taskId?: string }>();
 const formData = defineModel<Record<string, any>>({ default: () => ({}) });
 const emit = defineEmits(['stage-change']);
+
+const submitForm = ref<() => Promise<void>>();
+const submitError = ref<string | null>(null);
+
+watch(
+  () => formData.value,
+  (newVal) => {
+    if (props.taskId && newVal) {
+      localStorage.setItem(`draft_task_${props.taskId}`, JSON.stringify(newVal));
+    }
+  },
+  { deep: true }
+);
 
 const hostRef = ref<HTMLElement | null>(null);
 let shadowApp: any = null;
@@ -27,6 +42,36 @@ let shadowApp: any = null;
 // TIN-5: Ghost Cleanup Hooks
 const isSubmitted = ref(false);
 const uploadedUuids = ref<string[]>([]);
+
+const isAsyncLoading = ref(false);
+
+const debouncedCache = new Map<string, any>();
+const getDebouncedAutocomplete = (node: any) => {
+  const cacheKey = node.id;
+  if (!debouncedCache.has(cacheKey)) {
+    const fn = useDebounceFn(async (queryVal: string) => {
+      if (!queryVal) return;
+      try {
+        isAsyncLoading.value = true;
+        const res = await apiClient.get(`${node.autocompleteUrl}?q=${queryVal}`);
+        if (res.data) {
+          const mappings = node.autocompleteMappings || [];
+          mappings.forEach((m: { from: string, to: string }) => {
+            if (m.from && m.to) {
+              formData.value[m.to] = res.data[m.from];
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Autocomplete runtime error (CA-77):", err);
+      } finally {
+        isAsyncLoading.value = false;
+      }
+    }, 500);
+    debouncedCache.set(cacheKey, fn);
+  }
+  return debouncedCache.get(cacheKey);
+};
 
 const markFileUploaded = (uuid: string) => {
    if (!uploadedUuids.value.includes(uuid)) {
@@ -38,9 +83,32 @@ const notifySubmit = () => {
    isSubmitted.value = true;
 };
 
-defineExpose({ notifySubmit, markFileUploaded });
+// @Traceability: US-003 - CA-82
+defineExpose({
+  notifySubmit,
+  markFileUploaded,
+  isAsyncLoading,
+  submitForm: async () => {
+    if (submitForm.value) {
+      await submitForm.value();
+    }
+  },
+  submitError
+});
 
 onMounted(() => {
+  // @Traceability: US-003 - CA-82
+  if (props.taskId) {
+    const draft = localStorage.getItem(`draft_task_${props.taskId}`);
+    if (draft) {
+      try {
+        formData.value = JSON.parse(draft);
+      } catch (e) {
+        console.error('Error loading autosave draft', e);
+      }
+    }
+  }
+
   if (hostRef.value) {
     const shadowRoot = hostRef.value.attachShadow({ mode: 'open' });
     
@@ -61,6 +129,26 @@ onMounted(() => {
 
     shadowApp = createApp({
       setup() {
+        // @Traceability: US-003 - CA-82
+        const localSubmitError = ref<string | null>(null);
+        const localSubmitForm = async () => {
+            localSubmitError.value = null;
+            submitError.value = null;
+            try {
+                const taskId = props.taskId || 'mock-task';
+                await apiClient.post(`/api/v1/workbox/tasks/${taskId}/complete`, formData.value);
+                notifySubmit();
+                if (props.taskId) {
+                    localStorage.removeItem(`draft_task_${props.taskId}`);
+                }
+            } catch (err: any) {
+                console.error("Smart Button submit error:", err);
+                localSubmitError.value = err.message || "Un error ha ocurrido durante la sumisión.";
+                submitError.value = localSubmitError.value;
+            }
+        };
+        submitForm.value = localSubmitForm;
+
         // CA-11B: Memoria local del Info Modal
         const infoModalOpen = reactive<Record<string, boolean>>({});
 
@@ -85,13 +173,42 @@ onMounted(() => {
         const schemaConfigs = reactive<Record<string, z.ZodSchema>>({});
         const { wizardErrors, validateStep, hasStepErrors, clearStepErrors } = useWizardValidation(schemaConfigs);
 
+        const touchedFields = reactive(new Set<string>());
+
+        const getJexlContext = () => ({
+            data: formData.value,
+            context: props.mockContext || {} // CA-69: GAP 9 - Mimetismo RBAC
+        });
+
+        // TIN-3: Jexl Sandboxing Validator
+        const isVisible = (node: any) => {
+          if (!node.visibilityCondition && !node.disableCondition) return true;
+          try {
+             if (node.visibilityCondition) {
+                 return jexl.evalSync(node.visibilityCondition, getJexlContext());
+             }
+             return true; 
+          } catch(e) {
+             console.warn('Jexl eval blocked execution (Safeguard):', e);
+             return false;
+          }
+        };
+
+        const isDisabled = (node: any) => {
+            if (!node.disableCondition) return false;
+            try { return jexl.evalSync(node.disableCondition, getJexlContext()); } 
+            catch { return false; }
+        };
+
         watchEffect(() => {
-            if (!isWizard.value) return;
-            stages.value.forEach(stg => {
+            const stgsToProcess = isWizard.value ? stages.value : ['GLOBAL'];
+            stgsToProcess.forEach(stg => {
                 const nodesInStage: any[] = [];
                 const traverse = (nodes: any[]) => {
                     for(const n of nodes) {
-                        if ((n.stage || 'GLOBAL') === stg || !n.stage) {
+                        if (isWizard.value) {
+                            if ((n.stage || 'GLOBAL') === stg || !n.stage) nodesInStage.push(n);
+                        } else {
                             nodesInStage.push(n);
                         }
                         if (n.children) traverse(n.children);
@@ -123,13 +240,16 @@ onMounted(() => {
         });
 
         const validateCurrentStageZod = () => {
-            if (!isWizard.value || !currentStageName.value) return true;
+            const stg = isWizard.value ? currentStageName.value : 'GLOBAL';
+            if (!stg) return true;
             
-            const isValid = validateStep(currentStageName.value, formData.value);
+            const isValid = validateStep(stg, formData.value);
             
             if (!isValid) {
+                const stepErrs = wizardErrors.value[stg] || {};
+                Object.keys(stepErrs).forEach(k => touchedFields.add(k)); // Mark all touched to show errors
+
                 // Focus on first error element
-                const stepErrs = wizardErrors.value[currentStageName.value] || {};
                 const firstErrKey = Object.keys(stepErrs)[0];
                 if (firstErrKey) {
                     // Try to find the node id by variable or id
@@ -155,8 +275,17 @@ onMounted(() => {
                 }
                 return false;
             }
-            clearStepErrors(currentStageName.value);
+            clearStepErrors(stg);
             return true;
+        };
+
+        const validateField = (node: any) => {
+            const key = node.camundaVariable || node.id;
+            touchedFields.add(key);
+            const stg = isWizard.value ? currentStageName.value : 'GLOBAL';
+            if (stg) {
+                validateStep(stg, formData.value);
+            }
         };
 
         const checkStageState = () => {
@@ -182,46 +311,29 @@ onMounted(() => {
              checkStageState();
         }, { immediate: true });
 
-        // CA-54: GAP 8 - Mantenimiento Mnemónico (Auto-purga)
+        // CA-54 / CA-82: GAP 8 - Mantenimiento Mnemónico / Ghost Data Cleanup (Auto-purga de campos invisibles)
         watch(() => formData.value, (newVal) => {
+            if (!newVal) return;
+            let changed = false;
             const traverseAndClear = (nodes: any[]) => {
                 for (const node of nodes) {
                    if (node.children) traverseAndClear(node.children);
-                   if (node.clearOnHide && !isVisible(node)) {
+                   if (!isVisible(node)) {
                        const key = node.camundaVariable || node.id;
-                       if (newVal[key] !== undefined) {
+                       if (key && newVal[key] !== undefined) {
                            delete newVal[key];
+                           changed = true;
                        }
                    }
                 }
             };
             traverseAndClear(props.schema);
+            if (changed) {
+                formData.value = { ...newVal };
+            }
         }, { deep: true });
 
-        const getJexlContext = () => ({
-            data: formData.value,
-            context: props.mockContext || {} // CA-69: GAP 9 - Mimetismo RBAC
-        });
-
-        // TIN-3: Jexl Sandboxing Validator
-        const isVisible = (node: any) => {
-          if (!node.visibilityCondition && !node.disableCondition) return true;
-          try {
-             if (node.visibilityCondition) {
-                 return jexl.evalSync(node.visibilityCondition, getJexlContext());
-             }
-             return true; 
-          } catch(e) {
-             console.warn('Jexl eval blocked execution (Safeguard):', e);
-             return false;
-          }
-        };
-
-        const isDisabled = (node: any) => {
-            if (!node.disableCondition) return false;
-            try { return jexl.evalSync(node.disableCondition, getJexlContext()); } 
-            catch { return false; }
-        };
+        // Check CA-54 variables (clearing unseen fields logic)
 
         const asyncOptions = ref<Record<string, any[]>>({});
         const fetchAsyncData = useDebounceFn(async (url: string, query: string, fieldId: string) => {
@@ -256,15 +368,47 @@ onMounted(() => {
            let inputVNode: VNode | null = null;
 
            if (['text', 'password', 'email', 'url'].includes(node.type)) {
-               // TIN-4: Input Masking Native
+               // TIN-4: Input Masking Native / CA-77
                const attrs: any = {
                    type: node.type,
                    value: val || '',
                    placeholder: node.placeholder || '',
                    disabled,
                    class: 'form-input w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
-                   onInput: (e: any) => updateVal(e.target.value)
+                   onInput: (e: any) => {
+                       updateVal(e.target.value);
+                       if (node.enableAutocomplete && node.autocompleteUrl) {
+                           getDebouncedAutocomplete(node)(e.target.value);
+                       }
+                   },
+                   onBlur: () => {
+                       validateField(node);
+                   }
                };
+
+               if (node.enableAutocomplete && node.autocompleteUrl) {
+                    attrs.onBlur = async (e: any) => {
+                        validateField(node);
+                        const queryVal = e.target.value;
+                        if (!queryVal) return;
+                        try {
+                            isAsyncLoading.value = true;
+                            const res = await apiClient.get(`${node.autocompleteUrl}?q=${queryVal}`);
+                            if (res.data) {
+                                const mappings = node.autocompleteMappings || [];
+                                mappings.forEach((m: { from: string, to: string }) => {
+                                    if (m.from && m.to) {
+                                        formData.value[m.to] = res.data[m.from];
+                                    }
+                                });
+                            }
+                        } catch (err) {
+                            console.error("Autocomplete runtime error (CA-30):", err);
+                        } finally {
+                            isAsyncLoading.value = false;
+                        }
+                    };
+                }
                
                let iMaskOptions: any = null;
                
@@ -301,7 +445,8 @@ onMounted(() => {
                    placeholder: node.placeholder || '',
                    disabled,
                    class: 'form-input w-full rounded-md border-gray-300 shadow-sm sm:text-sm',
-                   onInput: (e: any) => updateVal(Number(e.target.value))
+                   onInput: (e: any) => updateVal(Number(e.target.value)),
+                   onBlur: () => validateField(node)
                });
            }
            else if (node.type === 'textarea') {
@@ -311,7 +456,8 @@ onMounted(() => {
                    rows: node.rows || 3,
                    disabled,
                    class: 'form-textarea w-full rounded-md border-gray-300 shadow-sm sm:text-sm',
-                   onInput: (e: any) => updateVal(e.target.value)
+                   onInput: (e: any) => updateVal(e.target.value),
+                   onBlur: () => validateField(node)
                });
            }
            else if (node.type === 'select') {
@@ -319,7 +465,8 @@ onMounted(() => {
                    value: val || '',
                    disabled,
                    class: 'form-select w-full rounded-md border-gray-300 shadow-sm sm:text-sm',
-                   onChange: (e: any) => updateVal(e.target.value)
+                   onChange: (e: any) => { updateVal(e.target.value); validateField(node); },
+                   onBlur: () => validateField(node)
                }, [
                    h('option', { value: '', disabled: true }, node.placeholder || 'Seleccione...'),
                    ...(node.options || []).map((opt: any) => h('option', { value: opt }, opt))
@@ -331,7 +478,7 @@ onMounted(() => {
                    checked: !!val,
                    disabled,
                    class: 'text-indigo-600 rounded border-gray-300 focus:ring-indigo-500',
-                   onChange: (e: any) => updateVal(e.target.checked)
+                   onChange: (e: any) => { updateVal(e.target.checked); validateField(node); }
                });
            }
            else if (node.type === 'async_select') {
@@ -404,16 +551,38 @@ onMounted(() => {
 
                return h('div', { class: 'mb-4 flex flex-col items-start' }, [buttonVNode, teleportVNode]);
            }
-           // Arrays, Tabs, Accordions can be extended here
-           else {
-               inputVNode = h('div', { class: 'text-xs text-gray-400 border border-dashed border-gray-200 p-2 rounded' }, `[Componente no soportado por Runtime Renderer: ${node.type}]`);
-           }
+            // @Traceability: US-003 - CA-82
+            else if (node.type === 'button_submit') {
+                inputVNode = h('button', {
+                    type: 'submit',
+                    class: 'w-full px-4 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition',
+                    onClick: (e: Event) => {
+                        e.preventDefault();
+                        localSubmitForm();
+                    }
+                }, node.label || 'Submit');
+            }
+            // Arrays, Tabs, Accordions can be extended here
+            else {
+                inputVNode = h('div', { class: 'text-xs text-gray-400 border border-dashed border-gray-200 p-2 rounded' }, `[Componente no soportado por Runtime Renderer: ${node.type}]`);
+            }
 
-           return h('div', { class: 'mb-4', id: `field-wrapper-${node.id}` }, [labelVNode, inputVNode]);
+           const errorMsg = touchedFields.has(bindingKey) ? (wizardErrors.value[isWizard.value ? (currentStageName.value || 'GLOBAL') : 'GLOBAL']?.[bindingKey]) : null;
+           const errorVNode = errorMsg ? h('p', { class: 'text-sm text-red-500 mt-1' }, errorMsg) : null;
+
+           return h('div', { class: 'mb-4', id: `field-wrapper-${node.id}` }, [labelVNode, inputVNode, errorVNode]);
         };
 
         return () => {
             const children: VNode[] = [];
+            
+            // @Traceability: US-003 - CA-82
+            if (localSubmitError.value) {
+                children.push(h('div', {
+                    class: 'error-banner alert-danger p-3 bg-red-100 text-red-700 border border-red-200 rounded-md mb-4',
+                    role: 'alert'
+                }, localSubmitError.value));
+            }
             
             // Form Fields rendering mapped per node
             const formFields = h('div', { class: 'space-y-1' }, props.schema.map(node => renderField(node)));
@@ -424,20 +593,19 @@ onMounted(() => {
                     return acc;
                 }, {} as Record<string, boolean>);
 
-                return h('div', { class: 'w-full' }, [
-                    h(FormWizard, {
-                        stages: stages.value,
-                        currentStage: currentStageName.value,
-                        errorMap: errorMapRaw,
-                        onNextStep: nextStage,
-                        onPrevStep: prevStage
-                    }, {
-                        default: () => formFields
-                    })
-                ]);
+                children.push(h(FormWizard, {
+                    stages: stages.value,
+                    currentStage: currentStageName.value,
+                    errorMap: errorMapRaw,
+                    onNextStep: nextStage,
+                    onPrevStep: prevStage
+                }, {
+                    default: () => formFields
+                }));
             } else {
-                return h('div', { class: 'w-full' }, [formFields]);
+                children.push(formFields);
             }
+            return h('div', { class: 'w-full' }, children);
         };
       }
     });

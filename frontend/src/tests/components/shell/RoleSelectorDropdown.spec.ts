@@ -1,8 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import RoleSelectorDropdown from '@/components/shell/RoleSelectorDropdown.vue';
 import { useAuthStore } from '@/stores/authStore';
+
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: vi.fn(() => Promise.resolve()),
+    currentRoute: {
+      value: {
+        meta: {
+          roles: []
+        }
+      }
+    }
+  })
+}));
+
+vi.mock('@/services/apiClient', () => ({
+  default: {
+    post: vi.fn(() => Promise.resolve({}))
+  }
+}));
+
 
 describe('RoleSelectorDropdown.vue', () => {
   beforeEach(() => {
@@ -99,6 +119,7 @@ describe('RoleSelectorDropdown.vue', () => {
 
     // Click en el segundo rol (Operador)
     await roleButtons[1].trigger('click');
+    await flushPromises();
 
     expect(authStore.switchRole).toHaveBeenCalledWith('ROLE_OPERADOR');
     

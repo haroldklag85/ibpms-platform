@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import org.springframework.http.HttpStatus;
@@ -74,6 +75,17 @@ public class GlobalExceptionHandler {
         problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/bad-request")));
         problem.setTitle("Petición inválida");
         problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 400 — JSON mal formado o no leíble */
+    @ApiResponse(responseCode = "400", description = "JSON mal formado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ProblemDetail handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setType(URI.create("https://ibpms.com/errors/bad-request"));
+        problem.setTitle("Petición inválida");
+        problem.setDetail("La solicitud contiene JSON mal formado: " + (ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage()));
         return problem;
     }
 
@@ -186,6 +198,17 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /** 405 — Método No Permitido */
+    @ApiResponse(responseCode = "405", description = "El método HTTP no está soportado por este recurso", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ProblemDetail handleMethodNotSupported(org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.METHOD_NOT_ALLOWED);
+        problem.setType(URI.create("https://ibpms.com/errors/method-not-allowed"));
+        problem.setTitle("Método No Permitido");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
     @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
     public ProblemDetail handleMissingParams(org.springframework.web.bind.MissingServletRequestParameterException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
@@ -201,6 +224,39 @@ public class GlobalExceptionHandler {
         problem.setType(URI.create("https://ibpms.com/errors/multipart-error"));
         problem.setTitle("Error procesando archivo");
         problem.setDetail("No se pudo leer el archivo adjunto o no se envió correctamente.");
+        return problem;
+    }
+
+    /** 429 — Recurso Agotado / Límite de Sandbox superado */
+    // @Traceability: US-005, CA-67
+    @ExceptionHandler(com.ibpms.poc.domain.exception.ResourceExhaustedException.class)
+    public ProblemDetail handleResourceExhausted(com.ibpms.poc.domain.exception.ResourceExhaustedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.TOO_MANY_REQUESTS);
+        problem.setType(URI.create("https://ibpms.com/errors/resource-exhausted"));
+        problem.setTitle("Límite de Sandbox superado");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 429 — Demasiadas Solicitudes (Rate Limiting) */
+    // @Traceability: US-005, CA-67
+    @ExceptionHandler(com.ibpms.poc.domain.exception.TooManyRequestsException.class)
+    public ProblemDetail handleTooManyRequests(com.ibpms.poc.domain.exception.TooManyRequestsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.TOO_MANY_REQUESTS);
+        problem.setType(URI.create("https://ibpms.com/errors/too-many-requests"));
+        problem.setTitle("Demasiadas solicitudes");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 413 — Payload Demasiado Grande */
+    // @Traceability: US-005, CA-67
+    @ExceptionHandler(com.ibpms.poc.domain.exception.PayloadTooLargeException.class)
+    public ProblemDetail handlePayloadTooLarge(com.ibpms.poc.domain.exception.PayloadTooLargeException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.PAYLOAD_TOO_LARGE);
+        problem.setType(URI.create("https://ibpms.com/errors/payload-too-large"));
+        problem.setTitle("Archivo demasiado grande");
+        problem.setDetail(ex.getMessage());
         return problem;
     }
 

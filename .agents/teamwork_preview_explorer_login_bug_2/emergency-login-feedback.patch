@@ -1,0 +1,99 @@
+diff --git a/frontend/e2e/emergency-login-feedback.spec.ts b/frontend/e2e/emergency-login-feedback.spec.ts
+index c7cf0cf..f91e92d 100644
+--- a/frontend/e2e/emergency-login-feedback.spec.ts
++++ b/frontend/e2e/emergency-login-feedback.spec.ts
+@@ -8,10 +8,14 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
+         await page.goto(LOGIN_URL);
+         await page.fill('[data-testid="email-input"]', 'no-existe@alpha.com');
+         await page.fill('[data-testid="password-input"]', 'cualquiera');
++        await page.fill('[data-testid="justification-input"]', 'Prueba de usuario inexistente');
+         await page.click('[data-testid="login-submit"]');
+         
+         const banner = page.locator('[data-testid="login-error-banner"]');
+         await expect(banner).toBeVisible({ timeout: 5000 });
+         await expect(banner).toContainText('No existe una cuenta asociada');
++        await expect(banner).toHaveClass(/bg-amber-50/);
++        await expect(banner).toHaveClass(/border-amber-500/);
++        await expect(banner).toHaveClass(/text-amber-800/);
+     });
+ 
+     test('ESC-02: Muestra banner rojo cuando la contraseña es incorrecta', async ({ page }) => {
+@@ -19,18 +23,23 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
+         await page.goto(LOGIN_URL);
+         await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
+         await page.fill('[data-testid="password-input"]', 'WrongPassword999');
++        await page.fill('[data-testid="justification-input"]', 'Prueba de contraseña incorrecta');
+         await page.click('[data-testid="login-submit"]');
+         
+         const banner = page.locator('[data-testid="login-error-banner"]');
+         await expect(banner).toBeVisible({ timeout: 5000 });
+         await expect(banner).toContainText('contraseña proporcionada es incorrecta');
++        await expect(banner).toHaveClass(/bg-red-50/);
++        await expect(banner).toHaveClass(/border-red-600/);
++        await expect(banner).toHaveClass(/text-red-800/);
+     });
+ 
+     test('ESC-03: Login exitoso redirige a /workdesk sin banner', async ({ page }) => {
+         await page.goto(LOGIN_URL);
+         await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
+         await page.fill('[data-testid="password-input"]', 'Test123!');
++        await page.fill('[data-testid="justification-input"]', 'Justificación válida de emergencia');
+         await page.click('[data-testid="login-submit"]');
+         
+         await expect(page).toHaveURL(/\/(workdesk|dashboard)/, { timeout: 10000 });
+@@ -48,10 +57,14 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
+         await page.goto(LOGIN_URL);
+         await page.fill('[data-testid="email-input"]', 'analista_n1@alpha.com');
+         await page.fill('[data-testid="password-input"]', 'Test123!');
++        await page.fill('[data-testid="justification-input"]', 'Prueba de cuenta deshabilitada');
+         await page.click('[data-testid="login-submit"]');
+         
+         const banner = page.locator('[data-testid="login-error-banner"]');
+         await expect(banner).toBeVisible({ timeout: 5000 });
+         await expect(banner).toContainText('cuenta de usuario está desactivada');
++        await expect(banner).toHaveClass(/bg-gray-100/);
++        await expect(banner).toHaveClass(/border-gray-400/);
++        await expect(banner).toHaveClass(/text-gray-700/);
+     });
+ 
+     test('ESC-05: El banner se limpia al reintentar', async ({ page }) => {
+@@ -60,12 +73,14 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
+         // Primer intento fallido
+         await page.fill('[data-testid="email-input"]', 'no-existe@alpha.com');
+         await page.fill('[data-testid="password-input"]', 'x');
++        await page.fill('[data-testid="justification-input"]', 'Intento 1');
+         await page.click('[data-testid="login-submit"]');
+         
+         const banner = page.locator('[data-testid="login-error-banner"]');
+         await expect(banner).toBeVisible({ timeout: 5000 });
+         
+         // Segundo intento exitoso
+         await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
+         await page.fill('[data-testid="password-input"]', 'Test123!');
++        await page.fill('[data-testid="justification-input"]', 'Intento 2');
+         await page.click('[data-testid="login-submit"]');
+         
+@@ -77,6 +92,7 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
+         await page.goto(LOGIN_URL);
+         await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
+         await page.fill('[data-testid="password-input"]', 'WrongPassword999');
++        await page.fill('[data-testid="justification-input"]', 'Volver al SSO');
+         await page.click('[data-testid="login-submit"]');
+         
+         const banner = page.locator('[data-testid="login-error-banner"]');
+@@ -98,9 +114,13 @@ test.describe('Emergency Login — Feedback Diferenciado', () => {
+         await page.goto(LOGIN_URL);
+         await page.fill('[data-testid="email-input"]', 'admin@alpha.com');
+         await page.fill('[data-testid="password-input"]', 'Test123!');
++        await page.fill('[data-testid="justification-input"]', 'Backend caído');
+         await page.click('[data-testid="login-submit"]');
+         
+         const banner = page.locator('[data-testid="login-error-banner"]');
+         await expect(banner).toBeVisible({ timeout: 5000 });
+         await expect(banner).toContainText('Error de conexión con el servidor. Verifique que el backend esté activo.');
++        await expect(banner).toHaveClass(/bg-red-900/);
++        await expect(banner).toHaveClass(/border-red-700/);
++        await expect(banner).toHaveClass(/text-red-50/);
+     });
+ 
+ });

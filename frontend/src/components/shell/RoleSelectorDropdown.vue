@@ -51,9 +51,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
+import apiClient from '@/services/apiClient';
 
 const authStore = useAuthStore();
 const { t } = useI18n();
+const router = useRouter();
 const isOpen = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
 
@@ -65,11 +68,55 @@ const formatRole = (role: string | null) => {
 
 const formattedActiveRole = computed(() => formatRole(authStore.activeRole));
 
-const selectRole = (role: string) => {
+const selectRole = async (role: string) => {
   if (role !== authStore.activeRole) {
-    authStore.switchRole(role);
+    isOpen.value = false;
+    
+    // Disparar overlay global en MainLayout
+    window.dispatchEvent(new CustomEvent('role-switching-start'));
+
+    try {
+      // Registrar cambio en Audit Log central (ISO 27001)
+      await apiClient.post('/admin/audit/telemetry', {
+        action: 'ROLE_SWITCH',
+        details: { from: authStore.activeRole, to: role },
+        timestamp: new Date().toISOString()
+      }).catch(err => {
+         console.warn('No se pudo reportar telemetría de auditoría:', err);
+      });
+
+      const oldRole = authStore.activeRole;
+      authStore.switchRole(role);
+
+      // Evaluar acceso de la ruta actual
+      const currentRoute = router.currentRoute.value;
+      if (currentRoute.meta.roles && Array.isArray(currentRoute.meta.roles)) {
+        const hasAccess = currentRoute.meta.roles.includes(role);
+        if (!hasAccess) {
+          // Redirigir a raíz con advertencia
+          window.dispatchEvent(new CustomEvent('layout-toast-dispatch', {
+            detail: { message: 'Acceso denegado: El rol seleccionado no tiene permisos para la vista anterior.' }
+          }));
+          await router.push('/');
+        } else {
+          // Redirigir a raíz por A2 para rehidratación limpia
+          await router.push('/');
+        }
+      } else {
+        // Redirigir a raíz por A2
+        await router.push('/');
+      }
+    } catch (e) {
+      console.error('Error al cambiar de rol:', e);
+    } finally {
+      // Ocultar overlay tras recarga de menú
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('role-switching-end'));
+      }, 500);
+    }
+  } else {
+    isOpen.value = false;
   }
-  isOpen.value = false;
 };
 
 // Cierra el dropdown al hacer clic fuera

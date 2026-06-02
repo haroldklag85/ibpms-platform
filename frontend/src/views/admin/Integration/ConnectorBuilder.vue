@@ -78,11 +78,19 @@
                 <label class="block text-xs font-bold text-gray-700 mb-1">Credencial Protegida (CA-10)</label>
                 <div class="flex gap-2 relative">
                    <input 
-                      :type="isSecretRevealed ? 'text' : 'password'" 
+                      v-if="isSecretRevealed"
+                      type="text" 
                       v-model="apiSecret" 
                       class="w-full text-sm border-gray-300 rounded shadow-sm focus:ring-indigo-500 bg-gray-50 focus:border-indigo-500 font-mono" 
                       placeholder="••••••••••••••••" 
-                      :readonly="!isSecretRevealed" 
+                   />
+                   <input 
+                      v-else
+                      type="password" 
+                      v-model="apiSecret" 
+                      class="w-full text-sm border-gray-300 rounded shadow-sm focus:ring-indigo-500 bg-gray-50 focus:border-indigo-500 font-mono" 
+                      placeholder="••••••••••••••••" 
+                      readonly 
                    />
                    <button v-if="!isSecretRevealed" @click="revealSecret" class="absolute right-2 top-1.5 text-[10px] text-indigo-600 font-bold hover:underline bg-gray-50 px-1 py-0.5" :disabled="isRevealing">
                       <span v-if="isRevealing" class="material-symbols-outlined text-[14px] animate-spin inline-block align-middle">sync</span>
@@ -239,11 +247,14 @@ const pgpEnabled = ref(false);
 // CA-10: Ofuscación y Auditoría
 import { useAuditReveal } from '@/composables/useAuditReveal';
 
-const apiSecret = ref('ibpms_sk_live_9f8g7h6j...');
+const apiSecret = ref('••••••••••••••••');
 const { isRevealed: isSecretRevealed, isRevealing, revealWithAudit } = useAuditReveal();
 
 const revealSecret = async () => {
     await revealWithAudit(`connector_secret_${connectorName.value || 'unnamed'}`);
+    if (isSecretRevealed.value) {
+        apiSecret.value = 'ibpms_sk_live_9f8g7h6j...';
+    }
 };
 
 // CA-9: Sudo Modal Transversal

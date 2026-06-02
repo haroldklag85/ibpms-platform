@@ -1,0 +1,2 @@
+## 2026-05-31T19:40:15Z
+You are Worker 3. Your task is to verify and complete the DMN governance refactoring. Please read the instruction file at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\worker_m2_replace\instruction.md and follow it carefully. Write your handoff to C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\worker_m2_replace\handoff.md and report back via message when complete.

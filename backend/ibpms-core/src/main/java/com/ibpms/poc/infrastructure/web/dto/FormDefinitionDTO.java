@@ -16,6 +16,7 @@ public class FormDefinitionDTO {
     private String hashSha256;
 
     // QA Certification fields
+    @com.fasterxml.jackson.annotation.JsonProperty("is_qa_certified")
     private Boolean isQaCertified;
     private String certifiedSchemaHash;
     private String certifiedBy;
@@ -65,6 +66,10 @@ public class FormDefinitionDTO {
         return versionId;
     }
 
+    public Integer getVersion() {
+        return versionId;
+    }
+
     public void setVersionId(Integer versionId) {
         this.versionId = versionId;
     }
@@ -89,6 +94,10 @@ public class FormDefinitionDTO {
         return createdAt;
     }
 
+    public LocalDateTime getUpdatedAt() {
+        return createdAt;
+    }
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
@@ -101,10 +110,12 @@ public class FormDefinitionDTO {
         this.hashSha256 = hashSha256;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("is_qa_certified")
     public Boolean getIsQaCertified() {
         return isQaCertified;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("is_qa_certified")
     public void setIsQaCertified(Boolean qaCertified) {
         isQaCertified = qaCertified;
     }

@@ -1,9 +1,9 @@
 package com.ibpms.poc.domain.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
-@ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+// @Traceability: US-003 - ADR-001 - Pure Domain Exception
+@Traceability(US = "US-003", CA = {"CA-91"})
 public class PayloadTooLargeException extends RuntimeException {
     public PayloadTooLargeException(String message) {
         super(message);

@@ -196,14 +196,18 @@
             </div>
           </div>
 
-          <!-- Shared Name & ID Inputs for Selected Task/Activity -->
-          <div v-if="selectedElement.id && ['bpmn:UserTask', 'bpmn:ServiceTask', 'bpmn:BusinessRuleTask', 'bpmn:CallActivity'].includes(selectedElement.type)" class="space-y-4">
+          <!-- Shared Name & ID Inputs for Selected Element -->
+          <div v-if="selectedElement.id && ['bpmn:Task', 'bpmn:UserTask', 'bpmn:ServiceTask', 'bpmn:BusinessRuleTask', 'bpmn:CallActivity', 'bpmn:StartEvent'].includes(selectedElement.type)" class="space-y-4">
             <div>
-              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre de la Tarea</label>
-              <input type="text" v-model="selectedElement.name" @input="syncElementProperties('name', selectedElement.name)" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border" placeholder="Nombre de la tarea" />
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {{ selectedElement.type === 'bpmn:StartEvent' ? 'Nombre del Evento' : 'Nombre de la Tarea' }}
+              </label>
+              <input type="text" v-model="selectedElement.name" @input="syncElementProperties('name', selectedElement.name)" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border" :placeholder="selectedElement.type === 'bpmn:StartEvent' ? 'Nombre del evento' : 'Nombre de la tarea'" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">ID de Tarea</label>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {{ selectedElement.type === 'bpmn:StartEvent' ? 'ID de Evento' : 'ID de Tarea' }}
+              </label>
               <input type="text" :value="selectedElement.id" disabled class="w-full text-xs font-mono border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 rounded p-2 border bg-gray-50 cursor-not-allowed" />
             </div>
           </div>
@@ -262,6 +266,25 @@
                   <option>Anti Ping-Pong: Máx 3 rebotes</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          <!-- Start Event Properties -->
+          <!-- @Traceability: US-005, US-024 Zero-Bypass Form Start -->
+          <div v-if="selectedElement.type === 'bpmn:StartEvent'" class="space-y-5">
+            <!-- FormKey -->
+            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+              <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+                📝 FormKey (Start Event)
+                <AppTooltip :content="bpmnTooltips.FORM_KEY" />
+              </label>
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Formulario de inicio del proceso</p>
+              <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border bg-indigo-50/30 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300">
+                <option value="">-- Sin FormKey --</option>
+                <option v-for="form in filteredForms" :key="form.key" :value="form.key">
+                  {{ form.type === 'MAESTRO' ? '🔵' : '🟢' }} {{ form.name }} ({{ form.key }})
+                </option>
+              </select>
             </div>
           </div>
 
@@ -377,7 +400,20 @@
 
           <!-- 6. Information Banner for non-editable elements (Gateways, Events, etc.) -->
           <!-- @Traceability: US-005, CA-77 Panel de Propiedades Contextual -->
-          <div v-if="selectedElement.id && !['bpmn:UserTask', 'bpmn:ServiceTask', 'bpmn:BusinessRuleTask', 'bpmn:CallActivity'].includes(selectedElement.type)" class="p-4 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500 text-center">
+          <!-- Banner para Tarea Genérica sin tipo definido -->
+          <div v-if="selectedElement.id && selectedElement.type === 'bpmn:Task'" class="p-4 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800 space-y-2">
+             <div class="font-bold flex items-center gap-1">
+               <span>⚠️ Tarea Genérica (Sin Tipo)</span>
+             </div>
+             <p class="leading-relaxed">Esta es una tarea genérica sin propiedades de ejecución de Camunda.</p>
+             <p class="leading-relaxed font-semibold">Para configurarla:</p>
+             <ul class="list-disc list-inside space-y-1 text-[11px] text-amber-700">
+               <li>Haz clic sobre la tarea en el lienzo.</li>
+               <li>Selecciona el ícono de la <strong>llave de tuercas 🔧</strong> (Change type).</li>
+               <li>Cámbiala a <strong>User Task</strong> (para asociar formularios) o <strong>Service Task</strong> (para conectar APIs/conectores).</li>
+             </ul>
+          </div>
+          <div v-else-if="selectedElement.id && !['bpmn:UserTask', 'bpmn:ServiceTask', 'bpmn:BusinessRuleTask', 'bpmn:CallActivity', 'bpmn:StartEvent'].includes(selectedElement.type)" class="p-4 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500 text-center">
              ℹ️ No hay propiedades de Camunda editables para este elemento.
           </div>
 

@@ -744,6 +744,70 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
 
             wrapper.unmount();
         });
+
+        // @Traceability: US-005, CA-77 (Panel de Propiedades Contextual en Modeler)
+        it('Test 6: Verificar que si se selecciona una tarea genérica bpmn:Task, se muestran los campos de Nombre/ID y se dibuja el banner educativo para convertirla a User Task o Service Task', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            wrapper.vm.selectedElement = { 
+                id: 'Task_generic', 
+                type: 'bpmn:Task', 
+                name: 'Tarea Generica Test', 
+                props: { formKey: '', decisionRef: '', calledElement: '', topic: '' } 
+            };
+            await wrapper.vm.$nextTick();
+
+            // Verify inputs
+            const nameInput = wrapper.find('input[placeholder="Nombre de la tarea"]');
+            expect(nameInput.exists()).toBe(true);
+            expect((nameInput.element as HTMLInputElement).value).toBe('Tarea Generica Test');
+
+            const idInput = wrapper.find('input[disabled]');
+            expect(idInput.exists()).toBe(true);
+            expect((idInput.element as HTMLInputElement).value).toBe('Task_generic');
+
+            // Verify educational banner
+            const html = wrapper.html();
+            expect(html).toContain('Tarea Genérica (Sin Tipo)');
+            expect(html).toContain('Esta es una tarea genérica sin propiedades de ejecución de Camunda.');
+            expect(html).toContain('llave de tuercas 🔧');
+
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, US-024 (Zero-Bypass Form Start en StartEvent)
+        it('Test 7: Verificar que si se selecciona un evento de inicio bpmn:StartEvent, se muestran los campos de Nombre del Evento, ID de Evento y el selector de FormKey (Start Event)', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            wrapper.vm.selectedElement = { 
+                id: 'StartEvent_1', 
+                type: 'bpmn:StartEvent', 
+                name: 'Evento Inicio Test', 
+                props: { formKey: 'formulario_inicio', decisionRef: '', calledElement: '', topic: '' } 
+            };
+            await wrapper.vm.$nextTick();
+
+            // Verify inputs with dynamic labels/placeholders
+            const nameInput = wrapper.find('input[placeholder="Nombre del evento"]');
+            expect(nameInput.exists()).toBe(true);
+            expect((nameInput.element as HTMLInputElement).value).toBe('Evento Inicio Test');
+
+            const idInput = wrapper.find('input[disabled]');
+            expect(idInput.exists()).toBe(true);
+            expect((idInput.element as HTMLInputElement).value).toBe('StartEvent_1');
+
+            // Verify Start Event formKey section is rendered
+            const html = wrapper.html();
+            expect(html).toContain('FormKey (Start Event)');
+            expect(html).toContain('Formulario de inicio del proceso');
+
+            // Verify that non-editable banner is NOT rendered for StartEvent
+            expect(html).not.toContain('No hay propiedades de Camunda editables para este elemento.');
+
+            wrapper.unmount();
+        });
     });
 });
 

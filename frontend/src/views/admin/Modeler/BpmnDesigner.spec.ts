@@ -667,6 +667,84 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             wrapper.unmount();
         });
     });
+
+    // @Traceability: US-005, CA-77 Panel de Propiedades Contextual en Modeler
+    describe('Pruebas para CA-77 (Panel de Propiedades Contextual en Modeler)', () => {
+        it('Test 1: Verificar que si selectedElement.id esta vacio, el dropdown de FormKey y Conector API no se renderizan en el DOM', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Set selectedElement to empty
+            wrapper.vm.selectedElement = { id: '', type: '', name: '', props: { formKey: '', decisionRef: '', calledElement: '', topic: '' } };
+            await wrapper.vm.$nextTick();
+
+            const html = wrapper.html();
+            expect(html).not.toContain('FormKey (User Task)');
+            expect(html).not.toContain('Conector API (Service Task)');
+
+            wrapper.unmount();
+        });
+
+        it('Test 3: Verificar que si selectedElement.type es bpmn:UserTask, los elementos de FormKey y Escalamiento son visibles, pero el de Conector API no lo es', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            wrapper.vm.selectedElement = { 
+                id: 'Task_1', 
+                type: 'bpmn:UserTask', 
+                name: 'User Task 1', 
+                props: { formKey: '', decisionRef: '', calledElement: '', topic: '' } 
+            };
+            await wrapper.vm.$nextTick();
+
+            const html = wrapper.html();
+            expect(html).toContain('FormKey (User Task)');
+            expect(html).toContain('Escalamiento &amp; Ping-Pong');
+            expect(html).not.toContain('Conector API (Service Task)');
+
+            wrapper.unmount();
+        });
+
+        it('Test 4: Verificar que si selectedElement.type es bpmn:ServiceTask, el conector de API y el mapeo de variables son visibles en pantalla, mientras que FormKey queda oculto', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            wrapper.vm.selectedElement = { 
+                id: 'Task_2', 
+                type: 'bpmn:ServiceTask', 
+                name: 'Service Task 1', 
+                props: { formKey: '', decisionRef: '', calledElement: '', topic: '' } 
+            };
+            // Set selectedConnector to something to show DataMapperGrid
+            wrapper.vm.selectedConnector = 'netsuite_erp';
+            await wrapper.vm.$nextTick();
+
+            const html = wrapper.html();
+            expect(html).toContain('Conector API (Service Task)');
+            expect(html).toContain('Mapeo Visual (DataMapperGrid)');
+            expect(html).not.toContain('FormKey (User Task)');
+
+            wrapper.unmount();
+        });
+
+        it('Test 5: Verificar que si se selecciona una compuerta bpmn:ExclusiveGateway, se dibuja el banner de aviso de No hay propiedades editables', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            wrapper.vm.selectedElement = { 
+                id: 'Gateway_1', 
+                type: 'bpmn:ExclusiveGateway', 
+                name: 'Exclusive Gateway 1', 
+                props: { formKey: '', decisionRef: '', calledElement: '', topic: '' } 
+            };
+            await wrapper.vm.$nextTick();
+
+            const html = wrapper.html();
+            expect(html).toContain('No hay propiedades de Camunda editables para este elemento.');
+
+            wrapper.unmount();
+        });
+    });
 });
 
 

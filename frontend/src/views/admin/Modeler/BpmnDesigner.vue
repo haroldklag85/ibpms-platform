@@ -141,236 +141,258 @@
 
       <!-- ═══════ Properties Side Panel ═══════ -->
       <aside class="w-80 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0 flex flex-col overflow-y-auto">
-        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
           <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
             ⚙️ Camunda Properties
           </h3>
         </div>
 
         <div class="p-4 space-y-5 flex-1">
-          <!-- Naming Dual -->
-          <div>
-            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre de Negocio</label>
-            <input type="text" v-model="currentProcessName" @input="onDiagramEdit" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border" placeholder="Ej: Crédito de Consumo" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">ID Técnico</label>
-            <input type="text" v-model="processId" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-gray-50 dark:bg-gray-900" placeholder="Auto: credito-de-consumo" />
-          </div>
+          <!-- @Traceability: US-005, CA-77 Panel de Propiedades Contextual -->
 
-          <!-- Nomenclatura Instancia CA-5 -->
-          <div class="p-3 bg-fuchsia-50 dark:bg-fuchsia-900/20 border border-fuchsia-200 rounded">
-             <label class="block text-xs font-bold text-fuchsia-800 dark:text-fuchsia-300 mb-1 flex items-center justify-between">
-               <span>🎟 Regla de Nomenclatura (CA-5)</span>
-               <AppTooltip :content="isNomenclatureSyntaxError ? '⚠️ Error de sintaxis: llaves sin cerrar' : bpmnTooltips.NOMENCLATURE" :isError="isNomenclatureSyntaxError" />
-             </label>
-             <input type="text" v-model="processNomenclature" @change="updateProcessProperty('ReglaNomenclatura', processNomenclature)" :class="{'border-red-500 ring-1 ring-red-500 bg-red-50': isNomenclatureSyntaxError}" class="w-full text-xs border-fuchsia-300 dark:border-fuchsia-600 dark:bg-gray-700 dark:text-white rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 p-2 border transition" placeholder="Ej: OC-{Solicitante}" />
-             <p class="text-[10px] text-fuchsia-600 dark:text-fuchsia-400 mt-1 leading-tight">Obligatorio. Define la máscara para instanciar tickets. Se inyecta al nodo raíz del XML.</p>
-          </div>
-
-          <!-- SLA Global -->
-          <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded">
-            <label class="block text-xs font-bold text-blue-800 dark:text-blue-300 mb-1 flex items-center justify-between">
-              ⏱ SLA Global (Horas)
-              <AppTooltip :content="bpmnTooltips.GLOBAL_SLA" />
-            </label>
-            <input type="number" v-model.number="globalSla" @change="updateGlobalSla" min="1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" placeholder="72" />
-            <!-- Propiedades: Tarea de Usuario (Intake / Approval) -->
-            <div v-if="selectedElement.type === 'bpmn:UserTask'" class="space-y-4">
-              <div>
-                <label class="block text-xs font-bold text-gray-700 mb-1">Formulario Asignado (FormKey Alterno)</label>
-                <select v-model="selectedElement.props.formKey" @change="syncElementProperties('camunda:formKey', selectedElement.props.formKey)" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 max-w-[200px]">
-                  <option value="">-- Sin Formulario --</option>
-                  <option value="form_solicitud_v1">form_solicitud_v1 (Simple)</option>
-                  <option value="iform_maestro_credito">iform_maestro_credito (Dual)</option>
-                </select>
-              </div>
-              <!-- SLA de la Tarea -->
-              <div class="pt-3 border-t border-gray-200">
-                <label class="block text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
-                  <span class="flex items-center gap-1">⏱️ SLA Timeout</span>
-                  <AppTooltip :content="bpmnTooltips.SLA_TIMEOUT" :isError="isSlaSyntaxError" />
-                </label>
-                <input type="text" v-model="selectedElement.props.sla" @change="updateElementSla" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 font-mono" :class="{'border-red-500 bg-red-50 text-red-700': isSlaSyntaxError}" placeholder="Ej: P2D (2 Días)" />
-              </div>
-
-              <!-- SharePoint Integration Checkbox (CA-2) -->
-              <div v-if="selectedElement.name && selectedElement.name.toLowerCase().includes('intake')" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <div class="flex items-start gap-2">
-                  <input type="checkbox" id="spFolderCheck" v-model="selectedElement.props.createSharepointFolder" @change="syncElementProperties('camunda:createSharepointFolder', selectedElement.props.createSharepointFolder)" class="mt-0.5 text-blue-600 rounded border-blue-300 focus:ring-blue-500 shadow-sm" />
-                  <label for="spFolderCheck" class="text-[11px] font-bold text-blue-900 cursor-pointer leading-tight">
-                    Create Unique SharePoint Sub-folder for this generic Process Instance (CA-2)
-                  </label>
-                </div>
-              </div>
+          <!-- 1. Global Process Properties (Shown only when no element is selected) -->
+          <div v-if="!selectedElement.id" class="space-y-5">
+            <!-- Naming Dual -->
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre de Negocio</label>
+              <input type="text" v-model="currentProcessName" @input="onDiagramEdit" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border" placeholder="Ej: Crédito de Consumo" />
             </div>
-          </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">ID Técnico</label>
+              <input type="text" v-model="processId" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-gray-50 dark:bg-gray-900" placeholder="Auto: credito-de-consumo" />
+            </div>
 
-          <!-- Process Pattern (CA-31 y CA-38) -->
-          <div>
-            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 flex items-center justify-between">
-              Patrón de Proceso
-              <AppTooltip :content="bpmnTooltips.PROCESS_PATTERN" />
-            </label>
-            <select v-model="processPattern" @change="updateProcessProperty('formPattern', processPattern)" :disabled="elementCount > 1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border disabled:opacity-60 disabled:cursor-not-allowed">
-              <option value="SIMPLE">🟢 Simple (Formularios independientes)</option>
-              <option value="IFORM_MAESTRO">🔵 iForm Maestro (Formulario mutante)</option>
-            </select>
-            <p v-if="elementCount > 1" class="text-[9px] text-gray-500 mt-1">🔒 Bloqueado: El lienzo no está vacío.</p>
-          </div>
-
-          <!-- User Task Properties -->
-          <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
-            <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
-              📝 FormKey (User Task)
-              <AppTooltip :content="bpmnTooltips.FORM_KEY" />
-            </label>
-            <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Formulario renderizado en Workdesk</p>
-            <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border bg-indigo-50/30 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300">
-              <option value="">-- Sin FormKey --</option>
-              <option v-for="form in filteredForms" :key="form.key" :value="form.key">
-                {{ form.type === 'MAESTRO' ? '🔵' : '🟢' }} {{ form.name }} ({{ form.key }})
-              </option>
-            </select>
-          </div>
-
-          <!-- Service Task Topics (CA-70) -->
-          <div v-if="selectedElement.type === 'bpmn:ServiceTask'" class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm mb-4">
-             <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
-                <span>🏷️ External Topic (CA-70)</span>
-             </label>
-             <p class="text-[10px] text-gray-500 mb-2">Tópico al que se suscriben los External Task Workers.</p>
-             <div class="relative">
-                <select v-model="selectedElement.props.topic" @change="syncElementProperties('camunda:topic', selectedElement.props.topic)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" :disabled="loadingTopics">
-                   <option value="">-- Seleccionar Tópico --</option>
-                   <option v-for="t in externalTopics" :key="t" :value="t">{{ t }}</option>
-                </select>
-                <div v-if="loadingTopics" class="absolute top-0 right-3 h-full flex items-center">
-                   <span class="animate-spin text-indigo-500 font-bold text-sm">↻</span>
-                </div>
-             </div>
-          </div>
-
-          <!-- CA-12: Business Rule Task — DMN Binding (Protección de Derechos Adquiridos) -->
-          <div v-if="selectedElement.type === 'bpmn:BusinessRuleTask'" class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded shadow-sm mb-4">
-             <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-2 flex items-center justify-between">
-                <span>📐 Regla DMN (CA-12)</span>
-                <AppTooltip content="Configura la regla de negocio y si se evalúa con la versión vigente al desplegar (DEPLOYMENT) o con la última publicada (LATEST)." />
-             </label>
-             <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Tabla de decisión conectada:</p>
-             <select v-model="selectedElement.props.decisionRef" @change="syncElementProperties('camunda:decisionRef', selectedElement.props.decisionRef)" class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border mb-3">
-                <option value="">— Seleccionar tabla DMN —</option>
-                <option v-for="dmn in availableDmns" :key="dmn.id" :value="dmn.key || dmn.id">
-                   {{ dmn.name }} (v{{ dmn.version }})
-                </option>
-             </select>
-
-             <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Estrategia de versionamiento:</p>
-             <select v-model="selectedElement.props.dmnBinding"
-                     @change="syncElementProperties('camunda:decisionRefBinding', selectedElement.props.dmnBinding)"
-                     class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
-                <option value="deployment">🔒 DEPLOYMENT (Default — Protección de Derechos Adquiridos)</option>
-                <option value="latest">⚡ LATEST (Late Binding — Siempre la regla más reciente)</option>
-             </select>
-             <p class="text-[10px] text-amber-600 dark:text-amber-500 mt-1 leading-tight">
-                <strong>DEPLOYMENT:</strong> Los casos en vuelo se evalúan con la DMN activa al nacer el caso.<br>
-                <strong>LATEST:</strong> Los casos en vuelo se evalúan con la DMN más reciente publicada.
-             </p>
-          </div>
-
-          <!-- Service Task Connector (CA-47, CA-49) -->
-          <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
-            <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
-               <span>🔌 Conector API (Service Task)</span>
-               <AppTooltip :content="bpmnTooltips.CONNECTOR" />
-            </label>
-            <select v-model="selectedConnector" @change="updateElementConnector" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border mb-3">
-              <option value="">-- Sin Conector --</option>
-              <option v-for="c in availableConnectors" :key="c.id" :value="c.id">
-                {{ c.icon }} {{ c.name }}
-              </option>
-            </select>
-
-            <!-- CA-49 & CA-50: DataMapperGrid -->
-            <div v-if="selectedConnector" class="border-t border-gray-200 dark:border-gray-700 pt-3">
-               <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2">
-                 🔀 Mapeo Visual (DataMapperGrid)
+            <!-- Nomenclatura Instancia CA-5 -->
+            <div class="p-3 bg-fuchsia-50 dark:bg-fuchsia-900/20 border border-fuchsia-200 rounded">
+               <label class="block text-xs font-bold text-fuchsia-800 dark:text-fuchsia-300 mb-1 flex items-center justify-between">
+                 <span>🎟 Regla de Nomenclatura (CA-5)</span>
+                 <AppTooltip :content="isNomenclatureSyntaxError ? '⚠️ Error de sintaxis: llaves sin cerrar' : bpmnTooltips.NOMENCLATURE" :isError="isNomenclatureSyntaxError" />
                </label>
-               <table class="w-full text-xs text-left">
-                  <thead>
-                     <tr class="text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                        <th class="pb-1 font-medium w-1/2">Input Esperado</th>
-                        <th class="pb-1 font-medium w-1/2">Variable del Proceso</th>
-                     </tr>
-                  </thead>
-                  <tbody>
-                     <tr v-for="schema in connectorSchema" :key="schema.name" class="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                        <td class="py-2 pr-2 font-mono text-[10px] text-gray-700 dark:text-gray-300">
-                           <div class="font-bold">{{ schema.name }}</div>
-                           <div class="text-gray-400 text-[9px]">({{ schema.type }})</div>
-                        </td>
-                        <td class="py-2 relative group">
-                           <select v-model="connectorMappings[schema.name]" @change="saveConnectorMapping" class="w-full text-[10px] p-1 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-1 focus:ring-indigo-500" :class="{'border-red-500 ring-1 ring-red-500': mappingErrors[schema.name]}">
-                              <option value="">-- Asignar --</option>
-                              <!-- CA-50: Type Coercion -->
-                              <option v-for="v in processVariables" :key="v.name" :value="v.name" :disabled="!isTypeCompatible(schema.type, v.type)">
-                                 {{ !isTypeCompatible(schema.type, v.type) ? '🚫 ' : '' }}{{ v.name }} ({{ v.type }})
-                              </option>
-                           </select>
-                           <AppTooltip v-if="mappingErrors[schema.name]" content="⚠️ Tipo Incompatible" isError class="absolute right-0 top-1/2 -translate-y-1/2 -mr-6" />
-                        </td>
-                     </tr>
-                  </tbody>
-               </table>
-               <div v-if="loadingSchema" class="flex justify-center py-2"><AppSkeleton class="w-3/4 h-4 rounded" /></div>
+               <input type="text" v-model="processNomenclature" @change="updateProcessProperty('ReglaNomenclatura', processNomenclature)" :class="{'border-red-500 ring-1 ring-red-500 bg-red-50': isNomenclatureSyntaxError}" class="w-full text-xs border-fuchsia-300 dark:border-fuchsia-600 dark:bg-gray-700 dark:text-white rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 p-2 border transition" placeholder="Ej: OC-{Solicitante}" />
+               <p class="text-[10px] text-fuchsia-600 dark:text-fuchsia-400 mt-1 leading-tight">Obligatorio. Define la máscara para instanciar tickets. Se inyecta al nodo raíz del XML.</p>
+            </div>
+
+            <!-- SLA Global -->
+            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded">
+              <label class="block text-xs font-bold text-blue-800 dark:text-blue-300 mb-1 flex items-center justify-between">
+                ⏱ SLA Global (Horas)
+                <AppTooltip :content="bpmnTooltips.GLOBAL_SLA" />
+              </label>
+              <input type="number" v-model.number="globalSla" @change="updateGlobalSla" min="1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" placeholder="72" />
+            </div>
+
+            <!-- Process Pattern (CA-31 y CA-38) -->
+            <div>
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 flex items-center justify-between">
+                Patrón de Proceso
+                <AppTooltip :content="bpmnTooltips.PROCESS_PATTERN" />
+              </label>
+              <select v-model="processPattern" @change="updateProcessProperty('formPattern', processPattern)" :disabled="elementCount > 1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border disabled:opacity-60 disabled:cursor-not-allowed">
+                <option value="SIMPLE">🟢 Simple (Formularios independientes)</option>
+                <option value="IFORM_MAESTRO">🔵 iForm Maestro (Formulario mutante)</option>
+              </select>
+              <p v-if="elementCount > 1" class="text-[9px] text-gray-500 mt-1">🔒 Bloqueado: El lienzo no está vacío.</p>
             </div>
           </div>
 
-          <!-- Escalamiento -->
-          <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
-            <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
-               <span>🔺 Escalamiento & Ping-Pong</span>
-               <AppTooltip :content="bpmnTooltips.ESCALATION" />
-            </label>
-            <div class="space-y-2">
-              <select class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
-                <option>Escalamiento: Ninguno</option>
-                <option>Escalamiento: Al Supervisor</option>
-                <option>Escalamiento: Al Director</option>
-              </select>
-              <select class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
-                <option>Anti Ping-Pong: Desactivado</option>
-                <option>Anti Ping-Pong: Máx 2 rebotes</option>
-                <option>Anti Ping-Pong: Máx 3 rebotes</option>
-              </select>
+          <!-- Shared Name & ID Inputs for Selected Task/Activity -->
+          <div v-if="selectedElement.id && ['bpmn:UserTask', 'bpmn:ServiceTask', 'bpmn:BusinessRuleTask', 'bpmn:CallActivity'].includes(selectedElement.type)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre de la Tarea</label>
+              <input type="text" v-model="selectedElement.name" @input="syncElementProperties('name', selectedElement.name)" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border" placeholder="Nombre de la tarea" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">ID de Tarea</label>
+              <input type="text" :value="selectedElement.id" disabled class="w-full text-xs font-mono border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 rounded p-2 border bg-gray-50 cursor-not-allowed" />
             </div>
           </div>
 
-          <!-- Call Activity Link (CA-27) -->
-          <div class="mb-4">
-             <label v-if="selectedElement.type === 'bpmn:CallActivity'" class="block text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
-                <span>🔗 Destino de Call Activity</span>
-                <AppTooltip :content="bpmnTooltips.CALL_ACTIVITY" :isError="isCallActivityError" />
-             </label>
-             <button v-if="selectedElement.type === 'bpmn:CallActivity'" @click="openCallActivity" class="w-full text-xs text-center py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-600 transition truncate px-2" :class="{'border-red-400 hover:border-red-500 text-red-500 bg-red-50 hover:bg-red-100': isCallActivityError}" :title="selectedElement.props.calledElement || 'Sub-proceso'">
-               Abrir Sub-Proceso {{ selectedElement.props.calledElement ? `(${selectedElement.props.calledElement})` : '(No Configurado)' }}
-             </button>
+          <!-- 2. User Task Properties -->
+          <div v-if="selectedElement.type === 'bpmn:UserTask'" class="space-y-5">
+            <!-- FormKey -->
+            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+              <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+                📝 FormKey (User Task)
+                <AppTooltip :content="bpmnTooltips.FORM_KEY" />
+              </label>
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Formulario renderizado en Workdesk</p>
+              <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border bg-indigo-50/30 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300">
+                <option value="">-- Sin FormKey --</option>
+                <option v-for="form in filteredForms" :key="form.key" :value="form.key">
+                  {{ form.type === 'MAESTRO' ? '🔵' : '🟢' }} {{ form.name }} ({{ form.key }})
+                </option>
+              </select>
+            </div>
+
+            <!-- SLA Timeout -->
+            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+              <label class="block text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
+                <span class="flex items-center gap-1">⏱️ SLA Timeout</span>
+                <AppTooltip :content="bpmnTooltips.SLA_TIMEOUT" :isError="isSlaSyntaxError" />
+              </label>
+              <input type="text" v-model="selectedElement.props.sla" @change="updateElementSla" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 font-mono" :class="{'border-red-500 bg-red-50 text-red-700': isSlaSyntaxError}" placeholder="Ej: P2D (2 Días)" />
+            </div>
+
+            <!-- SharePoint Integration Checkbox (CA-2) -->
+            <div v-if="selectedElement.name && selectedElement.name.toLowerCase().includes('intake')" class="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <div class="flex items-start gap-2">
+                <input type="checkbox" id="spFolderCheck" v-model="selectedElement.props.createSharepointFolder" @change="syncElementProperties('camunda:createSharepointFolder', selectedElement.props.createSharepointFolder)" class="mt-0.5 text-blue-600 rounded border-blue-300 focus:ring-blue-500 shadow-sm" />
+                <label for="spFolderCheck" class="text-[11px] font-bold text-blue-900 cursor-pointer leading-tight">
+                  Create Unique SharePoint Sub-folder for this generic Process Instance (CA-2)
+                </label>
+              </div>
+            </div>
+
+            <!-- Escalamiento -->
+            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+              <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+                 <span>🔺 Escalamiento & Ping-Pong</span>
+                 <AppTooltip :content="bpmnTooltips.ESCALATION" />
+              </label>
+              <div class="space-y-2">
+                <select class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
+                  <option>Escalamiento: Ninguno</option>
+                  <option>Escalamiento: Al Supervisor</option>
+                  <option>Escalamiento: Al Director</option>
+                </select>
+                <select class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
+                  <option>Anti Ping-Pong: Desactivado</option>
+                  <option>Anti Ping-Pong: Máx 2 rebotes</option>
+                  <option>Anti Ping-Pong: Máx 3 rebotes</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <!-- AI Copilot Quick Action -->
-          <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+          <!-- 3. Service Task Properties -->
+          <div v-if="selectedElement.type === 'bpmn:ServiceTask'" class="space-y-5">
+            <!-- Service Task Topics (CA-70) -->
+            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+               <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+                  <span>🏷️ External Topic (CA-70)</span>
+               </label>
+               <p class="text-[10px] text-gray-500 mb-2">Tópico al que se suscriben los External Task Workers.</p>
+               <div class="relative">
+                  <select v-model="selectedElement.props.topic" @change="syncElementProperties('camunda:topic', selectedElement.props.topic)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" :disabled="loadingTopics">
+                     <option value="">-- Seleccionar Tópico --</option>
+                     <option v-for="t in externalTopics" :key="t" :value="t">{{ t }}</option>
+                  </select>
+                  <div v-if="loadingTopics" class="absolute top-0 right-3 h-full flex items-center">
+                     <span class="animate-spin text-indigo-500 font-bold text-sm">↻</span>
+                  </div>
+               </div>
+            </div>
+
+            <!-- Service Task Connector (CA-47, CA-49) -->
+            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+              <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+                 <span>🔌 Conector API (Service Task)</span>
+                 <AppTooltip :content="bpmnTooltips.CONNECTOR" />
+              </label>
+              <select v-model="selectedConnector" @change="updateElementConnector" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border mb-3">
+                <option value="">-- Sin Conector --</option>
+                <option v-for="c in availableConnectors" :key="c.id" :value="c.id">
+                  {{ c.icon }} {{ c.name }}
+                </option>
+              </select>
+
+              <!-- CA-49 & CA-50: DataMapperGrid -->
+              <div v-if="selectedConnector" class="border-t border-gray-200 dark:border-gray-700 pt-3">
+                 <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2">
+                   🔀 Mapeo Visual (DataMapperGrid)
+                 </label>
+                 <table class="w-full text-xs text-left">
+                    <thead>
+                       <tr class="text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                          <th class="pb-1 font-medium w-1/2">Input Esperado</th>
+                          <th class="pb-1 font-medium w-1/2">Variable del Proceso</th>
+                       </tr>
+                    </thead>
+                    <tbody>
+                       <tr v-for="schema in connectorSchema" :key="schema.name" class="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                          <td class="py-2 pr-2 font-mono text-[10px] text-gray-700 dark:text-gray-300">
+                             <div class="font-bold">{{ schema.name }}</div>
+                             <div class="text-gray-400 text-[9px]">({{ schema.type }})</div>
+                          </td>
+                          <td class="py-2 relative group">
+                             <select v-model="connectorMappings[schema.name]" @change="saveConnectorMapping" class="w-full text-[10px] p-1 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-1 focus:ring-indigo-500" :class="{'border-red-500 ring-1 ring-red-500': mappingErrors[schema.name]}">
+                                <option value="">-- Asignar --</option>
+                                <option v-for="v in processVariables" :key="v.name" :value="v.name" :disabled="!isTypeCompatible(schema.type, v.type)">
+                                   {{ !isTypeCompatible(schema.type, v.type) ? '🚫 ' : '' }}{{ v.name }} ({{ v.type }})
+                                </option>
+                             </select>
+                             <AppTooltip v-if="mappingErrors[schema.name]" content="⚠️ Tipo Incompatible" isError class="absolute right-0 top-1/2 -translate-y-1/2 -mr-6" />
+                          </td>
+                       </tr>
+                    </tbody>
+                 </table>
+                 <div v-if="loadingSchema" class="flex justify-center py-2"><AppSkeleton class="w-3/4 h-4 rounded" /></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Business Rule Task Properties (CA-12) -->
+          <div v-if="selectedElement.type === 'bpmn:BusinessRuleTask'" class="space-y-5">
+            <!-- CA-12: Business Rule Task — DMN Binding (Protección de Derechos Adquiridos) -->
+            <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded shadow-sm">
+               <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-2 flex items-center justify-between">
+                  <span>📐 Regla DMN (CA-12)</span>
+                  <AppTooltip content="Configura la regla de negocio y si se evalúa con la versión vigente al desplegar (DEPLOYMENT) o con la última publicada (LATEST)." />
+               </label>
+               <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Tabla de decisión conectada:</p>
+               <select v-model="selectedElement.props.decisionRef" @change="syncElementProperties('camunda:decisionRef', selectedElement.props.decisionRef)" class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border mb-3">
+                  <option value="">— Seleccionar tabla DMN —</option>
+                  <option v-for="dmn in availableDmns" :key="dmn.id" :value="dmn.key || dmn.id">
+                     {{ dmn.name }} (v{{ dmn.version }})
+                  </option>
+               </select>
+
+               <p class="text-[10px] text-amber-700 dark:text-amber-400 mb-2">Estrategia de versionamiento:</p>
+               <select v-model="selectedElement.props.dmnBinding"
+                       @change="syncElementProperties('camunda:decisionRefBinding', selectedElement.props.dmnBinding)"
+                       class="w-full text-xs font-mono border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white rounded p-2 border">
+                  <option value="deployment">🔒 DEPLOYMENT (Default — Protección de Derechos Adquiridos)</option>
+                  <option value="latest">⚡ LATEST (Late Binding — Siempre la regla más reciente)</option>
+               </select>
+               <p class="text-[10px] text-amber-600 dark:text-amber-500 mt-1 leading-tight">
+                  <strong>DEPLOYMENT:</strong> Los casos en vuelo se evalúan con la DMN activa al nacer el caso.<br>
+                  <strong>LATEST:</strong> Los casos en vuelo se evalúan con la DMN más reciente publicada.
+               </p>
+            </div>
+          </div>
+
+          <!-- 5. Call Activity Properties (CA-27) -->
+          <div v-if="selectedElement.type === 'bpmn:CallActivity'" class="space-y-5">
+            <div class="mb-4">
+               <label class="block text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
+                  <span>🔗 Destino de Call Activity</span>
+                  <AppTooltip :content="bpmnTooltips.CALL_ACTIVITY" :isError="isCallActivityError" />
+               </label>
+               <button @click="openCallActivity" class="w-full text-xs text-center py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-600 transition truncate px-2" :class="{'border-red-400 hover:border-red-500 text-red-500 bg-red-50 hover:bg-red-100': isCallActivityError}" :title="selectedElement.props.calledElement || 'Sub-proceso'">
+                 Abrir Sub-Proceso {{ selectedElement.props.calledElement ? `(${selectedElement.props.calledElement})` : '(No Configurado)' }}
+               </button>
+            </div>
+          </div>
+
+          <!-- 6. Information Banner for non-editable elements (Gateways, Events, etc.) -->
+          <!-- @Traceability: US-005, CA-77 Panel de Propiedades Contextual -->
+          <div v-if="selectedElement.id && !['bpmn:UserTask', 'bpmn:ServiceTask', 'bpmn:BusinessRuleTask', 'bpmn:CallActivity'].includes(selectedElement.type)" class="p-4 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500 text-center">
+             ℹ️ No hay propiedades de Camunda editables para este elemento.
+          </div>
+
+          <!-- 7. AI Copilot Quick Action (Visible when selection exists) -->
+          <div v-if="selectedElement.id" class="pt-2 border-t border-gray-200 dark:border-gray-700">
             <button @click="showCopilot = true" class="w-full bg-slate-900 hover:bg-black text-white px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2 transition">
               🧠 Auditoría ISO-9001 (Copilot)
             </button>
           </div>
 
-          <!-- ═══════ Módulo Cognitivo (CA-10 / CA-11) ═══════ -->
+          <!-- 8. Módulo Cognitivo (CA-10 / CA-11) (Visible when element name includes 'rag') -->
           <div v-if="selectedElement.name && selectedElement.name.toLowerCase().includes('rag')" class="p-4 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-lg shadow-inner mt-4">
             <h4 class="text-xs font-bold text-emerald-800 dark:text-emerald-400 mb-3 flex items-center gap-2">
               <span class="text-lg">🤖</span> Cognitive Task Settings
             </h4>
             <div class="space-y-4">
-              
               <!-- Tone Selector (CA-11) -->
               <div>
                 <label class="block text-[10px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-widest mb-1">Tone Override</label>
@@ -398,9 +420,9 @@
                 <input type="text" v-model="selectedElement.props.aiSchemaId" @blur="syncElementProperties('camunda:aiSchemaId', selectedElement.props.aiSchemaId)" placeholder="Ej: schema_risk_matrix_v2" class="w-full text-[11px] font-mono border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded p-1.5" />
                 <p class="text-[9px] text-emerald-600 dark:text-emerald-500 mt-1 leading-tight">Fuerza a la IA a responder con un layout compatible con Pantalla 7.</p>
               </div>
-
             </div>
           </div>
+
           <!-- ════════════════════════════════════════════════ -->
 
         </div>
@@ -1493,8 +1515,16 @@ onMounted(async () => {
             aiTone: 'NEUTRAL'
           }
         };
+        // @Traceability: US-005, CA-77 Panel de Propiedades Contextual
+        selectedFormKey.value = bo.get('camunda:formKey') || '';
+        const delegateExpr = bo.get('camunda:delegateExpression') || '';
+        const match = delegateExpr.match(/\$\{(.+)Adapter\}/);
+        selectedConnector.value = match ? match[1] : '';
       } else {
         selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', decisionRef: '', dmnBinding: 'deployment' } };
+        // @Traceability: US-005, CA-77 Panel de Propiedades Contextual
+        selectedFormKey.value = '';
+        selectedConnector.value = '';
       }
     });
 

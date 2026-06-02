@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-5
+// @Traceability: US-005, CA-05
 <template>
   <div class="h-full w-full bg-gray-50 dark:bg-gray-900 flex flex-col" v-cloak>
 
@@ -1019,6 +1019,7 @@ const canvasContainer = ref<HTMLElement | null>(null);
 let modelerInstance: any = null;
 
 // ── Tooltips Didácticos (CA-38, CA-47 MVP) ─────────────────
+// @Traceability: US-005, CA-05
 const bpmnTooltips = {
   GLOBAL_SLA: 'Dicta el Acabado Total esperado del Proceso (Vida Útil). Al expirar, lanza métrica a los dashboards BAM corporativos y emite alertas amarillas.',
   SLA_TIMEOUT: 'Determina temporalidad en norma <a href="https://en.wikipedia.org/wiki/ISO_8601" target="_blank" class="text-blue-500 underline font-semibold">ISO-8601</a> antes de detonar Boundary Events o Escalar la Tarea a líderes.<br><br><b>Syntax estricta:</b> <code>P(N)Y(N)M(N)DT(N)H(N)M(N)S</code><br>Ejemplo: <code>P2D</code> = 2 días. <code>PT6H</code> = 6 Horas.',
@@ -1232,7 +1233,7 @@ const syncNomenclatureToHtml = (val: string) => {
         }
       }
       const safeVarName = DOMPurify.sanitize(varName);
-      html += `<span contenteditable="false" class="inline-block mx-0.5 px-1.5 py-0.5 rounded font-mono font-bold text-[11px] select-all cursor-default border ${badgeClass}" data-variable="${safeVarName}">{${safeVarName}}</span>`;
+      html += `<span contenteditable="false" class="token-pill inline-block mx-0.5 px-1.5 py-0.5 rounded font-mono font-bold text-[11px] select-all cursor-default border ${badgeClass}" data-variable="${safeVarName}">{${safeVarName}}</span>`;
     } else {
       if (part) {
         html += DOMPurify.sanitize(part);
@@ -2098,24 +2099,21 @@ onMounted(async () => {
                        nextTick(() => {
                          syncNomenclatureToHtml(processNomenclature.value);
                        });
-                   } else {
-                       declaredVariables.value = [];
-                       processNomenclature.value = '';
+                    } else {
+                        declaredVariables.value = [];
+                        processNomenclature.value = '';
+                        nextTick(() => {
+                          syncNomenclatureToHtml('');
+                        });
+                    }
+                } else {
+                    declaredVariables.value = [];
+                    processNomenclature.value = '';
                     nextTick(() => {
                       syncNomenclatureToHtml('');
                     });
-                    nextTick(() => {
-                      syncNomenclatureToHtml('');
-                    });
-                       nextTick(() => {
-  
-                       });
-                   }
-               } else {
-                   declaredVariables.value = [];
-                   processNomenclature.value = '';
-               }
-           }
+                }
+            }
 
            scanAndFetchFormFields();
        }
@@ -2803,6 +2801,7 @@ const updateIsExecutable = () => {
   });
 };
 
+// @Traceability: US-005, CA-05
 const updateProcessProperty = (name: string, value: string) => {
   if (!modelerInstance) return;
   // @Traceability: US-005, CA-40

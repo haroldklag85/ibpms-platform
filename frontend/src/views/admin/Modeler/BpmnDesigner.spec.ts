@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-5
+// @Traceability: US-005, CA-05
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import BpmnDesigner from './BpmnDesigner.vue';
@@ -1015,8 +1015,307 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             expect(wrapper.vm.bpmnTooltips.NOMENCLATURE_DUMMY).toContain('1. Escribe texto fijo (ej. <code>FAC-</code>).');
             expect(wrapper.vm.bpmnTooltips.NOMENCLATURE_DUMMY).toContain('FAC-{form.monto}-{system.date}');
         });
+
+        // @Traceability: US-005, CA-05
+        it('should parse out curly braces from variable name on addition', async () => {
+            wrapper.vm.newVarName = '{form.customField}';
+            wrapper.vm.newVarType = 'String';
+            await wrapper.vm.addDeclaredVariable();
+
+            expect(wrapper.vm.declaredVariables).toContainEqual({ name: 'form.customField', type: 'String' });
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should validate variable names using regex that allows dots', async () => {
+            // Valid name with dots
+            wrapper.vm.newVarName = 'my.custom.var';
+            wrapper.vm.newVarType = 'String';
+            await wrapper.vm.addDeclaredVariable();
+            expect(wrapper.vm.declaredVariables).toContainEqual({ name: 'my.custom.var', type: 'String' });
+
+            // Invalid name with other special characters
+            wrapper.vm.newVarName = 'invalid-name!';
+            wrapper.vm.newVarType = 'String';
+            await wrapper.vm.addDeclaredVariable();
+            expect(wrapper.vm.toast.type).toBe('error');
+            expect(wrapper.vm.toast.msg).toContain('El nombre de la variable solo puede contener caracteres alfanuméricos');
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should classify declared variables starting with form., webhook., or session. to their respective sources', async () => {
+            wrapper.vm.declaredVariables = [
+                { name: 'form.declaredMonto', type: 'Number' },
+                { name: 'webhook.declaredSender', type: 'String' },
+                { name: 'session.declaredUser', type: 'String' },
+                { name: 'otherDeclared', type: 'Boolean' }
+            ];
+
+
+            wrapper.vm.selectedElement = { 
+                id: 'StartEvent_1', 
+                type: 'bpmn:StartEvent', 
+                name: 'Evento Inicio Test', 
+                props: { formKey: 'formulario_inicio', decisionRef: '', calledElement: '', topic: '' } 
+            };
+            await wrapper.vm.$nextTick();
+
+            // Verify inputs with dynamic labels/placeholders
+            const nameInput = wrapper.find('input[placeholder="Nombre del evento"]');
+            expect(nameInput.exists()).toBe(true);
+            expect((nameInput.element as HTMLInputElement).value).toBe('Evento Inicio Test');
+
+            const idInput = wrapper.find('input[disabled]');
+            expect(idInput.exists()).toBe(true);
+            expect((idInput.element as HTMLInputElement).value).toBe('StartEvent_1');
+
+            // Verify Start Event formKey section is rendered
+            const html = wrapper.html();
+            expect(html).toContain('FormKey (Start Event)');
+            expect(html).toContain('Formulario de inicio del proceso');
+
+            // Verify that non-editable banner is NOT rendered for StartEvent
+            expect(html).not.toContain('No hay propiedades de Camunda editables para este elemento.');
+
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005 (Camunda 7 Core Properties History TTL, Version Tag and isExecutable)
+        it('Test 8: Verificar que si no se selecciona ningún elemento (lienzo/proceso raíz), se muestran los campos de History TTL, Version Tag e isExecutable y actualizan el nodo raíz del XML', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // When no element is selected, id is empty
+            wrapper.vm.selectedElement = { 
+                id: '', 
+                type: '', 
+                name: '', 
+                props: { formKey: '', decisionRef: '', calledElement: '', topic: '' } 
+            };
+            await wrapper.vm.$nextTick();
+
+            // Verify the HTML contains the fields
+            const html = wrapper.html();
+            expect(html).toContain('History Time To Live (Días)');
+            expect(html).toContain('Etiqueta de Versión (Version Tag)');
+            expect(html).toContain('Proceso Ejecutable (isExecutable)');
+
+            // Verify models are bound
+            wrapper.vm.processHistoryTTL = 90;
+            wrapper.vm.processVersionTag = 'v1.5.0';
+            wrapper.vm.processIsExecutable = false;
+            
+            // Trigger updates
+            await wrapper.vm.updateHistoryTTL();
+            await wrapper.vm.updateVersionTag();
+            await wrapper.vm.updateIsExecutable();
+
+            // Assert that properties are persisted in the root bpmn:Process businessObject
+            const rootElement = (window as any).__modelerInstance.get('canvas').getRootElement();
+            expect(rootElement.businessObject.get('camunda:historyTimeToLive')).toBe('90');
+            expect(rootElement.businessObject.get('camunda:versionTag')).toBe('v1.5.0');
+            expect(rootElement.businessObject.get('isExecutable')).toBe(false);
+
+            wrapper.unmount();
+        });
+    });
+
+    // CA-5: Business Glossary & Nomenclature Rule Autocomplete
+    describe('CA-5: Business Glossary & Nomenclature Rule Autocomplete', () => {
+        let wrapper: any;
+
+        beforeEach(async () => {
+            wrapper = mount(BpmnDesigner, {
+                global: {
+                    stubs: {
+                        Transition: false
+                    }
+                }
+            });
+            await flushPromises();
+        });
+
+        afterEach(() => {
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should correctly initialize with empty glossary and empty nomenclature rule', () => {
+            expect(wrapper.vm.declaredVariables).toEqual([]);
+            expect(wrapper.vm.processNomenclature).toBe('');
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should allow adding manual variables to the glossary and persist them to XML', async () => {
+            wrapper.vm.newVarName = 'montoAprobado';
+            wrapper.vm.newVarType = 'Number';
+            await wrapper.vm.addDeclaredVariable();
+
+            expect(wrapper.vm.declaredVariables).toContainEqual({ name: 'montoAprobado', type: 'Number' });
+            
+            // Verify XML persistence
+            const rootElement = (window as any).__modelerInstance.get('canvas').getRootElement();
+            const extensionElements = rootElement.businessObject.get('extensionElements');
+            const camundaProperties = extensionElements.values.find((e: any) => e.$type === 'camunda:Properties');
+            const glossaryProp = camundaProperties.values.find((p: any) => p.name === 'GlosarioVariables');
+            
+            expect(glossaryProp).toBeDefined();
+            expect(JSON.parse(glossaryProp.value)).toContainEqual({ name: 'montoAprobado', type: 'Number' });
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should validate manual variable inputs and prevent duplicate keys', async () => {
+            wrapper.vm.declaredVariables = [{ name: 'dupVar', type: 'String' }];
+            wrapper.vm.newVarName = 'dupVar';
+            wrapper.vm.newVarType = 'Boolean';
+            
+            await wrapper.vm.addDeclaredVariable();
+
+            // Should reject duplicates
+            expect(wrapper.vm.declaredVariables.length).toBe(1);
+            expect(wrapper.vm.toast.type).toBe('error');
+            expect(wrapper.vm.toast.msg).toBe('La variable dupVar ya está declarada');
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should dynamically merge variables from different sources', async () => {
+            wrapper.vm.declaredVariables = [{ name: 'varManual', type: 'Number' }];
+            wrapper.vm.processVariables = [{ name: 'varConnector', type: 'String' }];
+            wrapper.vm.formFieldsCache = {
+                'formKey_1': [{ name: 'varForm', type: 'String' }]
+            };
+
+            const merged = wrapper.vm.mergedVariables;
+            
+            // Check session context variables
+            expect(merged).toContainEqual({ name: 'session.user_name', type: 'String', source: 'Session' });
+            expect(merged).toContainEqual({ name: 'session.email', type: 'String', source: 'Session' });
+            
+            // Check sources
+            expect(merged).toContainEqual({ name: 'varManual', type: 'Number', source: 'Glossary' });
+            expect(merged).toContainEqual({ name: 'webhook.varConnector', type: 'String', source: 'Connector' });
+            expect(merged).toContainEqual({ name: 'form.varForm', type: 'String', source: 'Form' });
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should toggle the autocomplete popover on nomenclature input', async () => {
+            const editor = wrapper.find('[placeholder="Ej: OC-{Solicitante}"]');
+            expect(editor.exists()).toBe(true);
+
+            editor.element.innerHTML = 'OC-';
+            await editor.trigger('input');
+            expect(wrapper.vm.showAutocompletePopover).toBe(false);
+
+            editor.element.innerHTML = 'OC-{';
+            await editor.trigger('input');
+            expect(wrapper.vm.showAutocompletePopover).toBe(true);
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should contain the expected friendly nomenclature tooltip content', () => {
+            expect(wrapper.vm.bpmnTooltips.NOMENCLATURE_DUMMY).toContain('¿Qué es esto?</b> Es una plantilla para nombrar las solicitudes automáticamente mediante un <b>Glosario de Datos Unificado</b>');
+            expect(wrapper.vm.bpmnTooltips.NOMENCLATURE_DUMMY).toContain('1. Escribe texto fijo (ej. <code>FAC-</code>).');
+            expect(wrapper.vm.bpmnTooltips.NOMENCLATURE_DUMMY).toContain('FAC-{form.monto}-{system.date}');
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should parse out curly braces from variable name on addition', async () => {
+            wrapper.vm.newVarName = '{form.customField}';
+            wrapper.vm.newVarType = 'String';
+            await wrapper.vm.addDeclaredVariable();
+
+            expect(wrapper.vm.declaredVariables).toContainEqual({ name: 'form.customField', type: 'String' });
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should validate variable names using regex that allows dots', async () => {
+            // Valid name with dots
+            wrapper.vm.newVarName = 'my.custom.var';
+            wrapper.vm.newVarType = 'String';
+            await wrapper.vm.addDeclaredVariable();
+            expect(wrapper.vm.declaredVariables).toContainEqual({ name: 'my.custom.var', type: 'String' });
+
+            // Invalid name with other special characters
+            wrapper.vm.newVarName = 'invalid-name!';
+            wrapper.vm.newVarType = 'String';
+            await wrapper.vm.addDeclaredVariable();
+            expect(wrapper.vm.toast.type).toBe('error');
+            expect(wrapper.vm.toast.msg).toContain('El nombre de la variable solo puede contener caracteres alfanuméricos');
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should classify declared variables starting with form., webhook., or session. to their respective sources', async () => {
+            wrapper.vm.declaredVariables = [
+                { name: 'form.declaredMonto', type: 'Number' },
+                { name: 'webhook.declaredSender', type: 'String' },
+                { name: 'session.declaredUser', type: 'String' },
+                { name: 'otherDeclared', type: 'Boolean' }
+            ];
+
+            const merged = wrapper.vm.mergedVariables;
+
+            expect(merged).toContainEqual({ name: 'form.declaredMonto', type: 'Number', source: 'Form' });
+            expect(merged).toContainEqual({ name: 'webhook.declaredSender', type: 'String', source: 'Connector' });
+            expect(merged).toContainEqual({ name: 'session.declaredUser', type: 'String', source: 'Session' });
+            expect(merged).toContainEqual({ name: 'otherDeclared', type: 'Boolean', source: 'Glossary' });
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should insert a token pill and update processNomenclature when an autocomplete option is selected', async () => {
+            wrapper.vm.processNomenclature = 'OC-{';
+            await wrapper.vm.$nextTick();
+            wrapper.vm.showAutocompletePopover = true;
+            wrapper.vm.selectVariable('session.user_name');
+            await wrapper.vm.$nextTick();
+
+            expect(wrapper.vm.processNomenclature).toBe('OC-{session.user_name}');
+            expect(wrapper.vm.showAutocompletePopover).toBe(false);
+            
+            const editor = wrapper.find('[placeholder="Ej: OC-{Solicitante}"]');
+            expect(editor.element.innerHTML).toContain('token-pill');
+            expect(editor.element.innerHTML).toContain('session.user_name');
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should correctly sync nomenclature value containing variables to contenteditable HTML', async () => {
+            wrapper.vm.processNomenclature = 'FAC-{form.monto}-{system.date}';
+            wrapper.vm.syncNomenclatureToHtml('FAC-{form.monto}-{system.date}');
+            await wrapper.vm.$nextTick();
+
+            const editor = wrapper.find('[placeholder="Ej: OC-{Solicitante}"]');
+            expect(editor.element.innerHTML).toContain('FAC-');
+            expect(editor.element.innerHTML).toContain('token-pill');
+            expect(editor.element.innerHTML).toContain('form.monto');
+            expect(editor.element.innerHTML).toContain('system.date');
+        });
+
+        // @Traceability: US-005, CA-05
+        it('should handle editor input and blur to update the Camunda process properties', async () => {
+            const editor = wrapper.find('[placeholder="Ej: OC-{Solicitante}"]');
+            editor.element.innerHTML = 'FACT-';
+            // Create a token pill element inside editor
+            const span = document.createElement('span');
+            span.className = 'token-pill bg-fuchsia-100 text-fuchsia-800 px-2 py-0.5 rounded text-sm select-none inline-flex items-center';
+            span.setAttribute('contenteditable', 'false');
+            span.setAttribute('data-variable', 'form.monto');
+            span.innerText = '{form.monto}';
+            editor.element.appendChild(span);
+
+            // Trigger input and blur
+            await editor.trigger('input');
+            await editor.trigger('blur');
+            await wrapper.vm.$nextTick();
+
+            // processNomenclature should be updated to include the pill variable value
+            expect(wrapper.vm.processNomenclature).toBe('FACT-{form.monto}');
+            
+            // Check properties inside camunda XML properties list
+            const rootElement = (window as any).__modelerInstance.get('canvas').getRootElement();
+            const extensionElements = rootElement.businessObject.get('extensionElements');
+            const camundaProperties = extensionElements.values.find((e: any) => e.$type === 'camunda:Properties');
+            const nomenclatureProp = camundaProperties.values.find((p: any) => p.name === 'ReglaNomenclatura');
+            
+            expect(nomenclatureProp).toBeDefined();
+            expect(nomenclatureProp.value).toBe('FACT-{form.monto}');
+        });
     });
 });
-
-
-

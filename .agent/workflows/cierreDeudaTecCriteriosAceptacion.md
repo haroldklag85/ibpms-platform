@@ -20,6 +20,30 @@ El usuario te pedirá coordinar una Historia de Usuario (US) y Criterios de Acep
 
 Ejecuta el siguiente protocolo paso a paso:
 
+### Fase 0.PRE: Consulta Obligatoria de Gobernanza PM-IA (Gate Estratégico)
+
+> ⚠️ **REGLA ESTRATÉGICA — ALINEACIÓN CON PM-IA:**
+> Antes de CUALQUIER acción de orquestación, el Arquitecto Líder DEBE verificar que la US solicitada está alineada con la estrategia del PM-IA. Este gate es PREVIO a la Fase 0.0.
+
+1. **Leer el Roadmap vigente:** `docs/sprints/gobernanza_pm/01_ROADMAP_Y_METODOLOGIA.md`
+   - Verificar que la US solicitada pertenece al Sprint activo en el roadmap.
+   - Verificar que la US pertenece a una Cadena de Capacidad (Capability Chain) habilitada.
+   - Si la US NO está en el sprint activo → **DETENER** y reportar al humano: *"Esta US no está en el sprint actual del roadmap PM-IA. Consulta con el PM antes de continuar."*
+
+2. **Verificar dependencias de Cadena:** Consultar la Cadena de Capacidad de la US y confirmar que TODAS las US prerequisito están completadas (✅ en coverage_matrix.md).
+   - Si hay US prerequisito incompletas → **DETENER** y reportar: *"La US [X] depende de US [Y] que aún no está completada. No se puede orquestar hasta que la cadena anterior esté cerrada."*
+
+3. **Consultar Contratos de API:** Leer `docs/sprints/gobernanza_pm/API_CONTRACTS.md`
+   - Verificar que los endpoints que la US necesita están definidos en el contrato.
+   - Si faltan endpoints → documentarlos en API_CONTRACTS.md ANTES de crear handoffs.
+
+4. **Consultar Guía del Arquitecto Líder:** Leer `docs/sprints/gobernanza_pm/GUIA_ARQUITECTO_LIDER.md` para recordar las obligaciones y políticas vigentes del PM-IA.
+
+> **Jerarquía de Autoridad:**
+> - **PM-IA** decide QUÉ se construye y CUÁNDO (priorización, roadmap, selección de cadena).
+> - **Arquitecto Líder** decide CÓMO se construye (arquitectura, handoffs, code review).
+> - Si hay conflicto entre priorización técnica y estratégica, prevalece la directiva del PM-IA.
+
 ### Fase 0.0: Política Antiamnesia (Re-entrenamiento Obligatorio)
 
 > ⚠️ **REGLA CERO — LUCHA CONTRA LA AMNESIA INSTITUCIONAL:**
@@ -136,6 +160,8 @@ El Arquitecto Líder DEBE incluir la siguiente sección en TODOS los Handoffs de
 ### Fase 1: Planificación y Creación de Contratos (Handoffs)
 
 > 📚 **SKILL OBLIGATORIO:** Antes de redactar cualquier Handoff, lee y aplica íntegramente el protocolo definido en `.agents/skills/architect_handoff_protocol/SKILL.md`. Este skill define la estructura formal de 6 secciones que TODO Handoff debe cumplir. Queda PROHIBIDO generar Handoffs sin seguir este protocolo.
+
+> 📋 **CONTRATO API OBLIGATORIO:** Todo endpoint referenciado en un Handoff DEBE existir en `docs/sprints/gobernanza_pm/API_CONTRACTS.md`. Si un endpoint nuevo es necesario, el Arquitecto DEBE agregarlo al contrato ANTES de incluirlo en el handoff. Tanto el Handoff de Backend como el de Frontend DEBEN referenciar el MISMO contrato para garantizar coherencia. **PROHIBIDO** inventar rutas, payloads o respuestas que no estén en el contrato centralizado.
 
 1. Analiza los Criterios de Aceptación solicitados. Identifica qué partes corresponden al Backend, cuáles al Frontend y cuáles requieren validación de QA.
 2. Utiliza silenciosamente tus herramientas de terminal/archivos (write_to_file) para crear o actualizar archivos físicos de delegación dentro de la carpeta oculta `.agentic-sync/`. 
@@ -307,6 +333,27 @@ Generar un artefacto `.agentic-sync/cierre_iteracion_[ITERACION]_[US-XXX].md` co
 ```
 
 Este artefacto es el **acta de cierre** de la iteración y queda como evidencia histórica para auditorías futuras.
+
+### Fase 6.B: Actualización de Bitácora No-Técnica (CHANGELOG)
+*(Se ejecuta INMEDIATAMENTE después de la Fase 6.)*
+
+> 📋 **REGLA DE COMUNICACIÓN HUMANA:** Todo cierre de iteración DEBE generar una entrada en la bitácora no-técnica para que los stakeholders humanos comprendan qué se entregó.
+
+1. Leer `docs/sprints/gobernanza_pm/CHANGELOG_NO_TECNICO.md`.
+2. Agregar una nueva entrada al inicio del documento con el siguiente formato:
+
+```markdown
+## [FECHA_LOCAL] — [TÍTULO DESCRIPTIVO EN LENGUAJE COTIDIANO]
+**Autor**: [Nombre del agente/usuario que ejecutó]
+**¿Qué es?**: [Descripción en lenguaje cotidiano — qué se construyó, sin tecnicismos]
+**¿Para qué sirve?**: [Beneficio práctico para el usuario final]
+**¿De dónde viene?**: [US-XXX — nombre de la historia de usuario que lo originó]
+**¿Qué debería hacer?**: [Comportamiento esperado visible para el usuario]
+**Estado**: ✅ Listo | 🔨 En progreso | ⚠️ Con observaciones
+```
+
+3. La entrada DEBE estar escrita como si se explicara a un CEO no-técnico. **PROHIBIDO** usar jerga técnica (endpoints, DTOs, hexagonal, Pinia, etc.).
+4. Hacer `git commit -m "docs(changelog): Actualizar bitácora no-técnica iteración [ITERACION]"` y `git push`.
 
 ---
 

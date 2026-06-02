@@ -735,10 +735,85 @@
       @success="msg => showToast('✅ ' + msg, 'success')"
     />
 
+    <!-- ═══════ Welcome Modal (CA-40) ═══════ -->
+    <div v-if="showWelcomeModal" data-testid="welcome-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+        <!-- Header -->
+        <div class="px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between">
+          <div>
+            <h3 class="text-xl font-bold">✨ Bienvenido al Diseñador iBPMS</h3>
+            <p class="text-xs text-blue-100 mt-1">Selecciona un proceso existente o crea uno nuevo para comenzar.</p>
+          </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto">
+          <!-- Left: Existing Processes Catalog -->
+          <div class="flex flex-col h-full border-r border-gray-200 dark:border-gray-700 pr-6">
+            <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+              📂 Procesos Recientes
+            </h4>
+            <div class="flex-1 overflow-y-auto flex flex-col gap-3 min-h-[250px]">
+              <div v-if="loadingCatalog" class="flex items-center justify-center py-10">
+                <span class="text-xs text-gray-500 font-bold animate-pulse">Cargando catálogo...</span>
+              </div>
+              <div v-else-if="catalogProcesses.length === 0" class="text-center text-xs text-gray-500 py-10 font-bold">
+                No hay procesos en el catálogo.
+              </div>
+              <div v-else v-for="p in catalogProcesses" :key="p.id" @click="selectProcessFromWelcome(p)" class="p-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer transition flex flex-col gap-1">
+                <span class="font-bold text-xs text-gray-900 dark:text-gray-100">{{ p.name }}</span>
+                <div class="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
+                  <span>v{{ p.version }} | {{ p.author?.split(' ')[0] }}</span>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase" :class="{'bg-green-100 text-green-800': p.status==='ACTIVO', 'bg-yellow-100 text-yellow-800': p.status==='BORRADOR', 'bg-gray-100 text-gray-700': p.status==='ARCHIVADO'}">
+                    {{ p.status }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right: New Process Form -->
+          <div class="flex flex-col justify-between">
+            <div>
+              <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-4">
+                ✨ Crear Nuevo Proceso
+              </h4>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del Proceso</label>
+                  <input v-model="newProcessName" type="text" placeholder="Ej. Proceso de Facturación" class="w-full rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2.5 text-xs focus:ring-blue-500 focus:border-blue-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Patrón de Proceso</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button @click="newProcessPattern = 'SIMPLE'" :class="newProcessPattern === 'SIMPLE' ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10 border-blue-300' : 'border-gray-200 dark:border-gray-700'" class="p-3 border rounded-lg text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                      <span class="text-lg">🟢</span>
+                      <p class="text-xs font-bold mt-1 text-gray-800 dark:text-white">Simple</p>
+                    </button>
+                    <button @click="newProcessPattern = 'IFORM_MAESTRO'" :class="newProcessPattern === 'IFORM_MAESTRO' ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10 border-blue-300' : 'border-gray-200 dark:border-gray-700'" class="p-3 border rounded-lg text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                      <span class="text-lg">🔵</span>
+                      <p class="text-xs font-bold mt-1 text-gray-800 dark:text-white">iForm</p>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="pt-6 border-t border-gray-100 dark:border-gray-700 mt-6 flex justify-end">
+              <button @click="completeProcessCreationInWelcome" :disabled="!newProcessName.trim()" class="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-md transition">
+                Crear y Diseñar Proceso
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
+// @Traceability: US-005, CA-40
 import { useTimeStore } from '@/stores/timeStore';
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent } from 'vue';
@@ -1080,11 +1155,12 @@ const restoreVersion = async (v: number) => {
 
 // ── Catalog (CA-14) ──────────────────────────────────────────
 const showCatalog = ref(false);
+const showWelcomeModal = ref(false);
 const catalogProcesses = ref<any[]>([]);
 const loadingCatalog = ref(false);
 
-watch(showCatalog, async (val) => {
-  if (val) {
+watch([showCatalog, showWelcomeModal], async ([newShowCatalog, newShowWelcomeModal]) => {
+  if (newShowCatalog || newShowWelcomeModal) {
     loadingCatalog.value = true;
     try {
       const { data } = await integrationStore.getCatalogProcesses();
@@ -1098,6 +1174,16 @@ watch(showCatalog, async (val) => {
     }
   }
 });
+
+const selectProcessFromWelcome = async (p: any) => {
+  await loadProcess(p);
+  showWelcomeModal.value = false;
+};
+
+const completeProcessCreationInWelcome = async () => {
+  createNewProcess();
+  showWelcomeModal.value = false;
+};
 
 // ── Toast ────────────────────────────────────────────────────
 const toast = ref<{ msg: string; type: 'success' | 'error' }>({ msg: '', type: 'success' });
@@ -1470,9 +1556,27 @@ onMounted(async () => {
     fetchLockState();
     fetchVersions();
 
-    // @Traceability: US-005, CA-40 Abrir catálogo si no se identifica un proceso activo
+    // @Traceability: US-005, CA-40 Abrir welcome modal si no se identifica un proceso activo
     if (!route || !route.query || !route.query.processId) {
+      showWelcomeModal.value = true;
       showCatalog.value = true;
+    } else {
+      try {
+        const targetId = route.query.processId;
+        const { data } = await integrationStore.getCatalogProcesses();
+        catalogProcesses.value = data || [];
+        const targetProcess = catalogProcesses.value.find(p => p.key === targetId || p.id === targetId);
+        if (targetProcess) {
+          await loadProcess(targetProcess);
+        } else {
+          showWelcomeModal.value = true;
+          showCatalog.value = true;
+        }
+      } catch (err) {
+        console.error('Error fetching catalog on mounted', err);
+        showWelcomeModal.value = true;
+        showCatalog.value = true;
+      }
     }
     
     watch(showVersions, (val) => {
@@ -1800,6 +1904,7 @@ const createNewProcess = () => {
   processPattern.value = newProcessPattern.value;
   processStatus.value = 'BORRADOR';
   showNewProcessModal.value = false;
+  showWelcomeModal.value = false;
   if (modelerInstance) {
     if (newProcessOrigin.value === 'TEMPLATE' && selectedTemplateId.value) {
       const tpl = templatesList.value.find(t => t.id === selectedTemplateId.value);
@@ -1863,6 +1968,7 @@ const loadProcess = async (p: any) => {
     }
 
     showCatalog.value = false;
+    showWelcomeModal.value = false;
     showToast(`Cargado: ${p.name} v${p.version}`);
     await fetchForms();
   } catch (err) {
@@ -2127,7 +2233,10 @@ defineExpose({
   zoomIn,
   zoomOut,
   zoomFit,
-  linterErrors // @Traceability: US-005, CA-77
+  linterErrors, // @Traceability: US-005, CA-77
+  showWelcomeModal,
+  selectProcessFromWelcome,
+  completeProcessCreationInWelcome
 });
 </script>
 

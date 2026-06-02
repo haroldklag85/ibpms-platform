@@ -6,7 +6,7 @@ import { useIntegrationStore } from '@/stores/useIntegrationStore';
 // Mock consol.error to keep tests clean from bpmn-js errors in test env
 vi.stubGlobal('console', {
     ...console,
-    error: vi.fn(),
+    error: console.error,
     log: vi.fn()
 });
 
@@ -69,6 +69,53 @@ vi.mock('bpmn-js/lib/Modeler', () => {
     };
 });
 vi.mock('diagram-js-minimap', () => ({ default: {} }));
+
+vi.mock('@/services/apiClient', () => {
+    return {
+        default: {
+            get: vi.fn().mockImplementation((url, config) => {
+                if (url === '/admin/settings/bpmn-complexity-limit') {
+                    return Promise.resolve({ data: { limit: 100 } });
+                }
+                if (url === '/design/processes/catalog') {
+                    return Promise.resolve({ data: [
+                        { id: '1', key: 'proceso-1', name: 'Proceso de Prueba', status: 'BORRADOR', version: 1, lastEdited: '2026-05-27', author: 'Autor A' }
+                    ] });
+                }
+                if (url === '/integrations/connectors') {
+                    return Promise.resolve({ data: [
+                        { id: 'o365_mail', name: 'O365/Exchange', icon: '📧' },
+                        { id: 'sharepoint_docs', name: 'SharePoint MS', icon: '📁' },
+                        { id: 'netsuite_erp', name: 'Oracle NetSuite', icon: '💰' }
+                    ] });
+                }
+                if (url === '/forms/active') {
+                    return Promise.resolve({ data: [
+                        { key: 'iForm_Credito_Base', name: 'Crédito Base', type: 'MAESTRO' },
+                        { key: 'iForm_Onboarding_V3', name: 'Onboarding V3', type: 'MAESTRO' },
+                        { key: 'form_aprobacion', name: 'Aprobación Rápida', type: 'SIMPLE' },
+                        { key: 'form_revision_docs', name: 'Revisión Documentos', type: 'SIMPLE' }
+                    ] });
+                }
+                if (url === '/dmn-models/definitions') {
+                    return Promise.resolve({ data: [] });
+                }
+                if (url.includes('/xml')) {
+                    return Promise.resolve({ data: { xml: '<xml/>' } });
+                }
+                return Promise.resolve({ data: {} });
+            }),
+            post: vi.fn().mockResolvedValue({ data: {} }),
+            put: vi.fn().mockResolvedValue({ data: {} }),
+            delete: vi.fn().mockResolvedValue({ data: {} }),
+            patch: vi.fn().mockResolvedValue({ data: {} }),
+            interceptors: {
+                request: { use: vi.fn() },
+                response: { use: vi.fn() }
+            }
+        }
+    };
+});
 
 let mockRouteQuery: any = { processId: 'credito-consumo-v1' };
 vi.mock('vue-router', () => ({
@@ -558,6 +605,65 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             // showCatalog debe ser true
             expect(wrapper.vm.showCatalog).toBe(true);
 
+            wrapper.unmount();
+        });
+    });
+
+    // @Traceability: US-005, CA-40
+    describe('WelcomeModal (CA-40)', () => {
+        beforeEach(() => {
+            mockRouteQuery = {};
+        });
+
+        it('Debe ser showWelcomeModal true si no hay processId en la URL query', async () => {
+            mockRouteQuery = {};
+            const wrapper = createWrapper();
+            await flushPromises();
+            expect(wrapper.vm.showWelcomeModal).toBe(true);
+            wrapper.unmount();
+        });
+
+        it('Debe renderizar el elemento del WelcomeModal en el HTML', async () => {
+            mockRouteQuery = {};
+            const wrapper = createWrapper();
+            await flushPromises();
+            const modal = wrapper.find('[data-testid="welcome-modal"]');
+            expect(modal.exists()).toBe(true);
+            wrapper.unmount();
+        });
+
+        it('Debe llamar a getCatalogProcesses al montar', async () => {
+            mockRouteQuery = {};
+            const store = useIntegrationStore();
+            const getCatalogSpy = vi.fn().mockResolvedValue({ data: [] });
+            (store as any).getCatalogProcesses = getCatalogSpy;
+            const wrapper = createWrapper();
+            await flushPromises();
+            expect(getCatalogSpy).toHaveBeenCalled();
+            wrapper.unmount();
+        });
+
+        it('Debe cerrar el welcome modal (showWelcomeModal = false) al seleccionar un proceso del catálogo', async () => {
+            mockRouteQuery = {};
+            const wrapper = createWrapper();
+            await flushPromises();
+            expect(wrapper.vm.showWelcomeModal).toBe(true);
+
+            // Simular la selección de un proceso
+            await wrapper.vm.selectProcessFromWelcome({ id: 'some-proc-id', name: 'Selected Process' });
+            expect(wrapper.vm.showWelcomeModal).toBe(false);
+            wrapper.unmount();
+        });
+
+        it('Debe cerrar el welcome modal (showWelcomeModal = false) al completar la creación del proceso', async () => {
+            mockRouteQuery = {};
+            const wrapper = createWrapper();
+            await flushPromises();
+            expect(wrapper.vm.showWelcomeModal).toBe(true);
+
+            // Simular completar la creación
+            await wrapper.vm.completeProcessCreationInWelcome();
+            expect(wrapper.vm.showWelcomeModal).toBe(false);
             wrapper.unmount();
         });
     });

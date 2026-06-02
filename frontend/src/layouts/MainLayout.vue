@@ -250,11 +250,11 @@
       
       <!-- Lienzo donde se renderizan las vistas secundarias (Router View) -->
       <div class="flex-1 overflow-auto bg-transparent relative">
-        <router-view v-slot="{ Component }">
+        <router-view v-slot="{ Component, route }">
           <transition name="fade" mode="out-in">
             <!-- @Traceability(US = "US-001", CA = {"CA-12"}) Acierto UX: Keep-Alive retiene scroll y filtros en RAM para 0ms de carga en regresos -->
             <keep-alive include="Workdesk">
-              <component :is="Component" :key="route.fullPath + '-' + authStore.activeRole" />
+              <component :is="Component" :key="route?.fullPath ? route.fullPath + '-' + authStore.activeRole : ''" />
             </keep-alive>
           </transition>
         </router-view>

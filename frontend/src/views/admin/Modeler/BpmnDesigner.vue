@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-5
 <template>
   <div class="h-full w-full bg-gray-50 dark:bg-gray-900 flex flex-col" v-cloak>
 
@@ -167,10 +168,46 @@
             <div class="p-3 bg-fuchsia-50 dark:bg-fuchsia-900/20 border border-fuchsia-200 rounded">
                <label class="block text-xs font-bold text-fuchsia-800 dark:text-fuchsia-300 mb-1 flex items-center justify-between">
                  <span>🎟 Regla de Nomenclatura (CA-5)</span>
-                 <AppTooltip :content="isNomenclatureSyntaxError ? '⚠️ Error de sintaxis: llaves sin cerrar' : bpmnTooltips.NOMENCLATURE" :isError="isNomenclatureSyntaxError" />
+                 <AppTooltip :content="isNomenclatureSyntaxError ? '⚠️ Error de sintaxis: llaves sin cerrar' : bpmnTooltips.NOMENCLATURE_DUMMY" :isError="isNomenclatureSyntaxError" />
                </label>
-               <input type="text" v-model="processNomenclature" @change="updateProcessProperty('ReglaNomenclatura', processNomenclature)" :class="{'border-red-500 ring-1 ring-red-500 bg-red-50': isNomenclatureSyntaxError}" class="w-full text-xs border-fuchsia-300 dark:border-fuchsia-600 dark:bg-gray-700 dark:text-white rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 p-2 border transition" placeholder="Ej: OC-{Solicitante}" />
+               <div class="relative">
+                 <!-- @Traceability: US-005, CA-05 -->
+                 <div
+                   ref="editorRef"
+                   contenteditable="true"
+                   @input="onEditorInput"
+                   @keydown="onEditorKeydown"
+                   @blur="onEditorBlur"
+                   :class="{'border-red-500 ring-1 ring-red-500 bg-red-50': isNomenclatureSyntaxError}"
+                   class="w-full min-h-[38px] text-xs border border-fuchsia-300 dark:border-fuchsia-600 dark:bg-gray-700 dark:text-white rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 p-2 outline-none transition overflow-y-auto max-h-24 whitespace-pre-wrap empty:before:content-[attr(placeholder)] empty:before:text-gray-400 dark:empty:before:text-gray-500"
+                   placeholder="Ej: OC-{Solicitante}"
+                 ></div>
+                 
+                 <!-- Autocomplete Dropdown Popover (CA-5) -->
+                 <div v-if="showAutocompletePopover && filteredAutocompleteVariables.length > 0" class="absolute z-50 left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg text-xs">
+                   <div v-for="v in filteredAutocompleteVariables" :key="v.name" @mousedown.prevent="selectVariable(v.name)" class="px-3 py-2 cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/40 flex justify-between items-center">
+                     <span class="font-mono font-bold text-gray-900 dark:text-white">{{ v.name }}</span>
+                     <span :class="{
+                       'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300': v.source === 'Session',
+                       'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300': v.source === 'Form',
+                       'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300': v.source === 'Glossary',
+                       'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300': v.source === 'Connector'
+                     }" class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">{{ v.source }}</span>
+                   </div>
+                 </div>
+               </div>
                <p class="text-[10px] text-fuchsia-600 dark:text-fuchsia-400 mt-1 leading-tight">Obligatorio. Define la máscara para instanciar tickets. Se inyecta al nodo raíz del XML.</p>
+               
+               <!-- Nomenclature preview chips below the input (CA-5) -->
+               <div v-if="processNomenclature" class="mt-2 flex flex-wrap items-center gap-1 text-[10px] border border-fuchsia-100 dark:border-fuchsia-900/50 rounded p-1.5 bg-fuchsia-50/50 dark:bg-fuchsia-900/10">
+                 <span class="text-fuchsia-400 font-medium mr-1">Previsualización:</span>
+                 <template v-for="(part, idx) in nomenclatureParts" :key="idx">
+                   <span v-if="part.isVariable" :class="part.badgeClass" class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded border font-mono font-semibold" :title="`Tipo: ${part.type} | Origen: ${part.source}`">
+                     {{ part.text }}
+                   </span>
+                   <span v-else class="text-fuchsia-700 dark:text-fuchsia-300 font-mono">{{ part.text }}</span>
+                 </template>
+               </div>
             </div>
 
             <!-- SLA Global -->
@@ -180,6 +217,81 @@
                 <AppTooltip :content="bpmnTooltips.GLOBAL_SLA" />
               </label>
               <input type="number" v-model.number="globalSla" @change="updateGlobalSla" min="1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" placeholder="72" />
+            </div>
+
+            <!-- History TTL (Camunda 7 Core) -->
+            <div class="p-3 bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded">
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1 flex items-center justify-between">
+                🛡️ History Time To Live (Días)
+                <AppTooltip content="Número de días que se conservarán los datos históricos en Camunda. Vacío o cero desactiva la limpieza automática para este proceso." />
+              </label>
+              <input type="number" v-model.number="processHistoryTTL" @change="updateHistoryTTL" min="1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" placeholder="Ej: 180" />
+            </div>
+
+            <!-- Version Tag (Camunda 7 Core) -->
+            <div class="p-3 bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded">
+              <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1 flex items-center justify-between">
+                🏷️ Etiqueta de Versión (Version Tag)
+                <AppTooltip content="Etiqueta semántica de la versión del diseño del proceso (ej. 1.0.0, v2.1-draft)." />
+              </label>
+              <input type="text" v-model="processVersionTag" @change="updateVersionTag" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border font-mono" placeholder="Ej: 1.0.0" />
+            </div>
+
+            <!-- Executable Checkbox (Camunda 7 Core) -->
+            <div class="p-3 bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded flex items-center justify-between">
+               <span class="block text-xs font-bold text-slate-800 dark:text-slate-300">
+                 ⚙️ Proceso Ejecutable (isExecutable)
+               </span>
+               <input type="checkbox" v-model="processIsExecutable" @change="updateIsExecutable" class="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500" />
+             </div>
+
+            <!-- Glosario de Variables de Negocio (CA-5) -->
+            <div class="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 rounded space-y-[12px]">
+              <div class="flex items-center justify-between cursor-pointer" @click="isGlossaryCollapsed = !isGlossaryCollapsed">
+                <span class="block text-xs font-bold text-purple-800 dark:text-purple-300">
+                  📚 Glosario de Variables de Negocio
+                </span>
+                <span class="text-xs text-purple-600 dark:text-purple-400">
+                  {{ isGlossaryCollapsed ? '▶' : '▼' }}
+                </span>
+              </div>
+
+              <div v-show="!isGlossaryCollapsed" class="space-y-[12px] pt-1 border-t border-purple-100 dark:border-purple-800">
+                <!-- List of declared variables -->
+                <div v-if="declaredVariables.length === 0" class="text-[10px] text-gray-500 dark:text-gray-400">
+                  No hay variables declaradas manualmente.
+                </div>
+                <div v-else class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                  <div v-for="(v, index) in declaredVariables" :key="index" class="flex items-center justify-between bg-white dark:bg-gray-800 border border-purple-100 dark:border-purple-900 p-1.5 rounded text-[11px]">
+                    <div class="flex items-center space-x-1.5 truncate">
+                      <span class="font-mono font-semibold text-purple-700 dark:text-purple-300 truncate" :title="v.name">{{ v.name }}</span>
+                      <span class="text-[9px] px-1 bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 rounded font-semibold">{{ v.type }}</span>
+                    </div>
+                    <button @click="removeDeclaredVariable(index)" class="text-red-500 hover:text-red-700 text-xs px-1 font-bold" title="Eliminar variable">&times;</button>
+                  </div>
+                </div>
+
+                <!-- Form to add new variable -->
+                <div class="space-y-2 pt-2 border-t border-purple-100 dark:border-purple-800">
+                  <div class="grid grid-cols-2 gap-1.5">
+                    <div>
+                      <label class="block text-[9px] font-bold text-purple-700 dark:text-purple-400 mb-0.5">Nombre/Clave</label>
+                      <input type="text" v-model="newVarName" placeholder="Ej: monto" class="w-full text-[10px] border-purple-200 dark:border-purple-800 dark:bg-gray-700 dark:text-white rounded p-1 border" />
+                    </div>
+                    <div>
+                      <label class="block text-[9px] font-bold text-purple-700 dark:text-purple-400 mb-0.5">Tipo</label>
+                      <select v-model="newVarType" class="w-full text-[10px] border-purple-200 dark:border-purple-800 dark:bg-gray-700 dark:text-white rounded p-1 border">
+                        <option value="String">String</option>
+                        <option value="Number">Number</option>
+                        <option value="Boolean">Boolean</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button @click="addDeclaredVariable" class="w-full text-center bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold py-1 px-2 rounded shadow transition">
+                    + Declarar Variable
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- Process Pattern (CA-31 y CA-38) -->
@@ -875,7 +987,7 @@
 // @Traceability: US-005, CA-40
 import { useTimeStore } from '@/stores/timeStore';
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
-import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent, nextTick } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRoute } from 'vue-router';
 import { debounce } from 'lodash-es';
@@ -915,6 +1027,10 @@ const bpmnTooltips = {
   CALL_ACTIVITY: 'Un Sub-proceso re-usable de nivel corporativo que actúa como Caja Negra. Obliga a que la Cédula/Identificador coincida lógicamente entre ambos Diagramas. El link no rutea si la variable Target no existe.',
   // CA-47: Integraciones Estrictas y UX
   NOMENCLATURE: 'Patrón para generar el ID del ticket. Soporta variables como {Solicitante}.',
+  NOMENCLATURE_DUMMY: '🎟 <b>¿Qué es esto?</b> Es una plantilla para nombrar las solicitudes automáticamente mediante un <b>Glosario de Datos Unificado</b> y mapeo bidireccional.<br><br>' +
+                      '1. Escribe texto fijo (ej. <code>FAC-</code>).<br>' +
+                      '2. Abre una llave <code>{</code> para ver variables disponibles (de sesión, formularios y webhooks).<br>' +
+                      '3. Ejemplo: <code>FAC-{form.monto}-{system.date}</code> se resolverá dinámicamente como <b>FAC-5000-2026-06-02</b>.',
   CONNECTOR: 'Integra este nodo con sistemas externos mapeando variables del proceso actual.',
   ESCALATION: 'Define reglas semánticas de rebote o escalamiento a roles superiores.'
 };
@@ -940,6 +1056,343 @@ const processStatus = ref<'BORRADOR' | 'ACTIVO' | 'ARCHIVADO' | 'PENDING'>('BORR
 const processPattern = ref<'SIMPLE' | 'IFORM_MAESTRO'>('SIMPLE');
 const processNomenclature = ref(''); // CA-5
 const globalSla = ref(72);
+const processHistoryTTL = ref<number | null>(180);
+const processVersionTag = ref('');
+const processIsExecutable = ref(true);
+
+// CA-5: Glosario de Variables de Negocio y Autocompletado
+const safeGet = (obj: any, key: string) => {
+  if (!obj) return undefined;
+  if (typeof obj.get === 'function') {
+    return obj.get(key);
+  }
+  return obj[key];
+};
+const isGlossaryCollapsed = ref(false);
+const declaredVariables = ref<{ name: string, type: 'String' | 'Number' | 'Boolean' }[]>([]);
+const newVarName = ref('');
+const newVarType = ref<'String' | 'Number' | 'Boolean'>('String');
+const formFieldsCache = ref<Record<string, { name: string, type: string }[]>>({});
+// @Traceability: US-005, CA-05
+const editorRef = ref<HTMLDivElement | null>(null);
+const showAutocompletePopover = ref(false);
+const autocompleteSearchQuery = ref('');
+
+// @Traceability: US-005, CA-05
+const addDeclaredVariable = () => {
+  let name = newVarName.value.trim();
+  // Parse out curly braces { } if user typed them
+  name = name.replace(/[{}]/g, '');
+  if (!name) {
+    showToast('El nombre de la variable no puede estar vacío', 'error');
+    return;
+  }
+  // allow dots . in key name validation regex: /^[a-zA-Z0-9_.]+$/
+  const regex = /^[a-zA-Z0-9_.]+$/;
+  if (!regex.test(name)) {
+    showToast('El nombre de la variable solo puede contener caracteres alfanuméricos, guiones bajos y puntos', 'error');
+    return;
+  }
+  const exists = declaredVariables.value.some(v => v.name === name);
+  if (exists) {
+    showToast(`La variable ${name} ya está declarada`, 'error');
+    return;
+  }
+  declaredVariables.value.push({ name, type: newVarType.value });
+  newVarName.value = '';
+  newVarType.value = 'String';
+  updateProcessProperty('GlosarioVariables', JSON.stringify(declaredVariables.value));
+  showToast('Variable declarada exitosamente');
+};
+
+const removeDeclaredVariable = (index: number) => {
+  declaredVariables.value.splice(index, 1);
+  updateProcessProperty('GlosarioVariables', JSON.stringify(declaredVariables.value));
+  showToast('Variable eliminada');
+};
+
+// @Traceability: US-005, CA-05
+const mergedVariables = computed(() => {
+  const map = new Map<string, { name: string, type: 'String' | 'Number' | 'Boolean', source: 'Session' | 'Form' | 'Connector' | 'Glossary' }>();
+
+  // 1. Session context (highest priority or first)
+  map.set('session.user_name', { name: 'session.user_name', type: 'String', source: 'Session' });
+  map.set('session.email', { name: 'session.email', type: 'String', source: 'Session' });
+  map.set('system.date', { name: 'system.date', type: 'String', source: 'Session' });
+
+  // 2. Form variables from cache
+  Object.values(formFieldsCache.value).forEach(fields => {
+    fields.forEach(f => {
+      const name = f.name.startsWith('form.') ? f.name : 'form.' + f.name;
+      if (!map.has(name)) {
+        map.set(name, {
+          name,
+          type: (f.type as any) || 'String',
+          source: 'Form'
+        });
+      }
+    });
+  });
+
+  // 3. Connector/processVariables
+  processVariables.value.forEach(v => {
+    const name = v.name.startsWith('webhook.') ? v.name : 'webhook.' + v.name;
+    if (!map.has(name)) {
+      map.set(name, {
+        name,
+        type: (v.type as any) || 'String',
+        source: 'Connector'
+      });
+    }
+  });
+
+  // 4. Glossary variables
+  declaredVariables.value.forEach(v => {
+    let source: 'Session' | 'Form' | 'Connector' | 'Glossary' = 'Glossary';
+    if (v.name.startsWith('form.')) {
+      source = 'Form';
+    } else if (v.name.startsWith('webhook.')) {
+      source = 'Connector';
+    } else if (v.name.startsWith('session.')) {
+      source = 'Session';
+    }
+    
+    map.set(v.name, {
+      name: v.name,
+      type: v.type,
+      source
+    });
+  });
+
+  return Array.from(map.values());
+});
+
+const filteredAutocompleteVariables = computed(() => {
+  const query = autocompleteSearchQuery.value.toLowerCase().trim();
+  if (!query) return mergedVariables.value;
+  return mergedVariables.value.filter(v => v.name.toLowerCase().includes(query));
+});
+
+// @Traceability: US-005, CA-05
+const nomenclatureParts = computed(() => {
+  const val = processNomenclature.value || '';
+  const parts = val.split(/(\{.*?\})/g);
+  return parts.map(part => {
+    const isVariable = part.startsWith('{') && part.endsWith('}');
+    if (!isVariable) {
+      return { text: part, isVariable: false };
+    }
+    const varName = part.substring(1, part.length - 1);
+    const foundVar = mergedVariables.value.find(v => v.name === varName);
+    let badgeClass = 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800';
+    let sourceLabel = 'Desconocido';
+    let varType = 'Desconocido';
+    if (foundVar) {
+      varType = foundVar.type;
+      sourceLabel = foundVar.source;
+      if (foundVar.source === 'Session') {
+        badgeClass = 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800';
+      } else if (foundVar.source === 'Form') {
+        badgeClass = 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-800';
+      } else if (foundVar.source === 'Glossary') {
+        badgeClass = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800';
+      } else if (foundVar.source === 'Connector') {
+        badgeClass = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800';
+      }
+    }
+    return {
+      text: part,
+      isVariable: true,
+      badgeClass,
+      type: varType,
+      source: sourceLabel
+    };
+  });
+});
+
+// @Traceability: US-005, CA-05
+const syncNomenclatureToHtml = (val: string) => {
+  if (!editorRef.value) return;
+  const parts = val.split(/(\{.*?\})/g);
+  let html = '';
+  parts.forEach(part => {
+    if (part.startsWith('{') && part.endsWith('}')) {
+      const varName = part.substring(1, part.length - 1);
+      const foundVar = mergedVariables.value.find(v => v.name === varName);
+      let badgeClass = 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800';
+      if (foundVar) {
+        if (foundVar.source === 'Session') {
+          badgeClass = 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800';
+        } else if (foundVar.source === 'Form') {
+          badgeClass = 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-800';
+        } else if (foundVar.source === 'Glossary') {
+          badgeClass = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800';
+        } else if (foundVar.source === 'Connector') {
+          badgeClass = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800';
+        }
+      }
+      const safeVarName = DOMPurify.sanitize(varName);
+      html += `<span contenteditable="false" class="inline-block mx-0.5 px-1.5 py-0.5 rounded font-mono font-bold text-[11px] select-all cursor-default border ${badgeClass}" data-variable="${safeVarName}">{${safeVarName}}</span>`;
+    } else {
+      if (part) {
+        html += DOMPurify.sanitize(part);
+      }
+    }
+  });
+  editorRef.value.innerHTML = html;
+};
+
+// @Traceability: US-005, CA-05
+const parseHtmlToNomenclature = (): string => {
+  if (!editorRef.value) return '';
+  let result = '';
+  const childNodes = editorRef.value.childNodes;
+  for (let i = 0; i < childNodes.length; i++) {
+    const node = childNodes[i];
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      if (el.tagName.toLowerCase() === 'span' && el.hasAttribute('data-variable')) {
+        result += `{${el.getAttribute('data-variable')}}`;
+      } else {
+        result += el.textContent || '';
+      }
+    } else if (node.nodeType === Node.TEXT_NODE) {
+      result += node.textContent || '';
+    }
+  }
+  return result;
+};
+
+// @Traceability: US-005, CA-05
+const onEditorInput = (event: Event) => {
+  const rawValue = parseHtmlToNomenclature();
+  processNomenclature.value = rawValue;
+  updateProcessProperty('ReglaNomenclatura', rawValue);
+
+  const selection = typeof window !== 'undefined' ? window.getSelection() : null;
+  let textBeforeCursor = '';
+  if (selection && selection.rangeCount > 0) {
+    try {
+      const range = selection.getRangeAt(0);
+      const preCaretRange = range.cloneRange();
+      if (editorRef.value) {
+        preCaretRange.selectNodeContents(editorRef.value);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        textBeforeCursor = preCaretRange.toString();
+      }
+    } catch (e) {
+      textBeforeCursor = rawValue;
+    }
+  } else {
+    textBeforeCursor = rawValue;
+  }
+
+  const lastBraceIndex = textBeforeCursor.lastIndexOf('{');
+  if (lastBraceIndex !== -1) {
+    const textAfterBrace = textBeforeCursor.substring(lastBraceIndex + 1);
+    if (!textAfterBrace.includes('}')) {
+      showAutocompletePopover.value = true;
+      autocompleteSearchQuery.value = textAfterBrace;
+      return;
+    }
+  }
+  showAutocompletePopover.value = false;
+  autocompleteSearchQuery.value = '';
+};
+
+// @Traceability: US-005, CA-05
+const onEditorKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    showAutocompletePopover.value = false;
+  }
+};
+
+// @Traceability: US-005, CA-05
+const onEditorBlur = () => {
+  setTimeout(() => {
+    showAutocompletePopover.value = false;
+  }, 200);
+};
+
+// @Traceability: US-005, CA-05
+watch(processNomenclature, (newVal) => {
+  const currentRaw = parseHtmlToNomenclature();
+  if (currentRaw !== newVal) {
+    syncNomenclatureToHtml(newVal);
+  }
+});
+
+// @Traceability: US-005, CA-05
+const selectVariable = (varName: string) => {
+  const foundVar = mergedVariables.value.find(v => v.name === varName);
+  const nameToUse = foundVar ? foundVar.name : varName;
+
+  const rawValue = processNomenclature.value || '';
+  const lastBraceIndex = rawValue.lastIndexOf('{');
+  
+  let newValue = '';
+  if (lastBraceIndex !== -1) {
+    newValue = rawValue.substring(0, lastBraceIndex) + `{${nameToUse}}`;
+  } else {
+    newValue = rawValue + `{${nameToUse}}`;
+  }
+
+  processNomenclature.value = newValue;
+  updateProcessProperty('ReglaNomenclatura', newValue);
+  syncNomenclatureToHtml(newValue);
+  showAutocompletePopover.value = false;
+  autocompleteSearchQuery.value = '';
+
+  nextTick(() => {
+    if (editorRef.value) {
+      editorRef.value.focus();
+      if (typeof window !== 'undefined' && window.getSelection) {
+        const range = document.createRange();
+        range.selectNodeContents(editorRef.value);
+        range.collapse(false);
+        const selection = window.getSelection();
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+    }
+  });
+};
+
+const scanAndFetchFormFields = async () => {
+  if (!modelerInstance) return;
+  try {
+    const elementRegistry = modelerInstance.get('elementRegistry');
+    if (!elementRegistry || typeof elementRegistry.filter !== 'function') return;
+    const userTasks = elementRegistry.filter((e: any) => e.type === 'bpmn:UserTask');
+    const startEvents = elementRegistry.filter((e: any) => e.type === 'bpmn:StartEvent');
+    const allElements = [...userTasks, ...startEvents];
+    const formKeys = [...new Set(allElements.map((t: any) => t.businessObject?.get('camunda:formKey')).filter(Boolean))];
+    for (const key of formKeys) {
+      if (!formFieldsCache.value[key]) {
+        try {
+          const { data } = await integrationStore.get(`/api/v1/forms/${key}/versions/1`);
+          if (data && data.formFields) {
+            formFieldsCache.value[key] = data.formFields.map((f: any) => ({
+              name: f.camundaVariable || f.id,
+              type: f.type === 'number' ? 'Number' : f.type === 'checkbox' ? 'Boolean' : 'String'
+            }));
+          } else if (data && data.fields) {
+            formFieldsCache.value[key] = data.fields.map((f: any) => ({
+              name: f.camundaVariable || f.id,
+              type: f.type === 'number' ? 'Number' : f.type === 'checkbox' ? 'Boolean' : 'String'
+            }));
+          }
+        } catch (e) {
+          console.warn(`Could not load fields for form key: ${key}`, e);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error scanning form fields', err);
+  }
+};
 const selectedFormKey = ref('');
 const selectedConnector = ref('');
 
@@ -1543,19 +1996,19 @@ onMounted(async () => {
           name: bo.name || '',
           props: {
             // Rehydrating dynamic elements using extensions or native attributes
-            sla: bo.get('camunda:dueDate') || '',
+            sla: safeGet(bo, 'camunda:dueDate') || '',
             calledElement: bo.calledElement || '',
-            formKey: bo.get('camunda:formKey') || '',
-            topic: bo.get('camunda:topic') || '',
-            decisionRef: bo.get('camunda:decisionRef') || '', // CA-12 DMN Reference
-            dmnBinding: bo.get('camunda:decisionRefBinding') || 'deployment', // CA-12: Default seguro
+            formKey: safeGet(bo, 'camunda:formKey') || '',
+            topic: safeGet(bo, 'camunda:topic') || '',
+            decisionRef: safeGet(bo, 'camunda:decisionRef') || '', // CA-12 DMN Reference
+            dmnBinding: safeGet(bo, 'camunda:decisionRefBinding') || 'deployment', // CA-12: Default seguro
             aiTokenLimit: 4000,
             aiTone: 'NEUTRAL'
           }
         };
         // @Traceability: US-005, CA-77 Panel de Propiedades Contextual
-        selectedFormKey.value = bo.get('camunda:formKey') || '';
-        const delegateExpr = bo.get('camunda:delegateExpression') || '';
+        selectedFormKey.value = safeGet(bo, 'camunda:formKey') || '';
+        const delegateExpr = safeGet(bo, 'camunda:delegateExpression') || '';
         const match = delegateExpr.match(/\$\{(.+)Adapter\}/);
         selectedConnector.value = match ? match[1] : '';
       } else {
@@ -1581,6 +2034,7 @@ onMounted(async () => {
 
       runClientLinter(); // @Traceability: US-005, CA-77
       debouncedValidate(); // CA-3 Pre-Flight reactivo a cambios
+      scanAndFetchFormFields();
     });
 
     // CA-3: Executable Pre-Flight Tin Hook
@@ -1602,6 +2056,68 @@ onMounted(async () => {
                corruptNodeId.value = null;
                preFlightStatus.value = 'PENDING';
            }
+
+           // Rehydrate GlosarioVariables and ReglaNomenclatura and SLA from XML root extension elements
+           if (rootElement && rootElement.businessObject) {
+               const bo = rootElement.businessObject;
+               
+               // Rehydrate SLA (camunda:dueDate)
+               const globalSlaAttr = bo.get('camunda:dueDate');
+               if (globalSlaAttr) {
+                   const match = globalSlaAttr.match(/^P(\d+)H$/);
+                   globalSla.value = match ? parseInt(match[1]) : 72;
+               } else {
+                   globalSla.value = 72;
+               }
+
+               // Rehydrate History TTL and Version Tag
+               const historyTtlAttr = bo.get('camunda:historyTimeToLive');
+               processHistoryTTL.value = historyTtlAttr ? parseInt(historyTtlAttr) : 180;
+
+               const versionTagAttr = bo.get('camunda:versionTag');
+               processVersionTag.value = versionTagAttr || '';
+
+               const extensionElements = bo.get('extensionElements');
+               if (extensionElements) {
+                   const camundaProperties = extensionElements.values?.find((e: any) => e.$type === 'camunda:Properties');
+                   if (camundaProperties) {
+                       // Parse Glossary Variables
+                       const glossaryProp = camundaProperties.values?.find((p: any) => p.name === 'GlosarioVariables');
+                       if (glossaryProp && glossaryProp.value) {
+                           try {
+                               declaredVariables.value = JSON.parse(glossaryProp.value);
+                           } catch (e) {
+                               declaredVariables.value = [];
+                           }
+                       } else {
+                           declaredVariables.value = [];
+                       }
+                       // Parse Nomenclature Rule
+                       const nomenclatureProp = camundaProperties.values?.find((p: any) => p.name === 'ReglaNomenclatura');
+                       processNomenclature.value = nomenclatureProp ? nomenclatureProp.value : '';
+                       nextTick(() => {
+                         syncNomenclatureToHtml(processNomenclature.value);
+                       });
+                   } else {
+                       declaredVariables.value = [];
+                       processNomenclature.value = '';
+                    nextTick(() => {
+                      syncNomenclatureToHtml('');
+                    });
+                    nextTick(() => {
+                      syncNomenclatureToHtml('');
+                    });
+                       nextTick(() => {
+  
+                       });
+                   }
+               } else {
+                   declaredVariables.value = [];
+                   processNomenclature.value = '';
+               }
+           }
+
+           scanAndFetchFormFields();
        }
     });
 
@@ -2254,6 +2770,39 @@ const updateElementConnector = () => {
   }
 };
 
+const updateHistoryTTL = () => {
+  if (!modelerInstance) return;
+  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
+  if (!canvas) return;
+  const modeling = modelerInstance.get('modeling');
+  const rootElement = canvas.getRootElement();
+  modeling.updateProperties(rootElement, {
+    'camunda:historyTimeToLive': processHistoryTTL.value !== null && processHistoryTTL.value !== undefined ? String(processHistoryTTL.value) : undefined
+  });
+};
+
+const updateVersionTag = () => {
+  if (!modelerInstance) return;
+  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
+  if (!canvas) return;
+  const modeling = modelerInstance.get('modeling');
+  const rootElement = canvas.getRootElement();
+  modeling.updateProperties(rootElement, {
+    'camunda:versionTag': processVersionTag.value || undefined
+  });
+};
+
+const updateIsExecutable = () => {
+  if (!modelerInstance) return;
+  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
+  if (!canvas) return;
+  const modeling = modelerInstance.get('modeling');
+  const rootElement = canvas.getRootElement();
+  modeling.updateProperties(rootElement, {
+    isExecutable: processIsExecutable.value
+  });
+};
+
 const updateProcessProperty = (name: string, value: string) => {
   if (!modelerInstance) return;
   // @Traceability: US-005, CA-40
@@ -2332,7 +2881,13 @@ defineExpose({
   linterErrors, // @Traceability: US-005, CA-77
   showWelcomeModal,
   selectProcessFromWelcome,
-  completeProcessCreationInWelcome
+  completeProcessCreationInWelcome,
+  updateHistoryTTL,
+  updateVersionTag,
+  processHistoryTTL,
+  processVersionTag,
+  updateIsExecutable,
+  processIsExecutable
 });
 </script>
 

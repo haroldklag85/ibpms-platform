@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-5
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import BpmnDesigner from './BpmnDesigner.vue';
@@ -30,6 +31,36 @@ const mockElementRegistry = {
     })
 };
 
+const sharedMockRoot: any = {
+    id: 'Process_1',
+    businessObject: {
+        isExecutable: true,
+        get: (prop: string) => {
+            if (prop === 'extensionElements') {
+                return sharedMockRoot.businessObject.extensionElements;
+            }
+            return sharedMockRoot.businessObject[prop];
+        },
+        extensionElements: {
+            $type: 'bpmn:ExtensionElements',
+            get: (prop: string) => {
+                if (prop === 'values') return sharedMockRoot.businessObject.extensionElements.values;
+                return sharedMockRoot.businessObject.extensionElements[prop];
+            },
+            values: [
+                {
+                    $type: 'camunda:Properties',
+                    get: (prop: string) => {
+                        if (prop === 'values') return sharedMockRoot.businessObject.extensionElements.values[0].values;
+                        return sharedMockRoot.businessObject.extensionElements.values[0][prop];
+                    },
+                    values: []
+                }
+            ]
+        }
+    }
+};
+
 vi.mock('bpmn-js/lib/Modeler', () => {
     return {
         default: class MockModeler {
@@ -41,9 +72,41 @@ vi.mock('bpmn-js/lib/Modeler', () => {
                     return {
                         zoom: mockZoom,
                         open: mockOpen,
-                        getRootElement: () => ({ id: 'Process_1', businessObject: { isExecutable: true } }),
+                        getRootElement: () => {
+                            return sharedMockRoot;
+                        },
                         addMarker: vi.fn(),
                         removeMarker: vi.fn()
+                    };
+                }
+                if (name === 'modeling') {
+                    return {
+                        updateProperties: vi.fn().mockImplementation((element: any, props: any) => {
+                            if (element && element.businessObject) {
+                                Object.keys(props).forEach(k => {
+                                    element.businessObject[k] = props[k];
+                                    // Also support get/set model style
+                                    if (typeof element.businessObject.set === 'function') {
+                                        element.businessObject.set(k, props[k]);
+                                    }
+                                });
+                            }
+                        })
+                    };
+                }
+                if (name === 'bpmnFactory') {
+                    return {
+                        create: (type: string, attrs: any) => {
+                            const newObj = {
+                                $type: type,
+                                ...attrs,
+                                get: (prop: string) => {
+                                    if (prop === 'values') return newObj.values;
+                                    return (newObj as any)[prop];
+                                }
+                            };
+                            return newObj;
+                        }
                     };
                 }
                 if (name === 'minimap') {
@@ -100,6 +163,15 @@ vi.mock('@/services/apiClient', () => {
                 if (url === '/dmn-models/definitions') {
                     return Promise.resolve({ data: [] });
                 }
+                if (url.includes('/api/v1/forms/') && url.includes('/versions/1')) {
+                    return Promise.resolve({
+                        data: {
+                            formFields: [
+                                { id: 'varForm', type: 'text', camundaVariable: 'varForm' }
+                            ]
+                        }
+                    });
+                }
                 if (url.includes('/xml')) {
                     return Promise.resolve({ data: { xml: '<xml/>' } });
                 }
@@ -141,6 +213,7 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             return mockElementRegistry.getAll().filter(fn);
         });
         localStorage.clear();
+        sharedMockRoot.businessObject.extensionElements.values[0].values = [];
     });
 
     afterEach(() => {
@@ -809,6 +882,138 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             expect(html).not.toContain('No hay propiedades de Camunda editables para este elemento.');
 
             wrapper.unmount();
+        });
+
+        // @Traceability: US-005 (Camunda 7 Core Properties History TTL, Version Tag and isExecutable)
+        it('Test 8: Verificar que si no se selecciona ningún elemento (lienzo/proceso raíz), se muestran los campos de History TTL, Version Tag e isExecutable y actualizan el nodo raíz del XML', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // When no element is selected, id is empty
+            wrapper.vm.selectedElement = { 
+                id: '', 
+                type: '', 
+                name: '', 
+                props: { formKey: '', decisionRef: '', calledElement: '', topic: '' } 
+            };
+            await wrapper.vm.$nextTick();
+
+            // Verify the HTML contains the fields
+            const html = wrapper.html();
+            expect(html).toContain('History Time To Live (Días)');
+            expect(html).toContain('Etiqueta de Versión (Version Tag)');
+            expect(html).toContain('Proceso Ejecutable (isExecutable)');
+
+            // Verify models are bound
+            wrapper.vm.processHistoryTTL = 90;
+            wrapper.vm.processVersionTag = 'v1.5.0';
+            wrapper.vm.processIsExecutable = false;
+            
+            // Trigger updates
+            await wrapper.vm.updateHistoryTTL();
+            await wrapper.vm.updateVersionTag();
+            await wrapper.vm.updateIsExecutable();
+
+            // Assert that properties are persisted in the root bpmn:Process businessObject
+            const rootElement = (window as any).__modelerInstance.get('canvas').getRootElement();
+            expect(rootElement.businessObject.get('camunda:historyTimeToLive')).toBe('90');
+            expect(rootElement.businessObject.get('camunda:versionTag')).toBe('v1.5.0');
+            expect(rootElement.businessObject.get('isExecutable')).toBe(false);
+
+            wrapper.unmount();
+        });
+    });
+
+    // CA-5: Business Glossary & Nomenclature Rule Autocomplete
+    describe('CA-5: Business Glossary & Nomenclature Rule Autocomplete', () => {
+        let wrapper: any;
+
+        beforeEach(async () => {
+            wrapper = mount(BpmnDesigner, {
+                global: {
+                    stubs: {
+                        Transition: false
+                    }
+                }
+            });
+            await flushPromises();
+        });
+
+        afterEach(() => {
+            wrapper.unmount();
+        });
+
+        it('should correctly initialize with empty glossary and empty nomenclature rule', () => {
+            expect(wrapper.vm.declaredVariables).toEqual([]);
+            expect(wrapper.vm.processNomenclature).toBe('');
+        });
+
+        it('should allow adding manual variables to the glossary and persist them to XML', async () => {
+            wrapper.vm.newVarName = 'montoAprobado';
+            wrapper.vm.newVarType = 'Number';
+            await wrapper.vm.addDeclaredVariable();
+
+            expect(wrapper.vm.declaredVariables).toContainEqual({ name: 'montoAprobado', type: 'Number' });
+            
+            // Verify XML persistence
+            const rootElement = (window as any).__modelerInstance.get('canvas').getRootElement();
+            const extensionElements = rootElement.businessObject.get('extensionElements');
+            const camundaProperties = extensionElements.values.find((e: any) => e.$type === 'camunda:Properties');
+            const glossaryProp = camundaProperties.values.find((p: any) => p.name === 'GlosarioVariables');
+            
+            expect(glossaryProp).toBeDefined();
+            expect(JSON.parse(glossaryProp.value)).toContainEqual({ name: 'montoAprobado', type: 'Number' });
+        });
+
+        it('should validate manual variable inputs and prevent duplicate keys', async () => {
+            wrapper.vm.declaredVariables = [{ name: 'dupVar', type: 'String' }];
+            wrapper.vm.newVarName = 'dupVar';
+            wrapper.vm.newVarType = 'Boolean';
+            
+            await wrapper.vm.addDeclaredVariable();
+
+            // Should reject duplicates
+            expect(wrapper.vm.declaredVariables.length).toBe(1);
+            expect(wrapper.vm.toast.type).toBe('error');
+            expect(wrapper.vm.toast.msg).toBe('La variable dupVar ya está declarada');
+        });
+
+        it('should dynamically merge variables from different sources', async () => {
+            wrapper.vm.declaredVariables = [{ name: 'varManual', type: 'Number' }];
+            wrapper.vm.processVariables = [{ name: 'varConnector', type: 'String' }];
+            wrapper.vm.formFieldsCache = {
+                'formKey_1': [{ name: 'varForm', type: 'String' }]
+            };
+
+            const merged = wrapper.vm.mergedVariables;
+            
+            // Check session context variables
+            expect(merged).toContainEqual({ name: 'session.user_name', type: 'String', source: 'Session' });
+            expect(merged).toContainEqual({ name: 'session.email', type: 'String', source: 'Session' });
+            
+            // Check sources
+            expect(merged).toContainEqual({ name: 'varManual', type: 'Number', source: 'Glossary' });
+            expect(merged).toContainEqual({ name: 'webhook.varConnector', type: 'String', source: 'Connector' });
+            expect(merged).toContainEqual({ name: 'form.varForm', type: 'String', source: 'Form' });
+        });
+
+        it('should toggle the autocomplete popover on nomenclature input', async () => {
+            const editor = wrapper.find('[placeholder="Ej: OC-{Solicitante}"]');
+            expect(editor.exists()).toBe(true);
+
+            editor.element.innerHTML = 'OC-';
+            await editor.trigger('input');
+            expect(wrapper.vm.showAutocompletePopover).toBe(false);
+
+            editor.element.innerHTML = 'OC-{';
+            await editor.trigger('input');
+            expect(wrapper.vm.showAutocompletePopover).toBe(true);
+        });
+
+        it('should contain the expected friendly nomenclature tooltip content', () => {
+            expect(wrapper.vm.bpmnTooltips.NOMENCLATURE_DUMMY).toContain('¿Qué es esto?</b> Es una plantilla para nombrar las solicitudes automáticamente mediante un <b>Glosario de Datos Unificado</b>');
+            expect(wrapper.vm.bpmnTooltips.NOMENCLATURE_DUMMY).toContain('1. Escribe texto fijo (ej. <code>FAC-</code>).');
+            expect(wrapper.vm.bpmnTooltips.NOMENCLATURE_DUMMY).toContain('FAC-{form.monto}-{system.date}');
         });
     });
 });

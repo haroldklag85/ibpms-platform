@@ -247,10 +247,14 @@
 
             <!-- Glosario de Variables de Negocio (CA-5) -->
             <div class="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 rounded space-y-[12px]">
+              <!-- @Traceability: US-005, CA-05 -->
               <div class="flex items-center justify-between cursor-pointer" @click="isGlossaryCollapsed = !isGlossaryCollapsed">
-                <span class="block text-xs font-bold text-purple-800 dark:text-purple-300">
-                  📚 Glosario de Variables de Negocio
-                </span>
+                <div class="flex items-center space-x-1.5">
+                  <span class="block text-xs font-bold text-purple-800 dark:text-purple-300">
+                    📚 Glosario de Variables de Negocio
+                  </span>
+                  <AppTooltip :content="bpmnTooltips.GLOSSARY_VARIABLES" />
+                </div>
                 <span class="text-xs text-purple-600 dark:text-purple-400">
                   {{ isGlossaryCollapsed ? '▶' : '▼' }}
                 </span>
@@ -1033,7 +1037,14 @@ const bpmnTooltips = {
                       '2. Abre una llave <code>{</code> para ver variables disponibles (de sesión, formularios y webhooks).<br>' +
                       '3. Ejemplo: <code>FAC-{form.monto}-{system.date}</code> se resolverá dinámicamente como <b>FAC-5000-2026-06-02</b>.',
   CONNECTOR: 'Integra este nodo con sistemas externos mapeando variables del proceso actual.',
-  ESCALATION: 'Define reglas semánticas de rebote o escalamiento a roles superiores.'
+  ESCALATION: 'Define reglas semánticas de rebote o escalamiento a roles superiores.',
+  // @Traceability: US-005, CA-05
+  GLOSSARY_VARIABLES: '🗂️ <b>¿Qué es esto?</b> Es un catálogo local donde puedes declarar manualmente variables personalizadas para el proceso (ej: <code>prioridad</code>).<br><br>' +
+                      '<b>¿Cuándo usarlo?</b><br>Úsalo para registrar variables antes de diseñar los formularios de las tareas o integraciones. Así podrás utilizarlas en la Regla de Nomenclatura sin generar alertas.<br><br>' +
+                      '<b>¿Cómo funciona?</b><br>' +
+                      '1. Escribe el <b>Nombre</b> (sin espacios ni caracteres especiales).<br>' +
+                      '2. Elige el <b>Tipo</b> (Texto, Número o Booleano).<br>' +
+                      '3. Clic en <b>+ Declarar Variable</b> y estará disponible en el menú de autocompletado <code>{</code>.'
 };
 
 // ── Selection State ──────────────────────────────────────────
@@ -1897,6 +1908,45 @@ const handleBeforeUnload = () => {
    // if(sessionId) apiClient.destroyCopilotSession(sessionId);
 };
 
+// @Traceability: US-005, CA-05
+const camundaModdleDescriptor = {
+  name: 'Camunda',
+  uri: 'http://camunda.org/schema/1.0/bpmn',
+  prefix: 'camunda',
+  xml: {
+    tagAlias: 'lowerCase'
+  },
+  types: [
+    {
+      name: 'Property',
+      superClass: [ 'Element' ],
+      properties: [
+        {
+          name: 'name',
+          isAttr: true,
+          type: 'String'
+        },
+        {
+          name: 'value',
+          isAttr: true,
+          type: 'String'
+        }
+      ]
+    },
+    {
+      name: 'Properties',
+      superClass: [ 'Element' ],
+      properties: [
+        {
+          name: 'values',
+          isMany: true,
+          type: 'Property'
+        }
+      ]
+    }
+  ]
+};
+
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
   // @Traceability: US-005, CA-40
@@ -1913,7 +1963,10 @@ onMounted(async () => {
     modelerInstance = new BpmnModeler({
       container: canvasContainer.value!,
       additionalModules: [minimapModule],
-      keyboard: { bindTo: document } // CA-20 Copy/Paste enabled system-wide
+      keyboard: { bindTo: document }, // CA-20 Copy/Paste enabled system-wide
+      moddleExtensions: {
+        camunda: camundaModdleDescriptor
+      }
     });
 
     // @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos

@@ -1,4 +1,4 @@
-// @Traceability: US-007 - ADR-001
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.web.ai;
 
 import com.ibpms.poc.AbstractIntegrationTest;
@@ -53,37 +53,28 @@ public class BpmnCopilotSseIntegrationTest extends AbstractIntegrationTest {
     @SpyBean
     private BpmnLayoutAdapter layoutAdapter; // Queremos verificar que no consuma CPU si cae la red
 
-    @TestConfiguration
-    public static class OverrideSecurityConfig {
-        @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new OncePerRequestFilter() {
-                    @Override
-                    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-                        SecurityContextHolder.getContext().setAuthentication(
-                            new UsernamePasswordAuthenticationToken("QA_Agent", null, List.of(new SimpleGrantedAuthority("ROLE_PROCESS_ARCHITECT")))
-                        );
-                        filterChain.doFilter(request, response);
-                    }
-                }, org.springframework.security.web.context.SecurityContextHolderFilter.class)
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-            return http.build();
-        }
-    }
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.ibpms.poc.infrastructure.security.JwtTokenProvider jwtTokenProvider;
 
     @Test
     @DisplayName("SRE-01: Validar Desconexión de Red Graceful SSE (Anti-Memory Leak)")
     public void testSseEmitter_ClientDisconnect_GracefullyKillsThread() throws Exception {
         String payload = "{\"prompt\": \"Test de simulación SSE para corte abrupto.\"}";
+        String token = jwtTokenProvider.generateToken(
+            "QA_Agent", 
+            java.util.List.of("ROLE_PROCESS_ARCHITECT"), 
+            "tenant_alpha", 
+            java.util.Map.of("Sucursal_ID", "123", "Codigo_Jefe", "456")
+        );
         
         // 1. Iniciamos la petición de red REAL contra el Tomcat aleatorio
-        URL url = java.net.URI.create("http://localhost:" + port + "/api/v1/api/v1/ai/copilot/generate").toURL();
+        URL url = java.net.URI.create("http://localhost:" + port + "/api/v1/ai/copilot/generate").toURL();
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/json");
         conn.setRequestProperty("Accept", "text/event-stream");
         conn.setRequestProperty("Connection", "close"); // FORZAR no usar Keep-Alive
+        conn.setRequestProperty("Authorization", "Bearer " + token);
         conn.setReadTimeout(5000);
         conn.setDoOutput(true);
         

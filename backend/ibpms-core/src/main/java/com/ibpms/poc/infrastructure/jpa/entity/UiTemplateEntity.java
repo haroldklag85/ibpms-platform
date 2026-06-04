@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.entity;
 
 import com.ibpms.poc.domain.model.TemplateType;
@@ -6,7 +7,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -28,7 +28,6 @@ public class UiTemplateEntity {
     @Column(nullable = false, length = 50)
     private TemplateType type;
 
-    @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
     private String rawCode;
 

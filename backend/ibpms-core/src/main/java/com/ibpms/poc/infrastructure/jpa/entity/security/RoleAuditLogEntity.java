@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.entity.security;
 
 import jakarta.persistence.*;
@@ -25,8 +26,7 @@ public class RoleAuditLogEntity {
     @Column(name = "action", nullable = false, length = 20)
     private String action;
 
-    @Lob
-    @Column(name = "delta_json", nullable = false)
+    @Column(name = "delta_json", columnDefinition = "TEXT", nullable = false)
     private String deltaJson;
 
     public RoleAuditLogEntity() {}

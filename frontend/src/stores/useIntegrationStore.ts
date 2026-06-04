@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 import { defineStore } from 'pinia';
 import apiClient from '@/services/apiClient';
 
@@ -63,7 +64,7 @@ export const useIntegrationStore = defineStore('integrationStore', {
       return this.get(`/design/processes/${id}/audit-logs`);
     },
     spawnSandbox(payload: any) {
-      return this.post(`/design/processes/sandbox-spawn`, payload);
+      return this.post(`/design/processes/sandbox-spawn`, payload, { headers: { 'X-Sandbox-Mode': 'true' } });
     },
     getIntegrationConnectors() {
       return this.get(`/integrations/connectors`);

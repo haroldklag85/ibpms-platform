@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.application.service.security;
 
 import com.ibpms.poc.AbstractIntegrationTest;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * - CA-6 BE-05: createRole lanza excepción si parentRole.id no existe
  */
 @DisplayName("US-036 CA-6 — Herencia Piramidal de Permisos (WITH RECURSIVE)")
+@org.springframework.transaction.annotation.Transactional
 class RolePermissionInheritanceIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
@@ -34,14 +37,19 @@ class RolePermissionInheritanceIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private UUID grandparentRoleId;
     private UUID parentRoleId;
     private UUID childRoleId;
 
     @BeforeEach
     void setUp() {
-        // Limpiar estado previo
+        jdbcTemplate.execute("DELETE FROM ibpms_security_user_roles");
+        jdbcTemplate.execute("UPDATE ibpms_security_role SET parent_role_id = NULL");
         roleRepository.deleteAll();
+        roleRepository.flush();
 
         // Tier 1 — Abuelo: tiene permiso en "proceso-contrato"
         RoleEntity grandparent = new RoleEntity("ROLE_DIRECTOR", "Director con máximos permisos");

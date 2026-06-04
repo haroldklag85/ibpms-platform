@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-05
+// @Traceability: US-005, CA-41 - ADR-001
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import BpmnDesigner from './BpmnDesigner.vue';
@@ -1628,6 +1628,98 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             wrapper.vm.updateGlobalSlaRaw();
             expect(wrapper.vm.globalSlaRaw).toBe('${processExpression}');
             expect(wrapper.vm.globalSla).toBe(72); // Falls back to 72 for invalid duration string
+
+            wrapper.unmount();
+        });
+    });
+
+    // @Traceability: US-005, CA-41 - ADR-001
+    describe('US-005: Sandbox Simulation Observability (CA-41, ADR-014)', () => {
+        it('Debe llamar a spawnSandbox con el XML correcto al ejecutar runSandbox y mostrar toast de éxito', async () => {
+            // @Traceability: US-005, CA-41 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const spawnSpy = vi.fn().mockResolvedValue({ data: { status: 'SIMULATION_DESTROYED', mockSpawnedId: '123' } });
+            store.spawnSandbox = spawnSpy;
+
+            // Invocamos el método expuesto
+            await wrapper.vm.runSandbox();
+            await flushPromises();
+
+            expect(spawnSpy).toHaveBeenCalledWith({ xml: '<xml/>' });
+            expect(wrapper.vm.toast.type).toBe('success');
+            expect(wrapper.vm.toast.msg).toContain('✅ Sandbox (CA-41): Ejecución simulada sin errores.');
+
+            wrapper.unmount();
+        });
+
+        it('Debe mostrar toast de error semántico detallado cuando spawnSandbox falla con HTTP 500', async () => {
+            // @Traceability: US-005, CA-41 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const spawnSpy = vi.fn().mockRejectedValue({
+                response: {
+                    status: 500,
+                    data: { detail: 'Error interno del motor de simulación (Trace: TRX-100)' }
+                }
+            });
+            store.spawnSandbox = spawnSpy;
+
+            await wrapper.vm.runSandbox();
+            await flushPromises();
+
+            expect(wrapper.vm.toast.type).toBe('error');
+            expect(wrapper.vm.toast.msg).toBe('Error interno del motor de simulación (Trace: TRX-100)');
+
+            wrapper.unmount();
+        });
+
+        it('Debe mostrar toast de error semántico cuando spawnSandbox falla por Rate Limit (HTTP 429)', async () => {
+            // @Traceability: US-005, CA-41 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const spawnSpy = vi.fn().mockRejectedValue({
+                response: {
+                    status: 429,
+                    data: { error: 'Rate limit de Sandbox superado (10 req/min).' }
+                }
+            });
+            store.spawnSandbox = spawnSpy;
+
+            await wrapper.vm.runSandbox();
+            await flushPromises();
+
+            expect(wrapper.vm.toast.type).toBe('error');
+            expect(wrapper.vm.toast.msg).toBe('Rate limit de Sandbox superado (10 req/min).');
+
+            wrapper.unmount();
+        });
+
+        it('Debe mostrar toast de error semántico cuando spawnSandbox falla por Payload Too Large (HTTP 413)', async () => {
+            // @Traceability: US-005, CA-41 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const spawnSpy = vi.fn().mockRejectedValue({
+                response: {
+                    status: 413,
+                    data: { message: 'El archivo excede el límite de Sandbox (2MB).' }
+                }
+            });
+            store.spawnSandbox = spawnSpy;
+
+            await wrapper.vm.runSandbox();
+            await flushPromises();
+
+            expect(wrapper.vm.toast.type).toBe('error');
+            expect(wrapper.vm.toast.msg).toBe('El archivo excede el límite de Sandbox (2MB).');
 
             wrapper.unmount();
         });

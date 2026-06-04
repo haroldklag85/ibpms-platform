@@ -1,22 +1,25 @@
-# BRIEFING — 2026-06-01T00:16:00Z
+# BRIEFING — 2026-06-02T00:52:00-05:00
 
 ## Mission
-Refactor the DMN governance module of US-007 to comply with ADR-001 (Hexagonal Architecture / DDD), completely decoupling the domain layer from persistence.
+Implement the Glosario de Datos Unificado (Propuesta 2) for the nomenclature rule input field in BpmnDesigner.vue to improve the UX/UI of CA-5 under US-005.
 
 ## 🔒 My Identity
 - Archetype: teamwork_preview_orchestrator
 - Roles: orchestrator, user_liaison, human_reporter, successor
-- Working directory: C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator
+- Working directory: c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\
 - Original parent: main agent
-- Original parent conversation ID: 17a29c38-c175-4537-bff7-8ffb073f6682
+- Original parent conversation ID: 1129c571-3fc8-44c2-8517-ba4ca62fb99e
 
 ## 🔒 My Workflow
-- **Pattern**: Project
-- **Scope document**: C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\PROJECT.md
-1. **Decompose**: Decomposed the refactoring into 6 milestones representing the standard TDD Red-to-Green refactoring flow for DDD/Hexagonal layers.
+- **Pattern**: Project / Canonical
+- **Scope document**: c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\PROJECT.md
+1. **Decompose**: We decompose the task into:
+   - Milestone 1: Exploration and Analysis (investigate BpmnDesigner.vue and BpmnDesigner.spec.ts)
+   - Milestone 2: Implementation of Glosario de Variables (section, merging, XML, pill editor, tooltip)
+   - Milestone 3: Testing, Verification, and Auditing (unit tests, Vitest run, npm run build)
 2. **Dispatch & Execute**:
-   - **Direct (iteration loop)**: Explorer → Worker → Reviewer → gate
-   - **Delegate (sub-orchestrator)**: None (work scope is small enough to fit a direct iteration loop, though we will proceed milestone by milestone).
+   - **Direct (iteration loop)**: Explorer → Worker → Reviewer → test → gate
+   - **Delegate (sub-orchestrator)**: None (small scale task)
 3. **On failure** (in this order):
    - Retry: nudge stuck agent or re-send task
    - Replace: spawn fresh agent with partial progress
@@ -24,52 +27,51 @@ Refactor the DMN governance module of US-007 to comply with ADR-001 (Hexagonal A
    - Redistribute: split stuck agent's remaining work
    - Redesign: re-partition decomposition
    - Escalate: report to parent (sub-orchestrators only, last resort)
-4. **Succession**: Self-succeed at 16 spawns.
+4. **Succession**: Self-succeed at 16 spawns, write handoff.md, spawn successor.
 - **Work items**:
-  1. Milestone 1: Compliance Test (Red Phase) [done]
-  2. Milestones 2-6: Complete DMN Governance Refactoring & Verification [in-progress]
-- Current phase: 2
-- Current focus: Milestones 2-6: Complete DMN Governance Refactoring & Verification
+  1. Exploration & Analysis [done]
+  2. Implement Glosario de Variables [done]
+  3. Validate & Verify [done]
+- **Current phase**: 3
+- **Current focus**: Complete
 
 ## 🔒 Key Constraints
 - NEVER write, modify, or create source code files directly.
 - NEVER run build/test commands yourself — require workers to do so.
 - You MAY use file-editing tools ONLY for metadata/state files (.md) in your .agents/ folder.
-- Always include traceability comment `// @Traceability: US-007 - ADR-001` in modified code.
 - Never reuse a subagent after it has delivered its handoff — always spawn fresh
 
 ## Current Parent
-- Conversation ID: 17a29c38-c175-4537-bff7-8ffb073f6682
+- Conversation ID: 1129c571-3fc8-44c2-8517-ba4ca62fb99e
 - Updated: not yet
 
 ## Key Decisions Made
-- Decomposed the US-007 DMN governance refactoring into 6 sequential milestones following ADR-001 principles.
-- Will use Explorer → Worker → Reviewer pattern to implement the compliance test, purification, adapters, mappers, web integration, and final verification.
+- Initial setup and decomposition complete.
+- Milestone 1 analysis complete.
+- Milestone 2 implementation and local unit testing complete.
+- Milestone 3 verification and forensic audit completed cleanly.
 
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
-| Explorer 1 | teamwork_preview_explorer | Investigate compliance test and source | completed | 0cceccdb-bc6a-48c0-aea1-f015a2a1ca0b |
-| Explorer 2 | teamwork_preview_explorer | Investigate compliance test and source | completed | 5e05a661-cd95-49ce-aadf-5ab992490ad1 |
-| Explorer 3 | teamwork_preview_explorer | Investigate compliance test and source | completed | a44281b1-503a-4ae8-ba37-4e9fefbe4235 |
-| Worker 1 | teamwork_preview_worker | Implement and verify failing compliance test | completed | ad928356-0fe9-41ca-9100-5c25233eeb64 |
-| Worker 2 | teamwork_preview_worker | Implement refactoring and verify passing tests | aborted | 44a85bf2-e824-40b4-8419-f3ddda38725b |
-| Worker 3 | teamwork_preview_worker | Verify refactoring, compile, and run tests | aborted | 56fc4132-2f8e-40b7-897d-44bc1a3db82d |
-| Worker 8 | teamwork_preview_worker | Recreate DB, run compliance & integration tests | stuck | 6e237bbb-b3f8-4efd-9420-248c3a1d6a6e |
-| Worker 9 | teamwork_preview_worker | Recreate DB, run compliance & integration tests (replacement) | in-progress | b18ffd7f-7111-4a99-9b22-162ab373fd3f |
+| explorer_glosario_1 | teamwork_preview_explorer | Milestone 1: Exploration & Analysis | completed | f17bb0be-f0e3-44a1-972d-c4521a2d185b |
+| worker_glosario_1 | teamwork_preview_worker | Milestone 2: Implement Glosario de Variables | completed | 548be7e7-b476-48e9-b3d6-469dce0b5c05 |
+| auditor_glosario_1 | teamwork_preview_auditor | Milestone 3: Forensic Integrity Audit | completed | 6b239007-f954-4a3c-8759-6e5d55883177 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 8 / 16
-- Pending subagents: b18ffd7f-7111-4a99-9b22-162ab373fd3f
+- Spawn count: 3 / 16
+- Pending subagents: none
 - Predecessor: none
 - Successor: not yet spawned
 
 ## Active Timers
-- Heartbeat cron: task-65
+- Heartbeat cron: none
 - Safety timer: none
+- On succession: kill all timers before spawning successor
+- On context truncation: run `manage_task(Action="list")` — re-create if missing
 
 ## Artifact Index
-- C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\PROJECT.md — Project specifications, contracts, and code layout
-- C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\plan.md — Refactoring and verification plan
-- C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\progress.md — Task execution and status tracking
+- c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\PROJECT.md — Scope document
+- c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\progress.md — Progress tracker
+- c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\.agents\orchestrator\context.md — Context tracker

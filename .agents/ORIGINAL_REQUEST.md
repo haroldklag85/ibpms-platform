@@ -276,3 +276,33 @@ Modificar la definición del árbol de menús en `MenuLayoutController.java` par
 - [ ] Compilar y verificar que las pruebas del frontend pasen exitosamente (`npx vitest run`).
 - [ ] Garantizar que no se modifiquen aserciones de pruebas históricas (Ley Global 4).
 - [ ] Ejecutar `npm run build` en el frontend y corroborar compilación exitosa sin advertencias ni errores.
+
+## Follow-up — 2026-06-02T05:04:10Z
+
+Decouple the "Explorador de procesos" sidebar from the "Welcome Modal" initial load in the BPMN Modeler.
+
+Working directory: c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform
+Integrity mode: development
+
+## Requirements
+
+### R1. Remove showCatalog = true on mount
+Do not automatically open the "Explorador de procesos" sidebar drawer when mounting BpmnDesigner.vue if processId is not present in the URL query parameters. Only the WelcomeModal should act as the initial gatekeeper.
+
+### R2. Close showCatalog on process creation
+Ensure that when a new process is created or selected (such as when completing the wizard in WelcomeModal), the "Explorador de procesos" drawer is explicitly closed or remains closed.
+
+### R3. TDD and Verification
+- Ensure that the sidebar does not automatically slide open on initial page load if no process is loaded.
+- Verify that selecting a process or creating a new process from the Welcome Modal leaves the user on a clean canvas without the sidebar open.
+- Add or update unit tests in BpmnDesigner.spec.ts to reflect the new decoupled lifecycle behavior.
+- Ensure all tests pass and npm run build compiles with zero errors.
+
+## Acceptance Criteria
+
+### Decoupled Modeler Interface
+- [ ] On mounting BpmnDesigner without processId, the Welcome Modal is displayed and the Process Explorer sidebar remains closed.
+- [ ] Selecting a process from the Welcome Modal closes the Modal and loads the process with the sidebar closed.
+- [ ] Creating a new process from the Welcome Modal closes the Modal and initializes the template/canvas with the sidebar closed.
+- [ ] Clicking the "Explorador de procesos" top toolbar button successfully toggles the sidebar drawer open.
+

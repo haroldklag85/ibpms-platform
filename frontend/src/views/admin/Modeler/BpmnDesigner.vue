@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-05
+// @Traceability: US-005, CA-41 - ADR-001
 <template>
   <div class="h-full w-full bg-gray-50 dark:bg-gray-900 flex flex-col" v-cloak>
 
@@ -49,7 +49,7 @@
           </span>
         </button>
         <!-- Sandbox CA-41 -->
-        <button @click="runSandbox" class="bg-amber-500 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-amber-600 flex items-center gap-1 transition">
+        <button data-testid="btn-test-sandbox" @click="runSandbox" class="bg-amber-500 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-amber-600 flex items-center gap-1 transition">
           🧪 Probar en Sandbox
         </button>
         <!-- Audit Logs (CA-42) -->
@@ -2828,7 +2828,7 @@ const requestDeploy = async () => {
   }
 };
 
-// @Traceability: US-005, CA-20, CA-41, CA-63
+// @Traceability: US-005, CA-41 - ADR-001
 const runSandbox = async () => {
   try {
     showToast('🧪 Sandbox: Iniciando simulación en Motor V1...');
@@ -2838,8 +2838,15 @@ const runSandbox = async () => {
     await integrationStore.spawnSandbox({ xml });
     
     showToast(`✅ Sandbox (CA-41): Ejecución simulada sin errores.`, 'success');
-  } catch (err) {
-    showToast('🧪 Error conectando al motor de Simulación Sandbox', 'error');
+  } catch (err: any) {
+    // ADR-014: Diferenciación Semántica de Errores y visualización del mensaje real
+    let errorMsg = '🧪 Error conectando al motor de Simulación Sandbox';
+    if (err && err.response && err.response.data) {
+      errorMsg = err.response.data.detail || err.response.data.error || err.response.data.message || errorMsg;
+    } else if (err && err.message) {
+      errorMsg = err.message;
+    }
+    showToast(errorMsg, 'error');
   }
 };
 
@@ -3252,7 +3259,8 @@ defineExpose({
   onGlobalSimpleSlaChange,
   onSimpleSlaChange,
   updateElementSla,
-  updateGlobalSlaRaw
+  updateGlobalSlaRaw,
+  runSandbox
 });
 </script>
 

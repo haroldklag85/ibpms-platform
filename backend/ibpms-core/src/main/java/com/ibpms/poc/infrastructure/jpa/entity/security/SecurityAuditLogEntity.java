@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.entity.security;
 
 import jakarta.persistence.*;
@@ -30,8 +31,7 @@ public class SecurityAuditLogEntity {
     @Column(name = "is_break_glass")
     private Boolean isBreakGlass = false;
 
-    @Lob
-    @Column(name = "justification")
+    @Column(name = "justification", columnDefinition = "TEXT")
     private String justification;
 
     public SecurityAuditLogEntity() {

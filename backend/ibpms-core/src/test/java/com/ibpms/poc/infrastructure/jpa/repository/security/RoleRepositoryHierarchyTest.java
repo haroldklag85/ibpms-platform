@@ -1,21 +1,18 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.repository.security;
 
+import com.ibpms.poc.AbstractIntegrationTest;
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-@ActiveProfiles("test")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class RoleRepositoryHierarchyTest {
+@org.springframework.transaction.annotation.Transactional
+public class RoleRepositoryHierarchyTest extends AbstractIntegrationTest {
 
     @Autowired
     private RoleRepository roleRepository;

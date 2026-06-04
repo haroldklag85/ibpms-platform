@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +38,7 @@ import org.springframework.context.annotation.Bean;
 import com.ibpms.poc.AbstractIntegrationTest;
 
 @ActiveProfiles({"test", "sre-test"})
+@org.springframework.context.annotation.Import({GenerativeSreIntegrationTest.SreTestConfig.class, GenerativeSreIntegrationTest.DummyAiController.class})
 @SuppressWarnings("null")
 public class GenerativeSreIntegrationTest extends AbstractIntegrationTest {
 
@@ -44,10 +46,21 @@ public class GenerativeSreIntegrationTest extends AbstractIntegrationTest {
     private JwtTokenProvider jwtTokenProvider;
     private String managerToken;
 
+    @Autowired
+    private DummyAiController dummyAiController;
+
     @org.junit.jupiter.api.BeforeEach
     void setUpPort() {
         io.restassured.RestAssured.port = port;
-        managerToken = jwtTokenProvider.generateToken("test-manager", List.of("ROLE_BPMN_Release_Manager"), "tenant1");
+        managerToken = jwtTokenProvider.generateToken(
+            "test-manager", 
+            List.of("ROLE_BPMN_Release_Manager"), 
+            "tenant1", 
+            Map.of("Sucursal_ID", "123", "Codigo_Jefe", "456")
+        );
+        if (dummyAiController != null) {
+            dummyAiController.reset();
+        }
     }
 
     // Supongamos que este es el cliente Feign o RestTemplate que despacha al LLM externo
@@ -61,6 +74,11 @@ public class GenerativeSreIntegrationTest extends AbstractIntegrationTest {
         private final LlmExternalClient client;
         private int requestCount = 0;
         private final Map<String, String> cache = new ConcurrentHashMap<>();
+
+        public void reset() {
+            this.requestCount = 0;
+            this.cache.clear();
+        }
 
         public DummyAiController(LlmExternalClient client) {
             this.client = client;

@@ -1,4 +1,4 @@
-// @Traceability: US-007 - ADR-001
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc;
 
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,8 +24,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
 
-
-    @org.springframework.boot.test.web.server.LocalServerPort
+    @org.springframework.beans.factory.annotation.Value("${local.server.port:0}")
     protected int port;
 
     // @Traceability: US-005, CA-65

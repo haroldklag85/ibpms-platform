@@ -2,7 +2,10 @@
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.domain.model.agile.AgileTask;
+import com.ibpms.poc.domain.model.enums.ClaimActionType;
 import com.ibpms.poc.infrastructure.persistence.AgileTaskRepositoryJpa;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -16,6 +19,9 @@ import java.util.UUID;
 
 @Service
 public class AgileTaskService {
+
+    private static final Logger log = LoggerFactory.getLogger(AgileTaskService.class);
+    private static final int MAX_CONSECUTIVE_EXTENSIONS = 2;
 
     private final AgileTaskRepositoryJpa taskRepository;
     private final SlaChangeLogService slaChangeLogService;
@@ -296,9 +302,10 @@ public class AgileTaskService {
         }
         task.setStatus("AVAILABLE");
         task.getAssigneeIds().remove(unclaimedBy);
+        task.setTimeoutExtensions(0); // CA-19: Reset extensiones al liberar
         taskRepository.save(task);
 
-        claimAuditService.audit(taskId, unclaimedBy, "UNCLAIMED", null, null, mensajeInterno);
+        claimAuditService.audit(taskId, unclaimedBy, ClaimActionType.RELEASED.name(), null, null, mensajeInterno);
 
         messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
                 "event", com.ibpms.poc.domain.model.agile.WebSocketEventType.TASK_UNCLAIMED.name(),
@@ -322,6 +329,7 @@ public class AgileTaskService {
         if (task.getAssigneeIds() != null) {
             task.getAssigneeIds().clear();
         }
+        task.setTimeoutExtensions(0); // CA-19: Reset extensiones al liberar
         taskRepository.save(task);
 
         claimAuditService.auditForceUnclaim(taskId, supervisor, tenantId);
@@ -382,7 +390,7 @@ public class AgileTaskService {
         task.getAssigneeIds().add(assignee);
         taskRepository.save(task);
 
-        claimAuditService.audit(taskId, assignee, "BULK_CLAIMED", null, null, null);
+        claimAuditService.audit(taskId, assignee, ClaimActionType.BULK_CLAIMED.name(), null, null, null);
     }
 
     /**
@@ -393,7 +401,7 @@ public class AgileTaskService {
         AgileTask task = getTaskForUpdate(taskId);
         
         if (task.getTeamId() != null && !task.getTeamId().equals(supervisorTeamId)) {
-            claimAuditService.audit(taskId, supervisorId, "DENIED", "Team mismatch", null, null);
+            claimAuditService.audit(taskId, supervisorId, ClaimActionType.DENIED.name(), "Team mismatch", null, null);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos para gestionar tareas de este equipo");
         }
 
@@ -404,9 +412,10 @@ public class AgileTaskService {
         if (task.getAssigneeIds() != null) {
             task.getAssigneeIds().clear();
         }
+        task.setTimeoutExtensions(0); // CA-19: Reset extensiones al liberar
         taskRepository.save(task);
 
-        claimAuditService.audit(taskId, supervisorId, "FORCE_UNCLAIMED", null, previousAssignee, null);
+        claimAuditService.audit(taskId, supervisorId, ClaimActionType.FORCE_UNCLAIMED.name(), null, previousAssignee, null);
 
         messagingTemplate.convertAndSend("/topic/tasks", java.util.Map.of(
                 "event", "TASK_FORCE_UNCLAIMED",
@@ -423,7 +432,8 @@ public class AgileTaskService {
     }
 
     /**
-     * GAP-008: extendTimeout
+     * CA-19: Extensión de timeout con límite de {@value #MAX_CONSECUTIVE_EXTENSIONS} extensiones consecutivas.
+     * Notifica al supervisor en cada extensión.
      */
     @Transactional
     public void extendTimeout(UUID taskId, String assignee) {
@@ -431,13 +441,28 @@ public class AgileTaskService {
         if (task.getAssigneeIds() == null || !task.getAssigneeIds().contains(assignee)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No eres el asignado de esta tarea");
         }
-        if (task.getTimeoutExtensions() != null && task.getTimeoutExtensions() >= 2) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Maximum extensions reached");
+
+        // CA-19: Máximo 2 extensiones consecutivas
+        int currentExtensions = task.getTimeoutExtensions() != null ? task.getTimeoutExtensions() : 0;
+        if (currentExtensions >= MAX_CONSECUTIVE_EXTENSIONS) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Se alcanzó el límite de " + MAX_CONSECUTIVE_EXTENSIONS +
+                " extensiones consecutivas. El auto-unclaim se ejecutará al cumplirse el timeout.");
         }
-        task.setTimeoutExtensions((task.getTimeoutExtensions() == null ? 0 : task.getTimeoutExtensions()) + 1);
+
+        task.setTimeoutExtensions(currentExtensions + 1);
         task.setLastActivityAt(java.time.ZonedDateTime.now());
         taskRepository.save(task);
 
-        claimAuditService.audit(taskId, assignee, "TIMEOUT_EXTENDED", null, null, null);
+        claimAuditService.audit(taskId, assignee, ClaimActionType.TIMEOUT_EXTENDED.name(),
+            "Extensión " + (currentExtensions + 1) + " de " + MAX_CONSECUTIVE_EXTENSIONS, null, null);
+
+        // CA-19: Notificar al supervisor vía WebSocket
+        notificationService.notifyTimeoutExtended(
+            task.getTeamId() != null ? task.getTeamId() : "default",
+            taskId.toString(), assignee, currentExtensions + 1);
+
+        log.info("[EXTEND_TIMEOUT] Tarea {} - extensión {}/{} por usuario {}",
+            taskId, currentExtensions + 1, MAX_CONSECUTIVE_EXTENSIONS, assignee);
     }
 }

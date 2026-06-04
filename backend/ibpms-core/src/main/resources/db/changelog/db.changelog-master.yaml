@@ -150,3 +150,6 @@ databaseChangeLog:
       context: dev,test
   - include:
       file: db/changelog/changes/058-create-deploy-requests.sql
+  # CA-15 (US-002 PM-01): Agrega tenant_id para ghost timeout per-tenant
+  - include:
+      file: db/changelog/changes/059-us002-add-tenant-id-to-agile-tasks.sql

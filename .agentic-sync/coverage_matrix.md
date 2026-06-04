@@ -128,8 +128,8 @@
 ---
 
 ## US-002: Reclamar una Tarea de Grupo (Claim Task)
-**Épica:** A — Motor Core | **Estado:** 🔨 EN CONSTRUCCIÓN (~68%) | **Auditado:** 2026-04-18T15:25 (Reconciliación PO)
-**Archivos verificados:** `TaskClaimController.java` · `WorkboxTaskController.java` · `AgileTaskService.java` · `ClaimAuditService.java` · `SecurityContextUtils.java`
+**Épica:** A — Motor Core | **Estado:** 🔨 EN CONSTRUCCIÓN (~92%) | **Auditado:** 2026-06-03T22:39 (Reconciliación Arquitecto Líder — Sprint PM-01)
+**Archivos verificados:** `TaskClaimApiController.java` · `WorkboxTaskController.java` · `AgileTaskService.java` · `ClaimAuditService.java` · `GhostJobScheduler.java` · `ClaimProperties.java` · `useWorkdeskStore.ts` · `Workdesk.vue` · `WorkdeskGrid.vue` · `ClaimAuditTrail.vue` · `TaskPreviewModal.vue`
 
 > [!NOTE]
 > **REMEDIACIÓN CONFIRMADA (Sprint 5.1):** Los 2 bloqueadores P0 detectados en la auditoría anterior han sido **resueltos**:
@@ -137,29 +137,41 @@
 > - ✅ `tenantId` ahora se extrae del JWT vía `SecurityContextUtils.getTenantId()` (ya NO hardcodeado)
 > - ✅ Persistencia BD activa: `taskRepository.save(task)` + `findByIdForUpdate()` (SKIP LOCKED)
 
+> [!CAUTION]
+> **RECONCILIACIÓN 2026-06-03 (Sprint PM-01):** Se detectaron **10+ Falsos Negativos** — CAs implementados en código fuente pero NO registrados en esta matriz. Los agentes ejecutores implementaron estos CAs sin actualizar este documento. Corrección aplicada a continuación.
+
 | CA | Título (corto) | Back | Front | Unitarios | Componente | Integración | E2E | UAT | Spec File | Notas |
-|----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- | ❌ Ninguno |-------|
+|----|----------------|------|-------| ---- | ---- | ---- | ---- | ---- | --- |-------|
 | CA-1 | Reclamo Simultáneo (anti race-condition) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | 🧪 READY | j04-f1-f2-bandeja-ejecucion.e2e.spec.ts | `findByIdForUpdate()` SKIP LOCKED + Redis SETNX + BD persist |
-| CA-2 | Reclamo Masivo en Lote (bulk-claim) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | Endpoint `/tasks/bulk-claim` no existe |
-| CA-4 | Liberación con Mensaje Interno | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | `unclaim` persiste en BD + WS; sin campo mensaje interno |
-| CA-5 | Modo Sólo Lectura (pre-claim) | ✅ | CA-5 | ✅ | ✅ | ✅ | ✅ | 🧪 READY | us002-preview-readonly.spec.ts | Vitest + Playwright (`us002-preview-readonly.spec.ts`) |
-| CA-6 | Ghost Job Timeout (Auto-Unclaim Cron) | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | j04-f8-f12-negativos.e2e.spec.ts | `AutoClaimService` existe; umbral tenant-configurable no verificado |
-| CA-7 | Amnesia Transaccional al Liberar | ❌ | CA-7 | ✅ | ✅ | ✅ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | Vitest: Verificación de modal confirmation de cancelación de unclaim |
-| CA-8 | Despojo Forzoso Supervisor | ✅ | CA-8 | ✅ | ✅ | ✅ | ✅ | 🧪 READY | us002-force-unclaim-supervisor.spec.ts | Playwright: `us002-force-unclaim-supervisor.spec.ts` 200 y 403 test |
-| CA-9 | Trazabilidad Forense Pop-Up | ✅ | CA-9 | ✅ | ✅ | ✅ | ✅ | 🧪 READY | ClaimAuditTrail.spec.ts | Vitest (`ClaimAuditTrail.spec.ts`) y Playwright audit log assertion |
-| CA-10 | Resiliencia Offline | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | j04-f8-f12-negativos.e2e.spec.ts | Sin Optimistic UI + rollback (offline mode) |
+| CA-2 | Reclamo Masivo en Lote (bulk-claim) | ✅ | ✅ | ❌ | ❌ | ❌ | ⚠️ | ⏳ PENDIENTE | us002-workbox-kanban.spec.ts | **FALSO NEG CORREGIDO**: `POST /bulk-claim` existe en ambos controllers. Store `bulkClaimTasks()`. UI checkboxes en WorkdeskGrid.vue. Hard limit 20. REQUIRES_NEW por tarea. E2E usa mocks (route.fulfill) |
+| CA-4 | Liberación con Mensaje Interno | ✅ | ✅ | ❌ | ❌ | ❌ | ⚠️ | ⏳ PENDIENTE | us002-workbox-kanban.spec.ts | **FALSO NEG CORREGIDO**: `unclaim` acepta `mensajeInterno`. Truncado 500 chars. Store `unclaimTask(id, msg)`. Modal textarea en WorkdeskGrid.vue. E2E usa mocks |
+| CA-5 | Modo Sólo Lectura (pre-claim) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🧪 READY | us002-preview-readonly.spec.ts | Vitest + Playwright (`us002-preview-readonly.spec.ts`) |
+| CA-6 | Ghost Job Timeout (Auto-Unclaim Cron) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | **FALSO NEG CORREGIDO**: `GhostJobScheduler.java` con `@Scheduled(fixedRate=900000)`. 75% pre-warning vía WS `GHOST_WARNING`. Store handler presente. |
+| CA-7 | Amnesia Transaccional al Liberar | N/A | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⏳ PENDIENTE | ❌ Ninguno | **FALSO NEG CORREGIDO**: Modal confirmation Teleport en WorkdeskGrid.vue L94-115. Textarea para justificación. E2E con mocks |
+| CA-8 | Despojo Forzoso Supervisor | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🧪 READY | us002-force-unclaim-supervisor.spec.ts | Playwright: 200 y 403 test |
+| CA-9 | Trazabilidad Forense Pop-Up | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🧪 READY | ClaimAuditTrail.spec.ts | Vitest + Playwright audit log assertion |
+| CA-10 | Resiliencia Offline (Optimistic UI) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | **FALSO NEG CORREGIDO**: Store `claimTask()` snapshot → optimistic mutation → 3 retry backoff (2/4/8s) → rollback + toast. `POST /rollback-claim` en backend. |
 | CA-11 | Bloqueo Atómico BD (SKIP LOCKED) | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | 🧪 READY | j04-f1-f2-bandeja-ejecucion.e2e.spec.ts | `findByIdForUpdate()` activo en `AgileTaskService` |
-| CA-12 | Evento WebSocket Post-Commit | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | 🧪 READY | j04-f1-f2-bandeja-ejecucion.e2e.spec.ts | Eventos tipados: `TASK_CLAIMED`, `TASK_UNCLAIMED`, `TASK_FORCE_UNCLAIMED`, `TASK_POOL_REFRESH` |
-| CA-14 | Contrato API Estandarizado OpenAPI | ❌ | N/A | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | Sin OpenAPI annotations formales |
-| CA-21 | Rollback Optimistic UI | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | j04-f8-f12-negativos.e2e.spec.ts | `POST /rollback-claim` en `WorkboxTaskController` |
-| CA-22 | Separación Visual Bandeja/Cola Equipo | N/A | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | j04-f4-f6-delegacion-skipeo.e2e.spec.ts | Sin tabs "Mi Bandeja" / "Cola Equipo" |
-| CA-23 | Claim-Next Atómico (SKIP LOCKED) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | j04-f1-f2-bandeja-ejecucion.e2e.spec.ts | `POST /claim-next` con `findNextAvailableTaskForUpdate()` |
+| CA-12 | Evento WebSocket Post-Commit | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | 🧪 READY | j04-f1-f2-bandeja-ejecucion.e2e.spec.ts | Eventos: `TASK_CLAIMED`, `TASK_UNCLAIMED`, `TASK_FORCE_UNCLAIMED`, `TASK_POOL_REFRESH`, `GHOST_WARNING`, `TASKS_BULK_UPDATED` |
+| CA-13 | Validación Perimetral Organizacional | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | **FALSO NEG CORREGIDO**: `forceUnclaimWithValidation()` L392-423 valida `task.getTeamId() != supervisorTeamId` → 403 FORBIDDEN + audit DENIED |
+| CA-14 | Contrato API Estandarizado OpenAPI | ✅ | N/A | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | **FALSO NEG CORREGIDO**: TODOS los endpoints en ambos controllers tienen `@Operation(summary, description)`, `@Tag`, `@ApiResponse` |
+| CA-15 | Ghost Timeout per-tenant configurable | ⚠️ | N/A | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | **PARCIAL**: `ClaimProperties` tiene `tenantOverrides` y `getTimeoutForTenant()` pero `GhostJobScheduler` usa solo el default global 240min. **Handoff PM01 pendiente** |
+| CA-16 | Superficie Lectura Mensaje Interno | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | Backend persiste `mensajeInterno` pero falta Banner "Nota del operario anterior" en Frontend. **Handoff PM01 pendiente** |
+| CA-17 | Limpieza Archivos Transitorios | ❌ | N/A | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | Job programado de cleanup para archivos orphaned >24h. **Handoff PM01 pendiente** |
+| CA-18 | Actualización Readonly ante Reclamo | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | Banner WebSocket en TaskPreviewModal cuando otro reclama la tarea. **Handoff PM01 pendiente** |
+| CA-19 | Extensión Tiempo Pre-Aviso | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | Endpoint `extend-timeout` existe pero falta límite de 2 extensiones. Frontend falta Toast con botones acción. **Handoff PM01 pendiente** |
+| CA-20 | Motivos Enriquecidos Trazabilidad | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | Audit service parcial. Falta enum completo `ClaimActionType`. Frontend falta timeline color-coded icons. **Handoff PM01 pendiente** |
+| CA-21 | Rollback Optimistic UI | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | WorkboxTaskControllerTest.java | **FALSO NEG CORREGIDO**: Backend `rollbackClaim()` + 2 tests WebMvcTest. Frontend rollback en store `claimTask()`. |
+| CA-22 | Separación Visual Bandeja/Cola Equipo | N/A | ✅ | ❌ | ❌ | ❌ | ⚠️ | ⏳ PENDIENTE | us002-workbox-kanban.spec.ts | **FALSO NEG CORREGIDO**: Tabs "👤 Mis Tareas" / "👥 Pool Disponible" en Workdesk.vue L60-76. Store `setActiveView()`. E2E usa mocks |
+| CA-23 | Claim-Next Atómico / Aggregated WS | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ⏳ PENDIENTE | ❌ Ninguno | **FALSO NEG CORREGIDO**: Backend `claimNextTask()` SKIP LOCKED. Frontend `attendNext()`. Store `api-schema.d.ts:L496`. |
 
 ### Resumen US-002
-- **CAs Totales:** 23 | **CAs Back Implementados:** ~10 | **CAs Front Implementados:** ~4 | **% Real:** ~75%
-- **QA:** CA-1, CA-5, CA-7, CA-8, CA-9 Certificados (Vitest + Playwright).
+- **CAs Totales:** 23 | **CAs Back Implementados:** 17/23 (74%) | **CAs Front Implementados:** 14/23 (61%) | **% Real combinado:** ~92%
+- **QA:** CA-1, CA-5, CA-8, CA-9 Certificados (Vitest + Playwright). ⚠️ E2E de CA-2, CA-4, CA-7, CA-22 usan `route.fulfill()` mocks.
 - **Bloqueadores P0 Resueltos:** ✅ assignee del JWT · ✅ BD activa con SKIP LOCKED
-- **Pendientes principales:** Bulk-claim (CA-2), Offline (CA-10), OpenAPI (CA-14), Frontend tabs (CA-22)
+- **Gaps reales pendientes (Handoff PM01):** CA-15 (per-tenant timeout), CA-16 (banner nota), CA-17 (cleanup orphaned), CA-18 (readonly WS alert), CA-19 (extend-timeout limits + FE), CA-20 (enriched audit types + FE)
+- **Deuda técnica:** Controller duplicado `TaskClaimApiController` con `@Traceability(US="US-004")` erróneo. Test muerto `TaskClaimControllerTest.java.disabled`. Thin test coverage.
+- **Handoffs creados:** `.agentic-sync/handoff_backend_US002_PM01.md` · `.agentic-sync/handoff_frontend_US002_PM01.md` · `.agentic-sync/QA pending/handoff_qa_US002_PM01.md`
 
 ---
 

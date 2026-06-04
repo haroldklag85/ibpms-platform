@@ -192,10 +192,14 @@ vi.mock('@/services/apiClient', () => {
     };
 });
 
+const mockPush = vi.fn();
 let mockRouteQuery: any = { processId: 'credito-consumo-v1' };
 vi.mock('vue-router', () => ({
     useRoute: () => ({
         query: mockRouteQuery
+    }),
+    useRouter: () => ({
+        push: mockPush
     })
 }));
 
@@ -689,6 +693,7 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
     describe('WelcomeModal (CA-40)', () => {
         beforeEach(() => {
             mockRouteQuery = {};
+            mockPush.mockClear();
         });
 
         it('Debe ser showWelcomeModal true si no hay processId en la URL query', async () => {
@@ -742,6 +747,34 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             await wrapper.vm.completeProcessCreationInWelcome();
             expect(wrapper.vm.showWelcomeModal).toBe(false);
             expect(wrapper.vm.showCatalog).toBe(false);
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, CA-40
+        it('Debe redireccionar al portal (/) al hacer clic en el boton X de la cabecera del welcome modal', async () => {
+            mockRouteQuery = {};
+            const wrapper = createWrapper();
+            await flushPromises();
+            
+            const closeBtn = wrapper.find('[data-testid="welcome-close-header"]');
+            expect(closeBtn.exists()).toBe(true);
+            
+            await closeBtn.trigger('click');
+            expect(mockPush).toHaveBeenCalledWith('/');
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, CA-40
+        it('Debe redireccionar al portal (/) al hacer clic en el boton Cancelar en el pie del welcome modal', async () => {
+            mockRouteQuery = {};
+            const wrapper = createWrapper();
+            await flushPromises();
+            
+            const cancelBtn = wrapper.find('[data-testid="welcome-cancel-footer"]');
+            expect(cancelBtn.exists()).toBe(true);
+            
+            await cancelBtn.trigger('click');
+            expect(mockPush).toHaveBeenCalledWith('/');
             wrapper.unmount();
         });
     });

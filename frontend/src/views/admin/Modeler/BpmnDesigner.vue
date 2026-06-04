@@ -955,6 +955,8 @@
             <h3 class="text-xl font-bold">✨ Bienvenido al Diseñador iBPMS</h3>
             <p class="text-xs text-blue-100 mt-1">Selecciona un proceso existente o crea uno nuevo para comenzar.</p>
           </div>
+          <!-- @Traceability: US-005, CA-40 -->
+          <button @click="cancelAndGoToPortal" data-testid="welcome-close-header" class="text-white/80 hover:text-white text-2xl font-bold transition focus:outline-none" title="Salir al Portal">&times;</button>
         </div>
         
         <!-- Content -->
@@ -1010,8 +1012,12 @@
               </div>
             </div>
             
-            <div class="pt-6 border-t border-gray-100 dark:border-gray-700 mt-6 flex justify-end">
-              <button @click="completeProcessCreationInWelcome" :disabled="!newProcessName.trim()" class="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-md transition">
+            <!-- @Traceability: US-005, CA-40 -->
+            <div class="pt-6 border-t border-gray-100 dark:border-gray-700 mt-6 flex gap-3 justify-end w-full">
+              <button @click="cancelAndGoToPortal" data-testid="welcome-cancel-footer" class="w-1/2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-bold py-2.5 px-4 rounded-lg border border-gray-200 dark:border-gray-600 transition">
+                Cancelar
+              </button>
+              <button @click="completeProcessCreationInWelcome" :disabled="!newProcessName.trim()" class="w-1/2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-md transition">
                 Crear y Diseñar Proceso
               </button>
             </div>
@@ -1029,7 +1035,7 @@ import { useTimeStore } from '@/stores/timeStore';
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent, nextTick } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { debounce } from 'lodash-es';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 import InstancesManager from './InstancesManager.vue';
@@ -1044,6 +1050,13 @@ const authStore = useAuthStore();
 const integrationStore = useIntegrationStore(); // @Traceability: US-005, CA-40
 const timeStore = useTimeStore(); // Prevent runtime TypeError on undefined timeStore
 const route = useRoute();
+const router = useRouter(); // @Traceability: US-005, CA-40
+
+// @Traceability: US-005, CA-40
+const cancelAndGoToPortal = () => {
+  router.push('/');
+};
+
 const activeRole = computed(() => authStore.roles?.[0] || 'BPMN_Designer'); // Reemplaza mockRole CA-21, CA-66
 
 // ── Types ────────────────────────────────────────────────────

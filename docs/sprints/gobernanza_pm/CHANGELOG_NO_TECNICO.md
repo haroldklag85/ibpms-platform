@@ -74,6 +74,38 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 ---
 
+## 2026-06-05 — Ejecución de Formularios Operativos
+**Autor**: Agentes Especialistas de IA (Backend y Frontend)
+**¿Qué es?**: Se construyó la pantalla final donde los usuarios llenan la información de sus tareas. Ahora incluye protecciones para evitar que la misma tarea se abra dos veces por error, y avisa si se intenta enviar un formulario incompleto o en blanco.
+**¿Para qué sirve?**: Para garantizar que el trabajo diario fluya sin interrupciones ni pérdida de datos. Si un usuario tiene un error al llenar la información, el sistema lo lleva directo al problema; si alguien más toma la tarea, la pantalla se bloquea para no hacer doble trabajo.
+**¿De dónde viene?**: Historia de Usuario US-029 (Ejecución de Formularios - Cadena 3).
+**¿Qué debería hacer?**:
+- Al hacer clic en una tarea, se abre su formulario completo.
+- El sistema advierte y bloquea si se intenta trabajar la misma tarea en dos pestañas del navegador a la vez.
+- Si falta información, resalta el error y mueve la pantalla hacia él automáticamente.
+- Pide confirmación de seguridad si se intenta enviar el trabajo sin haber llenado datos obligatorios.
+- Los campos de solo lectura se identifican visualmente con un candado para evitar confusiones.
+
+**Estado**: ✅ Listo
+
+---
+
+## 2026-06-04 — Sistema de Reclamo y Liberación de Tareas
+**Autor**: Agentes Especialistas de IA (Backend y Frontend)
+**¿Qué es?**: Se implementó el sistema de "apropiación" de tareas. Ahora, cuando un usuario va a trabajar en una tarea, la "reclama" para que los demás sepan que él se está encargando de ella. Si no puede terminarla, puede "liberarla" para que otro compañero la tome.
+**¿Para qué sirve?**: Para evitar colisiones en el trabajo de los equipos. Previene que dos empleados intenten resolver la misma actividad al mismo tiempo, organizando la bandeja de pendientes de manera clara y transparente.
+**¿De dónde viene?**: Historia de Usuario US-002 (Reclamo de Tareas - Cadena 2).
+**¿Qué debería hacer?**:
+- En la bandeja de tareas compartidas, cada una muestra un botón para tomar propiedad.
+- Al reclamar una tarea, aparece bloqueada (mostrando el nombre del responsable) para el resto del equipo.
+- El usuario dueño puede devolver o "soltar" la tarea si no puede continuar.
+- Si una tarea se deja abandonada mucho tiempo, el sistema la suelta automáticamente para que otro la tome (anti-fantasmas).
+- Muestra una línea de tiempo con el historial exacto (quién la tomó, cuándo y por qué la soltó).
+
+**Estado**: ✅ Listo
+
+---
+
 ## 2026-03-15 — Inicio de Sesión y Control de Acceso
 
 **Autor**: Equipo de Desarrollo IBPMS (Sprints S0–S5)

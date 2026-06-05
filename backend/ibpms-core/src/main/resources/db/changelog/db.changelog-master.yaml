@@ -93,6 +93,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/39-us029-form-execution-schema.sql
   - include:
+      file: db/changelog/40-us029-fix-form-event-store.sql
+  - include:
       file: db/changelog/40-us029-draft-expiration.sql
   - include:
       file: db/changelog/41-us007-dmn-schema-complement.sql

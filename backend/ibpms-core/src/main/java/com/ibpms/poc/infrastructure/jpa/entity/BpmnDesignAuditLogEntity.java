@@ -5,13 +5,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Type;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
 @Table(name = "ibpms_bpmn_design_audit_log")
+@IdClass(BpmnDesignAuditLogId.class)
 public class BpmnDesignAuditLogEntity {
 
     public enum Action {
@@ -32,15 +37,16 @@ public class BpmnDesignAuditLogEntity {
     @Column(name = "user_id", nullable = false, length = 100)
     private String userId;
 
+    @Id
     @Column(nullable = false, updatable = false)
     private LocalDateTime timestamp;
 
     @Column(name = "version_affected", nullable = false)
     private int versionAffected;
 
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
-    private String details;
+    private Map<String, Object> details;
 
     public BpmnDesignAuditLogEntity() {
         this.id = UUID.randomUUID();
@@ -48,7 +54,7 @@ public class BpmnDesignAuditLogEntity {
     }
 
     public BpmnDesignAuditLogEntity(UUID processDesignId, Action action, String userId,
-            int versionAffected, String details) {
+            int versionAffected, Map<String, Object> details) {
         this();
         this.processDesignId = processDesignId;
         this.action = action;
@@ -106,11 +112,11 @@ public class BpmnDesignAuditLogEntity {
         this.versionAffected = versionAffected;
     }
 
-    public String getDetails() {
+    public Map<String, Object> getDetails() {
         return details;
     }
 
-    public void setDetails(String details) {
+    public void setDetails(Map<String, Object> details) {
         this.details = details;
     }
 }

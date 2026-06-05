@@ -306,6 +306,13 @@
 			<version>1.2.1</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Hypersistence Utils para JSONB a Map -->
+		<dependency>
+			<groupId>io.hypersistence</groupId>
+			<artifactId>hypersistence-utils-hibernate-63</artifactId>
+			<version>3.7.3</version>
+		</dependency>
 	</dependencies>
 
 	<build>

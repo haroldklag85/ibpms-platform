@@ -30,12 +30,11 @@ public class ProcessDesignJpaAdapter implements GenericProcessDefinitionPort {
     public List<String> getGenericFormWhitelist(String processKey) {
         return processDesignRepository.findByTechnicalId(processKey)
                 .map(BpmnProcessDesignEntity::getGenericFormWhitelist)
-                .map(whitelistStr -> {
-                    if (whitelistStr != null && !whitelistStr.isBlank()) {
-                        try {
-                            return objectMapper.readValue(whitelistStr, new TypeReference<List<String>>() {});
-                        } catch (Exception e) {
-                            return null;
+                .map(whitelistMap -> {
+                    if (whitelistMap != null && whitelistMap.containsKey("allowedForms")) {
+                        Object obj = whitelistMap.get("allowedForms");
+                        if (obj instanceof List) {
+                            return (List<String>) obj;
                         }
                     }
                     return null;

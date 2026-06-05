@@ -74,6 +74,20 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 ---
 
+## 2026-06-05 — Reparación del Guardado de Procesos BPMN
+**Autor**: Agente Backend (Sprints PM-01)
+**¿Qué es?**: Se solucionó un problema crítico que impedía guardar los diagramas de procesos de negocio. Se mejoró la forma en que el sistema almacena y recupera la información de los diseños en la base de datos para que sea más confiable.
+**¿Para qué sirve?**: Para garantizar que cuando un analista diseña o modifica un proceso en el modelador visual, el sistema lo guarde correctamente sin generar errores. Esto es fundamental porque sin procesos guardados correctamente, el sistema no puede asignar tareas a los usuarios.
+**¿De dónde viene?**: Corrección de un problema técnico detectado (OBS-1, originado en US-005) para asegurar que el sistema y la base de datos se comuniquen perfectamente.
+**¿Qué debería hacer?**:
+- El sistema guarda los diseños de procesos sin interrupciones.
+- Mantiene un registro del historial sin errores cuando ocurren cambios en los procesos.
+- Todo el módulo de modelado funciona correctamente con el almacenamiento central.
+
+**Estado**: ✅ Listo
+
+---
+
 ## 2026-06-05 — Ejecución de Formularios Operativos
 **Autor**: Agentes Especialistas de IA (Backend y Frontend)
 **¿Qué es?**: Se construyó la pantalla final donde los usuarios llenan la información de sus tareas. Ahora incluye protecciones para evitar que la misma tarea se abra dos veces por error, y avisa si se intenta enviar un formulario incompleto o en blanco.
@@ -237,5 +251,5 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 ---
 
-*Última actualización: 2026-06-02 23:30 COT*
-*Próxima entrada esperada: Al completarse la primera tarea del Sprint PM-01*
+*Última actualización: 2026-06-05 03:30 COT*
+*Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*

@@ -1,135 +1,193 @@
-import os
 import re
 
-FRONTEND_DIR = r"C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\src"
+with open(r'c:\Users\USER\Desktop\Proyectos\Harold Ibpms\ibpms-platform\frontend\src\components\forms\FormRenderer.vue', 'r', encoding='utf-8') as f:
+    content = f.read()
 
-def process_vue_files():
-    vue_files = []
-    for root, dirs, files in os.walk(FRONTEND_DIR):
-        if 'views' in root or 'components' in root:
-            for f in files:
-                if f.endswith('.vue'):
-                    vue_files.append(os.path.join(root, f))
-    
-    modified_count = 0
-    for file_path in vue_files:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            
-        if 'apiClient' in content or 'api }' in content or 'api,' in content:
-            # Check if it has an import
-            if re.search(r'import\s+.*?apiClient.*?;?', content) or re.search(r'import\s+\{\s*api\s*\}.*?;?', content):
-                # We need to replace it
-                # Remove imports
-                content = re.sub(r'import\s+apiClient\s+from\s+[\'"]@/services/apiClient[\'"];?\n?', '', content)
-                content = re.sub(r'import\s+\{\s*api\s*\}\s+from\s+[\'"]@/services/apiClient[\'"];?\n?', '', content)
-                content = re.sub(r'import\s+\{\s*apiClient\s*\}\s+from\s+[\'"]@/services/apiClient[\'"];?\n?', '', content)
-                
-                # Add integrationStore import
-                import_stmt = "import { useIntegrationStore } from '@/stores/useIntegrationStore';\n"
-                if 'import { useIntegrationStore }' not in content:
-                    content = re.sub(r'(<script[^>]*>\n)', r'\1' + import_stmt, content)
-                
-                # Add store initialization
-                store_init = "const integrationStore = useIntegrationStore();\n"
-                if store_init not in content:
-                    # Find a good place to put it, e.g., after the imports
-                    # Usually after the last import
-                    last_import_match = list(re.finditer(r'import\s+.*?\n', content))
-                    if last_import_match:
-                        last_import = last_import_match[-1]
-                        content = content[:last_import.end()] + "\n" + store_init + content[last_import.end():]
-                
-                # Replace api calls
-                content = re.sub(r'\bapiClient\.', 'integrationStore.', content)
-                content = re.sub(r'\bapi\.', 'integrationStore.', content)
-                
-                # Add Traceability comment if not exists
-                trace_comment = "// @Traceability: Retro-Remediación ADR-006\n"
-                if trace_comment not in content:
-                    content = content.replace(store_init, trace_comment + store_init)
-                    
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(content)
-                modified_count += 1
-                print(f"Refactored {file_path}")
-                
-    print(f"Modified {modified_count} vue files.")
+# 1. Imports
+content = content.replace(
+    "import { useWizardValidation } from '@/composables/useWizardValidation';",
+    "import { useWizardValidation } from '@/composables/useWizardValidation';\nimport { useTaskSync } from '@/composables/useTaskSync';"
+)
 
-def fix_setinterval():
-    # BpmnDesigner.vue
-    fpath = os.path.join(FRONTEND_DIR, 'views', 'admin', 'Modeler', 'BpmnDesigner.vue')
-    if os.path.exists(fpath):
-        with open(fpath, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        # Add timeStore import if missing
-        if 'useTimeStore' not in content:
-            content = re.sub(r'(<script[^>]*>\n)', r"\1import { useTimeStore } from '@/stores/timeStore';\n", content)
-            
-        if 'const timeStore =' not in content:
-            content = re.sub(r'(const integrationStore.*?\n)', r'\1const timeStore = useTimeStore();\n', content)
-            
-        # Replace setInterval
-        # heartbeatInterval = setInterval(async () => { ... }, 30000)
-        # autoSaveInterval = setInterval(async () => { ... }, 60000)
-        # setInterval(() => { autoSaveAgo.value++; }, 1000);
-        
-        content = re.sub(r'heartbeatInterval\s*=\s*setInterval\(async\s*\(\)\s*=>\s*\{([\s\S]*?)\},\s*30000\);',
-                         r'watch(() => timeStore.currentTick, async (tick) => {\n  if (tick % 30000 < 1000) {\1}\n}); // @Traceability: Retro-Remediación ADR-006', content)
-                         
-        content = re.sub(r'autoSaveInterval\s*=\s*setInterval\(async\s*\(\)\s*=>\s*\{([\s\S]*?)\},\s*60000\);',
-                         r'watch(() => timeStore.currentTick, async (tick) => {\n  if (tick % 60000 < 1000) {\1}\n}); // @Traceability: Retro-Remediación ADR-006', content)
-                         
-        content = re.sub(r'setInterval\(\(\)\s*=>\s*\{\s*autoSaveAgo\.value\+\+;\s*\},\s*1000\);',
-                         r'watch(() => timeStore.currentTick, (tick) => {\n  if (tick % 1000 < 500) { autoSaveAgo.value++; }\n});', content)
-        
-        with open(fpath, 'w', encoding='utf-8') as f:
-            f.write(content)
-        print("Refactored BpmnDesigner.vue timers")
+# 2. useTaskSync
+content = content.replace(
+    "const submitForm = ref<() => Promise<void>>();\nconst submitError = ref<string | null>(null);",
+    "const submitForm = ref<() => Promise<void>>();\nconst submitError = ref<string | null>(null);\n\n// @Traceability: US-029, CA-30, CA-31\nconst { isDuplicateTab, syncStatus } = useTaskSync(props.taskId || 'new');"
+)
 
-    # IntakeTriageView.vue
-    fpath = os.path.join(FRONTEND_DIR, 'views', 'IntakeTriageView.vue')
-    if os.path.exists(fpath):
-        with open(fpath, 'r', encoding='utf-8') as f:
-            content = f.read()
-            
-        if 'useTimeStore' not in content:
-            content = re.sub(r'(<script[^>]*>\n)', r"\1import { useTimeStore } from '@/stores/timeStore';\n", content)
-            
-        if 'const timeStore =' not in content:
-            content = re.sub(r'(const [a-zA-Z0-9_]+\s*=\s*.*?\n)', r'\1const timeStore = useTimeStore();\n', content, count=1)
-            
-        content = re.sub(r'pollingInterval\s*=\s*setInterval\(\(\)\s*=>\s*\{([\s\S]*?)\},\s*10000\);',
-                         r'watch(() => timeStore.currentTick, (tick) => {\n  if (tick % 10000 < 1000) {\1}\n}); // @Traceability: Retro-Remediación ADR-006', content)
-        content = re.sub(r'let pollingInterval.*?\n', '', content)
-        content = re.sub(r'clearInterval\(pollingInterval\);?', '', content)
-        
-        with open(fpath, 'w', encoding='utf-8') as f:
-            f.write(content)
-        print("Refactored IntakeTriageView.vue timers")
-        
-    # useFormStore.ts
-    fpath = os.path.join(FRONTEND_DIR, 'stores', 'useFormStore.ts')
-    if os.path.exists(fpath):
-        with open(fpath, 'r', encoding='utf-8') as f:
-            content = f.read()
-            
-        if 'useTimeStore' not in content:
-            content = "import { useTimeStore } from '@/stores/timeStore';\n" + content
-            
-        if 'const timeStore =' not in content:
-            content = re.sub(r'(export const useFormStore = defineStore.*?\n.*?\n)', r'\1    const timeStore = useTimeStore();\n', content)
-            
-        content = re.sub(r'undoTimer\s*=\s*setInterval\(\(\)\s*=>\s*\{([\s\S]*?)\},\s*5000\);',
-                         r'watch(() => timeStore.currentTick, (tick) => {\n  if (tick % 5000 < 1000) {\1}\n}); // @Traceability: Retro-Remediación ADR-006', content)
-        content = re.sub(r'let undoTimer.*?\n', '', content)
-        content = re.sub(r'clearInterval\(undoTimer\);?', '', content)
-        
-        with open(fpath, 'w', encoding='utf-8') as f:
-            f.write(content)
-        print("Refactored useFormStore.ts timers")
+# 3. ReadOnly disabled + CSS
+content = content.replace(
+    "const disabled = isDisabled(node);",
+    "const disabled = isDisabled(node) || node.readOnly;"
+)
+# update class for text inputs
+content = re.sub(
+    r"class: 'form-input w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',",
+    "class: 'form-input w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ' + (node.readOnly ? 'bg-[#F5F5F5] border-[#e5e7eb] cursor-not-allowed pl-8' : 'border-gray-300'),",
+    content
+)
+# update class for number inputs
+content = re.sub(
+    r"class: 'form-input w-full rounded-md border-gray-300 shadow-sm sm:text-sm',",
+    "class: 'form-input w-full rounded-md shadow-sm sm:text-sm ' + (node.readOnly ? 'bg-[#F5F5F5] border-[#e5e7eb] cursor-not-allowed pl-8' : 'border-gray-300'),",
+    content
+)
 
-if __name__ == "__main__":
-    process_vue_files()
-    fix_setinterval()
+# 4. wrap text and number inputs with relative div and padlock
+def replace_input_vnode(match):
+    text = match.group(0)
+    return text + "\n               if (node.readOnly) {\n                   inputVNode = h('div', { class: 'relative w-full' }, [\n                       h('span', { class: 'absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 z-10 select-none' }, '🔒'),\n                       inputVNode\n                   ]);\n               }"
+
+# For text type block
+content = re.sub(r"inputVNode = h\('input', attrs\);", replace_input_vnode, content)
+# For number type block
+content = re.sub(r"onBlur: \(\) => validateField\(node\)\n\s*}\);", replace_input_vnode, content)
+
+
+# 5. Modify localSubmitForm and showEmptyConfirmModal
+old_submit_block = """        const localSubmitError = ref<string | null>(null);
+        const localSubmitForm = async () => {
+            localSubmitError.value = null;
+            submitError.value = null;
+            try {
+                const taskId = props.taskId || 'mock-task';
+                await apiClient.post(`/api/v1/workbox/tasks/${taskId}/complete`, formData.value);
+                notifySubmit();
+                if (props.taskId) {
+                    localStorage.removeItem(`draft_task_${props.taskId}`);
+                }
+            } catch (err: any) {
+                console.error("Smart Button submit error:", err);
+                localSubmitError.value = err.message || "Un error ha ocurrido durante la sumisión.";
+                submitError.value = localSubmitError.value;
+            }
+        };
+        submitForm.value = localSubmitForm;"""
+
+new_submit_block = """        const localSubmitError = ref<string | null>(null);
+        const showEmptyConfirmModal = ref(false); // CA-32
+
+        const executeSubmit = async () => {
+            localSubmitError.value = null;
+            submitError.value = null;
+            try {
+                isAsyncLoading.value = true;
+                const taskId = props.taskId || 'mock-task';
+                await apiClient.post(`/api/v1/workbox/tasks/${taskId}/complete`, formData.value);
+                notifySubmit();
+                if (props.taskId) {
+                    localStorage.removeItem(`draft_task_${props.taskId}`);
+                }
+            } catch (err: any) {
+                console.error("Smart Button submit error:", err);
+                localSubmitError.value = err.message || "Un error ha ocurrido durante la sumisión.";
+                submitError.value = localSubmitError.value;
+            } finally {
+                isAsyncLoading.value = false;
+            }
+        };
+
+        const localSubmitForm = async () => {
+            // Check if validateCurrentStageZod exists and call it
+            if (typeof validateCurrentStageZod === 'function') {
+                if (!validateCurrentStageZod()) return;
+            }
+
+            let hasRequired = false;
+            const traverseCheck = (nodes: any[]) => {
+                for(const n of nodes) {
+                    if (isVisible(n) && n.required) hasRequired = true;
+                    if (n.children) traverseCheck(n.children);
+                }
+            };
+            traverseCheck(props.schema);
+
+            if (!hasRequired) {
+                showEmptyConfirmModal.value = true;
+                return;
+            }
+            await executeSubmit();
+        };
+        // Will set submitForm.value later after validateCurrentStageZod is defined"""
+
+content = content.replace(old_submit_block, new_submit_block)
+
+# Add submitForm.value = localSubmitForm at the end of setup
+content = content.replace("const fetchAsyncData = useDebounceFn", "submitForm.value = localSubmitForm;\n\n        const fetchAsyncData = useDebounceFn")
+
+# 6. Button submit logic
+old_button_submit = """            else if (node.type === 'button_submit') {
+                inputVNode = h('button', {
+                    type: 'submit',
+                    class: 'w-full px-4 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition',
+                    onClick: (e: Event) => {
+                        e.preventDefault();
+                        localSubmitForm();
+                    }
+                }, node.label || 'Submit');
+            }"""
+
+new_button_submit = """            else if (node.type === 'button_submit') {
+                inputVNode = h('button', {
+                    type: 'submit',
+                    disabled: isDuplicateTab.value || isAsyncLoading.value,
+                    class: 'w-full px-4 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition' + (isDuplicateTab.value ? ' opacity-50 cursor-not-allowed' : ''),
+                    onClick: (e: Event) => {
+                        e.preventDefault();
+                        if (!isDuplicateTab.value) {
+                            localSubmitForm();
+                        }
+                    }
+                }, [
+                    isAsyncLoading.value ? h('span', { class: 'animate-spin mr-2 inline-block' }, '↻') : null,
+                    isDuplicateTab.value ? 'Pestaña Duplicada (Bloqueado)' : (isAsyncLoading.value ? 'Guardando en el servidor...' : (node.label || 'Submit'))
+                ]);
+            }"""
+
+content = content.replace(old_button_submit, new_button_submit)
+
+# 7. Add Teleport and Duplicate Warning to children
+old_return_children = """        return () => {
+            const children: VNode[] = [];"""
+
+new_return_children = """        return () => {
+            const children: VNode[] = [];
+            
+            if (isDuplicateTab.value) {
+                 children.push(h('div', {
+                    class: 'error-banner alert-warning p-3 bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-md mb-4 flex items-center font-bold',
+                    role: 'alert'
+                 }, '⚠️ Estás editando esta tarea en otra pestaña. Por seguridad, esta vista ha sido bloqueada.'));
+            }
+
+            if (showEmptyConfirmModal.value) {
+                children.push(h(Teleport, { to: 'body' }, [
+                    h('div', { class: 'fixed inset-0 bg-black/50 z-[900] flex items-center justify-center p-4' }, [
+                        h('div', { class: 'bg-white p-6 rounded-lg max-w-md w-full shadow-xl text-left' }, [
+                            h('h3', { class: 'text-lg font-bold mb-4' }, '¿Estás seguro de que deseas completar esta tarea?'),
+                            h('p', { class: 'mb-4 text-gray-600' }, 'Esta acción no se puede deshacer.'),
+                            h('div', { class: 'flex justify-end gap-2' }, [
+                                h('button', {
+                                    class: 'px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-medium',
+                                    onClick: (e: Event) => { e.preventDefault(); showEmptyConfirmModal.value = false; }
+                                }, 'Cancelar'),
+                                h('button', {
+                                    class: 'px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold flex items-center',
+                                    onClick: (e: Event) => {
+                                        e.preventDefault();
+                                        showEmptyConfirmModal.value = false;
+                                        executeSubmit();
+                                    }
+                                }, 'Sí, completar')
+                            ])
+                        ])
+                    ])
+                ]));
+            }"""
+
+content = content.replace(old_return_children, new_return_children)
+
+with open(r'c:\Users\USER\Desktop\Proyectos\Harold Ibpms\ibpms-platform\frontend\src\components\forms\FormRenderer.vue', 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print("Done")

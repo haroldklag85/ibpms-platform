@@ -14,6 +14,7 @@ import { IMaskDirective } from 'vue-imask';
 import { useDebounceFn } from '@vueuse/core';
 import FormWizard from './FormWizard.vue';
 import { useWizardValidation } from '@/composables/useWizardValidation';
+import { useTaskSync } from '@/composables/useTaskSync';
 
 // @Traceability: US-003 - CA-30, CA-52, CA-77, CA-79, CA-80
 const integrationStore = useIntegrationStore();
@@ -25,6 +26,9 @@ const emit = defineEmits(['stage-change']);
 
 const submitForm = ref<() => Promise<void>>();
 const submitError = ref<string | null>(null);
+
+// @Traceability: US-029, CA-30, CA-31
+const { isDuplicateTab, syncStatus } = useTaskSync(props.taskId || 'new');
 
 watch(
   () => formData.value,
@@ -131,10 +135,13 @@ onMounted(() => {
       setup() {
         // @Traceability: US-003 - CA-82
         const localSubmitError = ref<string | null>(null);
-        const localSubmitForm = async () => {
+        const showEmptyConfirmModal = ref(false); // CA-32
+
+        const executeSubmit = async () => {
             localSubmitError.value = null;
             submitError.value = null;
             try {
+                isAsyncLoading.value = true;
                 const taskId = props.taskId || 'mock-task';
                 await apiClient.post(`/api/v1/workbox/tasks/${taskId}/complete`, formData.value);
                 notifySubmit();
@@ -145,9 +152,33 @@ onMounted(() => {
                 console.error("Smart Button submit error:", err);
                 localSubmitError.value = err.message || "Un error ha ocurrido durante la sumisión.";
                 submitError.value = localSubmitError.value;
+            } finally {
+                isAsyncLoading.value = false;
             }
         };
-        submitForm.value = localSubmitForm;
+
+        const localSubmitForm = async () => {
+            // Check if validateCurrentStageZod exists and call it
+            if (typeof validateCurrentStageZod === 'function') {
+                if (!validateCurrentStageZod()) return;
+            }
+
+            let hasRequired = false;
+            const traverseCheck = (nodes: any[]) => {
+                for(const n of nodes) {
+                    if (isVisible(n) && n.required) hasRequired = true;
+                    if (n.children) traverseCheck(n.children);
+                }
+            };
+            traverseCheck(props.schema);
+
+            if (!hasRequired) {
+                showEmptyConfirmModal.value = true;
+                return;
+            }
+            await executeSubmit();
+        };
+        // Will set submitForm.value later after validateCurrentStageZod is defined
 
         // CA-11B: Memoria local del Info Modal
         const infoModalOpen = reactive<Record<string, boolean>>({});
@@ -336,6 +367,8 @@ onMounted(() => {
         // Check CA-54 variables (clearing unseen fields logic)
 
         const asyncOptions = ref<Record<string, any[]>>({});
+        submitForm.value = localSubmitForm;
+
         const fetchAsyncData = useDebounceFn(async (url: string, query: string, fieldId: string) => {
             if(!url) return;
             try {
@@ -358,7 +391,7 @@ onMounted(() => {
            const bindingKey = node.camundaVariable || node.id;
            const val = formData.value[bindingKey];
            const updateVal = (newVal: any) => { formData.value[bindingKey] = newVal; };
-           const disabled = isDisabled(node);
+           const disabled = isDisabled(node) || node.readOnly;
 
            const labelVNode = h('label', { class: 'block text-sm font-bold text-gray-700 mb-1' }, [
                node.label,
@@ -374,7 +407,7 @@ onMounted(() => {
                    value: val || '',
                    placeholder: node.placeholder || '',
                    disabled,
-                   class: 'form-input w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm',
+                   class: 'form-input w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ' + (node.readOnly ? 'bg-[#F5F5F5] border-[#e5e7eb] cursor-not-allowed pl-8' : 'border-gray-300'),
                    onInput: (e: any) => {
                        updateVal(e.target.value);
                        if (node.enableAutocomplete && node.autocompleteUrl) {
@@ -437,6 +470,12 @@ onMounted(() => {
                    };
                }
                inputVNode = h('input', attrs);
+               if (node.readOnly) {
+                   inputVNode = h('div', { class: 'relative w-full' }, [
+                       h('span', { class: 'absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 z-10 select-none' }, '🔒'),
+                       inputVNode
+                   ]);
+               }
            }
            else if (node.type === 'number') {
                inputVNode = h('input', {
@@ -444,10 +483,16 @@ onMounted(() => {
                    value: val || '',
                    placeholder: node.placeholder || '',
                    disabled,
-                   class: 'form-input w-full rounded-md border-gray-300 shadow-sm sm:text-sm',
+                   class: 'form-input w-full rounded-md shadow-sm sm:text-sm ' + (node.readOnly ? 'bg-[#F5F5F5] border-[#e5e7eb] cursor-not-allowed pl-8' : 'border-gray-300'),
                    onInput: (e: any) => updateVal(Number(e.target.value)),
                    onBlur: () => validateField(node)
                });
+               if (node.readOnly) {
+                   inputVNode = h('div', { class: 'relative w-full' }, [
+                       h('span', { class: 'absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 z-10 select-none' }, '🔒'),
+                       inputVNode
+                   ]);
+               }
            }
            else if (node.type === 'textarea') {
                inputVNode = h('textarea', {
@@ -459,6 +504,12 @@ onMounted(() => {
                    onInput: (e: any) => updateVal(e.target.value),
                    onBlur: () => validateField(node)
                });
+               if (node.readOnly) {
+                   inputVNode = h('div', { class: 'relative w-full' }, [
+                       h('span', { class: 'absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 z-10 select-none' }, '🔒'),
+                       inputVNode
+                   ]);
+               }
            }
            else if (node.type === 'select') {
                inputVNode = h('select', {
@@ -555,12 +606,18 @@ onMounted(() => {
             else if (node.type === 'button_submit') {
                 inputVNode = h('button', {
                     type: 'submit',
-                    class: 'w-full px-4 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition',
+                    disabled: isDuplicateTab.value || isAsyncLoading.value,
+                    class: 'w-full px-4 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition' + (isDuplicateTab.value ? ' opacity-50 cursor-not-allowed' : ''),
                     onClick: (e: Event) => {
                         e.preventDefault();
-                        localSubmitForm();
+                        if (!isDuplicateTab.value) {
+                            localSubmitForm();
+                        }
                     }
-                }, node.label || 'Submit');
+                }, [
+                    isAsyncLoading.value ? h('span', { class: 'animate-spin mr-2 inline-block' }, '↻') : null,
+                    isDuplicateTab.value ? 'Pestaña Duplicada (Bloqueado)' : (isAsyncLoading.value ? 'Guardando en el servidor...' : (node.label || 'Submit'))
+                ]);
             }
             // Arrays, Tabs, Accordions can be extended here
             else {
@@ -575,6 +632,38 @@ onMounted(() => {
 
         return () => {
             const children: VNode[] = [];
+            
+            if (isDuplicateTab.value) {
+                 children.push(h('div', {
+                    class: 'error-banner alert-warning p-3 bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-md mb-4 flex items-center font-bold',
+                    role: 'alert'
+                 }, '⚠️ Estás editando esta tarea en otra pestaña. Por seguridad, esta vista ha sido bloqueada.'));
+            }
+
+            if (showEmptyConfirmModal.value) {
+                children.push(h(Teleport, { to: 'body' }, [
+                    h('div', { class: 'fixed inset-0 bg-black/50 z-[900] flex items-center justify-center p-4' }, [
+                        h('div', { class: 'bg-white p-6 rounded-lg max-w-md w-full shadow-xl text-left' }, [
+                            h('h3', { class: 'text-lg font-bold mb-4' }, '¿Estás seguro de que deseas completar esta tarea?'),
+                            h('p', { class: 'mb-4 text-gray-600' }, 'Esta acción no se puede deshacer.'),
+                            h('div', { class: 'flex justify-end gap-2' }, [
+                                h('button', {
+                                    class: 'px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-medium',
+                                    onClick: (e: Event) => { e.preventDefault(); showEmptyConfirmModal.value = false; }
+                                }, 'Cancelar'),
+                                h('button', {
+                                    class: 'px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold flex items-center',
+                                    onClick: (e: Event) => {
+                                        e.preventDefault();
+                                        showEmptyConfirmModal.value = false;
+                                        executeSubmit();
+                                    }
+                                }, 'Sí, completar')
+                            ])
+                        ])
+                    ])
+                ]));
+            }
             
             // @Traceability: US-003 - CA-82
             if (localSubmitError.value) {

@@ -18,12 +18,21 @@ import java.util.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.ibpms.poc.domain.model.enums.ClaimActionType;
 
+/**
+ * ⚠️ DEPRECATED: Use {@link WorkboxTaskController} ({@code /api/v1/workbox/tasks/*}) instead.
+ * Este controller se mantiene por compatibilidad pero NO es consumido por el Frontend.
+ * Scheduled for consolidation in V2.
+ *
+ * @deprecated since PM-01. Use WorkboxTaskController.
+ */
 @RestController
 @RequestMapping("/api/v1/tasks")
 @CrossOrigin(origins = "*")
-@Traceability(US = "US-004", CA = {"CA-01"})
-@Tag(name = "Task Claim Management", description = "Operaciones de Asignación y Reclamación de Tareas Ágiles")
+@Deprecated(since = "PM-01", forRemoval = false)
+@Traceability(US = "US-002", CA = {"CA-01"})
+@Tag(name = "Task Claim Management [DEPRECATED]", description = "⚠️ DEPRECATED: Use WorkboxTaskController (/api/v1/workbox/tasks/*). Mantenido por compatibilidad.")
 public class TaskClaimApiController {
 
     private final AgileTaskService taskService;
@@ -43,7 +52,7 @@ public class TaskClaimApiController {
         String assignee = SecurityContextUtils.getAssignee();
         taskService.claimTask(taskId, assignee);
         
-        claimAuditService.audit(taskId, assignee, "CLAIMED", null, null, null);
+        claimAuditService.audit(taskId, assignee, ClaimActionType.CLAIMED.name(), null, null, null);
 
         return ResponseEntity.ok(Map.of("message", "Tarea reclamada exitosamente.", "taskId", taskId.toString()));
     }

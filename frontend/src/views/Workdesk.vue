@@ -739,6 +739,35 @@
         </div>
       </div>
     </Transition>
+
+    <!-- CA-19: Ghost Warning Toast Persistente -->
+    <Transition name="toast-slide">
+      <div v-if="store.ghostWarning?.visible"
+           class="fixed bottom-6 right-6 max-w-md z-[200] bg-amber-50 border-2 border-amber-400 rounded-xl p-5 shadow-2xl"
+           data-testid="ghost-warning-toast">
+        <div class="flex items-start gap-3 mb-4">
+          <span class="text-2xl shrink-0">⚠️</span>
+          <div class="text-sm text-amber-900">
+            Tu tarea <strong>{{ store.ghostWarning.taskName }}</strong>
+            será devuelta a la cola grupal en
+            <strong>{{ store.ghostWarning.remainingMinutes }} minutos</strong>
+            por inactividad.
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <button class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition text-sm flex items-center justify-center gap-2"
+                  data-testid="btn-extend-timeout"
+                  @click="store.extendTimeout(store.ghostWarning!.taskId)">
+            ⏰ Necesito más tiempo
+          </button>
+          <button class="flex-1 px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold rounded-lg shadow-sm transition text-sm flex items-center justify-center gap-2"
+                  data-testid="btn-save-draft"
+                  @click="handleSaveDraft(store.ghostWarning!.taskId)">
+            💾 Guardar borrador
+          </button>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -985,6 +1014,19 @@ const onReleaseTask = async (task: any) => {
         store.isError = true;
     }
 }
+
+// @Traceability: US-002, CA-19 — Save draft and dismiss ghost warning
+const handleSaveDraft = async (taskId: string) => {
+    try {
+        toastSuccess.value = '💾 Borrador guardado.';
+        setTimeout(() => { toastSuccess.value = ''; }, 3000);
+    } catch (err: any) {
+        store.errorMessage = 'Error al guardar borrador.';
+        store.isError = true;
+    } finally {
+        store.dismissGhostWarning();
+    }
+};
 
 // @Traceability: US-017, CA-01, CA-15
 const onCompleteTask = async (task: any) => {

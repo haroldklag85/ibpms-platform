@@ -16,6 +16,7 @@ public class AgileTask {
     private UUID id;
     private UUID projectId;
     private String teamId;
+    private String tenantId;
     private String title;
     private String description;
     private BigDecimal effortEstimated;

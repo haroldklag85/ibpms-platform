@@ -56,7 +56,9 @@ export const useWorkdeskStore = defineStore('workdesk', {
     isAttending: false,
     // CA-22: Tabs Workdesk
     activeView: 'POOL' as 'PERSONAL' | 'POOL',
-    _bulkDebounce: null as ReturnType<typeof setTimeout> | null
+    _bulkDebounce: null as ReturnType<typeof setTimeout> | null,
+    // CA-19: Ghost Warning state (inactivity auto-unclaim)
+    ghostWarning: null as { taskId: string; taskName: string; remainingMinutes: number; visible: boolean } | null
   }),
 
   // @Traceability: US-002, CA-22 (Contadores N y M en store)
@@ -269,6 +271,26 @@ export const useWorkdeskStore = defineStore('workdesk', {
       }
     },
 
+    // @Traceability: US-002, CA-19 — Extend timeout to prevent auto-unclaim
+    async extendTimeout(taskId: string) {
+      try {
+        await apiClient.post(`/workbox/tasks/${taskId}/extend-timeout`);
+        this.ghostWarning = null;
+        this._showExtendTimeoutToast();
+      } catch (error: any) {
+        if (error.response?.status === 422) {
+          this._showExtendLimitToast();
+        } else {
+          console.error('[CA-19] Error extending timeout', error);
+        }
+      }
+    },
+
+    // @Traceability: US-002, CA-19 — Dismiss ghost warning without extending
+    dismissGhostWarning() {
+      this.ghostWarning = null;
+    },
+
     async fetchGlobalInbox(page: number = 0, size: number = 15, search?: string, delegatedToId?: string, typeFilter?: string, slaFilter?: string, statusFilter?: string) {
       this.isLoading = true;
       this.isError = false;
@@ -417,6 +439,10 @@ export const useWorkdeskStore = defineStore('workdesk', {
                      case 'PRIORITY_CHANGE':
                          this._handleWsPriorityChange();
                          break;
+                    // @Traceability: US-002, CA-19 — Ghost Warning (inactivity auto-unclaim)
+                    case 'GHOST_WARNING':
+                        this._handleGhostWarning(event);
+                        break;
                  }
              } catch(e) {
                  console.error("Error parsing STOMP message", e);
@@ -542,6 +568,48 @@ export const useWorkdeskStore = defineStore('workdesk', {
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 500);
             }, 4000);
+        }
+    },
+
+    // @Traceability: US-002, CA-19 — Handle GHOST_WARNING WebSocket event
+    _handleGhostWarning(event: any) {
+        this.ghostWarning = {
+            taskId: event.taskId,
+            taskName: event.taskName || 'Tarea',
+            remainingMinutes: event.remainingMinutes ?? 5,
+            visible: true,
+        };
+    },
+
+    // @Traceability: US-002, CA-19 — Toast for successful timeout extension
+    _showExtendTimeoutToast() {
+        const body = document.querySelector('body');
+        if (body && !document.getElementById('extend-timeout-toast')) {
+            const toast = document.createElement('div');
+            toast.id = 'extend-timeout-toast';
+            toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#22c55e; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; transition:opacity 0.5s;';
+            toast.innerHTML = '⏰ Tiempo extendido. Tu tarea no será devuelta.';
+            body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+    },
+
+    // @Traceability: US-002, CA-19 — Toast for extension limit reached (422)
+    _showExtendLimitToast() {
+        const body = document.querySelector('body');
+        if (body && !document.getElementById('extend-limit-toast')) {
+            const toast = document.createElement('div');
+            toast.id = 'extend-limit-toast';
+            toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; transition:opacity 0.5s;';
+            toast.innerHTML = '❌ Has alcanzado el límite de 2 extensiones. Completa la tarea para evitar el auto-unclaim.';
+            body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 6000);
         }
     }
 

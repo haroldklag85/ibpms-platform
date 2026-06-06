@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-41 - ADR-001
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.infrastructure.web;
 
 import org.springframework.http.ResponseEntity;
@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.ibpms.poc.application.dto.DeploymentValidationResponse;
 import com.ibpms.poc.application.dto.MigratableInstanceDTO;
 import com.ibpms.poc.application.dto.MigrationRequestDTO;
+import com.ibpms.poc.application.dto.BpmnDesignAuditLogDTO;
 import com.ibpms.poc.application.service.PreFlightAnalyzerService;
 import com.ibpms.poc.application.service.ProcessMigrationService;
 
@@ -613,12 +614,8 @@ public class BpmnDesignController {
 
     // @Traceability: US-005, CA-42 (Observabilidad y Auditoría de Procesos)
     @GetMapping("/{processDefinitionKey}/audit-logs")
-    public ResponseEntity<List<Map<String, String>>> getBpmnAuditLogs(@PathVariable("processDefinitionKey") String key) {
-        return ResponseEntity.ok(List.of(
-            Map.of("timestamp", "2023-11-20 10:00:00", "action", "IMPORT XML", "user", "arq-mock-1"),
-            Map.of("timestamp", "2023-11-20 10:15:00", "action", "REQUEST DEPLOY", "user", "arq-mock-1"),
-            Map.of("timestamp", "2023-12-05 08:30:00", "action", "ARCHIVED", "user", "sys-admin-role")
-        ));
+    public ResponseEntity<List<BpmnDesignAuditLogDTO>> getBpmnAuditLogs(@PathVariable("processDefinitionKey") String key) {
+        return ResponseEntity.ok(bpmnDesignService.getAuditLogsForProcess(key));
     }
 
     // @Traceability: US-005, CA-17 (Auto-Nomenclatura Variable Estricta)

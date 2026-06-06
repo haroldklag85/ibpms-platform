@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.application.dto;
 
 import java.time.LocalDateTime;
@@ -10,6 +11,14 @@ public class BpmnDesignAuditLogDTO {
     private LocalDateTime timestamp;
     private int versionAffected;
     private String details;
+
+    public String getUser() {
+        return userId;
+    }
+
+    public int getVersion() {
+        return versionAffected;
+    }
 
     public UUID getId() {
         return id;

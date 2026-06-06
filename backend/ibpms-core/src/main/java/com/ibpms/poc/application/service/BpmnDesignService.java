@@ -1,7 +1,9 @@
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.application.dto.BpmnProcessDesignDTO;
 import com.ibpms.poc.application.dto.CreateBpmnProcessDesignDTO;
+import com.ibpms.poc.application.dto.BpmnDesignAuditLogDTO;
 import com.ibpms.poc.application.port.out.BpmnAuditPort;
 import com.ibpms.poc.application.port.out.BpmnDesignPort;
 import com.ibpms.poc.application.port.out.DeployRequestPort;
@@ -293,5 +295,44 @@ public class BpmnDesignService {
         dto.setUpdatedAt(e.getUpdatedAt());
         dto.setCreatedBy(e.getCreatedBy());
         return dto;
+    }
+
+    // @Traceability: US-005, CA-42 - Activity Timeline
+    public List<BpmnDesignAuditLogDTO> getAuditLogsForProcess(String processKey) {
+        BpmnProcessDesign domain = designPort.findByTechnicalId(processKey)
+                .orElseThrow(() -> new IllegalArgumentException("Diseño BPMN no encontrado con technical_id: " + processKey));
+        
+        return auditPort.getAuditLogsForProcess(domain.getId()).stream()
+                .map(entry -> {
+                    BpmnDesignAuditLogDTO dto = new BpmnDesignAuditLogDTO();
+                    dto.setId(entry.getId());
+                    dto.setAction(mapDomainActionToFrontendAction(entry.getAction().name()));
+                    dto.setUserId(entry.getUserId());
+                    dto.setTimestamp(entry.getTimestamp());
+                    dto.setVersionAffected(entry.getVersionAffected());
+                    dto.setDetails(entry.getDetails());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private String mapDomainActionToFrontendAction(String domainAction) {
+        if (domainAction == null) return "";
+        switch (domainAction) {
+            case "IMPORT":
+            case "SAVE_DRAFT":
+                return "IMPORT XML";
+            case "DEPLOY":
+            case "DEPLOY_APPROVED":
+                return "DEPLOYED";
+            case "REQUEST_DEPLOY":
+                return "REQUEST DEPLOY";
+            case "ARCHIVE":
+                return "ARCHIVED";
+            case "ROLLBACK":
+                return "ROLLBACK";
+            default:
+                return domainAction;
+        }
     }
 }

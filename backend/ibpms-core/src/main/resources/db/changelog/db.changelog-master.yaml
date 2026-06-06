@@ -1,3 +1,4 @@
+# // @Traceability: US-005, CA-42 - Activity Timeline
 databaseChangeLog:
   - include:
       file: db/changelog/001-initial-schema.xml
@@ -150,3 +151,5 @@ databaseChangeLog:
       context: dev,test
   - include:
       file: db/changelog/changes/058-create-deploy-requests.sql
+  - include:
+      file: db/changelog/changes/059-us029-draft-payload.sql

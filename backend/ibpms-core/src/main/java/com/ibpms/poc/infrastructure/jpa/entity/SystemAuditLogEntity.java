@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.infrastructure.jpa.entity;
 
 import jakarta.persistence.Column;
@@ -30,7 +31,8 @@ public class SystemAuditLogEntity {
     @Column(name = "correlation_id")
     private String correlationId;
 
-    @Column(name = "active_roles_json", columnDefinition = "TEXT")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "active_roles_json", columnDefinition = "jsonb")
     private String activeRolesJson;
 
     public SystemAuditLogEntity() {

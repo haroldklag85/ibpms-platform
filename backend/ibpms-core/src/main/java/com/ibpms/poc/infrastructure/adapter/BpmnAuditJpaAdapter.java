@@ -1,12 +1,15 @@
-// @Traceability: US-003 - ADR-001
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.infrastructure.adapter;
 
 import com.ibpms.poc.application.port.out.BpmnAuditPort;
 import com.ibpms.poc.infrastructure.jpa.entity.BpmnDesignAuditLogEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.BpmnDesignAuditLogRepository;
+import com.ibpms.poc.domain.model.BpmnDesignAuditEntry;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class BpmnAuditJpaAdapter implements BpmnAuditPort {
@@ -34,5 +37,20 @@ public class BpmnAuditJpaAdapter implements BpmnAuditPort {
             details
         );
         repository.save(entity);
+    }
+
+    @Override
+    public List<BpmnDesignAuditEntry> getAuditLogsForProcess(UUID processDesignId) {
+        return repository.findByProcessDesignIdOrderByTimestampDesc(processDesignId).stream()
+                .map(entity -> new BpmnDesignAuditEntry(
+                    entity.getId(),
+                    entity.getProcessDesignId(),
+                    BpmnDesignAuditEntry.Action.valueOf(entity.getAction().name()),
+                    entity.getUserId(),
+                    entity.getTimestamp(),
+                    entity.getVersionAffected(),
+                    entity.getDetails()
+                ))
+                .collect(Collectors.toList());
     }
 }

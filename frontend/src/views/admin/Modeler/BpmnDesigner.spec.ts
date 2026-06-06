@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-41 - ADR-001
+// @Traceability: US-005, CA-42 - Activity Timeline
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import BpmnDesigner from './BpmnDesigner.vue';
@@ -1722,6 +1722,229 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             expect(wrapper.vm.toast.msg).toBe('El archivo excede el límite de Sandbox (2MB).');
 
             wrapper.unmount();
+        });
+    });
+
+    // @Traceability: US-005, CA-80, CA-81, CA-82, CA-83, CA-84 - ADR-001
+    describe('US-005: 3-Tier Validation & Simulation Pipeline (CA-80, CA-81, CA-82, CA-83, CA-84)', () => {
+
+        it('CA-80: Debe existir el boton "Validar y Simular" y al hacer click abrir el modal conteniendo las 3 secciones', async () => {
+            // @Traceability: US-005, CA-80, CA-81, CA-82, CA-83, CA-84 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const btn = wrapper.find('[data-testid="btn-test-sandbox"]');
+            expect(btn.exists()).toBe(true);
+            expect(btn.text()).toContain('Validar y Simular');
+
+            // Click opens the modal
+            await btn.trigger('click');
+            await wrapper.vm.$nextTick();
+
+            expect(wrapper.vm.showValidationModal).toBe(true);
+
+            // Modal contains elements/sections for Linter local, Pre-Flight Analyzer, and Sandbox Simulator
+            const modal = wrapper.find('[data-testid="validation-modal"]');
+            expect(modal.exists()).toBe(true);
+
+            const linterSection = wrapper.find('[data-testid="section-local-linter"]');
+            expect(linterSection.exists()).toBe(true);
+            expect(linterSection.text()).toContain('Linter local');
+
+            const preflightSection = wrapper.find('[data-testid="section-preflight-analyzer"]');
+            expect(preflightSection.exists()).toBe(true);
+            expect(preflightSection.text()).toContain('Pre-Flight Analyzer');
+
+            const sandboxSection = wrapper.find('[data-testid="section-sandbox-simulator"]');
+            expect(sandboxSection.exists()).toBe(true);
+            expect(sandboxSection.text()).toContain('Sandbox Simulator');
+
+            wrapper.unmount();
+        });
+
+        it('CA-81: Debe ejecutar el linter local y el pre-flight en paralelo al abrir el modal, y bloquear simulacion si hay errores fatales', async () => {
+            // @Traceability: US-005, CA-80, CA-81, CA-82, CA-83, CA-84 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const validateSpy = vi.spyOn(store, 'validateProcess').mockResolvedValue({ data: { warnings: [] } });
+
+            // Trigger open modal which should trigger both validations in parallel
+            wrapper.vm.openValidationModal();
+            await wrapper.vm.$nextTick();
+
+            // Verify both linter and pre-flight validation are triggered
+            expect(validateSpy).toHaveBeenCalled();
+
+            // Simulate fatal error in linter or pre-flight
+            wrapper.vm.linterErrors = ['Error fatal de estructura'];
+            await wrapper.vm.$nextTick();
+
+            // Check that the simulation button is disabled or sandbox is blocked
+            const simBtn = wrapper.find('[data-testid="btn-run-simulation"]');
+            expect(simBtn.attributes('disabled')).toBeDefined();
+
+            // Reset linter errors, simulate pre-flight status = ERROR
+            wrapper.vm.linterErrors = [];
+            wrapper.vm.preFlightStatus = 'ERROR';
+            await wrapper.vm.$nextTick();
+
+            expect(simBtn.attributes('disabled')).toBeDefined();
+
+            wrapper.unmount();
+        });
+
+        it('CA-82 & CA-83: Debe interceptar error HTTP 422 de variable faltante, mostrar overlay, persistir en localStorage y re-ejecutar con variables', async () => {
+            // @Traceability: US-005, CA-80, CA-81, CA-82, CA-83, CA-84 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            
+            // First sandbox call returns 422 MISSING_VARIABLE for variable 'x'
+            const spawnSpy = vi.fn()
+                .mockRejectedValueOnce({
+                    response: {
+                        status: 422,
+                        data: { error: 'MISSING_VARIABLE', variableName: 'x' }
+                    }
+                })
+                .mockResolvedValueOnce({
+                    data: { status: 'SUCCESS', activeNodes: [] }
+                });
+            store.spawnSandbox = spawnSpy;
+
+            // Set process key/id to mock route query value
+            wrapper.vm.processKey = 'credito-consumo-v1';
+            await wrapper.vm.$nextTick();
+
+            // Trigger simulation
+            await wrapper.vm.runSandbox();
+            await flushPromises();
+
+            // Overlay should be visible
+            expect(wrapper.vm.showVariablePrompt).toBe(true);
+            const overlay = wrapper.find('[data-testid="variable-prompt-overlay"]');
+            expect(overlay.exists()).toBe(true);
+
+            // Simulate submitting variable value
+            await wrapper.vm.submitSandboxVariable({ name: 'x', value: '42' });
+            await flushPromises();
+
+            // Persisted in localStorage under ibpms_sandbox_variables_[processKey]
+            const stored = localStorage.getItem('ibpms_sandbox_variables_credito-consumo-v1');
+            expect(stored).not.toBeNull();
+            expect(JSON.parse(stored!)).toEqual({ x: '42' });
+
+            // Verify that sandbox re-ran with the variables map
+            expect(spawnSpy).toHaveBeenCalledTimes(2);
+            expect(spawnSpy).toHaveBeenLastCalledWith({
+                xml: '<xml/>',
+                variables: { x: '42' }
+            });
+
+            wrapper.unmount();
+        });
+
+        it('CA-84: Debe marcar trayectoria con halos verdes al cerrar modal tras una simulacion exitosa y limpiar con boton', async () => {
+            // @Traceability: US-005, CA-80, CA-81, CA-82, CA-83, CA-84 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const spawnSpy = vi.fn().mockResolvedValue({
+                data: { status: 'SUCCESS', activeNodes: ['Task_1', 'Task_2'] }
+            });
+            store.spawnSandbox = spawnSpy;
+
+            const modeler = (window as any).__modelerInstance;
+            const canvas = modeler.get('canvas');
+            const addMarkerSpy = vi.spyOn(canvas, 'addMarker');
+            const removeMarkerSpy = vi.spyOn(canvas, 'removeMarker');
+
+            // Open modal and run sandbox simulation
+            wrapper.vm.openValidationModal();
+            await wrapper.vm.runSandbox();
+            await flushPromises();
+
+            // Close modal (should apply markers to active nodes)
+            await wrapper.vm.closeValidationModal();
+            await wrapper.vm.$nextTick();
+
+            expect(addMarkerSpy).toHaveBeenCalledWith('Task_1', 'highlight-executed');
+            expect(addMarkerSpy).toHaveBeenCalledWith('Task_2', 'highlight-executed');
+
+            // Button "Limpiar trayectoria" should exist
+            const clearBtn = wrapper.find('[data-testid="btn-clear-trajectory"]');
+            expect(clearBtn.exists()).toBe(true);
+            expect(clearBtn.text()).toContain('Limpiar trayectoria');
+
+            // Clicking it should remove markers
+            await clearBtn.trigger('click');
+            await wrapper.vm.$nextTick();
+
+            expect(removeMarkerSpy).toHaveBeenCalledWith('Task_1', 'highlight-executed');
+            expect(removeMarkerSpy).toHaveBeenCalledWith('Task_2', 'highlight-executed');
+
+            wrapper.unmount();
+        });
+    });
+
+    // @Traceability: US-005, CA-42 - Activity Timeline
+    describe('US-005: Activity Timeline (CA-42)', () => {
+        let wrapper: any;
+
+        beforeEach(async () => {
+            wrapper = createWrapper();
+            await flushPromises();
+        });
+
+        afterEach(() => {
+            wrapper.unmount();
+        });
+
+        it('should fetch and render audit logs in a vertical timeline with business emojis and mapped text', async () => {
+            const store = useIntegrationStore();
+            const auditLogsMock = [
+                { timestamp: '2026-06-06T12:00:00Z', action: 'IMPORT XML', user: 'Harolt Gómez', version: 1 },
+                { date: '2026-06-06T12:15:00Z', action: 'REQUEST DEPLOY', user: 'Ana García', version: 2 },
+                { timestamp: '2026-06-06T12:30:00Z', action: 'DEPLOYED', user: 'System', version: null }
+            ];
+            vi.spyOn(store, 'getProcessAuditLogs').mockResolvedValue({ data: auditLogsMock });
+
+            await wrapper.vm.openAuditLogs();
+            await flushPromises();
+
+            expect(wrapper.vm.showAuditLogsModal).toBe(true);
+            expect(wrapper.vm.auditLogs.length).toBe(3);
+
+            const html = wrapper.html();
+            expect(html).toContain('Borrador Importado / Creado');
+            expect(html).toContain('Solicitud de Despliegue Enviada');
+            expect(html).toContain('Despliegue Exitoso en Producción');
+            expect(html).toContain('v1');
+            expect(html).toContain('v2');
+        });
+
+        it('should handle log item expansion and trigger version rollback', async () => {
+            const store = useIntegrationStore();
+            const auditLogsMock = [
+                { timestamp: '2026-06-06T12:00:00Z', action: 'DEPLOYED', user: 'System', version: 3 }
+            ];
+            vi.spyOn(store, 'getProcessAuditLogs').mockResolvedValue({ data: auditLogsMock });
+            const restoreSpy = vi.spyOn(store, 'restoreProcessVersion').mockResolvedValue({ data: { xml: '<xml>restored</xml>' } });
+            const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true);
+
+            await wrapper.vm.openAuditLogs();
+            await flushPromises();
+
+            expect(wrapper.vm.expandedLogs[0]).toBeFalsy();
+            await wrapper.vm.toggleLogExpansion(0);
+            expect(wrapper.vm.expandedLogs[0]).toBe(true);
+
+            await wrapper.vm.restoreVersionFromLog(3);
+            expect(restoreSpy).toHaveBeenCalledWith(wrapper.vm.processId, 3);
         });
     });
 });

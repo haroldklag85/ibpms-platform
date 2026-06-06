@@ -1,49 +1,61 @@
-# Plan de Implementación — Embudo de Validación y Simulación de Sandbox (US-005, CA-80 a CA-84)
+# Implementation Plan - Backend Bugfix US-005 (Versions History API)
 
-Este plan describe el diseño e implementación para el embudo de validación en 3 niveles y la simulación interactiva de sandbox dentro de `BpmnDesigner.vue`.
+This plan details the steps to correct the Process Versions history endpoint (`/api/v1/design/processes/{processDefinitionKey}/versions`) in the backend to return an empty list with `200 OK` when the process is a draft or is not found, rather than throwing an unhandled `IllegalArgumentException` (which translates to `400 Bad Request`).
 
-## 1. Objetivos Técnicos
-*   **CA-80 (Modal Glassmorphic Consolidado):** Reemplazar el botón "Probar en Sandbox" por "🧪 Validar y Simular", el cual despliega un modal glassmorphic con 3 niveles secuenciales/pestañas: Linter Local, Pre-Flight Analyzer y Sandbox Simulator.
-*   **CA-81 (Ejecución Paralela y Bloqueo Selectivo):** Al abrir el modal, ejecutar paralelamente la validación del linter local y el pre-flight del backend. Si se encuentran errores fatales, bloquear el inicio de la simulación. Los warnings no deben bloquear la simulación.
-*   **CA-82 (Captura de Variables e Interactividad HTTP 422):** Si el motor de simulación responde con un error HTTP 422 y tipo `MISSING_VARIABLE`, pausar la ejecución, desplegar un popup interactivo pidiendo el valor de la variable requerida, y al confirmar, reintentar la simulación inyectando el valor ingresado.
-*   **CA-83 (Persistencia de Variables por Proceso):** Guardar y recuperar las variables ingresadas en `localStorage` usando la clave estructurada `ibpms_sandbox_variables_${processId}`.
-*   **CA-84 (Trazado de Halos de Ejecución y Limpieza):** Marcar los nodos ejecutados en el canvas de bpmn-js usando la clase `highlight-executed` (con animaciones neon CSS). Agregar un botón "Limpiar Trayectoria" (`data-testid="btn-clear-trajectory"`) que remueva los marcadores.
+## 1. Target Files
+- **Backend Controller**: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/web/BpmnDesignController.java`
+- **Sandbox Governance Integration Tests**: `backend/ibpms-core/src/test/java/com/ibpms/poc/infrastructure/web/bpmn/SandboxGovernanceTest.java`
+- **Deploy Contract Integration Tests**: `backend/ibpms-core/src/test/java/com/ibpms/poc/infrastructure/web/bpmn/BpmnDeployContractTest.java`
 
-## 2. Cambios en Código (`BpmnDesigner.vue`)
-1.  **Variables Reactivas:**
-    *   `showSandboxModal` (boolean)
-    *   `sandboxStage` ('linter' | 'preflight' | 'sandbox')
-    *   `preFlightErrors` (string[])
-    *   `preFlightWarnings` (string[])
-    *   `sandboxBlocked` (boolean)
-    *   `showVariablePopup` (boolean)
-    *   `missingVariableName` (string)
-    *   `tempVariableValue` (string)
-    *   `sandboxVariables` (Record<string, any>)
-    *   `executedNodes` (string[])
-    *   `isSimulating` (boolean)
-    *   `simulationLogs` (string[])
+---
 
-2.  **Lógica y Métodos:**
-    *   `openValidationAndSimulation()`: Limpia estados, carga variables guardadas, abre el modal en pestaña 'linter' y lanza `runValidationFunnel()`.
-    *   `runPreFlightBackend()`: Realiza la llamada de validación del proceso al backend (`integrationStore.validateProcess`). Captura errores y warnings del response.
-    *   `runValidationFunnel()`: Ejecuta concurrentemente `runClientLinter()` y `runPreFlightBackend()`. Llama a `evaluateBlockingSelectivo()`.
-    *   `evaluateBlockingSelectivo()`: Determina si el linter o el preflight tienen errores fatales (bloqueando la simulación).
-    *   `startSimulation()`: Ejecuta la simulación enviando el XML y las variables acumuladas. Maneja el error 422 para solicitar variables faltantes y dibuja los halos neones al finalizar con éxito.
-    *   `submitVariable()`: Guarda la variable provista en `sandboxVariables`, persiste en localStorage, cierra el popup y reintenta `startSimulation()`.
-    *   `saveVariablesToLocalStorage()` / `loadVariablesFromLocalStorage()`: Gestiona la persistencia en `localStorage`.
-    *   `renderTrajectoryHalos()` / `clearTrajectory()`: Agrega o quita el marcador `highlight-executed` a los elementos del canvas.
+## 2. Step-by-Step Implementation
 
-3.  **UI HTML (Modales y Botones):**
-    *   Actualizar el botón "Probar en Sandbox" para invocar a `openValidationAndSimulation`.
-    *   Agregar el botón de "Limpiar Trayectoria" visible únicamente cuando `executedNodes.length > 0`.
-    *   Agregar el modal glassmorphic de 3 niveles y el popup flotante para variables al final de la plantilla HTML.
+### Step 1: Branch Verification
+Ensure we are working on the bugfix branch:
+```bash
+git checkout -b bugfix/DevDavid-us-005-versions-api
+```
 
-4.  **Estilos CSS:**
-    *   Añadir clases y animaciones de tipo pulso neon para `.highlight-executed`.
+### Step 2: Modify `getProcessVersions` in `BpmnDesignController.java`
+- Catch `IllegalArgumentException` thrown by `bpmnDesignService.obtenerPorTechnicalId` and return `ResponseEntity.ok(List.of())`.
+- Check if the process design is null or has current version `0` (draft), returning `ResponseEntity.ok(List.of())`.
+- Map standard fields required by the frontend:
+  - `versionId` -> `dto.getCurrentVersion()`
+  - `version` -> `dto.getCurrentVersion()`
+  - `deploymentId` -> `"dep-" + processDefinitionKey`
+  - `isLatest` -> `true`
+  - `date` -> `dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : ""`
+  - `author` -> `dto.getCreatedBy() != null ? dto.getCreatedBy() : "Sistema"`
+  - `status` -> `dto.getStatus() != null ? dto.getStatus() : "BORRADOR"`
+- Annotate the code change with the required traceability comment:
+  `// @Traceability: US-005, CA-15, BUG-FIX: Retornar lista vacía de versiones si el proceso no tiene despliegues`
 
-## 3. Pruebas y Compilación
-*   Ejecutar las pruebas en WSL:
-    `wsl --cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/frontend -e npx vitest run src/views/admin/Modeler/BpmnDesigner.spec.ts`
-*   Ejecutar el build en WSL:
-    `wsl --cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/frontend -e npm run build`
+### Step 3: Seed Process Design in `BpmnDeployContractTest.java`
+- Inject `BpmnProcessDesignRepository`.
+- In `testGetVersionsForExistentProcessReturnsAlignedFields`, before invoking draft save or versions endpoint, seed a valid process design in the database (with status draft and version `1`) to avoid `IllegalArgumentException` when fetching the process.
+- Assert that response fields match the contract (`version`, `date`, `author`, `status`).
+
+### Step 4: Run Verification Tests in WSL
+Verify the fix by executing:
+```bash
+wsl sh -c "cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/backend/ibpms-core && mvn test -Dtest=SandboxGovernanceTest,BpmnDeployContractTest"
+```
+
+### Step 5: Commit and Push
+Ensure no `git stash` is used. Standard git workflow:
+```bash
+git add .
+git commit -m "fix(backend): US-005 BUG-FIX get process versions empty list"
+git push origin bugfix/DevDavid-us-005-versions-api
+```
+
+---
+
+## 3. Definition of Done (DoD)
+1. **Compilation without errors**: Spring Boot application compiles inside the native environment.
+2. **Success of `testGetProcessVersionsNotFoundReturnsEmptyList`**: The RestAssured integration test in `SandboxGovernanceTest` returns `200 OK` with an empty JSON array `[]`.
+3. **Success of `testGetVersionsForExistentProcessReturnsAlignedFields`**: The RestAssured integration test in `BpmnDeployContractTest` returns `200 OK` with the versions array containing standard aligned fields.
+4. **Traceability Tag**: Modified lines in `BpmnDesignController.java` are properly tagged with the reverse traceability tag.
+5. **No Git Stash**: All changes are directly committed to the branch.
+

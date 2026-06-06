@@ -217,3 +217,77 @@ Add a premium explanatory tooltip next to the "Regla de Nomenclatura (CA-5)" lab
 - [ ] The explanatory tooltip button `❓` next to the nomenclature rule label presents a friendly, dummies-tone description of the glossary and examples.
 - [ ] The entire Vitest suite passes and the production bundle build succeeds.
 
+## 2026-06-06T19:18:24Z
+
+El proyecto consiste en rediseñar y reconstruir la barra de herramientas (Toolbar) y la interfaz visual de la funcionalidad "Validar y simular" (US-005) en la aplicación iBPMS, cambiando de un modal emergente (popup) a un panel lateral (canvas lateral) resizable y organizando los botones superiores en un flujo secuencial continuo de 6 pasos (estilo Stepper). Adicionalmente, se debe corregir el bug en el panel de Historial de Versiones (donde procesos nuevos en borrador muestran versiones ficticias inexistentes v2/v3) y estabilizar los hallazgos de backend (OBS-1 y OBS-2).
+
+Working directory: /home/haroltandrsgmezagu/proyectos/ibpms-platform
+Integrity mode: development
+
+## Requirements
+
+### R1. Barra de Herramientas en Stepper Secuencial Glassmorphic
+La barra de herramientas superior del modelador se reorganizará visualmente en 6 tarjetas secuenciales ordenadas de izquierda a derecha (estilo Stepper):
+- Paso 1: Biblioteca (Explorador de procesos, Importar, Exportar).
+- Paso 2: Modelado (Canvas + Consultar Copiloto IA).
+- Paso 3: Simulación (Validar y Simular, Limpiar Trayectoria).
+- Paso 4: Trazabilidad (Auditoría, Versiones).
+- Paso 5: Despliegue (Solicitar Despliegue, Solicitudes en solo lectura para diseñadores, [VALIDAR Y DESPLEGAR]).
+- Paso 6: Operación (Gestor de Instancias).
+
+Reglas de UI del Stepper:
+- Estética Glassmorphism: Fondo translúcido con desenfoque de fondo (backdrop-filter: blur(8px)) y bordes extra-finos semi-transparentes para temas claro/oscuro.
+- Resaltado Dinámico: Se destacará visualmente la tarjeta de la fase actual del ciclo de vida en base al estado del proceso (currentVersion === 0 destaca diseño/simulación; currentVersion > 0 destaca fases avanzadas).
+- Paso 6 Deshabilitado en v0: El botón "Gestor de Instancias" aparecerá deshabilitado con un tooltip de ayuda contextual: "Esta opción estará disponible al realizar el primer despliegue activo".
+- Permisos en Paso 5: Los diseñadores (BPMN_Designer) solo podrán consultar el panel de solicitudes en modo de Solo Lectura (los controles de aprobación/rechazo estarán bloqueados o inactivos).
+- Responsividad: Colapsar los grupos en menús desplegables (Dropdowns) o deslizador horizontal en pantallas pequeñas.
+
+### R2. Layout de Panel Lateral Derecho No Bloqueante (Push Layout)
+El panel de validación y simulación del Paso 3 debe deslizarse desde la derecha de la pantalla y empujar (encoger) el canvas del modelador BPMN en lugar de superponerse. El lienzo y sus elementos permanecen editables e interactivos para el usuario con el panel abierto.
+- La lógica de arrastre (resizing) del panel lateral debe implementarse utilizando eventos nativos de ratón (mousedown, mousemove, mouseup) en Vue 3 para evitar conflictos con los componentes de bpmn-js.
+- El panel de propiedades nativo de bpmn-js se ocultará automáticamente al abrirse y se restaurará al cerrarse.
+
+### R3. Organización en Acordeón Vertical en Simulación
+Las tres fases de validación (Linter Local, Pre-Flight Analyzer y Sandbox Simulator) se presentarán en secciones colapsables (acordeón vertical) dentro del panel lateral de simulación.
+
+### R4. Simulación Interactiva con Trazado en Caliente
+La simulación interactiva del sandbox debe ejecutarse en caliente, dibujando halos verdes animados (highlight-executed) sobre el canvas del modelador en tiempo real (nodo por nodo) a medida que avanza. Al cerrar el panel o hacer clic en "Limpiar trayectoria", los halos deben removerse.
+- Se incluirá una grilla interactiva en la sección del simulador para que el usuario pueda ver, editar y eliminar valores de variables acumuladas en localStorage antes de lanzar el test.
+
+### R5. Detección y Corrección de Bug del Historial de Versiones (Backend y Frontend)
+- Backend: Modificar la ruta /api/v1/design/processes/{processDefinitionKey}/versions in BpmnDesignController.java para capturar IllegalArgumentException (que ocurre cuando un proceso en borrador no existe aún en la base de datos) y retornar HTTP 200 con una lista vacía List.of().
+- Alineación de Contrato: Enriquecer el DTO de respuesta del endpoint de versiones del backend con las llaves que el frontend renderiza: version, date (o updatedAt), author (o createdBy), y status, además de las claves existentes.
+- Frontend: Modificar la función fetchVersions() en BpmnDesigner.vue para que, en caso de error, limpie la variable versionHistory asignándole un array vacío [] en lugar de cargar el fallback mock de Ana/Carlos. Mapear las propiedades del JSON del backend correspondientemente.
+
+### R6. Estabilización de Backend (OBS-1 y OBS-2)
+- Modificar DataMappingIntegrityTest.java para que herede de AbstractIntegrationTest (que utiliza ddl-auto=validate junto con Liquibase), eliminando cualquier DDL espurio inyectado manualmente en la prueba.
+- Completar las anotaciones OpenAPI (Swagger) en BpmnDesignController.java para los endpoints /deploy y /validate, asegurando la correcta documentación del Response Body (e.g. 201 Created con ids y timestamps) y sus parámetros de entrada.
+- Alinear la llamada de validateProcess en useIntegrationStore.ts del frontend para que envíe un objeto FormData con formato multipart/form-data conteniendo el XML en el parámetro file.
+
+## Acceptance Criteria
+
+### Rediseño de Barra de Herramientas Stepper (UI)
+- [ ] La barra de herramientas superior se organiza en un Stepper de 6 grupos secuenciales con diseño Glassmorphic.
+- [ ] La tarjeta de la fase actual del proceso se resalta visualmente según el estado.
+- [ ] En un proceso nuevo en borrador (v0), el Paso 6 (Gestor de Instancias) está deshabilitado en gris con un tooltip explicativo.
+- [ ] Un usuario con rol BPMN_Designer puede ver el panel de solicitudes del Paso 5 en modo solo lectura, con los botones de aprobación/rechazo bloqueados.
+- [ ] La barra es responsiva y colapsa los grupos en dropdowns colapsables en pantallas pequeñas.
+
+### Corrección del Historial de Versiones (Bug-Fix)
+- [ ] El endpoint de versiones de backend retorna 200 OK con un array vacío [] para procesos no persistidos.
+- [ ] El endpoint de versiones de backend retorna las llaves mapeadas version, date, author y status.
+- [ ] Al hacer clic en el botón de Versiones para un proceso nuevo en borrador, el panel muestra un estado vacío ("No hay versiones publicadas aún") y ya no despliega las versiones mock v2/v3 de ejemplo.
+
+### Interfaz del Panel Lateral de Simulación (Frontend)
+- [ ] El botón superior "Validar y simular" abre/cierra (comportamiento toggle) el panel lateral derecho.
+- [ ] El panel se puede redimensionar arrastrando su borde izquierdo en un rango de 400px a 700px.
+- [ ] Las tres secciones colapsables (Linter, Pre-Flight, Simulator) funcionan como acordeón vertical.
+- [ ] El panel de propiedades nativo de bpmn-js se oculta de forma limpia al abrirse el panel de simulación y se restaura al cerrarse.
+- [ ] Los halos verdes brillantes se van dibujando dinámicamente en el canvas nodo por nodo en caliente durante la simulación y se limpian al presionar "Limpiar trayectoria".
+
+### Estabilización y Calidad
+- [ ] Las llamadas de validación del frontend al backend no fallan con HTTP 400 y transmiten el payload como multipart/form-data.
+- [ ] El test de persistencia del backend corre con éxito bajo el esquema Liquibase real (ddl-auto=validate).
+- [ ] El backend cuenta con OpenAPI Swagger docs completos para los endpoints de despliegue y validación BPMN.
+- [ ] Todos los tests de regresión del backend (mvn clean test -Dtest=DataMappingIntegrityTest,BpmnDeployContractTest,SandboxGovernanceTest) y el build del frontend (npm run build) compilan y finalizan con éxito.
+

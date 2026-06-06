@@ -2,8 +2,8 @@
 package com.ibpms.poc.infrastructure.web.bpmn;
 
 import com.ibpms.poc.AbstractIntegrationTest;
-import com.ibpms.poc.infrastructure.jpa.entity.BpmnProcessDesignEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.BpmnProcessDesignRepository;
+
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,8 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
 
 import java.io.File;
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -28,9 +26,6 @@ public class BpmnDeployContractTest extends AbstractIntegrationTest {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private BpmnProcessDesignRepository processDesignRepository;
 
     private String token;
 
@@ -178,22 +173,6 @@ public class BpmnDeployContractTest extends AbstractIntegrationTest {
                 "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
                 "  </bpmn:process>\n" +
                 "</bpmn:definitions>";
-
-        // Seed the process design in the database so that draft saving and version fetching works
-        processDesignRepository.findByTechnicalId(processKey).ifPresent(p -> processDesignRepository.delete(p));
-
-        BpmnProcessDesignEntity processDesign = new BpmnProcessDesignEntity();
-        processDesign.setId(UUID.randomUUID());
-        processDesign.setName("Test Process Versions");
-        processDesign.setTechnicalId(processKey);
-        processDesign.setStatus(BpmnProcessDesignEntity.Status.DRAFT);
-        processDesign.setFormPattern(BpmnProcessDesignEntity.FormPattern.SIMPLE);
-        processDesign.setCurrentVersion(1);
-        processDesign.setMaxNodes(50);
-        processDesign.setCreatedAt(LocalDateTime.now());
-        processDesign.setUpdatedAt(LocalDateTime.now());
-        processDesign.setCreatedBy("BPMN_Release_Manager");
-        processDesignRepository.save(processDesign);
 
         given()
             .header("Authorization", "Bearer " + token)

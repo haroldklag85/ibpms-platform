@@ -2,7 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import path from 'path';
 
-// Read from default ".env" or equivalent
+// Read from .env.local first, then fallback to default ".env"
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 dotenv.config();
 
 export default defineConfig({
@@ -27,6 +28,15 @@ export default defineConfig({
     video: 'on-first-retry',
     screenshot: 'only-on-failure',
     actionTimeout: 30000,
+    launchOptions: process.env.PLAYWRIGHT_USE_GPU === 'true' ? {
+      args: [
+        '--ignore-gpu-blocklist',
+        '--enable-gpu-rasterization',
+        '--enable-zero-copy',
+        '--use-gl=angle',
+        '--use-angle=vulkan'
+      ]
+    } : undefined
   },
   projects: [
     {

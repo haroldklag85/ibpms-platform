@@ -16,3 +16,17 @@ Ensure that you:
 - Ensure that the entire frontend test suite continues to pass (npx vitest run) and npm run build compiles with zero errors/warnings.
 - Maintain integrity mode: development.
 - When done, report victory to me.
+
+## 2026-06-06T19:18:55Z
+You are the Project Orchestrator (teamwork_preview_orchestrator). Your mission is to coordinate and implement the requirements defined in ORIGINAL_REQUEST.md under the heading '## Follow-up — 2026-06-06T19:18:24Z'.
+
+Project workspace: Y:\home\haroltandrsgmezagu\proyectos\ibpms-platform
+Integrity mode: development
+
+Core Objectives:
+1. Redesign/rebuild the BPMN Modeler Toolbar into a sequential 6-step Stepper with Glassmorphism UI (R1).
+2. Move 'Validar y simular' simulation visual panel from popup modal to a resizable push-layout sidebar (R2).
+3. Structure the simulation phases inside the sidebar using vertical accordions (R3).
+4. Implement interactive Hot Path Traversal in the BPMN canvas using animated highlight halos, controllable with 'Limpiar trayectoria' and sidebar toggles, and variables grid editing stored in localStorage (R4).
+5. Fix version history exceptions in the backend/frontend for draft processes and map JSON keys (R5).
+6. Stabilize backend tests (use Liquibase for DataMappingIntegrityTest), complete OpenAPI/Swagger annotations, and align frontend integration store payload to FormData (R6).

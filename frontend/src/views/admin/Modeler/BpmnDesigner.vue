@@ -146,7 +146,7 @@
       </div>
 
       <!-- ═══════ Properties Side Panel ═══════ -->
-      <aside class="w-80 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0 flex flex-col overflow-y-auto">
+      <aside v-show="!showSandboxModal" class="w-80 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0 flex flex-col overflow-y-auto">
         <div class="p-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
           <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
             ⚙️ Camunda Properties
@@ -620,6 +620,212 @@
 
         </div>
       </aside>
+
+      <!-- ═══════ Validation & Simulation Side Panel (CA-80) ═══════ -->
+      <aside 
+        v-show="showSandboxModal" 
+        :style="{ width: validationPanelWidth + 'px' }" 
+        data-testid="sandbox-glass-modal" 
+        class="border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0 flex flex-col overflow-hidden relative select-none animate-slide-left"
+      >
+        <!-- Resizer Bar (CA-80) -->
+        <div 
+          data-testid="validation-resizer" 
+          @mousedown="startResizing" 
+          class="absolute top-0 left-0 w-1 h-full cursor-col-resize hover:bg-indigo-500/50 transition z-50"
+        ></div>
+
+        <!-- Header -->
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900 shrink-0">
+          <h3 class="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center gap-1.5">
+            🧪 Embudo de Validación y Sandbox
+          </h3>
+          <button @click="showSandboxModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg font-bold transition">&times;</button>
+        </div>
+
+        <!-- Accordion Content (CA-81) -->
+        <div class="flex-1 overflow-y-auto flex flex-col min-h-0 select-text">
+          
+          <!-- Accordion 1: Linter Local -->
+          <div class="border-b border-gray-200 dark:border-gray-700">
+            <div 
+              data-testid="linter-header" 
+              @click="collapsedSections.linter = !collapsedSections.linter" 
+              class="cursor-pointer px-4 py-3 bg-gray-50 dark:bg-gray-900 flex justify-between items-center text-xs font-bold text-gray-600 dark:text-gray-300 select-none"
+            >
+              <span>🔍 Nivel 1: Linter Local</span>
+              <span>{{ collapsedSections.linter ? '➕' : '➖' }}</span>
+            </div>
+            
+            <div v-show="!collapsedSections.linter" data-testid="linter-level" class="p-4 space-y-[12px] bg-white dark:bg-gray-800">
+              <div v-if="linterErrors.length > 0" class="space-y-2">
+                <div v-for="(err, i) in linterErrors" :key="'lin-'+i" class="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg text-xs text-red-700 dark:text-red-400 font-mono">
+                  {{ err }}
+                </div>
+              </div>
+              <div v-else class="text-xs text-green-600 dark:text-green-400 font-medium">
+                ✅ No se detectaron errores estructurales de diseño.
+              </div>
+            </div>
+          </div>
+
+          <!-- Accordion 2: Pre-Flight Analyzer -->
+          <div class="border-b border-gray-200 dark:border-gray-700">
+            <div 
+              data-testid="preflight-header" 
+              @click="collapsedSections.preflight = !collapsedSections.preflight" 
+              class="cursor-pointer px-4 py-3 bg-gray-50 dark:bg-gray-900 flex justify-between items-center text-xs font-bold text-gray-600 dark:text-gray-300 select-none"
+            >
+              <span>⚙️ Nivel 2: Pre-Flight Analyzer</span>
+              <span>{{ collapsedSections.preflight ? '➕' : '➖' }}</span>
+            </div>
+            
+            <div v-show="!collapsedSections.preflight" data-testid="preflight-level" class="p-4 space-y-[12px] bg-white dark:bg-gray-800">
+              <div v-if="preFlightErrors.length > 0 || preFlightWarnings.length > 0" class="space-y-2">
+                <div v-for="(err, i) in preFlightErrors" :key="'pfe-'+i" class="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg text-xs text-red-700 dark:text-red-400 font-mono">
+                  🛑 {{ err }}
+                </div>
+                <div v-for="(warn, i) in preFlightWarnings" :key="'pfw-'+i" class="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-lg text-xs text-amber-700 dark:text-amber-400 font-mono">
+                  ⚠️ {{ warn }}
+                </div>
+              </div>
+              <div v-else class="text-xs text-green-600 dark:text-green-400 font-medium">
+                ✅ Validación de políticas de gobernanza superada.
+              </div>
+            </div>
+          </div>
+
+          <!-- Accordion 3: Sandbox Simulator -->
+          <div class="border-b border-gray-200 dark:border-gray-700 flex-1 flex flex-col min-h-0">
+            <div 
+              data-testid="simulator-header" 
+              @click="collapsedSections.simulator = !collapsedSections.simulator" 
+              class="cursor-pointer px-4 py-3 bg-gray-50 dark:bg-gray-900 flex justify-between items-center text-xs font-bold text-gray-600 dark:text-gray-300 select-none shrink-0"
+            >
+              <span>🚀 Nivel 3: Sandbox Simulator</span>
+              <span>{{ collapsedSections.simulator ? '➕' : '➖' }}</span>
+            </div>
+            
+            <div v-show="!collapsedSections.simulator" data-testid="sandbox-level" class="p-4 flex-1 flex flex-col min-h-0 space-y-4 bg-white dark:bg-gray-800 overflow-y-auto">
+              
+              <div v-if="sandboxBlocked" class="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg text-xs text-red-800 dark:text-red-400 font-semibold">
+                ⚠️ Simulación Inhabilitada: Corrige los errores críticos en el Linter o Pre-Flight.
+              </div>
+
+              <div v-else class="space-y-4 flex-1 flex flex-col min-h-0">
+                <!-- Variables CRUD Grid (CA-83) -->
+                <div class="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col shrink-0">
+                  <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Variables del Sandbox</h4>
+                  
+                  <!-- Formulario de adición inline -->
+                  <div class="grid grid-cols-3 gap-1 mb-2">
+                    <input 
+                      type="text" 
+                      v-model="newGridVarName" 
+                      placeholder="Nombre" 
+                      class="text-xs p-1 border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                    />
+                    <select 
+                      v-model="newGridVarType" 
+                      class="text-xs p-1 border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                    >
+                      <option value="String">String</option>
+                      <option value="Number">Number</option>
+                      <option value="Boolean">Boolean</option>
+                    </select>
+                    <input 
+                      type="text" 
+                      v-model="newGridVarValue" 
+                      placeholder="Valor" 
+                      class="text-xs p-1 border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <button 
+                    data-testid="btn-grid-add-variable" 
+                    @click="addGridVariable" 
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs py-1 rounded font-bold transition"
+                  >
+                    ➕ Agregar Variable
+                  </button>
+
+                  <!-- Lista de variables de la grilla -->
+                  <div v-if="Object.keys(sandboxVariables).length > 0" class="mt-3 space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    <div 
+                      v-for="(val, name) in sandboxVariables" 
+                      :key="name" 
+                      class="flex items-center justify-between bg-white dark:bg-gray-850 p-2 rounded border border-gray-150 dark:border-gray-750 text-xs"
+                    >
+                      <div class="flex flex-col min-w-0">
+                        <span class="font-bold truncate text-gray-700 dark:text-gray-200">{{ name }}</span>
+                        <span class="text-[10px] text-gray-400">Tipo: {{ typeof val === 'number' ? 'Number' : typeof val === 'boolean' ? 'Boolean' : 'String' }}</span>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <!-- Edit inline value -->
+                        <input 
+                          type="text" 
+                          :value="val" 
+                          @change="(e: any) => editGridVariable(name as string, typeof val === 'number' ? Number(e.target.value) : typeof val === 'boolean' ? (e.target.value === 'true' || e.target.value === true) : e.target.value)" 
+                          class="w-20 text-xs p-0.5 border rounded text-right dark:bg-gray-800 dark:text-white"
+                        />
+                        <button 
+                          :data-testid="'btn-grid-delete-' + name" 
+                          @click="deleteGridVariable(name as string)" 
+                          class="text-red-500 hover:text-red-700 font-bold px-1"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="text-[10px] text-gray-400 mt-2 text-center">
+                    No hay variables ingresadas.
+                  </div>
+                </div>
+
+                <!-- Run Simulation Area -->
+                <div class="flex justify-end shrink-0">
+                  <button 
+                    data-testid="btn-run-simulation" 
+                    @click="startSimulation()" 
+                    :disabled="isSimulating" 
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded shadow transition disabled:opacity-50"
+                  >
+                    ⚡ Iniciar Simulación
+                  </button>
+                </div>
+
+                <!-- Simulation Logs -->
+                <div v-if="simulationLogs.length > 0 || executedNodes.length > 0" class="flex-1 flex flex-col min-h-[120px] bg-gray-950 text-emerald-400 p-3 rounded-lg border border-gray-850 font-mono text-[11px] overflow-hidden">
+                  <div class="border-b border-gray-900 pb-1 flex justify-between text-gray-500 font-sans shrink-0">
+                    <span>SALIDA DE EJECUCIÓN</span>
+                    <button v-if="executedNodes.length > 0" @click="clearTrajectory" class="text-red-400 hover:underline">Limpiar Trayectoria</button>
+                  </div>
+                  <div class="flex-1 overflow-y-auto mt-1 space-y-0.5">
+                    <div v-for="(log, i) in simulationLogs" :key="'log-'+i">
+                      {{ log }}
+                    </div>
+                    <div v-if="executedNodes.length > 0" class="text-white font-bold mt-2">
+                      Nodos Ejecutados: [{{ executedNodes.join(', ') }}]
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center shrink-0">
+          <button @click="runValidationFunnel" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-3 py-1.5 rounded text-xs font-bold transition">
+            🔄 Re-Validar Todo
+          </button>
+          <button @click="showSandboxModal = false" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-indigo-750 transition">
+            Cerrar
+          </button>
+        </div>
+      </aside>
     </main>
 
     <!-- ═══════ Modal: Deploy ═══════ -->
@@ -719,7 +925,7 @@
           <h4 class="text-sm font-bold flex items-center gap-2"><span class="text-emerald-400">🧠</span> Copiloto IA — Auditoría ISO 9001</h4>
           <button @click="showCopilot = false" class="text-gray-400 hover:text-white">&times;</button>
         </div>
-        <div class="flex-1 p-4 overflow-y-auto space-y-3 text-sm font-mono">
+        <div class="flex-1 p-4 overflow-y-auto space-y-[12px] text-sm font-mono">
           <div v-for="(msg, i) in copilotMessages" :key="i" class="flex flex-col gap-2">
             <div class="flex items-start gap-2">
               <span :class="msg.role === 'ai' ? 'text-emerald-400' : 'text-blue-400'">{{ msg.role === 'ai' ? '🤖' : '👤' }}</span>
@@ -894,9 +1100,10 @@
              ℹ️ <b>Nota (CA-15):</b> El Rollback es inmutable. No pisa los datos, sino que clona la arquitectura creando una <b>V_NUEVA</b> en borrador.
           </p>
         </div>
+        <!-- @Traceability: US-005, CA-15, BUG-FIX: Renderizar mensaje cuando no hay versiones publicadas -->
         <div class="flex-1 overflow-y-auto p-3 space-y-2">
           <div v-if="loadingVersions" class="text-center text-xs text-gray-500 py-4">Cargando versiones...</div>
-          <div v-else v-for="v in versionHistory" :key="v.version" class="flex justify-between items-center p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-sm border border-gray-100 dark:border-gray-700 transition group">
+          <div v-else-if="versionHistory.length > 0" v-for="v in versionHistory" :key="v.version" class="flex justify-between items-center p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-sm border border-gray-100 dark:border-gray-700 transition group">
             <div>
               <span class="font-bold text-gray-800 dark:text-white">v{{ v.version }}</span>
               <p class="text-[10px] text-gray-500">{{ v.date }} — {{ v.author }}</p>
@@ -908,6 +1115,9 @@
                 Clonar como V_NUEVA (Rollback) ↺
               </button>
             </div>
+          </div>
+          <div v-else class="text-center text-xs text-gray-500 py-10" data-testid="no-versions-msg">
+            No hay versiones publicadas aún.
           </div>
         </div>
       </div>
@@ -972,7 +1182,7 @@
           <div v-if="loadingDeployRequests" class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 flex items-center justify-center z-10">
             <span class="text-sm text-gray-500 font-bold animate-pulse">Cargando solicitudes...</span>
           </div>
-          <div class="space-y-3">
+          <div class="space-y-[12px]">
             <div v-for="req in deployRequests" :key="req.id" class="p-4 bg-white dark:bg-gray-800 border rounded-lg shadow-sm flex flex-col gap-2 border-indigo-200 dark:border-indigo-700 relative">
               <span class="font-bold text-sm text-gray-900 dark:text-gray-100">{{ req.processName || processId }} (v{{ req.version }})</span>
               <p class="text-xs text-gray-500 line-clamp-2 italic">"{{ req.comment }}"</p>
@@ -1086,147 +1296,7 @@
       </div>
     </div>
 
-    <!-- ═══════ Glassmorphic Sandbox Modal (CA-80, CA-81, CA-82, CA-83, CA-84) ═══════ -->
-    <div v-if="showSandboxModal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300" data-testid="sandbox-glass-modal">
-      <div class="bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border border-white/20 dark:border-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[85vh]">
-        <!-- Header -->
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 shrink-0">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            🧪 Embudo de Validación y Simulación Sandbox
-          </h3>
-          <button @click="showSandboxModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold transition">&times;</button>
-        </div>
 
-        <!-- Tab Controls -->
-        <div class="flex border-b border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-950/20 px-6 shrink-0">
-          <button @click="sandboxStage = 'linter'" :class="sandboxStage === 'linter' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'" class="py-3 px-4 border-b-2 text-sm font-medium transition">
-            🔍 Linter Local
-          </button>
-          <button @click="sandboxStage = 'preflight'" :class="sandboxStage === 'preflight' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'" class="py-3 px-4 border-b-2 text-sm font-medium transition">
-            ⚙️ Pre-Flight Analyzer
-          </button>
-          <button @click="sandboxStage = 'simulation'" :class="sandboxStage === 'simulation' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'" class="py-3 px-4 border-b-2 text-sm font-medium transition">
-            🚀 Sandbox Simulator
-          </button>
-        </div>
-
-        <!-- Tab Contents -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-6">
-          
-          <!-- Linter Tab -->
-          <div v-show="sandboxStage === 'linter'" data-testid="linter-level" class="space-y-4">
-            <div class="flex items-center justify-between border-b pb-2">
-              <h4 class="font-bold text-gray-800 dark:text-gray-200">🔍 Análisis de Linter Local</h4>
-              <span :class="linterErrors.length > 0 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'" class="px-2 py-0.5 text-xs rounded-full font-bold">
-                {{ linterErrors.length > 0 ? '⚠️ ERRORES ENCONTRADOS' : '✅ PASADO' }}
-              </span>
-            </div>
-            <div v-if="linterErrors.length > 0" class="space-y-2">
-              <div v-for="(err, i) in linterErrors" :key="'lin-'+i" class="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg text-sm text-red-700 dark:text-red-400 font-mono">
-                {{ err }}
-              </div>
-            </div>
-            <div v-else class="text-center py-6 text-gray-500 text-sm">
-              ✨ No hay errores de diseño local. ¡Buen trabajo!
-            </div>
-          </div>
-
-          <!-- Pre-Flight Analyzer Tab -->
-          <div v-show="sandboxStage === 'preflight'" data-testid="preflight-level" class="space-y-4">
-            <div class="flex items-center justify-between border-b pb-2">
-              <h4 class="font-bold text-gray-800 dark:text-gray-200">⚙️ Verificación de Pre-Flight Backend</h4>
-              <span :class="preFlightErrors.length > 0 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : (preFlightWarnings.length > 0 ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300')" class="px-2 py-0.5 text-xs rounded-full font-bold">
-                {{ preFlightErrors.length > 0 ? '⚠️ ERRORES' : (preFlightWarnings.length > 0 ? '⚠️ ADVERTENCIAS' : '✅ PASADO') }}
-              </span>
-            </div>
-            
-            <div v-if="preFlightErrors.length > 0 || preFlightWarnings.length > 0" class="space-y-2">
-              <div v-for="(err, i) in preFlightErrors" :key="'pfe-'+i" class="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg text-sm text-red-700 dark:text-red-400 font-mono">
-                🛑 {{ err }}
-              </div>
-              <div v-for="(warn, i) in preFlightWarnings" :key="'pfw-'+i" class="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-lg text-sm text-amber-700 dark:text-amber-400 font-mono">
-                ⚠️ {{ warn }}
-              </div>
-            </div>
-            <div v-else class="text-center py-6 text-gray-500 text-sm">
-              ✨ El backend valida correctamente el diagrama semántico.
-            </div>
-          </div>
-
-          <!-- Sandbox Simulator Tab -->
-          <div v-show="sandboxStage === 'simulation'" data-testid="sandbox-level" class="space-y-4">
-            <div class="flex items-center justify-between border-b pb-2">
-              <h4 class="font-bold text-gray-800 dark:text-gray-200">🚀 Sandbox Simulator</h4>
-              <span :class="sandboxBlocked ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'" class="px-2 py-0.5 text-xs rounded-full font-bold">
-                {{ sandboxBlocked ? '🛑 BLOQUEADO' : '✅ LISTO' }}
-              </span>
-            </div>
-
-            <!-- Warning if blocked -->
-            <div v-if="sandboxBlocked" class="p-4 bg-red-50 dark:bg-red-950/35 border border-red-200 dark:border-red-900 rounded-lg text-sm text-red-800 dark:text-red-400">
-              ⚠️ La simulación está bloqueada debido a errores de linter local o pre-flight semántico críticos. Por favor corrige el diagrama antes de continuar.
-            </div>
-
-            <!-- Run Control & Parameters -->
-            <div v-else class="space-y-4">
-              <!-- Variables List -->
-              <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border">
-                <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Variables Persistidas (Scoped por ProcessKey)</h5>
-                <div v-if="Object.keys(sandboxVariables).length > 0" class="grid grid-cols-2 gap-2 text-xs font-mono">
-                  <div v-for="(val, name) in sandboxVariables" :key="name" class="flex justify-between bg-white dark:bg-gray-900 px-3 py-1.5 rounded border">
-                    <span class="text-gray-600 dark:text-gray-400">{{ name }}:</span>
-                    <span class="font-semibold text-gray-800 dark:text-gray-200">{{ val }}</span>
-                  </div>
-                </div>
-                <div v-else class="text-xs text-gray-400 py-2">
-                  No hay variables ingresadas para este proceso. El simulador pedirá variables dinámicamente si faltan.
-                </div>
-              </div>
-
-              <!-- Simulating overlay or logs -->
-              <div v-if="isSimulating" class="p-8 text-center bg-indigo-50/20 rounded-xl border border-dashed border-indigo-300 animate-pulse">
-                <p class="text-sm text-indigo-600 dark:text-indigo-400 font-bold">🧪 Simulación en curso en el motor Sandbox V1...</p>
-              </div>
-
-              <!-- Execute Button -->
-              <div class="flex justify-end">
-                <button 
-                  @click="startSimulation()" 
-                  :disabled="isSimulating" 
-                  class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
-                >
-                  ⚙️ Iniciar Simulación Interactiva
-                </button>
-              </div>
-
-              <!-- Simulation Output Logs -->
-              <div v-if="simulationLogs.length > 0 || executedNodes.length > 0" class="mt-4 bg-gray-950 text-emerald-400 p-4 rounded-xl border border-gray-800 font-mono text-xs max-h-48 overflow-y-auto">
-                <div class="border-b border-gray-800 pb-1.5 mb-1.5 flex justify-between text-gray-500 font-sans">
-                  <span>SALIDA DE EJECUCIÓN (NEON HALOS RENDERED)</span>
-                  <button @click="clearTrajectory" class="text-red-400 hover:underline">Limpiar Trayectoria</button>
-                </div>
-                <div v-for="(log, i) in simulationLogs" :key="'log-'+i" class="mb-1">
-                  {{ log }}
-                </div>
-                <div class="text-white mt-2 font-bold">
-                  Nodos Ejecutados: [{{ executedNodes.join(', ') }}]
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-between items-center shrink-0">
-          <button @click="runValidationFunnel" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2 rounded-lg text-xs font-bold transition">
-            🔄 Re-Validar Todo
-          </button>
-          <button @click="showSandboxModal = false" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-750 transition">
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
 
     <!-- ═══════ Variable Input Popup (CA-82) ═══════ -->
     <div v-if="showVariablePopup" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
@@ -1999,6 +2069,13 @@ const executedNodes = ref<string[]>([]);
 const isSimulating = ref(false);
 const simulationLogs = ref<string[]>([]);
 
+const validationPanelWidth = ref(450);
+const isResizingValidation = ref(false);
+const collapsedSections = ref({ linter: false, preflight: false, simulator: false });
+const newGridVarName = ref('');
+const newGridVarType = ref<'String' | 'Number' | 'Boolean'>('String');
+const newGridVarValue = ref('');
+
 // ── New Process Modal ────────────────────────────────────────
 const showNewProcessModal = ref(false);
 const newProcessName = ref('');
@@ -2180,20 +2257,24 @@ const fetchDmnDefinitions = async () => {
 };
 
 // @Traceability: US-005, CA-15
+// @Traceability: US-005, CA-15, BUG-FIX: Limpiar mocks del historial de versiones y mapear respuesta del backend
 const fetchVersions = async () => {
   loadingVersions.value = true;
   try {
     const { data } = await integrationStore.getProcessVersions(processId.value);
-    // Asume array [{version, date, author, status}]
-    versionHistory.value = data;
+    if (data && Array.isArray(data)) {
+      versionHistory.value = data.map((v: any) => ({
+        version: v.versionId,
+        date: v.date || 'Sin fecha',
+        author: v.author || 'Sistema',
+        status: v.isLatest ? 'ACTIVO' : 'ARCHIVADO'
+      }));
+    } else {
+      versionHistory.value = [];
+    }
   } catch (err) {
-    console.error('API Fake Call - Fallback Versions');
-    // MOCK Fallback de Seguridad visual
-    versionHistory.value = [
-      { version: 3, date: '2026-03-01', author: 'Ana García', status: 'BORRADOR' },
-      { version: 2, date: '2026-02-15', author: 'Carlos M.', status: 'ACTIVO' },
-      { version: 1, date: '2026-01-20', author: 'Ana García', status: 'ARCHIVADO' }
-    ];
+    console.error('Error al obtener versiones del proceso:', err);
+    versionHistory.value = [];
   } finally {
     loadingVersions.value = false;
   }
@@ -3257,17 +3338,125 @@ const loadVariablesFromLocalStorage = () => {
   }
 };
 
+// @Traceability: US-005, CA-83
 const saveVariablesToLocalStorage = () => {
   if (processId.value) {
-    localStorage.setItem(`ibpms_sandbox_variables_${processId.value}`, JSON.stringify(sandboxVariables.value));
+    if (Object.keys(sandboxVariables.value).length === 0) {
+      localStorage.removeItem(`ibpms_sandbox_variables_${processId.value}`);
+    } else {
+      localStorage.setItem(`ibpms_sandbox_variables_${processId.value}`, JSON.stringify(sandboxVariables.value));
+    }
   }
 };
 
+// @Traceability: US-005, CA-80
 const openValidationAndSimulation = async () => {
   showSandboxModal.value = true;
   sandboxStage.value = 'linter';
   loadVariablesFromLocalStorage();
   await runValidationFunnel();
+};
+
+// @Traceability: US-005, CA-80
+const startResizing = (e: MouseEvent) => {
+  e.preventDefault();
+  isResizingValidation.value = true;
+  document.addEventListener('mousemove', handleResizing);
+  document.addEventListener('mouseup', stopResizing);
+};
+
+const handleResizing = (e: MouseEvent) => {
+  const newWidth = window.innerWidth - e.clientX;
+  if (newWidth >= 400 && newWidth <= 700) {
+    validationPanelWidth.value = newWidth;
+  }
+};
+
+const stopResizing = () => {
+  isResizingValidation.value = false;
+  document.removeEventListener('mousemove', handleResizing);
+  document.removeEventListener('mouseup', stopResizing);
+};
+
+// @Traceability: US-005, CA-83
+const addGridVariable = () => {
+  const name = newGridVarName.value.trim();
+  if (!name) return;
+  let val: any = newGridVarValue.value;
+  if (newGridVarType.value === 'Number') {
+    val = Number(val);
+  } else if (newGridVarType.value === 'Boolean') {
+    val = (val === 'true' || val === true);
+  }
+  sandboxVariables.value[name] = val;
+  saveVariablesToLocalStorage();
+  newGridVarName.value = '';
+  newGridVarValue.value = '';
+};
+
+const editGridVariable = (key: string, val: any) => {
+  sandboxVariables.value[key] = val;
+  saveVariablesToLocalStorage();
+};
+
+const deleteGridVariable = (key: string) => {
+  delete sandboxVariables.value[key];
+  saveVariablesToLocalStorage();
+};
+
+// @Traceability: US-005, CA-84
+const simulationTimers = ref<any[]>([]);
+
+const clearSimulationTimers = () => {
+  simulationTimers.value.forEach(timer => clearTimeout(timer));
+  simulationTimers.value = [];
+};
+
+const renderTrajectoryHalos = () => {
+  clearSimulationTimers();
+  if (!modelerInstance) return;
+  const canvas = modelerInstance.get('canvas');
+  
+  // Clear any existing markers first
+  executedNodes.value.forEach((nodeId) => {
+    try {
+      canvas.removeMarker(nodeId, 'highlight-executed');
+    } catch (e) {}
+  });
+  
+  executedNodes.value.forEach((nodeId, index) => {
+    const delay = index * 400;
+    if (delay === 0) {
+      try {
+        canvas.addMarker(nodeId, 'highlight-executed');
+      } catch (e) {
+        console.error('Error adding neon halo to node:', nodeId, e);
+      }
+    } else {
+      const timer = setTimeout(() => {
+        try {
+          canvas.addMarker(nodeId, 'highlight-executed');
+        } catch (e) {
+          console.error('Error adding neon halo to node:', nodeId, e);
+        }
+      }, delay);
+      simulationTimers.value.push(timer);
+    }
+  });
+};
+
+const clearTrajectory = () => {
+  clearSimulationTimers();
+  if (!modelerInstance) return;
+  const canvas = modelerInstance.get('canvas');
+  executedNodes.value.forEach((nodeId) => {
+    try {
+      canvas.removeMarker(nodeId, 'highlight-executed');
+    } catch (e) {
+      console.error('Error removing neon halo from node:', nodeId, e);
+    }
+  });
+  executedNodes.value = [];
 };
 
 const startSimulation = async (bypassBlock = false) => {
@@ -3325,31 +3514,6 @@ const submitVariable = async () => {
   missingVariableName.value = '';
   tempVariableValue.value = '';
   await startSimulation();
-};
-
-const renderTrajectoryHalos = () => {
-  if (!modelerInstance) return;
-  const canvas = modelerInstance.get('canvas');
-  executedNodes.value.forEach((nodeId) => {
-    try {
-      canvas.addMarker(nodeId, 'highlight-executed');
-    } catch (e) {
-      console.error('Error adding neon halo to node:', nodeId, e);
-    }
-  });
-};
-
-const clearTrajectory = () => {
-  if (!modelerInstance) return;
-  const canvas = modelerInstance.get('canvas');
-  executedNodes.value.forEach((nodeId) => {
-    try {
-      canvas.removeMarker(nodeId, 'highlight-executed');
-    } catch (e) {
-      console.error('Error removing neon halo from node:', nodeId, e);
-    }
-  });
-  executedNodes.value = [];
 };
 
 const runSandbox = async () => {
@@ -3804,7 +3968,16 @@ defineExpose({
   restoreVersionFromLog,
   openSnapshot,
   closeSnapshotModal,
-  showSnapshotModal
+  showSnapshotModal,
+  validationPanelWidth,
+  isResizingValidation,
+  collapsedSections,
+  newGridVarName,
+  newGridVarType,
+  newGridVarValue,
+  addGridVariable,
+  editGridVariable,
+  deleteGridVariable
 });
 </script>
 

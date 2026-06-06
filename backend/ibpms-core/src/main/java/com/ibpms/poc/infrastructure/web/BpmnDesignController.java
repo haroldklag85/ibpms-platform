@@ -30,6 +30,11 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * REST Controller for BPMN Design operations (Integration Gaps Mock / Zero-Mock V2).
@@ -92,18 +97,22 @@ public class BpmnDesignController {
 
     // @Traceability: US-005, CA-65 Contrato API /deploy Incompleto
     @Operation(summary = "Desplegar proceso BPMN", description = "Despliega una nueva versión de un proceso BPMN al motor Camunda")
-    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Despliegue exitoso"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Parámetros inválidos o archivo vacío"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "415", description = "Tipo de contenido no soportado. Se requiere multipart/form-data y un archivo XML")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Despliegue exitoso",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(example = "{\"deployment_id\":\"dep-abc12345\",\"process_definition_id\":\"uuid-123\",\"process_definition_key\":\"my-process\",\"version\":1,\"deployed_at\":\"2026-06-06T00:00:00Z\",\"deployed_by\":\"BPMN_Release_Manager\",\"warnings\":[],\"generated_roles\":[]}"))),
+        @ApiResponse(responseCode = "400", description = "Parámetros inválidos o archivo vacío"),
+        @ApiResponse(responseCode = "403", description = "Acceso Denegado. Se requiere el rol BPMN_Release_Manager o modo Sandbox."),
+        @ApiResponse(responseCode = "415", description = "Tipo de contenido no soportado. Se requiere multipart/form-data"),
+        @ApiResponse(responseCode = "422", description = "Advertencias o errores del Pre-Flight Analyzer")
     })
-    @PostMapping(value = "/deploy")
+    @PostMapping(value = "/deploy", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> deployBpmnProcess(
             jakarta.servlet.http.HttpServletRequest request,
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestParam(value = "deploy_comment", required = false) String deployComment,
-            @RequestParam(value = "force_deploy", required = false, defaultValue = "false") boolean forceDeploy,
-            @RequestHeader(value = "X-Sandbox-Mode", required = false, defaultValue = "false") boolean isSandbox) {
+            @Parameter(description = "Archivo XML de BPMN 2.0 a desplegar") @RequestParam(value = "file", required = false) MultipartFile file,
+            @Parameter(description = "Comentario explicativo del despliegue (min 10 caracteres)") @RequestParam(value = "deploy_comment", required = false) String deployComment,
+            @Parameter(description = "Permite despliegues forzados ignorando warnings en modo Sandbox") @RequestParam(value = "force_deploy", required = false, defaultValue = "false") boolean forceDeploy,
+            @Parameter(description = "Indica si se despliega en modo Sandbox efímero") @RequestHeader(value = "X-Sandbox-Mode", required = false, defaultValue = "false") boolean isSandbox) {
 
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         boolean hasRole = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("BPMN_Release_Manager"));
@@ -182,9 +191,17 @@ public class BpmnDesignController {
     }
 
     // @Traceability: US-005, CA-65 Contrato API /validate
-    @PostMapping(value = "/validate")
+    @Operation(summary = "Validar proceso BPMN (Pre-Flight)", description = "Realiza la validación estructural y semántica de gobernanza del archivo BPMN")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Validación ejecutada exitosamente",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = DeploymentValidationResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Archivo BPMN vacío o formato no válido"),
+        @ApiResponse(responseCode = "413", description = "El tamaño del archivo excede el límite permitido de 5MB")
+    })
+    @PostMapping(value = "/validate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> validateBpmnProcess(
-            @RequestParam(value = "file", required = false) MultipartFile file) {
+            @Parameter(description = "Archivo XML de BPMN 2.0 a validar") @RequestParam(value = "file", required = false) MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest()

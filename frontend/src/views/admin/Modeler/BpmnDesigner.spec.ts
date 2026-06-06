@@ -1733,27 +1733,113 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
     describe('US-005: Embudo de Validación y Simulación Interactiva (CA-80 a CA-84)', () => {
         beforeEach(() => {
             localStorage.clear();
+            vi.useFakeTimers();
         });
 
-        it('CA-80: Debe desplegar el modal consolidado glassmorphic al presionar Validar y Simular', async () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+            vi.useRealTimers();
+        });
+
+        it('CA-80: Debe desplegar el panel lateral derecho (Push Layout) y ocultar Camunda Properties al presionar Validar y Simular', async () => {
+            // @Traceability: US-005, CA-80
             const wrapper = createWrapper();
             await flushPromises();
+
+            // Por defecto el panel debe estar cerrado
+            expect(wrapper.vm.showSandboxModal).toBe(false);
 
             const btn = wrapper.find('[data-testid="btn-test-sandbox"]');
             expect(btn.exists()).toBe(true);
 
-            // Simular click para abrir el modal
+            // Simular click para abrir el panel lateral
             await btn.trigger('click');
             await wrapper.vm.$nextTick();
 
             expect(wrapper.vm.showSandboxModal).toBe(true);
-            const modal = wrapper.find('[data-testid="sandbox-glass-modal"]');
-            expect(modal.exists()).toBe(true);
             
-            // Verificar las secciones visuales/niveles del dashboard
-            expect(wrapper.find('[data-testid="linter-level"]').exists()).toBe(true);
-            expect(wrapper.find('[data-testid="preflight-level"]').exists()).toBe(true);
-            expect(wrapper.find('[data-testid="sandbox-level"]').exists()).toBe(true);
+            // El panel de propiedades de Camunda debe estar oculto
+            const propertiesPanel = wrapper.find('aside.w-80');
+            expect(propertiesPanel.isVisible()).toBe(false);
+
+            // El panel lateral de validación debe existir y estar visible
+            const validationPanel = wrapper.find('[data-testid="sandbox-glass-modal"]');
+            expect(validationPanel.exists()).toBe(true);
+            expect(validationPanel.isVisible()).toBe(true);
+
+            wrapper.unmount();
+        });
+
+        it('CA-80: Debe soportar el redimensionamiento (resizable) del panel entre 400px y 700px', async () => {
+            // @Traceability: US-005, CA-80
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Abrir panel
+            wrapper.vm.showSandboxModal = true;
+            await wrapper.vm.$nextTick();
+
+            // El ancho inicial debe ser 450px
+            expect(wrapper.vm.validationPanelWidth).toBe(450);
+
+            // Simular arrastre (mousedown en el resizer)
+            const resizer = wrapper.find('[data-testid="validation-resizer"]');
+            expect(resizer.exists()).toBe(true);
+
+            // Espiar addEventListener
+            const addEventSpy = vi.spyOn(document, 'addEventListener');
+            const removeEventSpy = vi.spyOn(document, 'removeEventListener');
+
+            await resizer.trigger('mousedown', { preventDefault: () => {} });
+            
+            expect(wrapper.vm.isResizingValidation).toBe(true);
+            expect(addEventSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
+            expect(addEventSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
+
+            // Simular movimiento del mouse
+            // validationPanelWidth = window.innerWidth - e.clientX
+            // Asumiendo window.innerWidth = 1024. Si e.clientX = 524, width = 500
+            vi.stubGlobal('innerWidth', 1024);
+            const moveEvent = new MouseEvent('mousemove', { clientX: 524 });
+            document.dispatchEvent(moveEvent);
+            expect(wrapper.vm.validationPanelWidth).toBe(500);
+
+            // Intentar redimensionar fuera de límites (e.g. clientX = 200 -> width = 824)
+            const moveEventOut = new MouseEvent('mousemove', { clientX: 200 });
+            document.dispatchEvent(moveEventOut);
+            expect(wrapper.vm.validationPanelWidth).toBe(500); // Se mantiene en 500 porque supera el máximo de 700px
+
+            // Simular soltar (mouseup)
+            const upEvent = new MouseEvent('mouseup');
+            document.dispatchEvent(upEvent);
+            expect(wrapper.vm.isResizingValidation).toBe(false);
+            expect(removeEventSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
+            expect(removeEventSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
+
+            wrapper.unmount();
+        });
+
+        it('CA-81: Debe organizar las secciones en acordeón vertical colapsable', async () => {
+            // @Traceability: US-005, CA-81
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Por defecto ninguna sección está colapsada
+            expect(wrapper.vm.collapsedSections.linter).toBe(false);
+            expect(wrapper.vm.collapsedSections.preflight).toBe(false);
+            expect(wrapper.vm.collapsedSections.simulator).toBe(false);
+
+            // Simular clic en el header de Linter
+            const linterHeader = wrapper.find('[data-testid="linter-header"]');
+            expect(linterHeader.exists()).toBe(true);
+            await linterHeader.trigger('click');
+            expect(wrapper.vm.collapsedSections.linter).toBe(true);
+
+            // Simular clic en el header de Pre-Flight
+            const preflightHeader = wrapper.find('[data-testid="preflight-header"]');
+            expect(preflightHeader.exists()).toBe(true);
+            await preflightHeader.trigger('click');
+            expect(wrapper.vm.collapsedSections.preflight).toBe(true);
 
             wrapper.unmount();
         });
@@ -1831,50 +1917,70 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             wrapper.unmount();
         });
 
-        it('CA-83: Debe persistir temporalmente las variables en localStorage scoped por processKey', async () => {
-            mockRouteQuery = { processId: 'onboarding-process-v1' };
+        it('CA-83: Debe proveer una grilla interactiva para variables en localStorage', async () => {
+            // @Traceability: US-005, CA-83
+            mockRouteQuery = { processId: 'process-test-123' };
             const wrapper = createWrapper();
             await flushPromises();
 
-            wrapper.vm.sandboxVariables = { priority: 'high', flag: 'true' };
-            wrapper.vm.saveVariablesToLocalStorage();
+            // Verificar que se leen las variables vacías al inicio
+            expect(wrapper.vm.sandboxVariables).toEqual({});
 
-            const saved = localStorage.getItem('ibpms_sandbox_variables_onboarding-process-v1');
+            // Simular agregar variable a través de la grilla
+            wrapper.vm.newGridVarName = 'monto';
+            wrapper.vm.newGridVarType = 'Number';
+            wrapper.vm.newGridVarValue = '75000';
+            
+            const addBtn = wrapper.find('[data-testid="btn-grid-add-variable"]');
+            expect(addBtn.exists()).toBe(true);
+            await addBtn.trigger('click');
+
+            expect(wrapper.vm.sandboxVariables).toEqual({ monto: 75000 });
+            const saved = localStorage.getItem('ibpms_sandbox_variables_process-test-123');
             expect(saved).not.toBeNull();
-            expect(JSON.parse(saved!)).toEqual({ priority: 'high', flag: 'true' });
+            expect(JSON.parse(saved!)).toEqual({ monto: 75000 });
 
-            // Cargar de nuevo
-            wrapper.vm.sandboxVariables = {};
-            wrapper.vm.loadVariablesFromLocalStorage();
-            expect(wrapper.vm.sandboxVariables).toEqual({ priority: 'high', flag: 'true' });
+            // Simular edición inline
+            wrapper.vm.editGridVariable('monto', 90000);
+            expect(wrapper.vm.sandboxVariables).toEqual({ monto: 90000 });
+            expect(JSON.parse(localStorage.getItem('ibpms_sandbox_variables_process-test-123')!)).toEqual({ monto: 90000 });
+
+            // Simular eliminación
+            const deleteBtn = wrapper.find('[data-testid="btn-grid-delete-monto"]');
+            expect(deleteBtn.exists()).toBe(true);
+            await deleteBtn.trigger('click');
+            expect(wrapper.vm.sandboxVariables).toEqual({});
+            expect(localStorage.getItem('ibpms_sandbox_variables_process-test-123')).toBeNull();
 
             wrapper.unmount();
         });
 
-        it('CA-84: Debe dibujar halos neones en el canvas al finalizar y quitarlos con el boton Limpiar', async () => {
+        it('CA-84: Debe realizar trazado progresivo (nodo por nodo) en caliente de la simulación', async () => {
+            // @Traceability: US-005, CA-84
             const wrapper = createWrapper();
             await flushPromises();
 
             const modeler = (window as any).__modelerInstance;
             const canvas = modeler.get('canvas');
             const addMarkerSpy = vi.spyOn(canvas, 'addMarker');
-            const removeMarkerSpy = vi.spyOn(canvas, 'removeMarker');
 
-            wrapper.vm.executedNodes = ['StartEvent_1', 'Activity_1'];
+            wrapper.vm.executedNodes = ['StartEvent_1', 'Activity_1', 'EndEvent_1'];
             
-            // Trigger del renderizado de trayectoria
+            // Iniciar renderizado progresivo
             wrapper.vm.renderTrajectoryHalos();
 
+            // Al inicio (tiempo 0), debe haberse agregado el primer marcador
             expect(addMarkerSpy).toHaveBeenCalledWith('StartEvent_1', 'highlight-executed');
-            expect(addMarkerSpy).toHaveBeenCalledWith('Activity_1', 'highlight-executed');
+            expect(addMarkerSpy).not.toHaveBeenCalledWith('Activity_1', 'highlight-executed');
 
-            // Click en el boton Limpiar
-            const clearBtn = wrapper.find('[data-testid="btn-clear-trajectory"]');
-            expect(clearBtn.exists()).toBe(true);
-            
-            await clearBtn.trigger('click');
-            expect(removeMarkerSpy).toHaveBeenCalledWith('StartEvent_1', 'highlight-executed');
-            expect(removeMarkerSpy).toHaveBeenCalledWith('Activity_1', 'highlight-executed');
+            // Avanzar 400ms
+            await vi.advanceTimersByTimeAsync(400);
+            expect(addMarkerSpy).toHaveBeenCalledWith('Activity_1', 'highlight-executed');
+            expect(addMarkerSpy).not.toHaveBeenCalledWith('EndEvent_1', 'highlight-executed');
+
+            // Avanzar otros 400ms
+            await vi.advanceTimersByTimeAsync(400);
+            expect(addMarkerSpy).toHaveBeenCalledWith('EndEvent_1', 'highlight-executed');
 
         });
     });

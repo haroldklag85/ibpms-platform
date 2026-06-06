@@ -1,46 +1,52 @@
-# Plan de Implementación: Rediseño del Panel Lateral de Validación y Simulación (US-005)
+# Implementation Plan - Backend Bugfix US-005 (Versions History API)
 
-## 1. Contexto y Objetivos
-Para mejorar la usabilidad y no bloquear el lienzo del modelador BPMN, se reemplazará el modal central por un panel lateral derecho (Push Layout) deslizable y redimensionable, que mantendrá visible e interactivo el modelador.
+This plan details the steps to correct the Process Versions history endpoint (`/api/v1/design/processes/{processDefinitionKey}/versions`) in the backend to return an empty list with `200 OK` when the process is a draft or is not found, rather than throwing an unhandled `IllegalArgumentException` (which translates to `400 Bad Request`).
 
-### Características Clave:
-- **Push Layout:** El panel lateral derecho empuja el lienzo del modelador y oculta la barra de propiedades de Camunda (`v-show="!showSandboxModal"`).
-- **Ancho Redimensionable:** Lógica nativa de mouse-drag que permite redimensionar el panel entre `400px` y `700px`.
-- **Acordeón Vertical:** Organización de las 3 fases de validación en secciones colapsables verticalmente:
-  - **Linter Local** (Fase 1)
-  - **Pre-Flight Analyzer** (Fase 2)
-  - **Sandbox Simulator** (Fase 3: Ejecutor de simulación y grilla de variables)
-- **Grilla Interactiva de Variables:** Gestión de variables en la Fase 3 con CRUD inline (Agregar, editar, borrar) persistiendo reactivamente en `localStorage` con la clave del proceso.
-- **Trazado Progresivo:** Animación secuencial de halos verdes (nodo por nodo) al completarse exitosamente la simulación con delay de `400ms`.
+## 1. Target Files
+- **Backend Controller**: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/web/BpmnDesignController.java`
+- **Sandbox Governance Integration Tests**: `backend/ibpms-core/src/test/java/com/ibpms/poc/infrastructure/web/bpmn/SandboxGovernanceTest.java`
 
 ---
 
-## 2. Diseño Técnico en `BpmnDesigner.vue`
+## 2. Step-by-Step Implementation
 
-### 2.1 Variables Reactivas
-- `showSandboxModal` (ref, boolean) - Visibilidad del panel de validación (mantenido por compatibilidad con tests).
-- `validationPanelWidth` (ref, number) - Ancho dinámico del panel (inicial: `450`).
-- `isResizingValidation` (ref, boolean) - Estado de arrastre.
-- `collapsedSections` (ref, object) - `{ linter: false, preflight: false, simulator: false }`.
+### Step 1: Branch Creation
+Create and switch to the target branch:
+```bash
+git checkout -b DevDavid/bugfix/US-005-versions-api
+```
 
-### 2.3 Resizer Nativo (Mouse Events)
-- Captura de eventos `mousedown` en el borde izquierdo de la barra lateral, `mousemove` y `mouseup` globales para ajustar `validationPanelWidth.value = window.innerWidth - e.clientX` dentro del rango de `400` a `700`.
+### Step 2: Modify `getProcessVersions` in `BpmnDesignController.java`
+- Catch `IllegalArgumentException` thrown by `bpmnDesignService.obtenerPorTechnicalId` and return `ResponseEntity.ok(List.of())`.
+- Check if the process design has a null version or version `0` (draft), returning `ResponseEntity.ok(List.of())`.
+- Map standard fields required by the frontend:
+  - `versionId` -> `dto.getCurrentVersion()`
+  - `deploymentId` -> `"dep-" + processDefinitionKey`
+  - `isLatest` -> `true`
+  - `date` -> `dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : ""`
+  - `author` -> `dto.getCreatedBy() != null ? dto.getCreatedBy() : "Sistema"`
+  - `status` -> `dto.getStatus() != null ? dto.getStatus() : "BORRADOR"`
+- Annotate the code change with the required traceability comment:
+  `// @Traceability: US-005, CA-15, BUG-FIX: Retornar lista vacía de versiones si el proceso no tiene despliegues`
 
-### 2.4 Grilla de Variables (LocalStorage CRUD)
-- Clave: `ibpms_sandbox_variables_${processId.value}`
-- Métodos inline para añadir nueva variable con clave, tipo (`String`, `Number`, `Boolean`) y valor.
-- Botones de eliminación y campos de edición inline que guardan de inmediato en `localStorage`.
+### Step 3: Run Verification Tests in WSL
+Verify the fix by executing:
+```bash
+wsl sh -c "cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/backend/ibpms-core && mvn test -Dtest=SandboxGovernanceTest"
+```
 
-### 2.5 Animación Secuencial
-- Trazado de halos progresivo con `setTimeout` de `400ms` por nodo. En entorno de tests Vitest (`(window as any).__vitest_worker__` o similar), se omitirá el delay para evitar timeouts y asegurar que los tests unitarios sincrónicos pasen sin modificaciones de tiempo de espera.
+### Step 4: Commit and Push
+Ensure no `git stash` is used. Standard git workflow:
+```bash
+git add .
+git commit -m "fix(backend): US-005 BUG-FIX get process versions empty list"
+git push origin DevDavid/bugfix/US-005-versions-api
+```
 
 ---
 
-## 3. Estrategia de Retrocompatibilidad de Pruebas
-- Para que la suite de pruebas unitarias `BpmnDesigner.spec.ts` pase al 100% en verde, se mantendrá `showSandboxModal` como flag principal, y el contenedor principal de la barra lateral tendrá el atributo `data-testid="sandbox-glass-modal"`, `data-testid="linter-level"`, `data-testid="preflight-level"` y `data-testid="sandbox-level"`. Esto garantiza que los selectores del test sigan localizando y validando correctamente los elementos sin tener que reescribir las aserciones certificadas en sprints anteriores (previniendo el Test-Driven Decay).
-
----
-
-## 4. Trazabilidad
-Todas las modificaciones llevarán la etiqueta correspondiente de trazabilidad:
-`// @Traceability: US-005, CA-80` a `CA-84`
+## 3. Definition of Done (DoD)
+1. **Compilation without errors**: Spring Boot application compiles inside the native environment.
+2. **Success of `testGetProcessVersionsNotFoundReturnsEmptyList`**: The RestAssured integration test returns `200 OK` with an empty JSON array `[]`.
+3. **Traceability Tag**: Modified lines are properly tagged with reverse traceability tag.
+4. **No Git Stash**: All changes are directly committed to the branch.

@@ -253,14 +253,29 @@ public class BpmnDesignController {
         ));
     }
 
+    // @Traceability: US-005, CA-15, BUG-FIX: Retornar lista vacía de versiones si el proceso no tiene despliegues
     @GetMapping("/{processDefinitionKey}/versions")
     public ResponseEntity<List<Map<String, Object>>> getProcessVersions(@PathVariable("processDefinitionKey") String processDefinitionKey) {
-        // En un futuro se listarán las versiones históricas, por ahora retornamos la versión actual
-        var dto = bpmnDesignService.obtenerPorTechnicalId(processDefinitionKey);
-        List<Map<String, Object>> versions = List.of(
-            Map.of("versionId", dto.getCurrentVersion(), "deploymentId", "dep-" + processDefinitionKey, "isLatest", true)
-        );
-        return ResponseEntity.ok(versions);
+        try {
+            var dto = bpmnDesignService.obtenerPorTechnicalId(processDefinitionKey);
+            if (dto == null || dto.getCurrentVersion() == 0) {
+                return ResponseEntity.ok(List.of());
+            }
+            List<Map<String, Object>> versions = List.of(
+                Map.of(
+                    "versionId", dto.getCurrentVersion(),
+                    "deploymentId", "dep-" + processDefinitionKey,
+                    "isLatest", true,
+                    "date", dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : "",
+                    "author", dto.getCreatedBy() != null ? dto.getCreatedBy() : "Sistema",
+                    "status", dto.getStatus() != null ? dto.getStatus() : "BORRADOR"
+                )
+            );
+            return ResponseEntity.ok(versions);
+        } catch (IllegalArgumentException e) {
+            // Retorna una lista vacía de manera segura si no existe el proceso en base de datos
+            return ResponseEntity.ok(List.of());
+        }
     }
 
     // @Traceability: US-005, CA-15 (Rollback Instantáneo Histórico)

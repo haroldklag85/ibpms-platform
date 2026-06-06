@@ -1100,9 +1100,10 @@
              ℹ️ <b>Nota (CA-15):</b> El Rollback es inmutable. No pisa los datos, sino que clona la arquitectura creando una <b>V_NUEVA</b> en borrador.
           </p>
         </div>
+        <!-- @Traceability: US-005, CA-15, BUG-FIX: Renderizar mensaje cuando no hay versiones publicadas -->
         <div class="flex-1 overflow-y-auto p-3 space-y-2">
           <div v-if="loadingVersions" class="text-center text-xs text-gray-500 py-4">Cargando versiones...</div>
-          <div v-else v-for="v in versionHistory" :key="v.version" class="flex justify-between items-center p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-sm border border-gray-100 dark:border-gray-700 transition group">
+          <div v-else-if="versionHistory.length > 0" v-for="v in versionHistory" :key="v.version" class="flex justify-between items-center p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-sm border border-gray-100 dark:border-gray-700 transition group">
             <div>
               <span class="font-bold text-gray-800 dark:text-white">v{{ v.version }}</span>
               <p class="text-[10px] text-gray-500">{{ v.date }} — {{ v.author }}</p>
@@ -1114,6 +1115,9 @@
                 Clonar como V_NUEVA (Rollback) ↺
               </button>
             </div>
+          </div>
+          <div v-else class="text-center text-xs text-gray-500 py-10" data-testid="no-versions-msg">
+            No hay versiones publicadas aún.
           </div>
         </div>
       </div>
@@ -2253,20 +2257,24 @@ const fetchDmnDefinitions = async () => {
 };
 
 // @Traceability: US-005, CA-15
+// @Traceability: US-005, CA-15, BUG-FIX: Limpiar mocks del historial de versiones y mapear respuesta del backend
 const fetchVersions = async () => {
   loadingVersions.value = true;
   try {
     const { data } = await integrationStore.getProcessVersions(processId.value);
-    // Asume array [{version, date, author, status}]
-    versionHistory.value = data;
+    if (data && Array.isArray(data)) {
+      versionHistory.value = data.map((v: any) => ({
+        version: v.versionId,
+        date: v.date || 'Sin fecha',
+        author: v.author || 'Sistema',
+        status: v.isLatest ? 'ACTIVO' : 'ARCHIVADO'
+      }));
+    } else {
+      versionHistory.value = [];
+    }
   } catch (err) {
-    console.error('API Fake Call - Fallback Versions');
-    // MOCK Fallback de Seguridad visual
-    versionHistory.value = [
-      { version: 3, date: '2026-03-01', author: 'Ana García', status: 'BORRADOR' },
-      { version: 2, date: '2026-02-15', author: 'Carlos M.', status: 'ACTIVO' },
-      { version: 1, date: '2026-01-20', author: 'Ana García', status: 'ARCHIVADO' }
-    ];
+    console.error('Error al obtener versiones del proceso:', err);
+    versionHistory.value = [];
   } finally {
     loadingVersions.value = false;
   }

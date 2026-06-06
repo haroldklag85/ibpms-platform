@@ -2040,6 +2040,23 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             await wrapper.vm.restoreVersionFromLog(3);
             expect(restoreSpy).toHaveBeenCalledWith(wrapper.vm.processId, 3);
         });
+
+        // @Traceability: US-005, CA-15, BUG-FIX: Test de integración/unitario de versiones vacías
+        it('Debe renderizar mensaje de no hay versiones cuando el backend retorna una lista vacia', async () => {
+            const store = useIntegrationStore();
+            vi.spyOn(store, 'getProcessVersions').mockResolvedValue({ data: [] });
+
+            // Abrimos versiones
+            wrapper.vm.showVersions = true;
+            await wrapper.vm.fetchVersions();
+            await flushPromises();
+
+            expect(wrapper.vm.versionHistory.length).toBe(0);
+            
+            const msg = wrapper.find('[data-testid="no-versions-msg"]');
+            expect(msg.exists()).toBe(true);
+            expect(msg.text()).toContain('No hay versiones publicadas aún.');
+        });
     });
 });
 

@@ -17,6 +17,16 @@ const mockZoom = vi.fn().mockImplementation((val?: any) => {
 });
 const mockOpen = vi.fn();
 
+const mockCanvas = {
+    zoom: mockZoom,
+    open: mockOpen,
+    getRootElement: () => {
+        return sharedMockRoot;
+    },
+    addMarker: vi.fn(),
+    removeMarker: vi.fn()
+};
+
 const mockClipboard = {
     get: vi.fn(),
     set: vi.fn(),
@@ -72,15 +82,7 @@ vi.mock('bpmn-js/lib/Modeler', () => {
             saveXML = vi.fn().mockResolvedValue({ xml: '<xml/>' });
             get = vi.fn().mockImplementation((name: string) => {
                 if (name === 'canvas') {
-                    return {
-                        zoom: mockZoom,
-                        open: mockOpen,
-                        getRootElement: () => {
-                            return sharedMockRoot;
-                        },
-                        addMarker: vi.fn(),
-                        removeMarker: vi.fn()
-                    };
+                    return mockCanvas;
                 }
                 if (name === 'modeling') {
                     return {
@@ -221,6 +223,8 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
         });
         localStorage.clear();
         sharedMockRoot.businessObject.extensionElements.values[0].values = [];
+        mockCanvas.addMarker = vi.fn();
+        mockCanvas.removeMarker = vi.fn();
     });
 
     afterEach(() => {
@@ -1724,4 +1728,156 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             wrapper.unmount();
         });
     });
+
+    // @Traceability: US-005, CA-80, CA-81, CA-82, CA-83, CA-84 - ADR-001
+    describe('US-005: Embudo de Validación y Simulación Interactiva (CA-80 a CA-84)', () => {
+        beforeEach(() => {
+            localStorage.clear();
+        });
+
+        it('CA-80: Debe desplegar el modal consolidado glassmorphic al presionar Validar y Simular', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const btn = wrapper.find('[data-testid="btn-test-sandbox"]');
+            expect(btn.exists()).toBe(true);
+
+            // Simular click para abrir el modal
+            await btn.trigger('click');
+            await wrapper.vm.$nextTick();
+
+            expect(wrapper.vm.showSandboxModal).toBe(true);
+            const modal = wrapper.find('[data-testid="sandbox-glass-modal"]');
+            expect(modal.exists()).toBe(true);
+            
+            // Verificar las secciones visuales/niveles del dashboard
+            expect(wrapper.find('[data-testid="linter-level"]').exists()).toBe(true);
+            expect(wrapper.find('[data-testid="preflight-level"]').exists()).toBe(true);
+            expect(wrapper.find('[data-testid="sandbox-level"]').exists()).toBe(true);
+
+            wrapper.unmount();
+        });
+
+        it('CA-81: Debe ejecutar en paralelo Linter y Pre-Flight, y bloquear selectivamente si hay errores fatales', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Mockear los metodos de validacion a traves del registry global
+            const registry = (window as any).__validationRegistry;
+            const linterSpy = vi.spyOn(registry, 'runClientLinter');
+            const preFlightSpy = vi.spyOn(registry, 'runPreFlightBackend');
+
+            await wrapper.vm.runValidationFunnel();
+            await flushPromises();
+
+            // Verificar ejecucion paralela
+            expect(linterSpy).toHaveBeenCalled();
+            expect(preFlightSpy).toHaveBeenCalled();
+
+            // Caso A: Errores fatales (Linter o Preflight vacio/critico) -> Bloquea Sandbox
+            wrapper.vm.linterErrors = ['Fatal Error: XML is unparseable'];
+            wrapper.vm.preFlightErrors = [];
+            wrapper.vm.evaluateBlockingSelectivo();
+            expect(wrapper.vm.sandboxBlocked).toBe(true);
+
+            // Caso B: Solo warnings -> No bloquea Sandbox
+            wrapper.vm.linterErrors = [];
+            wrapper.vm.preFlightWarnings = ['Warning: CallActivity does not point to existing key'];
+            wrapper.vm.evaluateBlockingSelectivo();
+            expect(wrapper.vm.sandboxBlocked).toBe(false);
+
+            wrapper.unmount();
+        });
+
+        it('CA-82: Debe capturar error HTTP 422, suspender ejecucion, mostrar popup y reintentar con las variables', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            // Primer intento falla con 422 MISSING_VARIABLE
+            const spawnSpy = vi.fn()
+                .mockRejectedValueOnce({
+                    response: {
+                        status: 422,
+                        data: { error: 'MISSING_VARIABLE', variableName: 'monto' }
+                    }
+                })
+                .mockResolvedValueOnce({
+                    data: { status: 'SIMULATION_COMPLETE', executedNodeIds: ['StartEvent_1', 'Activity_1', 'EndEvent_1'] }
+                });
+            store.spawnSandbox = spawnSpy;
+
+            // Iniciar simulacion
+            await wrapper.vm.startSimulation();
+            await flushPromises();
+
+            // Debe levantar el popup para ingresar variable
+            expect(wrapper.vm.showVariablePopup).toBe(true);
+            expect(wrapper.vm.missingVariableName).toBe('monto');
+
+            // Ingresar variable y enviar
+            wrapper.vm.tempVariableValue = '60000';
+            await wrapper.vm.submitVariable();
+            await flushPromises();
+
+            // Al confirmar, debe re-intentar inyectando el payload completo
+            expect(spawnSpy).toHaveBeenCalledTimes(2);
+            expect(spawnSpy).toHaveBeenLastCalledWith({
+                xml: '<xml/>',
+                variables: { monto: '60000' }
+            });
+            expect(wrapper.vm.showVariablePopup).toBe(false);
+
+            wrapper.unmount();
+        });
+
+        it('CA-83: Debe persistir temporalmente las variables en localStorage scoped por processKey', async () => {
+            mockRouteQuery = { processId: 'onboarding-process-v1' };
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            wrapper.vm.sandboxVariables = { priority: 'high', flag: 'true' };
+            wrapper.vm.saveVariablesToLocalStorage();
+
+            const saved = localStorage.getItem('ibpms_sandbox_variables_onboarding-process-v1');
+            expect(saved).not.toBeNull();
+            expect(JSON.parse(saved!)).toEqual({ priority: 'high', flag: 'true' });
+
+            // Cargar de nuevo
+            wrapper.vm.sandboxVariables = {};
+            wrapper.vm.loadVariablesFromLocalStorage();
+            expect(wrapper.vm.sandboxVariables).toEqual({ priority: 'high', flag: 'true' });
+
+            wrapper.unmount();
+        });
+
+        it('CA-84: Debe dibujar halos neones en el canvas al finalizar y quitarlos con el boton Limpiar', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const modeler = (window as any).__modelerInstance;
+            const canvas = modeler.get('canvas');
+            const addMarkerSpy = vi.spyOn(canvas, 'addMarker');
+            const removeMarkerSpy = vi.spyOn(canvas, 'removeMarker');
+
+            wrapper.vm.executedNodes = ['StartEvent_1', 'Activity_1'];
+            
+            // Trigger del renderizado de trayectoria
+            wrapper.vm.renderTrajectoryHalos();
+
+            expect(addMarkerSpy).toHaveBeenCalledWith('StartEvent_1', 'highlight-executed');
+            expect(addMarkerSpy).toHaveBeenCalledWith('Activity_1', 'highlight-executed');
+
+            // Click en el boton Limpiar
+            const clearBtn = wrapper.find('[data-testid="btn-clear-trajectory"]');
+            expect(clearBtn.exists()).toBe(true);
+            
+            await clearBtn.trigger('click');
+            expect(removeMarkerSpy).toHaveBeenCalledWith('StartEvent_1', 'highlight-executed');
+            expect(removeMarkerSpy).toHaveBeenCalledWith('Activity_1', 'highlight-executed');
+
+            wrapper.unmount();
+        });
+    });
 });
+

@@ -1,38 +1,49 @@
-# Plan de Implementación — Pruebas de Complejidad BPMN (US-005, CA-30)
+# Plan de Implementación — Embudo de Validación y Simulación de Sandbox (US-005, CA-80 a CA-84)
 
-Este plan describe el enfoque para actualizar la prueba unitaria del validador de complejidad BPMN en la fase roja de TDD dentro de `BpmnDesigner.spec.ts`.
+Este plan describe el diseño e implementación para el embudo de validación en 3 niveles y la simulación interactiva de sandbox dentro de `BpmnDesigner.vue`.
 
-## 1. Objetivos de QA
-- Eliminar la inyección/simulación estática de `showToast` dentro de la prueba unitaria.
-- Simular la interacción real de carga de archivos usando el input `input-import-bpmn` con un archivo sintético de más de 100 nodos.
-- Actualizar las aserciones de la prueba de complejidad para requerir exactamente los mensajes contractuales:
-  - `"⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos"`
-  - `"Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor"`
-- Añadir la marca de trazabilidad obligatoria:
-  `// @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable`
-- Demostrar que el test falla inicialmente al correr la suite (Fase Roja).
+## 1. Objetivos Técnicos
+*   **CA-80 (Modal Glassmorphic Consolidado):** Reemplazar el botón "Probar en Sandbox" por "🧪 Validar y Simular", el cual despliega un modal glassmorphic con 3 niveles secuenciales/pestañas: Linter Local, Pre-Flight Analyzer y Sandbox Simulator.
+*   **CA-81 (Ejecución Paralela y Bloqueo Selectivo):** Al abrir el modal, ejecutar paralelamente la validación del linter local y el pre-flight del backend. Si se encuentran errores fatales, bloquear el inicio de la simulación. Los warnings no deben bloquear la simulación.
+*   **CA-82 (Captura de Variables e Interactividad HTTP 422):** Si el motor de simulación responde con un error HTTP 422 y tipo `MISSING_VARIABLE`, pausar la ejecución, desplegar un popup interactivo pidiendo el valor de la variable requerida, y al confirmar, reintentar la simulación inyectando el valor ingresado.
+*   **CA-83 (Persistencia de Variables por Proceso):** Guardar y recuperar las variables ingresadas en `localStorage` usando la clave estructurada `ibpms_sandbox_variables_${processId}`.
+*   **CA-84 (Trazado de Halos de Ejecución y Limpieza):** Marcar los nodos ejecutados en el canvas de bpmn-js usando la clase `highlight-executed` (con animaciones neon CSS). Agregar un botón "Limpiar Trayectoria" (`data-testid="btn-clear-trajectory"`) que remueva los marcadores.
 
-## 2. Pasos de Modificación del Test
+## 2. Cambios en Código (`BpmnDesigner.vue`)
+1.  **Variables Reactivas:**
+    *   `showSandboxModal` (boolean)
+    *   `sandboxStage` ('linter' | 'preflight' | 'sandbox')
+    *   `preFlightErrors` (string[])
+    *   `preFlightWarnings` (string[])
+    *   `sandboxBlocked` (boolean)
+    *   `showVariablePopup` (boolean)
+    *   `missingVariableName` (string)
+    *   `tempVariableValue` (string)
+    *   `sandboxVariables` (Record<string, any>)
+    *   `executedNodes` (string[])
+    *   `isSimulating` (boolean)
+    *   `simulationLogs` (string[])
 
-1. **Ubicación del Test**: localizaremos el test con descripción `"Debe generar un Toast de Advertencia al importar un archivo BPMN de alta complejidad (> 100 nodos)"`.
-2. **Reemplazo de la Simulación**:
-   - Reemplazaremos el bloque que invoca directamente a `wrapper.vm.showToast(...)`.
-   - Buscaremos el elemento input por su testid `[data-testid="input-import-bpmn"]`.
-   - Definiremos la propiedad `files` del input con un objeto `File` que contenga un string con más de 100 nodos BPMN.
-   - Dispararemos el evento `change` en el input y ejecutaremos `await flushPromises()`.
-3. **Actualización de Aserciones**:
-   - Cambiaremos `expect(wrapper.vm.toast.msg).toContain('Alta complejidad')` por dos aserciones estrictas sobre `wrapper.vm.toast.msg`:
-     - `expect(wrapper.vm.toast.msg).toContain('⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos')`
-     - `expect(wrapper.vm.toast.msg).toContain('Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor')`
-4. **Agregar Trazabilidad**:
-   - Inyectar el comentario de trazabilidad sobre el test modificado:
-     `// @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable`
+2.  **Lógica y Métodos:**
+    *   `openValidationAndSimulation()`: Limpia estados, carga variables guardadas, abre el modal en pestaña 'linter' y lanza `runValidationFunnel()`.
+    *   `runPreFlightBackend()`: Realiza la llamada de validación del proceso al backend (`integrationStore.validateProcess`). Captura errores y warnings del response.
+    *   `runValidationFunnel()`: Ejecuta concurrentemente `runClientLinter()` y `runPreFlightBackend()`. Llama a `evaluateBlockingSelectivo()`.
+    *   `evaluateBlockingSelectivo()`: Determina si el linter o el preflight tienen errores fatales (bloqueando la simulación).
+    *   `startSimulation()`: Ejecuta la simulación enviando el XML y las variables acumuladas. Maneja el error 422 para solicitar variables faltantes y dibuja los halos neones al finalizar con éxito.
+    *   `submitVariable()`: Guarda la variable provista en `sandboxVariables`, persiste en localStorage, cierra el popup y reintenta `startSimulation()`.
+    *   `saveVariablesToLocalStorage()` / `loadVariablesFromLocalStorage()`: Gestiona la persistencia en `localStorage`.
+    *   `renderTrajectoryHalos()` / `clearTrajectory()`: Agrega o quita el marcador `highlight-executed` a los elementos del canvas.
 
-## 3. Fase Roja de TDD
-- Ejecutaremos la suite usando:
-  `npx vitest run src/views/admin/Modeler/BpmnDesigner.spec.ts`
-- Verificaremos que el test falle con un error de aserción indicando que el mensaje del toast no contiene las nuevas cadenas del contrato.
-- El componente `BpmnDesigner.vue` **NO** se modificará en esta fase para respetar el ciclo TDD Rojo.
+3.  **UI HTML (Modales y Botones):**
+    *   Actualizar el botón "Probar en Sandbox" para invocar a `openValidationAndSimulation`.
+    *   Agregar el botón de "Limpiar Trayectoria" visible únicamente cuando `executedNodes.length > 0`.
+    *   Agregar el modal glassmorphic de 3 niveles y el popup flotante para variables al final de la plantilla HTML.
 
-## 4. Consolidación
-- Una vez verificado el fallo del test en la fase roja, realizaremos commit y push directamente a la rama `sprint-6` (sin usar `git stash`).
+4.  **Estilos CSS:**
+    *   Añadir clases y animaciones de tipo pulso neon para `.highlight-executed`.
+
+## 3. Pruebas y Compilación
+*   Ejecutar las pruebas en WSL:
+    `wsl --cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/frontend -e npx vitest run src/views/admin/Modeler/BpmnDesigner.spec.ts`
+*   Ejecutar el build en WSL:
+    `wsl --cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/frontend -e npm run build`

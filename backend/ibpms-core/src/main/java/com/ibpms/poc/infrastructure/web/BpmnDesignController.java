@@ -264,6 +264,7 @@ public class BpmnDesignController {
             List<Map<String, Object>> versions = List.of(
                 Map.of(
                     "versionId", dto.getCurrentVersion(),
+                    "version", dto.getCurrentVersion(),
                     "deploymentId", "dep-" + processDefinitionKey,
                     "isLatest", true,
                     "date", dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : "",

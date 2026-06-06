@@ -103,8 +103,10 @@ public class BpmnDesignController {
                 schema = @Schema(example = "{\"deployment_id\":\"dep-abc12345\",\"process_definition_id\":\"uuid-123\",\"process_definition_key\":\"my-process\",\"version\":1,\"deployed_at\":\"2026-06-06T00:00:00Z\",\"deployed_by\":\"BPMN_Release_Manager\",\"warnings\":[],\"generated_roles\":[]}"))),
         @ApiResponse(responseCode = "400", description = "Parámetros inválidos o archivo vacío"),
         @ApiResponse(responseCode = "403", description = "Acceso Denegado. Se requiere el rol BPMN_Release_Manager o modo Sandbox."),
+        @ApiResponse(responseCode = "413", description = "El tamaño del archivo excede el límite permitido de 5MB"),
         @ApiResponse(responseCode = "415", description = "Tipo de contenido no soportado. Se requiere multipart/form-data"),
-        @ApiResponse(responseCode = "422", description = "Advertencias o errores del Pre-Flight Analyzer")
+        @ApiResponse(responseCode = "422", description = "Advertencias o errores del Pre-Flight Analyzer"),
+        @ApiResponse(responseCode = "500", description = "Fallo interno al procesar el archivo BPMN")
     })
     @PostMapping(value = "/deploy", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> deployBpmnProcess(
@@ -197,7 +199,8 @@ public class BpmnDesignController {
             content = @Content(mediaType = "application/json",
                 schema = @Schema(implementation = DeploymentValidationResponse.class))),
         @ApiResponse(responseCode = "400", description = "Archivo BPMN vacío o formato no válido"),
-        @ApiResponse(responseCode = "413", description = "El tamaño del archivo excede el límite permitido de 5MB")
+        @ApiResponse(responseCode = "413", description = "El tamaño del archivo excede el límite permitido de 5MB"),
+        @ApiResponse(responseCode = "500", description = "Fallo interno al validar el archivo BPMN")
     })
     @PostMapping(value = "/validate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> validateBpmnProcess(
@@ -253,7 +256,7 @@ public class BpmnDesignController {
         ));
     }
 
-    // @Traceability: US-005, CA-15, BUG-FIX: Retornar lista vacía de versiones si el proceso no tiene despliegues
+    // @Traceability: US-005, CA-15
     @GetMapping("/{processDefinitionKey}/versions")
     public ResponseEntity<List<Map<String, Object>>> getProcessVersions(@PathVariable("processDefinitionKey") String processDefinitionKey) {
         try {
@@ -269,7 +272,9 @@ public class BpmnDesignController {
                     "isLatest", true,
                     "date", dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : "",
                     "author", dto.getCreatedBy() != null ? dto.getCreatedBy() : "Sistema",
-                    "status", dto.getStatus() != null ? dto.getStatus() : "BORRADOR"
+                    "status", dto.getStatus() != null ? dto.getStatus() : "BORRADOR",
+                    "updatedAt", dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : "",
+                    "createdBy", dto.getCreatedBy() != null ? dto.getCreatedBy() : "Sistema"
                 )
             );
             return ResponseEntity.ok(versions);

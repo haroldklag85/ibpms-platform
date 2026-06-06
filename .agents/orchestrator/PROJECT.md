@@ -1,31 +1,30 @@
-# Project: BpmnDesigner - Glosario de Datos Unificado (Propuesta 2)
-# Scope: US-005 CA-5 Nomenclature Rule UX/UI Enhancement
+# Project: iBPMS Platform Toolbar & Simulation Redesign
+# Scope: US-005 & US-007 Follow-up Requirements
 
 ## Architecture
 - **Frontend Layer**: Vue 3 SPA using TypeScript, TailwindCSS, and Pinia.
-- **Components involved**:
-  - `BpmnDesigner.vue`: Main BPMN Modeler component.
-  - `BpmnDesigner.spec.ts`: Unit tests for BpmnDesigner.
-- **Design Goals**:
-  - Add collapsible "Glosario de Variables de Negocio" card section in process properties panel.
-  - Support manual variable declaration (key, type) persisted in BPMN XML custom extension elements.
-  - Dynamically merge manual variables with linked forms (loaded via `fetchForms()`), active webhooks/connectors, and session context (`session.user_name`, `session.email`).
-  - Replace nomenclature input with an autocomplete pill/tag editor that triggers on `{` and inserts `{glosario.<variable_key>}` (or `{session.user_name}`).
-  - Render color-coded pills/chips for variables in the input.
-  - Add a premium explanatory tooltip in a friendly "dummies-tone" explaining the shared glossary concept.
+  - Modeler View: `frontend/src/views/admin/Modeler/BpmnDesigner.vue`
+  - Integration Store: `frontend/src/stores/useIntegrationStore.ts`
+- **Backend Layer**: Java Spring Boot, Hibernate, Liquibase, PostgreSQL.
+  - Controllers: `BpmnDesignController.java`
+  - Tests: `DataMappingIntegrityTest.java`
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|---|---|---|---|
-| 1 | Exploration & Analysis | Analyze BpmnDesigner.vue, XML handling, state, and BpmnDesigner.spec.ts | None | DONE |
-| 2 | Implementation | Implement Glosario section, merging logic, XML persistence, pill editor, and tooltip | M1 | IN_PROGRESS |
-| 3 | Testing & Verification | Write unit tests in BpmnDesigner.spec.ts, run Vitest, and execute production build | M2 | PLANNED |
+| 1 | Exploration & Analysis | Codebase investigation and mapping of endpoints, test suites, and components | None | PLANNED |
+| 2 | Backend Implementation | Version history bug fixes, JSON alignment, Swagger documentation, and DataMappingIntegrityTest stabilization | M1 | PLANNED |
+| 3 | Frontend Implementation | Stepper UI, Resizable push-layout sidebar, Accordion phases, Hot Path Traversal highlights, and FormData payload integration | M2 | PLANNED |
+| 4 | Verification & Audit | Backend Maven integration test suite and Frontend production build | M3 | PLANNED |
 
 ## Interface Contracts
-- **BPMN XML Extension Elements**: Custom extension elements used to store manual variables.
-- **Nomenclature Rule XML Mapping**: Persists to/from BPMN XML `ReglaNomenclatura` root property.
+- **BPMN Version History API**: `/api/v1/design/processes/{processDefinitionKey}/versions`
+  - Error case: catch `IllegalArgumentException` → return empty list with HTTP 200 OK.
+  - DTO schema keys required: `version`, `date` (or `updatedAt`), `author` (or `createdBy`), `status`, and any existing keys.
+- **BPMN Validation API**: `/validate` (multipart/form-data with file upload).
 
 ## Code Layout
 - Modeler Views: `frontend/src/views/admin/Modeler/BpmnDesigner.vue`
-- Unit Tests: `frontend/src/views/admin/Modeler/BpmnDesigner.spec.ts`
-- Pinia Stores: `frontend/src/stores/useIntegrationStore.ts` (or auth/process stores if applicable)
+- Pinia Stores: `frontend/src/stores/useIntegrationStore.ts`
+- Backend Controllers: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/web/BpmnDesignController.java`
+- Backend Integration Tests: `backend/ibpms-core/src/test/java/com/ibpms/poc/infrastructure/web/DataMappingIntegrityTest.java`

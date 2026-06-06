@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5434/ibpms_e2e
+    url: jdbc:postgresql://[::1]:5434/ibpms_e2e
     username: ibpms
     password: ibpms_e2e_pass
     hikari:
@@ -20,10 +20,10 @@ spring:
     defer-datasource-initialization: false
   data:
     redis:
-      host: localhost
+      host: "[::1]"
       port: 6380
   rabbitmq:
-    host: localhost
+    host: "[::1]"
     port: 5673
 
 camunda:

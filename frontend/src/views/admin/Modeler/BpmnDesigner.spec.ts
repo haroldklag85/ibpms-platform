@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-05
+// @Traceability: US-005, CA-41 - ADR-001
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import BpmnDesigner from './BpmnDesigner.vue';
@@ -28,6 +28,9 @@ const mockElementRegistry = {
     getAll: vi.fn().mockReturnValue([]),
     filter: vi.fn().mockImplementation(function(fn: any) {
         return mockElementRegistry.getAll().filter(fn);
+    }),
+    get: vi.fn().mockImplementation(function(id: string) {
+        return mockElementRegistry.getAll().find(el => el.id === id) || null;
     })
 };
 
@@ -189,10 +192,14 @@ vi.mock('@/services/apiClient', () => {
     };
 });
 
+const mockPush = vi.fn();
 let mockRouteQuery: any = { processId: 'credito-consumo-v1' };
 vi.mock('vue-router', () => ({
     useRoute: () => ({
         query: mockRouteQuery
+    }),
+    useRouter: () => ({
+        push: mockPush
     })
 }));
 
@@ -686,6 +693,7 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
     describe('WelcomeModal (CA-40)', () => {
         beforeEach(() => {
             mockRouteQuery = {};
+            mockPush.mockClear();
         });
 
         it('Debe ser showWelcomeModal true si no hay processId en la URL query', async () => {
@@ -739,6 +747,34 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             await wrapper.vm.completeProcessCreationInWelcome();
             expect(wrapper.vm.showWelcomeModal).toBe(false);
             expect(wrapper.vm.showCatalog).toBe(false);
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, CA-40
+        it('Debe redireccionar al portal (/) al hacer clic en el boton X de la cabecera del welcome modal', async () => {
+            mockRouteQuery = {};
+            const wrapper = createWrapper();
+            await flushPromises();
+            
+            const closeBtn = wrapper.find('[data-testid="welcome-close-header"]');
+            expect(closeBtn.exists()).toBe(true);
+            
+            await closeBtn.trigger('click');
+            expect(mockPush).toHaveBeenCalledWith('/');
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, CA-40
+        it('Debe redireccionar al portal (/) al hacer clic en el boton Cancelar en el pie del welcome modal', async () => {
+            mockRouteQuery = {};
+            const wrapper = createWrapper();
+            await flushPromises();
+            
+            const cancelBtn = wrapper.find('[data-testid="welcome-cancel-footer"]');
+            expect(cancelBtn.exists()).toBe(true);
+            
+            await cancelBtn.trigger('click');
+            expect(mockPush).toHaveBeenCalledWith('/');
             wrapper.unmount();
         });
     });
@@ -1316,6 +1352,376 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             
             expect(nomenclatureProp).toBeDefined();
             expect(nomenclatureProp.value).toBe('FACT-{form.monto}');
+        });
+    });
+
+    // @Traceability: US-005, CA-35
+    describe('US-005: SLA Duration Picker & Critical Path SLA Validation (CA-35)', () => {
+        // @Traceability: US-005, CA-35
+        it('Debe probar el parsing y formateo de duraciones en modo simple y avanzado', async () => {
+            // @Traceability: US-005, CA-35
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Validate that utility parsing function parses ISO 8601 strings to simple values correctly
+            expect(wrapper.vm.parseIso8601Duration).toBeDefined();
+            const parsedMinutes = wrapper.vm.parseIso8601Duration('PT30M');
+            expect(parsedMinutes).toEqual({ value: 30, unit: 'Minutos', isSimple: true });
+
+            const parsedHours = wrapper.vm.parseIso8601Duration('PT4H');
+            expect(parsedHours).toEqual({ value: 4, unit: 'Horas', isSimple: true });
+
+            const parsedDays = wrapper.vm.parseIso8601Duration('P2D');
+            expect(parsedDays).toEqual({ value: 2, unit: 'Días', isSimple: true });
+
+            const parsedWeeks = wrapper.vm.parseIso8601Duration('P1W');
+            expect(parsedWeeks).toEqual({ value: 1, unit: 'Semanas', isSimple: true });
+
+            // Validate advanced syntax or empty
+            const parsedEmpty = wrapper.vm.parseIso8601Duration('');
+            expect(parsedEmpty).toEqual({ value: 0, unit: 'Horas', isSimple: true });
+
+            const parsedAdvanced = wrapper.vm.parseIso8601Duration('${myExpr}');
+            expect(parsedAdvanced.isSimple).toBe(false);
+
+            // Validate formatting utility
+            expect(wrapper.vm.formatIso8601Duration).toBeDefined();
+            expect(wrapper.vm.formatIso8601Duration(15, 'Minutos')).toBe('PT15M');
+            expect(wrapper.vm.formatIso8601Duration(6, 'Horas')).toBe('PT6H');
+            expect(wrapper.vm.formatIso8601Duration(2, 'Días')).toBe('P2D');
+            expect(wrapper.vm.formatIso8601Duration(3, 'Semanas')).toBe('P3W');
+        });
+
+        it('Debe permitir alternar entre modo simple y avanzado', async () => {
+            // @Traceability: US-005, CA-35
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            expect(wrapper.vm.isSlaAdvancedMode).toBeDefined();
+            // Initially simple mode
+            wrapper.vm.isSlaAdvancedMode = false;
+            await wrapper.vm.$nextTick();
+
+            // When advanced is toggled
+            wrapper.vm.isSlaAdvancedMode = true;
+            await wrapper.vm.$nextTick();
+            expect(wrapper.vm.isSlaAdvancedMode).toBe(true);
+        });
+
+        it('Debe calcular el camino crítico de un flujo secuencial con bifurcación y compuertas en horas', async () => {
+            // @Traceability: US-005, CA-35
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const modeler = (window as any).__modelerInstance;
+            const elementRegistry = modeler.get('elementRegistry');
+
+            // Construct mock nodes to represent the process topology:
+            // StartEvent_1 -> Task_1 (P2D) -> Gateway_1
+            // Gateway_1 -> Task_2 (P3D) -> EndEvent_1
+            // Gateway_1 -> Task_3 (PT12H) -> EndEvent_1
+            const mockStart = {
+                id: 'StartEvent_1',
+                type: 'bpmn:StartEvent',
+                businessObject: { get: () => null },
+                outgoing: [{ target: null }]
+            };
+            const mockT1 = {
+                id: 'Task_1',
+                type: 'bpmn:UserTask',
+                businessObject: {
+                    get: (prop: string) => {
+                        if (prop === 'camunda:dueDate') return 'P2D';
+                        return null;
+                    }
+                },
+                outgoing: [{ target: null }]
+            };
+            const mockGw = {
+                id: 'Gateway_1',
+                type: 'bpmn:ExclusiveGateway',
+                businessObject: { get: () => null },
+                outgoing: [
+                    { target: null },
+                    { target: null }
+                ]
+            };
+            const mockT2 = {
+                id: 'Task_2',
+                type: 'bpmn:UserTask',
+                businessObject: {
+                    get: (prop: string) => {
+                        if (prop === 'camunda:dueDate') return 'P3D';
+                        return null;
+                    }
+                },
+                outgoing: [{ target: null }]
+            };
+            const mockT3 = {
+                id: 'Task_3',
+                type: 'bpmn:UserTask',
+                businessObject: {
+                    get: (prop: string) => {
+                        if (prop === 'camunda:dueDate') return 'PT12H';
+                        return null;
+                    }
+                },
+                outgoing: [{ target: null }]
+            };
+            const mockEnd = {
+                id: 'EndEvent_1',
+                type: 'bpmn:EndEvent',
+                businessObject: { get: () => null },
+                outgoing: []
+            };
+
+            // Link outgoing flow targets
+            mockStart.outgoing[0].target = mockT1 as any;
+            mockT1.outgoing[0].target = mockGw as any;
+            mockGw.outgoing[0].target = mockT2 as any;
+            mockGw.outgoing[1].target = mockT3 as any;
+            mockT2.outgoing[0].target = mockEnd as any;
+            mockT3.outgoing[0].target = mockEnd as any;
+
+            vi.spyOn(elementRegistry, 'getAll').mockReturnValue([
+                mockStart, mockT1, mockGw, mockT2, mockT3, mockEnd
+            ]);
+
+            // Recalculate
+            expect(wrapper.vm.updateCriticalPathDuration).toBeDefined();
+            wrapper.vm.updateCriticalPathDuration();
+
+            // Longest Path: T1 (48h) + T2 (72h) = 120h
+            expect(wrapper.vm.criticalPathDuration).toBe(120);
+        });
+
+        it('Debe mostrar el banner de alerta cuando se excede el SLA Global y auto-ajustarlo al hacer click', async () => {
+            // @Traceability: US-005, CA-35
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            wrapper.vm.globalSla = 72; // 3 Days
+            wrapper.vm.criticalPathDuration = 120; // 5 Days
+
+            expect(wrapper.vm.isCriticalPathExceeded).toBe(true);
+
+            expect(wrapper.vm.autoAdjustGlobalSla).toBeDefined();
+            wrapper.vm.autoAdjustGlobalSla();
+
+            expect(wrapper.vm.globalSla).toBe(120);
+            expect(wrapper.vm.isCriticalPathExceeded).toBe(false);
+        });
+
+        // @Traceability: US-005, CA-35
+        it('Debe actualizar camunda:dueDate al modificar el SLA del elemento y reflejarlo en la ruta crítica', async () => {
+            // @Traceability: US-005, CA-35
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const modeler = (window as any).__modelerInstance;
+            const elementRegistry = modeler.get('elementRegistry');
+
+            // Setup selectedElement as a UserTask
+            const mockElement = {
+                id: 'UserTask_Test',
+                type: 'bpmn:UserTask',
+                businessObject: {
+                    id: 'UserTask_Test',
+                    $type: 'bpmn:UserTask',
+                    get: vi.fn(),
+                    set: vi.fn()
+                }
+            };
+            vi.spyOn(elementRegistry, 'get').mockReturnValue(mockElement);
+
+            wrapper.vm.selectedElement = {
+                id: 'UserTask_Test',
+                type: 'bpmn:UserTask',
+                name: 'Test Task',
+                props: {
+                    sla: 'PT4H'
+                }
+            };
+            await wrapper.vm.$nextTick();
+
+            // 1. Update selectedElement.value.props.sla to a new duration (PT10H)
+            wrapper.vm.selectedElement.props.sla = 'PT10H';
+            await wrapper.vm.$nextTick();
+
+            // 2. Call updateElementSla()
+            wrapper.vm.updateElementSla();
+            await wrapper.vm.$nextTick();
+
+            // 3. Verify that the element's camunda:dueDate attribute is set to 'PT10H'
+            expect(mockElement.businessObject['camunda:dueDate']).toBe('PT10H');
+
+            // 4. Mock elementRegistry.getAll returning this task linked from Start to End
+            const mockStart = {
+                id: 'StartEvent_1',
+                type: 'bpmn:StartEvent',
+                businessObject: { get: () => null },
+                outgoing: [{ target: mockElement }]
+            };
+            mockElement.outgoing = [{ target: { id: 'EndEvent_1', type: 'bpmn:EndEvent', outgoing: [] } }] as any;
+            
+            // Mock get on mockElement businessObject to return PT10H for camunda:dueDate
+            mockElement.businessObject.get = vi.fn().mockImplementation((prop: string) => {
+                if (prop === 'camunda:dueDate') return 'PT10H';
+                return null;
+            });
+
+            vi.spyOn(elementRegistry, 'getAll').mockReturnValue([
+                mockStart, mockElement, { id: 'EndEvent_1', type: 'bpmn:EndEvent', outgoing: [] }
+            ]);
+
+            // Update critical path duration and verify it recalculates correctly to 10
+            wrapper.vm.updateCriticalPathDuration();
+            expect(wrapper.vm.criticalPathDuration).toBe(10);
+
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, CA-35
+        it('Debe verificar que tanto SLA Global como SLA Timeout soportan el selector visual unificado y sincronizan a ISO-8601', async () => {
+            // @Traceability: US-005, CA-35
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // 1. SLA Timeout (simple mode)
+            wrapper.vm.selectedElement = {
+                id: 'Task_1',
+                type: 'bpmn:UserTask',
+                name: 'User Task',
+                props: { sla: '' }
+            };
+            await wrapper.vm.$nextTick();
+
+            wrapper.vm.isSlaAdvancedMode = false;
+            wrapper.vm.slaSimpleValue = 3;
+            wrapper.vm.slaSimpleUnit = 'Días';
+            wrapper.vm.onSimpleSlaChange();
+            await wrapper.vm.$nextTick();
+
+            expect(wrapper.vm.selectedElement.props.sla).toBe('P3D');
+
+            // 2. SLA Global (simple mode)
+            wrapper.vm.isSlaAdvancedMode = false;
+            wrapper.vm.globalSlaSimpleValue = 12;
+            wrapper.vm.globalSlaSimpleUnit = 'Minutos';
+            wrapper.vm.onGlobalSimpleSlaChange();
+            await wrapper.vm.$nextTick();
+
+            expect(wrapper.vm.globalSlaRaw).toBe('PT12M');
+            expect(wrapper.vm.globalSla).toBe(0.2); // 12 minutes is 0.2 hours
+
+            // 3. Switch to advanced mode
+            wrapper.vm.isSlaAdvancedMode = true;
+            await wrapper.vm.$nextTick();
+
+            // Advanced Mode SLA Timeout
+            wrapper.vm.selectedElement.props.sla = '${myExpression}';
+            wrapper.vm.updateElementSla();
+            expect(wrapper.vm.selectedElement.props.sla).toBe('${myExpression}');
+
+            // Advanced Mode SLA Global
+            wrapper.vm.globalSlaRaw = '${processExpression}';
+            wrapper.vm.updateGlobalSlaRaw();
+            expect(wrapper.vm.globalSlaRaw).toBe('${processExpression}');
+            expect(wrapper.vm.globalSla).toBe(72); // Falls back to 72 for invalid duration string
+
+            wrapper.unmount();
+        });
+    });
+
+    // @Traceability: US-005, CA-41 - ADR-001
+    describe('US-005: Sandbox Simulation Observability (CA-41, ADR-014)', () => {
+        it('Debe llamar a spawnSandbox con el XML correcto al ejecutar runSandbox y mostrar toast de éxito', async () => {
+            // @Traceability: US-005, CA-41 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const spawnSpy = vi.fn().mockResolvedValue({ data: { status: 'SIMULATION_DESTROYED', mockSpawnedId: '123' } });
+            store.spawnSandbox = spawnSpy;
+
+            // Invocamos el método expuesto
+            await wrapper.vm.runSandbox();
+            await flushPromises();
+
+            expect(spawnSpy).toHaveBeenCalledWith({ xml: '<xml/>' });
+            expect(wrapper.vm.toast.type).toBe('success');
+            expect(wrapper.vm.toast.msg).toContain('✅ Sandbox (CA-41): Ejecución simulada sin errores.');
+
+            wrapper.unmount();
+        });
+
+        it('Debe mostrar toast de error semántico detallado cuando spawnSandbox falla con HTTP 500', async () => {
+            // @Traceability: US-005, CA-41 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const spawnSpy = vi.fn().mockRejectedValue({
+                response: {
+                    status: 500,
+                    data: { detail: 'Error interno del motor de simulación (Trace: TRX-100)' }
+                }
+            });
+            store.spawnSandbox = spawnSpy;
+
+            await wrapper.vm.runSandbox();
+            await flushPromises();
+
+            expect(wrapper.vm.toast.type).toBe('error');
+            expect(wrapper.vm.toast.msg).toBe('Error interno del motor de simulación (Trace: TRX-100)');
+
+            wrapper.unmount();
+        });
+
+        it('Debe mostrar toast de error semántico cuando spawnSandbox falla por Rate Limit (HTTP 429)', async () => {
+            // @Traceability: US-005, CA-41 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const spawnSpy = vi.fn().mockRejectedValue({
+                response: {
+                    status: 429,
+                    data: { error: 'Rate limit de Sandbox superado (10 req/min).' }
+                }
+            });
+            store.spawnSandbox = spawnSpy;
+
+            await wrapper.vm.runSandbox();
+            await flushPromises();
+
+            expect(wrapper.vm.toast.type).toBe('error');
+            expect(wrapper.vm.toast.msg).toBe('Rate limit de Sandbox superado (10 req/min).');
+
+            wrapper.unmount();
+        });
+
+        it('Debe mostrar toast de error semántico cuando spawnSandbox falla por Payload Too Large (HTTP 413)', async () => {
+            // @Traceability: US-005, CA-41 - ADR-001
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const spawnSpy = vi.fn().mockRejectedValue({
+                response: {
+                    status: 413,
+                    data: { message: 'El archivo excede el límite de Sandbox (2MB).' }
+                }
+            });
+            store.spawnSandbox = spawnSpy;
+
+            await wrapper.vm.runSandbox();
+            await flushPromises();
+
+            expect(wrapper.vm.toast.type).toBe('error');
+            expect(wrapper.vm.toast.msg).toBe('El archivo excede el límite de Sandbox (2MB).');
+
+            wrapper.unmount();
         });
     });
 });

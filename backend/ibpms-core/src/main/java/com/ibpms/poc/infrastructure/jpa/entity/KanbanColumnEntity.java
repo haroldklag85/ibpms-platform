@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.entity;
 
 import jakarta.persistence.Column;
@@ -17,6 +18,7 @@ public class KanbanColumnEntity {
     private UUID id;
 
     @Column(name = "board_id", nullable = false)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     private UUID boardId;
 
     @Column(nullable = false)

@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/ibpms_e2e
+    url: jdbc:postgresql://localhost:5434/ibpms_e2e
     username: ibpms
     password: ibpms_e2e_pass
     hikari:

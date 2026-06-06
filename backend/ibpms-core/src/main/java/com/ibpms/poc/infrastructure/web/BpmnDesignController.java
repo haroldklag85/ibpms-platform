@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import org.springframework.http.ResponseEntity;
@@ -117,6 +118,12 @@ public class BpmnDesignController {
                     .body(Map.of("error", "El archivo BPMN no puede estar vacío."));
         }
         
+        // @Traceability: US-005, CA-65
+        if (file.getSize() > 5 * 1024 * 1024) { // 5MB
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                    .body(Map.of("error", "El archivo excede el tamaño máximo permitido de 5MB."));
+        }
+        
         String contentType = file.getContentType();
         if (contentType == null || (!contentType.equals("application/xml") && !contentType.equals("text/xml"))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST) // Use 400 or 415. The test expects 400 or 415. Let's use 400 since it's an invalid file.
@@ -170,6 +177,35 @@ public class BpmnDesignController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Fallo al procesar el archivo BPMN: " + e.getMessage()));
+        }
+    }
+
+    // @Traceability: US-005, CA-65 Contrato API /validate
+    @PostMapping(value = "/validate")
+    public ResponseEntity<?> validateBpmnProcess(
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "El archivo BPMN no puede estar vacío."));
+        }
+
+        if (file.getSize() > 5 * 1024 * 1024) { // 5MB
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                    .body(Map.of("error", "El archivo excede el tamaño máximo permitido de 5MB."));
+        }
+
+        String originalFilename = java.util.Objects.requireNonNullElse(file.getOriginalFilename(), "document");
+        if (!originalFilename.endsWith(".bpmn")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Debe adjuntar un archivo .bpmn válido."));
+        }
+
+        try {
+            DeploymentValidationResponse validation = preFlightAnalyzerService.analizar(file.getInputStream());
+            return ResponseEntity.ok(validation);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Fallo al validar el archivo BPMN: " + e.getMessage()));
         }
     }
 
@@ -409,7 +445,7 @@ public class BpmnDesignController {
     }
 
     // @Traceability: US-005, CA-70 (External Task Topics)
-    @GetMapping("/external-task-topics")
+    @GetMapping({"/external-task-topics", "/topics"})
     public ResponseEntity<?> getExternalTaskTopics() {
         return ResponseEntity.ok(externalTaskTopicPort.findByIsActiveTrue());
     }
@@ -497,14 +533,82 @@ public class BpmnDesignController {
 
     @SandboxOperation
     @PostMapping("/sandbox-spawn")
-    public ResponseEntity<?> sandboxSpawnInstance(@RequestParam("processDefinitionKey") String key) {
+    public ResponseEntity<?> sandboxSpawnInstance(@RequestBody Map<String, Object> payload) {
+        if (payload == null || !payload.containsKey("xml")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Falta el XML del proceso"));
+        }
+        String xml = (String) payload.get("xml");
+        if (xml == null || xml.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El XML del proceso está vacío"));
+        }
+        String key = extractProcessIdFromXml(xml);
+        if (key == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "No se encontró process id en el XML"));
+        }
+
+        // @Traceability: US-005, CA-82 - ADR-001 (Interactive simulation variables request)
+        @SuppressWarnings("unchecked")
+        Map<String, Object> variables = (Map<String, Object>) payload.get("variables");
+        if (variables == null) {
+            variables = new java.util.HashMap<>();
+        }
+
+        List<String> requiredVars = extractRequiredVariablesFromXml(xml);
+        for (String reqVar : requiredVars) {
+            if (!variables.containsKey(reqVar)) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                    "error", "MISSING_VARIABLE",
+                    "variableName", reqVar
+                ));
+            }
+        }
+
         String instanceId = UUID.randomUUID().toString();
+        List<String> activeNodes = extractNodeIdsFromXml(xml);
         
         return ResponseEntity.ok(Map.of(
             "message", "Test Sandbox de Camunda superado. El XML parsea exitosamente un token y lo destruye sin afectar datos en vivo.",
             "mockSpawnedId", instanceId,
-            "status", "SIMULATION_DESTROYED"
+            "status", "SIMULATION_DESTROYED",
+            "activeNodes", activeNodes
         ));
+    }
+
+    private List<String> extractRequiredVariablesFromXml(String xml) {
+        List<String> variables = new java.util.ArrayList<>();
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\$\\{([^}]+)\\}");
+        java.util.regex.Matcher matcher = pattern.matcher(xml);
+        while (matcher.find()) {
+            String expression = matcher.group(1).trim();
+            String[] tokens = expression.split("[^a-zA-Z0-9_]+");
+            for (String token : tokens) {
+                if (token.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+                    if (!token.equals("true") && !token.equals("false") && !token.equals("null") && 
+                        !token.equals("and") && !token.equals("or") && !token.equals("not")) {
+                        if (!variables.contains(token)) {
+                            variables.add(token);
+                        }
+                    }
+                }
+            }
+        }
+        return variables;
+    }
+
+    private List<String> extractNodeIdsFromXml(String xml) {
+        List<String> nodeIds = new java.util.ArrayList<>();
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("id=\"([^\"]+)\"");
+        java.util.regex.Matcher matcher = pattern.matcher(xml);
+        while (matcher.find()) {
+            String id = matcher.group(1);
+            if (!id.startsWith("Definitions") && !id.startsWith("Process") && 
+                !id.startsWith("BPMN") && !id.startsWith("Collaboration")) {
+                if (!nodeIds.contains(id)) {
+                    nodeIds.add(id);
+                }
+            }
+        }
+        return nodeIds;
     }
 
     // @Traceability: US-005, CA-42 (Observabilidad y Auditoría de Procesos)

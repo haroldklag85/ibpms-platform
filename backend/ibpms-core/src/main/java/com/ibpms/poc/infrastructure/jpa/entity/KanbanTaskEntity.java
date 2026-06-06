@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.entity;
 
 import jakarta.persistence.CascadeType;
@@ -6,7 +7,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -33,7 +33,6 @@ public class KanbanTaskEntity {
     @Column(name = "title", nullable = false, length = 255)
     private String title;
 
-    @Lob
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
@@ -55,7 +54,6 @@ public class KanbanTaskEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Lob
     @Column(name = "blocked_reason", columnDefinition = "TEXT")
     private String blockedReason;
 

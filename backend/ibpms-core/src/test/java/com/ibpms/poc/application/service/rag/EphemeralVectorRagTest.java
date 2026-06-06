@@ -1,4 +1,4 @@
-// @Traceability: US-007 - ADR-001
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.application.service.rag;
 
 import com.ibpms.poc.AbstractIntegrationTest;
@@ -6,7 +6,6 @@ import com.ibpms.poc.AbstractIntegrationTest;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,7 +13,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 public class EphemeralVectorRagTest extends AbstractIntegrationTest {
 
     // Simulando la tabla LangChain/PGVector

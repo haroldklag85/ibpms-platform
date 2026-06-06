@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-05
+// @Traceability: US-005, CA-41 - ADR-001
 <template>
   <div class="h-full w-full bg-gray-50 dark:bg-gray-900 flex flex-col" v-cloak>
 
@@ -49,7 +49,7 @@
           </span>
         </button>
         <!-- Sandbox CA-41 -->
-        <button @click="runSandbox" class="bg-amber-500 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-amber-600 flex items-center gap-1 transition">
+        <button data-testid="btn-test-sandbox" @click="runSandbox" class="bg-amber-500 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-amber-600 flex items-center gap-1 transition">
           🧪 Probar en Sandbox
         </button>
         <!-- Audit Logs (CA-42) -->
@@ -210,13 +210,39 @@
                </div>
             </div>
 
+            <!-- Warning Banner @Traceability: US-005, CA-35 -->
+            <div v-if="isCriticalPathExceeded" class="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800 space-y-2 mb-3">
+              <p class="font-bold">
+                ⚠️ Inconsistencia de SLA: La ruta crítica de las tareas requiere al menos {{ criticalPathDuration }} horas, lo cual supera el SLA Global del proceso ({{ globalSla }} horas).
+              </p>
+              <button @click="autoAdjustGlobalSla" class="text-xs font-bold underline text-red-950 hover:text-red-900">
+                [ Ajustar SLA Global a {{ criticalPathDuration }}h ]
+              </button>
+            </div>
+            
+            <!-- Mode Toggle @Traceability: US-005, CA-35 -->
+            <div class="flex items-center justify-between p-1 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 mb-3">
+              <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Modo SLA Avanzado (Expresiones)</span>
+              <input type="checkbox" v-model="isSlaAdvancedMode" class="h-4 w-4 text-indigo-600 rounded" />
+            </div>
+
             <!-- SLA Global -->
+            <!-- @Traceability: US-005, CA-35 -->
             <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded">
               <label class="block text-xs font-bold text-blue-800 dark:text-blue-300 mb-1 flex items-center justify-between">
-                ⏱ SLA Global (Horas)
+                ⏱ SLA Global
                 <AppTooltip :content="bpmnTooltips.GLOBAL_SLA" />
               </label>
-              <input type="number" v-model.number="globalSla" @change="updateGlobalSla" min="1" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border" placeholder="72" />
+              <div v-if="!isSlaAdvancedMode" class="flex gap-2">
+                <input type="number" v-model.number="globalSlaSimpleValue" @change="onGlobalSimpleSlaChange" min="1" class="w-2/3 text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500" />
+                <select v-model="globalSlaSimpleUnit" @change="onGlobalSimpleSlaChange" class="w-1/3 text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 bg-white">
+                  <option value="Minutos">Minutos</option>
+                  <option value="Horas">Horas</option>
+                  <option value="Días">Días</option>
+                  <option value="Semanas">Semanas</option>
+                </select>
+              </div>
+              <input v-else type="text" v-model="globalSlaRaw" @change="updateGlobalSlaRaw" class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border font-mono" placeholder="Ej: P3D" />
             </div>
 
             <!-- History TTL (Camunda 7 Core) -->
@@ -247,10 +273,14 @@
 
             <!-- Glosario de Variables de Negocio (CA-5) -->
             <div class="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 rounded space-y-[12px]">
+              <!-- @Traceability: US-005, CA-05 -->
               <div class="flex items-center justify-between cursor-pointer" @click="isGlossaryCollapsed = !isGlossaryCollapsed">
-                <span class="block text-xs font-bold text-purple-800 dark:text-purple-300">
-                  📚 Glosario de Variables de Negocio
-                </span>
+                <div class="flex items-center space-x-1.5">
+                  <span class="block text-xs font-bold text-purple-800 dark:text-purple-300">
+                    📚 Glosario de Variables de Negocio
+                  </span>
+                  <AppTooltip :content="bpmnTooltips.GLOSSARY_VARIABLES" />
+                </div>
                 <span class="text-xs text-purple-600 dark:text-purple-400">
                   {{ isGlossaryCollapsed ? '▶' : '▼' }}
                 </span>
@@ -342,12 +372,22 @@
             </div>
 
             <!-- SLA Timeout -->
+            <!-- @Traceability: US-005, CA-35 -->
             <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
               <label class="block text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
                 <span class="flex items-center gap-1">⏱️ SLA Timeout</span>
                 <AppTooltip :content="bpmnTooltips.SLA_TIMEOUT" :isError="isSlaSyntaxError" />
               </label>
-              <input type="text" v-model="selectedElement.props.sla" @change="updateElementSla" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 font-mono" :class="{'border-red-500 bg-red-50 text-red-700': isSlaSyntaxError}" placeholder="Ej: P2D (2 Días)" />
+              <div v-if="!isSlaAdvancedMode" class="flex gap-2">
+                <input type="number" v-model.number="slaSimpleValue" @change="onSimpleSlaChange" min="0" class="w-2/3 text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500" />
+                <select v-model="slaSimpleUnit" @change="onSimpleSlaChange" class="w-1/3 text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 bg-white">
+                  <option value="Minutos">Minutos</option>
+                  <option value="Horas">Horas</option>
+                  <option value="Días">Días</option>
+                  <option value="Semanas">Semanas</option>
+                </select>
+              </div>
+              <input v-else type="text" v-model="selectedElement.props.sla" @change="updateElementSla" class="w-full text-xs border-gray-300 rounded shadow-sm focus:ring-indigo-500 font-mono" :class="{'border-red-500 bg-red-50 text-red-700': isSlaSyntaxError}" placeholder="Ej: P2D (2 Días)" />
             </div>
 
             <!-- SharePoint Integration Checkbox (CA-2) -->
@@ -915,6 +955,8 @@
             <h3 class="text-xl font-bold">✨ Bienvenido al Diseñador iBPMS</h3>
             <p class="text-xs text-blue-100 mt-1">Selecciona un proceso existente o crea uno nuevo para comenzar.</p>
           </div>
+          <!-- @Traceability: US-005, CA-40 -->
+          <button @click="cancelAndGoToPortal" data-testid="welcome-close-header" class="text-white/80 hover:text-white text-2xl font-bold transition focus:outline-none" title="Salir al Portal">&times;</button>
         </div>
         
         <!-- Content -->
@@ -970,8 +1012,12 @@
               </div>
             </div>
             
-            <div class="pt-6 border-t border-gray-100 dark:border-gray-700 mt-6 flex justify-end">
-              <button @click="completeProcessCreationInWelcome" :disabled="!newProcessName.trim()" class="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-md transition">
+            <!-- @Traceability: US-005, CA-40 -->
+            <div class="pt-6 border-t border-gray-100 dark:border-gray-700 mt-6 flex gap-3 justify-end w-full">
+              <button @click="cancelAndGoToPortal" data-testid="welcome-cancel-footer" class="w-1/2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-bold py-2.5 px-4 rounded-lg border border-gray-200 dark:border-gray-600 transition">
+                Cancelar
+              </button>
+              <button @click="completeProcessCreationInWelcome" :disabled="!newProcessName.trim()" class="w-1/2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-md transition">
                 Crear y Diseñar Proceso
               </button>
             </div>
@@ -989,7 +1035,7 @@ import { useTimeStore } from '@/stores/timeStore';
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent, nextTick } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { debounce } from 'lodash-es';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 import InstancesManager from './InstancesManager.vue';
@@ -1004,6 +1050,13 @@ const authStore = useAuthStore();
 const integrationStore = useIntegrationStore(); // @Traceability: US-005, CA-40
 const timeStore = useTimeStore(); // Prevent runtime TypeError on undefined timeStore
 const route = useRoute();
+const router = useRouter(); // @Traceability: US-005, CA-40
+
+// @Traceability: US-005, CA-40
+const cancelAndGoToPortal = () => {
+  router.push('/');
+};
+
 const activeRole = computed(() => authStore.roles?.[0] || 'BPMN_Designer'); // Reemplaza mockRole CA-21, CA-66
 
 // ── Types ────────────────────────────────────────────────────
@@ -1033,7 +1086,14 @@ const bpmnTooltips = {
                       '2. Abre una llave <code>{</code> para ver variables disponibles (de sesión, formularios y webhooks).<br>' +
                       '3. Ejemplo: <code>FAC-{form.monto}-{system.date}</code> se resolverá dinámicamente como <b>FAC-5000-2026-06-02</b>.',
   CONNECTOR: 'Integra este nodo con sistemas externos mapeando variables del proceso actual.',
-  ESCALATION: 'Define reglas semánticas de rebote o escalamiento a roles superiores.'
+  ESCALATION: 'Define reglas semánticas de rebote o escalamiento a roles superiores.',
+  // @Traceability: US-005, CA-05
+  GLOSSARY_VARIABLES: '🗂️ <b>¿Qué es esto?</b> Es un catálogo local donde puedes declarar manualmente variables personalizadas para el proceso (ej: <code>prioridad</code>).<br><br>' +
+                      '<b>¿Cuándo usarlo?</b><br>Úsalo para registrar variables antes de diseñar los formularios de las tareas o integraciones. Así podrás utilizarlas en la Regla de Nomenclatura sin generar alertas.<br><br>' +
+                      '<b>¿Cómo funciona?</b><br>' +
+                      '1. Escribe el <b>Nombre</b> (sin espacios ni caracteres especiales).<br>' +
+                      '2. Elige el <b>Tipo</b> (Texto, Número o Booleano).<br>' +
+                      '3. Clic en <b>+ Declarar Variable</b> y estará disponible en el menú de autocompletado <code>{</code>.'
 };
 
 // ── Selection State ──────────────────────────────────────────
@@ -1056,7 +1116,234 @@ const processId = ref('credito-consumo-v1');
 const processStatus = ref<'BORRADOR' | 'ACTIVO' | 'ARCHIVADO' | 'PENDING'>('BORRADOR');
 const processPattern = ref<'SIMPLE' | 'IFORM_MAESTRO'>('SIMPLE');
 const processNomenclature = ref(''); // CA-5
-const globalSla = ref(72);
+// @Traceability: US-005, CA-35
+const globalSlaRaw = ref('');
+const globalSlaSimpleValue = ref(72);
+const globalSlaSimpleUnit = ref('Horas');
+const globalSla = computed({
+  get() {
+    return parseDurationToHours(globalSlaRaw.value) || 72;
+  },
+  set(val: number) {
+    globalSlaRaw.value = `PT${val}H`;
+    updateGlobalSlaRaw();
+  }
+});
+// @Traceability: US-005, CA-35
+const isSlaAdvancedMode = ref(false);
+const slaSimpleValue = ref(0);
+const slaSimpleUnit = ref('Horas');
+const criticalPathDuration = ref(0);
+
+const parseIso8601Duration = (durationStr: string) => {
+  // @Traceability: US-005, CA-35
+  if (!durationStr) {
+    return { value: 0, unit: 'Horas', isSimple: true };
+  }
+  const matchMinutes = durationStr.match(/^PT(\d+)M$/);
+  if (matchMinutes) {
+    return { value: parseInt(matchMinutes[1]), unit: 'Minutos', isSimple: true };
+  }
+  const matchHours = durationStr.match(/^PT(\d+)H$/);
+  if (matchHours) {
+    return { value: parseInt(matchHours[1]), unit: 'Horas', isSimple: true };
+  }
+  const matchDays = durationStr.match(/^P(\d+)D$/);
+  if (matchDays) {
+    return { value: parseInt(matchDays[1]), unit: 'Días', isSimple: true };
+  }
+  const matchWeeks = durationStr.match(/^P(\d+)W$/);
+  if (matchWeeks) {
+    return { value: parseInt(matchWeeks[1]), unit: 'Semanas', isSimple: true };
+  }
+  return { value: 0, unit: 'Horas', isSimple: false };
+};
+
+const formatIso8601Duration = (value: number, unit: string) => {
+  // @Traceability: US-005, CA-35
+  if (unit === 'Minutos') return `PT${value}M`;
+  if (unit === 'Horas') return `PT${value}H`;
+  if (unit === 'Días') return `P${value}D`;
+  if (unit === 'Semanas') return `P${value}W`;
+  return '';
+};
+
+const parseDurationToHours = (duration: string): number => {
+  // @Traceability: US-005, CA-35
+  const parsed = parseIso8601Duration(duration);
+  if (!parsed.isSimple) return 0;
+  if (parsed.unit === 'Minutos') return parsed.value / 60;
+  if (parsed.unit === 'Horas') return parsed.value;
+  if (parsed.unit === 'Días') return parsed.value * 24;
+  if (parsed.unit === 'Semanas') return parsed.value * 24 * 7;
+  return 0;
+};
+
+// @Traceability: US-005, CA-35
+// @Traceability: US-005, CA-35
+watch(() => selectedElement.value?.props?.sla, (newVal) => {
+  if (!selectedElement.value?.id) return;
+  const parsed = parseIso8601Duration(newVal || '');
+  if (parsed.isSimple) {
+    slaSimpleValue.value = parsed.value;
+    slaSimpleUnit.value = parsed.unit;
+    isSlaAdvancedMode.value = false;
+  } else {
+    isSlaAdvancedMode.value = true;
+  }
+}, { immediate: true });
+
+// @Traceability: US-005, CA-35
+watch(globalSlaRaw, (newVal) => {
+  const parsed = parseIso8601Duration(newVal || '');
+  if (parsed.isSimple) {
+    globalSlaSimpleValue.value = parsed.value;
+    globalSlaSimpleUnit.value = parsed.unit;
+    if (!selectedElement.value?.id) {
+      isSlaAdvancedMode.value = false;
+    }
+  } else {
+    if (!selectedElement.value?.id) {
+      isSlaAdvancedMode.value = true;
+    }
+  }
+}, { immediate: true });
+
+// @Traceability: US-005, CA-35
+watch(() => selectedElement.value?.id, (newId) => {
+  if (newId) {
+    const parsed = parseIso8601Duration(selectedElement.value?.props?.sla || '');
+    if (parsed.isSimple) {
+      slaSimpleValue.value = parsed.value;
+      slaSimpleUnit.value = parsed.unit;
+      isSlaAdvancedMode.value = false;
+    } else {
+      isSlaAdvancedMode.value = true;
+    }
+  } else {
+    const parsed = parseIso8601Duration(globalSlaRaw.value || '');
+    if (parsed.isSimple) {
+      globalSlaSimpleValue.value = parsed.value;
+      globalSlaSimpleUnit.value = parsed.unit;
+      isSlaAdvancedMode.value = false;
+    } else {
+      isSlaAdvancedMode.value = true;
+    }
+  }
+});
+
+const onSimpleSlaChange = () => {
+  // @Traceability: US-005, CA-35
+  const formatted = formatIso8601Duration(slaSimpleValue.value, slaSimpleUnit.value);
+  if (selectedElement.value && selectedElement.value.props) {
+    selectedElement.value.props.sla = formatted;
+    updateElementSla();
+  }
+};
+
+const onGlobalSimpleSlaChange = () => {
+  // @Traceability: US-005, CA-35
+  const formatted = formatIso8601Duration(globalSlaSimpleValue.value, globalSlaSimpleUnit.value);
+  globalSlaRaw.value = formatted;
+  updateGlobalSlaRaw();
+};
+
+const updateGlobalSlaRaw = () => {
+  // @Traceability: US-005, CA-35
+  if (!modelerInstance) return;
+  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
+  if (!canvas) return;
+  const modeling = modelerInstance.get('modeling');
+  const rootElement = canvas.getRootElement();
+  if (rootElement && rootElement.businessObject) {
+    modeling.updateProperties(rootElement, { "camunda:dueDate": globalSlaRaw.value });
+  }
+};
+
+const updateCriticalPathDuration = () => {
+  // @Traceability: US-005, CA-35
+  if (!modelerInstance) {
+    criticalPathDuration.value = 0;
+    return;
+  }
+  try {
+    const elementRegistry = modelerInstance.get('elementRegistry');
+    if (!elementRegistry || typeof elementRegistry.getAll !== 'function') {
+      criticalPathDuration.value = 0;
+      return;
+    }
+    const elements = elementRegistry.getAll();
+    const startEvents = elements.filter((el: any) => el.type === 'bpmn:StartEvent');
+
+    const visited = new Set<string>();
+    const cache = new Map<string, number>();
+
+    const getLongestPathFromNode = (node: any): number => {
+      if (!node) return 0;
+      if (visited.has(node.id)) {
+        return 0;
+      }
+      if (cache.has(node.id)) {
+        return cache.get(node.id)!;
+      }
+      visited.add(node.id);
+
+      let durationHours = 0;
+      if (node.businessObject) {
+        let durationStr = '';
+        if (typeof node.businessObject.get === 'function') {
+          durationStr = node.businessObject.get('camunda:dueDate') || '';
+        } else {
+          durationStr = node.businessObject['camunda:dueDate'] || '';
+        }
+        if (durationStr) {
+          durationHours = parseDurationToHours(durationStr);
+        }
+      }
+
+      let maxOutgoingPath = 0;
+      if (node.outgoing && node.outgoing.length > 0) {
+        for (const flow of node.outgoing) {
+          if (flow && flow.target) {
+            const pathLength = getLongestPathFromNode(flow.target);
+            if (pathLength > maxOutgoingPath) {
+              maxOutgoingPath = pathLength;
+            }
+          }
+        }
+      }
+
+      visited.delete(node.id);
+      const total = durationHours + maxOutgoingPath;
+      cache.set(node.id, total);
+      return total;
+    };
+
+    let maxDuration = 0;
+    for (const startNode of startEvents) {
+      const duration = getLongestPathFromNode(startNode);
+      if (duration > maxDuration) {
+        maxDuration = duration;
+      }
+    }
+    criticalPathDuration.value = maxDuration;
+  } catch (err) {
+    console.error('Error calculating critical path duration:', err);
+    criticalPathDuration.value = 0;
+  }
+};
+
+const isCriticalPathExceeded = computed(() => {
+  // @Traceability: US-005, CA-35
+  return criticalPathDuration.value > globalSla.value;
+});
+
+const autoAdjustGlobalSla = () => {
+  // @Traceability: US-005, CA-35
+  globalSla.value = criticalPathDuration.value;
+  updateGlobalSla();
+};
+
 const processHistoryTTL = ref<number | null>(180);
 const processVersionTag = ref('');
 const processIsExecutable = ref(true);
@@ -2089,6 +2376,7 @@ onMounted(async () => {
       runClientLinter(); // @Traceability: US-005, CA-77
       debouncedValidate(); // CA-3 Pre-Flight reactivo a cambios
       scanAndFetchFormFields();
+      updateCriticalPathDuration(); // @Traceability: US-005, CA-35
     });
 
     // CA-3: Executable Pre-Flight Tin Hook
@@ -2116,9 +2404,11 @@ onMounted(async () => {
                const bo = rootElement.businessObject;
                
                // Rehydrate SLA (camunda:dueDate)
-               const globalSlaAttr = bo.get('camunda:dueDate');
+                // @Traceability: US-005, CA-35
+                const globalSlaAttr = bo.get('camunda:dueDate') || '';
+                globalSlaRaw.value = globalSlaAttr;
                if (globalSlaAttr) {
-                   const match = globalSlaAttr.match(/^P(\d+)H$/);
+                    const match = globalSlaAttr.match(/^P(\d+)H$/) || globalSlaAttr.match(/^PT(\d+)H$/);
                    globalSla.value = match ? parseInt(match[1]) : 72;
                } else {
                    globalSla.value = 72;
@@ -2169,8 +2459,9 @@ onMounted(async () => {
             }
 
            scanAndFetchFormFields();
-       }
-    });
+           updateCriticalPathDuration(); // @Traceability: US-005, CA-35
+        }
+     });
 
     // CA-09: Tracker Forense de Descartes ISO Override
     let isoIgnoreCount = 0;
@@ -2537,7 +2828,7 @@ const requestDeploy = async () => {
   }
 };
 
-// @Traceability: US-005, CA-20, CA-41, CA-63
+// @Traceability: US-005, CA-41 - ADR-001
 const runSandbox = async () => {
   try {
     showToast('🧪 Sandbox: Iniciando simulación en Motor V1...');
@@ -2547,8 +2838,15 @@ const runSandbox = async () => {
     await integrationStore.spawnSandbox({ xml });
     
     showToast(`✅ Sandbox (CA-41): Ejecución simulada sin errores.`, 'success');
-  } catch (err) {
-    showToast('🧪 Error conectando al motor de Simulación Sandbox', 'error');
+  } catch (err: any) {
+    // ADR-014: Diferenciación Semántica de Errores y visualización del mensaje real
+    let errorMsg = '🧪 Error conectando al motor de Simulación Sandbox';
+    if (err && err.response && err.response.data) {
+      errorMsg = err.response.data.detail || err.response.data.error || err.response.data.message || errorMsg;
+    } else if (err && err.message) {
+      errorMsg = err.message;
+    }
+    showToast(errorMsg, 'error');
   }
 };
 
@@ -2767,14 +3065,14 @@ const zoomFit = () => {
 
 // ── Native Attribute Modifiers (CA-26, CA-27) ──────────────────
 const updateGlobalSla = () => {
+  // @Traceability: US-005, CA-35
   if (!modelerInstance) return;
-  // @Traceability: US-005, CA-40
   const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
   if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
   const rootElement = canvas.getRootElement();
   if (rootElement && rootElement.businessObject) {
-    modeling.updateProperties(rootElement, { "camunda:dueDate": `P${globalSla.value}H` }); // Estandarizado a formato ISO 8601 Horas
+    modeling.updateProperties(rootElement, { "camunda:dueDate": globalSlaRaw.value });
   }
 };
 
@@ -2803,7 +3101,11 @@ const updateElementSla = () => {
       } else {
         slaProp.value = selectedElement.value.props.sla;
       }
-      modeling.updateProperties(element, { extensionElements });
+      // @Traceability: US-005, CA-35
+      modeling.updateProperties(element, { 
+        extensionElements,
+        'camunda:dueDate': selectedElement.value.props.sla 
+      });
     } catch (e) {
       modelerInstance.get('modeling').updateProperties(element, { 'camunda:dueDate': selectedElement.value.props.sla });
     }
@@ -2939,7 +3241,26 @@ defineExpose({
   processHistoryTTL,
   processVersionTag,
   updateIsExecutable,
-  processIsExecutable
+  processIsExecutable,
+  // @Traceability: US-005, CA-35
+  isSlaAdvancedMode,
+  globalSla,
+  criticalPathDuration,
+  isCriticalPathExceeded,
+  parseIso8601Duration,
+  formatIso8601Duration,
+  updateCriticalPathDuration,
+  autoAdjustGlobalSla,
+  globalSlaSimpleValue,
+  globalSlaSimpleUnit,
+  globalSlaRaw,
+  slaSimpleValue,
+  slaSimpleUnit,
+  onGlobalSimpleSlaChange,
+  onSimpleSlaChange,
+  updateElementSla,
+  updateGlobalSlaRaw,
+  runSandbox
 });
 </script>
 

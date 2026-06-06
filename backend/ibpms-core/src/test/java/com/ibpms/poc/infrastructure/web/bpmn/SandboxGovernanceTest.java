@@ -114,4 +114,56 @@ public class SandboxGovernanceTest extends AbstractIntegrationTest {
         .then()
             .statusCode(409); // Conflict (IllegalStateException mapped in GlobalExceptionHandler)
     }
+
+    @Test
+    @DisplayName("CA-82: testSandboxSpawnEndpointMissingVariableReturns422")
+    void testSandboxSpawnEndpointMissingVariableReturns422() {
+        String testXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Def_1\">\n" +
+                "  <bpmn:process id=\"process-test-var\" isExecutable=\"true\">\n" +
+                "    <bpmn:sequenceFlow id=\"flow1\" sourceRef=\"start\" targetRef=\"task\">\n" +
+                "      <bpmn:conditionExpression>${monto > 50000}</bpmn:conditionExpression>\n" +
+                "    </bpmn:sequenceFlow>\n" +
+                "  </bpmn:process>\n" +
+                "</bpmn:definitions>";
+
+        given()
+            .header("X-Mock-User", "user1")
+            .header("X-Sandbox-Mode", "true")
+            .contentType(ContentType.JSON)
+            .body(Map.of("xml", testXml))
+        .when()
+            .post("/sandbox-spawn")
+        .then()
+            .statusCode(422)
+            .body("error", equalTo("MISSING_VARIABLE"))
+            .body("variableName", equalTo("monto"));
+    }
+
+    @Test
+    @DisplayName("CA-82: testSandboxSpawnEndpointWithVariablesSuccess")
+    void testSandboxSpawnEndpointWithVariablesSuccess() {
+        String testXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Def_1\">\n" +
+                "  <bpmn:process id=\"process-test-var\" isExecutable=\"true\">\n" +
+                "    <bpmn:sequenceFlow id=\"flow1\" sourceRef=\"start\" targetRef=\"task\">\n" +
+                "      <bpmn:conditionExpression>${monto > 50000}</bpmn:conditionExpression>\n" +
+                "    </bpmn:sequenceFlow>\n" +
+                "  </bpmn:process>\n" +
+                "</bpmn:definitions>";
+
+        given()
+            .header("X-Mock-User", "user1")
+            .header("X-Sandbox-Mode", "true")
+            .contentType(ContentType.JSON)
+            .body(Map.of(
+                "xml", testXml,
+                "variables", Map.of("monto", 60000)
+            ))
+        .when()
+            .post("/sandbox-spawn")
+        .then()
+            .statusCode(200)
+            .body("status", equalTo("SIMULATION_DESTROYED"));
+    }
 }

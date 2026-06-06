@@ -546,13 +546,69 @@ public class BpmnDesignController {
             return ResponseEntity.badRequest().body(Map.of("error", "No se encontró process id en el XML"));
         }
 
+        // @Traceability: US-005, CA-82 - ADR-001 (Interactive simulation variables request)
+        @SuppressWarnings("unchecked")
+        Map<String, Object> variables = (Map<String, Object>) payload.get("variables");
+        if (variables == null) {
+            variables = new java.util.HashMap<>();
+        }
+
+        List<String> requiredVars = extractRequiredVariablesFromXml(xml);
+        for (String reqVar : requiredVars) {
+            if (!variables.containsKey(reqVar)) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                    "error", "MISSING_VARIABLE",
+                    "variableName", reqVar
+                ));
+            }
+        }
+
         String instanceId = UUID.randomUUID().toString();
+        List<String> activeNodes = extractNodeIdsFromXml(xml);
         
         return ResponseEntity.ok(Map.of(
             "message", "Test Sandbox de Camunda superado. El XML parsea exitosamente un token y lo destruye sin afectar datos en vivo.",
             "mockSpawnedId", instanceId,
-            "status", "SIMULATION_DESTROYED"
+            "status", "SIMULATION_DESTROYED",
+            "activeNodes", activeNodes
         ));
+    }
+
+    private List<String> extractRequiredVariablesFromXml(String xml) {
+        List<String> variables = new java.util.ArrayList<>();
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\$\\{([^}]+)\\}");
+        java.util.regex.Matcher matcher = pattern.matcher(xml);
+        while (matcher.find()) {
+            String expression = matcher.group(1).trim();
+            String[] tokens = expression.split("[^a-zA-Z0-9_]+");
+            for (String token : tokens) {
+                if (token.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+                    if (!token.equals("true") && !token.equals("false") && !token.equals("null") && 
+                        !token.equals("and") && !token.equals("or") && !token.equals("not")) {
+                        if (!variables.contains(token)) {
+                            variables.add(token);
+                        }
+                    }
+                }
+            }
+        }
+        return variables;
+    }
+
+    private List<String> extractNodeIdsFromXml(String xml) {
+        List<String> nodeIds = new java.util.ArrayList<>();
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("id=\"([^\"]+)\"");
+        java.util.regex.Matcher matcher = pattern.matcher(xml);
+        while (matcher.find()) {
+            String id = matcher.group(1);
+            if (!id.startsWith("Definitions") && !id.startsWith("Process") && 
+                !id.startsWith("BPMN") && !id.startsWith("Collaboration")) {
+                if (!nodeIds.contains(id)) {
+                    nodeIds.add(id);
+                }
+            }
+        }
+        return nodeIds;
     }
 
     // @Traceability: US-005, CA-42 (Observabilidad y Auditoría de Procesos)

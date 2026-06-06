@@ -71,3 +71,29 @@ Modificar la definición de las rutas en `src/router/index.ts` para asignar las 
 - [ ] Ejecutar `npx vitest run src/tests/regression_hallazgo2.spec.ts` y comprobar que pase exitosamente (verde).
 - [ ] Ejecutar `npm run build` en el frontend y comprobar que compile sin errores.
 - [ ] Garantizar que no se hayan modificado aserciones de pruebas históricas (Ley Global 4).
+
+## 2026-06-01T22:19:49Z
+
+El objetivo es realizar el análisis de causa raíz y la remediación del bug que provoca que el lienzo central de la aplicación iBPMS quede completamente en blanco al navegar entre pantallas en el frontend.
+
+Working directory: c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend
+Integrity mode: development
+
+## Requirements
+
+### R1. Análisis de Causa Raíz (RCA) del Lienzo en Blanco
+Analizar el ciclo de vida y la reactividad en el layout principal `src/layouts/MainLayout.vue` durante la navegación y el cambio de roles. Identificar si el `:key` dinámico asignado al componente renderizado dentro de `<router-view>` y `<keep-alive>` provoca errores de tipo `TypeError` (por ejemplo, si `route` o `route.fullPath` son indefinidos al montarse el componente o en los tests) que abortan la renderización del lienzo.
+
+### R2. Remediación y Blindaje de Renderizado
+Modificar `src/layouts/MainLayout.vue` para:
+- Usar de forma segura el objeto `route` inyectado localmente desde el slot scope de `<router-view>` (es decir, `v-slot="{ Component, route }"`).
+- Implementar un enlace de `:key` robusto y defensivo que utilice encadenamiento opcional (`route?.fullPath`) y fallbacks en caso de valores nulos o indefinidos para evitar fallos de renderizado en caliente, por ejemplo:
+  `route?.fullPath ? route.fullPath + '-' + authStore.activeRole : ''` o similar.
+
+## Acceptance Criteria
+
+### Compilación y Suite de Pruebas en Verde
+- [ ] Ejecutar la suite completa de pruebas unitarias/regresión del frontend (`npx vitest run`) y comprobar que el 100% de los tests pasen exitosamente (verde).
+- [ ] Ejecutar `npm run build` en el frontend y corroborar compilación exitosa sin advertencias ni errores.
+- [ ] Garantizar que no se hayan modificado aserciones de pruebas históricas (Ley Global 4).
+

@@ -144,3 +144,76 @@ Modificar la definición del árbol de menús en `MenuLayoutController.java` par
 - [ ] Compilar y verificar que las pruebas del frontend pasen exitosamente (`npx vitest run`).
 - [ ] Garantizar que no se modifiquen aserciones de pruebas históricas (Ley Global 4).
 - [ ] Ejecutar `npm run build` en el frontend y corroborar compilación exitosa sin advertencias ni errores.
+
+## 2026-06-02T05:04:10Z
+
+Decouple the "Explorador de procesos" sidebar from the "Welcome Modal" initial load in the BPMN Modeler.
+
+Working directory: c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform
+Integrity mode: development
+
+## Requirements
+
+### R1. Remove showCatalog = true on mount
+Do not automatically open the "Explorador de procesos" sidebar drawer when mounting BpmnDesigner.vue if processId is not present in the URL query parameters. Only the WelcomeModal should act as the initial gatekeeper.
+
+### R2. Close showCatalog on process creation
+Ensure that when a new process is created or selected (such as when completing the wizard in WelcomeModal), the "Explorador de procesos" drawer is explicitly closed or remains closed.
+
+### R3. TDD and Verification
+- Ensure that the sidebar does not automatically slide open on initial page load if no process is loaded.
+- Verify that selecting a process or creating a new process from the Welcome Modal leaves the user on a clean canvas without the sidebar open.
+- Add or update unit tests in BpmnDesigner.spec.ts to reflect the new decoupled lifecycle behavior.
+- Ensure all tests pass and npm run build compiles with zero errors.
+
+## Acceptance Criteria
+
+### Decoupled Modeler Interface
+- [ ] On mounting BpmnDesigner without processId, the Welcome Modal is displayed and the Process Explorer sidebar remains closed.
+- [ ] Selecting a process from the Welcome Modal closes the Modal and loads the process with the sidebar closed.
+- [ ] Creating a new process from the Welcome Modal closes the Modal and initializes the template/canvas with the sidebar closed.
+- [ ] Clicking the "Explorador de procesos" top toolbar button successfully toggles the sidebar drawer open.
+
+## 2026-06-02T05:51:01Z
+
+Implement the Glosario de Datos Unificado (Propuesta 2) for the nomenclature rule input field in BpmnDesigner.vue to improve the UX/UI of CA-5 under US-005.
+
+Working directory: c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform
+Integrity mode: development
+
+## Requirements
+
+### R1. Glosario de Variables Section & State
+Add a new collapsible card section in the BpmnDesigner.vue properties panel (visible when process is selected, alongside Nomenclature Rule) titled "Glosario de Variables de Negocio".
+- Allow architects to declare variables manually (e.g. key: `nit_cliente`, type: `Text`), which are persisted to the BPMN process definition XML metadata (custom extension elements).
+- Dynamically merge into this list any variables coming from:
+  - Linked start forms/user task forms (Form Catalog fields loaded via `fetchForms()`).
+  - Webhooks/Connectors active in the process (extracted from topics and mapper variables).
+  - Session context pre-defines (`session.user_name`, `session.email`).
+
+### R2. Token Autocomplete using Glosario
+Replace the simple nomenclature text input with an interactive autocomplete pill editor.
+- When typing `{`, display a popover suggestion list populated dynamically from the unified Glosario de Variables.
+- Selecting a variable inserts it as `{glosario.<variable_key>}` (or `{session.user_name}` for system context) in the nomenclature rule structure.
+- Tokens should be rendered visually as interactive, color-coded tags (pills) inside the input container.
+
+### R3. Dummies-Tone Explanatory Tooltip
+Add a premium explanatory tooltip next to the "Regla de Nomenclatura (CA-5)" label. The tooltip content must be styled beautifully and written in an extremely friendly "dummies-tone" explaining the concept of a shared glossary, how it works in a bidirectional way (whether screens or process is created first), and examples of execution.
+
+### R4. TDD and Verification
+- Write new component unit tests in BpmnDesigner.spec.ts under the CA-5 scope to verify:
+  - The Glosario de Variables section is rendered and allows adding manual variables.
+  - Typing `{` in the nomenclature rule input shows variables from both the manual Glosario, active forms, and session context.
+  - The dummies-tone tooltip is present with the correct text.
+- Ensure that the entire frontend test suite continues to pass (npx vitest run).
+- Ensure that npm run build compiles with zero warnings or errors.
+
+## Acceptance Criteria
+
+### Unified Glossary & Autocomplete
+- [ ] The "Glosario de Variables de Negocio" section is visible in the process properties sidebar.
+- [ ] Users can manually add variable keys to the glossary, which are successfully saved to the BPMN XML.
+- [ ] The autocomplete popover triggers on typing `{` in the nomenclature rule field, displaying the unified variables.
+- [ ] The explanatory tooltip button `❓` next to the nomenclature rule label presents a friendly, dummies-tone description of the glossary and examples.
+- [ ] The entire Vitest suite passes and the production bundle build succeeds.
+

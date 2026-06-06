@@ -1,40 +1,31 @@
-# Project: DMN Governance Hexagonal Architecture and DDD Refactoring (US-007 - ADR-001)
+# Project: BpmnDesigner - Glosario de Datos Unificado (Propuesta 2)
+# Scope: US-005 CA-5 Nomenclature Rule UX/UI Enhancement
 
 ## Architecture
-- **Domain Layer**: Contains pure POJOs (`com.ibpms.poc.domain.model`) and interfaces/ports (`com.ibpms.poc.domain.port`). It is completely clean of any infrastructure-specific concepts such as Spring Data pagination, JPA/Hibernate mapping annotations, and Web controller decorators.
-- **Application Layer**: Contains business logic, orchestrators, and services. Uses domain models and ports.
-- **Infrastructure Layer**: Contains persistence implementations (Spring Data repositories, MapStruct mappers, JPA Entities under `com.ibpms.poc.infrastructure.jpa`) and Web controllers. Adapters are consolidated under `com.ibpms.poc.infrastructure.adapter`.
+- **Frontend Layer**: Vue 3 SPA using TypeScript, TailwindCSS, and Pinia.
+- **Components involved**:
+  - `BpmnDesigner.vue`: Main BPMN Modeler component.
+  - `BpmnDesigner.spec.ts`: Unit tests for BpmnDesigner.
+- **Design Goals**:
+  - Add collapsible "Glosario de Variables de Negocio" card section in process properties panel.
+  - Support manual variable declaration (key, type) persisted in BPMN XML custom extension elements.
+  - Dynamically merge manual variables with linked forms (loaded via `fetchForms()`), active webhooks/connectors, and session context (`session.user_name`, `session.email`).
+  - Replace nomenclature input with an autocomplete pill/tag editor that triggers on `{` and inserts `{glosario.<variable_key>}` (or `{session.user_name}`).
+  - Render color-coded pills/chips for variables in the input.
+  - Add a premium explanatory tooltip in a friendly "dummies-tone" explaining the shared glossary concept.
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
-|---|------|-------|-------------|--------|
-| 1 | Compliance Test (Red Phase) | Implement failing `DmnArchitectureComplianceTest.java` in `com.ibpms.poc.application.usecase.dmn`. Verify it fails with `mvn test -Dtest=DmnArchitectureComplianceTest -pl ibpms-core`. | none | DONE |
-| 2 | Domain Layer Purification | Create `DmnModel.java` (pure POJO) and `DmnModelRepositoryPort.java` in domain layers. | M1 | DONE |
-| 3 | Use Case Refactoring | Refactor `DmnGovernanceUseCase.java` to use the repository port and pure POJO, removing JPA/infrastructure imports. | M2 | DONE |
-| 4 | Infrastructure Adapters & Mappers | Rename `DmnModelEntity.java` to `DmnModelJpaEntity.java`. Create `DmnModelMapper.java` (MapStruct) and `DmnModelJpaAdapter.java`. Update `DmnModelRepository.java`. | M3 | DONE |
-| 5 | Web & Test Integration | Update `DmnGovernanceController` and other classes/tests referencing `DmnModelEntity` to use the appropriate layers/entities. | M4 | DONE |
-| 6 | Verification & Compliance (Green Phase) | Compile and run all tests (`mvn test -pl ibpms-core`). Verify the compliance test passes. Run Forensic Auditor. | M5 | IN_PROGRESS (Worker 8 verifying) |
+|---|---|---|---|---|
+| 1 | Exploration & Analysis | Analyze BpmnDesigner.vue, XML handling, state, and BpmnDesigner.spec.ts | None | DONE |
+| 2 | Implementation | Implement Glosario section, merging logic, XML persistence, pill editor, and tooltip | M1 | IN_PROGRESS |
+| 3 | Testing & Verification | Write unit tests in BpmnDesigner.spec.ts, run Vitest, and execute production build | M2 | PLANNED |
 
 ## Interface Contracts
-### MapStruct Mappers
-- Mappers must map bidirectionally between domain model POJOs and JPA Entities (with `JpaEntity` suffix) inside `com.ibpms.poc.infrastructure.jpa.mapper`.
-- Mappers should use the component model `spring` (`@Mapper(componentModel = "spring")`).
-
-### DmnModelRepositoryPort
-- Domain Port signature:
-  - `Optional<DmnModel> findById(String id);`
-  - `DmnModel save(DmnModel dmnModel);`
-  - `void delete(DmnModel dmnModel);`
-  - `List<DmnModel> findByTenantId(String tenantId);`
-  - `List<DmnModel> findByStatusAndUpdatedAtBefore(String status, LocalDateTime cutoff);`
-
-### DmnModelJpaAdapter
-- Infrastructure Adapter implements `DmnModelRepositoryPort` and delegates to `DmnModelRepository` (which extends `JpaRepository<DmnModelJpaEntity, String>`). Maps entities to domain models using `DmnModelMapper`.
+- **BPMN XML Extension Elements**: Custom extension elements used to store manual variables.
+- **Nomenclature Rule XML Mapping**: Persists to/from BPMN XML `ReglaNomenclatura` root property.
 
 ## Code Layout
-- Domain Models: `backend/ibpms-core/src/main/java/com/ibpms/poc/domain/model`
-- Domain Ports: `backend/ibpms-core/src/main/java/com/ibpms/poc/domain/port`
-- JPA Entities: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/jpa/entity/dmn`
-- MapStruct Mappers: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/jpa/mapper`
-- Adapters: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/adapter`
-- Web Controllers: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/web/dmn`
+- Modeler Views: `frontend/src/views/admin/Modeler/BpmnDesigner.vue`
+- Unit Tests: `frontend/src/views/admin/Modeler/BpmnDesigner.spec.ts`
+- Pinia Stores: `frontend/src/stores/useIntegrationStore.ts` (or auth/process stores if applicable)

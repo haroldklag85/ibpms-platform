@@ -1897,6 +1897,45 @@ const handleBeforeUnload = () => {
    // if(sessionId) apiClient.destroyCopilotSession(sessionId);
 };
 
+// @Traceability: US-005, CA-05
+const camundaModdleDescriptor = {
+  name: 'Camunda',
+  uri: 'http://camunda.org/schema/1.0/bpmn',
+  prefix: 'camunda',
+  xml: {
+    tagAlias: 'lowerCase'
+  },
+  types: [
+    {
+      name: 'Property',
+      superClass: [ 'Element' ],
+      properties: [
+        {
+          name: 'name',
+          isAttr: true,
+          type: 'String'
+        },
+        {
+          name: 'value',
+          isAttr: true,
+          type: 'String'
+        }
+      ]
+    },
+    {
+      name: 'Properties',
+      superClass: [ 'Element' ],
+      properties: [
+        {
+          name: 'values',
+          isMany: true,
+          type: 'Property'
+        }
+      ]
+    }
+  ]
+};
+
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
   // @Traceability: US-005, CA-40
@@ -1913,7 +1952,10 @@ onMounted(async () => {
     modelerInstance = new BpmnModeler({
       container: canvasContainer.value!,
       additionalModules: [minimapModule],
-      keyboard: { bindTo: document } // CA-20 Copy/Paste enabled system-wide
+      keyboard: { bindTo: document }, // CA-20 Copy/Paste enabled system-wide
+      moddleExtensions: {
+        camunda: camundaModdleDescriptor
+      }
     });
 
     // @Traceability: US-005, CA-29 Copiar y Pegar Fragmentos entre Procesos

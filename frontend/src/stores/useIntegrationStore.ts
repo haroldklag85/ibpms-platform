@@ -30,8 +30,15 @@ export const useIntegrationStore = defineStore('integrationStore', {
     saveProcessDraft(id: string, payload: any) {
       return this.put(`/design/processes/${id}/draft`, payload);
     },
-    validateProcess(payload: any) {
-      return this.post(`/design/processes/validate`, payload);
+    // @Traceability: US-005, CA-65
+    validateProcess(payload: { xml: string }) {
+      const formData = new FormData();
+      const blob = new Blob([payload.xml], { type: 'application/xml' });
+      formData.append('file', blob, 'process.bpmn');
+      
+      return this.post(`/design/processes/validate`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
     },
     deployProcess(payload: any) {
       return this.post(`/design/processes/deploy`, payload, { headers: { 'Content-Type': 'multipart/form-data' } });

@@ -1,0 +1,11 @@
+# Normalizar saltos de línea para todos los archivos de texto
+* text=auto
+
+# Forzar que ciertos scripts siempre mantengan LF (crucial para Linux/WSL)
+*.sh text eol=lf
+
+# Declarar archivos binarios para que Git no los toque
+*.png binary
+*.jpg binary
+*.gif binary
+*.jar binary

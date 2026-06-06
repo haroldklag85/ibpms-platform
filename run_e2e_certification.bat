@@ -8,15 +8,14 @@ docker-compose down -v
 docker-compose -f docker-compose.e2e.yml down -v
 
 echo ===================================================
-echo [2/5] Compilando Backend (Forzando UTF-8)
+echo [2/5] Compilando Backend en WSL (Para máximo rendimiento)
 echo ===================================================
-cd backend
-call ..\maven\apache-maven-3.9.6\bin\mvn.cmd clean package -Dmaven.test.skip=true -Dfile.encoding=UTF-8
+:: @Traceability: US-005, CA-15
+call wsl bash -c "cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/backend && mvn clean compile -Dfile.encoding=UTF-8"
 if %errorlevel% neq 0 (
-  echo Error en la compilación de Maven. Abortando.
+  echo Error en la compilación de Maven en WSL. Abortando.
   exit /b %errorlevel%
 )
-cd ..
 
 echo ===================================================
 echo [3/5] Levantando Infraestructura E2E en Docker
@@ -26,9 +25,9 @@ docker-compose -f docker-compose.e2e.yml up -d --build
 echo ===================================================
 echo [4/5] Levantando Backend (E2E) y Frontend Proxy
 echo ===================================================
-:: Usamos un título de ventana único para matar solo estos procesos al final
-echo [INFO] Iniciando Backend en ventana oculta (vía Maven para evitar bug jar:nested)...
-start "IBPMS_BACKEND_E2E" /MIN cmd /c "cd backend\ibpms-core && ..\..\maven\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run -Dspring-boot.run.profiles=e2e -Dmaven.test.skip=true > ..\..\backend_real_log2.txt 2>&1"
+echo [INFO] Iniciando Backend en WSL (ventana oculta)...
+:: @Traceability: US-005, CA-15
+start "IBPMS_BACKEND_E2E" /MIN wsl bash -c "cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/backend/ibpms-core && mvn spring-boot:run -Dspring-boot.run.profiles=e2e -Dmaven.test.skip=true > /home/haroltandrsgmezagu/proyectos/ibpms-platform/backend_real_log2.txt 2>&1"
 :: Polling inteligente: Esperamos hasta que el Backend reporte UP en actuator/health
 echo [INFO] Esperando a que el Backend E2E termine su arranque (puede tardar hasta 5 minutos por timeouts de Azure/DMN)...
 :wait_backend
@@ -41,15 +40,17 @@ echo [INFO] Backend E2E reportado como UP. Procediendo...
 
 
 cd frontend
-echo [INFO] Iniciando Frontend Vite en ventana oculta...
-start "IBPMS_FRONTEND_E2E" /MIN cmd /c "npm run dev:e2e"
+echo [INFO] Iniciando Frontend Vite en ventana oculta (vía WSL)...
+:: @Traceability: US-005, CA-15
+start "IBPMS_FRONTEND_E2E" /MIN wsl bash -c "cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/frontend && npm run dev:e2e"
 echo [INFO] Esperando 10 segundos para compilación del proxy frontend...
 ping 127.0.0.1 -n 11 > nul
 
 echo ===================================================
-echo [5/5] Ejecutando Certificacion E2E (Playwright)
+echo [5/5] Ejecutando Certificacion E2E (Playwright vía WSL)
 echo ===================================================
-call npx playwright test e2e/certification/us005-bpmn-modeler-persistence.e2e.spec.ts -c playwright.e2e.config.ts
+:: @Traceability: US-005, CA-15
+call wsl bash -c "cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/frontend && npx playwright test e2e/certification/us005-bpmn-modeler-persistence.e2e.spec.ts -c playwright.e2e.config.ts"
 set PLAYWRIGHT_EXIT=%errorlevel%
 cd ..
 

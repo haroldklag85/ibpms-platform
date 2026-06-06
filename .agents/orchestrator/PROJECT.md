@@ -10,12 +10,10 @@
   - Tests: `DataMappingIntegrityTest.java`
 
 ## Milestones
-| # | Name | Scope | Dependencies | Status |
-|---|---|---|---|---|
-| 1 | Exploration & Analysis | Codebase investigation and mapping of endpoints, test suites, and components | None | PLANNED |
-| 2 | Backend Implementation | Version history bug fixes, JSON alignment, Swagger documentation, and DataMappingIntegrityTest stabilization | M1 | PLANNED |
-| 3 | Frontend Implementation | Stepper UI, Resizable push-layout sidebar, Accordion phases, Hot Path Traversal highlights, and FormData payload integration | M2 | PLANNED |
-| 4 | Verification & Audit | Backend Maven integration test suite and Frontend production build | M3 | PLANNED |
+| 1 | Exploration & Analysis | Codebase investigation and mapping of endpoints, test suites, and components | None | DONE |
+| 2 | Backend Implementation | Version history bug fixes, JSON alignment, Swagger documentation, and DataMappingIntegrityTest stabilization | M1 | DONE |
+| 3 | Frontend Implementation | Stepper UI, Resizable push-layout sidebar, Accordion phases, Hot Path Traversal highlights, and FormData payload integration | M2 | DONE |
+| 4 | Verification & Audit | Backend Maven integration test suite and Frontend production build | M3 | DONE |
 
 ## Interface Contracts
 - **BPMN Version History API**: `/api/v1/design/processes/{processDefinitionKey}/versions`

@@ -41,13 +41,12 @@ Redesign/rebuild the BPMN Modeler Toolbar into a sequential 6-step Stepper with 
    - Redesign: re-partition decomposition
    - Escalate: report to parent (sub-orchestrators only, last resort)
 4. **Succession**: Self-succeed at 16 spawns, write handoff.md, spawn successor.
-- **Work items**:
-  - Milestone 1: Exploration & Analysis [pending]
-  - Milestone 2: Backend Implementation [pending]
-  - Milestone 3: Frontend Implementation [pending]
-  - Milestone 4: Verification & Audit [pending]
-- **Current phase**: 1
-- **Current focus**: Exploration & Analysis
+  - Milestone 1: Exploration & Analysis [done]
+  - Milestone 2: Backend Implementation [done]
+  - Milestone 3: Frontend Implementation [done]
+  - Milestone 4: Verification & Audit [in-progress]
+- **Current phase**: 4
+- **Current focus**: Verification & Audit
 
 ## 🔒 Key Constraints
 - NEVER write, modify, or create source code files directly.
@@ -61,17 +60,23 @@ Redesign/rebuild the BPMN Modeler Toolbar into a sequential 6-step Stepper with 
 
 ## Key Decisions Made
 - Initial setup and decomposition of new follow-up requirements complete.
+- Backend implementation completed by worker_backend (906f361c-794f-45ef-8c8e-850cf486277e).
+- Frontend implementation completed by worker_frontend (724b834f-fafa-4f99-a740-95af2dec5243).
 
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
 | explorer_sim | teamwork_preview_explorer | Milestone 1: Exploration & Analysis | completed | 69479d9b-85d3-4d94-9415-174fccb9bfda |
-| worker_backend | teamwork_preview_worker | Milestone 2: Backend Implementation | in-progress | 906f361c-794f-45ef-8c8e-850cf486277e |
+| worker_backend | teamwork_preview_worker | Milestone 2: Backend Implementation | completed | 906f361c-794f-45ef-8c8e-850cf486277e |
+| worker_frontend | teamwork_preview_worker | Milestone 3: Frontend Implementation | completed | 724b834f-fafa-4f99-a740-95af2dec5243 |
+| reviewer_m4 | teamwork_preview_reviewer | Milestone 4: Code Review and Build Verification | completed | 5447c686-0d55-403b-b973-d08cd3016677 |
+| auditor_m4 | teamwork_preview_auditor | Milestone 4: Forensic Integrity Audit | failed | 658796db-a5d7-4ba8-adeb-49e1b5f405dd |
+| auditor_m4_2 | teamwork_preview_auditor | Milestone 4: Forensic Integrity Audit Replacement | completed | 23fd336f-84ef-4fdd-93ff-5daf97ebd474 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 2 / 16
-- Pending subagents: [906f361c-794f-45ef-8c8e-850cf486277e]
+- Spawn count: 6 / 16
+- Pending subagents: none
 - Predecessor: none
 - Successor: not yet spawned
 

@@ -10,83 +10,233 @@
       </div>
     </Transition>
 
-    <!-- ═══════ Top Toolbar ═══════ -->
-    <header class="flex flex-wrap justify-between items-center px-6 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shrink-0 gap-3">
-      <div class="flex items-center space-x-3">
-        <!-- @Traceability: US-005, CA-77 Panel de Propiedades Contextual (Unificación Botón Explorador) -->
-        <button @click="showCatalog = true" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 flex items-center space-x-1">
-          <span>📜</span><span>Explorador de procesos</span>
-        </button>
-        <span class="text-gray-300">|</span>
-        <h1 class="text-lg font-bold text-gray-900 dark:text-white">{{ currentProcessName || 'Proceso Sin Título' }}</h1>
-        <span v-if="processStatus" class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-              :class="{
-                'bg-yellow-100 text-yellow-800': processStatus === 'BORRADOR',
-                'bg-green-100 text-green-800': processStatus === 'ACTIVO',
-                'bg-gray-100 text-gray-600': processStatus === 'ARCHIVADO'
-              }">{{ processStatus }}</span>
-        <!-- CA-63: Indicador de Sandbox -->
-        <span v-if="processStatus === 'BORRADOR'" class="text-xs bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2">🧪 SANDBOX</span>
+    <!-- ═══════ Redesigned Top Toolbar: 6-Step Stepper with Glassmorphism ═══════ -->
+    <header class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md border-b border-white/20 dark:border-gray-700/30 shadow-sm flex flex-col p-4 w-full shrink-0">
+      <!-- Top info bar (title, status, active role) -->
+      <div class="flex flex-wrap justify-between items-center mb-3 pb-3 border-b border-gray-200/55 dark:border-gray-700/55 w-full gap-3">
+        <div class="flex items-center space-x-3">
+          <h1 class="text-lg font-bold text-gray-900 dark:text-white">{{ currentProcessName || 'Proceso Sin Título' }}</h1>
+          <span v-if="processStatus" class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                :class="{
+                  'bg-yellow-100 text-yellow-800': processStatus === 'BORRADOR',
+                  'bg-green-100 text-green-800': processStatus === 'ACTIVO',
+                  'bg-gray-100 text-gray-600': processStatus === 'ARCHIVADO'
+                }">{{ processStatus }}</span>
+          <!-- CA-63: Indicador de Sandbox -->
+          <span v-if="processStatus === 'BORRADOR'" class="text-xs bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2">🧪 SANDBOX</span>
+        </div>
+        <div class="flex items-center space-x-3">
+          <!-- Active Role CA-21 -->
+          <span class="text-xs bg-indigo-50 dark:bg-gray-700 border-indigo-200 dark:border-gray-600 rounded px-2 py-1 text-indigo-800 dark:text-white font-bold">
+             Rol Activo: {{ activeRole }}
+          </span>
+          <span class="text-xs text-gray-500 dark:text-gray-400">
+             Versión: v{{ currentVersion }}
+          </span>
+        </div>
       </div>
 
-      <div class="flex items-center gap-2 flex-wrap">
-        <!-- Import -->
-        <label data-testid="btn-import-bpmn" class="cursor-pointer bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex gap-1 items-center transition">
-          ⬆️ Importar
-          <!-- @Traceability: Testabilidad J-02 (T-24) -->
-          <input data-testid="input-import-bpmn" type="file" @change="handleFileUpload" accept=".bpmn,.xml" class="hidden" />
-        </label>
-        <!-- Export -->
-        <button data-testid="btn-export-bpmn" @click="downloadXML" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
-          ⬇️ Exportar .bpmn
-        </button>
-        <!-- Copilot con Notificación Dinámica Inteligente (CA-08) -->
-        <button @click="triggerCopilotAudit" class="bg-slate-900 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-black flex items-center gap-1 transition relative">
-          🧠 Consultar Copiloto IA
-          <span v-if="unreadAiBadge" class="absolute -top-1 -right-1 flex h-3 w-3">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 shadow shadow-red-500/50"></span>
-          </span>
-        </button>
-        <!-- Sandbox US-005 -->
-        <button data-testid="btn-test-sandbox" @click="runSandbox" class="bg-amber-500 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-amber-600 flex items-center gap-1 transition">
-          🧪 Validar y Simular
-        </button>
-        <!-- Limpiar Trayectoria CA-84 -->
-        <button data-testid="btn-clear-trajectory" @click="clearTrajectory" class="bg-slate-500 text-white px-3 py-1.5 rounded-md shadow text-xs font-medium hover:bg-slate-600 flex items-center gap-1 transition">
-          🧹 Limpiar Trayectoria
-        </button>
-        <!-- Audit Logs (CA-42) -->
-        <button @click="openAuditLogs" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
-          📝 Auditoría
-        </button>
-        <!-- Versions -->
-        <button @click="showVersions = !showVersions" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md shadow-sm text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-1 transition">
-          📜 Versiones
-        </button>
-        <!-- Deploy Requests CA-69 -->
-        <button v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)" @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold flex items-center gap-1 transition hover:bg-indigo-100">
-          📨 Solicitudes
-        </button>
-        <!-- Active Role CA-21 -->
-        <span class="text-xs bg-indigo-50 dark:bg-gray-700 border-indigo-200 dark:border-gray-600 rounded px-2 py-1 text-indigo-800 dark:text-white font-bold ml-2">
-           Rol Activo: {{ activeRole }}
-        </span>
-        <!-- Instance Manager CA-8 -->
-        <button @click="showInstancesManager = true" class="bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 px-3 py-1.5 rounded-md shadow-sm text-xs font-bold hover:bg-indigo-100 flex items-center gap-1 transition">
-          🧬 Gestor de Instancias
-        </button>
-        <!-- Request Deploy -->
-        <button v-show="['BPMN_Designer', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)" @click="requestDeploy" class="bg-purple-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-purple-700 flex items-center gap-1 transition">
-          📩 Solicitar Despliegue
-        </button>
-        <!-- Deploy (CA-21) -->
-        <button data-testid="btn-deploy" v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)"
-                @click="showDeployModal = true" 
-                :disabled="isDeploying || preFlightStatus !== 'VALIDATED'" 
-                class="bg-indigo-600 text-white px-3 py-1.5 rounded-md shadow text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 transition">
-          🚀 [VALIDAR Y DESPLEGAR]
-        </button>
+      <!-- Stepper grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 w-full">
+        <!-- Paso 1: Biblioteca -->
+        <div 
+          class="p-3 rounded-lg border transition-all duration-300 flex flex-col justify-between"
+          :class="isStepHighlighted(1) ? 'border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)] bg-indigo-500/5 dark:bg-indigo-500/10' : 'border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-800/30'"
+        >
+          <div class="flex items-center gap-2">
+            <span 
+              class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+              :class="isStepHighlighted(1) ? 'bg-indigo-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+            >1</span>
+            <span class="text-xs font-bold" :class="isStepHighlighted(1) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'">Biblioteca</span>
+          </div>
+          
+          <!-- Large screen buttons -->
+          <div class="hidden lg:flex flex-row items-center gap-2 mt-2 flex-wrap">
+            <button @click="showCatalog = true" class="text-[11px] bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded shadow-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition">
+              📜 Explorador
+            </button>
+            <label data-testid="btn-import-bpmn" class="cursor-pointer bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded shadow-sm text-[11px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-1">
+              ⬆️ Importar
+              <input ref="importFileInput" data-testid="input-import-bpmn" type="file" @change="handleFileUpload" accept=".bpmn,.xml" class="hidden" />
+            </label>
+            <button data-testid="btn-export-bpmn" @click="downloadXML" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded shadow-sm text-[11px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-1">
+              ⬇️ Exportar
+            </button>
+          </div>
+
+          <!-- Small screen dropdown -->
+          <select @change="handleStepSelect(1, $event)" class="lg:hidden w-full mt-2 text-xs p-1.5 border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+            <option value="" disabled selected>Acciones...</option>
+            <option value="Explorador">📜 Explorador</option>
+            <option value="Importar">⬆️ Importar</option>
+            <option value="Exportar">⬇️ Exportar</option>
+          </select>
+        </div>
+
+        <!-- Paso 2: Modelado -->
+        <div 
+          class="p-3 rounded-lg border transition-all duration-300 flex flex-col justify-between"
+          :class="isStepHighlighted(2) ? 'border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)] bg-indigo-500/5 dark:bg-indigo-500/10' : 'border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-800/30'"
+        >
+          <div class="flex items-center gap-2">
+            <span 
+              class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+              :class="isStepHighlighted(2) ? 'bg-indigo-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+            >2</span>
+            <span class="text-xs font-bold" :class="isStepHighlighted(2) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'">Modelado</span>
+          </div>
+
+          <div class="hidden lg:flex flex-row items-center gap-2 mt-2 flex-wrap">
+            <span class="text-[11px] font-semibold px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 flex items-center gap-1">
+              🎨 Canvas
+            </span>
+            <button @click="triggerCopilotAudit" class="bg-slate-950 text-white px-2 py-1 rounded shadow text-[11px] font-medium hover:bg-black transition flex items-center gap-1 relative">
+              🧠 Copiloto IA
+              <span v-if="unreadAiBadge" class="absolute -top-1 -right-1 flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow shadow-red-500/50"></span>
+              </span>
+            </button>
+          </div>
+
+          <select @change="handleStepSelect(2, $event)" class="lg:hidden w-full mt-2 text-xs p-1.5 border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+            <option value="" disabled selected>Acciones...</option>
+            <option value="Canvas">🎨 Centrar Canvas</option>
+            <option value="Copiloto IA">🧠 Copiloto IA</option>
+          </select>
+        </div>
+
+        <!-- Paso 3: Simulación -->
+        <div 
+          class="p-3 rounded-lg border transition-all duration-300 flex flex-col justify-between"
+          :class="isStepHighlighted(3) ? 'border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)] bg-indigo-500/5 dark:bg-indigo-500/10' : 'border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-800/30'"
+        >
+          <div class="flex items-center gap-2">
+            <span 
+              class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+              :class="isStepHighlighted(3) ? 'bg-indigo-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+            >3</span>
+            <span class="text-xs font-bold" :class="isStepHighlighted(3) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'">Simulación</span>
+          </div>
+
+          <div class="hidden lg:flex flex-row items-center gap-2 mt-2 flex-wrap">
+            <button data-testid="btn-test-sandbox" @click="runSandbox" class="bg-amber-500 text-white px-2 py-1 rounded shadow text-[11px] font-medium hover:bg-amber-600 transition flex items-center gap-1">
+              🧪 Simular
+            </button>
+            <button data-testid="btn-clear-trajectory" @click="clearTrajectory" class="bg-slate-500 text-white px-2 py-1 rounded shadow text-[11px] font-medium hover:bg-slate-600 transition flex items-center gap-1">
+              🧹 Limpiar
+            </button>
+          </div>
+
+          <select @change="handleStepSelect(3, $event)" class="lg:hidden w-full mt-2 text-xs p-1.5 border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+            <option value="" disabled selected>Acciones...</option>
+            <option value="Simular">🧪 Simular</option>
+            <option value="Limpiar">🧹 Limpiar</option>
+          </select>
+        </div>
+
+        <!-- Paso 4: Trazabilidad -->
+        <div 
+          class="p-3 rounded-lg border transition-all duration-300 flex flex-col justify-between"
+          :class="isStepHighlighted(4) ? 'border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)] bg-indigo-500/5 dark:bg-indigo-500/10' : 'border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-800/30'"
+        >
+          <div class="flex items-center gap-2">
+            <span 
+              class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+              :class="isStepHighlighted(4) ? 'bg-indigo-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+            >4</span>
+            <span class="text-xs font-bold" :class="isStepHighlighted(4) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'">Trazabilidad</span>
+          </div>
+
+          <div class="hidden lg:flex flex-row items-center gap-2 mt-2 flex-wrap">
+            <button @click="openAuditLogs" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded shadow-sm text-[11px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-1">
+              📝 Auditoría
+            </button>
+            <button @click="showVersions = !showVersions" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded shadow-sm text-[11px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-1">
+              📜 Versiones
+            </button>
+          </div>
+
+          <select @change="handleStepSelect(4, $event)" class="lg:hidden w-full mt-2 text-xs p-1.5 border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+            <option value="" disabled selected>Acciones...</option>
+            <option value="Auditoría">📝 Auditoría</option>
+            <option value="Versiones">📜 Versiones</option>
+          </select>
+        </div>
+
+        <!-- Paso 5: Despliegue -->
+        <div 
+          class="p-3 rounded-lg border transition-all duration-300 flex flex-col justify-between"
+          :class="isStepHighlighted(5) ? 'border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)] bg-indigo-500/5 dark:bg-indigo-500/10' : 'border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-800/30'"
+        >
+          <div class="flex items-center gap-2">
+            <span 
+              class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+              :class="isStepHighlighted(5) ? 'bg-indigo-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+            >5</span>
+            <span class="text-xs font-bold" :class="isStepHighlighted(5) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'">Despliegue</span>
+          </div>
+
+          <div class="hidden lg:flex flex-row items-center gap-1.5 mt-2 flex-wrap">
+            <button @click="requestDeploy" class="bg-purple-600 text-white px-2 py-1 rounded shadow text-[11px] font-bold hover:bg-purple-700 transition flex items-center gap-1">
+              📩 Solicitar
+            </button>
+            <button @click="openDeployRequests" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-2 py-1 rounded shadow-sm text-[11px] font-bold hover:bg-indigo-100 transition flex items-center gap-1">
+              📨 Ver Solicitudes
+            </button>
+            <button data-testid="btn-deploy" v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)"
+                    @click="showDeployModal = true" 
+                    :disabled="isDeploying || preFlightStatus !== 'VALIDATED'" 
+                    class="bg-indigo-600 text-white px-2 py-1 rounded shadow text-[11px] font-bold hover:bg-indigo-700 disabled:opacity-50 transition flex items-center gap-1">
+              🚀 Desplegar
+            </button>
+          </div>
+
+          <select @change="handleStepSelect(5, $event)" class="lg:hidden w-full mt-2 text-xs p-1.5 border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+            <option value="" disabled selected>Acciones...</option>
+            <option value="Solicitar Despliegue">📩 Solicitar</option>
+            <option value="Ver Solicitudes">📨 Ver Solicitudes</option>
+            <option v-if="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)" value="Desplegar">🚀 Desplegar</option>
+          </select>
+        </div>
+
+        <!-- Paso 6: Operación -->
+        <div 
+          class="p-3 rounded-lg border transition-all duration-300 flex flex-col justify-between"
+          :class="[
+            isStepHighlighted(6) ? 'border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)] bg-indigo-500/5 dark:bg-indigo-500/10' : 'border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-800/30',
+            currentVersion === 0 ? 'opacity-50' : ''
+          ]"
+          :title="currentVersion === 0 ? 'Esta opción estará disponible al realizar el primer despliegue activo' : ''"
+        >
+          <div class="flex items-center gap-2">
+            <span 
+              class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+              :class="isStepHighlighted(6) ? 'bg-indigo-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+            >6</span>
+            <span class="text-xs font-bold" :class="isStepHighlighted(6) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'">Operación</span>
+          </div>
+
+          <div class="hidden lg:flex flex-row items-center gap-2 mt-2 flex-wrap">
+            <button 
+              @click="showInstancesManager = true" 
+              :disabled="currentVersion === 0"
+              class="bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 px-2 py-1 rounded shadow-sm text-[11px] font-bold hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-1"
+            >
+              🧬 Gestor de Instancias
+            </button>
+          </div>
+
+          <select 
+            @change="handleStepSelect(6, $event)" 
+            :disabled="currentVersion === 0"
+            class="lg:hidden w-full mt-2 text-xs p-1.5 border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white disabled:opacity-50"
+          >
+            <option value="" disabled selected>Acciones...</option>
+            <option value="Operacion">🧬 Gestor de Instancias</option>
+          </select>
+        </div>
       </div>
     </header>
 
@@ -1191,10 +1341,10 @@
                 <span class="text-[10px] text-gray-500 dark:text-gray-400">📅 {{ req.requestedAt }}</span>
               </div>
               <div class="mt-2 flex gap-2 w-full">
-                <button @click="handleDeployRequest(req.id, true)" class="flex-1 bg-green-100 hover:bg-green-200 text-green-800 py-1.5 rounded text-xs font-bold transition flex justify-center items-center gap-1 shadow-sm border border-green-300">
+                <button v-if="activeRole !== 'BPMN_Designer'" @click="handleDeployRequest(req.id, true)" class="flex-1 bg-green-100 hover:bg-green-200 text-green-800 py-1.5 rounded text-xs font-bold transition flex justify-center items-center gap-1 shadow-sm border border-green-300">
                   ✅ Aprobar
                 </button>
-                <button @click="handleDeployRequest(req.id, false)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-800 py-1.5 rounded text-xs font-bold transition flex justify-center items-center gap-1 shadow-sm border border-red-300">
+                <button v-if="activeRole !== 'BPMN_Designer'" @click="handleDeployRequest(req.id, false)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-800 py-1.5 rounded text-xs font-bold transition flex justify-center items-center gap-1 shadow-sm border border-red-300">
                   ❌ Rechazar
                 </button>
               </div>
@@ -1361,6 +1511,47 @@ const cancelAndGoToPortal = () => {
 };
 
 const activeRole = computed(() => authStore.roles?.[0] || 'BPMN_Designer'); // Reemplaza mockRole CA-21, CA-66
+
+const currentVersion = ref(0);
+
+const isStepHighlighted = (step: number) => {
+  if (currentVersion.value === 0) {
+    return step === 2 || step === 3;
+  } else {
+    return step === 4 || step === 5 || step === 6;
+  }
+};
+
+const importFileInput = ref<HTMLInputElement | null>(null);
+
+const handleStepSelect = (step: number, event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  const value = target.value;
+  if (!value) return;
+
+  if (step === 1) {
+    if (value === 'Explorador') showCatalog.value = true;
+    else if (value === 'Importar') importFileInput.value?.click();
+    else if (value === 'Exportar') downloadXML();
+  } else if (step === 2) {
+    if (value === 'Canvas') {
+      zoomFit();
+    } else if (value === 'Copiloto IA') {
+      triggerCopilotAudit();
+    }
+  } else if (step === 3) {
+    if (value === 'Simular') runSandbox();
+    else if (value === 'Limpiar') clearTrajectory();
+  } else if (step === 4) {
+    if (value === 'Auditoría') openAuditLogs();
+    else if (value === 'Versiones') showVersions.value = !showVersions.value;
+  } else if (step === 5) {
+    if (value === 'Solicitar Despliegue') requestDeploy();
+    else if (value === 'Ver Solicitudes') openDeployRequests();
+    else if (value === 'Desplegar') showDeployModal.value = true;
+  }
+  target.value = '';
+};
 
 // ── Types ────────────────────────────────────────────────────
 interface BpmnElement {
@@ -2117,6 +2308,22 @@ watch(showCopilot, (val) => {
    if (val) unreadAiBadge.value = false;
 });
 
+watch([validationPanelWidth, showSandboxModal], () => {
+  if (modelerInstance) {
+    try {
+      modelerInstance.get('canvas').resized();
+    } catch (e) {
+      console.warn('Canvas resize failed:', e);
+    }
+  }
+});
+
+watch(showSandboxModal, (val) => {
+  if (!val) {
+    clearTrajectory();
+  }
+});
+
 const playPingSound = () => {
    try { new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU').play(); } catch(e){}
 };
@@ -2264,16 +2471,15 @@ const fetchVersions = async () => {
     const { data } = await integrationStore.getProcessVersions(processId.value);
     if (data && Array.isArray(data)) {
       versionHistory.value = data.map((v: any) => ({
-        version: v.versionId,
-        date: v.date || 'Sin fecha',
-        author: v.author || 'Sistema',
-        status: v.isLatest ? 'ACTIVO' : 'ARCHIVADO'
+        version: v.version !== undefined ? v.version : v.versionId,
+        date: v.date || v.updatedAt || 'Sin fecha',
+        author: v.author || v.createdBy || 'Sistema',
+        status: v.status || (v.isLatest ? 'ACTIVO' : 'ARCHIVADO') || 'BORRADOR'
       }));
     } else {
       versionHistory.value = [];
     }
   } catch (err) {
-    console.error('Error al obtener versiones del proceso:', err);
     versionHistory.value = [];
   } finally {
     loadingVersions.value = false;
@@ -2286,6 +2492,7 @@ const restoreVersion = async (v: number) => {
   try {
     const { data } = await integrationStore.restoreProcessVersion(processId.value, v);
     showToast(`Versión ${v} restaurada con éxito.`);
+    currentVersion.value = v;
     if (data && data.xml && modelerInstance) {
       await modelerInstance.importXML(data.xml);
       modelerInstance.get('canvas').zoom('fit-viewport');
@@ -2566,6 +2773,7 @@ const restoreVersionFromLog = async (version: number) => {
   try {
     const { data } = await integrationStore.restoreProcessVersion(processId.value, version);
     showToast(`Versión ${version} restaurada con éxito.`);
+    currentVersion.value = version;
     let restoredXml = data?.xml;
     if (!restoredXml) {
       const res = await integrationStore.get(`/api/v1/design/processes/${processId.value}/xml`);
@@ -3233,6 +3441,8 @@ const confirmDeploy = async () => {
     const dat = deployResponse?.data?.deployed_at;
     const suffix = (v && did) ? ` [v${v} | ID: ${did} | ${dat}]` : '';
     
+    if (v) currentVersion.value = Number(v);
+
     showToast(`✅ Proceso "${currentProcessName.value}" desplegado exitosamente${suffix}`);
     processStatus.value = 'ACTIVO';
     showDeployModal.value = false;
@@ -3590,6 +3800,8 @@ const loadProcess = async (p: any) => {
     processStatus.value = p.status;
     processId.value = p.key;
     processPattern.value = p.formPattern || 'SIMPLE';
+    currentVersion.value = p.version || 0;
+    loadVariablesFromLocalStorage();
 
     const { data } = await integrationStore.get(`/api/v1/design/processes/${p.key}/xml`);
     if (data && data.xml && modelerInstance) {
@@ -4081,21 +4293,22 @@ defineExpose({
 
 /* CA-84: Neon Pulse style for executed nodes */
 :deep(.bjs-container .highlight-executed .djs-outline) {
-  stroke: #6366f1 !important;
+  stroke: #10b981 !important;
   stroke-width: 4px !important;
-  filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.8));
+  filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.8)) drop-shadow(0 0 5px rgba(99, 102, 241, 0.6));
   animation: neon-pulse 1.5s infinite alternate;
 }
 :deep(.bjs-container .highlight-executed .djs-visual > :nth-child(1)) {
-  fill: #e0e7ff !important;
+  fill: #ecfdf5 !important;
+  fill-opacity: 0.85 !important;
 }
 
 @keyframes neon-pulse {
   from {
-    filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.5));
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.5)) drop-shadow(0 0 2px rgba(99, 102, 241, 0.4));
   }
   to {
-    filter: drop-shadow(0 0 12px rgba(99, 102, 241, 1));
+    filter: drop-shadow(0 0 12px rgba(16, 185, 129, 1)) drop-shadow(0 0 8px rgba(99, 102, 241, 0.8));
   }
 }
 </style>

@@ -566,9 +566,9 @@ Cada endpoint DEBE documentarse con la siguiente estructura:
 ---
 
 #### POST /api/bpmn/instances
-- **Estado**: ⚠️ Assumed
-- **US**: Por determinar
-- **CA**: Por determinar
+- **Estado**: ✅ Verified
+- **US**: US-007
+- **CA**: Todos
 - **Descripción**: Iniciar una nueva instancia de un proceso BPMN
 - **Auth**: Bearer JWT
 - **Headers**:
@@ -602,11 +602,49 @@ Cada endpoint DEBE documentarse con la siguiente estructura:
   {
     "error": "PROCESS_NOT_FOUND",
     "message": "No se encontró la definición de proceso con la clave indicada",
-    "timestamp": "2026-06-02T00:00:00Z"
+    "timestamp": "ISO-8601"
   }
   ```
-- **Notas**: Las variables de proceso se pasan al motor Camunda y están disponibles en tareas subsecuentes
-- **Última actualización**: 2026-06-02
+- **Notas**: Las variables de proceso se pasan al motor Camunda y están disponibles en tareas subsecuentes. Integrado en el Panel de Catálogo de Procesos del Workdesk.
+- **Commit de verificación**: 76c6ffc0
+- **Última actualización**: 2026-06-07
+
+---
+
+#### POST /api/bpmn/tasks/{taskId}/complete
+- **Estado**: ✅ Verified
+- **US**: US-007
+- **CA**: Todos
+- **Descripción**: Completar directamente una tarea en el motor BPMN (vía API nativa de ejecución, saltando la abstracción de Workdesk si es necesario)
+- **Auth**: Bearer JWT
+- **Headers**:
+  - `Authorization`: Bearer {accessToken}
+  - `Content-Type`: application/json
+- **Path Params**:
+  - `{taskId}`: string — ID de la tarea BPMN
+- **Request Body**:
+  ```json
+  {
+    "variables": {
+      "varName": {
+        "value": "any — valor de la variable",
+        "type": "string"
+      }
+    }
+  }
+  ```
+- **Response 204**: No Content
+- **Response 404**:
+  ```json
+  {
+    "error": "TASK_NOT_FOUND",
+    "message": "La tarea indicada no existe o ya fue completada",
+    "timestamp": "ISO-8601"
+  }
+  ```
+- **Notas**: Creado para US-007 y utilizado en bifurcación de completitud en `useWorkdeskStore`.
+- **Commit de verificación**: 76c6ffc0
+- **Última actualización**: 2026-06-07
 
 ---
 
@@ -965,6 +1003,77 @@ Cada endpoint DEBE documentarse con la siguiente estructura:
   - Responder con el token en texto plano para validar
 - **Notas**: Este endpoint publica mensajes a RabbitMQ para procesamiento asíncrono. Verificar la firma de Microsoft para seguridad. Puede requerir URL pública (ngrok en desarrollo).
 - **Última actualización**: 2026-06-02
+
+---
+
+### 5.7 Telemetría y Monitoreo (BAM)
+
+#### GET /api/v1/bpm/telemetry/instances
+- **Estado**: ✅ Verified
+- **US**: US-030
+- **CA**: Todos
+- **Descripción**: Obtener métricas y listado de instancias de procesos BPMN (activas, completadas o suspendidas)
+- **Auth**: Bearer JWT (requiere rol ADMIN)
+- **Headers**:
+  - `Authorization`: Bearer {accessToken}
+- **Query Params**:
+  - `state`: string — Estado de la instancia (ACTIVE, COMPLETED, SUSPENDED)
+  - `page`: integer — Número de página (default: 0)
+  - `size`: integer — Tamaño de página (default: 20)
+- **Response 200**:
+  ```json
+  {
+    "content": [
+      {
+        "id": "string — ID de la instancia",
+        "processDefinitionKey": "string — clave del proceso",
+        "state": "string — estado actual",
+        "startTime": "ISO-8601",
+        "endTime": "ISO-8601 (nullable)"
+      }
+    ],
+    "totalElements": "integer",
+    "totalPages": "integer"
+  }
+  ```
+- **Response 403**: Forbidden (si no es admin)
+- **Notas**: Utilizado por el dashboard de monitoreo para rastrear la salud del sistema.
+- **Commit de verificación**: 5b243230
+- **Última actualización**: 2026-06-07
+
+---
+
+#### GET /api/v1/bpm/telemetry/incidents
+- **Estado**: ✅ Verified
+- **US**: US-030
+- **CA**: Todos
+- **Descripción**: Obtener listado de incidentes técnicos (errores de ejecución) del motor BPMN
+- **Auth**: Bearer JWT (requiere rol ADMIN)
+- **Headers**:
+  - `Authorization`: Bearer {accessToken}
+- **Query Params**:
+  - `page`: integer — Número de página (default: 0)
+  - `size`: integer — Tamaño de página (default: 20)
+- **Response 200**:
+  ```json
+  {
+    "content": [
+      {
+        "id": "string — ID del incidente",
+        "processInstanceId": "string — ID de la instancia afectada",
+        "incidentType": "string — tipo de incidente",
+        "incidentMessage": "string — mensaje de error",
+        "createTime": "ISO-8601"
+      }
+    ],
+    "totalElements": "integer",
+    "totalPages": "integer"
+  }
+  ```
+- **Response 403**: Forbidden (si no es admin)
+- **Notas**: Expone la tabla histórica y en tiempo de ejecución de incidentes Camunda.
+- **Commit de verificación**: 5b243230
+- **Última actualización**: 2026-06-07
 
 ---
 

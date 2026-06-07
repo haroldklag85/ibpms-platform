@@ -317,6 +317,8 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 **Estado**: ✅ Listo
 
+---
+
 ## [2026-06-07] — Pantalla de Monitoreo de Procesos e Incidentes (BAM)
 
 **Autor**: Agente Frontend (🎨 FRONTEND - VUE)

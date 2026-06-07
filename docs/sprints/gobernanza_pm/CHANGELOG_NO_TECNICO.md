@@ -251,5 +251,26 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 ---
 
-*Última actualización: 2026-06-05 03:30 COT*
+*Última actualización: 2026-06-07 00:55 COT*
 *Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*
+
+---
+
+## [2026-06-07] — La plataforma ahora puede arrancar y completar procesos de negocio desde la pantalla del usuario
+
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA)
+
+**¿Qué es?**: Se construyó la capacidad para que la interfaz de usuario pueda **iniciar un trámite o proceso de negocio** (por ejemplo, "Abrir un caso de crédito") y **completar las tareas asignadas** (por ejemplo, "Revisar documentos del solicitante") directamente desde la aplicación web, conectándose al motor interno de procesos de la plataforma.
+
+**¿Para qué sirve?**: Antes de esta mejora, los procesos solo podían arrancarse de forma anónima (sin saber quién lo inició) o a través de canales internos especiales. Ahora, cualquier usuario autenticado puede iniciar un proceso desde la interfaz y el sistema sabe exactamente quién lo inició, cuándo, y qué datos aportó. También pueden completar sus tareas pendientes de forma segura, con protección contra doble envío accidental.
+
+**¿De dónde viene?**: Historia de Usuario US-007 (Ejecución BPMN) — Handoff del Arquitecto Líder, Sprint PM-01, Slot 3. Alineado con las decisiones arquitectónicas ADR-001 (separación de responsabilidades) y ADR-003 (motor de procesos embebido).
+
+**¿Qué debería hacer?**:
+- Al presionar "Iniciar Proceso" en la interfaz, el sistema crea una nueva instancia del trámite y devuelve una confirmación con el identificador único
+- Si el usuario intenta iniciar un trámite que no existe en el catálogo, recibirá un mensaje claro: "No se encontró la definición de proceso"
+- Al completar una tarea asignada, el proceso avanza automáticamente al siguiente paso definido en el flujo de trabajo
+- Todo queda registrado: quién inició el proceso, cuándo, y con qué datos
+
+**Estado**: ✅ Listo
+

@@ -23,7 +23,7 @@ public class KanbanColumnJpaAdapter implements KanbanColumnPort {
     public KanbanColumn save(KanbanColumn column) {
         KanbanColumnEntity entity = new KanbanColumnEntity();
         entity.setId(column.getId());
-        entity.setBoardId(column.getBoardId());
+        entity.setBoardId(column.getBoardId().toString());
         entity.setName(column.getName());
         entity.setPosition(column.getPosition());
 
@@ -33,14 +33,14 @@ public class KanbanColumnJpaAdapter implements KanbanColumnPort {
 
     @Override
     public List<KanbanColumn> findByBoardId(UUID boardId) {
-        return repository.findByBoardId(boardId).stream()
+        return repository.findByBoardId(boardId.toString()).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public long countByBoardId(UUID boardId) {
-        return repository.countByBoardId(boardId);
+        return repository.countByBoardId(boardId.toString());
     }
 
     @Override
@@ -51,7 +51,7 @@ public class KanbanColumnJpaAdapter implements KanbanColumnPort {
     private KanbanColumn toDomain(KanbanColumnEntity entity) {
         return new KanbanColumn(
                 entity.getId(),
-                entity.getBoardId(),
+                UUID.fromString(entity.getBoardId()),
                 entity.getName(),
                 entity.getPosition()
         );

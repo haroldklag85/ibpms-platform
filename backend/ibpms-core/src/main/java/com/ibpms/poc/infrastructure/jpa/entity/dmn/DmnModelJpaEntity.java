@@ -19,8 +19,7 @@ public class DmnModelJpaEntity {
     @Column(length = 100)
     private String id;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String xmlContent;
 
     @Column(nullable = false, length = 20)

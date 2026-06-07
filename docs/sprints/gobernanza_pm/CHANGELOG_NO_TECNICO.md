@@ -337,7 +337,24 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 **Estado**: ✅ Listo
 
+## [2026-06-07] — Eliminación de Redundancia de Estados en Tareas Kanban
+
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA)
+
+**¿Qué es?**: Se limpió el código responsable de mantener el tablero visual de tareas (Kanban). Específicamente, se eliminó la costumbre del sistema de "anotar en dos libretas" el estado de una tarea. Ahora, para saber si una tarea está en curso o terminada, el Kanban le pregunta directamente a la "fuente original" de los datos (la bandeja de trabajo principal) en lugar de intentar recordar su propia versión.
+
+**¿Para qué sirve?**: Para garantizar que no existan contradicciones en el sistema. Antes, si una tarea cambiaba de estado en la base central pero el Kanban no se enteraba, el usuario veía información incorrecta (por ejemplo, una tarea en "Pendiente" que ya estaba "En progreso"). Al eliminar esta redundancia, el tablero siempre muestra la pura verdad, evitando confusiones y errores al intentar tomar una tarea que ya está asignada a otro.
+
+**¿De dónde viene?**: Historia de Usuario US-008 (Refactorización Kanban) — Handoff del Arquitecto Líder, Sprint PM-01. Cumpliendo estrictamente con la directiva "Zero-Mock" (ADR-010).
+
+**¿Qué debería hacer?**:
+- El tablero Kanban consulta la información de estado de manera precisa y en tiempo real.
+- Ya no ocurren escenarios donde una tarea parece estar libre en el tablero, pero al hacer clic dice que ya fue reclamada.
+- Se reduce la posibilidad de errores por "información desactualizada".
+
+**Estado**: ✅ Listo
+
 ---
 
-*Última actualización: 2026-06-06 20:55 COT*
+*Última actualización: 2026-06-06 23:59 COT*
 *Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*

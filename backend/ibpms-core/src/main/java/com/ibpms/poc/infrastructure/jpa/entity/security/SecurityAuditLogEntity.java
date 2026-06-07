@@ -30,8 +30,7 @@ public class SecurityAuditLogEntity {
     @Column(name = "is_break_glass")
     private Boolean isBreakGlass = false;
 
-    @Lob
-    @Column(name = "justification")
+    @Column(name = "justification", columnDefinition = "TEXT")
     private String justification;
 
     public SecurityAuditLogEntity() {

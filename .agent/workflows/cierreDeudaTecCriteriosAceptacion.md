@@ -51,6 +51,7 @@ Ejecuta el siguiente protocolo paso a paso:
 > 1. **Arquitectura Core:** Lee `docs/architecture/arquitecturar.md`
 > 2. **Negocio y Funcionalidades:** Lee el índice y la Épica correspondiente en `docs/requirements/epics/`
 > 3. **Casos de Uso UAT (Contexto Humano):** Si hay bugs de UAT, lee `docs/uat/casos_uso_uat_j02.md` o el archivo equivalente.
+> 4. **Gobernanza del PM-IA:** Lee OBLIGATORIAMENTE `docs/sprints/gobernanza_pm/GUIA_ARQUITECTO_LIDER.md` para conocer las directrices estratégicas de Cadenas de Capacidad.
 > 
 > *La precisión quirúrgica de tus delegaciones depende de que no asumas cómo funciona el proyecto, sino que lo leas siempre en cada nueva invocación. DEBES asegurar incluir esta política explícitamente en cada handoff que generes para tus subagentes.*
 

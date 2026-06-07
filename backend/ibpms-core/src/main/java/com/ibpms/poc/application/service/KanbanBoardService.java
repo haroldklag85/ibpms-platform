@@ -1,10 +1,15 @@
 package com.ibpms.poc.application.service;
 
+import com.ibpms.poc.application.dto.KanbanBoardDto;
+import com.ibpms.poc.application.dto.KanbanColumnDto;
+import com.ibpms.poc.application.dto.KanbanTaskDto;
+import com.ibpms.poc.application.dto.KanbanTaskStateDto;
 import com.ibpms.poc.application.port.in.DelegateTaskUseCase;
 import com.ibpms.poc.infrastructure.jpa.entity.KanbanTaskEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.KanbanTaskRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,15 +33,17 @@ public class KanbanBoardService implements DelegateTaskUseCase {
     private final WorkdeskProjectionRepository projectionRepository;
     private final AgileTaskService agileTaskService;
     private final KanbanColumnRepository columnRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public KanbanBoardService(KanbanTaskRepository taskRepository, KanbanBoardRepository boardRepository,
                               WorkdeskProjectionRepository projectionRepository, AgileTaskService agileTaskService,
-                              KanbanColumnRepository columnRepository) {
+                              KanbanColumnRepository columnRepository, SimpMessagingTemplate messagingTemplate) {
         this.taskRepository = taskRepository;
         this.boardRepository = boardRepository;
         this.projectionRepository = projectionRepository;
         this.agileTaskService = agileTaskService;
         this.columnRepository = columnRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public List<KanbanBoardEntity> getAllBoards() {
@@ -70,119 +77,81 @@ public class KanbanBoardService implements DelegateTaskUseCase {
 
         KanbanTaskEntity subTask = new KanbanTaskEntity();
         subTask.setBoard(parent.getBoard());
-        subTask.setOriginalTaskId(UUID.randomUUID().toString()); // Placeholder para compilación
-        subTask.setStatus("TODO");
-        subTask.setParentTask(parent);
-
-        KanbanTaskEntity savedSubTask = taskRepository.save(subTask);
-        return savedSubTask.getId().toString();
-    }
-
-    @Transactional
-    public void updateTaskState(String taskId, String newState, KanbanStateMachine stateMachine) {
-        KanbanTaskEntity task = taskRepository.findById(java.util.Objects.requireNonNull(java.util.UUID.fromString(taskId)))
-                .orElseThrow(() -> new RuntimeException("Tarea no encontrada"));
-
-        stateMachine.validateTransition(task.getStatus(), newState);
-
-        task.setStatus(newState);
-        taskRepository.save(task);
+        subTask.setOriginalTaskId(UUID.randomUUID().toString()); // Placeholder
+        return taskRepository.save(subTask).getId().toString();
     }
 
     @Transactional(readOnly = true)
-    public Map<String, List<Map<String, Object>>> getBoardColumns(String tenantId, UUID boardId) {
-        // 1. Obtener tareas del tablero Kanban
+    public KanbanBoardDto getKanbanBoard(String tenantId, String projectId) {
+        UUID boardId = UUID.fromString(projectId);
         List<KanbanTaskEntity> kanbanTasks = taskRepository.findByBoardIdOrderByUpdatedAtDesc(boardId);
-        
-        // 2. Obtener datos reales del WorkdeskProjectionRepository usando los originalTaskId
         List<String> taskIds = kanbanTasks.stream().map(KanbanTaskEntity::getOriginalTaskId).collect(Collectors.toList());
         List<WorkdeskProjectionEntity> realTasks = projectionRepository.findAllById(taskIds);
+        
         Map<String, WorkdeskProjectionEntity> realTaskMap = realTasks.stream()
             .collect(Collectors.toMap(WorkdeskProjectionEntity::getId, t -> t, (existing, replacement) -> existing));
 
-        List<KanbanColumnEntity> columns = columnRepository.findByBoardId(boardId);
-        if (columns.isEmpty()) {
-            columns = List.of();
-        }
-
-        Map<String, List<Map<String, Object>>> result = new HashMap<>();
+        Map<String, List<KanbanTaskDto>> result = new HashMap<>();
         
         for (KanbanTaskEntity kt : kanbanTasks) {
             WorkdeskProjectionEntity realTask = realTaskMap.get(kt.getOriginalTaskId());
             if (realTask == null) {
-                continue; // Ignore or marked as completed
+                continue;
             }
             
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", kt.getId());
-            map.put("originalTaskId", kt.getOriginalTaskId());
-            map.put("state", kt.getStatus());
-            map.put("title", realTask.getTitle());
-            map.put("assignee", realTask.getAssignee() != null ? realTask.getAssignee() : "Unassigned");
-            map.put("slaExpirationDate", realTask.getSlaExpirationDate());
-            if (kt.getBlockedReason() != null) {
-                map.put("blockedReason", kt.getBlockedReason());
+            KanbanTaskDto dto = new KanbanTaskDto();
+            dto.setId(kt.getId().toString());
+            dto.setOriginalTaskId(kt.getOriginalTaskId());
+            dto.setTitle(realTask.getTitle());
+            dto.setAssignee(realTask.getAssignee());
+            dto.setSlaExpirationDate(realTask.getSlaExpirationDate());
+            
+            String kanbanState;
+            if ("PENDING".equalsIgnoreCase(realTask.getStatus())) {
+                kanbanState = "TODO";
+            } else if ("CLAIMED".equalsIgnoreCase(realTask.getStatus())) {
+                kanbanState = "IN_PROGRESS";
+            } else {
+                kanbanState = "DONE";
             }
+            dto.setState(kanbanState);
 
-            result.computeIfAbsent(kt.getStatus(), k -> new ArrayList<>()).add(map);
+            result.computeIfAbsent(kanbanState, k -> new ArrayList<>()).add(dto);
         }
 
-        // 3. Agrupar dinámicamente según las columnas configuradas en KanbanColumnEntity
-        List<Map<String, Object>> columnsOutput = new ArrayList<>();
-        List<String> predefined = List.of("TODO", "IN_PROGRESS", "BLOCKED", "DONE");
-        List<String> allStatus = new ArrayList<>(predefined);
-        for (KanbanColumnEntity col : columns) {
-            if (!allStatus.contains(col.getName())) {
-                allStatus.add(col.getName());
-            }
-        }
+        List<KanbanColumnDto> columnsOutput = new ArrayList<>();
+        List<String> predefined = List.of("TODO", "IN_PROGRESS", "DONE");
         
-        for (String status : allStatus) {
-            Map<String, Object> colMap = new HashMap<>();
-            colMap.put("name", status);
-            colMap.put("tasks", result.getOrDefault(status, List.of()));
-            columnsOutput.add(colMap);
+        for (String status : predefined) {
+            KanbanColumnDto colDto = new KanbanColumnDto();
+            colDto.setName(status);
+            colDto.setTasks(result.getOrDefault(status, new ArrayList<>()));
+            columnsOutput.add(colDto);
         }
 
-        return Map.of("columns", columnsOutput);
+        KanbanBoardDto boardDto = new KanbanBoardDto();
+        boardDto.setColumns(columnsOutput);
+        return boardDto;
     }
     
     @Transactional
-    public KanbanTaskEntity moveTask(UUID kanbanTaskId, String newStatus, String assignee, String blockedReason) {
-        KanbanTaskEntity task = taskRepository.findById(kanbanTaskId)
+    public KanbanTaskStateDto moveTask(String projectId, String taskId, String newStatus, String assignee) {
+        KanbanTaskEntity task = taskRepository.findById(UUID.fromString(taskId))
                 .orElseThrow(() -> new IllegalArgumentException("Task no encontrada"));
         
-        task.setStatus(newStatus);
-        if ("BLOCKED".equals(newStatus)) {
-            task.setBlockedReason(blockedReason);
-        } else {
-            task.setBlockedReason(null);
-        }
-        taskRepository.save(task);
-
-        // Sincronización Bidireccional con Workdesk (Zero-Mock)
-        if ("IN_PROGRESS".equalsIgnoreCase(newStatus)) {
-            agileTaskService.claimTask(UUID.fromString(task.getOriginalTaskId()), assignee);
-        } else if ("TODO".equalsIgnoreCase(newStatus)) {
-            agileTaskService.unclaimTask(UUID.fromString(task.getOriginalTaskId()), assignee, null);
+        try {
+            if ("IN_PROGRESS".equalsIgnoreCase(newStatus)) {
+                agileTaskService.claimTask(UUID.fromString(task.getOriginalTaskId()), assignee);
+            } else if ("TODO".equalsIgnoreCase(newStatus)) {
+                agileTaskService.unclaimTask(UUID.fromString(task.getOriginalTaskId()), assignee, null);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error al cambiar estado de la tarea: " + e.getMessage(), e);
         }
         
-        // Crear columna si el estado no existe en KanbanColumnEntity (Auto-escalabilidad)
-        ensureColumnExists(task.getBoard(), newStatus);
+        KanbanTaskStateDto response = new KanbanTaskStateDto(task.getId().toString(), newStatus, 1L);
+        messagingTemplate.convertAndSend("/topic/workdesk/kanban", response);
         
-        return task;
-    }
-    
-    private void ensureColumnExists(KanbanBoardEntity board, String status) {
-        List<KanbanColumnEntity> cols = columnRepository.findByBoardId(board.getId());
-        boolean exists = cols.stream().anyMatch(c -> c.getName().equals(status));
-        if (!exists) {
-            KanbanColumnEntity newCol = new KanbanColumnEntity();
-            newCol.setId(UUID.randomUUID());
-            newCol.setBoardId(board.getId());
-            newCol.setName(status);
-            newCol.setPosition(cols.size() + 1);
-            columnRepository.save(newCol);
-        }
+        return response;
     }
 }

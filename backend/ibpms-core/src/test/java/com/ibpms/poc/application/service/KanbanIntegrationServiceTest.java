@@ -1,22 +1,22 @@
 package com.ibpms.poc.application.service;
 
-import com.ibpms.poc.infrastructure.jpa.entity.KanbanBoardEntity;
+import com.ibpms.poc.application.dto.KanbanBoardDto;
+import com.ibpms.poc.application.dto.KanbanTaskStateDto;
 import com.ibpms.poc.infrastructure.jpa.entity.KanbanTaskEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.KanbanBoardRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.KanbanColumnRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.KanbanTaskRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository;
 import com.ibpms.poc.infrastructure.jpa.entity.WorkdeskProjectionEntity;
-import com.ibpms.poc.infrastructure.jpa.entity.KanbanColumnEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,104 +24,90 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-public class KanbanIntegrationServiceTest {
+class KanbanIntegrationServiceTest {
 
     @Mock
     private KanbanTaskRepository taskRepository;
-
     @Mock
     private KanbanBoardRepository boardRepository;
-
     @Mock
     private WorkdeskProjectionRepository projectionRepository;
-
     @Mock
     private AgileTaskService agileTaskService;
-
     @Mock
     private KanbanColumnRepository columnRepository;
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
 
     @InjectMocks
-    private KanbanBoardService kanbanBoardService;
-
-    private UUID kanbanTaskId;
-    private KanbanTaskEntity kanbanTask;
-    private KanbanBoardEntity board;
-    private String originalTaskId;
+    private KanbanBoardService boardService;
 
     @BeforeEach
     void setUp() {
-        kanbanTaskId = UUID.randomUUID();
-        originalTaskId = UUID.randomUUID().toString();
-        board = new KanbanBoardEntity();
-        board.setId(UUID.randomUUID());
-
-        kanbanTask = new KanbanTaskEntity();
-        kanbanTask.setId(kanbanTaskId);
-        kanbanTask.setBoard(board);
-        kanbanTask.setOriginalTaskId(originalTaskId);
-        kanbanTask.setStatus("TODO");
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testMoveTaskToInProgressClaimsInWorkdesk() {
-        when(taskRepository.findById(kanbanTaskId)).thenReturn(Optional.of(kanbanTask));
-        when(columnRepository.findByBoardId(board.getId())).thenReturn(List.of());
+    void testGetKanbanBoardReturnsRealTasks() {
+        String projectId = UUID.randomUUID().toString();
+        
+        KanbanTaskEntity kt = new KanbanTaskEntity();
+        kt.setId(UUID.randomUUID());
+        kt.setOriginalTaskId(UUID.randomUUID().toString());
+        
+        WorkdeskProjectionEntity wp = new WorkdeskProjectionEntity();
+        wp.setId(kt.getOriginalTaskId());
+        wp.setTitle("Test Task");
+        wp.setStatus("PENDING");
 
-        KanbanTaskEntity result = kanbanBoardService.moveTask(kanbanTaskId, "IN_PROGRESS", "jdoe", null);
+        when(taskRepository.findByBoardIdOrderByUpdatedAtDesc(UUID.fromString(projectId))).thenReturn(List.of(kt));
+        when(projectionRepository.findAllById(List.of(kt.getOriginalTaskId()))).thenReturn(List.of(wp));
+        when(columnRepository.findByBoardId(projectId)).thenReturn(List.of());
 
-        assertEquals("IN_PROGRESS", result.getStatus());
-        verify(agileTaskService).claimTask(UUID.fromString(originalTaskId), "jdoe");
-        verify(columnRepository).save(any(KanbanColumnEntity.class)); // Verifies column creation for auto-escalability
+        KanbanBoardDto result = boardService.getKanbanBoard("default", projectId);
+
+        assertNotNull(result);
+        assertEquals(3, result.getColumns().size());
+        
+        var todoColumn = result.getColumns().stream().filter(c -> c.getName().equals("TODO")).findFirst().get();
+        assertEquals(1, todoColumn.getTasks().size());
+        assertEquals("Test Task", todoColumn.getTasks().get(0).getTitle());
     }
 
     @Test
-    void testMoveTaskToTodoUnclaimsInWorkdesk() {
-        when(taskRepository.findById(kanbanTaskId)).thenReturn(Optional.of(kanbanTask));
-        when(columnRepository.findByBoardId(board.getId())).thenReturn(List.of());
+    void testPatchTaskStateToInProgressCallsClaim() {
+        String taskId = UUID.randomUUID().toString();
+        String projectId = UUID.randomUUID().toString();
+        
+        KanbanTaskEntity kt = new KanbanTaskEntity();
+        kt.setId(UUID.fromString(taskId));
+        kt.setOriginalTaskId(UUID.randomUUID().toString());
+        
+        when(taskRepository.findById(UUID.fromString(taskId))).thenReturn(Optional.of(kt));
 
-        KanbanTaskEntity result = kanbanBoardService.moveTask(kanbanTaskId, "TODO", "jdoe", null);
+        KanbanTaskStateDto response = boardService.moveTask(projectId, taskId, "IN_PROGRESS", "user123");
 
-        assertEquals("TODO", result.getStatus());
-        verify(agileTaskService).unclaimTask(UUID.fromString(originalTaskId), "jdoe", null);
+        assertEquals("IN_PROGRESS", response.getStatus());
+        verify(agileTaskService, times(1)).claimTask(UUID.fromString(kt.getOriginalTaskId()), "user123");
     }
 
     @Test
-    void testMoveToCustomStateCreatesColumn() {
-        when(taskRepository.findById(kanbanTaskId)).thenReturn(Optional.of(kanbanTask));
-        when(columnRepository.findByBoardId(board.getId())).thenReturn(List.of()); // No columns configured
-
-        kanbanBoardService.moveTask(kanbanTaskId, "CUSTOM_STATE", "jdoe", null);
-
-        verify(columnRepository).save(argThat(col -> col.getName().equals("CUSTOM_STATE")));
-    }
-
-    @Test
-    void testGetBoardColumnsMergesRealData() {
-        when(taskRepository.findByBoardIdOrderByUpdatedAtDesc(board.getId())).thenReturn(List.of(kanbanTask));
+    void testPatchTaskStateEmitsWebsocketEvent() {
+        String taskId = UUID.randomUUID().toString();
+        String projectId = UUID.randomUUID().toString();
         
-        WorkdeskProjectionEntity realTask = new WorkdeskProjectionEntity();
-        realTask.setId(originalTaskId);
-        realTask.setOriginalTaskId(originalTaskId);
-        realTask.setTitle("Test Title");
-        realTask.setAssignee("jdoe");
+        KanbanTaskEntity kt = new KanbanTaskEntity();
+        kt.setId(UUID.fromString(taskId));
+        kt.setOriginalTaskId(UUID.randomUUID().toString());
         
-        when(projectionRepository.findAllById(List.of(originalTaskId))).thenReturn(List.of(realTask));
-        when(columnRepository.findByBoardId(board.getId())).thenReturn(List.of());
+        when(taskRepository.findById(UUID.fromString(taskId))).thenReturn(Optional.of(kt));
 
-        Map<String, List<Map<String, Object>>> response = kanbanBoardService.getBoardColumns("tenant1", board.getId());
+        boardService.moveTask(projectId, taskId, "TODO", "user123");
 
-        assertNotNull(response);
-        List<Map<String, Object>> columns = response.get("columns");
+        ArgumentCaptor<KanbanTaskStateDto> captor = ArgumentCaptor.forClass(KanbanTaskStateDto.class);
+        verify(messagingTemplate, times(1)).convertAndSend(eq("/topic/workdesk/kanban"), captor.capture());
         
-        // Find the "TODO" column
-        Map<String, Object> todoCol = columns.stream().filter(c -> "TODO".equals(c.get("name"))).findFirst().orElseThrow();
-        List<Map<String, Object>> tasks = (List<Map<String, Object>>) todoCol.get("tasks");
-        
-        assertEquals(1, tasks.size());
-        Map<String, Object> taskMap = tasks.get(0);
-        assertEquals("Test Title", taskMap.get("title"));
-        assertEquals("jdoe", taskMap.get("assignee"));
+        assertEquals("TODO", captor.getValue().getStatus());
+        verify(agileTaskService, times(1)).unclaimTask(eq(UUID.fromString(kt.getOriginalTaskId())), eq("user123"), isNull());
     }
 }

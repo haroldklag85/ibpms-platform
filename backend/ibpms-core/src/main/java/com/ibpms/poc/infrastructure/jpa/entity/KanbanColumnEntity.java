@@ -17,7 +17,7 @@ public class KanbanColumnEntity {
     private UUID id;
 
     @Column(name = "board_id", nullable = false)
-    private UUID boardId;
+    private String boardId;
 
     @Column(nullable = false)
     private String name;
@@ -28,8 +28,8 @@ public class KanbanColumnEntity {
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
-    public UUID getBoardId() { return boardId; }
-    public void setBoardId(UUID boardId) { this.boardId = boardId; }
+    public String getBoardId() { return boardId; }
+    public void setBoardId(String boardId) { this.boardId = boardId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public int getPosition() { return position; }

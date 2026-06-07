@@ -1,21 +1,14 @@
 package com.ibpms.poc.infrastructure.jpa.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import jakarta.persistence.EntityListeners;
-import com.ibpms.poc.infrastructure.event.KanbanTaskSyncListener;
 
 @Entity
 @Table(name = "ibpms_task")
@@ -32,30 +25,15 @@ public class KanbanTaskEntity {
     @Column(name = "original_task_id", nullable = false)
     private String originalTaskId;
 
-    @Column(name = "status", nullable = false, length = 50)
-    private String status;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Lob
-    @Column(name = "blocked_reason", columnDefinition = "TEXT")
-    private String blockedReason;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_task_id", referencedColumnName = "id", columnDefinition = "bpchar")
-    private KanbanTaskEntity parentTask;
-
-    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL)
-    private List<KanbanTaskEntity> subTasks = new ArrayList<>();
-
     public KanbanTaskEntity() {
         this.id = UUID.randomUUID();
         this.createdAt = LocalDateTime.now();
-        this.status = "TODO";
     }
 
     public UUID getId() {
@@ -82,14 +60,6 @@ public class KanbanTaskEntity {
         this.originalTaskId = originalTaskId;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -113,29 +83,5 @@ public class KanbanTaskEntity {
     @jakarta.persistence.PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
-    }
-
-    public KanbanTaskEntity getParentTask() {
-        return parentTask;
-    }
-
-    public void setParentTask(KanbanTaskEntity parentTask) {
-        this.parentTask = parentTask;
-    }
-
-    public List<KanbanTaskEntity> getSubTasks() {
-        return subTasks;
-    }
-
-    public void setSubTasks(List<KanbanTaskEntity> subTasks) {
-        this.subTasks = subTasks;
-    }
-
-    public String getBlockedReason() {
-        return blockedReason;
-    }
-
-    public void setBlockedReason(String blockedReason) {
-        this.blockedReason = blockedReason;
     }
 }

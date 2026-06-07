@@ -9,7 +9,6 @@ import com.ibpms.poc.infrastructure.jpa.repository.KanbanTaskRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,11 +38,7 @@ public class KanbanTaskJpaAdapter implements KanbanTaskPort {
         board.setId(task.getBoardId());
         entity.setBoard(board);
         
-        entity.setStatus(task.getStatus().name());
-        entity.setBlockedReason(task.getBlockedReason());
-        
-        // originalTaskId needs to be set, assuming task.getId() or similar. Using a default or task.getId().toString() if possible.
-        // If Domain model KanbanTask doesn't have it, we use task.getId().toString() as placeholder.
+        // originalTaskId needs to be set
         entity.setOriginalTaskId(task.getId().toString());
 
         entity = repository.save(entity);
@@ -66,19 +61,12 @@ public class KanbanTaskJpaAdapter implements KanbanTaskPort {
         KanbanTask task = new KanbanTask();
         task.setId(entity.getId());
         task.setBoardId(entity.getBoard().getId());
-        // Zero-Mock: Domain KanbanTask might still have these, we mock them since Entity doesn't store them anymore
         task.setTitle("Workdesk Data (Zero-Mock)");
         task.setDescription("N/A");
-        
-        try {
-            task.setStatus(KanbanState.valueOf(entity.getStatus()));
-        } catch (IllegalArgumentException | NullPointerException e) {
-            task.setStatus(KanbanState.TODO);
-        }
-
+        task.setStatus(KanbanState.TODO);
         task.setAssignee("N/A");
         task.setPriority("N/A");
-        task.setBlockedReason(entity.getBlockedReason());
+        task.setBlockedReason("N/A");
         if (entity.getCreatedAt() != null) {
             task.setCreatedAt(entity.getCreatedAt().atZone(ZoneId.systemDefault()));
         }

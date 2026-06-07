@@ -300,5 +300,24 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 ---
 
-*Última actualización: 2026-06-07 01:20 COT*
+## [2026-06-07] — Sistema de Monitoreo y Telemetría de Procesos
+
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA)
+
+**¿Qué es?**: Se construyeron las bases del sistema de monitoreo (telemetría) que permite listar qué procesos de negocio están activos, cuáles ya terminaron, y si alguno sufrió un error inesperado durante su ejecución.
+
+**¿Para qué sirve?**: Para que los administradores puedan vigilar la "salud" del sistema. Si un trámite se queda atascado por un error técnico, el sistema ahora puede identificarlo (como un "incidente") para que el equipo de soporte lo rescate sin que el usuario final pierda su información.
+
+**¿De dónde viene?**: Historia de Usuario US-030 (Monitoreo BPMN) — Handoff del Arquitecto Líder, Sprint PM-01.
+
+**¿Qué debería hacer?**:
+- El sistema puede listar todas las instancias de procesos que están en curso o suspendidas.
+- El sistema puede listar los procesos que ya terminaron su ciclo de vida.
+- El sistema detecta y lista los errores internos (incidentes), indicando en qué trámite falló.
+
+**Estado**: ✅ Listo
+
+---
+
+*Última actualización: 2026-06-07 20:46 COT*
 *Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*

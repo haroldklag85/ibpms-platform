@@ -415,4 +415,10 @@ export const api = {
             headers: { 'Idempotency-Key': idempotencyKey }
         });
     },
+
+    // -----------------------------------------------------------------
+    // US-030: Telemetría BPMN (BAM)
+    // -----------------------------------------------------------------
+    getTelemetryInstances: (status?: string) => apiClient.get('/bpm/telemetry/instances', { params: { status } }),
+    getTelemetryIncidents: () => apiClient.get('/bpm/telemetry/incidents'),
 };

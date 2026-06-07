@@ -317,7 +317,25 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 **Estado**: ✅ Listo
 
+## [2026-06-07] — Pantalla de Monitoreo de Procesos e Incidentes (BAM)
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE)
+
+**¿Qué es?**: Se construyó el tablero de control visual para monitorear en tiempo real todos los trámites que administra el sistema. Esta pantalla lista los procesos activos, completados y suspendidos, y cuenta con un panel destacado para alertar sobre incidentes técnicos o errores que requieran atención inmediata.
+
+**¿Para qué sirve?**: Para que los administradores tengan una visión panorámica (Business Activity Monitoring) del estado del sistema. Si un trámite se detiene por un fallo en el servidor o un error de conexión, el panel de incidentes lo muestra de inmediato. Así, el equipo de soporte técnico puede enterarse y resolver el problema antes de que el usuario final se dé cuenta, garantizando que el flujo de trabajo nunca se interrumpa.
+
+**¿De dónde viene?**: Historia de Usuario US-030 (Monitoreo BPMN) — Handoff del Arquitecto Líder, Sprint PM-01.
+
+**¿Qué debería hacer?**:
+- El tablero principal muestra una lista de todos los procesos iniciados, con su estado actual y fecha de creación.
+- Permite filtrar rápidamente para ver solo los procesos activos, completados o suspendidos.
+- Si ocurre algún error técnico en el motor de procesos, aparece inmediatamente en el "Panel de Incidentes Activos".
+- El diseño es moderno, rápido y muestra información 100% real y actualizada.
+
+**Estado**: ✅ Listo
+
 ---
 
-*Última actualización: 2026-06-07 20:46 COT*
+*Última actualización: 2026-06-06 20:55 COT*
 *Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*

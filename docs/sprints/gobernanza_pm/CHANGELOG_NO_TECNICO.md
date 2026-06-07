@@ -274,3 +274,31 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 **Estado**: ✅ Listo
 
+---
+
+## [2026-06-07] — La pantalla de trabajo ahora tiene un botón para iniciar nuevos trámites y ejecutar tareas del motor de procesos
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE)
+
+**¿Qué es?**: Se conectó la pantalla principal de trabajo (Bandeja Unificada) con la capacidad de iniciar nuevos trámites y completar las tareas generadas por el motor de procesos. Ahora aparece un botón verde "Iniciar Caso" en la barra superior que abre un panel lateral con la lista de procesos disponibles para ejecutar.
+
+**¿Para qué sirve?**: Para que los usuarios puedan iniciar un nuevo trámite (por ejemplo, "Solicitud de Crédito" o "Alta de Proveedor") directamente desde su pantalla de trabajo, sin necesidad de ir a otra sección del sistema. Al iniciar un caso, las tareas generadas aparecen automáticamente en la bandeja del equipo. Además, cuando un usuario completa una tarea de un proceso, el sistema usa la ruta directa al motor de procesos para asegurar que la operación sea confiable.
+
+**¿De dónde viene?**: Historia de Usuario US-007 (Ejecución de Procesos) — Integración visual aprobada por el Arquitecto Líder, Sprint PM-01.
+
+**¿Qué debería hacer?**:
+- En la parte superior de la bandeja de trabajo aparece un botón verde "Iniciar Caso"
+- Al presionarlo, se abre un panel lateral con la lista de todos los procesos de negocio disponibles
+- Cada proceso muestra su nombre, versión y un botón "Iniciar Caso"
+- Antes de iniciar, el sistema pide confirmación para evitar ejecuciones accidentales
+- Si el inicio es exitoso, muestra un aviso verde con el identificador del nuevo caso
+- Si ocurre un error (por ejemplo, el proceso no existe), muestra un mensaje claro y entendible
+- Después de iniciar un caso exitosamente, la bandeja se refresca automáticamente para mostrar las nuevas tareas
+- Al completar una tarea de proceso, el sistema determina automáticamente la mejor ruta para registrar la finalización
+
+**Estado**: ✅ Listo
+
+---
+
+*Última actualización: 2026-06-07 01:20 COT*
+*Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*

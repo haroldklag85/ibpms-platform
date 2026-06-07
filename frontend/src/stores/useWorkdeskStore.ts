@@ -237,6 +237,30 @@ export const useWorkdeskStore = defineStore('workdesk', {
       });
     },
 
+    /**
+     * Completa una tarea BPMN usando el endpoint directo del motor (US-007).
+     * Ruta: POST /api/bpmn/tasks/{taskId}/complete → 204 No Content.
+     * Bifurcación aprobada por el Arquitecto: usar para tareas con sourceSystem === 'BPMN'.
+     * @traceability US-007 — Ejecución BPMN, ADR-001 (Hexagonal)
+     */
+    async completeBpmnTaskDirect(taskId: string, variables: Record<string, unknown> = {}) {
+      return this._withNetworkSafety(async () => {
+        const snapshot = JSON.parse(JSON.stringify(this.items));
+        const taskIdx = this.items.findIndex(i => i.unifiedId === taskId || i.originalTaskId === taskId);
+        if (taskIdx !== -1) {
+            this.items.splice(taskIdx, 1);
+        }
+        try {
+            await api.completeBpmnTask(taskId, variables);
+            // 204 No Content — no hay body de respuesta
+            return null;
+        } catch (err: any) {
+            this.items = snapshot;
+            throw err;
+        }
+      });
+    },
+
     // @Traceability: US-002 - CA-10, CA-22
     async bulkClaimTasks(taskIds: string[]) {
       return this._withNetworkSafety(async () => {

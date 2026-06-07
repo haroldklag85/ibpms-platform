@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { useMenuStore } from '@/stores/useMenuStore';
+import type { StartProcessRequest } from '@/types/Process';
 
 // Instancia global con baseUrl que pasa por el Proxy de Vite (/api -> localhost:8080)
 const apiClient: AxiosInstance = axios.create({
@@ -391,5 +392,27 @@ export const api = {
         return apiClient.post(`/agile/tasks/${taskId}/timebox`, payload, {
             headers: { 'Idempotency-Key': uuid }
         });
-    }
+    },
+
+    // -----------------------------------------------------------------
+    // US-007: Ejecución BPMN (Endpoints fuera de /api/v1, bajo /api/bpmn)
+    // @Traceability: US-007 — Ejecución BPMN, ADR-001 (Hexagonal)
+    // NOTA: baseURL override requerido porque estos endpoints NO están
+    //       bajo /api/v1 sino bajo /api/bpmn directamente.
+    // -----------------------------------------------------------------
+
+    /** Inicia una nueva instancia de proceso BPMN — POST /api/bpmn/instances → 201 */
+    startProcess: (payload: StartProcessRequest) =>
+        apiClient.post('/bpmn/instances', payload, { baseURL: '/api' }),
+
+    /** Completa una tarea BPMN directamente (ruta US-007) — POST /api/bpmn/tasks/{id}/complete → 204 */
+    completeBpmnTask: (taskId: string, variables?: Record<string, unknown>) => {
+        const idempotencyKey = (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        return apiClient.post(`/bpmn/tasks/${taskId}/complete`, variables ?? {}, {
+            baseURL: '/api',
+            headers: { 'Idempotency-Key': idempotencyKey }
+        });
+    },
 };

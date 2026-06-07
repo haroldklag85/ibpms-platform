@@ -35,10 +35,10 @@ public class KanbanStateController {
 
     @GetMapping("/board")
     @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
-    public ResponseEntity<Map<String, List<Map<String, Object>>>> getBoard() {
+    public ResponseEntity<Map<String, List<Map<String, Object>>>> getBoard(@RequestParam java.util.UUID boardId) {
         String tenantId = SecurityContextUtils.getTenantId();
         // Llama al BoardService para retornar las tareas agrupadas por estado (columnas) para el tenant
-        Map<String, List<Map<String, Object>>> columns = boardService.getBoardColumns(tenantId);
+        Map<String, List<Map<String, Object>>> columns = boardService.getBoardColumns(tenantId, boardId);
         return ResponseEntity.ok(columns);
     }
 

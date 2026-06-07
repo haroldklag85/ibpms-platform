@@ -66,7 +66,7 @@ public class TimeTrackingIT extends AbstractIntegrationTest {
 
         task = new KanbanTaskEntity();
         task.setBoard(board);
-        task.setTitle("Task IT");
+        // task.setTitle("Task IT");
         task.setStatus("IN_PROGRESS");
         task = taskRepository.save(task);
     }

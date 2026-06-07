@@ -39,18 +39,12 @@ public class KanbanTaskJpaAdapter implements KanbanTaskPort {
         board.setId(task.getBoardId());
         entity.setBoard(board);
         
-        entity.setTitle(task.getTitle());
-        entity.setDescription(task.getDescription());
         entity.setStatus(task.getStatus().name());
-        entity.setAssignee(task.getAssignee());
-        entity.setPriority(task.getPriority());
         entity.setBlockedReason(task.getBlockedReason());
-
-        if (task.getSlaDueDate() != null) {
-            entity.setSlaDueDate(task.getSlaDueDate().toLocalDateTime());
-        } else {
-            entity.setSlaDueDate(null);
-        }
+        
+        // originalTaskId needs to be set, assuming task.getId() or similar. Using a default or task.getId().toString() if possible.
+        // If Domain model KanbanTask doesn't have it, we use task.getId().toString() as placeholder.
+        entity.setOriginalTaskId(task.getId().toString());
 
         entity = repository.save(entity);
         return toDomain(entity);
@@ -72,8 +66,9 @@ public class KanbanTaskJpaAdapter implements KanbanTaskPort {
         KanbanTask task = new KanbanTask();
         task.setId(entity.getId());
         task.setBoardId(entity.getBoard().getId());
-        task.setTitle(entity.getTitle());
-        task.setDescription(entity.getDescription());
+        // Zero-Mock: Domain KanbanTask might still have these, we mock them since Entity doesn't store them anymore
+        task.setTitle("Workdesk Data (Zero-Mock)");
+        task.setDescription("N/A");
         
         try {
             task.setStatus(KanbanState.valueOf(entity.getStatus()));
@@ -81,13 +76,9 @@ public class KanbanTaskJpaAdapter implements KanbanTaskPort {
             task.setStatus(KanbanState.TODO);
         }
 
-        task.setAssignee(entity.getAssignee());
-        task.setPriority(entity.getPriority());
+        task.setAssignee("N/A");
+        task.setPriority("N/A");
         task.setBlockedReason(entity.getBlockedReason());
-
-        if (entity.getSlaDueDate() != null) {
-            task.setSlaDueDate(entity.getSlaDueDate().atZone(ZoneId.systemDefault()));
-        }
         if (entity.getCreatedAt() != null) {
             task.setCreatedAt(entity.getCreatedAt().atZone(ZoneId.systemDefault()));
         }

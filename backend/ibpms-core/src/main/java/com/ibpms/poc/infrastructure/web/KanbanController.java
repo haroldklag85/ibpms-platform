@@ -38,6 +38,13 @@ public class KanbanController {
         return ResponseEntity.ok(boardService.getTasksByBoard(boardId));
     }
 
+    @GetMapping("/boards/{boardId}/columns")
+    public ResponseEntity<Map<String, List<Map<String, Object>>>> getBoardColumns(
+            @PathVariable UUID boardId,
+            @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
+        return ResponseEntity.ok(boardService.getBoardColumns(tenantId, boardId));
+    }
+
     @PostMapping("/boards/{boardId}/tasks")
     public ResponseEntity<KanbanTaskEntity> createTask(@PathVariable UUID boardId, @RequestBody KanbanTaskEntity task) {
         return ResponseEntity.status(HttpStatus.CREATED).body(boardService.createTask(boardId, task));
@@ -57,7 +64,9 @@ public class KanbanController {
         }
         
         try {
-            KanbanTaskEntity saved = boardService.moveTaskLegacy(taskId, newStatus);
+            String assignee = payload.get("assignee");
+            String blockedReason = payload.get("reason");
+            KanbanTaskEntity saved = boardService.moveTask(taskId, newStatus, assignee, blockedReason);
             return ResponseEntity.ok(saved);
         } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)

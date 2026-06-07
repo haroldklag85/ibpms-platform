@@ -59,7 +59,7 @@ public class KanbanStateTransitionIT extends AbstractIntegrationTest {
 
         task = new KanbanTaskEntity();
         task.setBoard(board);
-        task.setTitle("Task IT");
+        // task.setTitle("Task IT");
         task.setStatus("TODO");
         task = taskRepository.save(task);
     }

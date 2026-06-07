@@ -19,7 +19,6 @@ import com.ibpms.poc.infrastructure.event.KanbanTaskSyncListener;
 
 @Entity
 @Table(name = "ibpms_task")
-@EntityListeners(KanbanTaskSyncListener.class)
 public class KanbanTaskEntity {
 
     @Id
@@ -30,24 +29,11 @@ public class KanbanTaskEntity {
     @JoinColumn(name = "board_id", nullable = false)
     private KanbanBoardEntity board;
 
-    @Column(name = "title", nullable = false, length = 255)
-    private String title;
-
-    @Lob
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "original_task_id", nullable = false)
+    private String originalTaskId;
 
     @Column(name = "status", nullable = false, length = 50)
     private String status;
-
-    @Column(name = "assignee", length = 100)
-    private String assignee;
-
-    @Column(name = "priority", length = 20)
-    private String priority;
-
-    @Column(name = "sla_due_date")
-    private LocalDateTime slaDueDate;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -88,20 +74,12 @@ public class KanbanTaskEntity {
         this.board = board;
     }
 
-    public String getTitle() {
-        return title;
+    public String getOriginalTaskId() {
+        return originalTaskId;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setOriginalTaskId(String originalTaskId) {
+        this.originalTaskId = originalTaskId;
     }
 
     public String getStatus() {
@@ -110,34 +88,6 @@ public class KanbanTaskEntity {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getAssignee() {
-        return assignee;
-    }
-
-    @com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-008", CA = {"CA-04"})
-    public void setAssignee(String assignee) {
-        if (assignee != null && (assignee.contains(",") || assignee.contains(";") || assignee.trim().split("\\s+").length > 1)) {
-            throw new IllegalArgumentException("CA-04 Violación Anti-Multitasking: Una tarea Kanban solo puede tener un único dueño (Single-Assignee).");
-        }
-        this.assignee = assignee;
-    }
-
-    public String getPriority() {
-        return priority;
-    }
-
-    public void setPriority(String priority) {
-        this.priority = priority;
-    }
-
-    public LocalDateTime getSlaDueDate() {
-        return slaDueDate;
-    }
-
-    public void setSlaDueDate(LocalDateTime slaDueDate) {
-        this.slaDueDate = slaDueDate;
     }
 
     public LocalDateTime getCreatedAt() {

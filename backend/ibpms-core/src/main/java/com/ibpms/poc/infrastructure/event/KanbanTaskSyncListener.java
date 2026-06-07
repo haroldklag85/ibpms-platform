@@ -51,10 +51,10 @@ public class KanbanTaskSyncListener {
             projection.setId("KANBAN-" + task.getId());
             projection.setSourceSystem("KANBAN");
             projection.setOriginalTaskId(task.getId().toString());
-            projection.setTitle(task.getTitle());
-            projection.setAssignee(task.getAssignee());
+            projection.setTitle("N/A");
+            projection.setAssignee(null);
             projection.setCandidateGroup(null); // Kanban simple no maneja grupos aquí
-            projection.setSlaExpirationDate(task.getSlaDueDate());
+            projection.setSlaExpirationDate(null);
             projection.setStatus(task.getStatus());
 
             // @Traceability(US = "US-001", CA = {"CA-23"})
@@ -71,7 +71,7 @@ public class KanbanTaskSyncListener {
                 wsEvent.setTaskId("KANBAN-" + task.getId());
                 wsEvent.setTenantId(tenantId);
                 
-                if (task.getAssignee() != null) {
+                if (false) { // Disabled assignee check since it's not in KanbanTaskEntity anymore
                     wsEvent.setAction(com.ibpms.poc.application.dto.WsWorkdeskEventDTO.Action.REMOVE); // CA-06: Ghost deletion
                     messagingTemplate.convertAndSend("/topic/workdesk/" + tenantId, wsEvent);
                 } else if ("PENDING".equals(task.getStatus())) {

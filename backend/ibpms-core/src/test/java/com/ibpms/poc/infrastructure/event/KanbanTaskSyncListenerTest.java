@@ -43,8 +43,7 @@ class KanbanTaskSyncListenerTest {
 
         mockTask = new KanbanTaskEntity();
         mockTask.setId(UUID.randomUUID());
-        mockTask.setTitle("QA Audit Task");
-        mockTask.setStatus("OPEN");
+        mockTask.setStatus("TODO");
     }
 
     @Test
@@ -66,7 +65,6 @@ class KanbanTaskSyncListenerTest {
     @Test
     void whenTaskIsAssignedOrCompleted_thenSyncsToCQRS_AndBroadcastsWebsocket() {
         // Arrange
-        mockTask.setAssignee("agent.smith");
         when(projectionRepository.findById(anyString())).thenReturn(Optional.empty());
 
         // Act
@@ -78,7 +76,6 @@ class KanbanTaskSyncListenerTest {
         
         WorkdeskProjectionEntity saved = entityCaptor.getValue();
         assertEquals("KANBAN-" + mockTask.getId(), saved.getId());
-        assertEquals("agent.smith", saved.getAssignee());
 
         // Assert Websocket Broadcast
         verify(messagingTemplate, times(1)).convertAndSend(

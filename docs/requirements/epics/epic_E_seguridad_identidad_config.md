@@ -176,6 +176,48 @@ Feature: Identity Governance & RBAC Architecture
     And TIENE PROHIBIDO que la US-036 implemente su propia lógica de invalidación de tokens separada de la US-038.
     And ambas historias DEBEN ser asignadas al mismo Arquitecto de Software para garantizar coherencia en el diseño de seguridad.
 
+ # ==============================================================================
+  # [REFINAMIENTO] GOBERNANZA DINÁMICA DE TOPOLOGÍA VISUAL (MENÚ) (2026-04-22)
+  # ==============================================================================
+  Scenario: [REFINAMIENTO] Experiencia de Caída Segura (UX Fallback) (CA-26)
+    Given un usuario que inicia sesión pero su rol asignado no posee ningún menú activo (o le han sido revocados todos)
+    Then el Frontend ruteará al usuario hacia una "Página de Bienvenida" en blanco o Dashboard base neutral
+    And nunca lo dejará en un estado bloqueado con errores o con menús fantasma.
+
+  Scenario: [REFINAMIENTO] Inmutabilidad de Roles Nativos del Sistema (CA-27)
+    Given la necesidad de proteger la plataforma de bloqueos accidentales
+    When el CISO intenta editar los permisos de menú de un rol fundacional (ej. `SUPER_ADMIN` o `SYSTEM_ADMIN`)
+    Then la interfaz de selección de módulos (checkboxes) estará bloqueada (Read-Only/Disabled)
+    And se garantizará que los roles nativos siempre retengan acceso total al menú de Administración.
+
+  Scenario: [REFINAMIENTO] Granularidad Macro de la Topología Visual (CA-28)
+    Given la configuración de los accesos de menú para un nuevo rol en la V1
+    Then la interfaz permitirá habilitar/deshabilitar estrictamente los 7 Módulos Macro principales (Workdesk, Service Delivery, BAM, Modeler, Integración, Proyectos, Administración)
+    And no se exigirá selección granular de submenús internos, gobernando el acceso a nivel de macro-módulo por ahora.
+
+  Scenario: [REFINAMIENTO] Diseño Limpio del Modal de Roles (Tablas/Tabs) (CA-29)
+    Given la Pantalla 14 donde el CISO forja o edita un nuevo rol
+    Then la UI implementará un diseño dividido en Pestañas (Tabs) para no saturar verticalmente el modal
+    And existirá un "Tab 1: Información Básica" y un "Tab 2: Topología de Menús" aplicando buenas prácticas de UX/UI.
+
+  Scenario: [REFINAMIENTO] Superposición Inclusiva Multirrol (Unión Matemática) (CA-30)
+    Given un usuario al que se le han asignado múltiples roles (Ej: Rol A y Rol B)
+    When el Backend calcula los menús que el usuario puede ver
+    Then el sistema realizará la unión matemática inclusiva de los permisos de ambos roles
+    And entregará un listado unificado sin colisiones donde el usuario podrá ver tanto los módulos del Rol A como los del Rol B.
+
+  Scenario: [REFINAMIENTO] Arquitectura Endpoint Dinámico (Anti-JWT Bloat) (CA-31)
+    Given la prohibición estricta de usar JWT para gestionar la topología UI de gran tamaño
+    Then el Frontend consumirá obligatoriamente un Endpoint Dinámico dedicado (`GET /api/v1/users/me/menu-layout`)
+    And este endpoint retornará el JSON estricto con los módulos permitidos para el usuario logueado.
+
+  Scenario: [REFINAMIENTO] Caché Híbrida y Auto-Curación Zero-Trust (CA-32)
+    Given que el Frontend no debe saturar la red preguntando el menú en cada clic
+    Then el sistema implementará memoria en Frontend (Pinia `useMenuStore`) cargando el menú 1 sola vez por sesión
+    And el Backend cacheará esto en Redis (`@Cacheable`) purgándolo (`@CacheEvict`) si un rol es modificado
+    And si el usuario intenta navegar a un menú recién revocado por caché vieja, el Backend emitirá un 403, y el Interceptor Axios del Frontend purgará el Pinia y emitirá un Toast: "Sus accesos han sido actualizados por el Administrador".
+
+
 ```
 **Trazabilidad UX:** Wireframes Pantallas 14, 6, 7 y Workdesk (5).
 
@@ -417,64 +459,64 @@ El DevPortal habilitará el ecosistema "Componible" (V2-Ready). Dado que intervi
 **Criterios de Aceptación (Gherkin):**
 ```gherkin
 Feature: Zero-Trust Developer Portal Security
-  Scenario: Autodestrucción del Secreto (OWASP)
+  Scenario: Autodestrucción del Secreto (OWASP) (CA-01)
     Given que el desarrollador requiere un Service Principal (API Key) para su módulo externo
     When el sistema le revela el "Client Secret" en texto plano
     Then el sistema otorga un máximo de 3 oportunidades (intentos de visualización/copiado)
     And al agotar el tercer intento, el secreto se oculta permanentemente y "autodestruye" visualmente, obligando a generar uno nuevo si se perdió.
 
-  Scenario: Aislamiento por Cliente (Row-Level Tenancy)
+  Scenario: Aislamiento por Cliente (Row-Level Tenancy) (CA-02)
     Given un Módulo Externo autenticado
     When envía peticiones de consulta (GET) o mutación (POST)
     Then la arquitectura forza a nivel de Base de Datos que SÓLO pueda interactuar con la data y expedientes pertenecientes al Cliente que pagó y autorizó dicho Módulo.
     And tiene prohibición estructural de realizar Borrados Físicos (DELETE) en instacias Core de clientes.
 
-  Scenario: Ceguera Intencional y Sub-scopes restrictivos
+  Scenario: Ceguera Intencional y Sub-scopes restrictivos (CA-03)
     Given una API Key generada
     Then su token JWT debe nacer "capado" con un Sub-Scope limitante (Ej: `App_Read_Only`)
     And garantizando que el módulo pueda listar o leer tareas para su procesamiento, pero matemáticamente el backend rechace cualquier intento de "Edición" (Ceguera Operativa forzada).
 
-  Scenario: Prevención Anti-DDoS y Radar de Tráfico
+  Scenario: Prevención Anti-DDoS y Radar de Tráfico (CA-04)
     Given un módulo de terceros volviéndose errático y enviando ráfagas masivas
     Then el Azure APIM Gateway (o Kong local) activa un "Radar de Control" con Rate-Limiting estructurado
     And retorna HTTP 429 cortando la comunicación en el perímetro, protegiendo a la Base de Datos y al motor Camunda.
 
-  Scenario: Cuarentena de Nuevos Módulos (Sandbox Inyectado)
+  Scenario: Cuarentena de Nuevos Módulos (Sandbox Inyectado) (CA-05)
     Given un Módulo Externo recién registrado en el DevPortal
     Then por defecto nace en estado `Quarantine` apuntando a las bases de datos `Sandbox/Mirror`
     And no puede interactuar con el entorno productivo real del iBPMS hasta que el Administrador Global certifique su comportamiento.
 
-  Scenario: Revocación por Reporte Humano
+  Scenario: Revocación por Reporte Humano (CA-06)
     Given una sospecha de brecha de seguridad en un módulo externo
     When un administrador humano procesa el reporte y oprime `[Revocar Llave]` en la Pantalla 13
     Then el Token JWT principal del módulo y todos los de refresco caen de inmediato, generando un proceso de desconexión forzosa del entorno.
 
-  Scenario: Fechas de Caducidad y Alertas Administrativas
+  Scenario: Fechas de Caducidad y Alertas Administrativas (CA-07)
     Given que todas las "Llaves de Sistema" nacen con un Time-to-Live (TTL) finito (Fecha de expiración)
     Then semanas antes del vencimiento, el sistema dispara automáticamente alertas tempranas hacia el correo del Administrador para su gestión oportuna, advirtiendo del inminente apagón del módulo.
 
-  Scenario: Alertas Activas contra "Curiosidad Maliciosa"
+  Scenario: Alertas Activas contra "Curiosidad Maliciosa" (CA-08)
     Given que el token de un módulo intenta ejecutar un Endpoint o tocar una carpeta / archivo fuera de su Scope pre-aprobado (HTTP 403 Forbidden)
     Then el iBPMS bloquea la petición
     And dispara inmediatamente una notificación/alerta en tiempo real al correo del Oficial de Seguridad detallando el intento de intrusión.
 
-  Scenario: Trazabilidad Extrema (La Culpa Compartida)
+  Scenario: Trazabilidad Extrema (La Culpa Compartida) (CA-09)
     Given un Módulo Externo realizando acciones permitidas (Ej. Aprobando un caso)
     Then el Audit Ledger del sistema guarda el log asociando el autor indudablemente a `[App_De_Tercero: CRM_Bot]`, proveyendo evidencia legal irrefutable de que fue la máquina del proveedor quien manipuló los datos y no un humano de nuestra plantilla.
 
-  Scenario: Sandboxing Frontend (Aislamiento de Módulos Custom)
+  Scenario: Sandboxing Frontend (Aislamiento de Módulos Custom) (CA-10)
     Given que el equipo ha desarrollado un "Súper Módulo" con una UI exótica en React o Angular
     When este módulo se despliega dentro del ecosistema iBPMS (V1)
     Then el iBPMS cargará dicha UI de forma dinámica utilizando Iframes aislados (`sandbox`)
     And cualquier comunicación dinámica entre el Core (Vue 3) y el Iframe externo se realizará de manera controlada usando `window.postMessage()`, garantizando cero colisiones en el DOM, CSS Global o memoria (Pinia).
 
-  Scenario: Tokens OIDC con Audiencia Específica (Extensibility Scope)
+  Scenario: Tokens OIDC con Audiencia Específica (Extensibility Scope) (CA-11)
     Given un "Súper Módulo" registrado en el DevPortal
     When el Módulo obtiene sus credenciales OIDC contra Entra ID
     Then el JWT generado poseerá internamente Claims distintivos de extensión (Ej: `aud: ibpms.extensibility.supermodules`)
     And el SecurityFilterChain (Spring Boot) del Core leerá esta audiencia y bifurcará explícitamente los permisos, denegando el acceso a APIs puras de administrador humano.
 
-  Scenario: Obediencia al Hexágono y Prohibición de Bypass JPA
+  Scenario: Obediencia al Hexágono y Prohibición de Bypass JPA (CA-12)
     Given un Agente de Desarrollo o Humano codificando el Backend funcional de un "Súper Módulo"
     When intente persistir un nuevo dato asociado al caso o leer una variables
     Then la arquitectura le prohíbe técnicamente usar Interfaces `JpaRepository` o conectarse por JDBC a la instancia maestra de MySQL del Core
@@ -493,19 +535,19 @@ Feature: Zero-Trust Developer Portal Security
 ```gherkin
 Feature: Secure Customer Onboarding and Identity (CIAM)
 
-  Scenario: Prohibición de Registro Público (Zero-Public-Signup)
+  Scenario: Prohibición de Registro Público (Zero-Public-Signup) (CA-01)
     Given la pantalla de Login del Portal Externo (portal.ibpms.com)
     Then la interfaz NO DEBE tener ningún enlace, botón o formulario que diga "Registrarse" o "Crear Cuenta".
     And la creación de identidades ciudadanas (External Users) solo puede nacer desde el interior del iBPMS (Vía API o evento interno), blindando el sistema contra bots.
 
-  Scenario: Disparo de Invitación (Magic Link) por Evento
+  Scenario: Disparo de Invitación (Magic Link) por Evento (CA-02)
     Given un Cliente nuevo registrado en el CRM con el ID `CUST-999` y correo `juan@gmail.com`
     When el proceso BPMN llega a una tarea de "Invitar a Portal" O un analista oprime [Invitar] en la Vista 360
     Then el sistema generará un Token criptográfico de uso único (Magic Link).
     And el Motor de Notificaciones enviará un correo a `juan@gmail.com` con el botón "Crear mi Contraseña de Acceso".
     And el Magic Link tendrá una caducidad (TTL) rígida paramétrica (Ej: 24 horas).
 
-  Scenario: Aterrizaje y Vinculación Criptográfica (Account Claiming)
+  Scenario: Aterrizaje y Vinculación Criptográfica (Account Claiming) (CA-03)
     Given el cliente Juan que hace clic en el Magic Link dentro del tiempo permitido
     When aterriza en la página de "Definir Contraseña" del Portal B2C
     Then el sistema verifica que el Token no haya sido usado antes y bloquea la edición del campo de correo electrónico (Read-Only).
@@ -529,14 +571,14 @@ Feature: Frontend Visual Governance, Anti-FOUC and SRE Router Guards
   # ==============================================================================
   # A. RESOLUCIÓN DEL ESTADO Y PREVENCIÓN DE AMNESIA (GAPs 16 y 17)
   # ==============================================================================
-  Scenario: Hidratación Síncrona del Estado Reactivo (Anti-Amnesia de F5)
+  Scenario: Hidratación Síncrona del Estado Reactivo (Anti-Amnesia de F5) (CA-01)
     Given la arquitectura Single Page Application (SPA) basada en Vue 3 y Pinia
     When un usuario logueado presiona [F5] o recarga directamente una URL profunda (Ej: `/admin/modeler`)
     Then el interceptor de navegación (`router.beforeResolve`) TIENE PROHIBIDO evaluar los permisos instantáneamente.
     And deberá invocar una promesa bloqueante (`await hydrateAuth()`) forzando al Router a esperar a que Pinia recupere el Token del LocalStorage y recalcule los Claims.
     And previniendo falsos positivos de expulsión (403) causados por la latencia de lectura de la memoria RAM.
 
-Scenario: Renderizado Progresivo Estricto y FOUC Controlado (LCP Optimization)
+  Scenario: Renderizado Progresivo Estricto y FOUC Controlado (LCP Optimization) (CA-02)
     Given el proceso de montaje de la aplicación (SPA Vue 3)
     When el usuario ingresa a la URL
     Then el Frontend renderizará INMEDIATAMENTE el App Shell (Sidebar y Header Maestros) basándose en los Claims básicos del JWT en Caché para garantizar una métrica óptima de Largest Contentful Paint (LCP).
@@ -547,20 +589,20 @@ Scenario: Renderizado Progresivo Estricto y FOUC Controlado (LCP Optimization)
   # ==============================================================================
   # B. DEFENSA PERIMETRAL Y RUTAS (GAP 18)
   # ==============================================================================
-  Scenario: Gaslighting Cibernético (Security by Obscurity 404 vs 403)
+  Scenario: Gaslighting Cibernético (Security by Obscurity 404 vs 403) (CA-03)
     Given un usuario operativo o externo que adivina e intenta acceder a una URL restringida (URL Guessing)
     When el Router Guard intercepta la navegación detectando permisos insuficientes (Token válido, pero sin Rol)
     Then la arquitectura TIENE PROHIBIDO redirigirlo al Workdesk `/` emitiendo un "403 Forbidden" (lo cual confirmaría que la ruta confidencial existe).
     And el Router inyectará de frente el componente `NotFound404.vue` (Página no encontrada) manteniendo intacta la URL en la barra de direcciones.
     And impidiendo matemáticamente que un hacker logre mapear la estructura de directorios del sistema.
 
-  Scenario: Jerarquía de Redirección y Atesorador de Enlaces
+  Scenario: Jerarquía de Redirección y Atesorador de Enlaces (CA-04)
     Given el Router Guard evaluando una excepción de acceso
     When determina la causal de la penalización
     Then si el Token JWT EXPIRÓ (401): Redirigirá pasivamente a `/login`, limpiando el Storage.
     And si el Token VIVE pero el usuario guardó un "Hyperlink Viejo" de un menú al que ya no tiene acceso: Aplicará el escenario de Falso 404 SIN destruir su LocalStorage, protegiendo los borradores lícitos que esté trabajando en otras pestañas.
 
-  Scenario: Excepciones Perimetrales Controladas (Magic Links y Docs)
+  Scenario: Excepciones Perimetrales Controladas (Magic Links y Docs) (CA-05)
     Given la existencia de rutas transitorias y documentación técnica
     Then el Router Guard poseerá una bandera `meta: { isPublic: true }`.
     And omitirá la evaluación RBAC pesada para: Pantallas B2C accedidas mediante "Magic Links" (US-050), y Rutas técnicas locales (Swagger/Storybook), acelerando la carga sin comprometer el Core.
@@ -568,20 +610,20 @@ Scenario: Renderizado Progresivo Estricto y FOUC Controlado (LCP Optimization)
   # ==============================================================================
   # C. COMPOSICIÓN DINÁMICA DE MENÚS Y PRIVILEGIOS
   # ==============================================================================
-  Scenario: Backend-Driven UI, Auto-Colapso de Nodos y Caché de Menú
+  Scenario: Backend-Driven UI, Auto-Colapso de Nodos y Caché de Menú (CA-06)
     Given la fusión de múltiples roles en un mismo usuario
     When el Sidebar calcula las carpetas a renderizar
     Then la matriz de "Permisos vs Rutas" NO vivirá codificada en duro (Hardcoded) en el Router de Vue, sino que será inyectada mediante un JSON asíncrono desde el Backend.
     And si el cruce de roles oculta todos los sub-menús de una categoría padre (Ej: Ocultamos BPMN y Formularios), la carpeta padre completa "Administración" se ocultará automáticamente del DOM (Auto-Collapse).
     And el árbol de navegación resultante será cacheado en Pinia tras el Login para no re-computar directivas en cada transición de vista.
 
-  Scenario: Dashboard Bifurcado por Composición de Widgets
+  Scenario: Dashboard Bifurcado por Composición de Widgets (CA-07)
     Given la ruta raíz del sistema `/` (Workdesk)
     When diferentes roles (Operador vs Súper Admin) acceden a la misma URL
     Then el sistema TIENE PROHIBIDO redirigir a rutas hardcodeadas separadas (Ej: `/dashboard-admin`).
     And utilizará la misma vista raíz inyectando dinámicamente (Component Composition) los *Widgets* (Grafana vs Grillas Kanban) según los permisos aditivos de Pinia en la misma coordenada web.
 
-  Scenario: Dependencias Cruzadas y Privilegios de Solo Lectura (Granularidad CRUD)
+  Scenario: Dependencias Cruzadas y Privilegios de Solo Lectura (Granularidad CRUD) (CA-08)
     Given un Arquitecto de Procesos que necesita invocar una Regla IA dentro de su diagrama BPMN
     Then el Frontend le otorgará un privilegio degradado (Read-Only) hacia la ruta del Diccionario de la IA.
     And le permitirá consultar el catálogo, pero la directiva condicional a nivel de componente ocultará/destruirá físicamente los botones de `[+ Nueva Regla]` y `[Eliminar]`, reservados para el Administrador IA.
@@ -589,19 +631,19 @@ Scenario: Renderizado Progresivo Estricto y FOUC Controlado (LCP Optimization)
   # ==============================================================================
   # D. CONTROLES DE ALTA FRICCIÓN Y SALVAVIDAS
   # ==============================================================================
-  Scenario: Re-Autenticación para Funciones Destructivas (Sudo Mode)
+  Scenario: Re-Autenticación para Funciones Destructivas (Sudo Mode) (CA-09)
     Given una sesión iniciada bajo el rol máximo de `ROLE_SUPER_ADMIN`
     When este usuario intenta ejecutar una acción destructiva (Ej: Purgar BD, Borrar Tenant)
     Then la validación estándar del Router NO es suficiente.
     And el Frontend suspenderá el POST y renderizará un "Re-Prompt" (Modal de Seguridad) exigiendo la re-digitación de la contraseña o token EntraID para confirmar la transacción, previniendo secuestros de sesión en PCs desbloqueadas.
 
-  Scenario: Auditoría Forzosa al Revelar Secretos API (El Ojo de Sauron)
+  Scenario: Auditoría Forzosa al Revelar Secretos API (El Ojo de Sauron) (CA-10)
     Given el rol `ROLE_INTEGRITY_ENGINEER` ingresando a la vista "Integraciones API"
     When el componente se monta para mostrar credenciales o Tokens OAuth estáticos
     Then los Secretos se renderizarán ofuscados por defecto (`*****************`).
     And al hacer clic en "Mostrar 👁️", el Frontend disparará obligatoriamente un evento asíncrono de Telemetría (Audit-Log POST) hacia el backend registrando la visualización del secreto en ese milisegundo.
 
-  Scenario: Revocación en Caliente y Botón de Pánico Incondicional (Return Home)
+  Scenario: Revocación en Caliente y Botón de Pánico Incondicional (Return Home) (CA-11)
     Given la operativa en tiempo real del Frontend
     When un Súper Administrador revoca un rol a un usuario conectado
     Then un evento WebSocket (`[ROLE_REVOKED]`) obligará a Pinia a expulsar al usuario al `/login` en vivo.

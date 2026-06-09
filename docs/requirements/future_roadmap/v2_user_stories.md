@@ -5,6 +5,76 @@
 
 ---
 
+## ÉPICA V2-00: Cierre de Deuda Técnica de la Versión 1
+Recopilación de Criterios de Aceptación que fueron definidos en la V1 pero diferidos formalmente durante la auditoría arquitectónica ARQ-005 (sprint-6, 2026-05-01). Estos CAs tienen esqueleto backend parcial y requieren completar su implementación funcional.
+
+> **Origen:** Épica B — IDE Formularios, Diseño BPMN & Reglas DMN (US-005)
+> **Decisión de diferimiento:** Arquitecto Líder + PO (2026-05-01)
+> **Referencia de auditoría:** `.agentic-sync/audit_ARQ005_bloque3.md`
+
+### US-V2-DT-001: Funcionalidades Diferidas del Diseñador BPMN (Pantalla 6)
+
+**Como** Arquitecto de Procesos (BPMN Designer)
+**Quiero** que se completen las funcionalidades avanzadas del Diseñador BPMN que fueron diferidas durante la V1
+**Para** mejorar la experiencia de diseño, la seguridad de datos y la robustez de las integraciones externas.
+
+**Criterios de Aceptación (Gherkin):**
+```gherkin
+Feature: Deuda Técnica V1 — Diseñador BPMN (US-005)
+
+  Scenario: Diff Visual entre Versiones (CA-28 - Diferido desde V1)
+    # ORIGEN: epic_B_formularios_bpmn.md, US-005, Línea 1473
+    # NOTA: Escenario documentado en V1 pero diferido por complejidad de implementación.
+    Given el Arquitecto navega al Historial de Versiones y selecciona v2 y v3 para comparar
+    Then el sistema muestra un Diff visual resaltando nodos agregados (verde), eliminados (rojo) y modificados (amarillo).
+
+  Scenario: Colores Personalizados en Carriles y Tareas (CA-37 - Diferido desde V1)
+    # ORIGEN: epic_B_formularios_bpmn.md, US-005, Línea 1531
+    # NOTA: Escenario documentado en V1 pero diferido por baja prioridad funcional.
+    Given el Arquitecto selecciona un Carril o Tarea en el Lienzo
+    Then puede asignarle un color personalizado desde una paleta de colores para distinguir departamentos.
+
+  Scenario: Validación Lógica de Cláusulas OneOf/AnyOf (CA-53 - Diferido desde V1)
+    # ORIGEN: epic_B_formularios_bpmn.md, US-005, Línea 1633
+    # NOTA: Esqueleto backend existe (DataMapperGrid + PreFlight). Falta lógica interna de validación OpenAPI.
+    Given una API que exige el dato X *o* el dato Y mediante las cláusulas Swagger (OneOf / AnyOf)
+    When el Frontend despliega el `<DataMapperGrid>`
+    Then agrupa visualmente las filas afectadas bajo la etiqueta `[ 🔀 Requiere mapear al menos UNO ]`
+    And el Pre-Flight Analyzer verificará el grupo lógico en conjunto: Si falta al menos uno, alerta roja y aborta despliegue. Si ambos están vacíos, aborta. Si uno está lleno, autoriza el pase a Producción.
+
+  Scenario: Shift-Left Security para Datos Sensibles (PII/PHI) (CA-54 - Diferido desde V1)
+    # ORIGEN: epic_B_formularios_bpmn.md, US-005, Línea 1639
+    # NOTA: Sin implementación en V1. Requiere flag PII en modelo de variables + redacción en Camunda History.
+    Given el mapeo de una variable clasificada con el flag `[🔒 Dato Sensible PII]` desde la Pantalla 7 (Zod)
+    When la Service Task dispara la integración hacia la API externa
+    Then el dato crudo viaja obligatoriamente encriptado por el túnel HTTP/TLS
+    And el motor de auditoría histórica de Camunda (History Level) tiene estrictamente PROHIBIDO persistir el valor real en texto plano dentro de sus logs, reemplazándolo obligatoriamente por un hash o la viñeta `[REDACTED_PII]`.
+
+  Scenario: Delegación Transparente de Conversión Binaria (Multipart/Base64) (CA-56 - Diferido desde V1)
+    # ORIGEN: epic_B_formularios_bpmn.md, US-005, Línea 1651
+    # NOTA: OutboundDispatcherService existe con CircuitBreaker/Retry pero sin auto-detección de formato binario.
+    Given un componente Zod de tipo `<InputFile>` mapeado hacia un atributo del Payload destino
+    When el Arquitecto despliega y llega el momento de la ejecución
+    Then el flujo UI no exige que el Arquitecto indique la técnica de conversión
+    And el Worker (Backend) intercepta el mapping, consulta en caliente el requerimiento del Swagger (Multipart-FormData vs Base64), y lo transmuta automáticamente antes de inyectar la data a la trama HTTP de salida.
+```
+**Trazabilidad UX:** Pantalla 6 (BPMN Designer), Pantalla 7 (Form Builder), Panel de Integraciones.
+**Estado Infraestructura V1:** Tablas `ibpms_data_mappings`, `ibpms_external_task_topics` ya existen. Puertos hexagonales (`DataMappingPort`, `BpmnAuditPort`) implementados.
+
+### US-V2-DT-002: Refactorización y Deuda Técnica de Backend (ARQ-005)
+
+**Como** Arquitecto Backend
+**Quiero** saldar la deuda técnica funcional identificada durante la auditoría ARQ-005
+**Para** garantizar la resiliencia en alta concurrencia y flexibilidad multi-tenant.
+
+**Items de Deuda Técnica:**
+- **DT-V2-001:** Migrar `@Cacheable` a Redis distribuido (GAP-003)
+- **DT-V2-002:** Hacer umbrales SLA configurables por tenant (GAP-004)
+- **DT-V2-003:** Exponer `slaCreationDate` en DTO para cálculo dinámico de ventana SLA (GAP-006)
+
+---
+
+
 ## ÉPICA V2-01: Gobernanza Activa y Erradicación de Antipatrones (Opinionated OS)
 El iBPMS deja de ser un lienzo ciego y se convierte en un auditor inteligente del diseño de procesos. Interviene físicamente para evitar que las empresas democraticen la ineficiencia (como aprobadores redundantes que no mutan el modelo de datos).
 

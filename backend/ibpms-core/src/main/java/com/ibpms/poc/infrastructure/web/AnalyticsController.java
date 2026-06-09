@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 /**
  * Endpoint para Dashboards BAM y Analítica de Inteligencia Artificial (Bloque
@@ -15,7 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/analytics")
-@PreAuthorize("hasRole('Directivo') or hasRole('Admin_Intake')")
+@PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'Global Admin', 'Directivo', 'Admin_Intake')")
+@Traceability(US = "US-021", CA = {"CA-01"})
 public class AnalyticsController {
 
     private final ObtenerMetricasUseCase obtenerMetricasUseCase;

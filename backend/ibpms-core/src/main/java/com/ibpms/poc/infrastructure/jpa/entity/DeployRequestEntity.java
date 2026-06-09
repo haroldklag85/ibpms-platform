@@ -42,6 +42,9 @@ public class DeployRequestEntity {
     @Column(name = "review_comment")
     private String reviewComment;
 
+    @Column(name = "xml_payload", nullable = false, columnDefinition = "TEXT")
+    private String xmlPayload;
+
     public DeployRequestEntity() {
         this.id = UUID.randomUUID();
         this.requestedAt = LocalDateTime.now();
@@ -116,5 +119,13 @@ public class DeployRequestEntity {
 
     public void setReviewComment(String reviewComment) {
         this.reviewComment = reviewComment;
+    }
+
+    public String getXmlPayload() {
+        return xmlPayload;
+    }
+
+    public void setXmlPayload(String xmlPayload) {
+        this.xmlPayload = xmlPayload;
     }
 }

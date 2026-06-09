@@ -4,30 +4,42 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
+import com.ibpms.poc.AbstractIntegrationTest;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 /**
  * Integration tests for FormCertification (US-028 CA-11/CA-12/CA-13/CA-15/CA-16/CA-17).
- * Runs against the UAT PostgreSQL already provisioned by docker-compose.
- * No Testcontainers needed — uses the ibpms-postgres-uat container directly.
+ * Runs against PostgreSQL via Testcontainers (inherited from AbstractIntegrationTest).
+ * Compliant with ADR-010: No external Docker Compose dependency.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-public class FormCertificationTest {
+@Traceability(US = "US-003", CA = {"CA-87"})
+public class FormCertificationTest extends AbstractIntegrationTest {
 
     @LocalServerPort
     private int port;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.ibpms.poc.infrastructure.security.JwtTokenProvider jwtTokenProvider;
+
+    private String token;
+
     @BeforeEach
     public void setUp() {
         RestAssured.port = port;
+        // @Traceability(US="US-003", CA="CA-87", DESC="Generate token with required JIT claims to avoid 403 Forbidden")
+        token = jwtTokenProvider.generateToken(
+            "test-qa-user",
+            java.util.List.of("ibpms_rol_USER"),
+            "default",
+            java.util.Map.of("Sucursal_ID", "SUC-001", "Codigo_Jefe", "BOSS-999")
+        );
     }
 
     @Test
@@ -37,6 +49,7 @@ public class FormCertificationTest {
         
         given()
             .contentType(ContentType.JSON)
+            .header("Authorization", "Bearer " + token)
             .when()
             .post("/api/v1/design/forms/{id}/certify", formId)
             .then()
@@ -51,6 +64,7 @@ public class FormCertificationTest {
         UUID formId = UUID.randomUUID();
         given()
             .contentType(ContentType.JSON)
+            .header("Authorization", "Bearer " + token)
             .when()
             .post("/api/v1/design/forms/{id}/certify", formId)
             .then()
@@ -111,6 +125,7 @@ public class FormCertificationTest {
         // Primer intento
         given()
             .contentType(ContentType.JSON)
+            .header("Authorization", "Bearer " + token)
             .when()
             .post("/api/v1/design/forms/{id}/certify", formId)
             .then()
@@ -119,6 +134,7 @@ public class FormCertificationTest {
         // Segundo intento inmediato deberia dar 409
         given()
             .contentType(ContentType.JSON)
+            .header("Authorization", "Bearer " + token)
             .when()
             .post("/api/v1/design/forms/{id}/certify", formId)
             .then()
@@ -138,5 +154,18 @@ public class FormCertificationTest {
             .then()
             .statusCode(200)
             .body("$", isA(java.util.List.class));
+    }
+
+    @Test
+    public void testCertifyWithoutAuthReturnsUnauthorized() {
+        // POST /certify sin Authorization header -> HTTP 401 o 403
+        UUID formId = UUID.randomUUID();
+        
+        given()
+            .contentType(ContentType.JSON)
+            .when()
+            .post("/api/v1/design/forms/{id}/certify", formId)
+            .then()
+            .statusCode(anyOf(is(401), is(403)));
     }
 }

@@ -10,7 +10,7 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "ibpms.claim")
 public class ClaimProperties {
     
-    private int ghostTimeout = 30; // Default 30 min
+    private int ghostTimeout = 240; // Default 240 min (4 horas)
     private Map<String, Integer> tenantOverrides = new HashMap<>();
 
     public int getGhostTimeout() {

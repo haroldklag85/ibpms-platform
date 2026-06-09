@@ -1,4 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.web.ai;
+
+import com.ibpms.poc.AbstractIntegrationTest;
+
 
 import com.ibpms.poc.application.usecase.ai.BpmnLayoutAdapter;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +45,7 @@ import java.util.List;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "spring.main.allow-bean-definition-overriding=true")
-public class BpmnCopilotSseIntegrationTest {
+public class BpmnCopilotSseIntegrationTest extends AbstractIntegrationTest {
 
     @LocalServerPort
     private int port;

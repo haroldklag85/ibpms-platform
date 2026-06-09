@@ -1,3 +1,4 @@
+// @Traceability: US-017 - CA-01, CA-03, CA-17
 package com.ibpms.poc.api.controller;
 
 import com.ibpms.poc.application.dto.FormSubmitRequest;
@@ -10,8 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 @RestController
-@RequestMapping("/api/v1/workbox/tasks")
+@RequestMapping("/api/v1/workbox/bpmn-tasks")
 public class FormCompletionController {
 
     private final FormCompletionService formCompletionService;
@@ -21,15 +26,17 @@ public class FormCompletionController {
     }
 
     @PostMapping("/{taskId}/complete")
-    public ResponseEntity<FormSubmitResponse> completeTask(
+    public CompletableFuture<ResponseEntity<FormSubmitResponse>> completeTask(
             @PathVariable String taskId,
             @Valid @RequestBody FormSubmitRequest request,
             Authentication authentication) {
         
         String userId = authentication.getName(); // Obtenemos del JWT SecurityContext
         
-        FormSubmitResponse response = formCompletionService.completeTask(taskId, request, userId);
-        return ResponseEntity.ok(response);
+        return CompletableFuture.supplyAsync(() -> {
+            FormSubmitResponse response = formCompletionService.completeTask(taskId, request, userId);
+            return ResponseEntity.ok(response);
+        }).orTimeout(5, TimeUnit.SECONDS);
     }
 
     @ExceptionHandler(SagaCompensationException.class)
@@ -40,5 +47,14 @@ public class FormCompletionController {
                 .message("Process engine failed to confirm completion. Rolling back.")
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(TimeoutException.class)
+    public ResponseEntity<FormSubmitResponse> handleTimeout(TimeoutException ex) {
+        FormSubmitResponse response = FormSubmitResponse.builder()
+                .status("TIMEOUT_ERROR")
+                .message("The completion request exceeded the SLA latency limit.")
+                .build();
+        return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).body(response);
     }
 }

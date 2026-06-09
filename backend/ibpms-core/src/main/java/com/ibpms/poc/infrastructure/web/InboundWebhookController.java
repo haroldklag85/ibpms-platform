@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/webhooks")
+@Traceability(US = "US-023", CA = {"CA-21"})
 public class InboundWebhookController {
 
     private static final Logger log = LoggerFactory.getLogger(InboundWebhookController.class);

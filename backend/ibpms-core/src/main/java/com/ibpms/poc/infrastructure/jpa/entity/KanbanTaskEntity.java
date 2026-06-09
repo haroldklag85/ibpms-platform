@@ -55,6 +55,10 @@ public class KanbanTaskEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Lob
+    @Column(name = "blocked_reason", columnDefinition = "TEXT")
+    private String blockedReason;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_task_id", referencedColumnName = "id", columnDefinition = "bpchar")
     private KanbanTaskEntity parentTask;
@@ -112,7 +116,11 @@ public class KanbanTaskEntity {
         return assignee;
     }
 
+    @com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-008", CA = {"CA-04"})
     public void setAssignee(String assignee) {
+        if (assignee != null && (assignee.contains(",") || assignee.contains(";") || assignee.trim().split("\\s+").length > 1)) {
+            throw new IllegalArgumentException("CA-04 Violación Anti-Multitasking: Una tarea Kanban solo puede tener un único dueño (Single-Assignee).");
+        }
         this.assignee = assignee;
     }
 
@@ -144,6 +152,19 @@ public class KanbanTaskEntity {
         this.updatedAt = updatedAt;
     }
 
+    @jakarta.persistence.PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        this.updatedAt = this.createdAt;
+    }
+
+    @jakarta.persistence.PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public KanbanTaskEntity getParentTask() {
         return parentTask;
     }
@@ -158,5 +179,13 @@ public class KanbanTaskEntity {
 
     public void setSubTasks(List<KanbanTaskEntity> subTasks) {
         this.subTasks = subTasks;
+    }
+
+    public String getBlockedReason() {
+        return blockedReason;
+    }
+
+    public void setBlockedReason(String blockedReason) {
+        this.blockedReason = blockedReason;
     }
 }

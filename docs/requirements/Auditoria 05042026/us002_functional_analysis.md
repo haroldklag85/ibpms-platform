@@ -1,155 +1,48 @@
-# Análisis Funcional y de Entendimiento: US-002
+# Análisis Funcional: US-002 (Reclamar una Tarea de Grupo)
 
-## Historia Analizada
-**US-002: Reclamar una Tarea de Grupo (Claim Task)**
+**Fecha de Ejecución:** 2026-04-08
+**Rol:** Product Owner / Software Architect
+**Workflow Aplicado:** `/analisisEntendimientoUs.md`
 
----
+## 1. Resumen del entendimiento
+La historia de usuario **US-002 (Reclamar una Tarea de Grupo / Claim Task)** define la mecánica de pre-asignación y transferencia de propiedad de tareas dentro del ecosistema BPMN (Camunda). El entendimiento central es que esta historia regula la exclusividad operativa (quién es el dueño del caso) para evitar la duplicidad de esfuerzos, gestionando desde el momento en que una tarea está disponible en una cola grupal hasta que es asignada a un operario específico, devuelta voluntariamente, o despojada (reactiva o proactivamente). Incluye la orquestación en tiempo real de la UI para todos los operarios conectados y salvaguardas estrictas a nivel de transacciones concurrentes en la base de datos.
 
-### 1. Resumen del Entendimiento
+## 2. Objetivo principal
+El objetivo principal de negocio y funcional es garantizar un único Punto de Verdad Operativo (Single Point of Truth) respecto a la propiedad de la tarea en tiempo real. Esto evita el retrabajo (que dos analistas atiendan el mismo expediente) y previene la retención dañina (abandonos de SLA), asegurando que el estado de "Asignación" sea atómico, trazable y sincrónico en todas las pantallas del equipo (vía WebSockets).
 
-La US-002 define la **mecánica completa de propiedad del trabajo** en el iBPMS. Mientras la US-001 MUESTRA las tareas en la bandeja, la US-002 resuelve la pregunta: "¿Cómo paso una tarea de la cola compartida del equipo a MI bandeja personal?" — y todo el ciclo de vida que sigue: reclamar, explorar sin reclamar, liberar, transferir a un compañero, y la intervención forzosa de un jefe.
+## 3. Alcance funcional
+**Hasta dónde llega:** El alcance abarca de manera exclusiva las operaciones de mutación sobre la propiedad de la tarea (`assignee`). Esto incluye el acto de reclamar (individual o en lote), explorar sin alterar, devolver voluntariamente con notas asociadas, despojar forzosamente vía RBAC y el Auto-Unclaim por inactividad. Incluye también los mecanismos de UI resiliente y la limpieza transaccional de estados locales.
+**Dónde termina:** Termina en la frontera de la ejecución del negocio; es decir, **NO** incluye cómo se llena el formulario, cómo se emiten validaciones de negocio en los campos (Zod), ni cómo se avanza el flujo de Camunda (Submit). Esos alcances pertenecen a la US-029 y US-003.
 
-La historia se estructura en **5 dominios funcionales**:
+## 4. Lista de funcionalidades incluidas
+- **Reclamo Individual y Masivo Atómico:** Asignación segura con prevención de condición de carrera mediante `SELECT FOR UPDATE SKIP LOCKED` o la API de Camunda (`TaskService.claim`), con soporte masivo de hasta 20 tareas (CA-1, CA-2, CA-11, CA-14).
+- **Emisión Sincrónica (WebSockets):** Disparo de eventos tipo Batch (`BULK_REMOVE`/`ADD`) post-commit para re-renderizar de manera fluida (desvanecimiento escalonado) las pantallas del resto del equipo (CA-12, CA-23).
+- **Modo Sólo Lectura (Exploratorio):** Apertura de casos para visualización sin alterar el `assignee`, con expulsión reactiva no-obstructiva (Banner amarillo) si otro operario la toma en paralelo (CA-5, CA-18).
+- **Peer-to-Peer Handoff (Transición Voluntaria):** Liberación de tareas acompañada de "Notas Internas" efímeras (estilo post-it) para heredar contexto al siguiente compañero (CA-4, CA-16).
+- **Limpieza Transaccional ("Amnesia"):** Borrado disciplinado del LocalStorage para purgar formularios no completados, unido a limpieza desfasada (24h) de adjuntos transitorios `orphaned` (CA-7, CA-17).
+- **SLA Ghost Job Timeout:** Rutina recurrente de limpieza (defecto: 4 horas inactividad) para desencadenar *Auto-Unclaim*. Integra pre-avisos (75% del tiempo) en la UI y sistema de auto-extensiones limitado (2 veces) (CA-6, CA-15, CA-19).
+- **Despojo Jerárquico IDOR-Safe (Supervisores):** Ejecución de Forced Unclaim resguardado por las validaciones perimetrales de la matriz organizacional (`team_id`), documentando quién despoja a quién (CA-8, CA-13).
+- **Resiliencia Optimistic UI vs Fallos de Red:** Reclamos procesados visualmente en tiempo-cero ("Mentira Banca") que hacen rollback elocuente y notificado al operario tras agotar ruteos de backoff exponencial (CA-10, CA-21).
+- **Desacoplamiento Visual:** Implementación de pestañas separadas "Mi Bandeja" y "Cola del Equipo" (CA-22).
+- **Registro Forense y Auditoría:** Pop-up histórico (Timeline) reflejando inmutables razones y actores detrás de cada mutación transaccional (CA-9, CA-20).
 
-1. **Reclamo y Concurrencia (CA-01, CA-02):** Resolución de condición de carrera cuando dos personas reclaman la misma tarea al mismo milisegundo (el primero gana, el segundo recibe un aviso amable). Reclamo masivo de hasta 10 tareas en un solo clic con reporte parcial de éxito/fallo.
+## 5. Lista de brechas, gaps o ambigüedades
+*Aunque las remediaciones CA-11 al CA-23 cerraron la mayoría de los hallazgos de análisis previos, permanecen las siguientes fricciones:*
+- **Definición Estricta de "Heartbeat" (CA-15):** Se decreta que el timeout se evade solo con operaciones registrables, pero no se especifica si se dispondrá de mecanismos "Auto-Save" transparentes en el motor para reiniciar el timer si el usuario tarda 5 horas redactando un fallo de tutela exhaustivo sin haber pulsado "guardar borrador". Si la US-029 no incorpora auto-save al momento del typeo, el usuario será castigado con un Auto-Unclaim inmerecido.
+- **Transición Híbrida Rol/Equipo en Escalamiento (CA-13):** Las validaciones estáticas del `team_id` no definen el flujograma cuando una tarea cruza (es reasignada o reclamada) a un Staff de Controlaría que puede estar fuera del `team_id` originario de origen. ¿Quién despoja si el usuario no pertenece ya a un grupo local?
+- **Rollback en la Liberación:** El *Optimistic UI* (CA-10/CA-21) rige fuertemente la reclamación de tareas. No se especifica si el acto de *Liberar/Unclaim* goza de la misma resiliencia o si requiere validación sincrónica estricta contra backend para no perder la "Amnesia Transaccional".
 
-2. **Liberación y Transferencia (CA-04, CA-07):** El operario puede devolver una tarea a la cola del grupo con un mensaje opcional para un compañero ("@Pedro, te liberé este caso"). Al liberar, se borran todos los datos parciales del formulario para que el siguiente compañero la reciba limpia (Amnesia Transaccional).
+## 6. Lista de exclusiones (o aspectos fuera de alcance)
+- **Ejecución y Persistencia de la Data del Expediente:** Purgar el LocalStorage sí es su tarea, pero persistir los datos de negocio en Camunda **no** lo es.
+- **El renderizado del contenido dinámico y validación Zod:** Está excluido el trazado de la interfaz de lo que contiene la tarea internamente (US-003, US-028, US-029).
+- **Notificaciones Push y Chats:** El mensaje de Peer-Handoff (CA-16) limita su existencia a un texto adherido bajo la tarea y **NO** es un sistema de notificaciones/Emails, ni se integra a Teams/Slack.
+- **Restricción global corporativa:** Límite estructural de secuestro (cuantas tareas un analista puede tener al mismo tiempo) ha sido arrojado formalmente a V2 (Nota CA-3).
+- **Analíticas Complejas:** Calcular Camino Crítico (PERT) o avances financieros basados en rotación de reclamos es exclusivo de post-lanzamiento V2 (Nota SSOT).
 
-3. **Exploración Segura (CA-05):** Modo "Solo Lectura" que permite ver el formulario y los anexos de una tarea SIN reclamarla. La tarea sigue en la cola del grupo hasta que el botón físico [Reclamar] sea presionado.
-
-4. **Gobernanza y Control (CA-06, CA-08, CA-09):** Auto-liberación automática de tareas abandonadas por inactividad (Ghost Job Timeout). El supervisor puede despojar tareas de un operario ausente (Forced Unclaim). Bitácora forense de toda la rotación de asignaciones.
-
-5. **Resiliencia ante Desconexiones (CA-10):** Si la red cae al momento de reclamar, el Frontend simula la asignación visualmente (Optimistic UI) y reintenta la petición al servidor automáticamente.
-
----
-
-### 2. Objetivo Principal
-
-Garantizar **cero duplicidad operativa**: que dos personas NUNCA trabajen el mismo caso al mismo tiempo. Y garantizar **gobernanza total de la propiedad**: que si alguien reclama y abandona una tarea, el sistema la rescate automáticamente para que otro la atienda, preservando la limpieza de los datos del formulario.
-
----
-
-### 3. Alcance Funcional Definido
-
-| Dimensión | Hasta Dónde Llega | Dónde Termina |
-|---|---|---|
-| **Reclamo Individual** | Un clic en [Reclamar] asigna la tarea al usuario. HTTP 409 si alguien se adelantó (CA-01) | No define el mecanismo atómico de BD (bloqueo pesimista o claim nativo de Camunda) |
-| **Reclamo Masivo** | Selección múltiple + [Reclamar Seleccionadas] con reporte parcial (CA-02) | No define un máximo de tareas por lote |
-| **Liberación** | Devuelve la tarea a la Cola Grupal con mensaje opcional (CA-04) | No define si la liberación masiva existe |
-| **Exploración** | Modo Solo Lectura con doble clic (CA-05) | No define si el modo lectura bloquea la tarea temporalmente para otros exploradores |
-| **Auto-Unclaim** | Cron Job que detecta inactividad superior al SLA (CA-06) | No define el umbral exacto ni qué significa "inactividad" |
-| **Amnesia Transaccional** | Al liberar, se purga el LocalStorage y Camunda NO recibe datos parciales (CA-07) | No define qué pasa con archivos adjuntos ya subidos |
-| **Despojo Forzoso** | El Supervisor puede despojar manualmente al operario ausente (CA-08) | No define validación de perímetro organizacional |
-| **Trazabilidad** | Pop-Up con historial completo de rotación del assignee (CA-09) | No define si el historial incluye el motivo de cada cambio |
-| **Resiliencia Offline** | Optimistic UI con reintento automático (CA-10) | No define qué pasa si el reintento falla repetidamente |
-
----
-
-### 4. Lista de Funcionalidades Incluidas
-
-#### A. Reclamo y Concurrencia
-1. Reclamo individual con resolución First-Writer-Wins (CA-01)
-2. Respuesta HTTP 409 Conflict con modal amable al perdedor (CA-01)
-3. Reclamo masivo (Bulk Claim) con reporte parcial de éxito/fallo (CA-02)
-4. Transacción Batch para asignación en lote (CA-02)
-
-#### B. Liberación y Transferencia
-5. Botón [Liberar Tarea] en la Pantalla 5 (CA-04)
-6. Campo opcional para adjuntar Mensaje Interno al liberar (CA-04)
-7. Modal bloqueante de advertencia al liberar con datos parciales (CA-07)
-8. Purga de LocalStorage de la tarea al confirmar la liberación (CA-07)
-9. Prohibición estricta de enviar datos parciales a Camunda al liberar (CA-07)
-10. Garantía de formulario limpio para el siguiente reclamante (CA-07)
-
-#### C. Exploración Segura
-11. Doble clic para abrir detalle en Modo Solo Lectura (CA-05)
-12. No altera el assignee hasta presionar [Reclamar] explícitamente (CA-05)
-13. Renderizado completo de formulario y anexos en lectura (CA-05)
-
-#### D. Gobernanza y Control
-14. Cron Job backend que detecta tareas con inactividad superior al SLA (CA-06)
-15. Auto-Unclaim: purga del assignee inactivo y devolución a la Cola Grupal (CA-06)
-16. Controles de Supervisor con privilegios elevados en vista de monitoreo (CA-08)
-17. Forced Unclaim: despojo inmediato y devolución a disponibilidad pública (CA-08)
-18. Botón de Bitácora "Ver Trazabilidad" con Pop-Up de historial cronológico (CA-09)
-19. Historial completo de rotación del assignee desde la BD de Auditoría (CA-09)
-
-#### E. Resiliencia
-20. Reclamo Optimistic UI: el Frontend coloca la tarea visualmente en "Mi Bandeja" (CA-10)
-21. Ruteo/re-intento sincrónico automático hasta confirmación del Motor (CA-10)
-22. Degradación controlada ante micro-cortes de red (CA-10)
-
----
-
-### 5. Lista de Brechas, GAPs o Ambigüedades Detectadas
-
-#### GAP-1: Ausencia del Mecanismo Atómico de BD para Reclamo Simultáneo (CA-01)
-
-El CA-01 dice que cuando dos personas reclaman la misma tarea al mismo instante, "el primero gana y el segundo recibe un aviso 409". Pero NO dice CÓMO el servidor garantiza que solo uno gane. Sin un candado en la base de datos, podrían ocurrir situaciones donde AMBOS creen que ganaron ("Split-Brain").
-
-Dos soluciones posibles:
-- Opción A: Usar el comando nativo de Camunda `TaskService.claim()`.
-- Opción B: Forzar un bloqueo pesimista en PostgreSQL (`SELECT FOR UPDATE`).
-
-Riesgo si no se cierra: Dos personas terminan trabajando el mismo caso. Duplicidad total.
-
-#### GAP-2: Notificación WebSocket No Definida tras Reclamo/Liberación
-
-Cuando una persona reclama una tarea, los demás compañeros que ven esa misma tarea en su pantalla NO son notificados. La US-001 CA-06/CA-13 define que las tareas "desaparecen" instantáneamente por WebSocket, pero la US-002 NO define la obligación de EMITIR ese evento WebSocket desde el Backend al momento del reclamo/liberación.
-
-Consecuencia: Los compañeros siguen viendo la tarea como "disponible" durante minutos u horas. Cientos de errores 409.
-
-#### GAP-3: Escalación de Privilegios Horizontal en Despojo Forzoso (CA-08)
-
-El CA-08 dice que "un gerente con Rol de Supervisor" puede despojar tareas a cualquier operario. Pero NO dice si el supervisor de un departamento puede despojar tareas de OTRO departamento.
-
-Resolución: El Backend debe cruzar el team_id del supervisor contra el team_id de la tarea.
-
-#### GAP-4: Contrato API No Definido para las Operaciones de Reclamo
-
-La US-002 NO define los endpoints REST:
-- POST /api/v1/tasks/{taskId}/claim
-- POST /api/v1/tasks/bulk-claim
-- POST /api/v1/tasks/{taskId}/release
-- POST /api/v1/tasks/{taskId}/force-unclaim
-- GET /api/v1/tasks/{taskId}/audit-trail
-
-#### GAP-5: Umbral del Cron Job "Ghost Job Timeout" sin Definir (CA-06)
-
-El CA-06 dice que un proceso automático detectará tareas con "inactividad superior al SLA" y las liberará. Pero:
-- ¿Qué significa "inactividad"? ¿Cero clics? ¿Cero actualizaciones de estado?
-- ¿El umbral es fijo o configurable por proceso/tenant?
-- ¿Se avisa al operario ANTES del auto-unclaim?
-- ¿El auto-unclaim también activa la Amnesia Transaccional del CA-07?
-
----
-
-### 6. Lista de Exclusiones (Fuera de Alcance V1)
-
-1. Límite simultáneo de tareas por operario (CA-03 diferido a V2).
-2. Reasignación directa entre pares (solo liberar a cola grupal).
-3. Reclamo automático por el sistema (Auto-Assignment pertenece a US-001 CA-16/CA-21).
-4. Ejecución/completitud de la tarea (pertenece a US-029).
-5. Liberación masiva (no existe simétrico al Bulk Claim).
-6. Notificaciones externas (email/push) al despojar.
-7. Historial de motivos en la trazabilidad (CA-09 solo muestra rotación, no motivos).
-8. Protección de archivos adjuntos al liberar.
-
----
-
-### 7. Observaciones de Alineación o Riesgos para Continuar
-
-**Riesgo Crítico: GAP-1 + GAP-2 combinados.** Si el reclamo no tiene bloqueo atómico en BD Y no emite notificación WebSocket, el resultado es un sistema donde múltiples personas creen tener la misma tarea Y no se enteran de que otros la reclamaron.
-
-**Dependencias Externas de la US-002:**
-- **US-001 (Workdesk / Pantalla 1):** La grilla donde se ven las tareas y el botón [Reclamar]. Los WebSockets de desaparición dependen de que US-002 emita el evento al hacer Commit.
-- **US-029 (Completar Tarea):** El formulario se trabaja en US-029. La Amnesia Transaccional (CA-07) depende del patrón de LocalStorage de US-029.
-- **US-036 (RBAC / Pantalla 14):** La validación perimetral del despojo forzoso (GAP-3) consume la jerarquía organizacional de US-036.
-- **US-001 CA-28:** El bloqueo pesimista de "Atender Siguiente" es análogo al GAP-1 de US-002.
-
-**Fortalezas Sobresalientes:**
-1. Amnesia Transaccional (CA-07) = protección del siguiente operario contra datos basura.
-2. Modo Solo Lectura (CA-05) = reduce reclamos innecesarios.
-3. Optimistic UI (CA-10) = UX de élite ante latencia.
-4. Mensaje Interno en Liberación (CA-04) = comunicación asíncrona intra-equipo.
-5. Trazabilidad Forense (CA-09) = esencial para auditoría regulatoria.
+## 7. Observaciones de alineación o riesgos
+- **Clasificación MoSCoW:** **MUST**. (Requisito Obligatorio, confirmado en el artefacto `scope_master_v1.md`).
+- **Resumen de Dependencias con otras User Stories:**
+  - **US-001 (Workdesk / Pantalla 1):** Dependencia obligatoria. Provee la grilla visual de la Cola de Grupo, los mecanismos de WebSockets base y las lógicas de bloqueo atómico que fueron refactorizadas e inyectadas aquí (CA-11).
+  - **US-036 (RBAC / Pantalla 14):** Dependencia de Integridad. Administra la jerarquía `team_id`. Si US-036 no está lista, las comprobaciones de perimetraje orgánico de Despojo (CA-13) fallarán al no tener de dónde alimentar la matriz de permisos.
+  - **US-029 (Completar Tarea / Pantalla 2):** Dependencia paralela. La US-002 necesita interactuar en modo destrucción local "LocalStorage purge" (CA-07) sobre las especificaciones de borrador que la US-029 haya levantado.
+- **Dependencia Bloqueante:** **US-001 y US-036 son bloqueantes a nivel Backend.** Sin el API de WebSocket configurado estructuralmente en el Workbench (US-001), los CA-12 y CA-23 de la US-002 fallarán dramáticamente a nivel E2E ya que la desaparición automática transaccional es la columna vertebral UX de la plataforma y el perimetraje IDOR de RBAC (US-036) la espina de seguridad en auditoría del CA-13.

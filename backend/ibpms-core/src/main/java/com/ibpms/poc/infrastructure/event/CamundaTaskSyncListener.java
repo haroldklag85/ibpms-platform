@@ -58,6 +58,10 @@ public class CamundaTaskSyncListener implements TaskListener {
                 projection.setSlaExpirationDate(LocalDateTime.ofInstant(dueDate.toInstant(), ZoneId.systemDefault()));
             }
 
+            // @Traceability(US = "US-001", CA = {"CA-23"})
+            // TODO: Brecha de implementación CA-23. Falta calcular `progressPercent` en base a (UserTask actual / Total UserTasks).
+            projection.setProgressPercent(null);
+
             // Mapeamos el ciclo de vida de Camunda al status de vista
             if (EVENTNAME_COMPLETE.equals(eventName)) {
                 projection.setStatus("COMPLETED");
@@ -67,14 +71,24 @@ public class CamundaTaskSyncListener implements TaskListener {
 
             // Opcional: Extraer variables del contexto para payload
             // String localVars = mapper.writeValueAsString(delegateTask.getVariablesLocal());
-            
+            // @Traceability: US-005, CA-78 Sandbox Multi-tenancy (Sync tenantId to CQRS Workdesk)
+            String tenantId = delegateTask.getTenantId();
+            if (tenantId == null) {
+                tenantId = (String) delegateTask.getVariable("tenantId");
+            }
+            if (tenantId == null) {
+                tenantId = "default";
+            }
+            projection.setTenantId(tenantId);
+
+            if (projection.getImpactLevel() == null) {
+                projection.setImpactLevel(1);
+            }
+
             projectionRepository.save(projection);
             log.debug("BPMN CQRS Sync ({}) exitoso para tarea {}", eventName, taskId);
             
             // CA-06 + CA-27: Emisión de evento con vocabulario estandarizado y segregación por Tenant
-            String tenantId = (String) delegateTask.getVariable("tenantId");
-            if (tenantId == null) tenantId = "default";
-            
             com.ibpms.poc.application.dto.WsWorkdeskEventDTO wsEvent = new com.ibpms.poc.application.dto.WsWorkdeskEventDTO();
             wsEvent.setTaskId("BPMN-" + taskId);
             wsEvent.setTenantId(tenantId);

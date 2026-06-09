@@ -5,6 +5,7 @@ import java.util.UUID;
 import java.util.Set;
 import java.util.HashSet;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "ibpms_security_user")
@@ -23,14 +24,18 @@ public class UserEntity {
     @Column(name = "password_hash", length = 100)
     private String passwordHash;
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private UserStatus status = UserStatus.ACTIVE;
 
     @Column(name = "is_external_idp", nullable = false)
     private Boolean isExternalIdp = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "must_change_password", nullable = false, columnDefinition = "boolean default false")
+    private Boolean mustChangePassword = false;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -39,6 +44,11 @@ public class UserEntity {
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<RoleEntity> roles = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    @JsonIgnore
+    private UserEntity manager;
 
     public UserEntity() {
         this.createdAt = LocalDateTime.now();
@@ -53,12 +63,14 @@ public class UserEntity {
     public void setEmail(String email) { this.email = email; }
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
-    public Boolean getIsActive() { return isActive; }
-    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public UserStatus getStatus() { return status; }
+    public void setStatus(UserStatus status) { this.status = status; }
     public Boolean getIsExternalIdp() { return isExternalIdp; }
     public void setIsExternalIdp(Boolean isExternalIdp) { this.isExternalIdp = isExternalIdp; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Boolean getMustChangePassword() { return mustChangePassword; }
+    public void setMustChangePassword(Boolean mustChangePassword) { this.mustChangePassword = mustChangePassword; }
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "skills", columnDefinition = "JSON")
     private String skills;
@@ -67,4 +79,13 @@ public class UserEntity {
     public void setRoles(Set<RoleEntity> roles) { this.roles = roles; }
     public String getSkills() { return skills; }
     public void setSkills(String skills) { this.skills = skills; }
+    public UserEntity getManager() { return manager; }
+    public void setManager(UserEntity manager) { this.manager = manager; }
+    
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "jit_claims_json", columnDefinition = "jsonb")
+    private String jitClaimsJson;
+    
+    public String getJitClaimsJson() { return jitClaimsJson; }
+    public void setJitClaimsJson(String jitClaimsJson) { this.jitClaimsJson = jitClaimsJson; }
 }

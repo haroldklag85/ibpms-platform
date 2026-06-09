@@ -58,4 +58,26 @@ public class WorkdeskNotificationService {
 
         messagingTemplate.convertAndSend(destination, payload);
     }
+
+    /**
+     * CA-19: Emite un evento STOMP notificando que un operario ha extendido el timeout de ghost.
+     * El supervisor del equipo recibe la notificación para tomar acción si es necesario.
+     *
+     * @param tenantId        Identificador del tenant (o teamId como fallback)
+     * @param taskId          ID de la tarea con timeout extendido
+     * @param assignee        Operario que solicitó la extensión
+     * @param extensionNumber Número de extensión (1 o 2)
+     */
+    public void notifyTimeoutExtended(String tenantId, String taskId, String assignee, int extensionNumber) {
+        String destination = "/topic/workdesk/" + tenantId;
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", "TIMEOUT_EXTENDED");
+        payload.put("taskId", taskId);
+        payload.put("assignee", assignee);
+        payload.put("extensionNumber", extensionNumber);
+        payload.put("timestamp", System.currentTimeMillis());
+
+        messagingTemplate.convertAndSend(destination, payload);
+    }
 }

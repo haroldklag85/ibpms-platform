@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.util.UUID;
 import java.util.Set;
 import java.util.HashSet;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "ibpms_security_role")
@@ -20,6 +21,7 @@ public class RoleEntity {
     private String description;
 
     @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
     private Set<UserEntity> users = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -35,6 +37,7 @@ public class RoleEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_role_id")
+    @JsonIgnore
     private RoleEntity parentRole;
 
     // CA-1 US-036: Modelo híbrido EntraID/LOCAL — indica si este rol actúa como Plantilla Clonable
@@ -44,6 +47,15 @@ public class RoleEntity {
     // CA-1 US-036: Origen del rol — "LOCAL" (creado en iBPMS) o "ENTRA_ID" (sincronizado desde Azure AD)
     @Column(name = "source", length = 50, nullable = false)
     private String source = "LOCAL";
+
+    @Column(name = "is_vip_restricted")
+    private Boolean isVipRestricted = false;
+
+    @Column(name = "process_definition_id", length = 255)
+    private String processDefinitionId;
+
+    @Column(name = "lane_id", length = 255)
+    private String laneId;
 
     public RoleEntity() {}
 
@@ -70,4 +82,10 @@ public class RoleEntity {
     public void setIsTemplate(Boolean isTemplate) { this.isTemplate = isTemplate; }
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
+    public Boolean getIsVipRestricted() { return isVipRestricted; }
+    public void setIsVipRestricted(Boolean isVipRestricted) { this.isVipRestricted = isVipRestricted; }
+    public String getProcessDefinitionId() { return processDefinitionId; }
+    public void setProcessDefinitionId(String processDefinitionId) { this.processDefinitionId = processDefinitionId; }
+    public String getLaneId() { return laneId; }
+    public void setLaneId(String laneId) { this.laneId = laneId; }
 }

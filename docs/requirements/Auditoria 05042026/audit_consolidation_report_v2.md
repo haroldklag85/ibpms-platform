@@ -1,4 +1,8 @@
 # REPORTE DE CONSOLIDACIÓN Y PLAN DE REMEDIACIÓN PRIORIZADO (V2)
+
+> [!CAUTION]
+> **HALLAZGOS GRADUADOS AL SSOT:** Las brechas y planes de remediación de este reporte consolidado fueron solventados y graduados como Criterios de Aceptación formales en los archivos de Épica correspondientes (`docs/requirements/epics/`). Este archivo es ahora histórico y de solo lectura.
+
 **Estrategia:** RAG-First Deep Context Analysis
 **Scope Evaluado:** 17 Iteraciones (Auditoría Lineal y Transversal sobre `v1_user_stories.md`)
 

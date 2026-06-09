@@ -1,4 +1,6 @@
 spring:
+  cache:
+    type: redis
   servlet:
     multipart:
       max-file-size: 50MB
@@ -10,6 +12,10 @@ spring:
     username: ${POSTGRES_USER:ibpms_user}
     password: ${POSTGRES_PASSWORD:ibpms_password}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 40
+      minimum-idle: 10
+      connection-timeout: 20000
   jpa:
     hibernate:
       ddl-auto: update # Auto-reparación por Hibernate
@@ -18,9 +24,17 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
+    # HO-03: Defer datasource init para que seed-dev.sql se ejecute DESPUÉS de Liquibase + Hibernate DDL
+    defer-datasource-initialization: false
   liquibase:
     enabled: true
-    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  # HO-03: Auto-carga de datos mínimos para desarrollo local
+  sql:
+    init:
+      mode: never
+      data-locations: classpath:seed-dev.sql
+      continue-on-error: true
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
@@ -33,9 +47,12 @@ spring:
 
 camunda:
   bpm:
+    # ADR-003: Camunda 7 corre EMPOTRADO en este proceso JVM.
+    # El External Task Client es exclusivo para Camunda remoto (Camunda Run/Standalone).
+    # Tenerlo activo en modo embedded genera un loop de 401 en /engine-rest/external-task/fetchAndLock.
     client:
-      disable: false # Habilitado para Sprint 5
-      base-url: http://localhost:8080/api/v1/engine-rest
+      disable: true # DESHABILITADO — motor embedded, no se necesita cliente externo
+      base-url: http://localhost:8080/engine-rest
       max-tasks: 1
       async-response-timeout: 10000
     database:
@@ -58,7 +75,7 @@ ibpms:
   webhook:
     security:
       mode: ${WEBHOOK_SECURITY_MODE:HMAC}
-      hmac-secret: ${WEBHOOK_HMAC_SECRET:dev-hmac-secret-key-for-webhook-validation}
+      hmac-secret: ${HMAC_SECRET:mock-secret-for-local}
     payload:
       max-size-bytes: ${WEBHOOK_MAX_PAYLOAD_BYTES:10485760}
     pre-triage:
@@ -70,12 +87,10 @@ ibpms:
 
 jwt:
   secret: ${JWT_SECRET:changeme-this-must-be-at-least-32-chars-for-hs256-signature!!}
-  expiration: 3600
+  expiration: 900
 
 server:
   port: 8080
-  servlet:
-    context-path: /api/v1
   tomcat:
     max-http-form-post-size: 50MB
 
@@ -95,3 +110,41 @@ resilience4j.circuitbreaker:
       automaticTransitionFromOpenToHalfOpenEnabled: true
       waitDurationInOpenState: 15s       # En caso de falla, asume apertura de 15 segundos
       failureRateThreshold: 50           # Activa modo degradado si fallan el 50% de las llamadas
+
+---
+spring:
+  config:
+    activate:
+      on-profile: e2e
+  datasource:
+    url: jdbc:postgresql://localhost:5433/ibpms_e2e
+    username: ibpms
+    password: ibpms_e2e_pass
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 40
+      minimum-idle: 10
+      connection-timeout: 20000
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:seed-e2e.sql
+      continue-on-error: true
+
+  liquibase:
+    enabled: true
+  jpa:
+    defer-datasource-initialization: false
+  data:
+    redis:
+      host: localhost
+      port: 6380
+  rabbitmq:
+    host: localhost
+    port: 5673
+
+camunda:
+  bpm:
+    client:
+      base-url: http://localhost:8080/api/v1/engine-rest
+

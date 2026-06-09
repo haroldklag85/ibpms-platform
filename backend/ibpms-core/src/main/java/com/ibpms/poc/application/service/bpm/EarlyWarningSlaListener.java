@@ -1,6 +1,6 @@
 package com.ibpms.poc.application.service.bpm;
 
-import com.ibpms.poc.application.event.SlaAtRiskEvent;
+import com.ibpms.poc.infrastructure.bpm.scheduler.SlaAtRiskEvent;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ public class EarlyWarningSlaListener implements JavaDelegate {
         execution.setVariableLocal("isSlaAtRisk", true);
 
         // 2. Desacoplamiento de Correo (Observer en Memoria): Emisión del evento
-        SlaAtRiskEvent riskEvent = new SlaAtRiskEvent(procInstId, execution.getId(), currentActivityId);
+        SlaAtRiskEvent riskEvent = new SlaAtRiskEvent(this, execution.getId(), procInstId);
         eventPublisher.publishEvent(riskEvent);
 
         log.debug("[SLA WARNING] Evento SlaAtRiskEvent disparado localmente en RAM y Variable [isSlaAtRisk=true] materializada.");

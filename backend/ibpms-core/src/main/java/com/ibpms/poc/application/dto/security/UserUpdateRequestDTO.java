@@ -11,11 +11,12 @@ public class UserUpdateRequestDTO {
     private String email;
 
     // Opcional en update, pero si se envía debe cumplir
-    @Pattern(regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$", 
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*?])[A-Za-z\\d!@#$%^&*?]{8,}$", 
              message = "La contraseña debe tener mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo.")
     private String password;
 
     private Boolean isActive;
+    private String status;
     
     private Boolean isExternalIdp;
 
@@ -28,6 +29,8 @@ public class UserUpdateRequestDTO {
     public void setPassword(String password) { this.password = password; }
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
     public Boolean getIsExternalIdp() { return isExternalIdp; }
     public void setIsExternalIdp(Boolean isExternalIdp) { this.isExternalIdp = isExternalIdp; }
     public Set<UUID> getRoleIds() { return roleIds; }

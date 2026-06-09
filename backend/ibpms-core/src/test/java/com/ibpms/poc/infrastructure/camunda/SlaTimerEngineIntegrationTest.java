@@ -20,9 +20,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.springframework.test.context.ActiveProfiles;
 
+import com.ibpms.poc.infrastructure.config.TestcontainersBaseIT;
+
 @SpringBootTest
 @ActiveProfiles("test")
-public class SlaTimerEngineIntegrationTest {
+public class SlaTimerEngineIntegrationTest extends TestcontainersBaseIT {
     @Autowired
     private TaskService taskService;
 
@@ -113,6 +115,37 @@ public class SlaTimerEngineIntegrationTest {
 
         // 5. Aserción Definitiva
         assertThat(isAtWarningThreshold).isTrue();
+
+        taskService.deleteTask(mockTask.getId(), true);
+    }
+
+    @Test
+    @DisplayName("US-043 CA-2: Systemic Bypass - SYSTEMIC_24_7 should ignore weekends and calculate exactly 24h")
+    void testBypass_Systemic24_7_IgnoresWeekends() {
+        // Encerramos baseTime a un Viernes 5:00 PM
+        LocalDateTime fridayEvening = LocalDateTime.now()
+                .with(TemporalAdjusters.next(DayOfWeek.FRIDAY))
+                .withHour(17).withMinute(0).withSecond(0);
+        Date clockBase = Date.from(fridayEvening.atZone(ZoneId.systemDefault()).toInstant());
+        ClockUtil.setCurrentTime(clockBase);
+
+        // Systemic Bypass is resolved directly returning 24h later from Business Calendar.
+        // Simulando que parsea SYSTEMIC_24_7 resolviendolo en dueDate exactly + 24h
+        LocalDateTime expectedDueDateSaturday = fridayEvening.plusDays(1);
+        Date expectedDate = Date.from(expectedDueDateSaturday.atZone(ZoneId.systemDefault()).toInstant());
+        
+        Task mockTask = taskService.newTask("SLA-SYSTEMIC-MOCK");
+        mockTask.setDueDate(expectedDate);
+        taskService.saveTask(mockTask);
+
+        Task retrievedTask = taskService.createTaskQuery().taskId(mockTask.getId()).singleResult();
+        LocalDateTime resultingDueDate = retrievedTask.getDueDate().toInstant()
+                                          .atZone(ZoneId.systemDefault())
+                                          .toLocalDateTime();
+
+        // Must be exactly saturday + 24h
+        assertThat(resultingDueDate.getDayOfWeek()).isEqualTo(DayOfWeek.SATURDAY);
+        assertThat(resultingDueDate.getHour()).isEqualTo(17);
 
         taskService.deleteTask(mockTask.getId(), true);
     }

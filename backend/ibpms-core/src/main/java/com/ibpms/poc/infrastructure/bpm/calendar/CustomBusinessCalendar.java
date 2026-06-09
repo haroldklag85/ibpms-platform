@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 
@@ -45,10 +46,12 @@ public class CustomBusinessCalendar implements BusinessCalendar {
         return resolveDuedate(duedateDescription, task.getCreateTime(), 0L);
     }
     
-    // Fallback/Sobrecarga nativa en Camunda 7.20+ requiere a veces parametros extra pero estos 2 son obligatorios.
-    // Camunda parsea internamente ISO-8601, pero en nuestra arquitectura abstraemos la resolución
-    // Puesto que es una Prueba de Concepto (PoC) implementaremos un warp simbólico asumiendo +N horas de SLA
-    // Aquí interceptamos el Time-Warp.
+    /**
+     * CA-1: Resolución principal de Due Dates con soporte ISO 8601.
+     * CA-2: Bypass para timers sistémicos (SYSTEMIC_24_7).
+     * CA-4: Resolución de timezone desde config corporativa persistida.
+     * Soporta formatos: PT4H, P2D, Xh, número suelto. Fallback: 4h default.
+     */
     public Date resolveDuedate(String duedateDescription, Date startDate, long repeatOffset) {
         log.info("[TIME-WARP] Resolviendo SLA: {} desde la fecha base: {}", duedateDescription, startDate);
         
@@ -68,11 +71,24 @@ public class CustomBusinessCalendar implements BusinessCalendar {
 
         // SIMULADOR DE TIME-WARP PoC: 
         // Desplazamos la meta hasta encontrar horas hábiles.
-        LocalDateTime metaTemporal = LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault());
+        ZoneId zoneId = config.getTimezone() != null ? ZoneId.of(config.getTimezone()) : ZoneId.systemDefault();
+        LocalDateTime metaTemporal = LocalDateTime.ofInstant(startDate.toInstant(), zoneId);
         
-        // Sumamos arbitrariamente 4 horas hábiles por defecto al SLA si el formato es un genérico.
-        // En V2 se implementará el parser ISO 8601 completo considerando JodaTime o java.time.Duration.
-        int horasSla = 4; 
+        // SLA parseando formato ISO 8601 o genéricos
+        int horasSla = 4;
+        try {
+            if (duedateDescription != null) {
+                if (duedateDescription.matches("^\\d+[hH]$")) {
+                    horasSla = Integer.parseInt(duedateDescription.replaceAll("(?i)h", ""));
+                } else if (duedateDescription.startsWith("P")) {
+                    horasSla = (int) Duration.parse(duedateDescription).toHours();
+                } else if (duedateDescription.matches("^\\d+$")) {
+                    horasSla = Integer.parseInt(duedateDescription);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[TIME-WARP] Fallo parseando SLA '{}'. Usando fallback de {} horas.", duedateDescription, horasSla);
+        }
         
         while (horasSla > 0) {
             metaTemporal = metaTemporal.plusHours(1);
@@ -89,7 +105,7 @@ public class CustomBusinessCalendar implements BusinessCalendar {
         }
 
         log.info("[TIME-WARP] SLA Resuelto protegiendo fines de semana/feriados. Nueva Fecha: {}", metaTemporal);
-        return Date.from(metaTemporal.atZone(ZoneId.systemDefault()).toInstant());
+        return Date.from(metaTemporal.atZone(zoneId).toInstant());
     }
 
     private boolean isHoliday(LocalDateTime date, List<HolidayEntity> holidays) {

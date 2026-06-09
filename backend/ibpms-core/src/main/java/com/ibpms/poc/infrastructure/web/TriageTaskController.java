@@ -8,12 +8,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/intake/triage/tasks")
+@Traceability(US = "US-004", CA = {"CA-08", "CA-09", "CA-14", "CA-15"})
 public class TriageTaskController {
 
     private final TriageTaskService triageTaskService;
@@ -23,7 +25,7 @@ public class TriageTaskController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Page<TriageTask>> getTriageTasks(
             @RequestParam(required = false, defaultValue = "PENDING") String status,
             Pageable pageable) {
@@ -31,7 +33,7 @@ public class TriageTaskController {
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<TriageTask> approveTask(
             @PathVariable UUID id,
             @Valid @RequestBody ApproveTriageRequest request) {
@@ -39,7 +41,7 @@ public class TriageTaskController {
     }
 
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<TriageTask> rejectTask(
             @PathVariable UUID id,
             @Valid @RequestBody RejectTriageRequest request) {

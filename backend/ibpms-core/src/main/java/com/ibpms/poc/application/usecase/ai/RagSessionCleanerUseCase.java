@@ -24,8 +24,17 @@ public class RagSessionCleanerUseCase {
      * Purga destructivamente cualquier vector y simula S3 wipe para la sesión actual.
      */
     @Transactional
+    // @Traceability: US-027, CA-04
     public void wipeSessionFootprint(String tenantId, String sessionId) {
         log.warn("[APPSEC-RAG-WIPE] Orden de Destrucción Recibida para Tenant: {}, Session: {}", tenantId, sessionId);
+        
+        // Anti-IDOR Check: Validar pertenencia estructural del sessionId al tenant_id
+        String expectedPrefix = "session_" + tenantId.replace("tenant_", "") + "_";
+        if (!sessionId.startsWith(expectedPrefix)) {
+            log.error("[APPSEC-IDOR-BLOCK] Intento de acceso cruzado estructural detectado. Tenant {} intentó destruir {} (Se esperaba prefijo: {})", tenantId, sessionId, expectedPrefix);
+            throw new org.springframework.security.access.AccessDeniedException("IDOR Blocked: Session does not belong to the current tenant");
+        }
+        
         long startTime = System.currentTimeMillis();
 
         try {

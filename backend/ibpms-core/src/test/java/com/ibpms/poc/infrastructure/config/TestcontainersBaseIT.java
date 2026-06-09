@@ -1,4 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.config;
+
+import com.ibpms.poc.AbstractIntegrationTest;
+
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -12,52 +16,32 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  *
  * <p>Cierre de hallazgo: Testing Stack Audit - Nivel 3 (Integración)</p>
  *
- * <p>Levanta contenedores Docker efímeros de PostgreSQL 16 y RabbitMQ 3
- * que replican fielmente el entorno de producción. Usa {@code @ServiceConnection}
- * de Spring Boot 3.1+ para inyectar automáticamente las propiedades de conexión
- * (JDBC URL, host, port, credentials) en el ApplicationContext.</p>
- *
- * <h3>Uso:</h3>
- * <pre>{@code
- * class MiTestDeIntegracion extends TestcontainersBaseIT {
- *     @Test
- *     void debeCrearTopologiaDLQ() {
- *         // El contexto Spring ya está conectado a PostgreSQL y RabbitMQ reales
- *     }
- * }
- * }</pre>
- *
- * <h3>Requisitos:</h3>
- * <ul>
- *   <li>Docker debe estar corriendo en la máquina/CI</li>
- *   <li>Liquibase ejecutará migrations contra PostgreSQL real</li>
- * </ul>
+ * <p>ADR-010 EXCEPCIÓN: Enfoque E2E Estático Activo.
+ * Debido a restricciones de memoria local, Testcontainers ha sido desactivado.
+ * Los tests usarán la infraestructura estática del docker-compose.e2e.yml
+ * configurada en application-test.yml.</p>
  */
 @SpringBootTest
-@Testcontainers
-public abstract class TestcontainersBaseIT {
+// @Testcontainers // Desactivado por ADR-010 (Enfoque E2E Estático)
+public abstract class TestcontainersBaseIT extends AbstractIntegrationTest {
 
     /**
      * Contenedor PostgreSQL 16 Alpine.
-     * Reemplaza H2 en tests de integración para evitar incompatibilidades
-     * de dialecto (pg_trgm, gen_random_uuid(), locking behavior).
      */
-    @Container
-    @ServiceConnection
-    @SuppressWarnings("resource") // Testcontainers gestiona el lifecycle via JUnit Jupiter
-    static PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withDatabaseName("ibpms_test")
-                    .withUsername("ibpms_test")
-                    .withPassword("ibpms_test");
+    // @Container
+    // @ServiceConnection
+    // @SuppressWarnings("resource")
+    // static PostgreSQLContainer<?> postgres =
+    //         new PostgreSQLContainer<>("postgres:16-alpine")
+    //                 .withDatabaseName("ibpms_test")
+    //                 .withUsername("ibpms_test")
+    //                 .withPassword("ibpms_test");
 
     /**
      * Contenedor RabbitMQ 3 con Management Plugin.
-     * Permite validar topología real (exchanges, queues, bindings, DLX),
-     * retry con backoff, y TTL de mensajes.
      */
-    @Container
-    @ServiceConnection
-    static RabbitMQContainer rabbit =
-            new RabbitMQContainer("rabbitmq:3-management");
+    // @Container
+    // @ServiceConnection
+    // static RabbitMQContainer rabbit =
+    //         new RabbitMQContainer("rabbitmq:3-management-alpine");
 }

@@ -1,5 +1,7 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
+import com.ibpms.poc.AbstractIntegrationTest;
 import com.ibpms.poc.application.dto.DeploymentValidationResponse;
 import com.ibpms.poc.application.service.PreFlightAnalyzerService;
 import org.junit.jupiter.api.DisplayName;
@@ -8,7 +10,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -17,10 +18,9 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("CA-12: Pre-Flight DMN Binding Validation (Protección Derechos Adquiridos)")
-class PreFlightDmnBindingTest {
+class PreFlightDmnBindingTest extends AbstractIntegrationTest {
 
     @Autowired
     private PreFlightAnalyzerService preFlightAnalyzerService;

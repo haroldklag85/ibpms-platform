@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 /**
  * Adaptador Driving — Controlador REST para Expedientes.
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/expedientes")
+@Traceability(US = "US-005", CA = {"CA-01"})
 public class CaseController {
 
     private final CreateExpedienteUseCase createExpedienteUseCase;

@@ -10,12 +10,13 @@ import com.ibpms.poc.application.port.in.ReasignarTareaUseCase;
 import com.ibpms.poc.application.port.in.ReclamarTareaUseCase;
 import com.ibpms.poc.application.service.FormFieldCleanserService;
 import com.ibpms.poc.infrastructure.jpa.entity.FormFieldValueAuditEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.FormFieldValueAuditRepository;
+import com.ibpms.poc.application.service.FormFieldValueAuditService;
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.task.Task;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import com.ibpms.poc.application.dto.TaskCompleteRequest;
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/tasks")
+@Traceability(US = "US-004", CA = {"CA-12", "CA-31", "CA-47", "CA-50", "CA-72"})
 public class TaskController {
 
     private final ListarTareasUseCase listarTareasUseCase;
@@ -39,7 +41,7 @@ public class TaskController {
     private final ReasignarTareaUseCase reasignarTareaUseCase;
     private final FormFieldCleanserService formFieldCleanserService;
     private final TaskService taskService;
-    private final FormFieldValueAuditRepository auditRepository;
+    private final FormFieldValueAuditService auditService;
 
     public TaskController(ListarTareasUseCase listarTareasUseCase,
             CompletarTareaUseCase completarTareaUseCase,
@@ -49,7 +51,7 @@ public class TaskController {
             ReasignarTareaUseCase reasignarTareaUseCase,
             FormFieldCleanserService formFieldCleanserService,
             TaskService taskService,
-            FormFieldValueAuditRepository auditRepository) {
+            FormFieldValueAuditService auditService) {
         this.listarTareasUseCase = listarTareasUseCase;
         this.completarTareaUseCase = completarTareaUseCase;
         this.obtenerFormularioUseCase = obtenerFormularioUseCase;
@@ -58,7 +60,7 @@ public class TaskController {
         this.reasignarTareaUseCase = reasignarTareaUseCase;
         this.formFieldCleanserService = formFieldCleanserService;
         this.taskService = taskService;
-        this.auditRepository = auditRepository;
+        this.auditService = auditService;
     }
 
     @GetMapping
@@ -66,9 +68,10 @@ public class TaskController {
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "PENDING") String status,
-            @RequestParam(required = false) Integer priority) {
+            @RequestParam(required = false) Integer priority,
+            @RequestParam(required = false) String delegatedUser) {
 
-        List<TaskDTO> result = listarTareasUseCase.listar(limit, offset, status, priority);
+        List<TaskDTO> result = listarTareasUseCase.listar(limit, offset, status, priority, delegatedUser);
         return ResponseEntity.ok(result);
     }
 
@@ -142,7 +145,8 @@ public class TaskController {
                 if (oldStr == null || !oldStr.equals(newStr)) {
                     UUID formId = new UUID(0, 0); // Mock UUID for form design ID since it involves joining with
                                                   // Definition
-                    auditRepository.save(
+                    // @Traceability: US-008 - CA-01 (ADR-001 Refactor)
+                    auditService.saveAudit(
                             new FormFieldValueAuditEntity(processInstanceId, formId, key, oldStr, newStr, username));
                 }
             });

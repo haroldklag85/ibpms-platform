@@ -5,6 +5,7 @@ import org.camunda.bpm.client.spring.annotation.ExternalTaskSubscription;
 import org.camunda.bpm.client.task.ExternalTask;
 import org.camunda.bpm.client.task.ExternalTaskHandler;
 import org.camunda.bpm.client.task.ExternalTaskService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -14,9 +15,14 @@ import java.util.Map;
  * Cliente External Task de Camunda (CA-24).
  * En modo standalone (hilo separado) va por long-polling o se encarga de no
  * bloquear el thread transaccional de Camunda.
+ *
+ * ADR-003: En arquitectura V1 (motor embedded), este worker se desactiva
+ * vía camunda.bpm.client.disable=true para evitar el loop 401 contra /engine-rest.
  */
 @Component
 @ExternalTaskSubscription(topicName = "ai-generative-task")
+@org.springframework.context.annotation.Profile("!test")
+@ConditionalOnProperty(name = "camunda.bpm.client.disable", havingValue = "false", matchIfMissing = true)
 public class GenerativeTaskWorker implements ExternalTaskHandler {
 
     private final CognitiveOrchestratorService orchestrator;

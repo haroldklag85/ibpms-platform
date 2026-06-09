@@ -13,4 +13,11 @@ public interface RbacPort {
      * Devuelve una lista de Lanes BPMN asumiendo los roles de sistema indicados.
      */
     List<String> getPermittedBpmnLanesForGroups(List<String> idpGroupsList);
+
+    /**
+     * Purga las asignaciones de carriles (y perfiles opcionalmente) que ya no
+     * existen en el proceso BPMN.
+     * @Traceability: US-005, CA-06 Purga de Roles Zombies
+     */
+    void purgeZombieLanes(String processKey, List<String> activeLaneIds);
 }

@@ -1,4 +1,8 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.application.service.security;
+
+import com.ibpms.poc.AbstractIntegrationTest;
+
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @SuppressWarnings("null")
-public class AiJailbreakStrikesTest {
+public class AiJailbreakStrikesTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

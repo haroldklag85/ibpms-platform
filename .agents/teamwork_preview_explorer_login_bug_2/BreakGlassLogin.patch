@@ -1,0 +1,67 @@
+diff --git a/frontend/src/components/auth/BreakGlassLogin.vue b/frontend/src/components/auth/BreakGlassLogin.vue
+index a94b7c6..e7a7cde 100644
+--- a/frontend/src/components/auth/BreakGlassLogin.vue
++++ b/frontend/src/components/auth/BreakGlassLogin.vue
+@@ -45,6 +45,7 @@
+         <label class="block text-[10px] font-black text-red-800 uppercase tracking-widest mb-1.5 ml-1">Justificación del Incidente <span class="text-red-600">*</span></label>
+         <textarea 
+           v-model="emergencyForm.justification"
++          data-testid="justification-input"
+           required 
+           rows="3"
+           placeholder="Describa el motivo de la activación del protocolo (Ej: Caída masiva de EntraID / Redis Outage)..."
+@@ -68,10 +69,28 @@
+       </button>
+     </form>
+ 
+-    <div v-if="error" data-testid="login-error-banner" class="mt-4 p-3 bg-red-100 border-l-4 border-red-600 rounded flex items-start gap-3">
+-       <span class="material-symbols-outlined text-red-600 text-[18px]">error</span>
+-       <p class="text-[11px] text-red-800 font-bold leading-tight">{{ error }}</p>
++    <div 
++       v-if="error" 
++       data-testid="login-error-banner" 
++       :class="[
++         'mt-4 p-3 border-l-4 rounded flex items-start gap-3',
++         errorCode === 'USER_NOT_FOUND' ? 'bg-amber-50 border-amber-500 text-amber-800' :
++         errorCode === 'INVALID_PASSWORD' ? 'bg-red-50 border-red-600 text-red-800' :
++         errorCode === 'ACCOUNT_DISABLED' ? 'bg-gray-100 border-gray-400 text-gray-700' :
++         'bg-red-900 border-red-700 text-red-50'
++       ]"
++    >
++       <span 
++         class="material-symbols-outlined text-[18px]"
++         :class="[
++           errorCode === 'USER_NOT_FOUND' ? 'text-amber-500' :
++           errorCode === 'INVALID_PASSWORD' ? 'text-red-600' :
++           errorCode === 'ACCOUNT_DISABLED' ? 'text-gray-500' :
++           'text-red-300'
++         ]"
++       >error</span>
++       <p class="text-[11px] font-bold leading-tight">{{ error }}</p>
+     </div>
+   </div>
+ </template>
+@@ -84,6 +103,7 @@ const authStore = useAuthStore();
+ const router = useRouter();
+ const loading = ref(false);
+ const error = ref('');
++const errorCode = ref('');
+ 
+ const emergencyForm = ref({
+   email: '',
+@@ -95,6 +115,7 @@ const emergencyForm = ref({
+ const handleEmergencyLogin = async () => {
+   loading.value = true;
+   error.value = '';
++  errorCode.value = '';
+   
+   try {
+     const res = await apiClient.post('/auth/emergency-login', {
+@@ -111,6 +132,7 @@ const handleEmergencyLogin = async () => {
+     }
+   } catch (err: any) {
+     console.error('Error Break-Glass:', err);
++    errorCode.value = err.response?.data?.code || 'NETWORK_ERROR';
+     error.value = err.response?.data?.message || 'Error de conexión con el servidor. Verifique que el backend esté activo.';
+   } finally {
+     loading.value = false;

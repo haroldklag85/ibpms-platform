@@ -3,6 +3,7 @@ package com.ibpms.poc.infrastructure.web;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/design/snippets")
+@Traceability(US = "US-008", CA = {"CA-74"})
 public class FormSnippetController {
 
     // En V2 requerirá Base de Datos Relacional `ibpms_form_snippets`

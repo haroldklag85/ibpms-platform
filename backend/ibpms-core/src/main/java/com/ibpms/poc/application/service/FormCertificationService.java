@@ -1,11 +1,15 @@
 package com.ibpms.poc.application.service;
 
-import com.ibpms.poc.infrastructure.jpa.entity.FormDefinitionEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.FormDefinitionRepository;
+import com.ibpms.poc.domain.model.FormCertification;
+import com.ibpms.poc.domain.model.FormDefinition;
+import com.ibpms.poc.application.port.out.FormDefinitionPort;
+import com.ibpms.poc.application.port.out.FormCertificationPort;
+import com.ibpms.poc.application.port.out.AuditLogPort;
+import com.ibpms.poc.infrastructure.web.dto.FormDefinitionDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,6 +22,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
 
@@ -34,13 +39,19 @@ public class FormCertificationService {
     private static final int PAYLOAD_RAW_LIMIT = 32 * 1024;       // 32KB
     private static final int PAYLOAD_COMPRESSED_LIMIT = 64 * 1024; // 64KB
 
-    private final FormDefinitionRepository formDefinitionRepository;
-    private final JdbcTemplate jdbcTemplate;
+    private final FormDefinitionPort formDefinitionPort;
+    private final FormCertificationPort formCertificationPort;
+    private final AuditLogPort auditLogPort;
+    private final ObjectMapper objectMapper;
 
-    public FormCertificationService(FormDefinitionRepository formDefinitionRepository,
-                                     JdbcTemplate jdbcTemplate) {
-        this.formDefinitionRepository = formDefinitionRepository;
-        this.jdbcTemplate = jdbcTemplate;
+    public FormCertificationService(FormDefinitionPort formDefinitionPort,
+                                     FormCertificationPort formCertificationPort,
+                                     AuditLogPort auditLogPort,
+                                     ObjectMapper objectMapper) {
+        this.formDefinitionPort = formDefinitionPort;
+        this.formCertificationPort = formCertificationPort;
+        this.auditLogPort = auditLogPort;
+        this.objectMapper = objectMapper;
     }
 
     // ─────────────────────────────────────────────
@@ -49,17 +60,22 @@ public class FormCertificationService {
 
     @Transactional
     public void ensureEntityExists(UUID formDefinitionId) {
-        if (!formDefinitionRepository.existsById(formDefinitionId)) {
-            FormDefinitionEntity stub = new FormDefinitionEntity();
+        if (!formDefinitionPort.existsById(formDefinitionId)) {
+            FormDefinition stub = new FormDefinition();
             stub.setId(formDefinitionId);
             stub.setFormId(formDefinitionId);
             stub.setVersionId(1);
             stub.setSchemaContent("{}");
             stub.setCreatedBy("system");
             stub.setHashSha256(computeSha256("{}"));
-            stub.setIsQaCertified(false);
-            formDefinitionRepository.save(stub);
-            log.info("Auto-created stub FormDefinitionEntity for {}", formDefinitionId);
+            formDefinitionPort.save(stub);
+
+            FormCertification cert = new FormCertification();
+            cert.setFormDefinitionId(formDefinitionId);
+            cert.setIsQaCertified(false);
+            formCertificationPort.save(cert);
+
+            log.info("Auto-created stub FormDefinition for {}", formDefinitionId);
         }
     }
 
@@ -68,19 +84,26 @@ public class FormCertificationService {
     // ─────────────────────────────────────────────
 
     @Transactional
-    public FormDefinitionEntity certifyForm(UUID formDefinitionId, String certifierUserId, String payloadJson) {
-        FormDefinitionEntity entity = formDefinitionRepository.findById(formDefinitionId)
+    public FormDefinitionDTO certifyForm(UUID formDefinitionId, String certifierUserId, String payloadJson) {
+        FormDefinition entity = formDefinitionPort.findById(formDefinitionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "FormDefinition not found: " + formDefinitionId));
 
+        FormCertification cert = formCertificationPort.findByFormDefinitionId(formDefinitionId)
+                .orElseGet(() -> {
+                    FormCertification newCert = new FormCertification();
+                    newCert.setFormDefinitionId(formDefinitionId);
+                    return newCert;
+                });
+
         // CA-16: Concurrencia optimista — si ya está certificada, rechazar
-        if (Boolean.TRUE.equals(entity.getIsQaCertified()) && entity.getCertifiedBy() != null) {
-            long secondsAgo = ChronoUnit.SECONDS.between(entity.getCertifiedAt(), LocalDateTime.now());
-            String message = "Este esquema ya fue certificado por " + entity.getCertifiedBy() +
+        if (Boolean.TRUE.equals(cert.getIsQaCertified()) && cert.getCertifiedBy() != null) {
+            long secondsAgo = ChronoUnit.SECONDS.between(cert.getCertifiedAt(), LocalDateTime.now());
+            String message = "Este esquema ya fue certificado por " + cert.getCertifiedBy() +
                     " hace " + secondsAgo + " segundos. Recargue para ver el estado actualizado.";
 
             // Registrar intento rechazado en audit log
             auditLog(certifierUserId, "QA_CERT_CONFLICT",
-                    "{\"reason\": \"Concurrent certification attempt rejected\", \"existingCertifier\": \"" + entity.getCertifiedBy() + "\"}",
+                    "{\"reason\": \"Concurrent certification attempt rejected\", \"existingCertifier\": \"" + cert.getCertifiedBy() + "\"}",
                     null);
 
             throw new ResponseStatusException(HttpStatus.CONFLICT, message);
@@ -88,11 +111,11 @@ public class FormCertificationService {
 
         // Certificar
         String currentHash = computeSha256(entity.getSchemaContent());
-        entity.setIsQaCertified(true);
-        entity.setCertifiedSchemaHash(currentHash);
-        entity.setCertifiedBy(certifierUserId);
-        entity.setCertifiedAt(LocalDateTime.now());
-        formDefinitionRepository.save(entity);
+        cert.setIsQaCertified(true);
+        cert.setCertifiedSchemaHash(currentHash);
+        cert.setCertifiedBy(certifierUserId);
+        cert.setCertifiedAt(LocalDateTime.now());
+        formCertificationPort.save(cert);
 
         // CA-15: Registrar en audit log con payload truncamiento
         auditLog(certifierUserId, "QA_CERTIFIED",
@@ -100,7 +123,8 @@ public class FormCertificationService {
                 payloadJson);
 
         log.info("QA Certification granted for FormDefinition {} by {}", formDefinitionId, certifierUserId);
-        return entity;
+        
+        return toDTO(entity, cert);
     }
 
     // ──────────────────────────────────────────────────────
@@ -109,23 +133,25 @@ public class FormCertificationService {
 
     @Transactional
     public void onSchemaModified(UUID formDefinitionId, String modifiedBy) {
-        FormDefinitionEntity entity = formDefinitionRepository.findById(formDefinitionId)
+        FormDefinition entity = formDefinitionPort.findById(formDefinitionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "FormDefinition not found"));
 
-        if (!Boolean.TRUE.equals(entity.getIsQaCertified())) {
+        Optional<FormCertification> certOpt = formCertificationPort.findByFormDefinitionId(formDefinitionId);
+        if (certOpt.isEmpty() || !Boolean.TRUE.equals(certOpt.get().getIsQaCertified())) {
             return; // Not certified, nothing to revoke
         }
 
-        String previousHash = entity.getCertifiedSchemaHash();
+        FormCertification cert = certOpt.get();
+        String previousHash = cert.getCertifiedSchemaHash();
         String newHash = computeSha256(entity.getSchemaContent());
 
         if (previousHash != null && !previousHash.equals(newHash)) {
             // Revocar sello
-            entity.setIsQaCertified(false);
-            entity.setCertifiedSchemaHash(null);
-            entity.setCertifiedBy(null);
-            entity.setCertifiedAt(null);
-            formDefinitionRepository.save(entity);
+            cert.setIsQaCertified(false);
+            cert.setCertifiedSchemaHash(null);
+            cert.setCertifiedBy(null);
+            cert.setCertifiedAt(null);
+            formCertificationPort.save(cert);
 
             // Audit log inmutable
             String details = "{\"action\": \"QA_CERT_REVOKED\", \"reason\": \"Schema modified post-certification\"," +
@@ -142,23 +168,35 @@ public class FormCertificationService {
     // ────────────────────────────────────────────────────────
 
     @Transactional
-    public FormDefinitionEntity createNewVersion(UUID formId, int newVersionId, String schemaContent, String createdBy) {
-        FormDefinitionEntity newVersion = new FormDefinitionEntity();
+    public FormDefinitionDTO createNewVersion(UUID formId, int newVersionId, String schemaContent, String createdBy) {
+        try {
+            objectMapper.readTree(schemaContent);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Form schemaContent is not a valid JSON string");
+        }
+
+        FormDefinition newVersion = new FormDefinition();
         newVersion.setFormId(formId);
         newVersion.setVersionId(newVersionId);
         newVersion.setSchemaContent(schemaContent);
         newVersion.setCreatedBy(createdBy);
         newVersion.setHashSha256(computeSha256(schemaContent));
 
-        // CA-13: El sello NO se hereda. Nace sin certificar.
-        newVersion.setIsQaCertified(false);
-        newVersion.setCertifiedSchemaHash(null);
-        newVersion.setCertifiedBy(null);
-        newVersion.setCertifiedAt(null);
+        // [LEY GLOBAL 3: Trazabilidad Inversa] - US-003 - CA-87: Asignar la entidad guardada con ID generado para evitar form_definition_id null
+        FormDefinition savedVersion = formDefinitionPort.save(newVersion);
 
-        formDefinitionRepository.save(newVersion);
+        // CA-13: El sello NO se hereda. Nace sin certificar.
+        FormCertification newCert = new FormCertification();
+        newCert.setFormDefinitionId(savedVersion.getId());
+        newCert.setIsQaCertified(false);
+        newCert.setCertifiedSchemaHash(null);
+        newCert.setCertifiedBy(null);
+        newCert.setCertifiedAt(null);
+        
+        formCertificationPort.save(newCert);
+
         log.info("New schema version V{} created for form {} — born uncertified (CA-13)", newVersionId, formId);
-        return newVersion;
+        return toDTO(savedVersion, newCert);
     }
 
     // ───────────────────────────────────────────────────────────
@@ -192,10 +230,9 @@ public class FormCertificationService {
             }
         }
 
-        jdbcTemplate.update(
-                "INSERT INTO ibpms_audit_log (id, entity_type, entity_id, event_type, performed_by, created_at, payload_snapshot, is_compressed, truncated, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)",
+        auditLogPort.saveAuditLog(
                 id, "FORM_DEFINITION", id, action, userId,
-                java.sql.Timestamp.valueOf(LocalDateTime.now()),
+                LocalDateTime.now(),
                 payloadBytes, isCompressed, truncated, detailsJson
         );
     }
@@ -223,5 +260,26 @@ public class FormCertificationService {
             log.error("GZIP compression failed", e);
             return data; // Fallback: return raw
         }
+    }
+    
+    private FormDefinitionDTO toDTO(FormDefinition def, FormCertification cert) {
+        FormDefinitionDTO dto = new FormDefinitionDTO();
+        dto.setId(def.getId());
+        dto.setFormId(def.getFormId());
+        dto.setVersionId(def.getVersionId());
+        dto.setSchemaContent(def.getSchemaContent());
+        dto.setCreatedBy(def.getCreatedBy());
+        dto.setCreatedAt(def.getCreatedAt());
+        dto.setHashSha256(def.getHashSha256());
+
+        if (cert != null) {
+            dto.setIsQaCertified(cert.getIsQaCertified());
+            dto.setCertifiedSchemaHash(cert.getCertifiedSchemaHash());
+            dto.setCertifiedBy(cert.getCertifiedBy());
+            dto.setCertifiedAt(cert.getCertifiedAt());
+        } else {
+            dto.setIsQaCertified(false);
+        }
+        return dto;
     }
 }

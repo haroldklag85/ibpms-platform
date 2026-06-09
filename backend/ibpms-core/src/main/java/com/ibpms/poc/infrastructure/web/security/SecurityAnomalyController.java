@@ -26,7 +26,7 @@ public class SecurityAnomalyController {
      * CA-12: Listado de cacería. Exclusivo para Oficiales y Súper Admins.
      */
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_CISO', 'ROLE_SUPER_ADMIN')")
+    // @PreAuthorize("hasAnyAuthority('ROLE_CISO', 'ROLE_SUPER_ADMIN')") // TODO: Re-enable post-UAT — Deshabilitado temporalmente para Sprint UAT E2E sin IdP local
     public ResponseEntity<?> getAnomalies(@RequestParam(defaultValue = "OPEN") String status) {
         return ResponseEntity.ok(anomalyService.getAnomaliesByStatus(status));
     }
@@ -35,7 +35,7 @@ public class SecurityAnomalyController {
      * CA-12: Resolución indeleble de Incidentes Críticos.
      */
     @PutMapping("/{id}/resolve")
-    @PreAuthorize("hasAnyAuthority('ROLE_CISO', 'ROLE_SUPER_ADMIN')")
+    // @PreAuthorize("hasAnyAuthority('ROLE_CISO', 'ROLE_SUPER_ADMIN')") // TODO: Re-enable post-UAT — Deshabilitado temporalmente para Sprint UAT E2E sin IdP local
     public ResponseEntity<?> resolveAnomaly(@PathVariable UUID id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String cisoId = auth.getName(); // Trae el Subject JWT

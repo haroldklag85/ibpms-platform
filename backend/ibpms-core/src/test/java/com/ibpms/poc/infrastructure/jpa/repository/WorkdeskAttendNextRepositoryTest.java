@@ -21,10 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+import com.ibpms.poc.infrastructure.config.TestcontainersBaseIT;
+
+@SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class WorkdeskAttendNextRepositoryTest {
+public class WorkdeskAttendNextRepositoryTest extends TestcontainersBaseIT {
 
     @Autowired
     private WorkdeskProjectionRepository workdeskRepository;
@@ -40,7 +42,10 @@ public class WorkdeskAttendNextRepositoryTest {
     void should_assign_next_task_with_skill_match() {
         WorkdeskProjectionEntity task1 = new WorkdeskProjectionEntity();
         task1.setId("task1_skill");
-        task1.setTenantId("tenantA");
+        task1.setSourceSystem("BPMN");
+        task1.setOriginalTaskId("orig_1");
+        task1.setTitle("Test Task");
+        task1.setTenantId("tenant_alpha");
         task1.setCategoryTag("VIP_SUPPORT");
         task1.setAssignee(null);
         task1.setImpactLevel(10);
@@ -48,7 +53,7 @@ public class WorkdeskAttendNextRepositoryTest {
         workdeskRepository.save(task1);
 
         String[] userSkills = {"VIP_SUPPORT", "BILLING"};
-        Optional<WorkdeskProjectionEntity> nextTask = workdeskRepository.findNextAvailableTask("tenantA", userSkills);
+        Optional<WorkdeskProjectionEntity> nextTask = workdeskRepository.findNextAvailableTask("tenant_alpha", userSkills);
         
         assertTrue(nextTask.isPresent());
         assertEquals("VIP_SUPPORT", nextTask.get().getCategoryTag());
@@ -59,7 +64,10 @@ public class WorkdeskAttendNextRepositoryTest {
     void should_fallback_universal_when_no_skill_match() {
         WorkdeskProjectionEntity taskNoSkill = new WorkdeskProjectionEntity();
         taskNoSkill.setId("task1_noskill");
-        taskNoSkill.setTenantId("tenantB");
+        taskNoSkill.setSourceSystem("BPMN");
+        taskNoSkill.setOriginalTaskId("orig_2");
+        taskNoSkill.setTitle("Test Task");
+        taskNoSkill.setTenantId("tenant_alpha");
         taskNoSkill.setCategoryTag("TECH_LEVEL2");
         taskNoSkill.setAssignee(null);
         taskNoSkill.setImpactLevel(20); // Very high impact
@@ -68,10 +76,10 @@ public class WorkdeskAttendNextRepositoryTest {
 
         // Algoritmo de fallback universal si falla el de skills
         String[] userSkills = {"BILLING"};
-        Optional<WorkdeskProjectionEntity> skillMatch = workdeskRepository.findNextAvailableTask("tenantB", userSkills);
+        Optional<WorkdeskProjectionEntity> skillMatch = workdeskRepository.findNextAvailableTask("tenant_alpha", userSkills);
         assertFalse(skillMatch.isPresent()); // No match exactly
         
-        Optional<WorkdeskProjectionEntity> fallbackMatch = workdeskRepository.findNextAvailableTask("tenantB", null);
+        Optional<WorkdeskProjectionEntity> fallbackMatch = workdeskRepository.findNextAvailableTask("tenant_alpha", null);
         assertTrue(fallbackMatch.isPresent());
         assertEquals("TECH_LEVEL2", fallbackMatch.get().getCategoryTag()); // Universal fallback caught it
     }
@@ -90,13 +98,13 @@ public class WorkdeskAttendNextRepositoryTest {
         // Configurar Toggle OFF
         FeatureToggleEntity toggle = new FeatureToggleEntity();
         toggle.setToggleKey("FORCE_ROUTING");
-        toggle.setTenantId("tenantC");
+        toggle.setTenantId("tenant_alpha");
         toggle.setEnabled(false);
         featureToggleRepository.save(toggle);
         
         // Assertions logic via Service o Controller (aquí mock a repo validation)
         boolean isEnabled = false; 
-        /*featureToggleRepository.findByTenantIdAndToggleKey("tenantC", "FORCE_ROUTING")
+        /*featureToggleRepository.findByTenantIdAndToggleKey("tenant_alpha", "FORCE_ROUTING")
             .map(FeatureToggleEntity::isEnabled)
             .orElse(false);*/
             
@@ -107,7 +115,7 @@ public class WorkdeskAttendNextRepositoryTest {
     @Test
     void should_persist_skip_reason_in_audit_log() {
         TaskSkipEntity skip = new TaskSkipEntity();
-        skip.setTenantId("tenantA");
+        skip.setTenantId("tenant_alpha");
         skip.setUserId("user123");
         skip.setTaskId("t_88");
         skip.setSkipReason("CLIENTE_NO_RESPONDE");
@@ -125,7 +133,7 @@ public class WorkdeskAttendNextRepositoryTest {
         // En Spring Boot test validamos que el count de repositorio devuelva > 3
         for(int i=0; i<4; i++) {
             TaskSkipEntity skip = new TaskSkipEntity();
-            skip.setTenantId("tenantA");
+            skip.setTenantId("tenant_alpha");
             skip.setUserId("user3Consec");
             skip.setTaskId("t_c"+i);
             skip.setSkipReason("OTRO");
@@ -133,7 +141,7 @@ public class WorkdeskAttendNextRepositoryTest {
             taskSkipRepository.save(skip);
         }
         
-        //List<TaskSkipEntity> skips = taskSkipRepository.findTop3ByTenantIdAndUserIdOrderByCreatedAtDesc("tenantA", "user3Consec");
+        //List<TaskSkipEntity> skips = taskSkipRepository.findTop3ByTenantIdAndUserIdOrderByCreatedAtDesc("tenant_alpha", "user3Consec");
         //assertEquals(3, skips.size(), "Debe recuperar al menos los ultimos 3 skips para disparar alerta");
     }
 
@@ -154,14 +162,17 @@ public class WorkdeskAttendNextRepositoryTest {
     void should_enforce_tenant_isolation_on_attend_next() {
         WorkdeskProjectionEntity task = new WorkdeskProjectionEntity();
         task.setId("iso_tA");
-        task.setTenantId("tenantStrictIso");
+        task.setSourceSystem("BPMN");
+        task.setOriginalTaskId("orig_3");
+        task.setTitle("Test Task");
+        task.setTenantId("tenant_alpha");
         task.setCategoryTag("HR");
         task.setAssignee(null);
         task.setImpactLevel(5);
         task.setStatus("ACTIVE");
         workdeskRepository.save(task);
 
-        Optional<WorkdeskProjectionEntity> resultForOtherTenant = workdeskRepository.findNextAvailableTask("tenantAnother", null);
+        Optional<WorkdeskProjectionEntity> resultForOtherTenant = workdeskRepository.findNextAvailableTask("default", null);
         assertFalse(resultForOtherTenant.isPresent(), "No debe retornar tareas de otros tenants (tenant isolation)");
     }
 
@@ -177,7 +188,7 @@ public class WorkdeskAttendNextRepositoryTest {
     void should_log_toggle_change_immutably() {
         FeatureToggleEntity toggle = new FeatureToggleEntity();
         toggle.setToggleKey("FORCE_ROUTING");
-        toggle.setTenantId("tenantAudit");
+        toggle.setTenantId("tenant_alpha");
         toggle.setEnabled(true);
         toggle.setChangedBy("admin@company.com");
         toggle.setChangedAt(LocalDateTime.now());
@@ -199,7 +210,10 @@ public class WorkdeskAttendNextRepositoryTest {
     void should_order_by_impact_then_sla() {
         WorkdeskProjectionEntity task1 = new WorkdeskProjectionEntity();
         task1.setId("t_low_impact");
-        task1.setTenantId("tenantSort");
+        task1.setSourceSystem("BPMN");
+        task1.setOriginalTaskId("orig_4");
+        task1.setTitle("Test Task");
+        task1.setTenantId("tenant_alpha");
         task1.setCategoryTag("ALL");
         task1.setAssignee(null);
         task1.setImpactLevel(1);
@@ -208,14 +222,17 @@ public class WorkdeskAttendNextRepositoryTest {
 
         WorkdeskProjectionEntity task2 = new WorkdeskProjectionEntity();
         task2.setId("t_high_impact");
-        task2.setTenantId("tenantSort");
+        task2.setSourceSystem("BPMN");
+        task2.setOriginalTaskId("orig_5");
+        task2.setTitle("Test Task");
+        task2.setTenantId("tenant_alpha");
         task2.setCategoryTag("ALL");
         task2.setAssignee(null);
         task2.setImpactLevel(100);
         task2.setStatus("ACTIVE");
         workdeskRepository.save(task2);
 
-        Optional<WorkdeskProjectionEntity> nextTask = workdeskRepository.findNextAvailableTask("tenantSort", null);
+        Optional<WorkdeskProjectionEntity> nextTask = workdeskRepository.findNextAvailableTask("tenant_alpha", null);
         assertTrue(nextTask.isPresent());
         assertEquals("t_high_impact", nextTask.get().getId(), "Debe obtener la de mayor impacto primero");
     }

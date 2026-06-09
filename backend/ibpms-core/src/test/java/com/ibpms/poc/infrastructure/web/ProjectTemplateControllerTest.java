@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,8 +24,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.springframework.context.annotation.Import;
+
 @WebMvcTest(controllers = ProjectTemplateController.class)
-public class ProjectTemplateControllerTest {
+@Import(com.ibpms.poc.infrastructure.security.SecurityConfig.class)
+public class ProjectTemplateControllerTest extends BaseWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;

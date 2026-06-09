@@ -9,10 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import com.ibpms.poc.application.dto.bpm.GenericTaskPayloadDTO;
 import com.ibpms.poc.application.event.GenericTaskCompletedEvent;
+import com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository;
 
+import org.springframework.cache.annotation.Cacheable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * CA-5: Wrapper Crítico de Seguridad (Row-Level Security).
@@ -24,10 +27,14 @@ public class BpmTaskService {
 
     private final TaskService camundaTaskService;
     private final ApplicationEventPublisher eventPublisher;
+    private final RoleRepository roleRepository;
+    private final com.ibpms.poc.application.service.security.DataSegregationService dataSegregationService;
 
-    public BpmTaskService(TaskService camundaTaskService, ApplicationEventPublisher eventPublisher) {
+    public BpmTaskService(TaskService camundaTaskService, ApplicationEventPublisher eventPublisher, RoleRepository roleRepository, com.ibpms.poc.application.service.security.DataSegregationService dataSegregationService) {
         this.camundaTaskService = camundaTaskService;
         this.eventPublisher = eventPublisher;
+        this.roleRepository = roleRepository;
+        this.dataSegregationService = dataSegregationService;
     }
 
     /**
@@ -39,17 +46,7 @@ public class BpmTaskService {
      * @return Lista de Tareas filtradas rígidamente.
      */
     public List<Task> getSecureUserTasks(String userId, List<String> userRoles) {
-        TaskQuery query = camundaTaskService.createTaskQuery().active();
-        
-        if (userRoles != null && !userRoles.isEmpty()) {
-            query.or()
-                 .taskAssignee(userId)
-                 .taskCandidateGroupIn(userRoles)
-                 .endOr();
-        } else {
-            // Si el usuario no tiene roles estáticos, solo puede ver lo explícitamente asignado.
-            query.taskAssignee(userId);
-        }
+        TaskQuery query = dataSegregationService.getSecureTaskQuery(userId, userRoles);
 
         // CA-13: Roles Dinámicos (Process + Task level variables)
         // Ya que Camunda interpreta los Expression Lanes en Runtime literalizando el Assignee
@@ -63,16 +60,7 @@ public class BpmTaskService {
      * antes de permitir una operación (Reclaim, Complete, etc).
      */
     public boolean canInteractWithTask(String taskId, String userId, List<String> userRoles) {
-        TaskQuery query = camundaTaskService.createTaskQuery().taskId(taskId).active();
-        
-        if (userRoles != null && !userRoles.isEmpty()) {
-            query.or()
-                 .taskAssignee(userId)
-                 .taskCandidateGroupIn(userRoles)
-                 .endOr();
-        } else {
-            query.taskAssignee(userId);
-        }
+        TaskQuery query = dataSegregationService.getSecureTaskQuery(userId, userRoles).taskId(taskId);
 
         return query.count() > 0;
     }
@@ -91,8 +79,9 @@ public class BpmTaskService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tarea no encontrada.");
         }
 
-        // CA-1: VIP Pre-Flight Restrictor
-        boolean isVip = userRoles != null && (userRoles.contains("ROLE_ALTA_DIRECCION") || userRoles.contains("ROLE_APROBADOR_FINANCIERO"));
+        // CA-1 + CA-6 (REM-039-A): VIP Pre-Flight Restrictor — Dinámico desde BD (con Caché)
+        List<String> vipRoleNames = getVipRoleNames();
+        boolean isVip = userRoles != null && userRoles.stream().anyMatch(vipRoleNames::contains);
         
         if ("sys_generic_form".equals(task.getFormKey()) && isVip) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
@@ -178,5 +167,15 @@ public class BpmTaskService {
                 userId,
                 variables
         ));
+    }
+
+    /**
+     * Obtiene los roles VIP con restricciones cacheados por 5 minutos (Caffeine)
+     */
+    @Cacheable(value = "vipRoles", key = "'ALL'", unless = "#result.isEmpty()", cacheManager = "caffeineCacheManager")
+    public List<String> getVipRoleNames() {
+        return roleRepository.findByIsVipRestrictedTrue()
+                .stream().map(r -> "ROLE_" + r.getName())
+                .collect(Collectors.toList());
     }
 }

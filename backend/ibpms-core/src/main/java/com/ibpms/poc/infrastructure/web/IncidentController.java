@@ -2,6 +2,7 @@ package com.ibpms.poc.infrastructure.web;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/admin/incidents")
+@Traceability(US = "US-002", CA = {"CA-13"})
 public class IncidentController {
 
     /**

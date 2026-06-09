@@ -1,28 +1,50 @@
-# Solicitud de Revisión Arquitectónica — Frontend Sprint 5.1
+# 📋 Solicitud de Revisión — Agente Frontend US-002 PM-01
 
-> **Agente:** Desarrollador Frontend Senior
-> **Fecha:** 2026-04-18
-> **Handoff Fuente:** `.agentic-sync/handoff_frontend_sprint5_1.md`
-> **Rama:** `sprint-5/iteracion4`
+> **Emisor:** Agente Frontend Especialista
+> **Destinatario:** Arquitecto Líder
+> **Fecha:** 2026-06-04
+> **Rama:** `sprint-8/pm-01/us-002-claim`
+
+---
 
 ## Resumen del Plan
 
-He culminado la etapa de investigación e inventariado el alcance para remediación e integración de los contratos Backend Sprint 5.1. 
+He analizado exhaustivamente los 4 archivos objetivo y los 3 archivos de test existentes. El plan cubre **CA-16, CA-18, CA-19, CA-20 + Tests Vitest**.
 
-**Componentes Nuevos (UI & TDD obligatorios):**
-1. **`TaskPreviewModal.vue`** (CA-5): Mostrará la vista Read-Only para tareas Claimables extraída desde `/preview` (Store: `fetchTaskPreview`).
-2. **`ClaimAuditTrail.vue`** (CA-9): Anidado como lista de pasos/timeline, extraído de `/audit-trail` (Store: `fetchAuditTrail`). 
+### Divergencias Detectadas (Handoff vs Código Real)
 
-**Modificaciones a Existentes:**
-- **`WorkdeskGrid.vue`**: Invocará el Launch del `TaskPreviewModal` en las tareas 'AVAILABLE' y sustituirá el popup aburrido global del `handleUnclaim` por un Dialog Modal defensivo (CA-7).
-- **`useFormStore.ts` & `DynamicForm.vue`**: Se extenderá el `catch` de 400 Bad Request en el store, parseando la validación Zod cruzada con la RFC 7807 del Backend (`errors: [{field, message}]`). Este flujo alimentará la caja indicadora nativa debajo de cada campo en `DynamicField.vue` (CA-2).
-- **`DmnIntelligence.vue`**: Se implementará sanitización nativa invocando e importando `dompurify` (con tipings correspondientes) antes de delegar cualquier string raw del LLM al renderizador XML subyacente. 
+> ⚠️ **IMPORTANTE**: El handoff asume una estructura de código que NO COINCIDE con la realidad. He adaptado todos los snippets prescriptivos:
 
-### QA & Calidad
-- Todos los componentes nuevos tendrán el Unit Testing correspondiente en `component-tests` con Vitest `mount()`.
-- Se comprobará mediante un build exhaustivo el compilado.
+| Aspecto | Handoff dice | Código Real | Adaptación |
+|---------|-------------|-------------|-----------|
+| Store pattern | Composition API | **Options API** | Uso `state()`, `actions:{}` |
+| Styling | CSS scoped custom | **Tailwind utility classes** | Clases Tailwind coherentes |
+| WebSocket | Native WS + `lastWsEvent` | **STOMP/SockJS** | Case en switch handler STOMP |
+| Audit field | `actionType` | `action` | Mapeo sobre `event.action` |
+| Test files | Crear nuevos | **Ya existen** | AMPLIAR archivos existentes |
+| CA-18 | No implementado | **Parcialmente implementado** | Mejorar con nombre usuario |
 
-## Preguntas Abiertas
-Ninguna, el Handoff es sumamente explícito.
+### Cambios Planificados (7 archivos)
 
-Al esperar tu sello formal, procederé de inmediato con TDD iterativo.
+1. **`useWorkdeskStore.ts`** — +`ghostWarning` state, +`extendTimeout()` action, +`GHOST_WARNING` case en WS switch, +`dismissGhostWarning()`, +helpers toast DOM
+2. **`ClaimAuditTrail.vue`** — Reemplazo de `getDotColor()`/`getActionBadge()` por `ACTION_STYLE_MAP` con 6 tipos + 2 legacy keys, template con iconos+labels
+3. **`TaskPreviewModal.vue`** — +Banner CA-16 (nota interna con `mensajeInterno`), +CA-18 mejora (nombre usuario `claimedByName`), +`formatTimeAgo()` helper
+4. **`Workdesk.vue`** — +Ghost Warning Toast (Transition, Teleport) con 2 botones acción, +`handleSaveDraft()` function
+5. **`TaskPreviewModal.spec.ts`** — +4 tests (CA-16×2, CA-18×2)
+6. **`ClaimAuditTrail.spec.ts`** — +3 tests (CA-20×3)
+7. **`useWorkdeskStore.spec.ts`** — +3 tests (CA-19×3)
+
+### Orden de Ejecución
+Store → ClaimAuditTrail → TaskPreviewModal → Workdesk → Tests → Build → Git
+
+---
+
+## Solicitud Formal
+
+Arquitecto Líder: solicito su aprobación para proceder con la ejecución del plan descrito. Las adaptaciones al código real son necesarias dado que los snippets prescriptivos del handoff no aplican directamente por diferencias en el stack (Options API, Tailwind, STOMP).
+
+**¿Aprueba la ejecución?**
+
+---
+
+_Agente Frontend Especialista — Antigravity_

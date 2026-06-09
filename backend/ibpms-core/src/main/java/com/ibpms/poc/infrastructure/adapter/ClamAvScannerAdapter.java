@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.adapter;
 
 import com.ibpms.poc.domain.port.ClamAvScanner;

@@ -5,30 +5,44 @@ import com.ibpms.poc.infrastructure.jpa.repository.security.RoleAuditLogReposito
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+
+import io.restassured.RestAssured;
+import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
+import static io.restassured.RestAssured.given;
+import java.util.List;
+import static org.hamcrest.Matchers.*;
+
+
+
+import io.restassured.RestAssured;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
 import org.junit.jupiter.api.AfterEach;
 import com.ibpms.poc.AbstractIntegrationTest;
 
-@SpringBootTest
-@AutoConfigureMockMvc
 @SuppressWarnings("null")
 public class RoleAuditIntegrationTest extends AbstractIntegrationTest {
 
+
     @Autowired
-    private MockMvc mockMvc;
+    private JwtTokenProvider jwtTokenProvider;
+
+    private String auditorToken;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUpPort() {
+        io.restassured.RestAssured.port = port;
+        auditorToken = jwtTokenProvider.generateToken("test-auditor", List.of("ROLE_AUDITOR_GLOBAL"), "tenant1");
+    }
 
     @Autowired
     private RoleAuditLogRepository auditLogRepository;
@@ -42,13 +56,15 @@ public class RoleAuditIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("US-036 p4: Decodificación BLOB - La exportación ISO27001 debe despachar un CSV/ByteStream legible y estricto")
     void testIso27001RoleMatrixExport_BlobDecoding() throws Exception {
         // Enforce the Endpoint call simulating a direct HTTP GET request from a Browser's <a> tag
-        mockMvc.perform(get("/api/v1/security/audit/reports/iso27001/role-matrix"))
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"iso27001-role-matrix-report.csv\""))
-                .andExpect(content().contentTypeCompatibleWith(MediaType.parseMediaType("text/csv")))
-                // Magic Number Assertion: Text CSV files don't have classical binary magic numbers like PDFs (%PDF),
-                // but we assert the CSV header structure exists in the payload, confirming clean stream encoding.
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("EntraID_UUID,Email,FullName,PrimaryRole,Status,GranularPermissions")));
+        given()
+                .header("Authorization", "Bearer " + auditorToken)
+                .when()
+                .get("/api/v1/security/audit/reports/iso27001/role-matrix")
+                .then()
+                .statusCode(200)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"iso27001-role-matrix-report.csv\"")
+                .contentType("text/csv")
+                .body(containsString("EntraID_UUID,Email,FullName,PrimaryRole,Status,GranularPermissions"));
     }
 
     @Test

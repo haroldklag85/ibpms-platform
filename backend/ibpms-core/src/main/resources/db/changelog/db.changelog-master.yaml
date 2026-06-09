@@ -38,11 +38,15 @@ databaseChangeLog:
   - include:
       file: db/changelog/22-us005-bpmn-design-schema.sql
   - include:
+      file: db/changelog/changes/24-create-audit-log-table.sql
+  - include:
       file: db/changelog/25-us028-qa-certification-columns.sql
   - include:
       file: db/changelog/26-us001-workdesk-schema.sql
   - include:
       file: db/changelog/27-us001-workdesk-progress.sql
+  - include:
+      file: db/changelog/27-us001-attend-next-schema.sql
   - include:
       file: db/changelog/sprint3/001_create_form_event_store.sql
   - include:
@@ -56,8 +60,98 @@ databaseChangeLog:
   - include:
       file: db/changelog/sprint3/006_create_mq_resilience_tables.sql
   - include:
-      file: db/changelog/sprint4/001_us036_role_hybrid_fields.sql
-  - include:
-      file: db/changelog/sprint4/002_us036_delegation_reason.sql
-  - include:
       file: db/changelog/sprint5/001_create_claim_audit_log.sql
+  # HO-02 Sprint 6.2: Consolidación de delegación (3 tablas → 1)
+  - include:
+      file: db/changelog/28-consolidate-delegation.sql
+  - include:
+      file: db/changelog/29-consolidate-roles.sql
+  - include:
+      file: db/changelog/30-tenant-fk.sql
+  - include:
+      file: db/changelog/31-ensure-pk-user-roles.sql
+  - include:
+      file: db/changelog/32-add-user-hierarchy.sql
+  - include:
+      file: db/changelog/33-create-kanban-schema.sql
+  - include:
+      file: db/changelog/34-sprint6-bugs-fix.sql
+  - include:
+      file: db/changelog/35-arq02804-split-certification.sql
+  - include:
+      file: db/changelog/36-us036-ca07-ca11-updates.sql
+  - include:
+      file: db/changelog/36-us036-ca12-ca16-reports.sql
+  - include:
+      file: db/changelog/37-us036-ca17-ca22-tables.sql
+  - include:
+      file: db/changelog/36-us008-kanban-state-schema.sql
+  - include:
+      file: db/changelog/37-us002-claim-audit-log-orphans.sql
+  - include:
+      file: db/changelog/38-us007-dmn-manual-edit-schema.sql
+  - include:
+      file: db/changelog/39-us029-form-execution-schema.sql
+  - include:
+      file: db/changelog/40-us029-fix-form-event-store.sql
+  - include:
+      file: db/changelog/40-us029-draft-expiration.sql
+  - include:
+      file: db/changelog/41-us007-dmn-schema-complement.sql
+  - include:
+      file: db/changelog/changes/42-us025-menu-topology.sql
+  - include:
+      file: db/changelog/changes/43-us025-impersonation-audit.sql
+  - include:
+      file: db/changelog/changes/44-us036-role-soft-delete.sql
+  - include:
+      file: db/changelog/45-us036-ca23-ca28-infra.sql
+  - include:
+      file: db/changelog/46-us036-audit-reports.sql
+  - include:
+      file: db/changelog/changes/45-us001-workdesk-seed.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/46-us038-audit-columns.sql
+  - include:
+      file: db/changelog/changes/47-us034-idempotency.sql
+  - include:
+      file: db/changelog/changes/48-us038-user-metadata.sql
+  - include:
+      file: db/changelog/changes/47-us025-user-preferences.sql
+  - include:
+      file: db/changelog/changes/48-us003-form-design-remediation.sql
+  - include:
+      file: db/changelog/changes/48-seed-e2e-operational.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/49-us025-correlation-id.sql
+  - include:
+      file: db/changelog/changes/51-us029-form-definitions-seed.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/52-us001-seed-remediation.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/53-us002-alter-claim-audit.sql
+#  - include:
+#      file: db/changelog/changes/54-us008-time-logs-and-kanban.sql
+  - include:
+      file: db/changelog/changes/015-create-tenant-config.sql
+  - include:
+      file: db/changelog/changes/016-create-cqrs-event-store.sql
+  - include:
+      file: db/changelog/changes/055-create-dmn-models.sql
+#  - include:
+#      file: db/changelog/changes/017-create-task-drafts.sql
+  - include:
+      file: db/changelog/changes/056-seed-e2e-j02.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/057-seed-e2e-j02-extend.sql
+      context: dev,test
+  - include:
+      file: db/changelog/changes/058-create-deploy-requests.sql
+  # CA-15 (US-002 PM-01): Agrega tenant_id para ghost timeout per-tenant
+  - include:
+      file: db/changelog/changes/059-us002-add-tenant-id-to-agile-tasks.sql

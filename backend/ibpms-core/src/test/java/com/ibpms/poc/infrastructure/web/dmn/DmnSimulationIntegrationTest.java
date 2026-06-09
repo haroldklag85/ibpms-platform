@@ -1,10 +1,10 @@
+// @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.web.dmn;
 
+import com.ibpms.poc.AbstractLocalE2ETest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -12,10 +12,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
 @SuppressWarnings("null")
-public class DmnSimulationIntegrationTest {
+public class DmnSimulationIntegrationTest extends AbstractLocalE2ETest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -51,17 +49,11 @@ public class DmnSimulationIntegrationTest {
                 "\"xml\": \"" + validXml.replace("\"", "\\\"") + "\"," +
                 "\"variables\": {\"montoCredito\": 50000}" +
                 "}";
-        // Lanzamos la simulación al endpoint Volátil (Evalúa sin hacer .save() ni .deploy() persistente)
-        mockMvc.perform(post("/api/v1/dmn-models/simulate")
+        mockMvc.perform(post("/api/v1/dmn-models/simulate-sandbox")
                 .header("X-Mock-Tester", "QA_Agent_52")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(simulationPayload))
                .andExpect(status().is2xxSuccessful())
-               // Validar que el payload regrese la decisión mockeada que configuramos ("Alto")
                .andExpect(jsonPath("$.simulationResult[0].output").value("Alto"));
-        
-        // NOTA: Para probar arquitectónicamente la "Zero Persistencia":
-        // El test real en Spring realizaría un assert final en el DMNRepository = count(0)
-        // para ese deploymentKey transitorio, garantizando limpieza.
     }
 }

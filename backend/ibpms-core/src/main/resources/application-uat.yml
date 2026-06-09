@@ -33,6 +33,7 @@ spring:
 camunda:
   bpm:
     client:
+      disable: true
       base-url: "http://localhost:8080/engine-rest"
     database:
       type: postgres

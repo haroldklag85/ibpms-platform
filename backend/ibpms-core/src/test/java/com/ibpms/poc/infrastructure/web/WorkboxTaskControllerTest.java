@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.context.annotation.Import;
+import com.ibpms.poc.infrastructure.security.SecurityConfig;
 
 import java.util.UUID;
 
@@ -20,7 +23,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(WorkboxTaskController.class)
-class WorkboxTaskControllerTest {
+@Import(SecurityConfig.class)
+class WorkboxTaskControllerTest extends BaseWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -31,8 +35,20 @@ class WorkboxTaskControllerTest {
     @MockBean
     private TaskDraftService draftService;
 
+    @MockBean
+    private com.ibpms.poc.infrastructure.websocket.WorkdeskNotificationService workdeskNotificationService;
+
+    @MockBean
+    private com.ibpms.poc.application.service.ClaimAuditService claimAuditService;
+
+    @MockBean
+    private com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository projectionRepository;
+
+    @MockBean
+    private org.camunda.bpm.engine.TaskService camundaTaskService;
+
     @Test
-    @WithMockUser(username = "operador1", roles = {"OPERADOR"})
+    @WithMockUser(username = "operador1", roles = {"OPERARIO"})
     void shouldRollbackClaimSuccessfully() throws Exception {
         UUID taskId = UUID.randomUUID();
 
@@ -45,7 +61,7 @@ class WorkboxTaskControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "operador1", roles = {"OPERADOR"})
+    @WithMockUser(username = "operador1", roles = {"OPERARIO"})
     void shouldFailRollbackClaimIfAssignedToAnother() throws Exception {
         UUID taskId = UUID.randomUUID();
 

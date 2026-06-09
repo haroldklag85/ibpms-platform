@@ -25,6 +25,9 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration-seconds:3600}")
     private long expirationSeconds;
 
+    @Value("${jwt.clock-skew-seconds:0}")
+    private long clockSkewSeconds;
+
     private SecretKey secretKey;
 
     @PostConstruct
@@ -35,22 +38,50 @@ public class JwtTokenProvider {
     }
 
     // ── Generación (útil para tests) ───────────────────────────────────────────
-    public String generateToken(String subject, List<String> roles) {
+    // @Traceability(US="US-003", CA="CA-87", DESC="Overloaded token generation for JIT provisioning claims support in tests")
+    public String generateToken(String subject, List<String> roles, String tenantId) {
+        return generateToken(subject, roles, tenantId, null);
+    }
+
+    // @Traceability(US="US-003", CA="CA-87", DESC="Token generation with custom additional claims support")
+    public String generateToken(String subject, List<String> roles, String tenantId, java.util.Map<String, Object> additionalClaims) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationSeconds * 1000L);
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .subject(subject)
                 .claim("roles", roles)
-                .issuedAt(now)
+                .claim("tenant_id", tenantId);
+        if (additionalClaims != null) {
+            additionalClaims.forEach(builder::claim);
+        }
+        return builder.issuedAt(now)
                 .expiration(expiry)
-                .signWith(secretKey)
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
+    }
+
+    public String generateImpersonationToken(String subject, List<String> roles, String tenantId, String impersonatedBy) {
+        Date now = new Date();
+        long expiryTime = impersonatedBy != null ? Math.min(expirationSeconds, 1800) : expirationSeconds;
+        Date actualExpiry = new Date(now.getTime() + expiryTime * 1000L);
+        JwtBuilder builder = Jwts.builder()
+                .subject(subject)
+                .claim("roles", roles)
+                .claim("tenant_id", tenantId)
+                .issuedAt(now)
+                .expiration(actualExpiry)
+                .signWith(secretKey, Jwts.SIG.HS256);
+        if (impersonatedBy != null) {
+            builder.claim("impersonatedBy", impersonatedBy);
+        }
+        return builder.compact();
     }
 
     // ── Validación y Parsing ───────────────────────────────────────────────────
     public Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
+                .clockSkewSeconds(clockSkewSeconds)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -81,5 +112,26 @@ public class JwtTokenProvider {
     public String getClaim(String token, String claimKey) {
         Object claim = parseClaims(token).get(claimKey);
         return claim != null ? claim.toString() : null;
+    }
+
+    public String getUsernameFromTokenIgnoreExpiration(String token) {
+        try {
+            return getSubject(token);
+        } catch (ExpiredJwtException e) {
+            return e.getClaims().getSubject();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getRolesFromTokenIgnoreExpiration(String token) {
+        try {
+            return getRoles(token);
+        } catch (ExpiredJwtException e) {
+            Object roles = e.getClaims().get("roles");
+            if (roles instanceof List<?>) {
+                return (List<String>) roles;
+            }
+            return List.of();
+        }
     }
 }

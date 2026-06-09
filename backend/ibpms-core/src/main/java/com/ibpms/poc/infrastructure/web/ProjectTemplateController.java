@@ -7,9 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 @RestController
 @RequestMapping("/project-templates")
+@Traceability(US = "US-006", CA = {"CA-01"})
 public class ProjectTemplateController {
 
     private final CrearProjectTemplateUseCase crearProjectTemplateUseCase;

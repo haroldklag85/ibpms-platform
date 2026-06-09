@@ -1,92 +1,82 @@
 package com.ibpms.poc.infrastructure.web.bpmn;
 
+import com.ibpms.poc.AbstractIntegrationTest;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.time.LocalDateTime;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-public class SandboxGovernanceTest {
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
+// @Traceability: US-005, CA-67 (Reemplazo DDL mock por Liquibase Testcontainer)
+@Traceability(US = "US-005", CA = {"CA-67"})
+public class SandboxGovernanceTest extends AbstractIntegrationTest {
 
     @LocalServerPort
     private int port;
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private StringRedisTemplate redisTemplate;
 
-    @Container
-    public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("ibpms_test")
-            .withUsername("testuser")
-            .withPassword("testpass");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
-    }
+    private static final String REDIS_SANDBOX_COUNTER_KEY = "sandbox_active_simulations";
 
     @BeforeEach
     void setUp() {
         RestAssured.port = port;
-        RestAssured.basePath = "/api/v1/design/sandbox";
-        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS ibpms_sandbox_instances (id VARCHAR(255) PRIMARY KEY, created_by VARCHAR(255), created_at TIMESTAMP)");
-        jdbcTemplate.execute("TRUNCATE TABLE ibpms_sandbox_instances");
+        RestAssured.basePath = "/api/v1/design/processes";
+        redisTemplate.delete(REDIS_SANDBOX_COUNTER_KEY);
     }
 
     @Test
     @DisplayName("CA-67: testMaxThreeConcurrentSandboxInstances")
     void testMaxThreeConcurrentSandboxInstances() {
-        // Create 3 instances directly in db to simulate state
-        jdbcTemplate.update("INSERT INTO ibpms_sandbox_instances (id, created_by, created_at) VALUES (?, ?, ?)", "sbx-1", "user1", LocalDateTime.now());
-        jdbcTemplate.update("INSERT INTO ibpms_sandbox_instances (id, created_by, created_at) VALUES (?, ?, ?)", "sbx-2", "user1", LocalDateTime.now());
-        jdbcTemplate.update("INSERT INTO ibpms_sandbox_instances (id, created_by, created_at) VALUES (?, ?, ?)", "sbx-3", "user1", LocalDateTime.now());
+        // Set up the limit to exactly 3 manually
+        redisTemplate.opsForValue().set(REDIS_SANDBOX_COUNTER_KEY, "3");
 
-        // Attempt 4th
+        byte[] smallFile = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><bpmn:definitions></bpmn:definitions>".getBytes();
+
+        // Attempt 4th using the simulate endpoint
         given()
             .header("X-Mock-User", "user1")
-            .contentType(ContentType.JSON)
-            .body("{\"processKey\": \"test-model\"}")
+            .header("X-Sandbox-Mode", "true")
+            .multiPart("file", "small-process.xml", smallFile, "application/xml")
         .when()
-            .post("/start")
+            .post("/sandbox-simulate")
         .then()
-            .statusCode(429); // Too Many Requests
+            .statusCode(429); // Too Many Requests (ResourceExhaustedException)
+            
+        // Ensure limit remains
+        String count = redisTemplate.opsForValue().get(REDIS_SANDBOX_COUNTER_KEY);
+        assertEquals("3", count, "El contador de sandbox en Redis no debió aumentar tras el rechazo");
     }
 
     @Test
     @DisplayName("CA-67: testSandboxAutoDestroyAfter10Minutes")
     void testSandboxAutoDestroyAfter10Minutes() {
-        // Insert expired instance (15 mins old)
-        jdbcTemplate.update("INSERT INTO ibpms_sandbox_instances (id, created_by, created_at) VALUES (?, ?, ?)", 
-                            "sbx-expired", "user1", LocalDateTime.now().minusMinutes(15));
-        
-        // Manual validation trigger
+        // Instead of testing a manual cron/system cleanup, we test that SandboxInterceptor sets a TTL
+        redisTemplate.delete(REDIS_SANDBOX_COUNTER_KEY);
+
+        byte[] smallFile = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><bpmn:definitions></bpmn:definitions>".getBytes();
+
+        // 1 request should succeed and initialize counter
         given()
+            .header("X-Mock-User", "user1")
+            .header("X-Sandbox-Mode", "true")
+            .multiPart("file", "small-process.xml", smallFile, "application/xml")
         .when()
-            .post("/system/cleanup")
+            .post("/sandbox-simulate")
         .then()
             .statusCode(200);
 
-        Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM ibpms_sandbox_instances WHERE id = 'sbx-expired'", Integer.class);
-        assertEquals(0, count, "Las instancias con más de 10 minutos de antigüedad deben destruirse");
+        Long expire = redisTemplate.getExpire(REDIS_SANDBOX_COUNTER_KEY);
+        org.junit.jupiter.api.Assertions.assertTrue(expire != null && expire > 0, "Redis key must have an expiration TTL");
     }
 }

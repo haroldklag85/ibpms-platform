@@ -358,3 +358,28 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 *Última actualización: 2026-06-06 23:59 COT*
 *Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*
+
+---
+
+## [2026-06-09] — El Tablero Kanban ahora se conecta con los datos reales del sistema
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE)
+
+**¿Qué es?**: Se conectó el tablero visual de tareas (Kanban) directamente con la fuente real de datos del sistema. Antes, el tablero consultaba las tareas por separado y las columnas por otro lado; ahora, toda la información viene junta y actualizada desde una sola fuente confiable. También se mejoró la protección contra conflictos: si dos personas intentan mover la misma tarea al mismo tiempo, el sistema lo detecta, revierte automáticamente el movimiento del segundo usuario y le muestra un aviso claro en pantalla.
+
+**¿Para qué sirve?**: Para garantizar que lo que el usuario ve en el tablero de tareas sea siempre la verdad del sistema. Si un compañero mueve una tarea en otro computador, el tablero del primer usuario se actualiza en tiempo real. Si alguien intenta mover una tarea que ya tomó otra persona, el sistema le avisa instantáneamente en vez de mostrar un error confuso.
+
+**¿De dónde viene?**: Historia de Usuario US-008 (Vista Kanban) — Sprint PM-01, Slot 4. Cumpliendo las directivas de conexión real de datos (ADR-010) y actualización instantánea entre usuarios (CA-12).
+
+**¿Qué debería hacer?**:
+- Al abrir el tablero Kanban, las tareas se cargan directamente desde el sistema central.
+- Si otro usuario mueve una tarea desde su computador, el tablero se actualiza automáticamente sin necesidad de recargar la página.
+- Si un usuario mueve una tarea que ya fue tomada por otra persona, el tablero revierte el movimiento y muestra un aviso rojo: "Conflicto: esta tarea fue reclamada por otro usuario."
+- Al hacer clic en una tarjeta, se abre la vista detallada real de la tarea (no una copia local).
+
+**Estado**: ✅ Listo
+
+---
+
+*Última actualización: 2026-06-09 17:38 COT*
+*Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*

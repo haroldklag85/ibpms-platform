@@ -57,7 +57,7 @@
 
     <TaskPreviewModal 
       v-if="selectedTask" 
-      :taskId="selectedTask.id" 
+      :taskId="selectedTask.originalTaskId || selectedTask.id" 
       :readOnly="isReadonly || selectedTask.status === 'DONE'"
       @close="selectedTask = null" 
     />
@@ -127,10 +127,12 @@ const handleItemMove = async ({ item, newStatus }: { item: any, newStatus: strin
     syncStatus.value = 'ok';
   } catch(error: any) {
     syncStatus.value = 'error';
-    if (error.response?.status === 403) {
-      alert('Esta tarea está completada y no puede modificarse');
+    if (error.response?.status === 409) {
+      showConflictToast('Conflicto: esta tarea fue reclamada por otro usuario. Se revirtió el movimiento.');
+    } else if (error.response?.status === 403) {
+      showConflictToast('Esta tarea está completada y no puede modificarse.');
     } else if (error.response?.status === 400) {
-      alert('Transición de estado no válida');
+      showConflictToast('Transición de estado no válida.');
     }
   } finally {
     setTimeout(() => syncStatus.value = '', 2000);
@@ -183,6 +185,22 @@ const loadBoard = async () => {
   } finally {
     kanbanStore.loading = false; // CRÍTICO: Liberar la UI
   }
+};
+
+// @Traceability: CA-4 — Toast visual para conflictos 409
+const showConflictToast = (message: string) => {
+  const existing = document.getElementById('kanban-conflict-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'kanban-conflict-toast';
+  toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, 4000);
 };
 
 onMounted(() => {

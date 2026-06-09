@@ -383,3 +383,24 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 *Última actualización: 2026-06-09 17:38 COT*
 *Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*
+
+---
+
+## [2026-06-09] — Fortalecimiento de la integridad del sistema al registrar formularios enviados
+
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA)
+
+**¿Qué es?**: Se corrigió un problema estructural en la forma en que el sistema almacena los formularios que los usuarios envían al completar una tarea. La organización interna del sistema no estaba respetando sus propias reglas de separación de responsabilidades, lo que podía causar errores difíciles de rastrear a medida que el sistema crece. Además, se eliminó una tabla duplicada que se creaba automáticamente en la base de datos cada vez que el sistema se instalaba desde cero, generando confusión y desperdicio de espacio.
+
+**¿Para qué sirve?**: Para garantizar que cada formulario enviado por un usuario se almacene de forma confiable, que el historial de envíos nunca se pierda ni se corrompa, y que el sistema pueda crecer sin acumular datos basura. También se resolvieron inconsistencias en el registro de avances del proyecto que podrían confundir a quienes consultan el estado de avance del sistema.
+
+**¿De dónde viene?**: Historia de Usuario US-017 (Registro de Formularios y Garantía de Integridad de Datos) — Sprint PM-01, Slot 5 (Estabilización). Solicitado por el Arquitecto Líder para cerrar deuda técnica acumulada.
+
+**¿Qué debería hacer?**:
+- Cuando un usuario envía un formulario, el sistema lo registra de forma inmutable (no se puede alterar después)
+- Si ocurre un error al procesar el formulario, el sistema crea un registro de compensación (no borra el original)
+- La base de datos ya no crea tablas redundantes al instalarse por primera vez
+- El registro de avance del proyecto ya no tiene información contradictoria
+
+**Estado**: ✅ Listo
+

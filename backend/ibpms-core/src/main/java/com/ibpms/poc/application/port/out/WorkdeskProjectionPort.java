@@ -14,4 +14,10 @@ public interface WorkdeskProjectionPort {
     Optional<WorkdeskProjectionEntity> findNextAvailableTask(String tenantId, String[] skills);
     Optional<WorkdeskProjectionEntity> findById(String id);
     void save(WorkdeskProjectionEntity entity);
+
+    /**
+     * Removes a workdesk projection by ID (used in CQRS write-side cleanup).
+     * @Traceability: US-017 CA-01 — Post-submit projection cleanup
+     */
+    void deleteProjectionById(String projectionId);
 }

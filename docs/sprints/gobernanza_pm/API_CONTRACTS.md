@@ -1207,11 +1207,149 @@ El PM-IA puede solicitar una auditoría de contratos en cualquier momento, espec
 
 ---
 
+### 5.10 CQRS / Task Completion (US-017 — Persistencia Inmutable)
+
+#### POST /api/v1/workbox/tasks/{taskId}/complete
+- **Estado**: ⚠️ Assumed
+- **US**: US-017
+- **CA**: CA-01, CA-02, CA-03, CA-04, CA-10, CA-15, CA-16, CA-17
+- **Descripción**: Completar una tarea enviando el formulario con persistencia CQRS inmutable. Graba evento `FORM_SUBMITTED` en Event Store, notifica a Camunda con DTO minificado, y retorna referencia visible del evento.
+- **Auth**: Bearer JWT
+- **Headers**:
+  - `Authorization`: Bearer {accessToken}
+  - `Content-Type`: application/json
+  - `X-Idempotency-Key`: UUID — Llave de idempotencia para prevenir doble envío
+- **Path Params**:
+  - `{taskId}`: string — ID de la tarea Camunda o Kanban
+- **Request Body**:
+  ```json
+  {
+    "formData": "object — Payload completo del formulario validado por Zod",
+    "schemaVersion": "string — Versión del esquema JSON (Ej: 'V3')"
+  }
+  ```
+- **Response 200**:
+  ```json
+  {
+    "taskId": "string — ID de la tarea completada",
+    "eventReference": "string — Código legible del evento (Ej: 'EVT-A3F8K9')",
+    "eventId": "UUID — ID del evento en el Event Store",
+    "processInstanceId": "string — ID de la instancia BPMN",
+    "completedAt": "ISO-8601 — timestamp de completitud"
+  }
+  ```
+- **Response 403**:
+  ```json
+  {
+    "error": "NOT_TASK_ASSIGNEE",
+    "message": "Solo el asignado actual puede completar la tarea",
+    "timestamp": "ISO-8601"
+  }
+  ```
+- **Response 409**:
+  ```json
+  {
+    "error": "TASK_ALREADY_COMPLETED",
+    "message": "Esta tarea ya fue completada por otro operario",
+    "timestamp": "ISO-8601"
+  }
+  ```
+- **Response 500**:
+  ```json
+  {
+    "error": "ENGINE_UNAVAILABLE",
+    "message": "Motor BPMN no disponible tras 3 reintentos",
+    "timestamp": "ISO-8601"
+  }
+  ```
+- **Notas**: SLA máximo 5s normal, 17s con reintentos. Auto-Claim para tareas de grupo sin assignee (CA-04). Rollback compensatorio si Camunda falla (CA-03/CA-10).
+- **Última actualización**: 2026-06-09
+
+---
+
+#### GET /api/v1/workbox/tasks/{taskId}/draft
+- **Estado**: ⚠️ Assumed
+- **US**: US-017
+- **CA**: CA-07
+- **Descripción**: Recuperar el borrador más reciente del servidor para una tarea
+- **Auth**: Bearer JWT
+- **Headers**:
+  - `Authorization`: Bearer {accessToken}
+- **Path Params**:
+  - `{taskId}`: string — ID de la tarea
+- **Response 200**:
+  ```json
+  {
+    "currentStep": "integer — paso actual del wizard (nullable)",
+    "partialData": "object — datos parciales del formulario",
+    "schemaVersion": "string — versión del esquema",
+    "updatedAt": "ISO-8601 — última actualización del borrador"
+  }
+  ```
+- **Response 404**:
+  ```json
+  {
+    "error": "DRAFT_NOT_FOUND",
+    "message": "No existe borrador para esta tarea",
+    "timestamp": "ISO-8601"
+  }
+  ```
+- **Response 403**: Si el usuario no es el assignee
+- **Notas**: Implicit Locking — solo el assignee puede leer borradores. TTL 72h.
+- **Última actualización**: 2026-06-09
+
+---
+
+#### PUT /api/v1/workbox/tasks/{taskId}/draft
+- **Estado**: ⚠️ Assumed
+- **US**: US-017
+- **CA**: CA-07, CA-14
+- **Descripción**: Guardar o actualizar borrador del servidor (autoguardado)
+- **Auth**: Bearer JWT
+- **Headers**:
+  - `Authorization`: Bearer {accessToken}
+  - `Content-Type`: application/json
+- **Path Params**:
+  - `{taskId}`: string — ID de la tarea
+- **Request Body**:
+  ```json
+  {
+    "currentStep": "integer — paso actual del wizard (nullable)",
+    "partialData": "object — datos parciales del formulario",
+    "schemaVersion": "string — versión del esquema"
+  }
+  ```
+- **Response 204**: No Content (guardado exitoso)
+- **Response 403**: Si el usuario no es el assignee
+- **Response 429**: Rate limit excedido (máx 6/min por tarea, CA-14)
+- **Notas**: Rate-Limit 6 peticiones/minuto por tarea. Debounce 10s en Frontend.
+- **Última actualización**: 2026-06-09
+
+---
+
+#### DELETE /api/v1/workbox/tasks/{taskId}/draft
+- **Estado**: ⚠️ Assumed
+- **US**: US-017
+- **CA**: CA-07, CA-16
+- **Descripción**: Eliminar borrador tras submit exitoso
+- **Auth**: Bearer JWT
+- **Headers**:
+  - `Authorization`: Bearer {accessToken}
+- **Path Params**:
+  - `{taskId}`: string — ID de la tarea
+- **Response 204**: No Content (eliminado exitoso)
+- **Response 403**: Si el usuario no es el assignee
+- **Notas**: Se invoca automáticamente como parte del flujo POST /complete (CA-16). También puede invocarse manualmente.
+- **Última actualización**: 2026-06-09
+
+---
+
 ## 8. Historial de Cambios del Documento
 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 1.0.0 | 2026-06-02 | PM-IA / Arquitecto Líder | Creación inicial con inventario assumed |
+| 1.1.0 | 2026-06-09 | Arquitecto Líder | Agregar contratos US-017 CQRS (complete, draft GET/PUT/DELETE) — PM-01 Slot 5 |
 
 ---
 

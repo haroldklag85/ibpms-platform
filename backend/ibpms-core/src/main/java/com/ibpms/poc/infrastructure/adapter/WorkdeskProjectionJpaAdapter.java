@@ -37,4 +37,9 @@ public class WorkdeskProjectionJpaAdapter implements WorkdeskProjectionPort {
     public void save(WorkdeskProjectionEntity entity) {
         repository.save(entity);
     }
+
+    @Override
+    public void deleteProjectionById(String projectionId) {
+        repository.deleteById(projectionId);
+    }
 }

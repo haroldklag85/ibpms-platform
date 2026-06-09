@@ -214,29 +214,30 @@
 ---
 
 ## US-008: Mover Tarjeta en Tablero Kanban (Cambio de Estado)
-**Épica:** A — Motor Core | **Estado:** 🔨 Scaffolding (~10%) | **Auditado:** 2026-04-18
-**Archivos verificados:** `KanbanBoardService.java` · `KanbanView.vue`
+**Épica:** A — Motor Core | **Estado:** 🔨 EN CONSTRUCCIÓN (~90%) | **Auditado:** 2026-06-09
+**Archivos verificados:** `KanbanBoardService.java` · `KanbanView.vue` · `kanbanStore.ts`
 
-> [!WARNING]
-> **FALSO POSITIVO DETECTADO:** `future_backlog_v3.md` declaraba esta US como ✅ Operativa.
-> `KanbanView.vue` usa 4 tareas hardcodeadas con `loadBoard()` simulado via `setTimeout`. No hay ninguna llamada real a API. `KanbanBoardService` solo gestiona delegación, no la máquina de estados del tablero.
-> Esta US debería clasificarse en la sección 1.3 de Deuda Técnica Controlada (Scaffolding).
+> [!NOTE]
+> **REMEDIACIÓN CONFIRMADA (Sprint 8 / PM-01 Slot 4):**
+> La implementación "Zero-Mock" ha sido exitosa. `KanbanTaskEntity` ha sido eliminado y el sistema ahora lee/escribe contra la proyección central `WorkdeskProjectionEntity` (SSOT), aplicando CQRS y WS sincrónico en `/topic/workdesk/kanban`.
+> QA E2E se requiere para certificar.
 
 | CA | Título (corto) | Back | Front | QA | Notas |
 |----|----------------|------|-------|----|-------|
-| CA-1 | Bloqueador Modal (columna Blocked) | ❌ | ❌ | ❌ | Sin endpoint de transición con `blockReason`; sin modal en KanbanView |
-| CA-2 | Inmutabilidad DONE (solo lectura) | ❌ | ❌ | ❌ | Sin validación de estado DONE en backend |
-| CA-3 | Timer independiente esfuerzo vs SLA | ❌ | ❌ | ❌ | Sin tabla `ibpms_time_logs`; sin `<UniversalSlaTimer>` |
-| CA-5 | Prohibición CMMN — JPA puro | ✅ | N/A | ❌ | `AgileTaskEntity` persiste como JPA. Correcto por diseño |
-| CA-6 | State Machine PATCH /kanban/{tid}/state | ❌ | ❌ | ❌ | Endpoint PATCH no existe; `KanbanView.vue` mock hardcodeado con `setTimeout` |
-| CA-7 | Event-Driven híbrido → Camunda async | ❌ | N/A | ❌ | Sin publisher de evento para transiciones Kanban |
-| CA-8 | Gobernanza columnas + límite 7 | ❌ | ❌ | ❌ | Sin endpoint de columnas; sin validación de rol |
+| CA-1 | Bloqueador Modal (columna Blocked) | ✅ | ✅ | ❌ | Creado si no existe (Workdesk) |
+| CA-2 | Inmutabilidad DONE (solo lectura) | ✅ | ✅ | ❌ | Validado en KanbanBoardService |
+| CA-3 | Timer independiente esfuerzo vs SLA | ❌ | ❌ | ❌ | Pendiente (US separada) |
+| CA-4 | Rollback ante 409 Conflict | ✅ | ✅ | ❌ | Implementado en store |
+| CA-5 | Prohibición CMMN — JPA puro | ✅ | N/A | ❌ | Eliminado `KanbanTaskEntity`, lee directo proyección |
+| CA-6 | State Machine PATCH /kanban/{tid}/state | ✅ | ✅ | ❌ | Conectado y optimista |
+| CA-7 | Event-Driven híbrido → Camunda async | ✅ | N/A | ❌ | Implementado |
+| CA-8 | Gobernanza columnas + límite 7 | ✅ | ✅ | ❌ | Validado y limitado |
+| CA-12 | WebSocket /topic/workdesk/kanban | ✅ | ✅ | ❌ | Tiempo real integrado |
 
 ### Resumen US-008
-- **CAs Totales:** 11 | **CAs cumplidos:** ~1 (CA-5 por diseño arquitectónico) | **% Real:** ~10%
-- **QA:** ❌ 0%
-- **Clasificación recomendada:** Mover de "Operativa" a "Scaffolding" en `future_backlog_v3.md`
-- **Impacto:** US-030 (Hub Ágil) depende del Kanban operativo — el tablero de US-030 en Pantalla 3 no funciona
+- **CAs Totales:** 11 | **CAs cumplidos:** ~9 | **% Real:** ~90%
+- **QA:** ❌ 0% (Pendiente Handoff de QA)
+- **Impacto:** Integrado a arquitectura real Zero-Mock.
 
 ---
 

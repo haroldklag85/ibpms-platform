@@ -296,5 +296,38 @@ public class BpmnDeployContractTest extends AbstractIntegrationTest {
             .contentType(ContentType.JSON)
             .body("xml", equalTo(customXml));
     }
+
+    @Test
+    @DisplayName("BUG-FIX: testPutDraftForNonExistentProcessCreatesItSuccessfully")
+    void testPutDraftForNonExistentProcessCreatesItSuccessfully() {
+        // @Traceability: US-005, CA-15
+        String processKey = "non-existent-process-put-draft-123";
+        String validBpmn = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Def_1\">\n" +
+                "  <bpmn:process id=\"" + processKey + "\" isExecutable=\"true\">\n" +
+                "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
+                "  </bpmn:process>\n" +
+                "</bpmn:definitions>";
+
+        // Ensure it doesn't exist
+        processDesignRepository.findByTechnicalId(processKey).ifPresent(p -> processDesignRepository.delete(p));
+
+        given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(java.util.Map.of("xml", validBpmn))
+        .when()
+            .put("/" + processKey + "/draft")
+        .then()
+            .statusCode(200);
+
+        // Verify it was created in repository
+        org.junit.jupiter.api.Assertions.assertTrue(
+            processDesignRepository.findByTechnicalId(processKey).isPresent()
+        );
+        
+        // Clean up
+        processDesignRepository.findByTechnicalId(processKey).ifPresent(p -> processDesignRepository.delete(p));
+    }
 }
 

@@ -3399,7 +3399,7 @@ const onDiagramEdit = () => {
 
 const lastSavedXml = ref<string>('');
 
-// @Traceability: US-005, CA-24
+// @Traceability: US-005, CA-15
 const saveDraft = async () => {
   if (!modelerInstance) return;
   try {
@@ -3408,9 +3408,15 @@ const saveDraft = async () => {
     await integrationStore.saveProcessDraft(processId.value, { xml });
     lastSavedXml.value = xml;
     console.log('[AutoSave] Draft XML saved to Backend API successfully (CA-19)');
-  } catch (err) {
+  } catch (err: any) {
     // CA-10: Offline degradation warning
-    showToast('⚠️ Modo Offline: Guardado en API falló. Revisa tu conexión de red.', 'error');
+    const isNetworkError = !err.response || err.code === 'ERR_NETWORK' || err.response?.status === 503;
+    if (isNetworkError) {
+      showToast('⚠️ Modo Offline: Guardado en API falló. Revisa tu conexión de red.', 'error');
+    } else {
+      const serverMsg = err.response?.data?.message || err.response?.data?.error || 'Fallo al procesar el borrador en el servidor.';
+      showToast(`❌ Error al guardar borrador: ${serverMsg}`, 'error');
+    }
     console.error('[AutoSave] Failed:', err);
   }
 };

@@ -2142,6 +2142,45 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
 
             wrapper.unmount();
         });
+
+        // @Traceability: US-005, CA-15
+        it('Debe mostrar toast de Modo Offline si ocurre un error de red al guardar borrador', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const networkError = new Error('Network Error');
+            (networkError as any).code = 'ERR_NETWORK';
+            vi.spyOn(store, 'saveProcessDraft').mockRejectedValue(networkError);
+
+            await wrapper.vm.saveDraft();
+            await flushPromises();
+
+            expect(wrapper.vm.toast.msg).toBe('⚠️ Modo Offline: Guardado en API falló. Revisa tu conexión de red.');
+            expect(wrapper.vm.toast.type).toBe('error');
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, CA-15
+        it('Debe mostrar mensaje del servidor en toast si ocurre un error lógico del servidor (HTTP 400) al guardar borrador', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            const store = useIntegrationStore();
+            const serverError = new Error('Bad Request');
+            (serverError as any).response = {
+                status: 400,
+                data: { message: 'El ID técnico ya existe en otra versión' }
+            };
+            vi.spyOn(store, 'saveProcessDraft').mockRejectedValue(serverError);
+
+            await wrapper.vm.saveDraft();
+            await flushPromises();
+
+            expect(wrapper.vm.toast.msg).toBe('❌ Error al guardar borrador: El ID técnico ya existe en otra versión');
+            expect(wrapper.vm.toast.type).toBe('error');
+            wrapper.unmount();
+        });
     });
 });
 

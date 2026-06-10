@@ -20,7 +20,7 @@
 | 6 | Bug 2 & Backend Fixes | Catch IllegalArgumentException in getProcessXml in BpmnDesignController.java and return basic XML, ensure test compilation | M5 | DONE |
 | 7 | Bug 1 & Frontend Refinements | Implement auto-save, lock renewal, URL synchronization, toaster alerts, toolbar/drawer UX adjustments, and TDD tests | M6 | DONE |
 | 8 | Verification & Audit | Run JUnit backend tests, Playwright E2E and CT tests with GPU, run Forensic Auditor | M7 | DONE |
-| 9 | Technical ID Immutability | Fix technical ID mutation when loading existing processes, run unit tests, and build | M8 | PLANNED |
+| 9 | Technical ID Immutability | Fix technical ID mutation when loading existing processes, run unit tests, and build | M8 | DONE |
 
 
 ## Interface Contracts

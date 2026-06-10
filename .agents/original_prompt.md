@@ -174,3 +174,55 @@ Required Skills to apply:
 - addyosmani_code_review
 - yudhi_architecture_compliance
 - yudhi_database_migrations
+
+## 2026-06-10T01:46:55Z
+
+Fix HTTP 400 Bad Request when saving or auto-saving drafts for newly created processes (v0) that are not yet persisted in the database (US-005).
+
+Working directory: z:/home/haroltandrsgmezagu/proyectos/ibpms-platform
+Integrity mode: development
+
+Note: The TDD integration test has already been written in BpmnDeployContractTest.java and its initial failure has been verified (returned 400 instead of 200). The detailed handoff with architectural rules and surgical instructions is located at:
+.agentic-sync/handoff_US005_creacion_procesos.md
+
+Please follow the handoff instructions strictly to apply the fixes in both the Java backend (BpmnDesignService.java) and Vue frontend (BpmnDesigner.vue). Verify that all tests pass, run the production build, and commit the changes conventions-style to the sprint branch.
+
+## Requirements
+
+### R1. Auto-creation of Process Drafts in Backend
+When the frontend auto-saves or manually saves a draft using `PUT /api/v1/design/processes/{id}/draft`, the backend currently throws an `IllegalArgumentException` and returns HTTP 400 if the process doesn't exist in the database.
+- Modify `BpmnDesignService.guardarBorradorPorTechnicalId` (and any associated service/port logic) to **automatically create and persist** a new process record in the database if it is not found by its `technicalId`.
+- The new process should be initialized with:
+  - `status = BpmnProcessDesign.Status.BORRADOR`
+  - `currentVersion = 0`
+  - `name` derived from the technical ID (e.g. capitalized slug: "Solicitud TC3" for key "solicitud-tc3") or parsed from the BPMN XML.
+  - `formPattern` defaulted to `SIMPLE` (or parsed from the XML metadata if available).
+- Ensure this auto-creation is atomic, audited via `auditPort`, and returns HTTP 200/201 to the frontend.
+
+### R2. Proper Frontend Network Error Handling
+Currently, any failure during `saveDraft()` in `BpmnDesigner.vue` triggers a false network connection warning toast: `"Modo Offline: Guardado en API falló. Revisa tu conexión de red."`.
+- Modify `saveDraft()` in `BpmnDesigner.vue` to inspect the Axios error response.
+- Only show the network connection banner if there is a real network failure (e.g., `error.code === 'ERR_NETWORK'` or status code 503).
+- For status code 400 or other application-level exceptions, display a specific error toast reflecting the actual issue returned by the backend.
+
+### R3. Test-Driven Development (TDD)
+- Update/Add JUnit integration tests in `BpmnDesignControllerIT.java` or `BpmnDeployContractTest.java` to verify that sending a `PUT /{id}/draft` request for a non-existent process successfully creates the process as a `BORRADOR` and returns HTTP 200.
+- Update/Add Vitest unit tests in `BpmnDesigner.spec.ts` to assert that:
+  - Successful auto-saving of a new process does not show the error banner.
+  - Actual network failures (HTTP 503/Network Error) display the offline error banner correctly.
+
+## Acceptance Criteria
+
+### Draft Persistence & Validation
+- [ ] Auto-saving a newly created process (v0) on the modeler UI returns HTTP 200 and does not display any offline/network error banner.
+- [ ] The newly created process is registered in the database and visible in the Process Catalog (`catalogProcesses`) with the label `📝 BORRADOR`.
+- [ ] All JUnit integration tests and Vitest unit tests pass successfully.
+- [ ] Both frontend and backend builds compile cleanly.
+- [ ] Git commit conforms to conventional standards and is pushed to the sprint branch.
+
+Required Skills to apply:
+- addyosmani_sre_discipline
+- addyosmani_planning
+- addyosmani_code_review
+- yudhi_architecture_compliance
+- yudhi_database_migrations

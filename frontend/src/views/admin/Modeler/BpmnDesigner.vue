@@ -3107,7 +3107,7 @@ onMounted(async () => {
 
                // @Traceability: US-005, CA-15
                if (currentVersion.value === 0 || !versionTagAttr) {
-                   processVersionTag.value = versionTagAttr || '1.0.0';
+                   processVersionTag.value = versionTagAttr || '0.0.0';
                    updateVersionTag();
                } else {
                    processVersionTag.value = versionTagAttr || '';

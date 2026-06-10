@@ -2260,7 +2260,7 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
                 wrapper.unmount();
             });
 
-            it('Debe auto-sugerir "1.0.0" para el Version Tag si el proceso es nuevo y no tiene etiqueta', async () => {
+            it('Debe auto-sugerir "0.0.0" para el Version Tag si el proceso es nuevo y no tiene etiqueta', async () => {
                 // Configurar el mock root para no tener version tag
                 sharedMockRoot.businessObject['camunda:versionTag'] = undefined;
 
@@ -2281,9 +2281,9 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
                 importDoneCallback({ error: null });
                 await wrapper.vm.$nextTick();
 
-                // Verificamos que la propiedad del frontend y el modeler se hayan actualizado a 1.0.0
-                expect(wrapper.vm.processVersionTag).toBe('1.0.0');
-                expect(sharedMockRoot.businessObject['camunda:versionTag']).toBe('1.0.0');
+                // Verificamos que la propiedad del frontend y el modeler se hayan actualizado a 0.0.0
+                expect(wrapper.vm.processVersionTag).toBe('0.0.0');
+                expect(sharedMockRoot.businessObject['camunda:versionTag']).toBe('0.0.0');
                 wrapper.unmount();
             });
         });

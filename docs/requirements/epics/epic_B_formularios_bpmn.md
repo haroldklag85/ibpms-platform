@@ -1889,6 +1889,13 @@ Scenario: Intervención de Emergencia sobre Bloqueo Pesimista (Break-Lock)  (CA-
     Then el modelador dibuja halos verdes brillantes animados (`highlight-executed`) trazando la trayectoria del token en el canvas
     And se habilita un botón discreto "Limpiar trayectoria" en la barra de herramientas del modelador para remover los halos a demanda.
 
+  Scenario: Documentación Completa y Estabilidad del API Docs / Swagger (CA-85)
+    Given la disponibilidad de SpringDoc OpenAPI en el backend
+    When el desarrollador o auditor accede al endpoint `/v3/api-docs` o a la interfaz de `/swagger-ui/index.html`
+    Then el servidor debe retornar el JSON de especificación OpenAPI o renderizar la interfaz web con éxito (HTTP 200)
+    And la generación automática de la documentación de API no debe arrojar excepciones (como StackOverflowError) por referencias circulares en los DTOs de la US-005
+    And todos los endpoints del controlador BpmnDesignController deben estar documentados con anotaciones OpenAPI (@Operation, @ApiResponses) especificando resumen, descripción detallada y códigos de respuesta esperados de acuerdo con api_documentation_standard_guide.md.
+
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).
 

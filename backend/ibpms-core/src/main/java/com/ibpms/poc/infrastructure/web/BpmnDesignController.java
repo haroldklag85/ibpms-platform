@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-42 - Activity Timeline
+// @Traceability: US-005 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import org.springframework.http.ResponseEntity;
@@ -303,18 +303,30 @@ public class BpmnDesignController {
      * @Traceability(US="US-005", CA="CA-ENDPOINT", DESC="Fusión de ruta /catalog requerida por Frontend")
      */
     @GetMapping("/catalog")
-    public ResponseEntity<List<Map<String, Object>>> getAllLatestProcesses() {
+    @Operation(
+        summary = "Obtener el catálogo de procesos",
+        description = "Retorna el listado de procesos de negocio. Permite filtrar opcionalmente por estado (ej: ACTIVE para el portal operativo)."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Catálogo recuperado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class)))
+    })
+    public ResponseEntity<List<Map<String, Object>>> getAllLatestProcesses(
+            @Parameter(description = "Estado para filtrar el catálogo (ej: DRAFT, ACTIVE, ARCHIVED)")
+            @RequestParam(value = "status", required = false) String status) {
         // @Traceability: US-005, CA-40
-        List<Map<String, Object>> processes = bpmnDesignService.listarTodos().stream().map(dto -> {
-            java.util.Map<String, Object> map = new java.util.HashMap<>();
-            map.put("key", dto.getTechnicalId());
-            map.put("name", dto.getName());
-            map.put("version", dto.getCurrentVersion());
-            map.put("deployDate", dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : "");
-            map.put("status", dto.getStatus());
-            map.put("formPattern", dto.getFormPattern() != null ? dto.getFormPattern() : "SIMPLE");
-            return map;
-        }).collect(java.util.stream.Collectors.toList());
+        List<Map<String, Object>> processes = bpmnDesignService.listarTodos().stream()
+            .filter(dto -> status == null || status.equalsIgnoreCase(dto.getStatus()))
+            .map(dto -> {
+                java.util.Map<String, Object> map = new java.util.HashMap<>();
+                map.put("key", dto.getTechnicalId());
+                map.put("name", dto.getName());
+                map.put("version", dto.getCurrentVersion());
+                map.put("deployDate", dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : "");
+                map.put("status", dto.getStatus());
+                map.put("formPattern", dto.getFormPattern() != null ? dto.getFormPattern() : "SIMPLE");
+                return map;
+            }).collect(java.util.stream.Collectors.toList());
         
         return ResponseEntity.ok(processes);
     }

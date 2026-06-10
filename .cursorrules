@@ -127,7 +127,7 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 
 ### Nivel 5 (Condicional por Rol): Documentos de Arquitectura y Layout
 - **Cuándo leerlo:** Solo cuando tu rol lo requiera. No es lectura universal.
-- **Si eres Backend:** Consulta `docs/architecture/c4-model.md` (diagramas C4), `docs/architecture/ibpms_core_erd.md` (Entidad-Relación) y `docs/architecture/ui_components_schema.md` (JSON Schema de formularios) antes de crear Entidades, Puertos o Adaptadores.
+- **Si eres Backend:** Consulta `docs/architecture/c4-model.md` (diagramas C4), `docs/architecture/ibpms_core_erd.md` (Entidad-Relación), `docs/architecture/ui_components_schema.md` (JSON Schema de formularios) y `docs/architecture/adr-017-api-documentation-standard.md` (Estándar de APIs) antes de crear o modificar Entidades, Puertos, Adaptadores o RestControllers.
 - **Si eres Frontend:** Consulta obligatoriamente `scaffolding/workflows/v1_master_layout_policies.md` (15 reglas de geometría, responsive, A11y, Z-Index) antes de construir o modificar cualquier componente visual.
 - **Regla:** Estos documentos complementan los 4 niveles anteriores pero NO los reemplazan. En caso de discrepancia entre un diagrama C4 y el Gherkin, **SIEMPRE PREVALECE EL GHERKIN** (Nivel 2).
 

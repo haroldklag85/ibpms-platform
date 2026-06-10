@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-42 - Activity Timeline
+// @Traceability: US-005 - ADR-001
 package com.ibpms.poc.infrastructure.web.bpmn;
 
 import com.ibpms.poc.AbstractIntegrationTest;
@@ -135,5 +135,63 @@ public class BpmnDesignAuditLogIntegrationTest extends AbstractIntegrationTest {
             .body("[1].version", is(1))
             .body("[1].versionAffected", is(1))
             .body("[1].timestamp", containsString("2026-06-06T12:00:00"));
+    }
+
+    @Test
+    void testGetCatalogWithoutFilterReturnsAllProcesses() {
+        given()
+            .header("Authorization", "Bearer " + token)
+        .when()
+            .get("/catalog")
+        .then()
+            .statusCode(200)
+            .body("size()", greaterThanOrEqualTo(1))
+            .body("find { it.key == '" + processKey + "' }.status", equalTo("DRAFT"));
+    }
+
+    @Test
+    void testGetCatalogFilteredByActiveStatusReturnsOnlyActive() {
+        // Al consultar ACTIVE, nuestro proceso DRAFT no debe aparecer
+        given()
+            .header("Authorization", "Bearer " + token)
+            .queryParam("status", "ACTIVE")
+        .when()
+            .get("/catalog")
+        .then()
+            .statusCode(200)
+            .body("find { it.key == '" + processKey + "' }", nullValue());
+
+        // Insertar un proceso ACTIVE
+        UUID activeDesignId = UUID.randomUUID();
+        String activeProcessKey = "active_process_" + UUID.randomUUID().toString().substring(0, 8);
+        BpmnProcessDesignEntity activeProcess = new BpmnProcessDesignEntity();
+        activeProcess.setId(activeDesignId);
+        activeProcess.setName("Active Process Name");
+        activeProcess.setTechnicalId(activeProcessKey);
+        activeProcess.setStatus(BpmnProcessDesignEntity.Status.ACTIVE);
+        activeProcess.setFormPattern(BpmnProcessDesignEntity.FormPattern.SIMPLE);
+        activeProcess.setCurrentVersion(1);
+        activeProcess.setMaxNodes(50);
+        activeProcess.setCreatedAt(LocalDateTime.now());
+        activeProcess.setUpdatedAt(LocalDateTime.now());
+        activeProcess.setCreatedBy("admin");
+        processDesignRepository.save(activeProcess);
+
+        // Ahora al consultar ACTIVE, debe aparecer únicamente el proceso ACTIVE
+        try {
+            given()
+                .header("Authorization", "Bearer " + token)
+                .queryParam("status", "ACTIVE")
+            .when()
+                .get("/catalog")
+            .then()
+                .statusCode(200)
+                .body("find { it.key == '" + activeProcessKey + "' }", notNullValue())
+                .body("find { it.key == '" + activeProcessKey + "' }.status", equalTo("ACTIVE"))
+                .body("find { it.key == '" + processKey + "' }", nullValue());
+        } finally {
+            // Limpieza específica
+            processDesignRepository.deleteById(activeDesignId);
+        }
     }
 }

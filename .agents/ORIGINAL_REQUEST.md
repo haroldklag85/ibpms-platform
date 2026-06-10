@@ -557,4 +557,45 @@ Required Skills to apply:
 - yudhi_architecture_compliance
 - yudhi_database_migrations
 
+## Follow-up — 2026-06-10T04:06:06Z
+
+Implement process version tag auto-suggestion, SemVer validation in Pre-Flight, and timeline version fallback correction (US-005).
+
+Working directory: z:/home/haroltandrsgmezagu/proyectos/ibpms-platform
+Integrity mode: development
+
+## Requirements
+
+### R1. Timeline Version Fallback Correction
+In `BpmnDesigner.vue` timeline log rendering, replace the logical OR fallback (`|| 1`) with a nullish/exact check so that version `0` (drafts) is correctly rendered as `v0` instead of being coerced to `v1`. This applies to the version badge and the click-to-restore action.
+
+### R2. Version Tag Auto-Suggestion (Frontend)
+In `BpmnDesigner.vue`, when a new process is created or loaded (where `currentVersion` is `0` or no `camunda:versionTag` exists yet), the field `processVersionTag` must be automatically suggested and set to `"1.0.0"`, and the XML root property updated.
+
+### R3. SemVer Validation in Pre-Flight Analyzer (Backend)
+In `CamundaBpmnValidationAdapter.java`, extract `camunda:versionTag` from the process definition during both draft XML validation (`validateDraftXml`) and deployment stream validation (`validateBpmnStream`). Validate that the tag is not empty and complies with SemVer format (`^[0-9]+\.[0-9]+\.[0-9]+.*$`). Reject the validation/deployment with an HTTP 422 error if it is invalid.
+
+### R4. Test-Driven Development (TDD)
+- Frontend: Write unit tests in `BpmnDesigner.spec.ts` verifying that `v0` is correctly rendered in the timeline log when `version = 0`, and that `"1.0.0"` is auto-suggested for new processes.
+- Backend: Write unit tests in `BpmnVersionTagValidationTest.java` verifying valid, invalid, and missing version tags.
+- Verify tests fail before implementing logic and pass after.
+
+## Acceptance Criteria
+
+### Modeler UI
+- [ ] Timeline log renders `v0` if log version is `0`.
+- [ ] Timeline log click-to-restore restores version `0` if log version is `0`.
+- [ ] Version tag is auto-suggested to `"1.0.0"` when creating or loading a new process (v0).
+- [ ] Vitest unit tests in `BpmnDesigner.spec.ts` pass in WSL.
+
+### Backend Validation
+- [ ] Pre-flight analyzer rejects XML with invalid version tags (e.g. `"v1.0"`, `"abc"`, empty/blank).
+- [ ] Pre-flight analyzer accepts XML with valid SemVer version tags (e.g. `"1.0.0"`, `"2.0.1-SNAPSHOT"`).
+- [ ] JUnit tests in `BpmnVersionTagValidationTest.java` pass.
+
+### Build & Delivery
+- [ ] Maven test completes successfully with `-Djacoco.skip=true`.
+- [ ] Frontend production build compiles cleanly (`npm run build`) in WSL.
+- [ ] Changes are committed and pushed to `sprint-6` branch without using `git stash`.
+
 

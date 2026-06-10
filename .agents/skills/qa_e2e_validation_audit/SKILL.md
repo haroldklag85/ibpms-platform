@@ -25,6 +25,7 @@ Antes de reportar cualquier resultado al Arquitecto o al Humano, **DEBES** ejecu
 1. **Frontend Unit/Components (Vitest):** `cd frontend && npm run test:unit`
 2. **Backend Unit/Integration (JUnit/Mockito):** `cd backend/ibpms-core && mvn test`
 3. **Plataforma E2E (Playwright):** `npx playwright test --reporter=html`
+   *   **Tuning de Hardware (GPU/VRAM):** Si ejecutas en la estación local OMEN con GPU dedicada, debes aplicar obligatoriamente la aceleración por hardware cargando las directivas del skill en [gpu_acceleration_tuning/SKILL.md](file:///home/haroltandrsgmezagu/.gemini/antigravity-ide/skills/gpu_acceleration_tuning/SKILL.md) o [gpu_acceleration_tuning/SKILL.md](file:///home/haroltandrsgmezagu/proyectos/ibpms-platform/.agents/skills/gpu_acceleration_tuning/SKILL.md) e inyectando `PLAYWRIGHT_USE_GPU=true` en tu comando.
 
 Este comando ejecutará los tests Playwright que verificarán:
 *   Flujos de usuario completos (login, navegación, CRUD, formularios).

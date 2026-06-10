@@ -1,17 +1,11 @@
-# Context - iBPMS Platform Toolbar & Simulation Redesign
+# Project Context: US-005 Process Version Tag Auto-Suggestion
 
-## Goal
-Coordinate and implement the requirements defined in ORIGINAL_REQUEST.md under the heading '## Follow-up — 2026-06-06T19:18:24Z'.
+## Technical Stack
+- Frontend: Vue 3 with Vite/TS.
+- Testing: Vitest.
 
-## Active Task
-- Milestone 1: Exploration and Analysis.
-
-## Key Files
-- `frontend/src/views/admin/Modeler/BpmnDesigner.vue`
-- `frontend/src/stores/useIntegrationStore.ts`
-- `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/web/BpmnDesignController.java`
-- `backend/ibpms-core/src/test/java/com/ibpms/poc/infrastructure/web/DataMappingIntegrityTest.java`
-
-## Relevant Commands
-- Backend tests: `mvn clean test -Dtest=DataMappingIntegrityTest,BpmnDeployContractTest,SandboxGovernanceTest`
-- Frontend build: `npm run build`
+## Key Goals
+- When process version tag auto-suggestion runs: if the process is a draft (currentVersion is 0) or lacks a version tag, suggest "0.0.0" instead of "1.0.0".
+- Assertions in `BpmnDesigner.spec.ts` must align with the suggestion behavior.
+- Clean code enforcement, strict typing (no any).
+- Build check: `npm run build` must compile cleanly.

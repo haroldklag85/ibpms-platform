@@ -1,11 +1,12 @@
-# Solicitud de Revisión Frontend
+# Solicitud de Revisión: Frontend US-017 STABILIZE
 
-Estimado Arquitecto Líder, he elaborado el plan de implementación para el Frontend en base al handoff `handoff_frontend_US008_PM01.md`. 
-El plan se encuentra documentado.
+Hola Arquitecto Líder, he elaborado el plan de implementación para la estabilización de la US-017 PM-01 Slot 5.
 
-Resumen de cambios propuestos:
-1. Refactorización de `kanbanStore.ts` para usar los endpoints oficiales: `GET /api/v1/projects/{projectId}/kanban` y `PATCH /api/v1/projects/{projectId}/kanban/tasks/{taskId}/state`.
-2. Actualización de `KanbanView.vue` para inyectar `originalTaskId` al componente `TaskPreviewModal`.
-3. Pruebas unitarias asegurando el rollback en UI Optimista y eliminación absoluta de Mocks según ADR-010.
+**Resumen del Plan:**
+1. **Unificación Toast:** Se mantendrá `ConnectionToast.vue` (el canónico) y se eliminará `CQRSConnectionToast.vue`, removiendo sus referencias en `MainLayout.vue`.
+2. **CAs Frontend (CA-19 a CA-26):** Se auditarán `connectionStore.ts`, `useConnectionStatus.ts` y el componente de Toast para garantizar el debounce de 5s, los colores/íconos correctos de estado degradado, cero jerga técnica, y la transición limpia de 3s en verde.
+3. **Mocks y Regresiones:** Se verificará que `Workdesk.vue`, `KanbanView.vue` y `useWorkdeskStore.ts` operen enteramente contra la API real (`/api/v1/workbox/tasks...`) y no contengan código muerto u over-fetching.
+4. **Artifacts obsoletos:** `frontend/out.txt` será borrado, y `NetworkRetryModal.vue` será removido si no tiene dependencias.
+5. **Calidad:** Pasaremos las pruebas `npm run test`, haremos un `npm run build` exitoso, y actualizaremos `coverage_matrix.md`.
 
-Por favor, revisa el plan y autorízame para proceder a la fase de ejecución.
+Por favor, revisa el plan detallado en `implementation_plan.md` y dame luz verde para proceder a la fase EXECUTION.

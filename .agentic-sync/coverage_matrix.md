@@ -24,7 +24,7 @@
 | **Total US en V1** | 56 |
 | **US Completadas** | 11 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048) |
 | **US En Construcción (avanzadas >60%)** | 6 (US-002 ~68%, US-004 ~71%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
-| **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — bloqueada por IDOR, US-017 ~50% — 8 CAs UX/UI pendientes) |
+| **US En Construcción (tempranas <50%)** | 1 (US-007 ~48% — bloqueada por IDOR) |
 | **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
 | **US Pendientes** | 32 |
 | **CAs Implementados (estimado)** | ~290+ |
@@ -820,7 +820,7 @@
 | **Total US en V1** | 56 |
 | **US Completadas (Back+Front)** | 12 (US-000, US-001, US-003, US-005, US-028, US-034, US-036, US-038, US-039, US-043, US-048, US-051) |
 | **US En Construcción (avanzadas >60%)** | 6 (US-002 ~68%, US-004 ~71%, US-025 ~60%, US-027 ~65%, US-029 ~72%, US-030 ~85%) |
-| **US En Construcción (tempranas <50%)** | 2 (US-007 ~48% — bloqueada por IDOR, US-017 ~50% — 8 CAs UX/UI pendientes) |
+| **US En Construcción (tempranas <50%)** | 1 (US-007 ~48% — bloqueada por IDOR) |
 | **US Scaffolding (Fencing activo)** | 5 (US-008 ~10%, US-011, US-021, US-035, US-045) |
 | **US Pendientes** | 31 |
 | **CAs Implementados (estimado)** | ~296+ |
@@ -849,10 +849,7 @@
 | 🟡 P3 | Desglose CA-a-CA faltante | US-034, US-038, US-039, US-043, US-048 | Reconciliación con `git log --grep="CA-"` | ❌ Pendiente |
 | 🟡 P3 | Deuda técnica US-043 CA-6 | US-043 | Plan de remediación | ❌ Pendiente |
 | 🟡 P4 | OBS abiertas US-005 | US-005 | Cerrar OBS-1 (CA-68) y OBS-2 (CA-65) | ❌ Pendiente |
-| 🟢 P1 | US-017 CA-19 a CA-26 UX/UI delegados | US-017 | Handoff Frontend + QA emitidos (Toast Flotante Conexión) | ⏳ Delegado |liación con `git log --grep="CA-"` | ❌ Pendiente |
-| 🟡 P3 | Deuda técnica US-043 CA-6 | US-043 | Plan de remediación | ❌ Pendiente |
-| 🟡 P4 | OBS abiertas US-005 | US-005 | Cerrar OBS-1 (CA-68) y OBS-2 (CA-65) | ❌ Pendiente |
-| 🟢 P1 | US-017 CA-19 a CA-26 UX/UI delegados | US-017 | Handoff Frontend + QA emitidos (Toast Flotante Conexión) | ⏳ Delegado |
+| ✅ CERRADO PM01 | US-017 CA-19 a CA-26 UX/UI implementados | US-017 | Implementación Frontend completada y validada | ✅ CERRADO |
 
 ---
 

@@ -404,3 +404,21 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 **Estado**: ✅ Listo
 
+---
+
+## [2026-06-09] — Simplificación de notificaciones de conexión y guardado
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE)
+
+**¿Qué es?**: Se eliminó una notificación duplicada que podía confundir al usuario mostrando dos mensajes de estado al mismo tiempo. Se consolidó toda la información sobre el estado de la conexión a internet y el progreso de guardado en un solo indicador claro en la esquina de la pantalla.
+
+**¿Para qué sirve?**: Para evitar confusiones y asegurar que el usuario sepa exactamente si el sistema está guardando sus datos, si se perdió la conexión, o si todo funciona correctamente, usando un lenguaje sencillo y sin tecnicismos.
+
+**¿De dónde viene?**: Historia de Usuario US-017 (Estabilización Frontend) — Sprint PM-01, Slot 5. Cumpliendo las reglas de notificaciones claras (CA-19 a CA-26).
+
+**¿Qué debería hacer?**:
+- Muestra un solo indicador cuando hay problemas de conexión o el sistema está guardando datos de forma prolongada.
+- Los mensajes son fáciles de entender (por ejemplo: "Guardando cambios...", "Trabajando sin conexión").
+- Los cambios rápidos (menores a 5 segundos) se guardan de forma invisible para no interrumpir el trabajo del usuario.
+
+**Estado**: ✅ Listo

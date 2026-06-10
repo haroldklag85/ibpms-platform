@@ -2182,7 +2182,8 @@ const scanAndFetchFormFields = async () => {
     for (const key of formKeys) {
       if (!formFieldsCache.value[key]) {
         try {
-          const { data } = await integrationStore.get(`/api/v1/forms/${key}/versions/1`);
+          // @Traceability: US-005, CA-15 - ADR-001: Centralizar y corregir prefijos de llamadas
+          const { data } = await integrationStore.get(`/forms/${key}/versions/1`);
           if (data && data.formFields) {
             formFieldsCache.value[key] = data.formFields.map((f: any) => ({
               name: f.camundaVariable || f.id,
@@ -2434,7 +2435,8 @@ const openDeployRequests = async () => {
   showDeployRequests.value = true;
   loadingDeployRequests.value = true;
   try {
-     const { data } = await integrationStore.get(`/api/v1/design/processes/${processId.value}/deploy-requests`);
+     // @Traceability: US-005, CA-69 - ADR-001: Centralizar llamadas en el store
+     const { data } = await integrationStore.getDeployRequests(processId.value);
      deployRequests.value = data || [];
   } catch (err) {
      showToast('Error obteniendo solicitudes', 'error');
@@ -2447,10 +2449,12 @@ const openDeployRequests = async () => {
 const handleDeployRequest = async (id: string, approve: boolean) => {
   try {
      if (approve) {
-        await integrationStore.post(`/api/v1/design/processes/deploy-requests/${id}/review`, { approved: true, comment: 'Aprobado por UI' });
+        // @Traceability: US-005, CA-69 - ADR-001: Centralizar llamadas en el store
+        await integrationStore.reviewDeployRequest(id, { approved: true, comment: 'Aprobado por UI' });
         showToast('Solicitud Aprobada. Proceso desplegado.', 'success');
      } else {
-        await integrationStore.post(`/api/v1/design/processes/deploy-requests/${id}/review`, { approved: false, comment: 'Rechazado por UI - Comentario suficientemente largo' });
+        // @Traceability: US-005, CA-69 - ADR-001: Centralizar llamadas en el store
+        await integrationStore.reviewDeployRequest(id, { approved: false, comment: 'Rechazado por UI - Comentario suficientemente largo' });
         showToast('Solicitud Rechazada.', 'success');
      }
      await openDeployRequests();
@@ -2751,7 +2755,8 @@ const openSnapshot = async (logItem: any) => {
   let xml = logItem.xml;
   if (!xml) {
     try {
-      const res = await integrationStore.get(`/api/v1/design/processes/${processId.value}/xml`);
+      // @Traceability: US-005, CA-15 - ADR-001: Centralizar llamadas en el store
+      const res = await integrationStore.getProcessXml(processId.value);
       xml = res?.data?.xml || emptyBpmn;
     } catch (err) {
       xml = emptyBpmn;
@@ -2804,7 +2809,8 @@ const restoreVersionFromLog = async (version: number) => {
     currentVersion.value = version;
     let restoredXml = data?.xml;
     if (!restoredXml) {
-      const res = await integrationStore.get(`/api/v1/design/processes/${processId.value}/xml`);
+      // @Traceability: US-005, CA-15 - ADR-001: Centralizar llamadas en el store
+      const res = await integrationStore.getProcessXml(processId.value);
       restoredXml = res?.data?.xml;
     }
     if (restoredXml && modelerInstance) {
@@ -3529,7 +3535,8 @@ const requestDeploy = async () => {
     formData.append('file', new Blob([xml], { type: 'text/xml' }), `${processId.value || 'process'}.bpmn`);
     
     // El Boundary es auto-calculado por fetch/axios si usamos FormData
-    await integrationStore.post(`/api/v1/design/processes/deploy-request`, formData);
+    // @Traceability: US-005, CA-69 - ADR-001: Centralizar llamadas en el store
+    await integrationStore.requestDeployment(formData);
     showToast('🚀 Solicitud de despliegue enviada de forma exitosa al Release Manager', 'success');
     processStatus.value = 'PENDING';
   } catch(err: any) {
@@ -3866,7 +3873,8 @@ const loadProcess = async (p: any) => {
     currentVersion.value = p.version || 0;
     loadVariablesFromLocalStorage();
 
-    const { data } = await integrationStore.get(`/api/v1/design/processes/${p.key}/xml`);
+    // @Traceability: US-005, CA-15 - ADR-001: Centralizar llamadas en el store
+    const { data } = await integrationStore.getProcessXml(p.key);
     if (data && data.xml && modelerInstance) {
       await modelerInstance.importXML(data.xml);
       modelerInstance.get('canvas').zoom('fit-viewport');

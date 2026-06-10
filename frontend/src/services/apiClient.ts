@@ -301,7 +301,8 @@ export const api = {
     saveProcessDraft: (id: string, payload: any) => apiClient.put(`/design/processes/${id}/draft`, payload),
     validateProcess: (payload: any) => apiClient.post(`/design/processes/validate`, payload),
     deployProcess: (payload: FormData) => apiClient.post(`/design/processes/deploy`, payload, { headers: { 'Content-Type': 'multipart/form-data' } }),
-    requestDeployment: (id: string, payload?: any) => apiClient.post(`/design/processes/${id}/request-deployment`, payload),
+    requestDeployment: (payload: FormData) => apiClient.post('/design/processes/deploy-request', payload, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    getProcessXml: (key: string) => apiClient.get(`/design/processes/${key}/xml`),
     getCatalogProcesses: () => apiClient.get(`/design/processes/catalog`),
     getBpmnTemplates: () => apiClient.get(`/design/processes/templates`),
     archiveProcess: (id: string) => apiClient.post(`/design/processes/${id}/archive`), // CA-32
@@ -320,8 +321,7 @@ export const api = {
 
     // 6.5 Panel Solicitudes de Despliegue (CA-69)
     getDeployRequests: (key: string) => apiClient.get(`/design/processes/${key}/deploy-requests`),
-    approveDeployRequest: (id: string, payload?: any) => apiClient.post(`/design/deploy-requests/${id}/approve`, payload),
-    rejectDeployRequest: (id: string, payload: any) => apiClient.post(`/design/deploy-requests/${id}/reject`, payload),
+    reviewDeployRequest: (id: string, payload: { approved: boolean, comment?: string }) => apiClient.post(`/design/processes/deploy-requests/${id}/review`, payload),
 
     // Integraciones / Conectores (CA-45, CA-49, CA-68, CA-70)
     getIntegrationConnectors: () => apiClient.get(`/integrations/connectors`),

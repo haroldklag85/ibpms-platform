@@ -124,8 +124,11 @@ export const useIntegrationStore = defineStore('integrationStore', {
     createProjectTemplate(payload: any) {
       return this.post('/projects/templates', payload);
     },
-    requestDeployment(id: string, payload?: any) {
-      return this.post(`/design/processes/${id}/request-deployment`, payload);
+    // @Traceability: US-005, CA-69
+    requestDeployment(payload: FormData) {
+      return this.post('/design/processes/deploy-request', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
     },
     deployToSandbox(id: string, payload: any) {
       return this.post(`/design/processes/${id}/sandbox`, payload);
@@ -133,11 +136,13 @@ export const useIntegrationStore = defineStore('integrationStore', {
     getDeployRequests(key: string) {
       return this.get(`/design/processes/${key}/deploy-requests`);
     },
-    approveDeployRequest(id: string, payload?: any) {
-      return this.post(`/design/deploy-requests/${id}/approve`, payload);
+    // @Traceability: US-005, CA-69
+    reviewDeployRequest(id: string, payload: { approved: boolean, comment?: string }) {
+      return this.post(`/design/processes/deploy-requests/${id}/review`, payload);
     },
-    rejectDeployRequest(id: string, payload: any) {
-      return this.post(`/design/deploy-requests/${id}/reject`, payload);
+    // @Traceability: US-005, CA-15
+    getProcessXml(key: string) {
+      return this.get(`/design/processes/${key}/xml`);
     },
     getBpmnVariables(processKey: string) {
       return this.get(`/design/processes/${processKey}/variables`);

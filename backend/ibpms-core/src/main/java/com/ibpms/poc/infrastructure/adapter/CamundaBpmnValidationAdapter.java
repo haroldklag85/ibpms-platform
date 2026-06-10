@@ -40,6 +40,10 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
     private static final Logger log = LoggerFactory.getLogger(CamundaBpmnValidationAdapter.class);
     private static final String BPMN_NS = "http://www.omg.org/spec/BPMN/20100524/MODEL";
 
+    // @Traceability: US-005, CA-15
+    private static final java.util.regex.Pattern SEMVER_PATTERN = 
+        java.util.regex.Pattern.compile("^[0-9]+\\.[0-9]+\\.[0-9]+.*$");
+
     @Override
     public PreFlightResultDTO validateDraftXml(String xml, int maxNodes) {
         PreFlightResultDTO result = new PreFlightResultDTO();
@@ -60,6 +64,8 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
             checkZombieNodes(doc, result);
             checkInfiniteLoops(doc, result);
             checkGatewayConvergence(doc, result);
+            // @Traceability: US-005, CA-15
+            checkProcessVersionTag(doc, result);
             checkMaxNodes(doc, maxNodes, result);
 
         } catch (Exception e) {
@@ -211,6 +217,18 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
                 response.addError("Process", "Debe definir cómo se llamarán los casos de este proceso.");
             }
 
+            // @Traceability: US-005, CA-15
+            for (Process proc : processes) {
+                if (proc.isExecutable()) {
+                    String versionTag = proc.getCamundaVersionTag();
+                    if (versionTag == null || versionTag.isBlank()) {
+                        response.addError(proc.getId(), "El tag de versión (versionTag) es obligatorio y no puede estar vacío.");
+                    } else if (!SEMVER_PATTERN.matcher(versionTag).matches()) {
+                        response.addError(proc.getId(), "El tag de versión '" + versionTag + "' no cumple con el formato SemVer (x.y.z).");
+                    }
+                }
+            }
+
             Collection<TimerEventDefinition> timers = modelInstance.getModelElementsByType(TimerEventDefinition.class);
             for (TimerEventDefinition t : timers) {
                 if ((t.getTimeDuration() == null || t.getTimeDuration().getTextContent().isBlank()) &&
@@ -263,6 +281,38 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
         }
 
         return response;
+    }
+
+    // @Traceability: US-005, CA-15
+    private void checkProcessVersionTag(Document doc, PreFlightResultDTO result) {
+        NodeList processes = doc.getElementsByTagNameNS(BPMN_NS, "process");
+        if (processes.getLength() == 0) {
+            processes = doc.getElementsByTagName("bpmn:process");
+        }
+        if (processes.getLength() == 0) {
+            processes = doc.getElementsByTagName("process");
+        }
+
+        for (int i = 0; i < processes.getLength(); i++) {
+            Element el = (Element) processes.item(i);
+            String isExecutable = el.getAttribute("isExecutable");
+            if (isExecutable != null && "false".equalsIgnoreCase(isExecutable.trim())) {
+                continue;
+            }
+
+            String versionTag = el.getAttributeNS("http://camunda.org/schema/1.0/bpmn", "versionTag");
+            if (versionTag == null || versionTag.isBlank()) {
+                versionTag = el.getAttribute("camunda:versionTag");
+            }
+
+            if (versionTag == null || versionTag.isBlank()) {
+                result.addIssue(PreFlightResultDTO.Severity.ERROR, "PROCESS_VERSION_TAG_EMPTY",
+                        el.getAttribute("id"), "El tag de versión (versionTag) es obligatorio.");
+            } else if (!SEMVER_PATTERN.matcher(versionTag).matches()) {
+                result.addIssue(PreFlightResultDTO.Severity.ERROR, "PROCESS_VERSION_TAG_INVALID_SEMVER",
+                        el.getAttribute("id"), "El tag de versión '" + versionTag + "' no cumple con el formato SemVer (x.y.z).");
+            }
+        }
     }
 
     private void checkUserTaskFormKey(Document doc, PreFlightResultDTO result) {

@@ -34,7 +34,10 @@ export default defineConfig({
         '--enable-gpu-rasterization',
         '--enable-zero-copy',
         '--use-gl=angle',
-        '--use-angle=vulkan'
+        '--use-angle=vulkan',
+        '--enable-accelerated-2d-canvas',
+        '--enable-webgl',
+        '--enable-webgl2'
       ]
     } : undefined
   },

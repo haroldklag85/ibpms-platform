@@ -5,6 +5,8 @@ import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createWebHistory } from 'vue-router';
 import { useMenuStore } from '@/stores/useMenuStore';
 import apiClient from '@/services/apiClient';
+// @Traceability: US-005, CA-15
+import i18n from '@/i18n';
 
 vi.mock('@/services/apiClient', () => {
   return {
@@ -16,9 +18,12 @@ vi.mock('@/services/apiClient', () => {
 
 describe('US-051 CA-6: MainLayout Renderizado Dinámico', () => {
     let router: any;
+    let pinia: any;
 
     beforeEach(() => {
-        setActivePinia(createPinia());
+        // @Traceability: US-005, CA-15
+        pinia = createPinia();
+        setActivePinia(pinia);
         router = createRouter({
             history: createWebHistory(),
             routes: [
@@ -51,9 +56,10 @@ describe('US-051 CA-6: MainLayout Renderizado Dinámico', () => {
         ];
         (apiClient.get as any).mockResolvedValue({ data: mockData });
 
+        // @Traceability: US-005, CA-15
         const wrapper = mount(MainLayout, {
             global: {
-                plugins: [router]
+                plugins: [router, pinia, i18n]
             }
         });
 

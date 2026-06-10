@@ -1,6 +1,19 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { useAuthStore } from '@/stores/authStore';
+import apiClient from '@/services/apiClient';
+
+// @Traceability: US-005, CA-15
+vi.mock('@/services/apiClient', () => {
+    return {
+        default: {
+            get: vi.fn(),
+            post: vi.fn().mockResolvedValue({ data: {} }),
+            put: vi.fn().mockResolvedValue({ data: {} }),
+            delete: vi.fn().mockResolvedValue({ data: {} })
+        }
+    };
+});
 
 // Bloque 1: Aislamiento Pinia y Security Context (US-036)
 describe('AuthStore - Security & RBAC', () => {
@@ -8,6 +21,8 @@ describe('AuthStore - Security & RBAC', () => {
         setActivePinia(createPinia());
         localStorage.clear();
         vi.restoreAllMocks();
+        // @Traceability: US-005, CA-15
+        vi.spyOn(apiClient, 'get').mockResolvedValue({ data: [] });
     });
 
     afterEach(() => {

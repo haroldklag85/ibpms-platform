@@ -1187,7 +1187,7 @@
                 <div class="flex items-center justify-between mt-1 text-[11px]">
                   <span class="text-gray-600 dark:text-gray-350">Usuario: <span class="font-semibold text-gray-700 dark:text-gray-200">{{ log.user }}</span></span>
                   <span class="font-semibold text-indigo-650 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-1.5 py-0.5 rounded text-[10px]">
-                    v{{ log.version || 1 }}
+                    v{{ log.version ?? 1 }}
                   </span>
                 </div>
                 
@@ -1201,7 +1201,7 @@
                       Ver Snapshot
                     </button>
                     <button 
-                      @click="restoreVersionFromLog(log.version || 1)" 
+                      @click="restoreVersionFromLog(log.version ?? 1)" 
                       class="bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400 px-2.5 py-1 rounded font-bold text-[10px] transition focus:ring-1 focus:ring-green-400"
                     >
                       Restaurar esta versión
@@ -3098,7 +3098,14 @@ onMounted(async () => {
                processHistoryTTL.value = historyTtlAttr ? parseInt(historyTtlAttr) : 180;
 
                const versionTagAttr = bo.get('camunda:versionTag');
-               processVersionTag.value = versionTagAttr || '';
+
+               // @Traceability: US-005, CA-15
+               if (currentVersion.value === 0 || !versionTagAttr) {
+                   processVersionTag.value = versionTagAttr || '1.0.0';
+                   updateVersionTag();
+               } else {
+                   processVersionTag.value = versionTagAttr || '';
+               }
 
                const extensionElements = bo.get('extensionElements');
                if (extensionElements) {
@@ -4163,6 +4170,7 @@ const getModelerClipboard = () => {
 };
 
 defineExpose({
+  currentVersion,
   getModelerClipboard,
   saveDraft,
   preFlightStatus,

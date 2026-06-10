@@ -2214,6 +2214,79 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             expect(wrapper.vm.toast.msg).toBe('');
             wrapper.unmount();
         });
+
+        // @Traceability: US-005, CA-15 - Version Tag & Timeline Log Correction
+        describe('Pruebas de Versionamiento US-005', () => {
+            it('Debe renderizar "v0" en el timeline de logs cuando la versión es 0', async () => {
+                const store = useIntegrationStore();
+                const auditLogsMock = [
+                    { timestamp: '2026-06-06T12:00:00Z', action: 'IMPORT XML', user: 'Harolt Gómez', version: 0 }
+                ];
+                vi.spyOn(store, 'getProcessAuditLogs').mockResolvedValue({ data: auditLogsMock });
+
+                const wrapper = createWrapper();
+                await flushPromises();
+
+                await wrapper.vm.openAuditLogs();
+                await flushPromises();
+
+                expect(wrapper.vm.showAuditLogsModal).toBe(true);
+                expect(wrapper.vm.auditLogs.length).toBe(1);
+
+                const html = wrapper.html();
+                // Verifica que se renderice v0 y no v1
+                expect(html).toContain('v0');
+                expect(html).not.toContain('v1');
+                wrapper.unmount();
+            });
+
+            it('Debe pasar el valor de versión 0 al restaurar cuando se selecciona un log con versión 0', async () => {
+                const store = useIntegrationStore();
+                const auditLogsMock = [
+                    { timestamp: '2026-06-06T12:00:00Z', action: 'DEPLOYED', user: 'System', version: 0 }
+                ];
+                vi.spyOn(store, 'getProcessAuditLogs').mockResolvedValue({ data: auditLogsMock });
+                const restoreSpy = vi.spyOn(store, 'restoreProcessVersion').mockResolvedValue({ data: { xml: '<xml>restored</xml>' } });
+                vi.spyOn(window, 'confirm').mockImplementation(() => true);
+
+                const wrapper = createWrapper();
+                await flushPromises();
+
+                await wrapper.vm.openAuditLogs();
+                await flushPromises();
+
+                await wrapper.vm.restoreVersionFromLog(0);
+                expect(restoreSpy).toHaveBeenCalledWith(wrapper.vm.processId, 0);
+                wrapper.unmount();
+            });
+
+            it('Debe auto-sugerir "1.0.0" para el Version Tag si el proceso es nuevo y no tiene etiqueta', async () => {
+                // Configurar el mock root para no tener version tag
+                sharedMockRoot.businessObject['camunda:versionTag'] = undefined;
+
+                const wrapper = createWrapper();
+                await flushPromises();
+
+                // Establecemos currentVersion en 0 para simular proceso nuevo sin despliegues
+                wrapper.vm.currentVersion = 0;
+
+                const modeler = (window as any).__modelerInstance;
+
+                // Buscamos el callback registrado para "import.done" e interactuamos con él
+                const importDoneCall = modeler.on.mock.calls.find((call: any) => call[0] === 'import.done');
+                expect(importDoneCall).toBeDefined();
+                const importDoneCallback = importDoneCall[1];
+
+                // Ejecutamos la importación simulada
+                importDoneCallback({ error: null });
+                await wrapper.vm.$nextTick();
+
+                // Verificamos que la propiedad del frontend y el modeler se hayan actualizado a 1.0.0
+                expect(wrapper.vm.processVersionTag).toBe('1.0.0');
+                expect(sharedMockRoot.businessObject['camunda:versionTag']).toBe('1.0.0');
+                wrapper.unmount();
+            });
+        });
     });
 });
 

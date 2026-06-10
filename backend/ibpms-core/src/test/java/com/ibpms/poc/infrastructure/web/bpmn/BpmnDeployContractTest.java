@@ -44,9 +44,10 @@ public class BpmnDeployContractTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("CA-65: testDeployWithValidCommentReturns201")
     void testDeployWithValidCommentReturns201() {
+        // @Traceability: US-005, CA-15
         String validBpmn = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" xmlns:camunda=\"http://camunda.org/schema/1.0/bpmn\" id=\"Definitions_1\" targetNamespace=\"http://bpmn.io/schema/bpmn\">\n" +
-                "  <bpmn:process id=\"Process_1\" isExecutable=\"true\">\n" +
+                "  <bpmn:process id=\"Process_1\" isExecutable=\"true\" camunda:versionTag=\"1.0.0\">\n" +
                 "    <bpmn:extensionElements>\n" +
                 "      <camunda:property name=\"ReglaNomenclatura\" value=\"CASO-${GENERIC}\" />\n" +
                 "    </bpmn:extensionElements>\n" +
@@ -109,9 +110,10 @@ public class BpmnDeployContractTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("CA-65: testValidateEndpointDoesNotDeploy")
     void testValidateEndpointDoesNotDeploy() {
+        // @Traceability: US-005, CA-15
         String validBpmn = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" xmlns:camunda=\"http://camunda.org/schema/1.0/bpmn\" id=\"Definitions_1\" targetNamespace=\"http://bpmn.io/schema/bpmn\">\n" +
-                "  <bpmn:process id=\"Process_1\" isExecutable=\"true\">\n" +
+                "  <bpmn:process id=\"Process_1\" isExecutable=\"true\" camunda:versionTag=\"1.0.0\">\n" +
                 "    <bpmn:extensionElements>\n" +
                 "      <camunda:property name=\"ReglaNomenclatura\" value=\"CASO-${GENERIC}\" />\n" +
                 "    </bpmn:extensionElements>\n" +
@@ -171,10 +173,11 @@ public class BpmnDeployContractTest extends AbstractIntegrationTest {
     @DisplayName("BUG-FIX: testGetVersionsForExistentProcessReturnsAlignedFields")
     void testGetVersionsForExistentProcessReturnsAlignedFields() {
         // @Traceability: US-005, BUG-FIX: Asegurar contrato correcto de llaves (version, date, author, status)
+        // @Traceability: US-005, CA-15
         String processKey = "process-test-versions-123";
         String validBpmn = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Def_1\">\n" +
-                "  <bpmn:process id=\"" + processKey + "\" isExecutable=\"true\">\n" +
+                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" xmlns:camunda=\"http://camunda.org/schema/1.0/bpmn\" id=\"Def_1\">\n" +
+                "  <bpmn:process id=\"" + processKey + "\" isExecutable=\"true\" camunda:versionTag=\"1.0.0\">\n" +
                 "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
                 "  </bpmn:process>\n" +
                 "</bpmn:definitions>";
@@ -303,8 +306,8 @@ public class BpmnDeployContractTest extends AbstractIntegrationTest {
         // @Traceability: US-005, CA-15
         String processKey = "non-existent-process-put-draft-123";
         String validBpmn = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Def_1\">\n" +
-                "  <bpmn:process id=\"" + processKey + "\" isExecutable=\"true\">\n" +
+                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" xmlns:camunda=\"http://camunda.org/schema/1.0/bpmn\" id=\"Def_1\">\n" +
+                "  <bpmn:process id=\"" + processKey + "\" isExecutable=\"true\" camunda:versionTag=\"1.0.0\">\n" +
                 "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
                 "  </bpmn:process>\n" +
                 "</bpmn:definitions>";

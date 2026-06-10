@@ -66,7 +66,7 @@
             <button data-testid="btn-export-bpmn" @click="downloadXML" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded shadow-sm text-[11px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-1">
               ⬇️ Exportar
             </button>
-            <button @click="saveDraft" :disabled="isLocked" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-2 py-1 rounded shadow-sm text-[11px] font-bold hover:bg-indigo-100 disabled:opacity-50 transition flex items-center gap-1">
+            <button @click="saveDraft(true)" :disabled="isLocked" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-2 py-1 rounded shadow-sm text-[11px] font-bold hover:bg-indigo-100 disabled:opacity-50 transition flex items-center gap-1">
               💾 Guardar
             </button>
           </div>
@@ -1542,7 +1542,7 @@ const handleStepSelect = (step: number, event: Event) => {
     if (value === 'Explorador') showCatalog.value = true;
     else if (value === 'Importar') importFileInput.value?.click();
     else if (value === 'Exportar') downloadXML();
-    else if (value === 'Guardar') saveDraft();
+    else if (value === 'Guardar') saveDraft(true);
   } else if (step === 2) {
     if (value === 'Canvas') {
       zoomFit();
@@ -3400,7 +3400,7 @@ const onDiagramEdit = () => {
 const lastSavedXml = ref<string>('');
 
 // @Traceability: US-005, CA-15
-const saveDraft = async () => {
+const saveDraft = async (isManual = false) => {
   if (!modelerInstance) return;
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
@@ -3408,6 +3408,9 @@ const saveDraft = async () => {
     await integrationStore.saveProcessDraft(processId.value, { xml });
     lastSavedXml.value = xml;
     console.log('[AutoSave] Draft XML saved to Backend API successfully (CA-19)');
+    if (isManual) {
+      showToast('✅ Borrador guardado exitosamente.', 'success');
+    }
   } catch (err: any) {
     // CA-10: Offline degradation warning
     const isNetworkError = !err.response || err.code === 'ERR_NETWORK' || err.response?.status === 503;

@@ -2181,6 +2181,39 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             expect(wrapper.vm.toast.type).toBe('error');
             wrapper.unmount();
         });
+
+        // @Traceability: US-005, CA-15
+        it('Debe mostrar toast de éxito al guardar borrador manualmente si la operación es exitosa', async () => {
+            const store = useIntegrationStore();
+            vi.spyOn(store, 'getCatalogProcesses').mockResolvedValue({ data: [] } as any);
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            vi.spyOn(store, 'saveProcessDraft').mockResolvedValue({ data: { status: 'DRAFT_SAVED' } } as any);
+
+            await wrapper.vm.saveDraft(true); // Manual
+            await flushPromises();
+
+            expect(wrapper.vm.toast.msg).toBe('✅ Borrador guardado exitosamente.');
+            expect(wrapper.vm.toast.type).toBe('success');
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, CA-15
+        it('No debe mostrar toast de éxito al guardar borrador de forma automática/background', async () => {
+            const store = useIntegrationStore();
+            vi.spyOn(store, 'getCatalogProcesses').mockResolvedValue({ data: [] } as any);
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            vi.spyOn(store, 'saveProcessDraft').mockResolvedValue({ data: { status: 'DRAFT_SAVED' } } as any);
+
+            await wrapper.vm.saveDraft(false); // Auto/Background
+            await flushPromises();
+
+            expect(wrapper.vm.toast.msg).toBe('');
+            wrapper.unmount();
+        });
     });
 });
 

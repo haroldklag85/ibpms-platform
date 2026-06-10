@@ -18,12 +18,15 @@
           <h1 class="text-lg font-bold text-gray-900 dark:text-white">{{ currentProcessName || 'Proceso Sin Título' }}</h1>
           <span v-if="processStatus" class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
                 :class="{
-                  'bg-yellow-100 text-yellow-800': processStatus === 'BORRADOR',
+                  'bg-gray-200 text-gray-700': processStatus === 'BORRADOR',
                   'bg-green-100 text-green-800': processStatus === 'ACTIVO',
                   'bg-gray-100 text-gray-600': processStatus === 'ARCHIVADO'
-                }">{{ processStatus }}</span>
+                }"
+                title="Estado de la versión de diseño del proceso en la plataforma iBPMS">{{ processStatus }}</span>
           <!-- CA-63: Indicador de Sandbox -->
-          <span v-if="processStatus === 'BORRADOR'" class="text-xs bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2">🧪 SANDBOX</span>
+          <span v-if="processStatus === 'BORRADOR'" 
+                class="text-xs bg-gray-100 text-gray-650 border border-gray-300 px-2 py-0.5 rounded shadow-sm font-bold ml-2 cursor-help"
+                title="Modo Sandbox: Ejecución aislada para pruebas de simulación sin impactar producción">🧪 SANDBOX</span>
         </div>
         <div class="flex items-center space-x-3">
           <!-- Active Role CA-21 -->
@@ -38,7 +41,7 @@
 
       <!-- Stepper grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 w-full">
-        <!-- Paso 1: Biblioteca -->
+        <!-- Paso 1: Inicio -->
         <div 
           class="p-3 rounded-lg border transition-all duration-300 flex flex-col justify-between"
           :class="isStepHighlighted(1) ? 'border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)] bg-indigo-500/5 dark:bg-indigo-500/10' : 'border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-800/30'"
@@ -48,7 +51,7 @@
               class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
               :class="isStepHighlighted(1) ? 'bg-indigo-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
             >1</span>
-            <span class="text-xs font-bold" :class="isStepHighlighted(1) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'">Biblioteca</span>
+            <span class="text-xs font-bold" :class="isStepHighlighted(1) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'">Inicio</span>
           </div>
           
           <!-- Large screen buttons -->
@@ -63,6 +66,9 @@
             <button data-testid="btn-export-bpmn" @click="downloadXML" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded shadow-sm text-[11px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-1">
               ⬇️ Exportar
             </button>
+            <button @click="saveDraft" :disabled="isLocked" class="bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300 px-2 py-1 rounded shadow-sm text-[11px] font-bold hover:bg-indigo-100 disabled:opacity-50 transition flex items-center gap-1">
+              💾 Guardar
+            </button>
           </div>
 
           <!-- Small screen dropdown -->
@@ -71,6 +77,7 @@
             <option value="Explorador">📜 Explorador</option>
             <option value="Importar">⬆️ Importar</option>
             <option value="Exportar">⬇️ Exportar</option>
+            <option value="Guardar">💾 Guardar</option>
           </select>
         </div>
 
@@ -150,10 +157,10 @@
           </div>
 
           <div class="hidden lg:flex flex-row items-center gap-2 mt-2 flex-wrap">
-            <button @click="openAuditLogs" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded shadow-sm text-[11px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-1">
+            <button @click="openAuditLogs()" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded shadow-sm text-[11px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-1">
               📝 Auditoría
             </button>
-            <button @click="showVersions = !showVersions" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded shadow-sm text-[11px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-1">
+            <button @click="showVersions = !showVersions" class="bg-white dark:bg-gray-750 border border-gray-300 dark:border-gray-650 px-2 py-1 rounded shadow-sm text-[11px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-1">
               📜 Versiones
             </button>
           </div>
@@ -248,6 +255,8 @@
           🔒 SOLO LECTURA: Bloqueado por {{ lockOwner }} ({{ lockSince }})
           <!-- CA-66: Break Lock -->
           <button v-if="activeRole === 'Super_Admin'" @click="breakLock" class="ml-3 bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded text-[10px] uppercase transition shadow-sm border border-red-800">🔓 Romper Candado</button>
+          <!-- Renew Lock if expired due to inactivity -->
+          <button v-if="lockOwner === 'Expirado (Inactividad)'" @click="renewLock" class="ml-3 bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] uppercase transition shadow-sm border border-indigo-800">🔑 Adquirir Candado</button>
         </span>
         <span v-else class="text-green-600 font-medium">🔓 Edición Exclusiva Adquirida</span>
       </div>
@@ -1533,6 +1542,7 @@ const handleStepSelect = (step: number, event: Event) => {
     if (value === 'Explorador') showCatalog.value = true;
     else if (value === 'Importar') importFileInput.value?.click();
     else if (value === 'Exportar') downloadXML();
+    else if (value === 'Guardar') saveDraft();
   } else if (step === 2) {
     if (value === 'Canvas') {
       zoomFit();
@@ -1549,6 +1559,8 @@ const handleStepSelect = (step: number, event: Event) => {
     if (value === 'Solicitar Despliegue') requestDeploy();
     else if (value === 'Ver Solicitudes') openDeployRequests();
     else if (value === 'Desplegar') showDeployModal.value = true;
+  } else if (step === 6) {
+    if (value === 'Operacion') showInstancesManager.value = true;
   }
   target.value = '';
 };
@@ -1605,6 +1617,8 @@ const selectedElement = ref<BpmnElement>({
 });
 
 // ── Process State ────────────────────────────────────────────
+// @Traceability: US-005, CA-15
+const isNewProcess = ref(true);
 const currentProcessName = ref('Crédito de Consumo V1');
 const processId = ref('credito-consumo-v1');
 if (route && route.query && route.query.processId) {
@@ -2226,7 +2240,9 @@ const isCallActivityError = computed(() => {
 });
 const lockOwner = ref<string | null>(null);
 const lockSince = ref<string | null>(null);
-const isLocked = computed(() => lockOwner.value !== null);
+const isLocked = computed(() => {
+  return lockOwner.value !== null && lockOwner.value !== authStore.user?.username;
+});
 
 // ── Auto-Save ────────────────────────────────────────────────
 const autoSaveAgo = ref(5);
@@ -2393,6 +2409,18 @@ const breakLock = async () => {
     await fetchLockState();
   } catch (err: any) {
     showToast(err.response?.data?.error || 'Falló al intentar romper candado', 'error');
+  }
+};
+
+// @Traceability: US-005, CA-16
+const renewLock = async () => {
+  try {
+    const sessionId = authStore.token || 'unknown';
+    await integrationStore.post(`/design/processes/${processId.value}/lock`, null, { params: { sessionId } });
+    showToast('🔑 Bloqueo de edición adquirido exitosamente', 'success');
+    await fetchLockState();
+  } catch (err: any) {
+    showToast(err.response?.data?.error || 'No se pudo adquirir el bloqueo de edición', 'error');
   }
 };
 
@@ -2873,6 +2901,9 @@ const camundaModdleDescriptor = {
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
+  // @Traceability: US-005, CA-07
+  timeStore.startEngine();
+
   // @Traceability: US-005, CA-40
   const hasNoProcessId = !route || !route.query || !route.query.processId;
   showWelcomeModal.value = hasNoProcessId;
@@ -3196,6 +3227,9 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  // @Traceability: US-005, CA-07
+  timeStore.stopEngine();
+
   if (heartbeatInterval) clearInterval(heartbeatInterval); // CA-66
   // CA-04: Purga RAG al destruir el componente Vue nativo (Vue router leave)
   // TODO: integrationStore.destroyCopilotSession(sessionId);
@@ -3209,17 +3243,26 @@ onBeforeUnmount(() => {
 });
 
 // ── Auto-slug processId from name ────────────────────────────
+// @Traceability: US-005, CA-15
 watch(currentProcessName, (name) => {
-  if (name) {
+  if (name && isNewProcess.value) {
     processId.value = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   }
 });
 
 // CA-5 & CA-17: UI Masking for Technical ID strictly and XML Injection
+// @Traceability: US-005, CA-15
 watch(processId, (newId) => {
+  if (!newId) return;
   const cleaned = newId.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   if (newId !== cleaned) {
     processId.value = cleaned;
+  }
+  
+  if (route && router) {
+    if (route.query.processId !== cleaned) {
+      router.replace({ query: { ...route.query, processId: cleaned } });
+    }
   }
   
   // CA-17: Inyectar Naming Dual reactivamente en Root
@@ -3736,6 +3779,8 @@ const runSandbox = async () => {
 };
 
 const createNewProcess = () => {
+  // @Traceability: US-005, CA-15
+  isNewProcess.value = true;
   currentProcessName.value = newProcessName.value;
   processPattern.value = newProcessPattern.value;
   processStatus.value = 'BORRADOR';
@@ -3792,6 +3837,8 @@ const archiveProcess = async (pId: string) => {
 
 // @Traceability: US-005, CA-40
 const loadProcess = async (p: any) => {
+  // @Traceability: US-005, CA-15
+  isNewProcess.value = false;
   // @Traceability: US-005, CA-40
   showWelcomeModal.value = false;
   showCatalog.value = false;

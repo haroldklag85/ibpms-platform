@@ -50,7 +50,7 @@ echo ===================================================
 echo [5/5] Ejecutando Certificacion E2E (Playwright vía WSL)
 echo ===================================================
 :: @Traceability: US-005, CA-15
-call wsl bash -c "cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/frontend && npx playwright test e2e/certification/us005-bpmn-modeler-persistence.e2e.spec.ts -c playwright.e2e.config.ts"
+call wsl bash -c "export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64 && cd /home/haroltandrsgmezagu/proyectos/ibpms-platform/frontend && npx playwright test e2e/certification/us005-bpmn-modeler-persistence.e2e.spec.ts -c playwright.e2e.config.ts"
 set PLAYWRIGHT_EXIT=%errorlevel%
 cd ..
 

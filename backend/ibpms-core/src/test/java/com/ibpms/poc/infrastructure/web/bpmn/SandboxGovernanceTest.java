@@ -36,7 +36,12 @@ public class SandboxGovernanceTest extends AbstractIntegrationTest {
         RestAssured.port = port;
         RestAssured.basePath = "/api/v1/design/processes";
         redisTemplate.delete(REDIS_SANDBOX_COUNTER_KEY);
+        java.util.Set<String> keys = redisTemplate.keys("sandbox_rate_limit:*");
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
     }
+
 
     @Test
     @DisplayName("CA-67: testMaxThreeConcurrentSandboxInstances")

@@ -26,8 +26,10 @@ public class DataMappingIntegrityTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         RestAssured.port = port;
+        RestAssured.basePath = "";
         jdbcTemplate.execute("DELETE FROM ibpms_data_mappings WHERE process_definition_key = 'test-process'");
     }
+
 
     @Test
     @DisplayName("CA-68: testSaveMappingPersistsInDatabase")

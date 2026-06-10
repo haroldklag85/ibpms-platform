@@ -346,19 +346,29 @@ public class BpmnDesignController {
      * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
      * Obtiene el XML borrador del proceso desde la persistencia real.
      */
+    // @Traceability: US-005, CA-15
+    // @Traceability: US-005, CA-64
     @GetMapping("/{processDefinitionKey}/xml")
     public ResponseEntity<Map<String, String>> getProcessXml(@PathVariable("processDefinitionKey") String key) {
-        var dto = bpmnDesignService.obtenerPorTechnicalId(key);
-        String xml = dto.getXmlDraft();
-        if (xml == null || xml.isEmpty()) {
-            xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                  "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Definitions_1\">\n" +
-                  "  <bpmn:process id=\"" + key + "\" isExecutable=\"true\">\n" +
-                  "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
-                  "  </bpmn:process>\n" +
-                  "</bpmn:definitions>";
+        try {
+            var dto = bpmnDesignService.obtenerPorTechnicalId(key);
+            if (dto == null) {
+                throw new IllegalArgumentException("Process not found");
+            }
+            String xml = dto.getXmlDraft();
+            if (xml == null || xml.trim().isEmpty()) {
+                throw new IllegalArgumentException("Empty draft XML");
+            }
+            return ResponseEntity.ok(Map.of("xml", xml));
+        } catch (IllegalArgumentException e) {
+            String defaultXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Definitions_1\">\n" +
+                                "  <bpmn:process id=\"" + key + "\" isExecutable=\"true\">\n" +
+                                "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
+                                "  </bpmn:process>\n" +
+                                "</bpmn:definitions>";
+            return ResponseEntity.ok(Map.of("xml", defaultXml));
         }
-        return ResponseEntity.ok(Map.of("xml", xml));
     }
 
     @GetMapping("/templates")
@@ -375,6 +385,18 @@ public class BpmnDesignController {
         return ResponseEntity.ok(List.of(
             Map.of("id", "template_1", "name", "Aprobación Simple", "xml", tmplAprobacion)
         ));
+    }
+
+    // @Traceability: US-005, CA-16 (Consulta de Estado del Bloqueo Pesimista)
+    @GetMapping("/{processDefinitionKey}/lock")
+    public ResponseEntity<?> getLock(@PathVariable("processDefinitionKey") String key) {
+        return bpmnDesignService.getLockInfo(key)
+            .map(lock -> ResponseEntity.ok(Map.of(
+                "active", true,
+                "owner", lock.lockedBy(),
+                "since", lock.lockedAt().toString()
+            )))
+            .orElse(ResponseEntity.ok(Map.of("active", false)));
     }
 
     // @Traceability: US-005, CA-16, CA-43 (Bloqueo Pesimista Editores)

@@ -253,8 +253,9 @@
         <router-view v-slot="{ Component, route }">
           <transition name="fade" mode="out-in">
             <!-- @Traceability(US = "US-001", CA = {"CA-12"}) Acierto UX: Keep-Alive retiene scroll y filtros en RAM para 0ms de carga en regresos -->
+            <!-- @Traceability: US-005, CA-15 (Fix Welcome Modal Loop - Solución A) -->
             <keep-alive include="Workdesk">
-              <component :is="Component" :key="route?.fullPath ? route.fullPath + '-' + authStore.activeRole : ''" />
+              <component :is="Component" :key="route?.path ? route.path + '-' + authStore.activeRole : ''" />
             </keep-alive>
           </transition>
         </router-view>

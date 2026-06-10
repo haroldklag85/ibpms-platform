@@ -217,5 +217,84 @@ public class BpmnDeployContractTest extends AbstractIntegrationTest {
             .body("[0].author", notNullValue())
             .body("[0].status", notNullValue());
     }
+
+    @Test
+    @DisplayName("BUG-FIX: testGetProcessXmlNonExistentKeyReturnsDefaultTemplate200")
+    void testGetProcessXmlNonExistentKeyReturnsDefaultTemplate200() {
+        // @Traceability: US-005, CA-15
+        given()
+            .header("Authorization", "Bearer " + token)
+        .when()
+            .get("/non-existent-process-key-abc/xml")
+        .then()
+            .statusCode(200)
+            .contentType(ContentType.JSON)
+            .body("xml", containsString("<bpmn:process id=\"non-existent-process-key-abc\""));
+    }
+
+    @Test
+    @DisplayName("BUG-FIX: testGetProcessXmlEmptyDraftXmlReturnsDefaultTemplate200")
+    void testGetProcessXmlEmptyDraftXmlReturnsDefaultTemplate200() {
+        // @Traceability: US-005, CA-15
+        String processKey = "process-test-empty-draft";
+        
+        processDesignRepository.findByTechnicalId(processKey).ifPresent(p -> processDesignRepository.delete(p));
+
+        BpmnProcessDesignEntity processDesign = new BpmnProcessDesignEntity();
+        processDesign.setId(UUID.randomUUID());
+        processDesign.setName("Test Process Empty Draft");
+        processDesign.setTechnicalId(processKey);
+        processDesign.setStatus(BpmnProcessDesignEntity.Status.DRAFT);
+        processDesign.setFormPattern(BpmnProcessDesignEntity.FormPattern.SIMPLE);
+        processDesign.setCurrentVersion(1);
+        processDesign.setMaxNodes(50);
+        processDesign.setXmlDraft("   "); // blank XML
+        processDesign.setCreatedAt(LocalDateTime.now());
+        processDesign.setUpdatedAt(LocalDateTime.now());
+        processDesign.setCreatedBy("BPMN_Release_Manager");
+        processDesignRepository.save(processDesign);
+
+        given()
+            .header("Authorization", "Bearer " + token)
+        .when()
+            .get("/" + processKey + "/xml")
+        .then()
+            .statusCode(200)
+            .contentType(ContentType.JSON)
+            .body("xml", containsString("<bpmn:process id=\"" + processKey + "\""));
+    }
+
+    @Test
+    @DisplayName("BUG-FIX: testGetProcessXmlExistentDraftXmlReturnsDraftXml200")
+    void testGetProcessXmlExistentDraftXmlReturnsDraftXml200() {
+        // @Traceability: US-005, CA-15
+        String processKey = "process-test-with-draft";
+        String customXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><bpmn:definitions id=\"Custom_1\"></bpmn:definitions>";
+
+        processDesignRepository.findByTechnicalId(processKey).ifPresent(p -> processDesignRepository.delete(p));
+
+        BpmnProcessDesignEntity processDesign = new BpmnProcessDesignEntity();
+        processDesign.setId(UUID.randomUUID());
+        processDesign.setName("Test Process With Draft");
+        processDesign.setTechnicalId(processKey);
+        processDesign.setStatus(BpmnProcessDesignEntity.Status.DRAFT);
+        processDesign.setFormPattern(BpmnProcessDesignEntity.FormPattern.SIMPLE);
+        processDesign.setCurrentVersion(1);
+        processDesign.setMaxNodes(50);
+        processDesign.setXmlDraft(customXml);
+        processDesign.setCreatedAt(LocalDateTime.now());
+        processDesign.setUpdatedAt(LocalDateTime.now());
+        processDesign.setCreatedBy("BPMN_Release_Manager");
+        processDesignRepository.save(processDesign);
+
+        given()
+            .header("Authorization", "Bearer " + token)
+        .when()
+            .get("/" + processKey + "/xml")
+        .then()
+            .statusCode(200)
+            .contentType(ContentType.JSON)
+            .body("xml", equalTo(customXml));
+    }
 }
 

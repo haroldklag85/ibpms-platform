@@ -3,6 +3,8 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import BpmnDesigner from './BpmnDesigner.vue';
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
+import { useTimeStore } from '@/stores/timeStore';
+import { useAuthStore } from '@/stores/authStore';
 
 // Mock consol.error to keep tests clean from bpmn-js errors in test env
 vi.stubGlobal('console', {
@@ -195,13 +197,15 @@ vi.mock('@/services/apiClient', () => {
 });
 
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 let mockRouteQuery: any = { processId: 'credito-consumo-v1' };
 vi.mock('vue-router', () => ({
     useRoute: () => ({
         query: mockRouteQuery
     }),
     useRouter: () => ({
-        push: mockPush
+        push: mockPush,
+        replace: mockReplace
     })
 }));
 
@@ -209,6 +213,8 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
 
     beforeEach(() => {
         mockRouteQuery = { processId: 'credito-consumo-v1' };
+        mockPush.mockClear();
+        mockReplace.mockClear();
         mockZoom.mockImplementation((val?: any) => {
             if (val === undefined) return 1.0;
             return val;
@@ -2042,6 +2048,100 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
         });
 
         // @implNote Traceability: [DevDavid Merge - Eliminacion de Mock CA-15] Test de versiones vacías extirpado por violación de ley Zero-Mock (vi.spyOn). Validación delegada a e2e.
+    });
+
+    // @Traceability: US-005, Bug-1-Modeler-Fixes
+    describe('Bug 1 Modeler Frontend Fixes', () => {
+        it('Debe llamar a timeStore.startEngine() al montar y timeStore.stopEngine() al desmontar', async () => {
+            const timeStore = useTimeStore();
+            const startSpy = vi.spyOn(timeStore, 'startEngine');
+            const stopSpy = vi.spyOn(timeStore, 'stopEngine');
+
+            const wrapper = createWrapper();
+            await flushPromises();
+            expect(startSpy).toHaveBeenCalled();
+
+            wrapper.unmount();
+            expect(stopSpy).toHaveBeenCalled();
+        });
+
+        it('Debe refactorizar isLocked para retornar true solo si el proceso está bloqueado por otro usuario', async () => {
+            const authStore = useAuthStore();
+            authStore.user = { username: 'testuser' } as any;
+
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Caso 1: lockOwner es null
+            wrapper.vm.lockOwner = null;
+            expect(wrapper.vm.isLocked).toBe(false);
+
+            // Caso 2: lockOwner es el usuario logueado
+            wrapper.vm.lockOwner = 'testuser';
+            expect(wrapper.vm.isLocked).toBe(false);
+
+            // Caso 3: lockOwner es otro usuario
+            wrapper.vm.lockOwner = 'otheruser';
+            expect(wrapper.vm.isLocked).toBe(true);
+
+            wrapper.unmount();
+        });
+
+        it('Debe reactivamente sincronizar processId en la URL query cuando cambie', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Modificar processId a un valor nuevo
+            wrapper.vm.processId = 'proceso-nuevo-test';
+            await wrapper.vm.$nextTick();
+
+            // Verificar que router.replace fue llamado con el valor limpiado
+            expect(mockReplace).toHaveBeenCalledWith({
+                query: expect.objectContaining({ processId: 'proceso-nuevo-test' })
+            });
+
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, CA-15
+        it('Debe autogenerar processId a partir de currentProcessName cuando isNewProcess es true (proceso nuevo)', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Asegurar que el proceso es nuevo
+            wrapper.vm.isNewProcess = true;
+            wrapper.vm.processId = '';
+
+            // Cambiar nombre del proceso
+            wrapper.vm.currentProcessName = 'Mi Nuevo Proceso Modeler';
+            await wrapper.vm.$nextTick();
+            await flushPromises();
+
+            // Verificar que el processId se autogeneró como slug
+            expect(wrapper.vm.processId).toBe('mi-nuevo-proceso-modeler');
+
+            wrapper.unmount();
+        });
+
+        // @Traceability: US-005, CA-15
+        it('No debe sobreescribir processId a partir de currentProcessName cuando isNewProcess es false (proceso existente)', async () => {
+            const wrapper = createWrapper();
+            await flushPromises();
+
+            // Simular proceso existente cargado
+            wrapper.vm.isNewProcess = false;
+            wrapper.vm.processId = 'solitud-tc';
+
+            // Cambiar nombre del proceso
+            wrapper.vm.currentProcessName = 'Solicitud TC';
+            await wrapper.vm.$nextTick();
+            await flushPromises();
+
+            // Verificar que processId se mantuvo intacto y no se calculó el slug
+            expect(wrapper.vm.processId).toBe('solitud-tc');
+
+            wrapper.unmount();
+        });
     });
 });
 

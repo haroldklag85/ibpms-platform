@@ -43,14 +43,14 @@ export default defineConfig({
       name: 'e2e-certification',
       use: {
         ...devices['Desktop Chrome'],
-        channel: 'chrome',
+        // @Traceability: US-005, CA-15 (WSL Chromium Fallback Build)
       },
     },
     {
       name: 'Zero-Mock-E2E',
       use: {
         ...devices['Desktop Chrome'],
-        channel: 'chrome',
+        // @Traceability: US-005, CA-15 (WSL Chromium Fallback Build)
         baseURL: process.env.ZERO_MOCK_URL || 'http://localhost:5174',
       },
     },

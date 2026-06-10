@@ -34,15 +34,18 @@ public class BpmnDesignService {
     private final BpmnAuditPort auditPort;
     private final ProcessLockPort processLockPort;
     private final DeployRequestPort deployRequestPort;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     public BpmnDesignService(BpmnDesignPort designPort,
                              BpmnAuditPort auditPort,
                              ProcessLockPort processLockPort,
-                             DeployRequestPort deployRequestPort) {
+                             DeployRequestPort deployRequestPort,
+                             org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.designPort = designPort;
         this.auditPort = auditPort;
         this.processLockPort = processLockPort;
         this.deployRequestPort = deployRequestPort;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     // --- CRUD ---
@@ -218,6 +221,12 @@ public class BpmnDesignService {
 
     // --- Lock Pesimista Separado (CA-66, CA-64) ---
 
+    // @Traceability: US-005, CA-16
+    public java.util.Optional<com.ibpms.poc.application.port.out.ProcessLockPort.ProcessLockInfo> getLockInfo(String processKey) {
+        cleanStaleLock(processKey);
+        return processLockPort.findLock(processKey);
+    }
+
     public void acquireLockTechnicalKey(String processKey, String userId, String browserSessionId) {
         cleanStaleLock(processKey);
         processLockPort.findLock(processKey).ifPresent(lock -> {
@@ -252,6 +261,21 @@ public class BpmnDesignService {
         processLockPort.findLock(processKey).ifPresent(lock -> {
             processLockPort.deleteLock(processKey);
             auditByTechnicalId(processKey, "UNLOCK", adminUserId, "{\"type\": \"forced\", \"previousOwner\": \"" + lock.lockedBy() + "\"}");
+            try {
+                jdbcTemplate.update(
+                    "INSERT INTO ibpms_audit_log (id, entity_type, entity_id, event_type, performed_by, event_data, created_at) " +
+                    "VALUES (?, ?, ?, ?, ?, ?::json, ?)",
+                    UUID.randomUUID().toString(),
+                    "BPMN_PROCESS",
+                    processKey,
+                    "FORCE_UNLOCK",
+                    adminUserId,
+                    "{\"action\": \"force_unlock\", \"previousOwner\": \"" + lock.lockedBy() + "\"}",
+                    java.sql.Timestamp.valueOf(LocalDateTime.now())
+                );
+            } catch (Exception e) {
+                // Fail-safe to prevent breaking lock deletion on audit failure
+            }
         });
     }
 

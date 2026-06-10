@@ -1,25 +1,22 @@
-# Sentinel Handoff — iBPMS Modeler Toolbar & Simulation Redesign
+# Handoff Report - Project Sentinel
 
 ## Observation
-- The Project Orchestrator claimed victory for the US-005 and US-007 toolbar and simulation redesign requirements.
-- The independent post-victory Victory Auditor (`9564854e-b80d-45c2-a3ff-8bde1b301ef8`) was spawned and completed its 3-phase audit, resulting in a `VICTORY CONFIRMED` verdict.
-- All code compilation (frontend bundles successfully in 9.54s), testing (15 backend integration tests passed, 76 frontend unit tests passed), and integrity checks (no facades or hardcoded bypasses found) have been independently verified.
+- Received a follow-up request to fix the welcome modal and tech ID misalignment in BPMN Modeler (US-005) when loading a process with a typographic name-key mismatch.
+- A new Project Orchestrator has been spawned (conversation ID: `c2119c32-b1c9-4ef7-9e32-be0a9e94201f`) to implement the requested fix and run tests.
+- Progress monitoring and liveness check crons have been scheduled and activated.
 
 ## Logic Chain
-- Monitored the orchestrator throughout the milestones.
-- Dispatched the Victory Auditor upon victory claim.
-- Verified that all validation phases (A, B, and C) completed with PASS.
-- Relayed results to the parent agent.
+- The Sentinel delegated the technical implementation to the `teamwork_preview_orchestrator` who will coordinate developer resources to fix `BpmnDesigner.vue` and add unit tests to `BpmnDesigner.spec.ts`.
+- The Sentinel will periodically monitor `progress.md` (via Cron 1) and verify the orchestrator's active status (via Cron 2).
+- Upon the orchestrator claiming completion, a Victory Auditor will be spawned to verify results.
 
 ## Caveats
-- No technical decisions or code modifications were performed by the Sentinel. All works were managed by the Orchestrator and implemented by the worker agents under WSL.
+- No code has been modified yet; implementation is handled by the orchestrator.
+- Both crons must run concurrently to ensure proper tracking and prevent orchestrator hanging.
 
 ## Conclusion
-- Phase: complete
-- Verdict: VICTORY CONFIRMED
+- The orchestrator has been invoked, and the Sentinel is in monitoring/listening state waiting for the orchestrator's completion report or updates.
 
 ## Verification Method
-- Independent WSL execution of:
-  - Backend: `mvn clean test -Dtest=DataMappingIntegrityTest,BpmnDeployContractTest,SandboxGovernanceTest`
-  - Frontend spec tests: `npx vitest run src/views/admin/Modeler/BpmnDesigner.spec.ts`
-  - Frontend production build: `npm run build`
+- Check that the Project Orchestrator conversation `c2119c32-b1c9-4ef7-9e32-be0a9e94201f` is running.
+- Ensure Cron 1 and Cron 2 tasks are active and running in the background.

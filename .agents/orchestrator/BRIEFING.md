@@ -1,52 +1,22 @@
-# BRIEFING — 2026-06-06T19:50:07Z
+# BRIEFING — 2026-06-10T00:35:00Z
 
 ## Mission
-Redesign/rebuild the BPMN Modeler Toolbar into a sequential 6-step Stepper with Glassmorphism UI, refactor 'Validar y simular' visual simulation panel to a resizable sidebar with vertical accordions and live canvas traversal highlighting, fix draft version history exceptions in backend and frontend, stabilize Maven integration test with Liquibase, complete Swagger/OpenAPI docs, and align frontend store validation payload to FormData (US-005, US-007, and backend/frontend stabilization).
+Fix the welcome modal and tech ID misalignment in BPMN Modeler (US-005) when loading a process with typographic name-key mismatch.
 
 ## 🔒 My Identity
 - Archetype: teamwork_preview_orchestrator
 - Roles: orchestrator, user_liaison, human_reporter, successor
-- Working directory: Y:\home\haroltandrsgmezagu\proyectos\ibpms-platform\.agents\orchestrator
-- Original parent: main agent
-- Original parent conversation ID: ba495157-1dfc-42cd-ac3b-83444f67e814
+- Working directory: z:\home\haroltandrsgmezagu\proyectos\ibpms-platform\.agents\orchestrator\
+- Original parent: sentinel
+- Original parent conversation ID: 6542c09a-bf51-4718-a56d-a0cd96946539
 
 ## 🔒 My Workflow
-- **Pattern**: Project / Canonical
-- **Scope document**: Y:\home\haroltandrsgmezagu\proyectos\ibpms-platform\.agents\orchestrator\PROJECT.md
-1. **Decompose**: We decompose the scope into:
-   - Milestone 1: Exploration and Analysis of frontend (toolbar, sidebar, canvas highlighters, simulation panel, variables grid, version history) and backend (BpmnDesignController, DataMappingIntegrityTest, version API, OpenAPI docs).
-   - Milestone 2: Backend Implementation:
-     - Catch IllegalArgumentException in `/processes/{processDefinitionKey}/versions` and return empty list.
-     - Enrich response DTO of versions with version, date/updatedAt, author/createdBy, and status.
-     - Add Swagger annotations to `/deploy` and `/validate` in BpmnDesignController.java.
-     - Refactor DataMappingIntegrityTest.java to inherit from AbstractIntegrationTest.
-   - Milestone 3: Frontend Implementation:
-     - Toolbar stepper redesign (Glassmorphism, 6 steps, highlight active step, disable Step 6 for v0, role-based read-only view for Step 5, responsive).
-     - Sidebar push-layout simulation panel (toggle behavior, mouse event resizer 400px-700px, hide/restore bpmn-js properties panel, accordion for Linter, Pre-flight, Simulator).
-     - Interactive Hot Path Traversal (green halos animation, clean trajectory, variables grid editing with localStorage).
-     - Fix frontend version history fetch (empty array on error, mapping JSON keys).
-     - Update `useIntegrationStore.ts` payload to FormData for `validateProcess`.
-   - Milestone 4: Verification and Audit:
-     - Run backend tests `mvn clean test -Dtest=DataMappingIntegrityTest,BpmnDeployContractTest,SandboxGovernanceTest`.
-     - Run frontend build `npm run build`.
-     - Run Forensic Auditor.
-2. **Dispatch & Execute**:
-   - **Direct (iteration loop)**: Explorer → Worker → Reviewer → test → gate
-   - **Delegate (sub-orchestrator)**: None (direct implementation with workers/reviewers is efficient here)
-3. **On failure** (in this order):
-   - Retry: nudge stuck agent or re-send task
-   - Replace: spawn fresh agent with partial progress
-   - Skip: proceed without (only if non-critical)
-   - Redistribute: split stuck agent's remaining work
-   - Redesign: re-partition decomposition
-   - Escalate: report to parent (sub-orchestrators only, last resort)
-4. **Succession**: Self-succeed at 16 spawns, write handoff.md, spawn successor.
-  - Milestone 1: Exploration & Analysis [done]
-  - Milestone 2: Backend Implementation [done]
-  - Milestone 3: Frontend Implementation [done]
-  - Milestone 4: Verification & Audit [in-progress]
-- **Current phase**: 4
-- **Current focus**: Verification & Audit
+  - Milestone 7: Bug 1 & Frontend Refinements [done]
+  - Milestone 8: Verification & Audit [done]
+  - Milestone 9: Technical ID Immutability [in-progress]
+- **Current phase**: 9
+- **Current focus**: Technical ID Immutability
+
 
 ## 🔒 Key Constraints
 - NEVER write, modify, or create source code files directly.
@@ -66,25 +36,38 @@ Redesign/rebuild the BPMN Modeler Toolbar into a sequential 6-step Stepper with 
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
-| explorer_sim | teamwork_preview_explorer | Milestone 1: Exploration & Analysis | completed | 69479d9b-85d3-4d94-9415-174fccb9bfda |
+| worker_frontend_m9 | teamwork_preview_worker | Fix Technical ID Immutability (T-01 Modeler Bugfix) | in-progress | 56154c37-8904-4805-9401-8dd993074f65 |
+| worker_frontend_m7_gen3 | teamwork_preview_worker | Implement Bug 1 fixes and backend endpoint | completed | 2df2e9da-a51e-4915-814b-0a51acca0574 |
+| reviewer_m8_gen3 | teamwork_preview_reviewer | Verify Bug 1 fixes and backend endpoint | completed | 10404f0c-23f8-4dde-bae0-d5880fff98d8 |
+| auditor_m8_gen3 | teamwork_preview_auditor | Forensic Integrity Audit | completed | fee17a9e-8139-4eef-91b8-f08b3a786aa7 |
 | worker_backend | teamwork_preview_worker | Milestone 2: Backend Implementation | completed | 906f361c-794f-45ef-8c8e-850cf486277e |
 | worker_frontend | teamwork_preview_worker | Milestone 3: Frontend Implementation | completed | 724b834f-fafa-4f99-a740-95af2dec5243 |
 | reviewer_m4 | teamwork_preview_reviewer | Milestone 4: Code Review and Build Verification | completed | 5447c686-0d55-403b-b973-d08cd3016677 |
-| auditor_m4 | teamwork_preview_auditor | Milestone 4: Forensic Integrity Audit | failed | 658796db-a5d7-4ba8-adeb-49e1b5f405dd |
+| auditor_m4 | teamwork_preview_auditor | Milestone 4: Forensic Integrity Audit | completed | 658796db-a5d7-4ba8-adeb-49e1b5f405dd |
 | auditor_m4_2 | teamwork_preview_auditor | Milestone 4: Forensic Integrity Audit Replacement | completed | 23fd336f-84ef-4fdd-93ff-5daf97ebd474 |
+| explorer_m5_1 | teamwork_preview_explorer | Milestone 5: Exploration & Analysis | failed | 5cef3650-ad23-40d5-83bc-789fa1425334 |
+| explorer_m5_2 | teamwork_preview_explorer | Milestone 5: Exploration & Analysis | completed | 6c838b22-73f2-48f2-87d0-3b1b0359bb07 |
+| explorer_m5_3 | teamwork_preview_explorer | Milestone 5: Exploration & Analysis | completed | 8777354c-7658-4a5b-88ae-6b495256e2d7 |
+| worker_backend_m6 | teamwork_preview_worker | Milestone 6: Bug 2 & Backend Fixes | failed | 490be7e4-544e-4389-b711-78dd39f80124 |
+| worker_backend_m6_gen2 | teamwork_preview_worker | Milestone 6 Gen 2: Bug 2 & Backend Fixes | failed | 0eda086c-cda9-496f-8de9-c0a968043f81 |
+| worker_backend_m6_gen3 | teamwork_preview_worker | Milestone 6 Gen 3: Bug 2 & Backend Fixes | completed | b4f1c6bd-adab-4e62-8d61-2649d18e1e60 |
+| worker_frontend_m7 | teamwork_preview_worker | Milestone 7: Bug 1 & Frontend Refinements | completed | cc82ae30-590b-44d5-8f82-8777c8df9ab2 |
+| worker_frontend_m7_gen2 | teamwork_preview_worker | Milestone 7 Gen 2: Bug 1 & Frontend Refinements | completed | 70d8a0a0-7118-450a-9ea9-db0503783b01 |
+| reviewer_m8 | teamwork_preview_reviewer | Milestone 8: Review & Verification | completed | 847c482c-5df3-4ce7-8af0-6692435a6474 |
+| auditor_m8 | teamwork_preview_auditor | Milestone 8: Forensic Integrity Audit | completed | 74252d50-e85e-465f-a03b-94f8694fdbcd |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 6 / 16
+- Spawn count: 1 / 16
 - Pending subagents: none
-- Predecessor: none
+- Predecessor: 325d6e57-7844-40f1-9d54-248459b7f3e4
 - Successor: not yet spawned
 
 ## Active Timers
-- Heartbeat cron: ba495157-1dfc-42cd-ac3b-83444f67e814/task-35
+- Heartbeat cron: c2119c32-b1c9-4ef7-9e32-be0a9e94201f/task-26
 - Safety timer: none
 
 ## Artifact Index
-- Y:\home\haroltandrsgmezagu\proyectos\ibpms-platform\.agents\orchestrator\PROJECT.md — Scope document
-- Y:\home\haroltandrsgmezagu\proyectos\ibpms-platform\.agents\orchestrator\progress.md — Progress tracker
-- Y:\home\haroltandrsgmezagu\proyectos\ibpms-platform\.agents\orchestrator\context.md — Context tracker
+- z:\home\haroltandrsgmezagu\proyectos\ibpms-platform\.agents\orchestrator\PROJECT.md — Scope document
+- z:\home\haroltandrsgmezagu\proyectos\ibpms-platform\.agents\orchestrator\progress.md — Progress tracker
+

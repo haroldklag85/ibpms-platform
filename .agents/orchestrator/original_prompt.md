@@ -30,3 +30,18 @@ Core Objectives:
 4. Implement interactive Hot Path Traversal in the BPMN canvas using animated highlight halos, controllable with 'Limpiar trayectoria' and sidebar toggles, and variables grid editing stored in localStorage (R4).
 5. Fix version history exceptions in the backend/frontend for draft processes and map JSON keys (R5).
 6. Stabilize backend tests (use Liquibase for DataMappingIntegrityTest), complete OpenAPI/Swagger annotations, and align frontend integration store payload to FormData (R6).
+
+## 2026-06-07T05:43:35Z
+Please coordinate the development and stabilization of US-005 requirements based on the latest request appended to ORIGINAL_REQUEST.md. Use the existing .agents/orchestrator directory. Coordinate the implementation with specialists (explorers, workers, reviewers), ensure TDD is followed strictly, and compile & run verification tests on the local windows environment. Report status updates to progress.md and send a completion message when done.
+
+## 2026-06-08T17:11:14-05:00
+Please coordinate the development and stabilization of US-005 requirements based on the latest request appended to ORIGINAL_REQUEST.md. Use the existing .agents/orchestrator directory. Coordinate the implementation with specialists (explorers, workers, reviewers), ensure TDD is followed strictly, and compile & run verification tests on the local windows environment. Check the progress.md and BRIEFING.md files to see that Milestones 1-6 are complete, and that you need to resolve the Bug 1 deficiencies in Modeler frontend (onMounted/onBeforeUnmount hook fixes, router query param sync, isLocked computed logic, renewLock method definition). Report status updates to progress.md and send a completion message when done.
+
+## 2026-06-10T00:34:45Z
+As the Project Orchestrator, your mission is to fix the welcome modal and tech ID misalignment in BPMN Modeler (US-005) when loading a process with typographic name-key mismatch.
+The verbatim user request is recorded in `.agents/ORIGINAL_REQUEST.md`.
+The detailed technical handoff with instructions is in `.agentic-sync/handoff_US005_bug_guardado.md`.
+Please spawn the necessary specialists (such as a Vue worker) to apply the fix to BpmnDesigner.vue, verify that the unit tests in BpmnDesigner.spec.ts pass, execute the production build, and commit the changes to the sprint branch.
+Ensure you update `.agents/orchestrator/progress.md` regularly to report your progress.
+Workspace: z:/home/haroltandrsgmezagu/proyectos/ibpms-platform
+

@@ -3840,10 +3840,34 @@ const createNewProcess = () => {
           }, 100);
         });
       } else {
-        modelerInstance.importXML(emptyBpmn).then(() => setTimeout(() => updateProcessProperty('formPattern', processPattern.value), 100)); // CA-40
+        modelerInstance.importXML(emptyBpmn).then(() => {
+          setTimeout(() => {
+            try {
+              const modeling = modelerInstance.get('modeling');
+              const canvas = modelerInstance.get('canvas');
+              const rootElement = canvas.getRootElement();
+              if (rootElement && rootElement.businessObject) {
+                modeling.updateProperties(rootElement, { id: processId.value });
+              }
+              updateProcessProperty('formPattern', processPattern.value); // CA-40
+            } catch(e) {}
+          }, 100);
+        });
       }
     } else {
-      modelerInstance.importXML(emptyBpmn).then(() => setTimeout(() => updateProcessProperty('formPattern', processPattern.value), 100)); // CA-40
+      modelerInstance.importXML(emptyBpmn).then(() => {
+        setTimeout(() => {
+          try {
+            const modeling = modelerInstance.get('modeling');
+            const canvas = modelerInstance.get('canvas');
+            const rootElement = canvas.getRootElement();
+            if (rootElement && rootElement.businessObject) {
+              modeling.updateProperties(rootElement, { id: processId.value });
+            }
+            updateProcessProperty('formPattern', processPattern.value); // CA-40
+          } catch(e) {}
+        }, 100);
+      });
     }
   }
   showToast(`Proceso "${newProcessName.value}" creado`);
@@ -3891,6 +3915,20 @@ const loadProcess = async (p: any) => {
     if (data && data.xml && modelerInstance) {
       await modelerInstance.importXML(data.xml);
       modelerInstance.get('canvas').zoom('fit-viewport');
+
+      // Auto-correct process ID if there is a mismatch (e.g. legacy database XML holds Process_1)
+      try {
+        const modeling = modelerInstance.get('modeling');
+        const canvas = modelerInstance.get('canvas');
+        const rootElement = canvas.getRootElement();
+        if (rootElement && rootElement.businessObject && rootElement.businessObject.id !== processId.value) {
+          console.warn(`[Autocorrect] Mismatch detectado: XML tiene ID "${rootElement.businessObject.id}" pero la base de datos espera "${processId.value}". Corrigiendo...`);
+          modeling.updateProperties(rootElement, { id: processId.value });
+          await saveDraft(); // Persistent save of corrected XML
+        }
+      } catch (e) {
+        console.error('Error auto-correcting process ID in XML', e);
+      }
     }
 
     showToast(`Cargado: ${p.name} v${p.version}`);

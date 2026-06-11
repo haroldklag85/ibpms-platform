@@ -324,7 +324,7 @@
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">ID Técnico</label>
-              <input type="text" v-model="processId" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-gray-50 dark:bg-gray-900" placeholder="Auto: credito-de-consumo" />
+              <input type="text" v-model="processId" :disabled="!isNewProcess" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-gray-50 dark:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Auto: credito-de-consumo" />
             </div>
 
             <!-- Nomenclatura Instancia CA-5 -->
@@ -1618,7 +1618,7 @@ const selectedElement = ref<BpmnElement>({
 
 // ── Process State ────────────────────────────────────────────
 // @Traceability: US-005, CA-15
-const isNewProcess = ref(true);
+const isNewProcess = ref(!(route && route.query && route.query.processId));
 const currentProcessName = ref('Crédito de Consumo V1');
 const processId = ref('credito-consumo-v1');
 if (route && route.query && route.query.processId) {
@@ -2414,14 +2414,22 @@ const breakLock = async () => {
 };
 
 // @Traceability: US-005, CA-16
-const renewLock = async () => {
+const renewLock = async (silent: boolean | any = false) => {
+  const isSilent = silent === true;
   try {
-    const sessionId = authStore.token || 'unknown';
+    const rawToken = authStore.token || 'unknown';
+    // Truncate the sessionId to the last 100 characters of the token to prevent database varchar(255) overflows.
+    // JWT signature is at the end, so last 100 characters are unique and safe.
+    const sessionId = rawToken.length > 100 ? rawToken.slice(-100) : rawToken;
     await integrationStore.post(`/design/processes/${processId.value}/lock`, null, { params: { sessionId } });
-    showToast('🔑 Bloqueo de edición adquirido exitosamente', 'success');
+    if (!isSilent) {
+      showToast('🔑 Bloqueo de edición adquirido exitosamente', 'success');
+    }
     await fetchLockState();
   } catch (err: any) {
-    showToast(err.response?.data?.error || 'No se pudo adquirir el bloqueo de edición', 'error');
+    if (!isSilent) {
+      showToast(err.response?.data?.error || 'No se pudo adquirir el bloqueo de edición', 'error');
+    }
   }
 };
 
@@ -3420,6 +3428,7 @@ const saveDraft = async (isManual = false) => {
     
     await integrationStore.saveProcessDraft(processId.value, { xml });
     lastSavedXml.value = xml;
+    isNewProcess.value = false;
     console.log('[AutoSave] Draft XML saved to Backend API successfully (CA-19)');
     if (isManual) {
       showToast('✅ Borrador guardado exitosamente.', 'success');
@@ -3804,6 +3813,10 @@ const runSandbox = async () => {
 const createNewProcess = () => {
   // @Traceability: US-005, CA-15
   isNewProcess.value = true;
+  if (newProcessName.value) {
+    processId.value = newProcessName.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  }
+  renewLock(true);
   currentProcessName.value = newProcessName.value;
   processPattern.value = newProcessPattern.value;
   processStatus.value = 'BORRADOR';
@@ -3884,6 +3897,9 @@ const loadProcess = async (p: any) => {
     // @Traceability: US-005, CA-40
     await fetchForms();
     await fetchLockState();
+    if (!isLocked.value) {
+      await renewLock(true);
+    }
     await fetchVersions();
   } catch (err) {
     console.error('Error loading process XML', err);

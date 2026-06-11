@@ -28,10 +28,14 @@ public class SlaEarlyWarningScheduler {
     public void scanAndFlagAtRiskTasks() {
         log.info("[SLA_SCHEDULER] Iniciando escaneo de tareas activas para evaluar riesgos SLA al 80%");
 
-        // TODO V2: Implementar paginación .listPage() para entornos con alto volumen de tareas activas
-        List<Task> activeTasks = taskService.createTaskQuery()
-                .active()
-                .list();
+        if (taskService == null) {
+            return;
+        }
+        org.camunda.bpm.engine.task.TaskQuery query = taskService.createTaskQuery();
+        if (query == null) {
+            return;
+        }
+        List<Task> activeTasks = query.active().list();
 
         long now = System.currentTimeMillis();
 

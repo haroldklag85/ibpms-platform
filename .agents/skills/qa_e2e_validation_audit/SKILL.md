@@ -20,14 +20,15 @@ A partir de este momento, TIENES ESTRICTAMENTE PROHIBIDO asumir que el código f
 
 ## 1. PROHIBIDO EL REPORTE CIEGO (PIRÁMIDE DE TESTING COMPLETA)
 
-Antes de reportar cualquier resultado al Arquitecto o al Humano, **DEBES** ejecutar la suite de pruebas correspondiente a tu auditoría, respetando el ADR 011:
+Antes de reportar cualquier resultado al Arquitecto o al Humano, **DEBES** ejecutar la suite de pruebas correspondiente a tu auditoría, respetando el ADR 011 y el modelo de segmentación de pruebas:
 
 1. **Frontend Unit/Components (Vitest):** `cd frontend && npm run test:unit`
-2. **Backend Unit/Integration (JUnit/Mockito):** `cd backend/ibpms-core && mvn test`
-3. **Plataforma E2E (Playwright):** `npx playwright test --reporter=html`
-   *   **Tuning de Hardware (GPU/VRAM):** Si ejecutas en la estación local OMEN con GPU dedicada, debes aplicar obligatoriamente la aceleración por hardware cargando las directivas del skill en [gpu_acceleration_tuning/SKILL.md](file:///home/haroltandrsgmezagu/.gemini/antigravity-ide/skills/gpu_acceleration_tuning/SKILL.md) o [gpu_acceleration_tuning/SKILL.md](file:///home/haroltandrsgmezagu/proyectos/ibpms-platform/.agents/skills/gpu_acceleration_tuning/SKILL.md) e inyectando `PLAYWRIGHT_USE_GPU=true` en tu comando.
+2. **Backend Unit Tests (Surefire - pure unit):** `cd backend/ibpms-core && mvn test` (ejecución ultra-rápida en milisegundos)
+3. **Backend Integration Tests (Failsafe - Spring/DB context):** `cd backend/ibpms-core && mvn verify` (ejecutados en paralelo usando 4 forks)
+4. **Plataforma E2E (Playwright):** `PLAYWRIGHT_USE_GPU=true npx playwright test --config=playwright.e2e.config.ts` (paralelizado en workers acelerados por GPU)
+   *   **Tuning de Hardware (GPU/VRAM):** Si ejecutas en la estación local OMEN con GPU dedicada, debes aplicar obligatoriamente la aceleración por hardware cargando las directivas del skill en [gpu_acceleration_tuning/SKILL.md](file:///home/haroltandrsgmezagu/proyectos/ibpms-platform/.agents/skills/gpu_acceleration_tuning/SKILL.md) e inyectando `PLAYWRIGHT_USE_GPU=true` en tu comando.
 
-Este comando ejecutará los tests Playwright que verificarán:
+Este comando ejecutará las pruebas correspondientes que verificarán:
 *   Flujos de usuario completos (login, navegación, CRUD, formularios).
 *   Respuestas de red reales contra el backend Docker activo.
 *   Renderizado correcto de componentes Vue en el viewport.

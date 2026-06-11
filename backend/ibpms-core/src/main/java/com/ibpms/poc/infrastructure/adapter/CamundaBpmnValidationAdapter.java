@@ -66,6 +66,7 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
             checkGatewayConvergence(doc, result);
             // @Traceability: US-005, CA-15
             checkProcessVersionTag(doc, result);
+            checkProcessNomenclature(doc, result);
             checkMaxNodes(doc, maxNodes, result);
 
         } catch (Exception e) {
@@ -311,6 +312,60 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
             } else if (!SEMVER_PATTERN.matcher(versionTag).matches()) {
                 result.addIssue(PreFlightResultDTO.Severity.ERROR, "PROCESS_VERSION_TAG_INVALID_SEMVER",
                         el.getAttribute("id"), "El tag de versión '" + versionTag + "' no cumple con el formato SemVer (x.y.z).");
+            }
+        }
+    }
+
+    // @Traceability: US-005, CA-05
+    private void checkProcessNomenclature(Document doc, PreFlightResultDTO result) {
+        NodeList processes = doc.getElementsByTagNameNS(BPMN_NS, "process");
+        if (processes.getLength() == 0) {
+            processes = doc.getElementsByTagName("bpmn:process");
+        }
+        if (processes.getLength() == 0) {
+            processes = doc.getElementsByTagName("process");
+        }
+
+        for (int i = 0; i < processes.getLength(); i++) {
+            Element el = (Element) processes.item(i);
+            String isExecutable = el.getAttribute("isExecutable");
+            if (isExecutable != null && "false".equalsIgnoreCase(isExecutable.trim())) {
+                continue;
+            }
+
+            boolean hasNomenclature = false;
+            NodeList properties = el.getElementsByTagNameNS("http://camunda.org/schema/1.0/bpmn", "property");
+            for (int j = 0; j < properties.getLength(); j++) {
+                Element prop = (Element) properties.item(j);
+                if ("ReglaNomenclatura".equals(prop.getAttribute("name"))) {
+                    hasNomenclature = true;
+                    break;
+                }
+            }
+            if (!hasNomenclature) {
+                NodeList propertiesNoNS = el.getElementsByTagName("camunda:property");
+                for (int j = 0; j < propertiesNoNS.getLength(); j++) {
+                    Element prop = (Element) propertiesNoNS.item(j);
+                    if ("ReglaNomenclatura".equals(prop.getAttribute("name"))) {
+                        hasNomenclature = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasNomenclature) {
+                NodeList propertiesNoPrefix = el.getElementsByTagName("property");
+                for (int j = 0; j < propertiesNoPrefix.getLength(); j++) {
+                    Element prop = (Element) propertiesNoPrefix.item(j);
+                    if ("ReglaNomenclatura".equals(prop.getAttribute("name"))) {
+                        hasNomenclature = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasNomenclature) {
+                result.addIssue(PreFlightResultDTO.Severity.ERROR, "PROCESS_NO_NOMENCLATURE",
+                        el.getAttribute("id"), "Debe definir cómo se llamarán los casos de este proceso (ReglaNomenclatura).");
             }
         }
     }

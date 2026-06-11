@@ -40,7 +40,10 @@ public class JwtTokenProvider {
     // ── Generación (útil para tests) ───────────────────────────────────────────
     // @Traceability(US="US-003", CA="CA-87", DESC="Overloaded token generation for JIT provisioning claims support in tests")
     public String generateToken(String subject, List<String> roles, String tenantId) {
-        return generateToken(subject, roles, tenantId, null);
+        return generateToken(subject, roles, tenantId, java.util.Map.of(
+            "Sucursal_ID", "SUC-DEFAULT",
+            "Codigo_Jefe", "J-DEFAULT"
+        ));
     }
 
     // @Traceability(US="US-003", CA="CA-87", DESC="Token generation with custom additional claims support")

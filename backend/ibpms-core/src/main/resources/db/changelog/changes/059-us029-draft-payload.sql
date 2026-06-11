@@ -217,3 +217,11 @@ ALTER TABLE ibpms_security_user ADD COLUMN IF NOT EXISTS must_change_password BO
 ALTER TABLE ibpms_workdesk_projection ALTER COLUMN progress_percent TYPE INTEGER;
 ALTER TABLE ibpms_workdesk_projection ALTER COLUMN total_steps TYPE INTEGER;
 ALTER TABLE ibpms_workdesk_projection ALTER COLUMN current_step TYPE INTEGER;
+
+-- changeset antigravity:059-us029-kanban-nullable-case-v2
+-- comment: Permite que las tareas Kanban existan sin estar asociadas a un caso (US-008)
+
+ALTER TABLE ibpms_task ALTER COLUMN case_id DROP NOT NULL;
+ALTER TABLE ibpms_task ALTER COLUMN name DROP NOT NULL;
+ALTER TABLE ibpms_task ALTER COLUMN source_type DROP NOT NULL;
+ALTER TABLE ibpms_task ALTER COLUMN ref_id DROP NOT NULL;

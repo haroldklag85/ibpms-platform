@@ -1,4 +1,7 @@
 spring:
+  jersey:
+    type: filter
+    application-path: /engine-rest
   cache:
     type: redis
   servlet:

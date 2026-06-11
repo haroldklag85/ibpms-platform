@@ -3,7 +3,7 @@ package com.ibpms.poc;
 
 import org.junit.jupiter.api.Test;
 
-class ApplicationTests extends AbstractIntegrationTest {
+class ApplicationTests extends AbstractIntegrationIT {
 
     @Test
     void contextLoads() {

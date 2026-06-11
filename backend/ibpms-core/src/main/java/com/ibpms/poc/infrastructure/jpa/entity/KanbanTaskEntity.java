@@ -24,6 +24,7 @@ public class KanbanTaskEntity {
 
     @Id
     @Column(columnDefinition = "bpchar")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)

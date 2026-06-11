@@ -1,7 +1,7 @@
 // @Traceability: US-007 - ADR-001
 package com.ibpms.poc.integration.kanban;
 
-import com.ibpms.poc.AbstractIntegrationTest;
+import com.ibpms.poc.AbstractIntegrationIT;
 
 
 import com.ibpms.poc.infrastructure.jpa.entity.KanbanBoardEntity;
@@ -29,7 +29,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.notNullValue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class TimeTrackingIT extends AbstractIntegrationTest {
+public class TimeTrackingIT extends AbstractIntegrationIT {
 
     @LocalServerPort
     private int port;

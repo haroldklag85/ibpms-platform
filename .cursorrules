@@ -77,6 +77,12 @@ Tienes prohibido asumir que tu código funciona solo por inferencia estática. T
 - Si eres QA / DevOps: 
   Tu validación opera estrictamente bajo la Gobernanza de Pirámide de Testing (ADR 011). Tienes PROHIBIDO certificar validez funcional sin ejecutar explícitamente el Nivel 4 (Playwright E2E o REST Assured) y adjuntar evidencia física de logs de red reales. El uso de mocks en memoria es intolerable. Sigue tu doctrina en: `.agents/skills/qa_e2e_validation_audit/SKILL.md`.
 
+- **REGLA DE SEGMENTACIÓN DE PRUEBAS (Test Suite Partitioning):**
+  Queda estrictamente prohibido mezclar la nomenclatura de tests unitarios y de integración en el Backend:
+  1. **Tests Unitarios (`*Test.java`):** Lógica pura en memoria sin arrancar Spring Boot (sin `@SpringBootTest`, `@WebMvcTest`, `@DataJpaTest`). Deben correr en milisegundos y ser ejecutados por `maven-surefire-plugin` (`mvn test`).
+  2. **Tests de Integración (`*IT.java`):** Tests de infraestructura que cargan contexto Spring, bases de datos o servicios. Son ejecutados por `maven-failsafe-plugin` (`mvn verify`) en paralelo usando 4 forks para optimizar el rendimiento.
+  CUALQUIER test unitario que inicie Spring Boot violando esta regla será bloqueado por el validador pre-commit.
+
 - **REGLA DE ORO (Test-Driven Governance V2):**
   Ninguna Historia de Usuario, refactor de módulo o creación de "Feature" nueva podrá considerarse "Done" si el Agente a cargo no la entrega escudada por sus tres capas: 
   1. Testcontainers / Unit Tests en Backend.

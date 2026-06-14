@@ -1,9 +1,9 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
@@ -16,7 +16,6 @@ public class CatalogCacheEntity {
     @Column(length = 100)
     private String id; // Ej. CRM_CUSTOMER_SEGMENTS
 
-    @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
     private String payload; // El JSON del CRM crudo
 

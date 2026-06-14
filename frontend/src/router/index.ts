@@ -153,12 +153,6 @@ const router = createRouter({
                     component: () => import('@/views/admin/Analytics/DashboardBAM.vue'),
                     meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'Global Admin'] }
                 },
-                {
-                    path: 'admin/monitoring',
-                    name: 'BpmDashboard',
-                    component: () => import('@/views/monitoring/BpmDashboard.vue'),
-                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
-                },
                 // --- Bloque F: Integration Hub (Pantalla 11) ---
                 {
                     path: 'admin/integration/catalog',

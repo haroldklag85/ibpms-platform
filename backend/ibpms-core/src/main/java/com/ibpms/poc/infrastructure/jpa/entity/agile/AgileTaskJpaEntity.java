@@ -1,4 +1,4 @@
-// @Traceability: US-003 - ADR-001
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.infrastructure.jpa.entity.agile;
 
 import jakarta.persistence.*;

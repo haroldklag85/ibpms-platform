@@ -1,29 +1,57 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import jakarta.persistence.EntityListeners;
+import com.ibpms.poc.infrastructure.event.KanbanTaskSyncListener;
 
 @Entity
 @Table(name = "ibpms_task")
+@EntityListeners(KanbanTaskSyncListener.class)
 public class KanbanTaskEntity {
 
     @Id
     @Column(columnDefinition = "bpchar")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
     private KanbanBoardEntity board;
 
-    @Column(name = "original_task_id", nullable = false)
+    // Portado de HEAD: referencia CQRS a WorkdeskProjection
+    @Column(name = "original_task_id")
     private String originalTaskId;
+
+    @Column(name = "title", nullable = false, length = 255)
+    private String title;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "status", nullable = false, length = 50)
+    private String status;
+
+    @Column(name = "assignee", length = 100)
+    private String assignee;
+
+    @Column(name = "priority", length = 20)
+    private String priority;
+
+    @Column(name = "sla_due_date")
+    private LocalDateTime slaDueDate;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -31,9 +59,20 @@ public class KanbanTaskEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "blocked_reason", columnDefinition = "TEXT")
+    private String blockedReason;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_task_id", referencedColumnName = "id", columnDefinition = "bpchar")
+    private KanbanTaskEntity parentTask;
+
+    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL)
+    private List<KanbanTaskEntity> subTasks = new ArrayList<>();
+
     public KanbanTaskEntity() {
         this.id = UUID.randomUUID();
         this.createdAt = LocalDateTime.now();
+        this.status = "TODO";
     }
 
     public UUID getId() {
@@ -60,6 +99,58 @@ public class KanbanTaskEntity {
         this.originalTaskId = originalTaskId;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getAssignee() {
+        return assignee;
+    }
+
+    @com.ibpms.poc.crosscutting.annotations.Traceability(US = "US-008", CA = {"CA-04"})
+    public void setAssignee(String assignee) {
+        if (assignee != null && (assignee.contains(",") || assignee.contains(";") || assignee.trim().split("\\s+").length > 1)) {
+            throw new IllegalArgumentException("CA-04 Violación Anti-Multitasking: Una tarea Kanban solo puede tener un único dueño (Single-Assignee).");
+        }
+        this.assignee = assignee;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public LocalDateTime getSlaDueDate() {
+        return slaDueDate;
+    }
+
+    public void setSlaDueDate(LocalDateTime slaDueDate) {
+        this.slaDueDate = slaDueDate;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -83,5 +174,29 @@ public class KanbanTaskEntity {
     @jakarta.persistence.PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public KanbanTaskEntity getParentTask() {
+        return parentTask;
+    }
+
+    public void setParentTask(KanbanTaskEntity parentTask) {
+        this.parentTask = parentTask;
+    }
+
+    public List<KanbanTaskEntity> getSubTasks() {
+        return subTasks;
+    }
+
+    public void setSubTasks(List<KanbanTaskEntity> subTasks) {
+        this.subTasks = subTasks;
+    }
+
+    public String getBlockedReason() {
+        return blockedReason;
+    }
+
+    public void setBlockedReason(String blockedReason) {
+        this.blockedReason = blockedReason;
     }
 }

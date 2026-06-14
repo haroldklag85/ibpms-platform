@@ -77,6 +77,12 @@ Tienes prohibido asumir que tu código funciona solo por inferencia estática. T
 - Si eres QA / DevOps: 
   Tu validación opera estrictamente bajo la Gobernanza de Pirámide de Testing (ADR 011). Tienes PROHIBIDO certificar validez funcional sin ejecutar explícitamente el Nivel 4 (Playwright E2E o REST Assured) y adjuntar evidencia física de logs de red reales. El uso de mocks en memoria es intolerable. Sigue tu doctrina en: `.agents/skills/qa_e2e_validation_audit/SKILL.md`.
 
+- **REGLA DE SEGMENTACIÓN DE PRUEBAS (Test Suite Partitioning):**
+  Queda estrictamente prohibido mezclar la nomenclatura de tests unitarios y de integración en el Backend:
+  1. **Tests Unitarios (`*Test.java`):** Lógica pura en memoria sin arrancar Spring Boot (sin `@SpringBootTest`, `@WebMvcTest`, `@DataJpaTest`). Deben correr en milisegundos y ser ejecutados por `maven-surefire-plugin` (`mvn test`).
+  2. **Tests de Integración (`*IT.java`):** Tests de infraestructura que cargan contexto Spring, bases de datos o servicios. Son ejecutados por `maven-failsafe-plugin` (`mvn verify`) en paralelo usando 4 forks para optimizar el rendimiento.
+  CUALQUIER test unitario que inicie Spring Boot violando esta regla será bloqueado por el validador pre-commit.
+
 - **REGLA DE ORO (Test-Driven Governance V2):**
   Ninguna Historia de Usuario, refactor de módulo o creación de "Feature" nueva podrá considerarse "Done" si el Agente a cargo no la entrega escudada por sus tres capas: 
   1. Testcontainers / Unit Tests en Backend.
@@ -127,7 +133,7 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 
 ### Nivel 5 (Condicional por Rol): Documentos de Arquitectura y Layout
 - **Cuándo leerlo:** Solo cuando tu rol lo requiera. No es lectura universal.
-- **Si eres Backend:** Consulta `docs/architecture/c4-model.md` (diagramas C4), `docs/architecture/ibpms_core_erd.md` (Entidad-Relación) y `docs/architecture/ui_components_schema.md` (JSON Schema de formularios) antes de crear Entidades, Puertos o Adaptadores.
+- **Si eres Backend:** Consulta `docs/architecture/c4-model.md` (diagramas C4), `docs/architecture/ibpms_core_erd.md` (Entidad-Relación), `docs/architecture/ui_components_schema.md` (JSON Schema de formularios) y `docs/architecture/adr-017-api-documentation-standard.md` (Estándar de APIs) antes de crear o modificar Entidades, Puertos, Adaptadores o RestControllers.
 - **Si eres Frontend:** Consulta obligatoriamente `scaffolding/workflows/v1_master_layout_policies.md` (15 reglas de geometría, responsive, A11y, Z-Index) antes de construir o modificar cualquier componente visual.
 - **Regla:** Estos documentos complementan los 4 niveles anteriores pero NO los reemplazan. En caso de discrepancia entre un diagrama C4 y el Gherkin, **SIEMPRE PREVALECE EL GHERKIN** (Nivel 2).
 

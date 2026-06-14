@@ -1,6 +1,11 @@
 import { defineConfig, devices } from '@playwright/experimental-ct-vue';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import dotenv from 'dotenv';
+
+// Cargar variables de entorno de .env.local y .env
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 /**
  * Playwright Component Testing Configuration
@@ -29,6 +34,18 @@ export default defineConfig({
         },
       },
     },
+    launchOptions: process.env.PLAYWRIGHT_USE_GPU === 'true' ? {
+      args: [
+        '--ignore-gpu-blocklist',
+        '--enable-gpu-rasterization',
+        '--enable-zero-copy',
+        '--use-gl=angle',
+        '--use-angle=vulkan',
+        '--enable-accelerated-2d-canvas',
+        '--enable-webgl',
+        '--enable-webgl2'
+      ]
+    } : undefined
   },
   projects: [
     {

@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 import { defineStore } from 'pinia';
 import apiClient from '@/services/apiClient';
 
@@ -29,8 +30,15 @@ export const useIntegrationStore = defineStore('integrationStore', {
     saveProcessDraft(id: string, payload: any) {
       return this.put(`/design/processes/${id}/draft`, payload);
     },
-    validateProcess(payload: any) {
-      return this.post(`/design/processes/validate`, payload);
+    // @Traceability: US-005, CA-65
+    validateProcess(payload: { xml: string }) {
+      const formData = new FormData();
+      const blob = new Blob([payload.xml], { type: 'application/xml' });
+      formData.append('file', blob, 'process.bpmn');
+      
+      return this.post(`/design/processes/validate`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
     },
     deployProcess(payload: any) {
       return this.post(`/design/processes/deploy`, payload, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -63,7 +71,7 @@ export const useIntegrationStore = defineStore('integrationStore', {
       return this.get(`/design/processes/${id}/audit-logs`);
     },
     spawnSandbox(payload: any) {
-      return this.post(`/design/processes/sandbox-spawn`, payload);
+      return this.post(`/design/processes/sandbox-spawn`, payload, { headers: { 'X-Sandbox-Mode': 'true' } });
     },
     getIntegrationConnectors() {
       return this.get(`/integrations/connectors`);
@@ -116,8 +124,11 @@ export const useIntegrationStore = defineStore('integrationStore', {
     createProjectTemplate(payload: any) {
       return this.post('/projects/templates', payload);
     },
-    requestDeployment(id: string, payload?: any) {
-      return this.post(`/design/processes/${id}/request-deployment`, payload);
+    // @Traceability: US-005, CA-69
+    requestDeployment(payload: FormData) {
+      return this.post('/design/processes/deploy-request', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
     },
     deployToSandbox(id: string, payload: any) {
       return this.post(`/design/processes/${id}/sandbox`, payload);
@@ -125,11 +136,13 @@ export const useIntegrationStore = defineStore('integrationStore', {
     getDeployRequests(key: string) {
       return this.get(`/design/processes/${key}/deploy-requests`);
     },
-    approveDeployRequest(id: string, payload?: any) {
-      return this.post(`/design/deploy-requests/${id}/approve`, payload);
+    // @Traceability: US-005, CA-69
+    reviewDeployRequest(id: string, payload: { approved: boolean, comment?: string }) {
+      return this.post(`/design/processes/deploy-requests/${id}/review`, payload);
     },
-    rejectDeployRequest(id: string, payload: any) {
-      return this.post(`/design/deploy-requests/${id}/reject`, payload);
+    // @Traceability: US-005, CA-15
+    getProcessXml(key: string) {
+      return this.get(`/design/processes/${key}/xml`);
     },
     getBpmnVariables(processKey: string) {
       return this.get(`/design/processes/${processKey}/variables`);

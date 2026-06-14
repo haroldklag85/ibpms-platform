@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,13 +73,24 @@ public class KanbanBoardService implements DelegateTaskUseCase {
     @Override
     @Transactional
     public String delegateSubTask(String parentTaskId, String subTaskName, String assignee) {
+
+        // 1. Encontrar la tarea padre
         KanbanTaskEntity parent = taskRepository.findById(java.util.Objects.requireNonNull(java.util.UUID.fromString(parentTaskId)))
                 .orElseThrow(() -> new RuntimeException("Tarea padre no encontrada (Ad-Hoc Delegation)"));
 
+        // 2. Crear la Sub Tarea (Sprint-6: campos enriquecidos + CQRS originalTaskId)
         KanbanTaskEntity subTask = new KanbanTaskEntity();
         subTask.setBoard(parent.getBoard());
-        subTask.setOriginalTaskId(UUID.randomUUID().toString()); // Placeholder
-        return taskRepository.save(subTask).getId().toString();
+        subTask.setTitle(subTaskName);
+        subTask.setDescription("Sub-tarea generada ad-hoc a partir de: " + parent.getTitle());
+        subTask.setAssignee(assignee);
+        subTask.setParentTask(parent);
+        subTask.setOriginalTaskId(UUID.randomUUID().toString());
+
+        // 3. Javers detectará automáticamente este Save gracias a Hibernate
+        KanbanTaskEntity savedSubTask = taskRepository.save(subTask);
+
+        return savedSubTask.getId().toString();
     }
 
     @Transactional(readOnly = true)
@@ -153,5 +165,58 @@ public class KanbanBoardService implements DelegateTaskUseCase {
         messagingTemplate.convertAndSend("/topic/workdesk/kanban", response);
         
         return response;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MÉTODOS PORTADOS DE SPRINT-6 (Legacy Support)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    @Transactional
+    public KanbanTaskEntity moveTaskLegacy(UUID taskId, String newStatus) {
+        KanbanTaskEntity task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new IllegalArgumentException("Task no encontrada"));
+        task.setStatus(newStatus);
+        task.setUpdatedAt(LocalDateTime.now());
+        return taskRepository.save(task);
+    }
+
+    @Transactional
+    public void updateTaskState(String taskId, String newState, KanbanStateMachine stateMachine) {
+        KanbanTaskEntity task = taskRepository.findById(java.util.Objects.requireNonNull(java.util.UUID.fromString(taskId)))
+                .orElseThrow(() -> new RuntimeException("Tarea no encontrada"));
+
+        stateMachine.validateTransition(task.getStatus(), newState);
+
+        task.setStatus(newState);
+        taskRepository.save(task);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, List<Map<String, Object>>> getBoardColumns(String tenantId) {
+        List<KanbanTaskEntity> tasks = taskRepository.findTasksByTenantId(tenantId);
+
+        // Agrupar por estado (TODO, IN_PROGRESS, BLOCKED, DONE)
+        Map<String, List<Map<String, Object>>> grouped = tasks.stream()
+            .collect(Collectors.groupingBy(
+                KanbanTaskEntity::getStatus,
+                Collectors.mapping(
+                    task -> Map.of(
+                        "id", task.getId(),
+                        "title", task.getTitle(),
+                        "state", task.getStatus(),
+                        "assignee", task.getAssignee() != null ? task.getAssignee() : "Unassigned"
+                    ),
+                    Collectors.toList()
+                )
+            ));
+
+        return Map.of("columns",
+            List.of(
+                Map.of("name", "TODO", "tasks", grouped.getOrDefault("TODO", List.of())),
+                Map.of("name", "IN_PROGRESS", "tasks", grouped.getOrDefault("IN_PROGRESS", List.of())),
+                Map.of("name", "BLOCKED", "tasks", grouped.getOrDefault("BLOCKED", List.of())),
+                Map.of("name", "DONE", "tasks", grouped.getOrDefault("DONE", List.of()))
+            )
+        );
     }
 }

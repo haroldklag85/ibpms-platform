@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.entity;
 
 import jakarta.persistence.Column;
@@ -17,7 +18,8 @@ public class KanbanColumnEntity {
     private UUID id;
 
     @Column(name = "board_id", nullable = false)
-    private String boardId;
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    private UUID boardId;
 
     @Column(nullable = false)
     private String name;
@@ -28,8 +30,8 @@ public class KanbanColumnEntity {
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
-    public String getBoardId() { return boardId; }
-    public void setBoardId(String boardId) { this.boardId = boardId; }
+    public UUID getBoardId() { return boardId; }
+    public void setBoardId(UUID boardId) { this.boardId = boardId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public int getPosition() { return position; }

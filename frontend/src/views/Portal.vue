@@ -1,3 +1,4 @@
+<!-- @Traceability: US-005 - ADR-001 -->
 <template>
   <div class="max-w-7xl mx-auto">
     <!-- Procesos Frecuentes Quick Links -->
@@ -93,7 +94,8 @@ const loading = ref(true);
 
 onMounted(async () => {
     try {
-        const { data } = await integrationStore.get('/design/processes/catalog');
+        // @Traceability: US-005, CA-14
+        const { data } = await integrationStore.get('/design/processes/catalog?status=ACTIVE');
         processDefinitions.value = data || [];
     } catch (e) {
         console.error('Error fetching processes', e);

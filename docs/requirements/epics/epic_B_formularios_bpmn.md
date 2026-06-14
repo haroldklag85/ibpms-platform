@@ -1425,12 +1425,12 @@ Scenario: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquirido
     And si el usuario cierra el navegador sin desplegar, al volver a abrir el proceso encontrará el último borrador recuperado
     And el sistema debe mostrar un indicador discreto "✅ Guardado" en la barra de estado tras cada auto-guardado exitoso.
 
-  Scenario: Simulación en Sandbox Antes de Desplegar (CA-20)
+  Scenario: Simulación en Sandbox y Validación Integrada (CA-20)
     Given el Arquitecto tiene un diagrama BPMN listo pero no ha sido desplegado aún
-    When presiona el botón [🧪 Probar en Sandbox]
-    Then el sistema debe generar una instancia temporal (no persiste en producción) del proceso
-    And avanzar visualmente paso a paso mostrando por qué nodo (tarea/compuerta/evento) fluiría un caso de prueba ficticio
-    And al finalizar la simulación, destruir la instancia temporal sin dejar rastro en la base de datos de producción.
+    When presiona el botón consolidado [🧪 Validar y Simular] (CA-80)
+    Then el sistema ejecuta el embudo de validación en cascada paralela (Linter local + Pre-Flight remoto) (CA-81)
+    And si no existen errores fatales, genera una instancia temporal de simulación (Sandbox) directamente en el motor
+    And al finalizar la simulación exitosamente, destruye la instancia temporal sin dejar rastro persistente de producción.
 
   Scenario: Separación de Roles RBAC Diseñador vs Release Manager (CA-21)
     Given un usuario con rol "BPMN_Designer" abre un proceso en la Pantalla 6
@@ -1559,11 +1559,12 @@ Scenario: Versionamiento Seguro de Reglas DMN (Protección de Derechos Adquirido
     And si eligió Patrón A, cada User Task mostrará en el Dropdown solo formularios "Simple"
     And si eligió Patrón B, todas las User Tasks compartirán el mismo iForm Maestro y el Dropdown filtrará solo formularios "Maestro".
 
-  Scenario: Sandbox Simulado en Motor de Producción en V1 (CA-41)
+  Scenario: Sandbox Simulado y Consolidado en V1 (CA-41)
     Given el iBPMS V1 opera con un único motor Camunda (no hay ambiente de Desarrollo separado)
-    Then el botón [🧪 Sandbox] genera instancias temporales directamente en el motor de producción
-    And estas instancias se marcan como "SANDBOX_TEST" y se auto-destruyen al finalizar la simulación
-    And la separación real de ambientes (Dev vs Prod) se difiere a V2.
+    When se ejecuta la simulación de Sandbox desde el botón de "Validar y Simular" (CA-80)
+    Then genera instancias temporales marcadas como "SANDBOX_TEST" directamente en el motor de producción (CA-63)
+    And se destruyen automáticamente una vez completada o abortada la simulación
+    And el modelador dibuja halos verdes (highlight-executed) que trazan la ruta del token en el canvas (CA-84).
 
   Scenario: Registro de Auditoría de Diseño tipo Git-Log (CA-42)
     Given el Arquitecto realiza cualquier acción sobre un proceso (importar, editar, guardar borrador, solicitar despliegue, archivar, restaurar versión)
@@ -1856,6 +1857,44 @@ Scenario: Intervención de Emergencia sobre Bloqueo Pesimista (Break-Lock)  (CA-
     Then el backend del sistema de aprobación debe publicar un evento asíncrono en RabbitMQ
     And el microservicio adaptador de infraestructura debe consumir el evento para realizar la carga mediante REST API en el motor de Camunda
     And evitar referencias directas de clave foránea a nivel de base de datos entre el catálogo de diseño y las tablas de aprobaciones de despliegue.
+
+  Scenario: Botón Único "Validar y Simular" con Dashboard Glassmorphic (CA-80)
+    Given la necesidad de validar y simular el proceso de negocio en el Modeler
+    When el Arquitecto presiona el botón consolidado "Validar y Simular" con id `data-testid="btn-test-sandbox"`
+    Then el sistema despliega un modal con efecto glassmorphism y diseño dashboard de tres niveles
+    And organiza la información en Nivel 1 (Linter Local), Nivel 2 (Pre-Flight Analyzer) y Nivel 3 (Sandbox Simulator).
+
+  Scenario: Ejecución en Cascada Paralela y Bloqueo Selectivo (CA-81)
+    Given la apertura del modal consolidado "Validar y Simular"
+    When se ejecutan en paralelo la validación de Linter local (sintaxis y estructura) y Pre-Flight de Gobernanza (backend)
+    Then si existen errores fatales en alguno de los niveles, el sistema bloquea el Nivel 3 (Sandbox Simulator)
+    And si solo se reportan advertencias (warnings), se permite la ejecución de la simulación.
+
+  Scenario: Solicitud Interactiva de Variables & Re-intento Automático (CA-82)
+    Given un flujo en Sandbox que evalúa una condición en una compuerta
+    When el motor retorna un error de variable faltante (HTTP 422)
+    Then el sistema interrumpe la simulación mostrando un popup interactivo superpuesto
+    And el Arquitecto ingresa el valor de la variable
+    And al confirmar, la simulación del Sandbox se re-ejecuta automáticamente inyectando el valor.
+
+  Scenario: Persistencia Temporal de Variables en Sesión (CA-83)
+    Given la digitación de variables en el popup interactivo de simulación (CA-82)
+    When el Arquitecto confirma el formulario de variables
+    Then los valores ingresados se guardan de forma segura en `localStorage` bajo la clave `ibpms_sandbox_variables_[processKey]`
+    And se precargan automáticamente en futuras simulaciones para evitar la re-digitación.
+
+  Scenario: Trazado de Trayectoria con Halos Verdes y Botón de Limpieza (CA-84)
+    Given una simulación en Sandbox completada de manera exitosa
+    When el modal consolidado es cerrado o minimizado
+    Then el modelador dibuja halos verdes brillantes animados (`highlight-executed`) trazando la trayectoria del token en el canvas
+    And se habilita un botón discreto "Limpiar trayectoria" en la barra de herramientas del modelador para remover los halos a demanda.
+
+  Scenario: Documentación Completa y Estabilidad del API Docs / Swagger (CA-85)
+    Given la disponibilidad de SpringDoc OpenAPI en el backend
+    When el desarrollador o auditor accede al endpoint `/v3/api-docs` o a la interfaz de `/swagger-ui/index.html`
+    Then el servidor debe retornar el JSON de especificación OpenAPI o renderizar la interfaz web con éxito (HTTP 200)
+    And la generación automática de la documentación de API no debe arrojar excepciones (como StackOverflowError) por referencias circulares en los DTOs de la US-005
+    And todos los endpoints del controlador BpmnDesignController deben estar documentados con anotaciones OpenAPI (@Operation, @ApiResponses) especificando resumen, descripción detallada y códigos de respuesta esperados de acuerdo con api_documentation_standard_guide.md.
 
 ```
 **Trazabilidad UX:** Wireframes Pantalla 6 (Diseñador BPMN) y Pantalla 14 (RBAC).

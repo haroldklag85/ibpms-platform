@@ -1,0 +1,2078 @@
+﻿
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mC:/Users/HaroltAndrésGómezAgu/ProyectoAntigravity/ibpms-platform/frontend[39m
+
+ [32m✓[39m src/tests/stores/us038_missing_coverage.spec.ts [2m ([22m[2m8 tests[22m[2m)[22m[33m 527[2mms[22m[39m
+node.exe : [90mstderr[2m | src/tests/useWorkdeskStore.spec.ts[2m > [22m[2museWorkdeskStore.ts - Iteration 79-DEV 
+(CA-06, CA-13, CA-26, CA-27)[2m > [22m[2mTest 25: CA-15 delegation_403_forbidden_sets_error_state: Respuesta 403 
+activa isError y limpia items[22m[39m
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([90mstderr[2m...items[22m[39m:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Failed to fetch secure workdesk queues { response: { status: [33m403[39m, data: { message: [32m'IDOR 
+Forbidden'[39m } } }
+
+ [32m✓[39m src/tests/useWorkdeskStore.spec.ts [2m ([22m[2m22 tests[22m[2m)[22m[90m 248[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA78.spec.ts[2m > [22m[2mUS-003 - CA-78: Factoría 
+Reactiva Zod On-The-Fly y Renderizado Bidireccional[2m > [22m[2m2. Monaco Bidirectional Sync (Setting computedCode 
+updates canvasFields reactive metadata)[2m > [22m[2mshould sync bidirectionally through the component wrapper 
+instance[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+Error fetching global dictionary: TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchDictionary [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\s
+tores\useFormDesignerStore.ts:175:35[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Modeler\Form
+Designer.vue:1185:5
+Error fetching snippets: TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchSnippets [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\sto
+res\useFormDesignerStore.ts:186:35[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Modeler\Form
+Designer.vue:1186:5
+Error fetching approved connectors: TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchApprovedConnectors [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[
+39msrc\stores\useFormDesignerStore.ts:212:29[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Modeler\Form
+Designer.vue:1187:5
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA78.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[33m 362[2mms[22m[39m
+[90mstdout[2m | src/views/admin/Modeler/__tests__/FormDesignerPhase1CAs.spec.ts[2m > [22m[2mUS-003 Phase 1 Pending Acceptance Criteria Tests[2m > [22m[2mCA-92: Política de Expiración y Limpieza de LocalStorage[2m > [22m[2mshould purge entries older than 7 days and ignore entries from other contexts[22m[39m
+[GC] Purged 2 stale drafts (0.33 KB freed)
+
+[90mstdout[2m | src/views/admin/Modeler/__tests__/FormDesignerPhase1CAs.spec.ts[2m > [22m[2mUS-003 Phase 1 Pending Acceptance Criteria Tests[2m > [22m[2mCA-92: Política de Expiración y Limpieza de LocalStorage[2m > [22m[2mshould respect the max quota limit and purge oldest entries matching prefixes in FIFO order[22m[39m
+[GC] Purged 1 stale drafts (0.14 KB freed)
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerPhase1CAs.spec.ts [2m ([22m[2m11 tests[22m[2m)[22m[90m 287[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA 
+Certification (CA-12 to CA-17)[2m > [22m[2mCA-12: Badge muestra "revoked" cuando certification state 
+cambia[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA 
+Certification (CA-12 to CA-17)[2m > [22m[2mCA-13: Indicador de versión muestra V{N} + estado[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mSidebar RBAC: Con 
+roles ["ROLE_SUPER_ADMIN"] el sidebar muestra todos los grupos. Con ["ROLE_OPERADOR"] muestra solo Workdesk[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mColapso/Expansión: 
+Al invocar toggleSidebar(), la clase CSS muta de w-64 a w-16[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mBreadcrumbs: La 
+ruta /admin/modeler/bpmn genera 3 breadcrumbs con labels legibles del routeNameMap[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mDensity Toggle: Al 
+hacer clic en botón COMPACT, preferencesStore.uiDensity muta a "COMPACT"[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mLlama 
+menuStore.fetchMenuLayout() en onMounted[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mMuestra 
+topRolesTipText formateado desde authStore.roles[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mdefensively binds 
+fallback key when route is undefined in slot scope[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mbinds dynamic key 
+correctly when route is provided in slot scope[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="/admin/users-ROLE_ADMIN" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mhandles route with 
+undefined fullPath gracefully and falls back to empty string key[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+ [32m✓[39m src/tests/layouts/MainLayout.spec.ts [2m ([22m[2m11 tests[22m[2m)[22m[33m 722[2mms[22m[39m
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mhandles route with 
+empty fullPath and falls back to empty string key[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/layouts/MainLayout.spec.ts[2m > [22m[2mMainLayout.vue[2m > [22m[2mhandles undefined 
+activeRole gracefully without throwing TypeError[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component is missing template or render function:  {} 
+  at <Anonymous key="/admin/users-undefined" > 
+  at <KeepAlive include="Workdesk" > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="fade" mode="out-in" > 
+  at <Anonymous> 
+  at <MainLayout ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA 
+Certification (CA-12 to CA-17)[2m > [22m[2mCA-14: Errores de superRefine se pintan en naranja[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mDebe invocar saveDraft exitosamente (Auto-Save logic)[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mDebe invalidar el Pre-Flight (estado PENDING) al detectar cambios en el diagrama[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA 
+Certification (CA-12 to CA-17)[2m > [22m[2mCA-17: Panel de coherencia muestra matches y warnings[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA 
+Certification (CA-12 to CA-17)[2m > [22m[2mCA-11: Botón de certificación se habilita en Happy Path y cambia a 
+Certificado[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts[2m > [22m[2mUS-028: Form Designer QA 
+Certification (CA-12 to CA-17)[2m > [22m[2mCA-11: Rechazo de certificación muestra mensaje de conflicto 
+409[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerQACert.spec.ts [2m ([22m[2m6 tests[22m[2m)[22m[33m 2279[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mDebe filtrar la lista de formularios para que solo muestre Formularios Simples cuando el proceso es 
+Simple[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mDebe filtrar la lista de formularios para que solo muestre Formularios Simples cuando el proceso es 
+Simple[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mDebe contener los conectores V1 (O365, SharePoint, NetSuite) en el Dropdown de Connectors[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mDebe generar un Toast de Advertencia al importar un archivo BPMN de alta complejidad (> 100 
+nodos)[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-25 (Zoom, Minimap y Navegación Visual)[2m > [22m[2mPrueba 1 (Existencia de 
+Controles): Debe verificar que los botones de Zoom In (+), Zoom Out (-) y Zoom Fit (O) existen en el lienzo con sus 
+títulos/clases correspondientes[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-25 (Zoom, Minimap y Navegación Visual)[2m > [22m[2mPrueba 2 (Funcionalidad de 
+Zoom In): Debe verificar que hacer clic en el botón de Zoom In llama a canvas.zoom con un incremento del nivel actual 
+(+0.3)[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-25 (Zoom, Minimap y Navegación Visual)[2m > [22m[2mPrueba 3 (Funcionalidad de 
+Zoom Out): Debe verificar que hacer clic en el botón de Zoom Out llama a canvas.zoom con un decremento del nivel 
+actual (-0.3)[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-25 (Zoom, Minimap y Navegación Visual)[2m > [22m[2mPrueba 4 (Funcionalidad de 
+Zoom Fit): Debe verificar que hacer clic en el botón de Zoom Fit llama a canvas.zoom("fit-viewport")[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-25 (Zoom, Minimap y Navegación Visual)[2m > [22m[2mPrueba 5 (Minimap Abierto): 
+Debe verificar que el minimap se inicializa y se abre por defecto al montar el componente[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-29 (Copiar y Pegar Fragmentos entre Procesos)[2m > [22m[2mDebe guardar los 
+elementos en localStorage al copiar (Ctrl+C / clipboard.set)[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-29 (Copiar y Pegar Fragmentos entre Procesos)[2m > [22m[2mDebe recuperar los 
+elementos desde localStorage al pegar (Ctrl+V / clipboard.get)[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-31 (Etiquetas de Estado en el Catálogo de Procesos)[2m > [22m[2mDebe renderizar 
+las etiquetas visuales de estado exactas en el catálogo de procesos[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-32 (Archivar un Proceso sin Instancias Activas)[2m > [22m[2mDebe habilitar el 
+botón Archivar si no existen instancias activas[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-32 (Archivar un Proceso sin Instancias Activas)[2m > [22m[2mDebe deshabilitar el 
+botón Archivar y mostrar el tooltip si existen instancias activas[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-77 (Linter en Frontend)[2m > [22m[2mDebe ejecutar el linter y detectar la 
+ausencia de StartEvent y EndEvent[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-77 (Linter en Frontend)[2m > [22m[2mDebe ejecutar el linter y detectar la 
+ausencia de StartEvent y EndEvent[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-77 (Linter en Frontend)[2m > [22m[2mDebe detectar nodos zombie (UserTask o 
+Compuerta sin entrada o salida)[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-77 (Linter en Frontend)[2m > [22m[2mDebe detectar nodos zombie (UserTask o 
+Compuerta sin entrada o salida)[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-77 (Linter en Frontend)[2m > [22m[2mDebe detectar pasarelas exclusivas 
+divergentes sin flujo por defecto[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+Backend /forms indisponible. Fallback a MOCKS CA-30.
+API Integraciones MOCKS (CA-45)
+Fallo obteniendo threshold, usando default 100 limit (CA-30)
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22m[2mPantalla 6: BPMN Designer (Frontend 
+QA)[2m > [22m[2mPruebas para CA-77 (Linter en Frontend)[2m > [22m[2mDebe detectar pasarelas exclusivas 
+divergentes sin flujo por defecto[22m[39m
+[Vue warn]: Failed to resolve component: AppSkeleton
+If this is a native custom element, make sure to exclude it from component resolution via 
+compilerOptions.isCustomElement. 
+  at <BpmnDesigner ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+ [32m✓[39m src/views/admin/Modeler/BpmnDesigner.spec.ts [2m ([22m[2m18 tests[22m[2m)[22m[33m 3239[2mms[22m[39m
+[90mstdout[2m | src/components/forms/__tests__/FormRendererCA81_CA82.spec.ts[2m > [22m[2m[🕵️ QA - E2E] FormRenderer CA-81 & CA-82[2m > [22m[2mCA-82: should clean up temporary S3 uploaded file orphans using sendBeacon on unmount if not completed[22m[39m
+📡 [TIN-5] SendBeacon ejecutado para limpiar archivos huérfanos de S3: [ [32m'uuid-document-1'[39m, [32m'uuid-document-2'[39m ]
+
+[90mstderr[2m | src/components/forms/__tests__/FormRendererCA81_CA82.spec.ts[2m > [22m[2m[🕵️ QA - E2E] 
+FormRenderer CA-81 & CA-82[2m > [22m[2mCA-82: should catch submission errors and render a friendly UI error alert 
+banner without using window.alert[22m[39m
+Smart Button submit error: Error: Network error or Camunda crash
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\components\forms\__tests
+__\FormRendererCA81_CA82.spec.ts:250:49
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:11[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runFiles [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:958:5[90m)[39m
+    at startTests [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[3
+9mnode_modules/[4m@vitest/runner[24m/dist/index.js:967:3[90m)[39m
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5[90m)[39m
+    at run [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_
+modules/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:105:3[90m)[39m
+    at runBaseTests [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/
+[39mnode_modules/[4mvitest[24m/dist/vendor/base.Ybri3C14.js:30:3[90m)[39m
+
+ [32m✓[39m src/components/forms/__tests__/FormRendererCA81_CA82.spec.ts [2m ([22m[2m6 tests[22m[2m)[22m[90m 237[2mms[22m[39m
+[90mstderr[2m | src/tests/stores/useFormStore.spec.ts[2m > [22m[2museFormStore[2m > [22m[2mTest CA-31 / CA-32: 
+Fallo de red 504 almacena idempotencyKey y activa requiresRetry[22m[39m
+Failed to submit form { response: { status: [33m504[39m } }
+
+[90mstderr[2m | src/tests/stores/useFormStore.spec.ts[2m > [22m[2museFormStore[2m > [22m[2mTest CA-31 / CA-32: 
+Retries mantienen misma idempotencyKey y frenan a los 3 reintentos[22m[39m
+Failed to submit form { response: { status: [33m504[39m } }
+Failed to submit form { response: { status: [33m504[39m } }
+Failed to submit form { response: { status: [33m504[39m } }
+Failed to submit form { response: { status: [33m504[39m } }
+
+[90mstderr[2m | src/tests/stores/useFormStore.spec.ts[2m > [22m[2museFormStore[2m > [22m[2mTest CA-37: HTTP 
+500 expone error genérico sin stack trace[22m[39m
+Failed to submit form {
+  response: {
+    status: [33m500[39m,
+    data: {
+      message: [32m'java.lang.NullPointerException at 
+com.ibpms.poc.service.FormService.submit(FormService.java:42)'[39m,
+      trace: [32m'at sun.reflect...'[39m,
+      type: [32m'INTERNAL_ERROR'[39m
+    }
+  }
+}
+
+[90mstderr[2m | src/tests/stores/useFormStore.spec.ts[2m > [22m[2museFormStore[2m > [22m[2mTest CA-35: HTTP 
+409 con SESSION_CONFLICT dispara evento[22m[39m
+Failed to submit form { response: { status: [33m409[39m, data: { type: [32m'SESSION_CONFLICT'[39m } } }
+
+[90mstderr[2m | src/tests/stores/useFormStore.spec.ts[2m > [22m[2museFormStore[2m > [22m[2mTest CA-2: HTTP 400 
+Backend mapea errores de Zod en validationErrors[22m[39m
+Failed to submit form { response: { status: [33m400[39m, data: { errors: [36m[Array][39m } } }
+
+ [32m✓[39m src/tests/stores/useFormStore.spec.ts [2m ([22m[2m9 tests[22m[2m)[22m[90m 88[2mms[22m[39m
+[90mstderr[2m | src/components/forms/DynamicForm.spec.ts[2m > [22m[2mPantalla 7: Motor iForms (Frontend QA)[2m > 
+[22m[2mDebe renderizar un iForm Maestro ocultando los campos que no pertenecen al "stage" (Dual-Pattern)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/components/forms/DynamicForm.spec.ts[2m > [22m[2mPantalla 7: Motor iForms (Frontend QA)[2m > 
+[22m[2mDebe validar en vivo (Zod Live CA-6) mostrando error si el Regex/Regla se viola sin necesidad de hacer 
+Submit[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/components/forms/DynamicForm.spec.ts[2m > [22m[2mPantalla 7: Motor iForms (Frontend QA)[2m > 
+[22m[2mDebe recuperar los datos precargados si existían previamente en LocalStorage (Auto-Save CA-8)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/components/forms/DynamicForm.spec.ts[2m > [22m[2mPantalla 7: Motor iForms (Frontend QA)[2m > 
+[22m[2mDebe obtener las coordenadas automáticamente al activar el sensor GPS (CA-45)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [2m[90m↓[39m[22m src/views/__tests__/Workdesk.spec.ts [2m ([22m[2m6 tests[22m [2m|[22m [33m6 skipped[39m[2m)[22m
+[90mstderr[2m | src/components/forms/DynamicForm.spec.ts[2m > [22m[2mPantalla 7: Motor iForms (Frontend QA)[2m > 
+[22m[2mDebe filtrar la lista de opciones instántaneamente en un Typeahead (CA-24)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/components/forms/DynamicForm.spec.ts[2m > [22m[2mPantalla 7: Motor iForms (Frontend QA)[2m > 
+[22m[2mDebe bloquear el envío del formulario si Zod falla validación en Arrays Estructurales (Min 2 Filas, 
+CA-25)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/components/forms/DynamicForm.spec.ts [2m ([22m[2m6 tests[22m[2m)[22m[33m 365[2mms[22m[39m
+[90mstderr[2m | src/tests/views/WorkdeskFacets.spec.ts[2m > [22m[2mUS-001 Iteración 78-DEV: Faceted Filters & 
+Rate Limiting (QA Certification)[2m > [22m[2m[CA-22/CA-29] Facet chips renderizados con contadores cuando 
+store.facets presente[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskFacets.spec.ts[2m > [22m[2mUS-001 Iteración 78-DEV: Faceted Filters & 
+Rate Limiting (QA Certification)[2m > [22m[2m[CA-22] Chip de faceta es clickeable y contiene el handler 
+applyFacetFilter[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskFacets.spec.ts[2m > [22m[2mUS-001 Iteración 78-DEV: Faceted Filters & 
+Rate Limiting (QA Certification)[2m > [22m[2m[CA-29] Facetas no visibles cuando store.facets está vacío[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskFacets.spec.ts[2m > [22m[2mUS-001 Iteración 78-DEV: Faceted Filters & 
+Rate Limiting (QA Certification)[2m > [22m[2m[CA-30] Store maneja 429 sin limpiar items existentes[22m[39m
+CA-30: Ignorando error 429 para mantener listado UI intacto
+
+ [32m✓[39m src/tests/views/WorkdeskFacets.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[33m 498[2mms[22m[39m
+ [32m✓[39m src/views/admin/RbacManager/__tests__/RbacDelegationLog.spec.ts [2m ([22m[2m6 tests[22m[2m)[22m[90m 290[2mms[22m[39m
+[90mstderr[2m | src/tests/stores/us036_missing_coverage.spec.ts[2m > [22m[2m[US-036] CA-31 — Arquitectura 
+Endpoint Dinámico (Anti-JWT Bloat) [BUGFIX][2m > [22m[2mshould return empty layout gracefully when backend returns 
+empty array[22m[39m
+CA-26: Sin topología de menús detectada. Activando fallback de seguridad.
+
+ [32m✓[39m src/views/admin/RbacManager/__tests__/GlobalRolesTable.spec.ts [2m ([22m[2m9 tests[22m[2m)[22m[90m 222[2mms[22m[39m
+[90mstderr[2m | src/tests/views/WorkdeskGrid.spec.ts[2m > [22m[2mUS-001 Iteración 77-DEV: Workdesk Data Grid (QA 
+Certification)[2m > [22m[2m[CA-03] Data Grid renderiza 6 columnas: Nombre, SLA, Estado, Avance, Recurso, 
+Acciones[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskGrid.spec.ts[2m > [22m[2mUS-001 Iteración 77-DEV: Workdesk Data Grid (QA 
+Certification)[2m > [22m[2m[CA-23] Progress bar muestra porcentaje cuando progressPercent != null[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA71.spec.ts[2m > [22m[2mCA-71: Máquina del Tiempo 
+JSON / Soft-Versioning Local[2m > [22m[2m1. FormDesigner.vue mantiene una lista local de instantáneas de 
+canvasFields[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA71.spec.ts[2m > [22m[2mCA-71: Máquina del Tiempo 
+JSON / Soft-Versioning Local[2m > [22m[2m2. Modificar canvasFields captura automáticamente una nueva instantánea 
+tras un cambio (deep watcher)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/views/WorkdeskGrid.spec.ts[2m > [22m[2mUS-001 Iteración 77-DEV: Workdesk Data Grid (QA 
+Certification)[2m > [22m[2m[CA-23] Columna Avance muestra "N/D" cuando progressPercent es null[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/tests/views/WorkdeskGrid.spec.ts[2m > [22m[2mUS-001 Iteración 77-DEV: Workdesk Data Grid (QA 
+Certification)[2m > [22m[2m[CA-07/CA-18] Banner degradación visible cuando store.isDegraded = true[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA71.spec.ts[2m > [22m[2mCA-71: Máquina del Tiempo 
+JSON / Soft-Versioning Local[2m > [22m[2m3. Al hacer clic en "Historial JSON" bajo el dropdown se abre el modal de 
+instantáneas locales[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/stores/us036_missing_coverage.spec.ts[2m > [22m[2m[US-036] CA-2 — El Guardián Absoluto 
+(Root Super Admin) [BUGFIX][2m > [22m[2mshould assign ROLE_SUPER_ADMIN offline when EMERGENCY_LOCAL_JWT is detected 
+without backend[22m[39m
+Could not fetch effective-roles Error: ERR_NETWORK
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests\stores\us036_missi
+ng_coverage.spec.ts:71:50
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:11[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runFiles [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:958:5[90m)[39m
+    at startTests [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[3
+9mnode_modules/[4m@vitest/runner[24m/dist/index.js:967:3[90m)[39m
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5[90m)[39m
+    at run [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_
+modules/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:105:3[90m)[39m
+    at runBaseTests [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/
+[39mnode_modules/[4mvitest[24m/dist/vendor/base.Ybri3C14.js:30:3[90m)[39m
+
+[90mstderr[2m | src/tests/stores/us036_missing_coverage.spec.ts[2m > [22m[2m[US-036] CA-26 — Experiencia de Caída 
+Segura (UX Fallback)[2m > [22m[2mshould handle null menu layout without crashing the application[22m[39m
+CA-26: Sin topología de menús detectada. Activando fallback de seguridad.
+
+ [32m✓[39m src/tests/stores/us036_missing_coverage.spec.ts [2m ([22m[2m6 tests[22m[2m)[22m[33m 1165[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA71.spec.ts[2m > [22m[2mCA-71: Máquina del Tiempo 
+JSON / Soft-Versioning Local[2m > [22m[2m4. La lista de instantáneas muestra un indicador de tiempo relativo basado 
+en Date.now()[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/views/WorkdeskGrid.spec.ts[2m > [22m[2mUS-001 Iteración 77-DEV: Workdesk Data Grid (QA 
+Certification)[2m > [22m[2m[CA-12] Empty State gamificado muestra celebración cuando items vacíos[22m[39m
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+ [32m✓[39m src/tests/views/WorkdeskGrid.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[33m 1158[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA71.spec.ts[2m > [22m[2mCA-71: Máquina del Tiempo 
+JSON / Soft-Versioning Local[2m > [22m[2m5. Al hacer clic en "Restaurar" para una instantánea específica, se 
+restablecen los canvasFields de la tienda[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA71.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[33m 1268[2mms[22m[39m
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA86.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 194[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA77.spec.ts[2m > [22m[2mUS-003: CA-77 Integration 
+and Anti-DDoS / SSRF Barricade[2m > [22m[2m2. In FormDesigner.vue, properties editor renders a select dropdown for 
+autocompleteUrl with approved connectors[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA77.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[33m 801[2mms[22m[39m
+ [32m✓[39m src/tests/regression_hallazgo6.spec.ts [2m ([22m[2m7 tests[22m[2m)[22m[90m 188[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA74.spec.ts[2m > [22m[2mCA-74: Global Dictionary 
+and Reusable Fragments (Snippets) Unit & Integration Tests[2m > [22m[2m4. In FormDesigner.vue, editingField 
+camundaVariable input has a datalist displaying dictionary items[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA74.spec.ts[2m > [22m[2mCA-74: Global Dictionary 
+and Reusable Fragments (Snippets) Unit & Integration Tests[2m > [22m[2m5. Selecting a dictionary item automatically 
+copies its label and isPII properties onto editingField[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA74.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[33m 552[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA30.spec.ts[2m > [22m[2mCA-30: Autocomplete with 
+External API/DB Integration[2m > [22m[2m3. FormRenderer executes autocomplete at runtime and maps response 
+properties[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA30.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 143[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA85.spec.ts[2m > [22m[2mCA-85: Auto-Guardado y 
+Recuperación de Sesión en el Diseñador[2m > [22m[2m1. When FormDesigner.vue is mounted, if localStorage has a draft 
+saved at form_draft_ca85_modeler and the canvas is empty, a dialog or banner showing "Detectamos un borrador no 
+guardado. ¿Desea restaurar su trabajo previo?" is displayed.[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA85.spec.ts[2m > [22m[2mCA-85: Auto-Guardado y 
+Recuperación de Sesión en el Diseñador[2m > [22m[2m2. Clicking the "Restaurar" (or "Sí") button inside the 
+banner/dialog parses the saved draft and sets canvasFields in the store, then hides the banner/dialog.[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA85.spec.ts[2m > [22m[2mCA-85: Auto-Guardado y 
+Recuperación de Sesión en el Diseñador[2m > [22m[2m3. Clicking the "Descartar" (or "No") button inside the 
+banner/dialog removes the draft from localStorage under form_draft_ca85_modeler and hides the banner/dialog, leaving 
+the canvas empty.[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA85.spec.ts[2m > [22m[2mCA-85: Auto-Guardado y 
+Recuperación de Sesión en el Diseñador[2m > [22m[2m4. Modifying the canvas fields (canvasFields) trigger a save of 
+the new layout to localStorage under form_draft_ca85_modeler with a debounce.[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA85.spec.ts[2m > [22m[2mCA-85: Auto-Guardado y 
+Recuperación de Sesión en el Diseñador[2m > [22m[2m4. Modifying the canvas fields (canvasFields) trigger a save of 
+the new layout to localStorage under form_draft_ca85_modeler with a debounce.[22m[39m
+<empty line>
+[90mstdout[2m | src/views/admin/Modeler/__tests__/FormDesignerCA85.spec.ts[2m > [22m[2mCA-85: Auto-Guardado y Recuperación de Sesión en el Diseñador[2m > [22m[2m4. Modifying the canvas fields (canvasFields) trigger a save of the new layout to localStorage under form_draft_ca85_modeler with a debounce.[22m[39m
+[CA-85] Amnesia Cero: Borrador de Mónaco/Lienzo persistido preventivamente
+✅ Diseño auto-guardado en API (Modelador)
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA85.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[33m 619[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA52.spec.ts[2m > [22m[2mCA-52: Feedback Visual en 
+Llamadas a APIs / Estado Indeterminado[2m > [22m[2m2. FormRenderer.vue defines, exposes isAsyncLoading and sets it 
+during autocomplete api calls[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/stores/FormStoreCA72.spec.ts[2m > [22m[2mFormStoreCA72 - Resiliencia Periférica Offline 
+y Tolerancia a Conflictos[2m > [22m[2mTest Case 1: When store.submitForm fails with a network error, it must 
+serialize the payload to localStorage under ibpms_network_fallback_${taskId} and re-throw the error[22m[39m
+Failed to submit form Error: Network Error
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests\stores\FormStoreCA
+72.spec.ts:59:30
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:135:14
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:60:26
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:17[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runFiles [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:958:5[90m)[39m
+    at startTests [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[3
+9mnode_modules/[4m@vitest/runner[24m/dist/index.js:967:3[90m)[39m
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5[90m)[39m {
+  code: [32m'ERR_NETWORK'[39m
+}
+
+[90mstderr[2m | src/tests/stores/FormStoreCA72.spec.ts[2m > [22m[2mFormStoreCA72 - Resiliencia Periférica Offline 
+y Tolerancia a Conflictos[2m > [22m[2mTest Case 2: When store.submitForm fails with a server 5xx error, it must 
+serialize the payload to localStorage under ibpms_network_fallback_${taskId} and re-throw the error[22m[39m
+Failed to submit form {
+  response: { status: [33m500[39m, data: { message: [32m'Internal Server Error'[39m } }
+}
+
+[90mstderr[2m | src/tests/stores/FormStoreCA72.spec.ts[2m > [22m[2mFormStoreCA72 - Resiliencia Periférica Offline 
+y Tolerancia a Conflictos[2m > [22m[2mTest Case 4: When store.submitForm is called with enableUndo: true and the 
+soft-undo timer expires, if completeTask fails with a network error, it must serialize the payload to localStorage and 
+re-throw the error[22m[39m
+Final commit failed Error: Network Error
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests\stores\FormStoreCA
+72.spec.ts:108:30
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:135:14
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:60:26
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:17[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runFiles [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:958:5[90m)[39m
+    at startTests [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[3
+9mnode_modules/[4m@vitest/runner[24m/dist/index.js:967:3[90m)[39m
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5[90m)[39m {
+  code: [32m'ERR_NETWORK'[39m
+}
+
+ [32m✓[39m src/tests/stores/FormStoreCA72.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 81[2mms[22m[39m
+[90mstderr[2m | src/views/__tests__/WorkdeskCards.spec.ts[2m > [22m[2mWorkdesk.vue - Card Grid View Tests[2m > 
+[22m[2mRenders Table view when uiDensity is STANDARD[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/__tests__/WorkdeskCards.spec.ts[2m > [22m[2mWorkdesk.vue - Card Grid View Tests[2m > 
+[22m[2mRenders Card Grid view when uiDensity is COMFORTABLE[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/__tests__/WorkdeskCards.spec.ts[2m > [22m[2mWorkdesk.vue - Card Grid View Tests[2m > 
+[22m[2mApplies correct SLA border colors on cards[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | src/views/__tests__/WorkdeskCards.spec.ts[2m > [22m[2mWorkdesk.vue - Card Grid View Tests[2m > 
+[22m[2mHides action buttons based on personal vs pool tab[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <Workdesk ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+ [32m✓[39m src/views/__tests__/WorkdeskCards.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[33m 482[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA52.spec.ts[2m > [22m[2mCA-52: Feedback Visual en 
+Llamadas a APIs / Estado Indeterminado[2m > [22m[2m3. TaskViewerModal.vue disables completion button and shows 
+spinner when FormRenderer isAsyncLoading is true[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA52.spec.ts[2m > [22m[2mCA-52: Feedback Visual en 
+Llamadas a APIs / Estado Indeterminado[2m > [22m[2m3. TaskViewerModal.vue disables completion button and shows 
+spinner when FormRenderer isAsyncLoading is true[22m[39m
+[Vue warn]: Component emitted event "update:modelValue" but it is neither declared in the emits option nor as an 
+"onUpdate:modelValue" prop.
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA52.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[33m 335[2mms[22m[39m
+ [32m✓[39m src/tests/e2e/US003_ArchitecturalGaps.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 233[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA70.spec.ts[2m > [22m[2mCA-70: Modo Trámite 
+Público Perimetral / Bypass JWT Seguro[2m > [22m[2m1. FormDesigner.vue provee un checkbox #publicToggle vinculado 
+al estado isPublic de la tienda[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA70.spec.ts[2m > [22m[2mCA-70: Modo Trámite 
+Público Perimetral / Bypass JWT Seguro[2m > [22m[2m2. Al activar el acceso público, se genera un token 
+criptográfico seguro y se añade a publicUrl[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA83.spec.ts[2m > [22m[2mCA-83: Sandbox de Pruebas 
+Zod In-Browser / Fuzzing[2m > [22m[2m2. FormDesigner Component Integration[2m > [22m[2mrenders Autocompletar 
+Fuzz button and populates payload on click[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA70.spec.ts[2m > [22m[2mCA-70: Modo Trámite 
+Público Perimetral / Bypass JWT Seguro[2m > [22m[2m3. PublicIntake.vue inyecta dinámicamente la etiqueta script de 
+Google reCAPTCHA v3 en setup y renderiza su badge[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA70.spec.ts[2m > [22m[2mCA-70: Modo Trámite 
+Público Perimetral / Bypass JWT Seguro[2m > [22m[2m4. Al enviar el formulario, PublicIntake.vue muestra una 
+notificación basada en Vue en lugar de un alert() nativo[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA70.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[33m 1152[2mms[22m[39m
+ [32m✓[39m src/tests/e2e/US003_FormMasterArchitecture.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 208[2mms[22m[39m
+ [32m✓[39m src/tests/router/RouterGuard.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 72[2mms[22m[39m
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA83.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[33m 933[2mms[22m[39m
+[90mstderr[2m | src/components/forms/__tests__/FormRendererCA80.spec.ts[2m > [22m[2mFormRenderer CA-80 (Lazy 
+Validation & Masks)[2m > [22m[2mdoes not trigger validation on input, but triggers on blur[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/components/forms/__tests__/FormRendererCA80.spec.ts[2m > [22m[2mFormRenderer CA-80 (Lazy 
+Validation & Masks)[2m > [22m[2mstores raw unmasked numeric value while displaying masked format[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/Security/__tests__/IdentityGovernance.spec.ts[2m > [22m[2mIdentityGovernance.vue 
+- Phase 2 (US-036)[2m > [22m[2mCA-07: muestra el sello [Usuario Inactivo] y deshabilita edición para usuarios 
+inactivos[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+Error obteniendo procesos del sistema TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchSystemProcesses [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39m
+src\stores\rbacStore.js:249:46[90m)[39m
+    at async Promise.all (index 1)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo anomalías TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchAnomalies [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\st
+ores\rbacStore.js:162:40[90m)[39m
+    at async Promise.all (index 2)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo reportes CISO TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchCisoReports [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\
+stores\rbacStore.js:269:42[90m)[39m
+    at async Promise.all (index 3)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo logs de auditoría TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchAuditLogs [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\st
+ores\rbacStore.js:308:40[90m)[39m
+    at async Promise.all (index 6)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error synchronizing Identity Governance: TypeError: Cannot read properties of undefined (reading 'catch')
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1435:54
+
+[90mstderr[2m | src/views/admin/Security/__tests__/IdentityGovernance.spec.ts[2m > [22m[2mIdentityGovernance.vue 
+- Phase 2 (US-036)[2m > [22m[2mCA-09: valida que la fecha de fin no sea anterior a la de inicio en 
+delegaciones[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+Error cargando roles TypeError: Cannot read properties of undefined (reading 'catch')
+    at Proxy.fetchRoles [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\stores
+\rbacStore.js:25:46[90m)[39m
+    at Proxy.wrappedAction [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/fro
+ntend/[39mnode_modules/[4mpinia[24m/dist/pinia.mjs:1399:26[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1420:23
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4m@vue\runtim
+e-core[24m\dist\runtime-core.cjs.js:3063:40
+    at callWithErrorHandling [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_
+modules\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:200:19[90m)[39m
+    at callWithAsyncErrorHandling [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39m
+node_modules\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:207:17[90m)[39m
+    at hook.__weh.hook.__weh [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_
+modules\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:3043:19[90m)[39m
+    at flushPostFlushCbs [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modu
+les\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:382:28[90m)[39m
+    at render [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4m@vu
+e\runtime-core[24m\dist\runtime-core.cjs.js:6707:7[90m)[39m
+    at mount [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4m@vue
+\runtime-core[24m\dist\runtime-core.cjs.js:4193:13[90m)[39m
+Error obteniendo procesos del sistema TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchSystemProcesses [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39m
+src\stores\rbacStore.js:249:46[90m)[39m
+    at async Promise.all (index 1)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo anomalías TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchAnomalies [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\st
+ores\rbacStore.js:162:40[90m)[39m
+    at async Promise.all (index 2)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo reportes CISO TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchCisoReports [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\
+stores\rbacStore.js:269:42[90m)[39m
+    at async Promise.all (index 3)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo delegaciones TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchDelegations [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\
+stores\rbacStore.js:205:42[90m)[39m
+    at async Promise.all (index 4)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo logs de auditoría TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchAuditLogs [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\st
+ores\rbacStore.js:308:40[90m)[39m
+    at async Promise.all (index 6)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error synchronizing Identity Governance: TypeError: Cannot read properties of undefined (reading 'catch')
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1435:54
+
+[90mstderr[2m | src/views/admin/Security/__tests__/IdentityGovernance.spec.ts[2m > [22m[2mIdentityGovernance.vue 
+- Phase 2 (US-036)[2m > [22m[2mCA-10: muestra el secreto de la API Key solo una vez al crearla[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+Error cargando roles TypeError: Cannot read properties of undefined (reading 'catch')
+    at Proxy.fetchRoles [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\stores
+\rbacStore.js:25:46[90m)[39m
+    at Proxy.wrappedAction [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/fro
+ntend/[39mnode_modules/[4mpinia[24m/dist/pinia.mjs:1399:26[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1420:23
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4m@vue\runtim
+e-core[24m\dist\runtime-core.cjs.js:3063:40
+    at callWithErrorHandling [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_
+modules\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:200:19[90m)[39m
+    at callWithAsyncErrorHandling [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39m
+node_modules\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:207:17[90m)[39m
+    at hook.__weh.hook.__weh [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_
+modules\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:3043:19[90m)[39m
+    at flushPostFlushCbs [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modu
+les\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:382:28[90m)[39m
+    at render [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4m@vu
+e\runtime-core[24m\dist\runtime-core.cjs.js:6707:7[90m)[39m
+    at mount [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4m@vue
+\runtime-core[24m\dist\runtime-core.cjs.js:4193:13[90m)[39m
+Error obteniendo procesos del sistema TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchSystemProcesses [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39m
+src\stores\rbacStore.js:249:46[90m)[39m
+    at async Promise.all (index 1)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo anomalías TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchAnomalies [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\st
+ores\rbacStore.js:162:40[90m)[39m
+    at async Promise.all (index 2)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo reportes CISO TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchCisoReports [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\
+stores\rbacStore.js:269:42[90m)[39m
+    at async Promise.all (index 3)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo delegaciones TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchDelegations [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\
+stores\rbacStore.js:205:42[90m)[39m
+    at async Promise.all (index 4)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo logs de auditoría TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchAuditLogs [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\st
+ores\rbacStore.js:308:40[90m)[39m
+    at async Promise.all (index 6)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error synchronizing Identity Governance: TypeError: Cannot read properties of undefined (reading 'catch')
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1435:54
+
+[90mstderr[2m | src/views/admin/Security/__tests__/IdentityGovernance.spec.ts[2m > [22m[2mIdentityGovernance.vue 
+- Phase 2 (US-036)[2m > [22m[2mCA-27: valida la inmutabilidad de roles CORE (SUPER_ADMIN, NATIVE_ADMIN)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+Error cargando roles TypeError: Cannot read properties of undefined (reading 'catch')
+    at Proxy.fetchRoles [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\stores
+\rbacStore.js:25:46[90m)[39m
+    at Proxy.wrappedAction [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/fro
+ntend/[39mnode_modules/[4mpinia[24m/dist/pinia.mjs:1399:26[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1420:23
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4m@vue\runtim
+e-core[24m\dist\runtime-core.cjs.js:3063:40
+    at callWithErrorHandling [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_
+modules\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:200:19[90m)[39m
+    at callWithAsyncErrorHandling [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39m
+node_modules\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:207:17[90m)[39m
+    at hook.__weh.hook.__weh [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_
+modules\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:3043:19[90m)[39m
+    at flushPostFlushCbs [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modu
+les\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:382:28[90m)[39m
+    at render [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4m@vu
+e\runtime-core[24m\dist\runtime-core.cjs.js:6707:7[90m)[39m
+    at mount [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4m@vue
+\runtime-core[24m\dist\runtime-core.cjs.js:4193:13[90m)[39m
+Error obteniendo procesos del sistema TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchSystemProcesses [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39m
+src\stores\rbacStore.js:249:46[90m)[39m
+    at async Promise.all (index 1)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo anomalías TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchAnomalies [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\st
+ores\rbacStore.js:162:40[90m)[39m
+    at async Promise.all (index 2)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo reportes CISO TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchCisoReports [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\
+stores\rbacStore.js:269:42[90m)[39m
+    at async Promise.all (index 3)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo delegaciones TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchDelegations [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\
+stores\rbacStore.js:205:42[90m)[39m
+    at async Promise.all (index 4)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error obteniendo logs de auditoría TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchAuditLogs [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\st
+ores\rbacStore.js:308:40[90m)[39m
+    at async Promise.all (index 6)
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1419:9
+Error synchronizing Identity Governance: TypeError: Cannot read properties of undefined (reading 'catch')
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Security\Ide
+ntityGovernance.vue:1435:54
+
+ [32m✓[39m src/views/admin/Security/__tests__/IdentityGovernance.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 297[2mms[22m[39m
+ [32m✓[39m src/components/forms/__tests__/FormRendererCA80.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[33m 453[2mms[22m[39m
+[90mstderr[2m | src/tests/views/admin/ProjectBuilder/TemplateBuilder.spec.ts[2m > [22m[2mTemplateBuilder.vue 
+(Orphan Task Protection)[2m > [22m[2mDisables PUBLISH button if any task is missing a form_key[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/views/admin/ProjectBuilder/TemplateBuilder.spec.ts[2m > [22m[2mTemplateBuilder.vue 
+(Orphan Task Protection)[2m > [22m[2mEnables PUBLISH button when all tasks have valid form_keys[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/views/admin/ProjectBuilder/TemplateBuilder.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 286[2mms[22m[39m
+[90mstderr[2m | src/tests/components/dmn/DmnNlpPanel.spec.ts[2m > [22m[2mDmnNlpPanel.vue (CA-16 al CA-20)[2m > 
+[22m[2mRenderiza vacio inicialmente sin previsualizacion[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/dmn/DmnNlpPanel.spec.ts[2m > [22m[2mDmnNlpPanel.vue (CA-16 al CA-20)[2m > 
+[22m[2mEl boton se habilita al escribir y desactiva al generar[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/dmn/DmnNlpPanel.spec.ts[2m > [22m[2mDmnNlpPanel.vue (CA-16 al CA-20)[2m > 
+[22m[2mRenderiza la confianza DMN visualmente[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/dmn/DmnNlpPanel.spec.ts[2m > [22m[2mDmnNlpPanel.vue (CA-16 al CA-20)[2m > 
+[22m[2mCA-21: Error 422 XML mal formado muestra bloque rojo y sin canvas XML[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/dmn/DmnNlpPanel.spec.ts[2m > [22m[2mDmnNlpPanel.vue (CA-16 al CA-20)[2m > 
+[22m[2mCA-22: Error 403 HIT_POLICY_FORBIDDEN dispara evento al store[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/dmn/DmnNlpPanel.spec.ts[2m > [22m[2mDmnNlpPanel.vue (CA-16 al CA-20)[2m > 
+[22m[2mCA-23: Error 429 rate limit activa isRateLimited en el store[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/dmn/DmnNlpPanel.spec.ts[2m > [22m[2mDmnNlpPanel.vue (CA-16 al CA-20)[2m > 
+[22m[2mCA-24: Error 504 timeout activa requiresFallback en el store[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/components/dmn/DmnNlpPanel.spec.ts [2m ([22m[2m7 tests[22m[2m)[22m[90m 187[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA75.spec.ts[2m > [22m[2mUS-003: CA-75 - Peaje 
+Analítico (Data Diet) Unit Tests[2m > [22m[2m1. In FormDesigner.vue, editing a field displays a select dropdown 
+with id or data-testid "destinoEstrategicoSelect"[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+Error fetching global dictionary: TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchDictionary [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\s
+tores\useFormDesignerStore.ts:175:35[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Modeler\Form
+Designer.vue:1185:5
+Error fetching snippets: TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchSnippets [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\sto
+res\useFormDesignerStore.ts:186:35[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Modeler\Form
+Designer.vue:1186:5
+Error fetching approved connectors: TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchApprovedConnectors [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[
+39msrc\stores\useFormDesignerStore.ts:212:29[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Modeler\Form
+Designer.vue:1187:5
+
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA75.spec.ts[2m > [22m[2mUS-003: CA-75 - Peaje 
+Analítico (Data Diet) Unit Tests[2m > [22m[2m2. When setting destinoEstrategico to "Analítica Pasiva", required 
+checkbox is disabled andrequired is set to false[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+Error fetching global dictionary: TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchDictionary [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\s
+tores\useFormDesignerStore.ts:175:35[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Modeler\Form
+Designer.vue:1185:5
+Error fetching snippets: TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchSnippets [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\sto
+res\useFormDesignerStore.ts:186:35[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Modeler\Form
+Designer.vue:1186:5
+Error fetching approved connectors: TypeError: Cannot read properties of undefined (reading 'data')
+    at Proxy.fetchApprovedConnectors [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[
+39msrc\stores\useFormDesignerStore.ts:212:29[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\views\admin\Modeler\Form
+Designer.vue:1187:5
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA75.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[33m 552[2mms[22m[39m
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/incidents[2m > [22m[2mdebe denegar el acceso a 
+/admin/incidents para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/incidents. Rol activo provisto: ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/views/PmoSettings.spec.ts[2m > [22m[2mPmoSettings.vue[2m > [22m[2mCA-3/CA-5: 
+onMounted fetches business-hours and holidays correctly[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/views/PmoSettings.spec.ts[2m > [22m[2mPmoSettings.vue[2m > [22m[2mCA-3: Retroactive 
+SLA Apply triggers 202 Modal[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/views/PmoSettings.spec.ts[2m > [22m[2mPmoSettings.vue[2m > [22m[2mCA-5: Can delete a 
+holiday from the UI[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/views/PmoSettings.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 199[2mms[22m[39m
+ [32m✓[39m src/tests/views/admin/Integration/DlqDashboard.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[33m 682[2mms[22m[39m
+[90mstderr[2m | src/tests/views/kanban/KanbanView.spec.ts[2m > [22m[2mKanbanView.vue[2m > [22m[2mrenders the 
+board and calls the real API store on mount[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/views/kanban/KanbanView.spec.ts[2m > [22m[2mKanbanView.vue[2m > [22m[2mdisplays a 
+block reason modal when a task is moved to BLOCKED[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/views/kanban/KanbanView.spec.ts[2m > [22m[2mKanbanView.vue[2m > [22m[2mcalls 
+store.moveTask with blockReason when modal is confirmed[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/views/kanban/KanbanView.spec.ts[2m > [22m[2mKanbanView.vue[2m > [22m[2mshows 
+readonly status for users without permissions[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn] Write operation failed: computed value is readonly
+
+ [32m✓[39m src/tests/views/kanban/KanbanView.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[33m 408[2mms[22m[39m
+[90mstderr[2m | src/tests/stores/useDmnStore.spec.ts[2m > [22m[2museDmnStore[2m > [22m[2mManeja errores de 
+caidas en Prompt NLP[22m[39m
+NLP DMN Generation err Error: Infraccion RAG
+    at Proxy.<anonymous> [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests
+\stores\useDmnStore.spec.ts:42:19[90m)[39m
+    at Proxy.mockCall [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend
+/[39mnode_modules/[4m@vitest/spy[24m/dist/index.js:50:17[90m)[39m
+    at Proxy.spy [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39
+mnode_modules/[4mtinyspy[24m/dist/index.js:42:80[90m)[39m
+    at Proxy.generateFromPrompt [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msr
+c\stores\useDmnStore.ts:56:19[90m)[39m
+    at Proxy.wrappedAction [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/fro
+ntend/[39mnode_modules/[4mpinia[24m/dist/pinia.mjs:1399:26[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests\stores\useDmnStore
+.spec.ts:46:25
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:135:14
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:60:26
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:17[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+
+[90mstderr[2m | src/tests/stores/useDmnStore.spec.ts[2m > [22m[2museDmnStore[2m > [22m[2mTest CA-21: 422 XML 
+Inválido expone el error SAX y evita renderizado[22m[39m
+NLP DMN Generation err Error: SAX Error: Unexpected character
+    at Proxy.<anonymous> [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests
+\stores\useDmnStore.spec.ts:56:19[90m)[39m
+    at Proxy.mockCall [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend
+/[39mnode_modules/[4m@vitest/spy[24m/dist/index.js:50:17[90m)[39m
+    at Proxy.spy [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39
+mnode_modules/[4mtinyspy[24m/dist/index.js:42:80[90m)[39m
+    at Proxy.generateFromPrompt [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msr
+c\stores\useDmnStore.ts:56:19[90m)[39m
+    at Proxy.wrappedAction [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/fro
+ntend/[39mnode_modules/[4mpinia[24m/dist/pinia.mjs:1399:26[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests\stores\useDmnStore
+.spec.ts:59:27
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:135:14
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:60:26
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:17[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+
+[90mstderr[2m | src/tests/stores/useDmnStore.spec.ts[2m > [22m[2museDmnStore[2m > [22m[2mTest CA-22: 403 
+HIT_POLICY_FORBIDDEN emite evento hit-policy-forbidden[22m[39m
+NLP DMN Generation err Error: 403 HIT_POLICY_FORBIDDEN
+    at Proxy.<anonymous> [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests
+\stores\useDmnStore.spec.ts:68:19[90m)[39m
+    at Proxy.mockCall [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend
+/[39mnode_modules/[4m@vitest/spy[24m/dist/index.js:50:17[90m)[39m
+    at Proxy.spy [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39
+mnode_modules/[4mtinyspy[24m/dist/index.js:42:80[90m)[39m
+    at Proxy.generateFromPrompt [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msr
+c\stores\useDmnStore.ts:56:19[90m)[39m
+    at Proxy.wrappedAction [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/fro
+ntend/[39mnode_modules/[4mpinia[24m/dist/pinia.mjs:1399:26[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests\stores\useDmnStore
+.spec.ts:71:27
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:135:14
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:60:26
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:17[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+
+[90mstderr[2m | src/tests/stores/useDmnStore.spec.ts[2m > [22m[2museDmnStore[2m > [22m[2mTest CA-23: 429 
+Activa contador Rate Limit basado en header Retry-After[22m[39m
+NLP DMN Generation err Error: 429
+    at Proxy.<anonymous> [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests
+\stores\useDmnStore.spec.ts:79:19[90m)[39m
+    at Proxy.mockCall [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend
+/[39mnode_modules/[4m@vitest/spy[24m/dist/index.js:50:17[90m)[39m
+    at Proxy.spy [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39
+mnode_modules/[4mtinyspy[24m/dist/index.js:42:80[90m)[39m
+    at Proxy.generateFromPrompt [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msr
+c\stores\useDmnStore.ts:56:19[90m)[39m
+    at Proxy.wrappedAction [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/fro
+ntend/[39mnode_modules/[4mpinia[24m/dist/pinia.mjs:1399:26[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests\stores\useDmnStore
+.spec.ts:82:27
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:135:14
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:60:26
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:17[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+
+[90mstderr[2m | src/tests/stores/useDmnStore.spec.ts[2m > [22m[2museDmnStore[2m > [22m[2mTest CA-24: 504 
+Timeout activa prevents normal flow and sets requiresFallback[22m[39m
+NLP DMN Generation err Error: 504
+    at Proxy.<anonymous> [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests
+\stores\useDmnStore.spec.ts:90:19[90m)[39m
+    at Proxy.mockCall [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend
+/[39mnode_modules/[4m@vitest/spy[24m/dist/index.js:50:17[90m)[39m
+    at Proxy.spy [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39
+mnode_modules/[4mtinyspy[24m/dist/index.js:42:80[90m)[39m
+    at Proxy.generateFromPrompt [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msr
+c\stores\useDmnStore.ts:56:19[90m)[39m
+    at Proxy.wrappedAction [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/fro
+ntend/[39mnode_modules/[4mpinia[24m/dist/pinia.mjs:1399:26[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests\stores\useDmnStore
+.spec.ts:93:27
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:135:14
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4m@vitest/runner[24m/dist/index.js:60:26
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:17[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+
+ [32m✓[39m src/tests/stores/useDmnStore.spec.ts [2m ([22m[2m7 tests[22m[2m)[22m[90m 38[2mms[22m[39m
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/modeler/bpmn[2m > [22m[2mdebe denegar el acceso a 
+/admin/modeler/bpmn para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/modeler/bpmn. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/modeler/forms[2m > [22m[2mdebe denegar el acceso a 
+/admin/modeler/forms para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/modeler/forms. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/modeler/forms/designer[2m > [22m[2mdebe denegar el 
+acceso a /admin/modeler/forms/designer para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/modeler/forms/designer. Rol activo provisto: 
+ROLE_OPERARIO
+
+ [32m✓[39m src/tests/stores/useTimeboxStore.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 63[2mms[22m[39m
+ [32m✓[39m src/tests/stores/useProjectTemplateStore.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 24[2mms[22m[39m
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/modeler/dmn[2m > [22m[2mdebe denegar el acceso a 
+/admin/modeler/dmn para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/modeler/dmn. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/components/shell/RoleSelectorDropdown.spec.ts[2m > [22m[2mRoleSelectorDropdown.vue[2m 
+> [22m[2mNO renderiza si el usuario tiene 1 o 0 roles[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/shell/RoleSelectorDropdown.spec.ts[2m > [22m[2mRoleSelectorDropdown.vue[2m 
+> [22m[2mAbre el dropdown al hacer click con 2+ roles[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/shell/RoleSelectorDropdown.spec.ts[2m > [22m[2mRoleSelectorDropdown.vue[2m 
+> [22m[2mLlama a switchRole y cierra el dropdown al seleccionar un rol diferente[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/workdesk/WorkdeskGrid.spec.ts[2m > [22m[2mWorkdeskGrid.vue (CA-11 a CA-15 
+Reclamar y Liberar)[2m > [22m[2mMuestra botón "Ver Detalle" si la tarea está AVAILABLE, abre modal 
+previsualización[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/workdesk/WorkdeskGrid.spec.ts[2m > [22m[2mWorkdeskGrid.vue (CA-11 a CA-15 
+Reclamar y Liberar)[2m > [22m[2mMuestra botón "Liberar" si la tarea está ACTIVE y asignada al usuario actual, abre 
+modal y emite unclaimTask[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/components/workdesk/WorkdeskGrid.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[33m 330[2mms[22m[39m
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/analytics/bam[2m > [22m[2mdebe denegar el acceso a 
+/admin/analytics/bam para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/analytics/bam. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/integration/builder[2m > [22m[2mdebe denegar el acceso a 
+/admin/integration/builder para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/integration/builder. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/intake[2m > [22m[2mdebe denegar el acceso a 
+/admin/intake para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/intake. Rol activo provisto: ROLE_OPERARIO
+
+ [32m✓[39m src/tests/components/shell/RoleSelectorDropdown.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[33m 818[2mms[22m[39m
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/generic-form[2m > [22m[2mdebe denegar el acceso a 
+/admin/generic-form para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/generic-form. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/project-builder[2m > [22m[2mdebe denegar el acceso a 
+/admin/project-builder para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/project-builder. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/integration/mapper[2m > [22m[2mdebe denegar el acceso a 
+/admin/integration/mapper para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/integration/mapper. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/modeler/instances[2m > [22m[2mdebe denegar el acceso a 
+/admin/modeler/instances para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/modeler/instances. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/pmo/settings[2m > [22m[2mdebe denegar el acceso a 
+/admin/pmo/settings para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/pmo/settings. Rol activo provisto: 
+ROLE_OPERARIO
+
+ [32m✓[39m src/stores/rbacStore.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 66[2mms[22m[39m
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin[2m > [22m[2mdebe denegar el acceso a /admin para un 
+usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin. Rol activo provisto: ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/i18n/i18n-integration.spec.ts[2m > [22m[2mi18n Integration[2m > [22m[2mrenderiza en 
+español por defecto[22m[39m
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+[90mstderr[2m | src/tests/i18n/i18n-integration.spec.ts[2m > [22m[2mi18n Integration[2m > [22m[2mcambio a 
+inglés actualiza textos visibles[22m[39m
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+[90mstderr[2m | src/tests/i18n/i18n-integration.spec.ts[2m > [22m[2mi18n Integration[2m > [22m[2mfallback a 
+español si clave no existe en inglés[22m[39m
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ [32m✓[39m src/tests/i18n/i18n-integration.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 199[2mms[22m[39m
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /ai/prompts[2m > [22m[2mdebe denegar el acceso a /ai/prompts 
+para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /ai/prompts. Rol activo provisto: ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/integration/catalog[2m > [22m[2mdebe denegar el acceso a 
+/admin/integration/catalog para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/integration/catalog. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/mailboxes[2m > [22m[2mdebe denegar el acceso a 
+/admin/mailboxes para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/mailboxes. Rol activo provisto: ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /sgdea/vault[2m > [22m[2mdebe denegar el acceso a /sgdea/vault 
+para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /sgdea/vault. Rol activo provisto: ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /admin/security/identity[2m > [22m[2mdebe denegar el acceso a 
+/admin/security/identity para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/security/identity. Rol activo provisto: 
+ROLE_OPERARIO
+
+[90mstderr[2m | src/tests/regression_hallazgo2.spec.ts[2m > [22m[2mRegression - Hallazgo 2: Unprotected Modeler 
+and Admin Routes Security Test[2m > [22m[2mRuta: /intake-triage[2m > [22m[2mdebe denegar el acceso a 
+/intake-triage para un usuario con rol no autorizado (ROLE_OPERARIO)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /intake-triage. Rol activo provisto: ROLE_OPERARIO
+
+ [32m✓[39m src/tests/regression_hallazgo2.spec.ts [2m ([22m[2m58 tests[22m[2m)[22m[33m 10337[2mms[22m[39m
+ [32m✓[39m src/tests/agileStore.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 273[2mms[22m[39m
+[90mstderr[2m | src/views/admin/Modeler/__tests__/FormDesignerCA84.spec.ts[2m > [22m[2mCA-84: Manejo Amigable de 
+Errores de Sintaxis en el Mónaco IDE[2m > [22m[2m2. UI Component level[2m > [22m[2mrenders dedicated problems 
+panel/diagnostic element when store.editorErrors has errors[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA84.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 268[2mms[22m[39m
+ [32m✓[39m src/tests/services/apiClient.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 288[2mms[22m[39m
+ [32m✓[39m src/services/apiClient.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 267[2mms[22m[39m
+ [32m✓[39m src/tests/stores/authStore.spec.ts [2m ([22m[2m9 tests[22m[2m)[22m[90m 54[2mms[22m[39m
+ [32m✓[39m src/tests/stores/useMenuStore.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 21[2mms[22m[39m
+ [32m✓[39m src/tests/components/BpmnAiInjection.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 160[2mms[22m[39m
+ [32m✓[39m src/tests/components/logout/LogoutConfirmation.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 203[2mms[22m[39m
+[90mstderr[2m | src/tests/components/logout/LogoutConfirmation.spec.ts[2m > [22m[2mApp.vue - Transversal Logout 
+Confirmation tests[2m > [22m[2mDoes not render logout confirmation modal by default[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/logout/LogoutConfirmation.spec.ts[2m > [22m[2mApp.vue - Transversal Logout 
+Confirmation tests[2m > [22m[2mRenders logout confirmation modal when showLogoutConfirm is true[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/logout/LogoutConfirmation.spec.ts[2m > [22m[2mApp.vue - Transversal Logout 
+Confirmation tests[2m > [22m[2mHides the modal when Cancel is clicked[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/logout/LogoutConfirmation.spec.ts[2m > [22m[2mApp.vue - Transversal Logout 
+Confirmation tests[2m > [22m[2mLogs out and redirects to /login when confirm button is clicked[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [2m[90m↓[39m[22m src/tests/views/admin/ProjectBuilder/AgileHub.spec.ts [2m ([22m[2m2 tests[22m [2m|[22m [33m2 skipped[39m[2m)[22m
+[90mstderr[2m | src/tests/regression_hallazgo1.spec.ts[2m > [22m[2mRegression - Hallazgo 1: DLQ Dashboard Route 
+Bypass Security Test[2m > [22m[2mdebe denegar el acceso a la ruta DLQ (/admin/integration/dlq) si el usuario NO 
+tiene el rol requerido (ROLE_ADMIN_IT o ROLE_SUPER_ADMIN)[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin/integration/dlq. Rol activo provisto: 
+ROLE_OPERARIO
+
+ [32m✓[39m src/tests/regression_hallazgo1.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[33m 347[2mms[22m[39m
+ [32m✓[39m src/views/admin/Modeler/__tests__/FormDesignerCA27.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 59[2mms[22m[39m
+ [32m✓[39m src/tests/components/DynamicForm.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 198[2mms[22m[39m
+ [32m✓[39m src/tests/components/dmn/DmnGridManual.spec.ts [2m ([22m[2m7 tests[22m[2m)[22m[33m 469[2mms[22m[39m
+[90mstderr[2m | src\services\apiClient.ts:45:21[22m[39m
+Modo Desconectado. La aplicación se ha congelado por falta de Red.
+Modo Desconectado. La aplicación se ha congelado por falta de Red.
+Modo Desconectado. La aplicación se ha congelado por falta de Red.
+Modo Desconectado. La aplicación se ha congelado por falta de Red.
+Modo Desconectado. La aplicación se ha congelado por falta de Red.
+Modo Desconectado. La aplicación se ha congelado por falta de Red.
+
+[90mstderr[2m | src\components\dmn\DmnGridManual.vue:136:13[22m[39m
+Using fallback zod dictionary
+Using fallback zod dictionary
+Using fallback zod dictionary
+Using fallback zod dictionary
+Using fallback zod dictionary
+Using fallback zod dictionary
+
+ [32m✓[39m src/tests/services/FormEngineService.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m src/tests/intakeStore.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 31[2mms[22m[39m
+ [32m✓[39m src/tests/components/MainLayout.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[33m 336[2mms[22m[39m
+[90mstderr[2m | src/tests/regression_hallazgo3.spec.ts[2m > [22m[2mConnectorBuilder.vue Regression Test Suite 
+(Finding 3)[2m > [22m[2mUpon mounting, apiSecret has masked value and type is password[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/regression_hallazgo3.spec.ts[2m > [22m[2mConnectorBuilder.vue Regression Test Suite 
+(Finding 3)[2m > [22m[2mClicking "👁️ Monitorear" sends audit event and displays the real secret[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/regression_hallazgo3.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 283[2mms[22m[39m
+[90mstderr[2m | src/components/forms/__tests__/FormRendererCA79.spec.ts[2m > [22m[2mFormRenderer CA-79: 
+Sandboxing Estricto y Aislamiento Perimetral (Anti-XSS/RCE)[2m > [22m[2mencapsulates its content inside a Shadow 
+DOM to ensure style isolation[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/components/forms/__tests__/FormRendererCA79.spec.ts[2m > [22m[2mFormRenderer CA-79: 
+Sandboxing Estricto y Aislamiento Perimetral (Anti-XSS/RCE)[2m > [22m[2muses AST Sandbox without eval/new Function 
+and prohibits global contexts like window, fetch[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/components/forms/__tests__/FormRendererCA79.spec.ts[2m > [22m[2mFormRenderer CA-79: 
+Sandboxing Estricto y Aislamiento Perimetral (Anti-XSS/RCE)[2m > [22m[2misolates CSS injection inside the Shadow 
+DOM (does not bleed to parent document)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/components/forms/__tests__/FormRendererCA79.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 233[2mms[22m[39m
+ [32m✓[39m src/tests/components/common/UniversalSlaTimer.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 115[2mms[22m[39m
+[90mstderr[2m | src/tests/components/common/SessionLockModal.spec.ts[2m > [22m[2mSessionLockModal.vue[2m > 
+[22m[2mNO se muestra por defecto[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/common/SessionLockModal.spec.ts[2m > [22m[2mSessionLockModal.vue[2m > 
+[22m[2mSe muestra al recibir evento SESSION_EXPIRED[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/common/SessionLockModal.spec.ts[2m > [22m[2mSessionLockModal.vue[2m > 
+[22m[2mRe-auth exitosa cierra el modal[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/common/SessionLockModal.spec.ts[2m > [22m[2mSessionLockModal.vue[2m > 
+[22m[2mRe-auth fallida hace logout[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/components/common/SessionLockModal.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 183[2mms[22m[39m
+[90mstderr[2m | src/tests/stores/useAuthStore.spec.ts[2m > [22m[2mAuthStore - Security & RBAC[2m > 
+[22m[2mdebería forzar autenticación fallida y purgar si un hacker inyecta un localStorage forjado con un JWT base 
+roto[22m[39m
+Modo Desconectado. La aplicación se ha congelado por falta de Red.
+Could not fetch effective-roles AxiosError: Network Error
+    at XMLHttpRequest.handleError [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platf
+orm/frontend/[39mnode_modules/[4maxios[24m/lib/adapters/xhr.js:122:21[90m)[39m
+    at XMLHttpRequest.invokeTheCallbackFunction [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\
+frontend\[39mnode_modules\[4mjsdom[24m\lib\generated\idl\EventHandlerNonNull.js:14:28[90m)[39m
+    at XMLHttpRequest.<anonymous> [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39m
+node_modules\[4mjsdom[24m\lib\jsdom\living\helpers\create-event-accessor.js:57:32[90m)[39m
+    at innerInvokeEventListeners [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mn
+ode_modules\[4mjsdom[24m\lib\jsdom\living\events\EventTarget-impl.js:360:16[90m)[39m
+    at invokeEventListeners [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_m
+odules\[4mjsdom[24m\lib\jsdom\living\events\EventTarget-impl.js:296:3[90m)[39m
+    at XMLHttpRequestImpl._dispatch [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[3
+9mnode_modules\[4mjsdom[24m\lib\jsdom\living\events\EventTarget-impl.js:243:9[90m)[39m
+    at fireAnEvent [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[
+4mjsdom[24m\lib\jsdom\living\helpers\events.js:18:36[90m)[39m
+    at requestErrorSteps [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modu
+les\[4mjsdom[24m\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:127:3[90m)[39m
+    at dispatchError [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\
+[4mjsdom[24m\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:101:3[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4mjsdom[24m\
+lib\jsdom\living\xhr\XMLHttpRequest-impl.js:722:13
+    at Axios.request [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/
+[39mnode_modules/[4maxios[24m/lib/core/Axios.js:46:41[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+    at Proxy.hydrateAuth [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\store
+s\authStore.ts:188:34[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests\stores\useAuthStor
+e.spec.ts:33:9
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:11[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runFiles [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:958:5[90m)[39m
+    at startTests [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[3
+9mnode_modules/[4m@vitest/runner[24m/dist/index.js:967:3[90m)[39m
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7 {
+  isAxiosError: [33mtrue[39m,
+  code: [32m'ERR_NETWORK'[39m,
+  config: {
+    transitional: {
+      silentJSONParsing: [33mtrue[39m,
+      forcedJSONParsing: [33mtrue[39m,
+      clarifyTimeoutError: [33mfalse[39m,
+      legacyInterceptorReqResOrdering: [33mtrue[39m
+    },
+    adapter: [ [32m'xhr'[39m, [32m'http'[39m, [32m'fetch'[39m ],
+    transformRequest: [ [36m[Function: transformRequest][39m ],
+    transformResponse: [ [36m[Function: transformResponse][39m ],
+    timeout: [33m10000[39m,
+    xsrfCookieName: [32m'XSRF-TOKEN'[39m,
+    xsrfHeaderName: [32m'X-XSRF-TOKEN'[39m,
+    maxContentLength: [33m-1[39m,
+    maxBodyLength: [33m-1[39m,
+    env: { FormData: [36m[Function][39m, Blob: [36m[class Blob][39m },
+    validateStatus: [36m[Function: validateStatus][39m,
+    headers: Object [AxiosHeaders] {
+      Accept: [32m'application/json, text/plain, */*'[39m,
+      [32m'Content-Type'[39m: [32m'application/json'[39m,
+      Authorization: [32m'Bearer HACKED_FORGED_JWT_NO_EMERGENCY'[39m,
+      [32m'X-Active-Role'[39m: [32m'ROLE_USER'[39m,
+      [32m'X-Correlation-ID'[39m: [32m'f76f81b3-43bf-4faa-842b-ec45b4afe646'[39m
+    },
+    baseURL: [32m'/api/v1'[39m,
+    method: [32m'get'[39m,
+    url: [32m'/auth/effective-roles'[39m,
+    allowAbsoluteUrls: [33mtrue[39m,
+    data: [90mundefined[39m
+  },
+  request: XMLHttpRequest {},
+  event: ProgressEvent { isTrusted: [36m[Getter][39m }
+}
+
+[90mstderr[2m | src/tests/components/ConnectionToast.spec.ts[2m > [22m[2mConnectionToast.vue[2m > 
+[22m[2mCA-20: verifies positioning properties[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/ConnectionToast.spec.ts[2m > [22m[2mConnectionToast.vue[2m > 
+[22m[2mCA-21: validates plain business text without technical jargon[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/ConnectionToast.spec.ts[2m > [22m[2mConnectionToast.vue[2m > 
+[22m[2mCA-22: ensures no full-screen blocking overlay is present[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/ConnectionToast.spec.ts[2m > [22m[2mConnectionToast.vue[2m > 
+[22m[2mCA-25: fades out 3 seconds after RESTORED[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/components/ConnectionToast.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 129[2mms[22m[39m
+[90mstderr[2m | src/views/admin/RbacManager/__tests__/ProcessRolesTable.spec.ts[2m > 
+[22m[2mProcessRolesTable.vue[2m > [22m[2mrenderiza la matriz de permisos Iniciador vs Ejecutor (CA-04)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/views/admin/RbacManager/__tests__/ProcessRolesTable.spec.ts[2m > 
+[22m[2mProcessRolesTable.vue[2m > [22m[2mmuestra indicador de herencia y deshabilita edición (CA-06)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/views/admin/RbacManager/__tests__/ProcessRolesTable.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 115[2mms[22m[39m
+[90mstderr[2m | src/tests/components/admin/ImpersonationBanner.spec.ts[2m > [22m[2mImpersonationBanner.vue[2m > 
+[22m[2mSe renderiza cuando isImpersonating === true[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+[90mstderr[2m | src/tests/components/admin/ImpersonationBanner.spec.ts[2m > [22m[2mImpersonationBanner.vue[2m > 
+[22m[2mNO se renderiza cuando isImpersonating === false[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+[90mstderr[2m | src/tests/components/admin/ImpersonationBanner.spec.ts[2m > [22m[2mImpersonationBanner.vue[2m > 
+[22m[2mClick en "Volver a mi sesión" llama exitImpersonation()[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+[90mstderr[2m | src/tests/components/admin/ImpersonationBanner.spec.ts[2m > [22m[2mImpersonationBanner.vue[2m > 
+[22m[2mCountdown muestra tiempo restante formateado[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+[Vue warn]: Component "i18n-t" has already been registered in target app.
+[Vue warn]: Component "I18nT" has already been registered in target app.
+[Vue warn]: Component "i18n-n" has already been registered in target app.
+[Vue warn]: Component "I18nN" has already been registered in target app.
+[Vue warn]: Component "i18n-d" has already been registered in target app.
+[Vue warn]: Component "I18nD" has already been registered in target app.
+[Vue warn]: Directive "t" has already been registered in target app.
+
+ [32m✓[39m src/tests/components/admin/ImpersonationBanner.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 120[2mms[22m[39m
+ [32m✓[39m src/tests/views/admin/AI/SacConfigManager.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 141[2mms[22m[39m
+[90mstderr[2m | src/tests/stores/useAuthStore.spec.ts[2m > [22m[2mAuthStore - Security & RBAC[2m > 
+[22m[2mdebería asignar rol administrativo solo si el JWT porta las claims validadas (EMERGENCY_LOCAL_JWT)[22m[39m
+Modo Desconectado. La aplicación se ha congelado por falta de Red.
+Could not fetch effective-roles AxiosError: Network Error
+    at XMLHttpRequest.handleError [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platf
+orm/frontend/[39mnode_modules/[4maxios[24m/lib/adapters/xhr.js:122:21[90m)[39m
+    at XMLHttpRequest.invokeTheCallbackFunction [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\
+frontend\[39mnode_modules\[4mjsdom[24m\lib\generated\idl\EventHandlerNonNull.js:14:28[90m)[39m
+    at XMLHttpRequest.<anonymous> [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39m
+node_modules\[4mjsdom[24m\lib\jsdom\living\helpers\create-event-accessor.js:57:32[90m)[39m
+    at innerInvokeEventListeners [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mn
+ode_modules\[4mjsdom[24m\lib\jsdom\living\events\EventTarget-impl.js:360:16[90m)[39m
+    at invokeEventListeners [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_m
+odules\[4mjsdom[24m\lib\jsdom\living\events\EventTarget-impl.js:296:3[90m)[39m
+    at XMLHttpRequestImpl._dispatch [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[3
+9mnode_modules\[4mjsdom[24m\lib\jsdom\living\events\EventTarget-impl.js:243:9[90m)[39m
+    at fireAnEvent [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[
+4mjsdom[24m\lib\jsdom\living\helpers\events.js:18:36[90m)[39m
+    at requestErrorSteps [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modu
+les\[4mjsdom[24m\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:127:3[90m)[39m
+    at dispatchError [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\
+[4mjsdom[24m\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:101:3[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39mnode_modules\[4mjsdom[24m\
+lib\jsdom\living\xhr\XMLHttpRequest-impl.js:722:13
+    at Axios.request [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/
+[39mnode_modules/[4maxios[24m/lib/core/Axios.js:46:41[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+    at Proxy.hydrateAuth [90m(C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\store
+s\authStore.ts:188:34[90m)[39m
+    at [90mC:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\[39msrc\tests\stores\useAuthStor
+e.spec.ts:46:9
+    at runTest [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mn
+ode_modules/[4m@vitest/runner[24m/dist/index.js:781:11[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runSuite [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runFiles [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39m
+node_modules/[4m@vitest/runner[24m/dist/index.js:958:5[90m)[39m
+    at startTests [90m(file:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[3
+9mnode_modules/[4m@vitest/runner[24m/dist/index.js:967:3[90m)[39m
+    at [90mfile:///C:/Users/HaroltAndr%C3%A9sG%C3%B3mezAgu/ProyectoAntigravity/ibpms-platform/frontend/[39mnode_modul
+es/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7 {
+  isAxiosError: [33mtrue[39m,
+  code: [32m'ERR_NETWORK'[39m,
+  config: {
+    transitional: {
+      silentJSONParsing: [33mtrue[39m,
+      forcedJSONParsing: [33mtrue[39m,
+      clarifyTimeoutError: [33mfalse[39m,
+      legacyInterceptorReqResOrdering: [33mtrue[39m
+    },
+    adapter: [ [32m'xhr'[39m, [32m'http'[39m, [32m'fetch'[39m ],
+    transformRequest: [ [36m[Function: transformRequest][39m ],
+    transformResponse: [ [36m[Function: transformResponse][39m ],
+    timeout: [33m10000[39m,
+    xsrfCookieName: [32m'XSRF-TOKEN'[39m,
+    xsrfHeaderName: [32m'X-XSRF-TOKEN'[39m,
+    maxContentLength: [33m-1[39m,
+    maxBodyLength: [33m-1[39m,
+    env: { FormData: [36m[Function][39m, Blob: [36m[class Blob][39m },
+    validateStatus: [36m[Function: validateStatus][39m,
+    headers: Object [AxiosHeaders] {
+      Accept: [32m'application/json, text/plain, */*'[39m,
+      [32m'Content-Type'[39m: [32m'application/json'[39m,
+      Authorization: [32m'Bearer 
+header.eyJzdWIiOiJyb290QGlicG1zLmxvY2FsIiwgInJvbGVzIjpbIlJPTEVfU1VQRVJfQURNSU4iXX0=.signature'[39m,
+      [32m'X-Active-Role'[39m: [32m'ROLE_SUPER_ADMIN'[39m,
+      [32m'X-Correlation-ID'[39m: [32m'a04c3cac-e73c-47c9-8734-5f5118c89ac7'[39m
+    },
+    baseURL: [32m'/api/v1'[39m,
+    method: [32m'get'[39m,
+    url: [32m'/auth/effective-roles'[39m,
+    allowAbsoluteUrls: [33mtrue[39m,
+    data: [90mundefined[39m
+  },
+  request: XMLHttpRequest {},
+  event: ProgressEvent { isTrusted: [36m[Getter][39m }
+}
+
+ [32m✓[39m src/tests/stores/useAuthStore.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[33m 1780[2mms[22m[39m
+ [32m✓[39m src/tests/components/TaskViewerModal.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 120[2mms[22m[39m
+ [32m✓[39m src/tests/components/forms/TaskFormSubmit.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 126[2mms[22m[39m
+[90mstderr[2m | src/tests/components/forms/TaskFormSubmit.spec.ts[2m > [22m[2mTaskFormSubmit.vue (CA-21 a 
+CA-30)[2m > [22m[2mValida formulario vacío e inyecta errores visuales (CA-21)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/forms/TaskFormSubmit.spec.ts[2m > [22m[2mTaskFormSubmit.vue (CA-21 a 
+CA-30)[2m > [22m[2mMuestra botón de Soft-Undo si submit pasa Zod con delay de 5s (CA-29)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/router/RouterGuardSpoofBypass.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 58[2mms[22m[39m
+ [32m✓[39m src/tests/components/DmnAntiXss.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 129[2mms[22m[39m
+ [32m✓[39m src/tests/services/FormDefinitionAPI.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 30[2mms[22m[39m
+ [32m✓[39m src/tests/components/CopilotActionPills.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 110[2mms[22m[39m
+[90mstderr[2m | src/tests/router/RouterGuardActiveRole.spec.ts[2m > [22m[2mRouter Guard - Active Role Validation 
+(RouterGuardActiveRole.spec.ts)[2m > [22m[2mshould block navigation to /admin when activeRole is ROLE_OPERARIO, 
+even if all roles list contains ROLE_SUPER_ADMIN[22m[39m
+[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL /admin. Rol activo provisto: ROLE_OPERARIO
+
+ [32m✓[39m src/tests/router/RouterGuardActiveRole.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 36[2mms[22m[39m
+ [32m✓[39m src/tests/components/admin/RbacManager/ApiKeySemaphore.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 105[2mms[22m[39m
+[90mstderr[2m | src/tests/components/workdesk/TaskPreviewModal.spec.ts[2m > [22m[2mTaskPreviewModal.vue 
+(CA-5)[2m > [22m[2mNo renderiza si no se pasa taskId[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/workdesk/TaskPreviewModal.spec.ts[2m > [22m[2mTaskPreviewModal.vue 
+(CA-5)[2m > [22m[2mLlama a fetchTaskPreview al montarse o al recibir taskId[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/workdesk/TaskPreviewModal.spec.ts[2m > [22m[2mTaskPreviewModal.vue 
+(CA-5)[2m > [22m[2mMuestra los datos Read-Only y el botón Reclamar, y emite al reclamar[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/components/workdesk/TaskPreviewModal.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 194[2mms[22m[39m
+ [32m✓[39m src/tests/us038-security-governance.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 45[2mms[22m[39m
+ [32m✓[39m src/tests/stores/connectionStore.spec.ts [2m ([22m[2m7 tests[22m[2m)[22m[90m 22[2mms[22m[39m
+ [2m[90m↓[39m[22m src/tests/views/Workdesk.spec.ts [2m ([22m[2m2 tests[22m [2m|[22m [33m2 skipped[39m[2m)[22m
+ [32m✓[39m src/tests/components/agile/DynamicRoleCards.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 251[2mms[22m[39m
+[90mstderr[2m | src/tests/components/agile/DynamicRoleCards.spec.ts[2m > [22m[2mDynamicRoleCards.vue (CA-09 al 
+CA-14)[2m > [22m[2mRenderiza SkeletonCard si isLoading es true (CA-15)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/agile/DynamicRoleCards.spec.ts[2m > [22m[2mDynamicRoleCards.vue (CA-09 al 
+CA-14)[2m > [22m[2mAplica borrado V-IF atómico (CA-11): no renderiza tarjeta si rol no coincide[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/agile/DynamicRoleCards.spec.ts[2m > [22m[2mDynamicRoleCards.vue (CA-09 al 
+CA-14)[2m > [22m[2mRenderiza tarjeta si rol coincide o está permitido (CA-09)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/utils/DateTransformer.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m src/tests/views/admin/GenericForm/GenericFormView.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 27[2mms[22m[39m
+ [32m✓[39m src/tests/utils/DmnAntiXss.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 205[2mms[22m[39m
+ [32m✓[39m src/tests/composables/useSlaTrafficLight.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 20[2mms[22m[39m
+ [32m✓[39m src/tests/composables/useDraftTtl.spec.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 21[2mms[22m[39m
+ [32m✓[39m src/components/common/ErrorStateGlobal.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 148[2mms[22m[39m
+ [32m✓[39m src/tests/composables/useSlaEngine.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m src/tests/components/BpmnAiRecovery.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m src/tests/components/PanicModal.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 121[2mms[22m[39m
+ [32m✓[39m src/tests/composables/useConnectionStatus.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 71[2mms[22m[39m
+[90mstderr[2m | src/tests/services/axiosInterceptor.spec.ts[2m > [22m[2mapiClient Interceptors[2m > 
+[22m[2mCA-32: Un error 403 con código general debe invocar purgeTopology() del MenuStore[22m[39m
+CA-32: Revocación de acceso detectada (403). Purgando topología local.
+
+ [32m✓[39m src/tests/services/axiosInterceptor.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[33m 369[2mms[22m[39m
+[90mstderr[2m | src/tests/components/workdesk/ClaimAuditTrail.spec.ts[2m > [22m[2mClaimAuditTrail.vue (CA-9)[2m 
+> [22m[2mRenderiza lista vacia o loader mientras busca datos[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/workdesk/ClaimAuditTrail.spec.ts[2m > [22m[2mClaimAuditTrail.vue (CA-9)[2m 
+> [22m[2mMapea eventos de auditoría (CLAIM / UNCLAIM / FORCE_UNCLAIM) a la línea de tiempo temporal[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/components/workdesk/ClaimAuditTrail.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 88[2mms[22m[39m
+ [32m✓[39m src/tests/composables/useLazyLoad.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 54[2mms[22m[39m
+[90mstderr[2m | src/tests/components/forms/generic/DraftRestorationBanner.spec.ts[2m > [22m[2mDraft Validation UX 
+Tests[2m > [22m[2mQA-039-12 (QA-TEST-04): El indicador de sync se muestra si hay draft local (Borrador en 
+Navegador)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/forms/generic/DraftRestorationBanner.spec.ts[2m > [22m[2mDraft Validation UX 
+Tests[2m > [22m[2mQA-039-13 (QA-TEST-04): El Banner o Indicator vuelve a SYNCED tras restaurar (guardar 
+auto)[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/forms/generic/DraftRestorationBanner.spec.ts[2m > [22m[2mDraft Validation UX 
+Tests[2m > [22m[2mQA-039-15 (QA-TEST-04): Estado de ERROR[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/components/forms/generic/DraftRestorationBanner.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 104[2mms[22m[39m
+ [32m✓[39m src/tests/composables/useSoftUndo.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 49[2mms[22m[39m
+[90mstderr[2m | src/tests/composables/useSoftUndo.spec.ts[2m > [22m[2museSoftUndo[2m > [22m[2mexecute() inicia 
+countdown y ejecuta actionFn() despues de timeoutMs[22m[39m
+[Vue warn]: onUnmounted is called when there is no active component instance to be associated with. Lifecycle 
+injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register 
+lifecycle hooks before the first await statement.
+
+[90mstderr[2m | src/tests/composables/useSoftUndo.spec.ts[2m > [22m[2museSoftUndo[2m > [22m[2mcancel() antes 
+del timeout cancela la ejecucion[22m[39m
+[Vue warn]: onUnmounted is called when there is no active component instance to be associated with. Lifecycle 
+injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register 
+lifecycle hooks before the first await statement.
+
+[90mstderr[2m | src/tests/composables/useSoftUndo.spec.ts[2m > [22m[2museSoftUndo[2m > [22m[2mLimpia el estado 
+y timers correctamente[22m[39m
+[Vue warn]: onUnmounted is called when there is no active component instance to be associated with. Lifecycle 
+injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register 
+lifecycle hooks before the first await statement.
+
+ [32m✓[39m src/tests/components/shared/SessionConflictBanner.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 130[2mms[22m[39m
+ [32m✓[39m src/tests/integration-hub/OutboundDispatcher.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 212[2mms[22m[39m
+[90mstderr[2m | src/tests/components/dmn/DmnPublishModal.spec.ts[2m > [22m[2mDmnPublishModal & Panic / Rollback 
+(GAP-10)[2m > [22m[2mrequires CONFIRMO_V2 to enable deploy button[22m[39m
+Using fallback zod dictionary
+
+[90mstderr[2m | src/tests/components/dmn/DmnPublishModal.spec.ts[2m > [22m[2mDmnPublishModal & Panic / Rollback 
+(GAP-10)[2m > [22m[2mrollback button invokes POST /api/v1/dmn/{id}/rollback[22m[39m
+Using fallback zod dictionary
+
+ [32m✓[39m src/tests/components/dmn/DmnPublishModal.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 287[2mms[22m[39m
+ [32m✓[39m src/views/admin/Modeler/__tests__/BpmnDmnBinding.spec.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 35[2mms[22m[39m
+ [32m✓[39m src/tests/stores/usePreferencesStore.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 169[2mms[22m[39m
+[90mstderr[2m | src/tests/components/workdesk/WorkdeskTabs.spec.ts[2m > [22m[2mWorkdeskTabs.vue (CA-22)[2m > 
+[22m[2mRenderiza las pestañas y muestra PERSONAL como activo por defecto[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+[90mstderr[2m | src/tests/components/workdesk/WorkdeskTabs.spec.ts[2m > [22m[2mWorkdeskTabs.vue (CA-22)[2m > 
+[22m[2mCambia la vista a POOL al hacer click y dispara setActiveView[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/components/workdesk/WorkdeskTabs.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 199[2mms[22m[39m
+ [32m✓[39m src/tests/components/forms/generic/EvidenceDropzone.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 263[2mms[22m[39m
+ [32m✓[39m src/tests/regression_hallazgo5.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 76[2mms[22m[39m
+ [32m✓[39m src/tests/components/common/FatalToast.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 94[2mms[22m[39m
+ [32m✓[39m src/views/admin/RbacManager/__tests__/RbacManagerView.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[33m 328[2mms[22m[39m
+ [32m✓[39m src/tests/views/admin/Modeler/ZodSandboxPersistence.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [2m[90m↓[39m[22m src/tests/components/WorkdeskWidgets.spec.ts [2m ([22m[2m1 test[22m [2m|[22m [33m1 skipped[39m[2m)[22m
+ [32m✓[39m src/tests/integration-hub/CryptographyService.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 237[2mms[22m[39m
+[90mstderr[2m | src/tests/components/shared/NetworkRetryModal.spec.ts[2m > [22m[2mNetworkRetryModal.vue (CA-31, 
+CA-32)[2m > [22m[2mis deprecated and renders an empty div[22m[39m
+[Vue warn]: App already provides property with key "Symbol(pinia)". It will be overwritten with the new value.
+
+ [32m✓[39m src/tests/components/shared/NetworkRetryModal.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 118[2mms[22m[39m
+ [32m✓[39m src/tests/dummy.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m src/tests/components/common/EmptyState.spec.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 141[2mms[22m[39m
+ [32m✓[39m src/tests/components/agile/SkeletonCard.spec.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 139[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m113 passed[39m[22m[2m | [22m[33m4 skipped[39m[90m (117)[39m
+[2m      Tests [22m [1m[32m497 passed[39m[22m[2m | [22m[33m11 skipped[39m[90m (508)[39m
+[2m   Start at [22m 17:36:01
+[2m   Duration [22m 93.92s[2m (transform 22.23s, setup 63.99s, collect 75.19s, tests 44.96s, environment 331.86s, prepare 51.00s)[22m
+

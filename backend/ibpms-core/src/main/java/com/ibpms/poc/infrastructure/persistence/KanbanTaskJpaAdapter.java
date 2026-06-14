@@ -9,6 +9,7 @@ import com.ibpms.poc.infrastructure.jpa.repository.KanbanTaskRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,8 +39,18 @@ public class KanbanTaskJpaAdapter implements KanbanTaskPort {
         board.setId(task.getBoardId());
         entity.setBoard(board);
         
-        // originalTaskId needs to be set
-        entity.setOriginalTaskId(task.getId().toString());
+        entity.setTitle(task.getTitle());
+        entity.setDescription(task.getDescription());
+        entity.setStatus(task.getStatus().name());
+        entity.setAssignee(task.getAssignee());
+        entity.setPriority(task.getPriority());
+        entity.setBlockedReason(task.getBlockedReason());
+
+        if (task.getSlaDueDate() != null) {
+            entity.setSlaDueDate(task.getSlaDueDate().toLocalDateTime());
+        } else {
+            entity.setSlaDueDate(null);
+        }
 
         entity = repository.save(entity);
         return toDomain(entity);
@@ -61,12 +72,22 @@ public class KanbanTaskJpaAdapter implements KanbanTaskPort {
         KanbanTask task = new KanbanTask();
         task.setId(entity.getId());
         task.setBoardId(entity.getBoard().getId());
-        task.setTitle("Workdesk Data (Zero-Mock)");
-        task.setDescription("N/A");
-        task.setStatus(KanbanState.TODO);
-        task.setAssignee("N/A");
-        task.setPriority("N/A");
-        task.setBlockedReason("N/A");
+        task.setTitle(entity.getTitle());
+        task.setDescription(entity.getDescription());
+        
+        try {
+            task.setStatus(KanbanState.valueOf(entity.getStatus()));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            task.setStatus(KanbanState.TODO);
+        }
+
+        task.setAssignee(entity.getAssignee());
+        task.setPriority(entity.getPriority());
+        task.setBlockedReason(entity.getBlockedReason());
+
+        if (entity.getSlaDueDate() != null) {
+            task.setSlaDueDate(entity.getSlaDueDate().atZone(ZoneId.systemDefault()));
+        }
         if (entity.getCreatedAt() != null) {
             task.setCreatedAt(entity.getCreatedAt().atZone(ZoneId.systemDefault()));
         }

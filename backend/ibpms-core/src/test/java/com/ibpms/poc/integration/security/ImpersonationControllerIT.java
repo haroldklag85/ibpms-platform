@@ -1,11 +1,12 @@
 package com.ibpms.poc.integration.security;
 
-import com.ibpms.poc.AbstractIntegrationTest;
+import com.ibpms.poc.AbstractIntegrationIT;
 import com.ibpms.poc.infrastructure.security.JwtTokenProvider;
 import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
 import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository;
+import com.ibpms.poc.infrastructure.jpa.repository.security.DelegationRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +21,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ImpersonationControllerIT extends AbstractIntegrationTest {
+public class ImpersonationControllerIT extends AbstractIntegrationIT {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -31,6 +32,9 @@ public class ImpersonationControllerIT extends AbstractIntegrationTest {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private DelegationRepository delegationRepository;
+
     private UserEntity superAdmin;
     private UserEntity operador;
     private UserEntity otroSuperAdmin;
@@ -38,6 +42,7 @@ public class ImpersonationControllerIT extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         RestAssured.port = port;
+        delegationRepository.deleteAll();
         userRepository.deleteAll();
         roleRepository.deleteAll();
 

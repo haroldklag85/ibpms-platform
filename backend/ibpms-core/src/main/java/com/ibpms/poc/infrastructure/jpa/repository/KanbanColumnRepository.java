@@ -9,6 +9,6 @@ import java.util.UUID;
 
 @Repository
 public interface KanbanColumnRepository extends JpaRepository<KanbanColumnEntity, UUID> {
-    List<KanbanColumnEntity> findByBoardId(String boardId);
-    long countByBoardId(String boardId);
+    List<KanbanColumnEntity> findByBoardId(UUID boardId);
+    long countByBoardId(UUID boardId);
 }

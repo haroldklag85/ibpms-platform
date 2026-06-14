@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.domain.model;
 
 import java.time.LocalDateTime;
@@ -28,6 +29,17 @@ public class BpmnDesignAuditEntry {
         this.action = action;
         this.userId = userId;
         this.timestamp = LocalDateTime.now();
+        this.versionAffected = versionAffected;
+        this.details = details;
+    }
+
+    public BpmnDesignAuditEntry(UUID id, UUID processDesignId, Action action, String userId,
+            LocalDateTime timestamp, int versionAffected, String details) {
+        this.id = id;
+        this.processDesignId = processDesignId;
+        this.action = action;
+        this.userId = userId;
+        this.timestamp = timestamp;
         this.versionAffected = versionAffected;
         this.details = details;
     }

@@ -194,6 +194,7 @@ describe('MainLayout.vue', () => {
     });
 
     it('binds dynamic key correctly when route is provided in slot scope', async () => {
+        // @Traceability: US-005, CA-15
         const wrapper = mount(MainLayout, {
             global: {
                 plugins: [
@@ -207,7 +208,7 @@ describe('MainLayout.vue', () => {
                     })
                 ],
                 stubs: {
-                    RouterView: { template: '<div><slot :Component="{}" :route="{ fullPath: \'/admin/users\' }" /></div>' },
+                    RouterView: { template: '<div><slot :Component="{}" :route="{ path: \'/admin/users\', fullPath: \'/admin/users\' }" /></div>' },
                     RouterLink: RouterLinkStub
                 }
             }
@@ -343,6 +344,7 @@ describe('MainLayout.vue', () => {
     });
 
     it('handles undefined activeRole gracefully without throwing TypeError', async () => {
+        // @Traceability: US-005, CA-15
         const wrapper = mount(MainLayout, {
             global: {
                 plugins: [
@@ -356,7 +358,7 @@ describe('MainLayout.vue', () => {
                     })
                 ],
                 stubs: {
-                    RouterView: { template: '<div><slot :Component="{}" :route="{ fullPath: \'/admin/users\' }" /></div>' },
+                    RouterView: { template: '<div><slot :Component="{}" :route="{ path: \'/admin/users\', fullPath: \'/admin/users\' }" /></div>' },
                     RouterLink: RouterLinkStub
                 }
             }

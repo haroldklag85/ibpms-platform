@@ -158,3 +158,9 @@ databaseChangeLog:
   # CA-15 (US-002 PM-01): Agrega tenant_id para ghost timeout per-tenant
   - include:
       file: db/changelog/changes/059-us002-add-tenant-id-to-agile-tasks.sql
+  # Sprint-6: US-029 draft payload tables + business hours + forensic overrides
+  - include:
+      file: db/changelog/changes/059-us029-draft-payload.sql
+  # Sprint-6: Seed test tenants (T-100)
+  - include:
+      file: db/changelog/changes/060-seed-test-tenants.sql

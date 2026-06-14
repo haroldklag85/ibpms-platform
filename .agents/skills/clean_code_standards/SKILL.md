@@ -23,6 +23,13 @@ description: Normativas estrictas de Clean Code. Obligatorio para cualquier escr
 2. **Inmutabilidad:** Prefiere registros (`record`) para DTOs. Usa `final` en inyecciones de dependencias por constructor. Usa inyección por constructor (`@RequiredArgsConstructor`), NO `@Autowired` en los fields (variables).
 3. **Manejo Excepciones:** No captures excepciones genéricas `catch (Exception e)`. Captura y tira clases concretas `CustomTaskNotFoundException`. No ocultes el stack trace, si lo re-levantás, pásalo adentro.
 4. **Logging Correcto:** Prohibido el uso de `System.out.println`. Utiliza frameworks de Log formales (`@Slf4j`) con su nivel correcto de entropía (`log.trace`, `log.debug`, `log.info`, `log.error`).
+5. **Documentación OpenAPI/Swagger (ADR-017):** Es obligatorio documentar todos los endpoints expuestos en RestControllers usando anotaciones `@Operation` y `@ApiResponses`. Se prohíbe exponer entidades JPA o Camunda directamente para evitar `StackOverflowError` en la autogeneración; se exige el uso exclusivo de DTOs planos. Véase [adr-017-api-documentation-standard.md](file:///z:/home/haroltandrsgmezagu/proyectos/ibpms-platform/docs/architecture/adr-017-api-documentation-standard.md).
+
+## ESTÁNDARES DE TESTING (Backend)
+1. **Segmentación Estricta de Test Suites:**
+   - **Tests Unitarios (`*Test.java`):** Deben validar únicamente lógica de negocio pura. Tienen estrictamente prohibido arrancar el contexto de Spring Boot (sin annotations `@SpringBootTest`, `@WebMvcTest`, `@DataJpaTest`). Deben completarse en pocos milisegundos. Se ejecutan con `mvn test`.
+   - **Tests de Integración (`*IT.java`):** Deben validar integraciones de bases de datos, APIs y colas. Son los únicos que arrancan Spring y se ejecutan con `mvn verify` en paralelo en 4 forks.
+2. **Validación Pre-Commit:** Se ha implementado un escáner estricto pre-commit (`scripts/anti-integration-leak-scanner.js`) que bloquea el commit de cualquier test unitario (`*Test.java`) que importe anotaciones de Spring Boot. Es obligatorio respetar esta separación para evitar degradar el rendimiento del ciclo de desarrollo.
 
 ## ESTÁNDARES ESPECÍFICOS FRONTEND (Vue 3 / TypeScript)
 1. **Tipado Estricto:** Evita a toda costa los `any`. Define `interfaces` y `types` para contratos de Axios y props de Vue.

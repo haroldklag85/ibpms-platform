@@ -1,4 +1,4 @@
-// @Traceability: US-007 - ADR-001
+// @Traceability: US-007, US-005, CA-41 - ADR-001
 package com.ibpms.poc.infrastructure.jpa.entity.dmn;
 
 import jakarta.persistence.*;
@@ -19,7 +19,7 @@ public class DmnModelJpaEntity {
     @Column(length = 100)
     private String id;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "xml_content", columnDefinition = "TEXT", nullable = false)
     private String xmlContent;
 
     @Column(nullable = false, length = 20)

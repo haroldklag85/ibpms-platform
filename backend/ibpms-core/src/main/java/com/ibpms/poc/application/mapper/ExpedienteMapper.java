@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.application.mapper;
 
 import com.ibpms.poc.application.dto.ExpedienteDTO;
@@ -71,13 +72,13 @@ public interface ExpedienteMapper {
         }
     }
 
+    @SuppressWarnings("unchecked")
     default Map<String, Object> map(String value) {
         if (value == null) {
             return null;
         }
         try {
-            return new ObjectMapper().readValue(value, new TypeReference<Map<String, Object>>() {
-            });
+            return new ObjectMapper().readValue(value, Map.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error mapping JSON string to variables map", e);
         }

@@ -1,40 +1,36 @@
-# Project: DMN Governance Hexagonal Architecture and DDD Refactoring (US-007 - ADR-001)
+# Project: iBPMS Platform Toolbar & Simulation Redesign
+# Scope: US-005 & US-007 Follow-up Requirements
 
 ## Architecture
-- **Domain Layer**: Contains pure POJOs (`com.ibpms.poc.domain.model`) and interfaces/ports (`com.ibpms.poc.domain.port`). It is completely clean of any infrastructure-specific concepts such as Spring Data pagination, JPA/Hibernate mapping annotations, and Web controller decorators.
-- **Application Layer**: Contains business logic, orchestrators, and services. Uses domain models and ports.
-- **Infrastructure Layer**: Contains persistence implementations (Spring Data repositories, MapStruct mappers, JPA Entities under `com.ibpms.poc.infrastructure.jpa`) and Web controllers. Adapters are consolidated under `com.ibpms.poc.infrastructure.adapter`.
+- **Frontend Layer**: Vue 3 SPA using TypeScript, TailwindCSS, and Pinia.
+  - Modeler View: `frontend/src/views/admin/Modeler/BpmnDesigner.vue`
+  - Integration Store: `frontend/src/stores/useIntegrationStore.ts`
+- **Backend Layer**: Java Spring Boot, Hibernate, Liquibase, PostgreSQL.
+  - Controllers: `BpmnDesignController.java`
+  - Tests: `DataMappingIntegrityTest.java`
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| 1 | Compliance Test (Red Phase) | Implement failing `DmnArchitectureComplianceTest.java` in `com.ibpms.poc.application.usecase.dmn`. Verify it fails with `mvn test -Dtest=DmnArchitectureComplianceTest -pl ibpms-core`. | none | DONE |
-| 2 | Domain Layer Purification | Create `DmnModel.java` (pure POJO) and `DmnModelRepositoryPort.java` in domain layers. | M1 | DONE |
-| 3 | Use Case Refactoring | Refactor `DmnGovernanceUseCase.java` to use the repository port and pure POJO, removing JPA/infrastructure imports. | M2 | DONE |
-| 4 | Infrastructure Adapters & Mappers | Rename `DmnModelEntity.java` to `DmnModelJpaEntity.java`. Create `DmnModelMapper.java` (MapStruct) and `DmnModelJpaAdapter.java`. Update `DmnModelRepository.java`. | M3 | DONE |
-| 5 | Web & Test Integration | Update `DmnGovernanceController` and other classes/tests referencing `DmnModelEntity` to use the appropriate layers/entities. | M4 | DONE |
-| 6 | Verification & Compliance (Green Phase) | Compile and run all tests (`mvn test -pl ibpms-core`). Verify the compliance test passes. Run Forensic Auditor. | M5 | IN_PROGRESS (Worker 8 verifying) |
+| 1 | Exploration & Analysis | Codebase investigation and mapping of endpoints, test suites, and components | None | DONE |
+| 2 | Backend Implementation | Version history bug fixes, JSON alignment, Swagger documentation, and DataMappingIntegrityTest stabilization | M1 | DONE |
+| 3 | Frontend Implementation | Stepper UI, Resizable push-layout sidebar, Accordion phases, Hot Path Traversal highlights, and FormData payload integration | M2 | DONE |
+| 4 | Verification & Audit | Backend Maven integration test suite and Frontend production build | M3 | DONE |
+| 5 | Exploration & TDD Setup | Code investigation for Bug 1 (auto-save/navigation/lock) and Bug 2 (XML load exception) | M4 | DONE |
+| 6 | Bug 2 & Backend Fixes | Catch IllegalArgumentException in getProcessXml in BpmnDesignController.java and return basic XML, ensure test compilation | M5 | DONE |
+| 7 | Bug 1 & Frontend Refinements | Implement auto-save, lock renewal, URL synchronization, toaster alerts, toolbar/drawer UX adjustments, and TDD tests | M6 | DONE |
+| 8 | Verification & Audit | Run JUnit backend tests, Playwright E2E and CT tests with GPU, run Forensic Auditor | M7 | DONE |
+| 9 | Technical ID Immutability | Fix technical ID mutation when loading existing processes, run unit tests, and build | M8 | DONE |
+
 
 ## Interface Contracts
-### MapStruct Mappers
-- Mappers must map bidirectionally between domain model POJOs and JPA Entities (with `JpaEntity` suffix) inside `com.ibpms.poc.infrastructure.jpa.mapper`.
-- Mappers should use the component model `spring` (`@Mapper(componentModel = "spring")`).
-
-### DmnModelRepositoryPort
-- Domain Port signature:
-  - `Optional<DmnModel> findById(String id);`
-  - `DmnModel save(DmnModel dmnModel);`
-  - `void delete(DmnModel dmnModel);`
-  - `List<DmnModel> findByTenantId(String tenantId);`
-  - `List<DmnModel> findByStatusAndUpdatedAtBefore(String status, LocalDateTime cutoff);`
-
-### DmnModelJpaAdapter
-- Infrastructure Adapter implements `DmnModelRepositoryPort` and delegates to `DmnModelRepository` (which extends `JpaRepository<DmnModelJpaEntity, String>`). Maps entities to domain models using `DmnModelMapper`.
+- **BPMN Version History API**: `/api/v1/design/processes/{processDefinitionKey}/versions`
+  - Error case: catch `IllegalArgumentException` → return empty list with HTTP 200 OK.
+  - DTO schema keys required: `version`, `date` (or `updatedAt`), `author` (or `createdBy`), `status`, and any existing keys.
+- **BPMN Validation API**: `/validate` (multipart/form-data with file upload).
 
 ## Code Layout
-- Domain Models: `backend/ibpms-core/src/main/java/com/ibpms/poc/domain/model`
-- Domain Ports: `backend/ibpms-core/src/main/java/com/ibpms/poc/domain/port`
-- JPA Entities: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/jpa/entity/dmn`
-- MapStruct Mappers: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/jpa/mapper`
-- Adapters: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/adapter`
-- Web Controllers: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/web/dmn`
+- Modeler Views: `frontend/src/views/admin/Modeler/BpmnDesigner.vue`
+- Pinia Stores: `frontend/src/stores/useIntegrationStore.ts`
+- Backend Controllers: `backend/ibpms-core/src/main/java/com/ibpms/poc/infrastructure/web/BpmnDesignController.java`
+- Backend Integration Tests: `backend/ibpms-core/src/test/java/com/ibpms/poc/infrastructure/web/DataMappingIntegrityTest.java`

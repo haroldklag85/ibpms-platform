@@ -473,17 +473,6 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     return res;
   };
 
-  const availableStages = computed(() => {
-    const stages = new Set<string>();
-    const flatF = flatFields(canvasFields.value);
-    flatF.forEach(f => {
-      if (f.stage && f.stage !== 'START_EVENT' && f.stage !== 'ALL' && f.stage !== 'ANALYSIS' && f.stage !== 'DECISION') {
-        stages.add(f.stage);
-      }
-    });
-    return Array.from(stages);
-  });
-
   const attemptTabChange = (targetTab: 'TEMPLATE' | 'SCRIPT' | 'ZOD' | 'STYLE' | 'JSON') => {
     if (activeCodeTab.value === 'JSON') {
         try {
@@ -522,46 +511,43 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   };
 
   const generateMockPath = (type: string, fuzzerPayloadRef: any) => {
-    const buildMock = (fields: any[]): any => {
-      let mock: any = {};
-      fields.forEach(f => {
-        if (f.type.startsWith('button_') || f.type === 'tabs' || f.type === 'accordion') return;
-        
+    let mock: any = {};
+    const flatF = flatFields(canvasFields.value);
+    flatF.forEach(f => {
+        if(f.type.startsWith('button_') || f.type === 'container') return;
         const key = f.camundaVariable || f.id;
-        
-        if (f.type === 'container') {
-          const childMocks = buildMock(f.children || []);
-          Object.assign(mock, childMocks); // Flatten objects from container
-        } else if (f.type === 'field_array') {
-          // Zod validation for arrays requires an array of objects
-          mock[key] = [buildMock(f.children || [])];
-        } else {
-          if (type === 'happy') {
-            if (f.type === 'number' || f.type === 'timer') mock[key] = 42;
-            else if (f.type === 'checkbox') mock[key] = true;
-            else if (f.type === 'email') mock[key] = 'test@example.com';
-            else if (f.type === 'url') mock[key] = 'https://example.com';
-            else if (f.isMultiple) mock[key] = ['Option1'];
-            else if (f.type === 'file' || f.type === 'signature') mock[key] = '550e8400-e29b-41d4-a716-446655440000';
+        if (type === 'happy') {
+            if(f.type === 'number' || f.type === 'timer') mock[key] = 42;
+            else if(f.type === 'checkbox') mock[key] = true;
+            else if(f.type === 'email') mock[key] = 'test@example.com';
+            else if(f.type === 'url') mock[key] = 'https://example.com';
+            else if(f.isMultiple) mock[key] = ['Option1'];
             else mock[key] = 'Dummy Data';
-          } else if (type === 'fuzz') {
-            if (f.type === 'email') mock[key] = 'invalid-email';
-            else if (f.type === 'url') mock[key] = 'invalid-url';
-            else if (f.type === 'number' || f.type === 'timer') mock[key] = 'not-a-number';
-            else if (f.type === 'checkbox') mock[key] = 'not-a-boolean';
-            else if (f.required) mock[key] = '';
-            else if (f.minLength && f.minLength > 0) mock[key] = 'x'.repeat(Math.max(0, f.minLength - 1));
-            else if (f.maxLength && f.maxLength > 0) mock[key] = 'x'.repeat(f.maxLength + 1);
-            else mock[key] = 'fuzzed-data';
-          } else {
+        } else if (type === 'fuzz') {
+            if (f.type === 'email') {
+                mock[key] = 'invalid-email';
+            } else if (f.type === 'url') {
+                mock[key] = 'invalid-url';
+            } else if (f.type === 'number' || f.type === 'timer') {
+                mock[key] = 'not-a-number';
+            } else if (f.type === 'checkbox') {
+                mock[key] = 'not-a-boolean';
+            } else {
+                if (f.required) {
+                    mock[key] = '';
+                } else if (f.minLength && f.minLength > 0) {
+                    mock[key] = 'x'.repeat(Math.max(0, f.minLength - 1));
+                } else if (f.maxLength && f.maxLength > 0) {
+                    mock[key] = 'x'.repeat(f.maxLength + 1);
+                } else {
+                    mock[key] = 'fuzzed-data';
+                }
+            }
+        } else {
             mock[key] = null;
-          }
         }
-      });
-      return mock;
-    };
-    
-    fuzzerPayloadRef.value = JSON.stringify(buildMock(canvasFields.value), null, 2);
+    });
+    fuzzerPayloadRef.value = JSON.stringify(mock, null, 2);
   };
 
   const certifyForm = async (formId: string, payload: string) => {
@@ -1320,7 +1306,6 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   });
 
   return {
-    availableStages,
     canvasFields,
     formTitle,
     formPattern,

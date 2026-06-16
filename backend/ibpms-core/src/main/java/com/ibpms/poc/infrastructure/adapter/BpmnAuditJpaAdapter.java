@@ -11,9 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.List;
-import java.util.stream.Collectors;
-import com.ibpms.poc.domain.model.BpmnDesignAuditEntry;
 
 @Component
 public class BpmnAuditJpaAdapter implements BpmnAuditPort {
@@ -53,30 +50,37 @@ public class BpmnAuditJpaAdapter implements BpmnAuditPort {
         );
         repository.save(entity);
     }
-
     @Override
-    public List<BpmnDesignAuditEntry> getAuditLogsForProcess(UUID processDesignId) {
-        return repository.findByProcessDesignIdOrderByTimestampDesc(processDesignId)
-            .stream()
-            .map(entity -> {
-                String detailsJson = null;
-                if (entity.getDetails() != null) {
-                    try {
-                        detailsJson = objectMapper.writeValueAsString(entity.getDetails());
-                    } catch (Exception e) {
-                        detailsJson = "{}";
-                    }
-                }
-                return new BpmnDesignAuditEntry(
-                    entity.getId(),
-                    entity.getProcessDesignId(),
-                    BpmnDesignAuditEntry.Action.valueOf(entity.getAction().name()),
-                    entity.getUserId(),
-                    entity.getTimestamp(),
-                    entity.getVersionAffected(),
-                    detailsJson
-                );
-            })
-            .collect(Collectors.toList());
+    public java.util.List<com.ibpms.poc.domain.model.BpmnDesignAuditEntry> getAuditLogsForProcess(UUID processDesignId) {
+        return repository.findByProcessDesignIdOrderByTimestampDesc(processDesignId).stream()
+                .map(this::mapToDomain)
+                .toList();
+    }
+
+    private com.ibpms.poc.domain.model.BpmnDesignAuditEntry mapToDomain(BpmnDesignAuditLogEntity entity) {
+        String detailsStr = "";
+        if (entity.getDetails() != null) {
+            try {
+                detailsStr = objectMapper.writeValueAsString(entity.getDetails());
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        com.ibpms.poc.domain.model.BpmnDesignAuditEntry.Action action;
+        try {
+            action = com.ibpms.poc.domain.model.BpmnDesignAuditEntry.Action.valueOf(entity.getAction().name());
+        } catch (IllegalArgumentException e) {
+            action = com.ibpms.poc.domain.model.BpmnDesignAuditEntry.Action.PRE_FLIGHT;
+        }
+
+        return new com.ibpms.poc.domain.model.BpmnDesignAuditEntry(
+                entity.getId(),
+                entity.getProcessDesignId(),
+                action,
+                entity.getUserId(),
+                entity.getTimestamp(),
+                entity.getVersionAffected(),
+                detailsStr
+        );
     }
 }

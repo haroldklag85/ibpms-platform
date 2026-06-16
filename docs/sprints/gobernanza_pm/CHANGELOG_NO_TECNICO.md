@@ -436,3 +436,16 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 **Estado**: ✅ Listo
 
+---
+
+## [2026-06-16] — Estabilización de la Conexión a la Base de Datos
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA)
+**¿Qué es?**: Se corrigió un problema de configuración donde el sistema intentaba conectarse a la base de datos por una "puerta" equivocada (puerto 5434), lo que causaba que el sistema no pudiera arrancar. Se ajustó la configuración para que siempre use la puerta correcta (puerto 5433) según lo dictado por la arquitectura del proyecto.
+**¿Para qué sirve?**: Para garantizar que el sistema siempre pueda comunicarse con la base de datos sin errores de conexión, previniendo fallas al iniciar y asegurando que el entorno local y de pruebas funcionen de manera estable y consistente.
+**¿De dónde viene?**: Resolución de un problema detectado durante el arranque del sistema (Connection Refused), alineando el código con el documento de arquitectura.
+**¿Qué debería hacer?**:
+- El sistema se conecta a la base de datos correctamente sin reportar error de conexión rechazada.
+- El servidor arranca con normalidad.
+
+**Estado**: ✅ Listo
+

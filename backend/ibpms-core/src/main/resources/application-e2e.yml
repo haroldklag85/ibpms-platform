@@ -1,6 +1,7 @@
 spring:
   datasource:
-    url: jdbc:postgresql://127.0.0.1:5434/ibpms_e2e
+    # @Traceability: BUG-FIX: fix postgres port to 5433 based on architecture
+    url: jdbc:postgresql://127.0.0.1:5433/ibpms_e2e
     username: ibpms
     password: ibpms_e2e_pass
     hikari:

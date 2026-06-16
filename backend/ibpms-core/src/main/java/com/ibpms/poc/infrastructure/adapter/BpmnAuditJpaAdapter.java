@@ -11,6 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.List;
+import java.util.stream.Collectors;
+import com.ibpms.poc.domain.model.BpmnDesignAuditEntry;
 
 @Component
 public class BpmnAuditJpaAdapter implements BpmnAuditPort {
@@ -49,5 +52,31 @@ public class BpmnAuditJpaAdapter implements BpmnAuditPort {
             detailsMap
         );
         repository.save(entity);
+    }
+
+    @Override
+    public List<BpmnDesignAuditEntry> getAuditLogsForProcess(UUID processDesignId) {
+        return repository.findByProcessDesignIdOrderByTimestampDesc(processDesignId)
+            .stream()
+            .map(entity -> {
+                String detailsJson = null;
+                if (entity.getDetails() != null) {
+                    try {
+                        detailsJson = objectMapper.writeValueAsString(entity.getDetails());
+                    } catch (Exception e) {
+                        detailsJson = "{}";
+                    }
+                }
+                return new BpmnDesignAuditEntry(
+                    entity.getId(),
+                    entity.getProcessDesignId(),
+                    BpmnDesignAuditEntry.Action.valueOf(entity.getAction().name()),
+                    entity.getUserId(),
+                    entity.getTimestamp(),
+                    entity.getVersionAffected(),
+                    detailsJson
+                );
+            })
+            .collect(Collectors.toList());
     }
 }

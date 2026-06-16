@@ -422,3 +422,17 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 - Los cambios rápidos (menores a 5 segundos) se guardan de forma invisible para no interrumpir el trabajo del usuario.
 
 **Estado**: ✅ Listo
+
+---
+
+## [2026-06-16] — Recuperación del Historial de Cambios en Procesos
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA)
+**¿Qué es?**: Se solucionó un problema técnico que impedía al sistema arrancar correctamente. El sistema había "olvidado" cómo mostrar el historial de cambios de un proceso, lo que bloqueaba todo el inicio. Se le enseñó nuevamente cómo extraer y traducir esa información de la base de datos para que el sistema inicie sin problemas.
+**¿Para qué sirve?**: Para garantizar que el sistema vuelva a funcionar y que los administradores puedan consultar la "caja negra" o el registro de actividad de cada proceso (quién lo modificó, cuándo y qué cambió). Esto es vital para auditorías y para entender qué ha pasado con un trámite a lo largo del tiempo.
+**¿De dónde viene?**: Resolución de Bug Quirúrgico (US-005) - Error de arranque del servidor.
+**¿Qué debería hacer?**:
+- El sistema arranca sin errores críticos de inicio.
+- El historial de cambios de cualquier trámite puede ser consultado correctamente.
+
+**Estado**: ✅ Listo
+

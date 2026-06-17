@@ -438,6 +438,28 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 ---
 
+## [2026-06-16] — Reparación de Interfaz de Usuario y Notificaciones
+**Autor**: Agente Frontend (🔧 BUG-FIX LEAD)
+**¿Qué es?**: Se solucionó un problema que impedía que la plataforma visual (Frontend) se cargara correctamente. El sistema intentaba buscar un componente visual de notificaciones con un nombre antiguo o incorrecto.
+**¿Para qué sirve?**: Para garantizar que todos los usuarios puedan acceder al portal y a la bandeja unificada sin encontrarse con una pantalla en blanco o un error crítico al intentar ingresar.
+**¿De dónde viene?**: Resolución de un error de carga detectado al arrancar la interfaz web.
+**¿Qué debería hacer?**:
+- El portal y la bandeja de trabajo ahora inician y se despliegan exitosamente sin interrupciones.
+
+**Estado**: ✅ Listo
+
+## [2026-06-16] — Recuperación de los test de verificación del sistema
+**Autor**: Agente Backend (🔧 BUG-FIX LEAD)
+**¿Qué es?**: Se corrigieron pequeños errores en el código de validación del sistema que estaban impidiendo que las revisiones técnicas y automáticas funcionaran. El sistema estaba confundiendo tipos de datos internos al leer logs y consultar tableros.
+**¿Para qué sirve?**: Para garantizar que todos los controles de calidad puedan ejecutarse de forma correcta antes de probar y publicar el sistema. Esto evita que los desarrolladores se queden "atascados" con pantallas de error en compilación y permite seguir avanzando.
+**¿De dónde viene?**: Resolución de un problema técnico detectado al levantar las pruebas del proyecto.
+**¿Qué debería hacer?**:
+- Los procesos de validación técnica ahora inician y se completan exitosamente sin interrumpir el desarrollo.
+
+**Estado**: ✅ Listo
+
+---
+
 ## [2026-06-16] — Estabilización de la Conexión a la Base de Datos
 **Autor**: Agente Backend (⚙️ BACKEND - JAVA)
 **¿Qué es?**: Se corrigió un problema de configuración donde el sistema intentaba conectarse a la base de datos por una "puerta" equivocada (puerto 5434), lo que causaba que el sistema no pudiera arrancar. Se ajustó la configuración para que siempre use la puerta correcta (puerto 5433) según lo dictado por la arquitectura del proyecto.
@@ -446,6 +468,21 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 **¿Qué debería hacer?**:
 - El sistema se conecta a la base de datos correctamente sin reportar error de conexión rechazada.
 - El servidor arranca con normalidad.
+
+**Estado**: ✅ Listo
+
+---
+
+## [2026-06-17] — Corrección Visual del Diseñador de Formularios
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3)
+**¿Qué es?**: Se corrigió un problema visual en la pantalla del Diseñador de Formularios donde los paneles se sobreponían entre sí al usar monitores de resolución estándar (pantallas normales de laptop o escritorio). Los tres paneles — la barra de componentes a la izquierda, el lienzo de diseño en el centro y el editor de código a la derecha — ahora se distribuyen armoniosamente sin invadir el espacio del otro.
+**¿Para qué sirve?**: Para que cualquier usuario pueda diseñar formularios cómodamente sin importar el tamaño de su pantalla. Antes, en pantallas normales (no ultra-anchas) el editor de código invadía el lienzo de diseño haciendo imposible trabajar. Ahora, cada panel se adapta al espacio disponible de forma proporcional.
+**¿De dónde viene?**: Bug reportado visualmente en el módulo de diseño de formularios (BUG-UI-DESIGNER).
+**¿Qué debería hacer?**:
+- En una pantalla de laptop estándar (1366x768), los tres paneles se muestran sin sobreponerse.
+- El lienzo de diseño central se contrae suavemente cuando hay menos espacio disponible.
+- El editor de código a la derecha es más angosto en pantallas pequeñas y se expande progresivamente en pantallas más grandes.
+- El error de consola reportado NO es del sistema sino de extensiones del navegador (se ignora justificadamente).
 
 **Estado**: ✅ Listo
 

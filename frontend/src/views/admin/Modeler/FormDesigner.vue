@@ -150,7 +150,7 @@
       </aside>
 
       <!-- Lienzo Central (Canvas Drag & Drop) -->
-      <section class="flex-1 bg-gray-50/50 flex flex-col relative">
+      <section class="flex-1 min-w-0 bg-gray-50/50 flex flex-col relative overflow-x-auto">
         <!-- Barra de Simulación del Stage (Solo para Maestro) -->
         <div v-if="formPattern === 'IFORM_MAESTRO'" class="absolute top-4 left-1/2 -translate-x-1/2 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-full shadow-sm text-xs font-bold flex items-center gap-3 z-10">
           <span>Simulation Stage:</span>
@@ -423,7 +423,7 @@
       </section>
 
       <!-- Monaco IDE (Bidireccional V2) -->
-      <aside v-show="!isFullScreen" class="w-2/5 min-w-[350px] bg-[#1e1e1e] border-l border-gray-800 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-20 shrink-0 transition-all">
+      <aside v-show="!isFullScreen" class="w-[30%] lg:w-1/3 2xl:w-2/5 min-w-[300px] bg-[#1e1e1e] border-l border-gray-800 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-20 shrink-0 transition-all">
         
         <!-- Tabs -->
         <div class="flex bg-[#252526] text-xs font-mono font-medium text-gray-400 border-b border-[#3e3e42] shrink-0 overflow-x-auto">

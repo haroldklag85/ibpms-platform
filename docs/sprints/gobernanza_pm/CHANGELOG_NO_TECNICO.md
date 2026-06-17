@@ -486,3 +486,14 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 **Estado**: ✅ Listo
 
+## [2026-06-17] — Corrección del IDE de Diseño que no se Mostraba (Pantalla en Blanco)
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3)
+**¿Qué es?**: Se resolvió un error crítico donde el Diseñador de Formularios aparecía completamente en blanco al abrirlo. El problema era que el editor de código inteligente (Monaco Editor) intentaba descargarse automáticamente desde Internet y la versión más reciente contenía un defecto que impedía su arranque, bloqueando toda la página.
+**¿Para qué sirve?**: Para que los usuarios puedan acceder al Diseñador de Formularios sin encontrarse una pantalla vacía. Ahora el sistema descarga una versión específica y estable del editor de código que funciona correctamente, garantizando que el IDE se muestre siempre al abrir la ruta de diseño.
+**¿De dónde viene?**: Bug reportado como BUG-MONACO-BLANK — Error `RegisterClientLocalizationsError` en consola al navegar a la pantalla de diseño de formularios.
+**¿Qué debería hacer?**:
+- Al abrir el Diseñador de Formularios, la pantalla muestra correctamente la barra de herramientas, el lienzo de diseño y el editor de código.
+- No aparecen errores en la consola del navegador.
+- El editor de código JSON/Zod carga normalmente y permite editar.
+
+**Estado**: ✅ Listo

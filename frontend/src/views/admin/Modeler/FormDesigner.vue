@@ -1026,9 +1026,17 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useLocalStorage } from '@vueuse/core';
 import VueDraggable from 'vuedraggable';
-import VueMonacoEditor from '@guolao/vue-monaco-editor';
+import VueMonacoEditor, { loader } from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
 import AppTooltip from '@/components/common/AppTooltip.vue';
+
+// @Traceability: BUG-MONACO-BLANK — Pin Monaco CDN to v0.43.0 to prevent
+// RegisterClientLocalizationsError from NLS module changes in v0.45+
+loader.config({
+  paths: {
+    vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs'
+  }
+});
 import FormRenderer from '@/components/forms/FormRenderer.vue';
 // @ts-ignore
 import jexl from 'jexl';

@@ -1030,12 +1030,14 @@ import VueMonacoEditor, { loader } from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
 import AppTooltip from '@/components/common/AppTooltip.vue';
 
-// @Traceability: BUG-MONACO-BLANK — Pin Monaco CDN to v0.43.0 to prevent
-// RegisterClientLocalizationsError from NLS module changes in v0.45+
+// @Traceability: BUG-MONACO-NLS — Pin Monaco CDN to v0.43.0 and disable NLS locale
+// fetching to prevent RegisterClientLocalizationsError in newer versions.
+// The `globalAPI: true` exposes `window.monaco` for editor marker decorations (CA-84).
 loader.config({
   paths: {
     vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs'
-  }
+  },
+  'vs/nls': { availableLanguages: {} }
 });
 import FormRenderer from '@/components/forms/FormRenderer.vue';
 // @ts-ignore
@@ -1564,6 +1566,8 @@ const onCamundaVariableChange = (e: Event) => {
     }
   }
 };
+
+
 
 declare const monaco: any;
 

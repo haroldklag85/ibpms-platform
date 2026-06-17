@@ -512,3 +512,22 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 - Todas las secciones (Formularios, Diseñador, Workdesk, etc.) cargan correctamente al navegar.
 
 **Estado**: ✅ Listo
+
+---
+
+## 17 de Junio de 2026 — Corrección de Pantalla Blanca al Navegar al Diseñador de Formularios y Error del Editor de Código
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3) — Rama DevDavid
+**¿Qué es?**: Se resolvieron dos problemas críticos que afectaban la experiencia del Diseñador de Formularios:
+1. **Pantalla Blanca**: Al hacer clic para ir a la lista de formularios o navegar entre secciones, la pantalla quedaba completamente en blanco. La causa era un problema de estructura interna donde una ventana emergente de confirmación de borrado estaba colocada fuera del contenedor principal de la página, lo cual confundía al sistema de animaciones de navegación.
+2. **Error en el Editor de Código**: El editor inteligente de código (Monaco IDE) que usan los diseñadores mostraba un error en la consola del navegador ("RegisterClientLocalizationsError") porque intentaba descargar traducciones de un servidor externo (CDN) que ya no es compatible con la versión actual. Se cambió para usar la versión del editor que ya viene incluida en la aplicación.
+
+**¿Para qué sirve?**: Para que los usuarios puedan navegar sin interrupciones al Gestor de Formularios y al Diseñador, sin pantallas en blanco y sin errores en la consola del navegador. El editor de código ahora carga instantáneamente sin depender de servidores externos.
+**¿De dónde viene?**: Bug Crítico reportado como BUG-TRANSITION-BLANK-V2 + BUG-MONACO-NLS — Diagnóstico del Arquitecto Líder identificó causa raíz en fragmento multi-nodo Vue 3 y CDN de Monaco obsoleta.
+**¿Qué debería hacer?**:
+- Al hacer clic en "Gestor de Formularios" o cualquier enlace de navegación, la nueva sección se muestra correctamente con animación suave — sin pantalla blanca.
+- El Diseñador de Formularios carga el editor de código sin errores en la consola del navegador.
+- El editor de código carga más rápido al no depender de descargas externas (CDN).
+- El modal de confirmación de borrado de formularios sigue funcionando normalmente.
+
+**Estado**: ✅ Listo

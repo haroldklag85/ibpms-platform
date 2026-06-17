@@ -148,7 +148,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, shallowRef } from 'vue';
 import { VueMonacoEditor, VueMonacoDiffEditor } from '@guolao/vue-monaco-editor';
-import * as monaco from 'monaco-editor';
 
 interface PromptTemplate {
   id: string;
@@ -231,7 +230,7 @@ const monacoOptions = {
   renderWhitespace: "selection"
 };
 
-const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor, m: typeof monaco) => {
+const handleEditorMount = (editor: any, m: any) => {
   // Register basic custom syntax highlighter for system prompts
   m.languages.register({ id: 'systemprompt' });
   m.languages.setMonarchTokensProvider('systemprompt', {

@@ -17,7 +17,7 @@
 
     <ImpersonationBanner v-if="authStore.isImpersonating" />
     <ImpersonationSelector v-if="showImpersonationSelector" @close="showImpersonationSelector = false" />
-    <CQRSConnectionToast />
+    <ConnectionToast />
     <!-- Sidebar: Expandable / Collapsed State (Left) -->
     <!-- Transición suave de ancho: w-64 cuando expandido, w-16 cuando colapsado -->
     <aside 
@@ -250,10 +250,10 @@
       
       <!-- Lienzo donde se renderizan las vistas secundarias (Router View) -->
       <div class="flex-1 overflow-auto bg-transparent relative">
+        <!-- @Traceability(US = "US-001", CA = {"CA-12"}) Acierto UX: Keep-Alive retiene scroll y filtros en RAM para 0ms de carga en regresos -->
+        <!-- @Traceability: US-005, CA-15 (Fix Welcome Modal Loop - Solución A) -->
         <router-view v-slot="{ Component, route }">
           <transition name="fade" mode="out-in">
-            <!-- @Traceability(US = "US-001", CA = {"CA-12"}) Acierto UX: Keep-Alive retiene scroll y filtros en RAM para 0ms de carga en regresos -->
-            <!-- @Traceability: US-005, CA-15 (Fix Welcome Modal Loop - Solución A) -->
             <keep-alive include="Workdesk">
               <component :is="Component" :key="route?.path ? route.path + '-' + authStore.activeRole : ''" />
             </keep-alive>
@@ -274,7 +274,7 @@ import { useMenuStore } from '@/stores/useMenuStore';
 import RoleSelectorDropdown from '@/components/shell/RoleSelectorDropdown.vue';
 import ImpersonationBanner from '@/components/admin/ImpersonationBanner.vue';
 import ImpersonationSelector from '@/components/admin/ImpersonationSelector.vue';
-import CQRSConnectionToast from '@/components/common/CQRSConnectionToast.vue';
+import ConnectionToast from '@/components/common/ConnectionToast.vue'; // @Traceability: BUG-FIX: Corrección de nombre y ruta de Toast
 import { useI18n } from 'vue-i18n';
 
 const router = useRouter();

@@ -497,3 +497,18 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 - El editor de código JSON/Zod carga normalmente y permite editar.
 
 **Estado**: ✅ Listo
+
+---
+
+## 17 de Junio de 2026 — Se corrigió la pantalla en blanco al navegar entre secciones de la plataforma
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3)
+**¿Qué es?**: Se resolvió un error crítico donde, al hacer clic en un enlace para ir al Diseñador de Formularios (u otras secciones), la pantalla quedaba completamente en blanco. Curiosamente, si el usuario recargaba la página con F5, todo funcionaba perfectamente. El problema era que unas notas internas de trazabilidad estaban ubicadas en un lugar incorrecto del código de navegación, lo cual confundía al sistema de animaciones y le impedía mostrar la nueva página.
+**¿Para qué sirve?**: Para que los usuarios puedan navegar libremente entre todas las secciones de la plataforma haciendo clic en los menús y botones, sin que la pantalla quede en blanco. La transición animada (efecto de desvanecimiento) entre páginas ahora funciona correctamente.
+**¿De dónde viene?**: Bug reportado como BUG-TRANSITION-BLANK — Pantalla blanca al navegar entre vistas usando la navegación interna de la aplicación.
+**¿Qué debería hacer?**:
+- Al hacer clic en cualquier enlace o botón de navegación, la nueva sección se muestra correctamente con una animación suave de transición.
+- Ya no es necesario recargar la página con F5 para ver el contenido.
+- Todas las secciones (Formularios, Diseñador, Workdesk, etc.) cargan correctamente al navegar.
+
+**Estado**: ✅ Listo

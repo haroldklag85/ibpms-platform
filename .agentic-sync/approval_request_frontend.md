@@ -1,12 +1,34 @@
-# Solicitud de Revisión: Frontend US-017 STABILIZE
+# Solicitud de Revisión Arquitectónica — BUG-TRANSITION-BLANK
+**Fecha:** 2026-06-17T16:13:00-05:00  
+**Solicitante:** Agente Frontend (DevDavid)  
+**Severidad:** CRÍTICA (pantalla blanca en navegación SPA)
 
-Hola Arquitecto Líder, he elaborado el plan de implementación para la estabilización de la US-017 PM-01 Slot 5.
+---
 
-**Resumen del Plan:**
-1. **Unificación Toast:** Se mantendrá `ConnectionToast.vue` (el canónico) y se eliminará `CQRSConnectionToast.vue`, removiendo sus referencias en `MainLayout.vue`.
-2. **CAs Frontend (CA-19 a CA-26):** Se auditarán `connectionStore.ts`, `useConnectionStatus.ts` y el componente de Toast para garantizar el debounce de 5s, los colores/íconos correctos de estado degradado, cero jerga técnica, y la transición limpia de 3s en verde.
-3. **Mocks y Regresiones:** Se verificará que `Workdesk.vue`, `KanbanView.vue` y `useWorkdeskStore.ts` operen enteramente contra la API real (`/api/v1/workbox/tasks...`) y no contengan código muerto u over-fetching.
-4. **Artifacts obsoletos:** `frontend/out.txt` será borrado, y `NetworkRetryModal.vue` será removido si no tiene dependencias.
-5. **Calidad:** Pasaremos las pruebas `npm run test`, haremos un `npm run build` exitoso, y actualizaremos `coverage_matrix.md`.
+## Resumen Ejecutivo
 
-Por favor, revisa el plan detallado en `implementation_plan.md` y dame luz verde para proceder a la fase EXECUTION.
+Se solicita aprobación para aplicar un **fix quirúrgico** en `MainLayout.vue` que corrige la pantalla blanca al navegar entre vistas SPA.
+
+## Causa Raíz Confirmada
+
+En `frontend/src/layouts/MainLayout.vue`, líneas 255-256, existen **2 comentarios HTML** (`<!-- @Traceability... -->`) dentro del tag `<transition name="fade" mode="out-in">`. En Vue 3, los comentarios son parseados como VNodes, generando un fragmento con múltiples nodos raíz. Esto corrompe la máquina de estados `out-in`: el componente saliente nunca termina de animar y el entrante nunca se renderiza.
+
+## Cambio Propuesto
+
+**Mover** los 2 comentarios `@Traceability` desde **dentro** del `<transition>` hacia **fuera** del `<router-view>` (antes de este), donde no interfieren con el renderizado.
+
+- **Archivos afectados:** 1 (`MainLayout.vue`)
+- **Líneas modificadas:** 6 (reubicación de 2 comentarios)
+- **Impacto en funcionalidades adyacentes:** CERO (solo se mueven comentarios HTML)
+- **Riesgo de regresión:** MÍNIMO
+
+## Criterios de Aceptación
+
+| ID | Criterio | Método de Validación |
+|----|----------|---------------------|
+| CA-BUG-1 | Navegación SPA sin pantalla blanca | Navegación manual + build exitoso |
+| CA-BUG-2 | Comentarios eliminados del `<transition>` | Inspección visual del código |
+
+## Solicitud Formal
+
+Arquitecto Líder, solicito su veredicto formal (✅ APROBADO / ❌ RECHAZADO) para proceder con la implementación de este fix quirúrgico.

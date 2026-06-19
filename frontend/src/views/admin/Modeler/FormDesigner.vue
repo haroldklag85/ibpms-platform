@@ -117,10 +117,10 @@
     </header>
 
     <!-- ═══════ Main Layout ═══════ -->
-    <main class="flex-1 flex min-h-0 relative">
+    <main class="flex-1 flex flex-col md:flex-row min-h-0 relative w-full overflow-hidden">
       
       <!-- Toolbox Izquierda (Componentes Lego) -->
-      <aside v-show="!isFullScreen" class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0 transition-all">
+      <aside v-show="!isFullScreen" class="w-full md:w-64 bg-white border-r border-gray-200 flex flex-col shrink-0 transition-all hidden md:flex">
         <div class="p-3 border-b border-gray-100 bg-gray-50">
           <h3 class="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">🧩 Componentes</h3>
         </div>
@@ -150,7 +150,7 @@
       </aside>
 
       <!-- Lienzo Central (Canvas Drag & Drop) -->
-      <section class="flex-1 min-w-0 bg-gray-50/50 flex flex-col relative overflow-x-auto">
+      <section class="flex-1 w-full min-w-0 bg-gray-50/50 flex flex-col relative overflow-x-hidden overflow-y-auto box-border">
         <!-- Barra de Simulación del Stage (Solo para Maestro) -->
         <div v-if="formPattern === 'IFORM_MAESTRO'" class="absolute top-4 left-1/2 -translate-x-1/2 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-full shadow-sm text-xs font-bold flex items-center gap-3 z-10">
           <span>Simulation Stage:</span>
@@ -167,7 +167,7 @@
           <!-- CA-6 Shadow DOM (Isolation real via attachShadow & Teleport) -->
           <div ref="designerHostRef" class="w-full min-h-full"></div>
           <Teleport v-if="designerShadowContainer" :to="designerShadowContainer">
-            <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative" style="all: revert; box-sizing: border-box;">
+            <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative w-full overflow-x-hidden box-border" style="all: revert; box-sizing: border-box;">
               <!-- @implNote Traceability: [DevDavid Merge] Integrando input editable preservando Teleport Shadow DOM -->
               <input v-model="formTitle" class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans w-full bg-transparent outline-none hover:bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-200 transition-colors cursor-text" title="Clic para editar el nombre del formulario" />
 
@@ -190,7 +190,7 @@
               <template #item="{ element, index }">
                 <div 
                   v-show="(formPattern !== 'IFORM_MAESTRO' || activeStageSim === 'ALL' || element.stage === activeStageSim) && evaluateMockVis(element)"
-                  class="group relative border border-transparent hover:border-indigo-300 hover:bg-indigo-50/30 p-4 rounded-lg mb-4 transition"
+                  class="group relative border border-transparent hover:border-indigo-300 hover:bg-indigo-50/30 p-4 rounded-lg mb-4 transition w-full max-w-full box-border break-words overflow-x-hidden"
                 >
                   
                   <!-- Controles del Campo (Hover) -->
@@ -254,7 +254,7 @@
                          ghost-class="ghost-dropzone"
                       >
                          <template #item="{ element: child, index: childIdx }">
-                            <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                            <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition w-full max-w-full box-border overflow-x-hidden">
                                <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
                                  <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
                                  <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
@@ -293,7 +293,7 @@
                          ghost-class="ghost-dropzone"
                       >
                          <template #item="{ element: child, index: childIdx }">
-                            <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                            <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition w-full max-w-full box-border overflow-x-hidden">
                                <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
                                  <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
                                  <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
@@ -336,7 +336,7 @@
                              <VueDraggable v-model="pane.children" :group="{ name: 'form-builder', pull: true, put: true }" item-key="id" class="min-h-[120px] transition-all" :class="{'border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center': !pane.children || pane.children.length === 0}" animation="200" ghost-class="ghost-dropzone">
                                 <template #item="{ element: child, index: childIdx }">
                                    <!-- Sub-nivel Visual -->
-                                   <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                                   <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition w-full max-w-full box-border overflow-x-hidden">
                                       <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
                                         <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
                                         <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
@@ -377,7 +377,7 @@
                             <VueDraggable v-model="panel.children" :group="{ name: 'form-builder', pull: true, put: true }" item-key="id" class="min-h-[120px] transition-all" :class="{'border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center': !panel.children || panel.children.length === 0}" animation="200" ghost-class="ghost-dropzone">
                                <template #item="{ element: child, index: childIdx }">
                                   <!-- Sub-nivel Visual -->
-                                  <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                                  <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition w-full max-w-full box-border overflow-x-hidden">
                                      <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
                                        <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
                                        <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
@@ -423,7 +423,7 @@
       </section>
 
       <!-- Monaco IDE (Bidireccional V2) -->
-      <aside v-show="!isFullScreen" class="w-[30%] lg:w-1/3 2xl:w-2/5 min-w-[300px] bg-[#1e1e1e] border-l border-gray-800 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-20 shrink-0 transition-all">
+      <aside v-show="!isFullScreen" class="w-full lg:w-1/3 2xl:w-2/5 min-w-[300px] bg-[#1e1e1e] border-l border-gray-800 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-20 shrink-0 transition-all hidden lg:flex">
         
         <!-- Tabs -->
         <div class="flex bg-[#252526] text-xs font-mono font-medium text-gray-400 border-b border-[#3e3e42] shrink-0 overflow-x-auto">

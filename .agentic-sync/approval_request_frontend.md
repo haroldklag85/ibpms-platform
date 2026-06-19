@@ -1,34 +1,15 @@
-# Solicitud de Revisión Arquitectónica — BUG-TRANSITION-BLANK
-**Fecha:** 2026-06-17T16:13:00-05:00  
-**Solicitante:** Agente Frontend (DevDavid)  
-**Severidad:** CRÍTICA (pantalla blanca en navegación SPA)
+# Solicitud de Aprobación - BUG-0001 (Estilos y Responsive)
 
----
+**Para:** Arquitecto Líder
+**De:** Agente Frontend (Rama DevDavid)
+**Asunto:** Solicitud de validación de Plan de Acción para BUG-0001
 
-## Resumen Ejecutivo
+He completado mi fase de análisis (PLANNING) y documentado el plan en `implementation_plan.md`.
 
-Se solicita aprobación para aplicar un **fix quirúrgico** en `MainLayout.vue` que corrige la pantalla blanca al navegar entre vistas SPA.
+**Resumen de la intervención:**
+1. Modificación de clases utilitarias Tailwind en el `main` Layout para soportar pantallas `md` y `lg` ocultando la barra lateral izquierda en móviles (`hidden md:flex`) y la del código en resoluciones menores a lg (`hidden lg:flex`).
+2. Adición de directivas de flexbox (`flex-col md:flex-row w-full overflow-hidden`) para garantizar un layout responsivo correcto.
+3. Reparación del desbordamiento en el `.shadow-dom-isolation-wrapper` inyectando clases de contención (`w-full max-w-full box-border`) a los contenedores directos que renderizan los campos semilla.
+4. Cumplimiento de ADR-002: no se crearán CSS globales, todo se resolverá mediante clases atómicas de Tailwind CSS ya presentes en la herramienta.
 
-## Causa Raíz Confirmada
-
-En `frontend/src/layouts/MainLayout.vue`, líneas 255-256, existen **2 comentarios HTML** (`<!-- @Traceability... -->`) dentro del tag `<transition name="fade" mode="out-in">`. En Vue 3, los comentarios son parseados como VNodes, generando un fragmento con múltiples nodos raíz. Esto corrompe la máquina de estados `out-in`: el componente saliente nunca termina de animar y el entrante nunca se renderiza.
-
-## Cambio Propuesto
-
-**Mover** los 2 comentarios `@Traceability` desde **dentro** del `<transition>` hacia **fuera** del `<router-view>` (antes de este), donde no interfieren con el renderizado.
-
-- **Archivos afectados:** 1 (`MainLayout.vue`)
-- **Líneas modificadas:** 6 (reubicación de 2 comentarios)
-- **Impacto en funcionalidades adyacentes:** CERO (solo se mueven comentarios HTML)
-- **Riesgo de regresión:** MÍNIMO
-
-## Criterios de Aceptación
-
-| ID | Criterio | Método de Validación |
-|----|----------|---------------------|
-| CA-BUG-1 | Navegación SPA sin pantalla blanca | Navegación manual + build exitoso |
-| CA-BUG-2 | Comentarios eliminados del `<transition>` | Inspección visual del código |
-
-## Solicitud Formal
-
-Arquitecto Líder, solicito su veredicto formal (✅ APROBADO / ❌ RECHAZADO) para proceder con la implementación de este fix quirúrgico.
+Solicito autorización para proceder a la fase de EXECUTION en la rama `DevDavid`.

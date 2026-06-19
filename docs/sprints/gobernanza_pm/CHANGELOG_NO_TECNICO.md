@@ -531,3 +531,18 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 - El modal de confirmación de borrado de formularios sigue funcionando normalmente.
 
 **Estado**: ✅ Listo
+
+---
+
+## 19 de Junio de 2026 — Mejora Visual y Responsiva del Diseñador de Formularios
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3) — Rama DevDavid
+**¿Qué es?**: Se mejoró el diseño de la pantalla del "Diseñador de Formularios" para que se adapte perfectamente a cualquier tamaño de pantalla, ya sea un monitor grande, una tableta o una laptop pequeña. Además, se solucionó un problema donde algunos campos arrastrados al centro de la pantalla se salían de su contenedor, creando barras de desplazamiento innecesarias y un aspecto desordenado.
+**¿Para qué sirve?**: Para que los creadores de formularios tengan una experiencia fluida y cómoda en cualquier dispositivo. Los paneles laterales (herramientas y código) ahora se ocultan inteligentemente si la pantalla es muy pequeña, y los campos dentro del formulario mantienen su tamaño correcto sin desbordarse.
+**¿De dónde viene?**: Resolución de BUG-0001 — Reporte de estilos y responsividad en FormDesigner.
+**¿Qué debería hacer?**:
+- En pantallas pequeñas (como tabletas), los paneles laterales se ocultan para dar prioridad al lienzo central.
+- Los campos del formulario, como cuadros de texto, no rebasan los bordes de la pantalla.
+- La pantalla ya no muestra barras de desplazamiento horizontales molestas que afecten la navegación.
+
+**Estado**: ✅ Listo

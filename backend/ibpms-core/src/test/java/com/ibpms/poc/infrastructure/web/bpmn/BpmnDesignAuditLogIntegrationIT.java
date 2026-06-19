@@ -95,7 +95,7 @@ public class BpmnDesignAuditLogIntegrationIT extends AbstractIntegrationIT {
             BpmnDesignAuditLogEntity.Action.SAVE_DRAFT,
             "Harolt Gómez",
             1,
-            "{\"event\":\"DRAFT_SAVED\"}"
+            java.util.Map.of("event", "DRAFT_SAVED") // @Traceability: BUG-FIX: Corrección String a Map
         );
         log1.setTimestamp(now);
         auditLogRepository.save(log1);
@@ -105,7 +105,7 @@ public class BpmnDesignAuditLogIntegrationIT extends AbstractIntegrationIT {
             BpmnDesignAuditLogEntity.Action.REQUEST_DEPLOY,
             "Ana García",
             2,
-            "{\"event\":\"DEPLOY_REQUESTED\"}"
+            java.util.Map.of("event", "DEPLOY_REQUESTED")
         );
         log2.setTimestamp(now.plusMinutes(15));
         auditLogRepository.save(log2);

@@ -62,7 +62,8 @@ class KanbanIntegrationServiceTest {
 
         when(taskRepository.findByBoardIdOrderByUpdatedAtDesc(UUID.fromString(projectId))).thenReturn(List.of(kt));
         when(projectionRepository.findAllById(List.of(kt.getOriginalTaskId()))).thenReturn(List.of(wp));
-        when(columnRepository.findByBoardId(projectId)).thenReturn(List.of());
+        // @Traceability: BUG-FIX: Corrección String a UUID
+        when(columnRepository.findByBoardId(UUID.fromString(projectId))).thenReturn(List.of());
 
         KanbanBoardDto result = boardService.getKanbanBoard("default", projectId);
 

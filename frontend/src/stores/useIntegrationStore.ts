@@ -88,8 +88,13 @@ export const useIntegrationStore = defineStore('integrationStore', {
     saveDataMappings(key: string, taskId: string, payload: any) {
       return this.post(`/design/processes/${key}/tasks/${taskId}/mappings`, payload);
     },
+    // @Traceability: US-005, CA-39
     getForms(processKey?: string) {
-      return this.get('/forms/active', { params: { processKey } });
+      const params: Record<string, string> = {};
+      if (processKey && processKey.trim() !== '') {
+        params.processKey = processKey;
+      }
+      return this.get('/forms/active', { params });
     },
     getBpmnComplexityLimit() {
       return this.get('/admin/settings/bpmn-complexity-limit');

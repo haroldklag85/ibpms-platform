@@ -755,3 +755,14 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - El sistema no se rompe si el proceso no tiene todavÃ­a un nombre tÃ©cnico correcto, sino que muestra la lista completa de formularios.
 
 **Estado**: âœ… Listo
+
+## 2026-06-22 — Corrección del Selector de Formularios en el Diseñador de Procesos BPMN
+**Autor**: Agente Frontend (?? FRONTEND - VUE3)
+**¿Qué es?**: Se corrigió el selector de formularios en el diseñador de procesos BPMN para que muestre los formularios reales creados por el usuario, eliminando datos de prueba que aparecían anteriormente.
+**¿Para qué sirve?**: Para asegurar que al configurar una tarea en un proceso, los usuarios solo puedan seleccionar formularios que realmente existen y están listos para usarse, evitando confusiones y errores con datos falsos.
+**¿De dónde viene?**: Historia de Usuario US-005, Criterios de Aceptación 39 y 40.
+**¿Qué debería hacer?**:
+- El menú desplegable de formularios muestra únicamente los formularios reales.
+- Si no hay formularios, muestra la lista vacía en vez de información inventada (mocks).
+
+**Estado**: ? Listo

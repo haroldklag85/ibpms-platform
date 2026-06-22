@@ -2590,21 +2590,16 @@ const fetchForms = async () => {
   try {
     // @Traceability: US-005, CA-40
     const { data } = await integrationStore.getForms(processId.value);
-    // Assuming backend returns array of objects with { id o key, name, type }
-    // Normalizing against old static mapping if backend structure differs slightly
+    // Assuming backend returns array of objects with { id, name, type }
     availableForms.value = data.map((f: any) => ({
-      key: f.key || f.id || f.formId,
+      key: f.id,
       name: f.name || f.title,
       type: f.type === 'MASTER' ? 'MAESTRO' : (f.type || 'SIMPLE')
     }));
   } catch (err) {
-    console.warn('Backend /forms indisponible. Fallback a MOCKS CA-30.');
-    availableForms.value = [
-      { key: 'iForm_Credito_Base', name: 'Crédito Base', type: 'MAESTRO' },
-      { key: 'iForm_Onboarding_V3', name: 'Onboarding V3', type: 'MAESTRO' },
-      { key: 'form_aprobacion', name: 'Aprobación Rápida', type: 'SIMPLE' },
-      { key: 'form_revision_docs', name: 'Revisión Documentos', type: 'SIMPLE' }
-    ];
+    // @Traceability: US-005, CA-39 - Eliminación de mock fallback (Zero-Mock Policy)
+    console.error('[BpmnDesigner] Error cargando catálogo de formularios:', err);
+    availableForms.value = [];
   }
 };
 

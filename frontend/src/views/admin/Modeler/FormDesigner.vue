@@ -167,7 +167,7 @@
           <!-- CA-6 Shadow DOM (Isolation real via attachShadow & Teleport) -->
           <div ref="designerHostRef" class="w-full min-h-full"></div>
           <Teleport v-if="designerShadowContainer" :to="designerShadowContainer">
-            <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative w-full overflow-x-hidden box-border" style="all: revert; box-sizing: border-box;">
+            <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative w-full overflow-x-hidden box-border">
               <!-- @implNote Traceability: [DevDavid Merge] Integrando input editable preservando Teleport Shadow DOM -->
               <input v-model="formTitle" class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans w-full bg-transparent outline-none hover:bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-200 transition-colors cursor-text" title="Clic para editar el nombre del formulario" />
 
@@ -190,7 +190,7 @@
               <template #item="{ element, index }">
                 <div 
                   v-show="(formPattern !== 'IFORM_MAESTRO' || activeStageSim === 'ALL' || element.stage === activeStageSim) && evaluateMockVis(element)"
-                  class="group relative border border-transparent hover:border-indigo-300 hover:bg-indigo-50/30 p-4 rounded-lg mb-4 transition w-full max-w-full box-border break-words overflow-x-hidden"
+                  class="group relative border border-transparent hover:border-indigo-300 hover:bg-indigo-50/30 p-4 rounded-lg mb-4 transition w-full max-w-full box-border break-words"
                 >
                   
                   <!-- Controles del Campo (Hover) -->
@@ -1241,15 +1241,12 @@ onMounted(async () => {
     if (designerHostRef.value) {
         const shadowRoot = designerHostRef.value.attachShadow({ mode: 'open' });
         
-        // Inyectamos Tailwind (Vite dev server) o genérico
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = '/src/assets/index.tailwind.css'; // Fallback path
-        shadowRoot.appendChild(link);
-
-        const tailwindCdn = document.createElement('script');
-        tailwindCdn.src = 'https://cdn.tailwindcss.com?plugins=forms';
-        shadowRoot.appendChild(tailwindCdn);
+        // @Traceability: US-003, CA-06, BUG-FIX: Shadow DOM CSS injection - clone compiled Tailwind from document head
+        // El Shadow DOM aísla CSS completamente. Clonamos las hojas de estilo
+        // que Vite/PostCSS ya compiló e inyectó en el <head> del documento principal.
+        document.querySelectorAll('style, link[rel="stylesheet"]').forEach(node => {
+            shadowRoot.appendChild(node.cloneNode(true));
+        });
 
         const container = document.createElement('div');
         container.className = 'workdesk-form-designer-canvas h-full';

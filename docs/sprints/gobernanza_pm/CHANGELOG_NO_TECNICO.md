@@ -538,11 +538,220 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 
 **Autor**: Agente Frontend (🎨 FRONTEND - VUE3) — Rama DevDavid
 **¿Qué es?**: Se mejoró el diseño de la pantalla del "Diseñador de Formularios" para que se adapte perfectamente a cualquier tamaño de pantalla, ya sea un monitor grande, una tableta o una laptop pequeña. Además, se solucionó un problema donde algunos campos arrastrados al centro de la pantalla se salían de su contenedor, creando barras de desplazamiento innecesarias y un aspecto desordenado.
+**¿Para qué sirve?**: Para garantizar que no existan contradicciones en el sistema. Antes, si una tarea cambiaba de estado en la base central pero el Kanban no se enteraba, el usuario veía información incorrecta (por ejemplo, una tarea en "Pendiente" que ya estaba "En progreso"). Al eliminar esta redundancia, el tablero siempre muestra la pura verdad, evitando confusiones y errores al intentar tomar una tarea que ya está asignada a otro.
+
+**¿De dónde viene?**: Historia de Usuario US-008 (Refactorización Kanban) — Handoff del Arquitecto Líder, Sprint PM-01. Cumpliendo estrictamente con la directiva "Zero-Mock" (ADR-010).
+
+**¿Qué debería hacer?**:
+- El tablero Kanban consulta la información de estado de manera precisa y en tiempo real.
+- Ya no ocurren escenarios donde una tarea parece estar libre en el tablero, pero al hacer clic dice que ya fue reclamada.
+- Se reduce la posibilidad de errores por "información desactualizada".
+
+**Estado**: ✅ Listo
+
+---
+
+*Última actualización: 2026-06-06 23:59 COT*
+*Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*
+
+---
+
+## [2026-06-09] — El Tablero Kanban ahora se conecta con los datos reales del sistema
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE)
+
+**¿Qué es?**: Se conectó el tablero visual de tareas (Kanban) directamente con la fuente real de datos del sistema. Antes, el tablero consultaba las tareas por separado y las columnas por otro lado; ahora, toda la información viene junta y actualizada desde una sola fuente confiable. También se mejoró la protección contra conflictos: si dos personas intentan mover la misma tarea al mismo tiempo, el sistema lo detecta, revierte automáticamente el movimiento del segundo usuario y le muestra un aviso claro en pantalla.
+
+**¿Para qué sirve?**: Para garantizar que lo que el usuario ve en el tablero de tareas sea siempre la verdad del sistema. Si un compañero mueve una tarea en otro computador, el tablero del primer usuario se actualiza en tiempo real. Si alguien intenta mover una tarea que ya tomó otra persona, el sistema le avisa instantáneamente en vez de mostrar un error confuso.
+
+**¿De dónde viene?**: Historia de Usuario US-008 (Vista Kanban) — Sprint PM-01, Slot 4. Cumpliendo las directivas de conexión real de datos (ADR-010) y actualización instantánea entre usuarios (CA-12).
+
+**¿Qué debería hacer?**:
+- Al abrir el tablero Kanban, las tareas se cargan directamente desde el sistema central.
+- Si otro usuario mueve una tarea desde su computador, el tablero se actualiza automáticamente sin necesidad de recargar la página.
+- Si un usuario mueve una tarea que ya fue tomada por otra persona, el tablero revierte el movimiento y muestra un aviso rojo: "Conflicto: esta tarea fue reclamada por otro usuario."
+- Al hacer clic en una tarjeta, se abre la vista detallada real de la tarea (no una copia local).
+
+**Estado**: ✅ Listo
+
+---
+
+*Última actualización: 2026-06-09 17:38 COT*
+*Próxima entrada esperada: Al completarse la siguiente historia del Sprint PM-01*
+
+---
+
+## [2026-06-09] — Fortalecimiento de la integridad del sistema al registrar formularios enviados
+
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA)
+
+**¿Qué es?**: Se corrigió un problema estructural en la forma en que el sistema almacena los formularios que los usuarios envían al completar una tarea. La organización interna del sistema no estaba respetando sus propias reglas de separación de responsabilidades, lo que podía causar errores difíciles de rastrear a medida que el sistema crece. Además, se eliminó una tabla duplicada que se creaba automáticamente en la base de datos cada vez que el sistema se instalaba desde cero, generando confusión y desperdicio de espacio.
+
+**¿Para qué sirve?**: Para garantizar que cada formulario enviado por un usuario se almacene de forma confiable, que el historial de envíos nunca se pierda ni se corrompa, y que el sistema pueda crecer sin acumular datos basura. También se resolvieron inconsistencias en el registro de avances del proyecto que podrían confundir a quienes consultan el estado de avance del sistema.
+
+**¿De dónde viene?**: Historia de Usuario US-017 (Registro de Formularios y Garantía de Integridad de Datos) — Sprint PM-01, Slot 5 (Estabilización). Solicitado por el Arquitecto Líder para cerrar deuda técnica acumulada.
+
+**¿Qué debería hacer?**:
+- Cuando un usuario envía un formulario, el sistema lo registra de forma inmutable (no se puede alterar después)
+- Si ocurre un error al procesar el formulario, el sistema crea un registro de compensación (no borra el original)
+- La base de datos ya no crea tablas redundantes al instalarse por primera vez
+- El registro de avance del proyecto ya no tiene información contradictoria
+
+**Estado**: ✅ Listo
+
+---
+
+## [2026-06-09] — Simplificación de notificaciones de conexión y guardado
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE)
+
+**¿Qué es?**: Se eliminó una notificación duplicada que podía confundir al usuario mostrando dos mensajes de estado al mismo tiempo. Se consolidó toda la información sobre el estado de la conexión a internet y el progreso de guardado en un solo indicador claro en la esquina de la pantalla.
+
+**¿Para qué sirve?**: Para evitar confusiones y asegurar que el usuario sepa exactamente si el sistema está guardando sus datos, si se perdió la conexión, o si todo funciona correctamente, usando un lenguaje sencillo y sin tecnicismos.
+
+**¿De dónde viene?**: Historia de Usuario US-017 (Estabilización Frontend) — Sprint PM-01, Slot 5. Cumpliendo las reglas de notificaciones claras (CA-19 a CA-26).
+
+**¿Qué debería hacer?**:
+- Muestra un solo indicador cuando hay problemas de conexión o el sistema está guardando datos de forma prolongada.
+- Los mensajes son fáciles de entender (por ejemplo: "Guardando cambios...", "Trabajando sin conexión").
+- Los cambios rápidos (menores a 5 segundos) se guardan de forma invisible para no interrumpir el trabajo del usuario.
+
+**Estado**: ✅ Listo
+
+---
+
+## [2026-06-16] — Recuperación del Historial de Cambios en Procesos
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA)
+**¿Qué es?**: Se solucionó un problema técnico que impedía al sistema arrancar correctamente. El sistema había "olvidado" cómo mostrar el historial de cambios de un proceso, lo que bloqueaba todo el inicio. Se le enseñó nuevamente cómo extraer y traducir esa información de la base de datos para que el sistema inicie sin problemas.
+**¿Para qué sirve?**: Para garantizar que el sistema vuelva a funcionar y que los administradores puedan consultar la "caja negra" o el registro de actividad de cada proceso (quién lo modificó, cuándo y qué cambió). Esto es vital para auditorías y para entender qué ha pasado con un trámite a lo largo del tiempo.
+**¿De dónde viene?**: Resolución de Bug Quirúrgico (US-005) - Error de arranque del servidor.
+**¿Qué debería hacer?**:
+- El sistema arranca sin errores críticos de inicio.
+- El historial de cambios de cualquier trámite puede ser consultado correctamente.
+
+**Estado**: ✅ Listo
+
+---
+
+## [2026-06-16] — Reparación de Interfaz de Usuario y Notificaciones
+**Autor**: Agente Frontend (🔧 BUG-FIX LEAD)
+**¿Qué es?**: Se solucionó un problema que impedía que la plataforma visual (Frontend) se cargara correctamente. El sistema intentaba buscar un componente visual de notificaciones con un nombre antiguo o incorrecto.
+**¿Para qué sirve?**: Para garantizar que todos los usuarios puedan acceder al portal y a la bandeja unificada sin encontrarse con una pantalla en blanco o un error crítico al intentar ingresar.
+**¿De dónde viene?**: Resolución de un error de carga detectado al arrancar la interfaz web.
+**¿Qué debería hacer?**:
+- El portal y la bandeja de trabajo ahora inician y se despliegan exitosamente sin interrupciones.
+
+**Estado**: ✅ Listo
+
+## [2026-06-16] — Recuperación de los test de verificación del sistema
+**Autor**: Agente Backend (🔧 BUG-FIX LEAD)
+**¿Qué es?**: Se corrigieron pequeños errores en el código de validación del sistema que estaban impidiendo que las revisiones técnicas y automáticas funcionaran. El sistema estaba confundiendo tipos de datos internos al leer logs y consultar tableros.
+**¿Para qué sirve?**: Para garantizar que todos los controles de calidad puedan ejecutarse de forma correcta antes de probar y publicar el sistema. Esto evita que los desarrolladores se queden "atascados" con pantallas de error en compilación y permite seguir avanzando.
+**¿De dónde viene?**: Resolución de un problema técnico detectado al levantar las pruebas del proyecto.
+**¿Qué debería hacer?**:
+- Los procesos de validación técnica ahora inician y se completan exitosamente sin interrumpir el desarrollo.
+
+**Estado**: ✅ Listo
+
+---
+
+## [2026-06-16] — Estabilización de la Conexión a la Base de Datos
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA)
+**¿Qué es?**: Se corrigió un problema de configuración donde el sistema intentaba conectarse a la base de datos por una "puerta" equivocada (puerto 5434), lo que causaba que el sistema no pudiera arrancar. Se ajustó la configuración para que siempre use la puerta correcta (puerto 5433) según lo dictado por la arquitectura del proyecto.
+**¿Para qué sirve?**: Para garantizar que el sistema siempre pueda comunicarse con la base de datos sin errores de conexión, previniendo fallas al iniciar y asegurando que el entorno local y de pruebas funcionen de manera estable y consistente.
+**¿De dónde viene?**: Resolución de un problema detectado durante el arranque del sistema (Connection Refused), alineando el código con el documento de arquitectura.
+**¿Qué debería hacer?**:
+- El sistema se conecta a la base de datos correctamente sin reportar error de conexión rechazada.
+- El servidor arranca con normalidad.
+
+**Estado**: ✅ Listo
+
+---
+
+## [2026-06-17] — Corrección Visual del Diseñador de Formularios
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3)
+**¿Qué es?**: Se corrigió un problema visual en la pantalla del Diseñador de Formularios donde los paneles se sobreponían entre sí al usar monitores de resolución estándar (pantallas normales de laptop o escritorio). Los tres paneles — la barra de componentes a la izquierda, el lienzo de diseño en el centro y el editor de código a la derecha — ahora se distribuyen armoniosamente sin invadir el espacio del otro.
+**¿Para qué sirve?**: Para que cualquier usuario pueda diseñar formularios cómodamente sin importar el tamaño de su pantalla. Antes, en pantallas normales (no ultra-anchas) el editor de código invadía el lienzo de diseño haciendo imposible trabajar. Ahora, cada panel se adapta al espacio disponible de forma proporcional.
+**¿De dónde viene?**: Bug reportado visualmente en el módulo de diseño de formularios (BUG-UI-DESIGNER).
+**¿Qué debería hacer?**:
+- En una pantalla de laptop estándar (1366x768), los tres paneles se muestran sin sobreponerse.
+- El lienzo de diseño central se contrae suavemente cuando hay menos espacio disponible.
+- El editor de código a la derecha es más angosto en pantallas pequeñas y se expande progresivamente en pantallas más grandes.
+- El error de consola reportado NO es del sistema sino de extensiones del navegador (se ignora justificadamente).
+
+**Estado**: ✅ Listo
+
+## [2026-06-17] — Corrección del IDE de Diseño que no se Mostraba (Pantalla en Blanco)
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3)
+**¿Qué es?**: Se resolvió un error crítico donde el Diseñador de Formularios aparecía completamente en blanco al abrirlo. El problema era que el editor de código inteligente (Monaco Editor) intentaba descargarse automáticamente desde Internet y la versión más reciente contenía un defecto que impedía su arranque, bloqueando toda la página.
+**¿Para qué sirve?**: Para que los usuarios puedan acceder al Diseñador de Formularios sin encontrarse una pantalla vacía. Ahora el sistema descarga una versión específica y estable del editor de código que funciona correctamente, garantizando que el IDE se muestre siempre al abrir la ruta de diseño.
+**¿De dónde viene?**: Bug reportado como BUG-MONACO-BLANK — Error `RegisterClientLocalizationsError` en consola al navegar a la pantalla de diseño de formularios.
+**¿Qué debería hacer?**:
+- Al abrir el Diseñador de Formularios, la pantalla muestra correctamente la barra de herramientas, el lienzo de diseño y el editor de código.
+- No aparecen errores en la consola del navegador.
+- El editor de código JSON/Zod carga normalmente y permite editar.
+
+**Estado**: ✅ Listo
+
+---
+
+## 17 de Junio de 2026 — Se corrigió la pantalla en blanco al navegar entre secciones de la plataforma
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3)
+**¿Qué es?**: Se resolvió un error crítico donde, al hacer clic en un enlace para ir al Diseñador de Formularios (u otras secciones), la pantalla quedaba completamente en blanco. Curiosamente, si el usuario recargaba la página con F5, todo funcionaba perfectamente. El problema era que unas notas internas de trazabilidad estaban ubicadas en un lugar incorrecto del código de navegación, lo cual confundía al sistema de animaciones y le impedía mostrar la nueva página.
+**¿Para qué sirve?**: Para que los usuarios puedan navegar libremente entre todas las secciones de la plataforma haciendo clic en los menús y botones, sin que la pantalla quede en blanco. La transición animada (efecto de desvanecimiento) entre páginas ahora funciona correctamente.
+**¿De dónde viene?**: Bug reportado como BUG-TRANSITION-BLANK — Pantalla blanca al navegar entre vistas usando la navegación interna de la aplicación.
+**¿Qué debería hacer?**:
+- Al hacer clic en cualquier enlace o botón de navegación, la nueva sección se muestra correctamente con una animación suave de transición.
+- Ya no es necesario recargar la página con F5 para ver el contenido.
+- Todas las secciones (Formularios, Diseñador, Workdesk, etc.) cargan correctamente al navegar.
+
+**Estado**: ✅ Listo
+
+---
+
+## 17 de Junio de 2026 — Corrección de Pantalla Blanca al Navegar al Diseñador de Formularios y Error del Editor de Código
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3) — Rama DevDavid
+**¿Qué es?**: Se resolvieron dos problemas críticos que afectaban la experiencia del Diseñador de Formularios:
+1. **Pantalla Blanca**: Al hacer clic para ir a la lista de formularios o navegar entre secciones, la pantalla quedaba completamente en blanco. La causa era un problema de estructura interna donde una ventana emergente de confirmación de borrado estaba colocada fuera del contenedor principal de la página, lo cual confundía al sistema de animaciones de navegación.
+2. **Error en el Editor de Código**: El editor inteligente de código (Monaco IDE) que usan los diseñadores mostraba un error en la consola del navegador ("RegisterClientLocalizationsError") porque intentaba descargar traducciones de un servidor externo (CDN) que ya no es compatible con la versión actual. Se cambió para usar la versión del editor que ya viene incluida en la aplicación.
+
+**¿Para qué sirve?**: Para que los usuarios puedan navegar sin interrupciones al Gestor de Formularios y al Diseñador, sin pantallas en blanco y sin errores en la consola del navegador. El editor de código ahora carga instantáneamente sin depender de servidores externos.
+**¿De dónde viene?**: Bug Crítico reportado como BUG-TRANSITION-BLANK-V2 + BUG-MONACO-NLS — Diagnóstico del Arquitecto Líder identificó causa raíz en fragmento multi-nodo Vue 3 y CDN de Monaco obsoleta.
+**¿Qué debería hacer?**:
+- Al hacer clic en "Gestor de Formularios" o cualquier enlace de navegación, la nueva sección se muestra correctamente con animación suave — sin pantalla blanca.
+- El Diseñador de Formularios carga el editor de código sin errores en la consola del navegador.
+- El editor de código carga más rápido al no depender de descargas externas (CDN).
+- El modal de confirmación de borrado de formularios sigue funcionando normalmente.
+
+**Estado**: ✅ Listo
+
+---
+
+## 19 de Junio de 2026 — Mejora Visual y Responsiva del Diseñador de Formularios
+
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3) — Rama DevDavid
+**¿Qué es?**: Se mejoró el diseño de la pantalla del "Diseñador de Formularios" para que se adapte perfectamente a cualquier tamaño de pantalla, ya sea un monitor grande, una tableta o una laptop pequeña. Además, se solucionó un problema donde algunos campos arrastrados al centro de la pantalla se salían de su contenedor, creando barras de desplazamiento innecesarias y un aspecto desordenado.
 **¿Para qué sirve?**: Para que los creadores de formularios tengan una experiencia fluida y cómoda en cualquier dispositivo. Los paneles laterales (herramientas y código) ahora se ocultan inteligentemente si la pantalla es muy pequeña, y los campos dentro del formulario mantienen su tamaño correcto sin desbordarse.
 **¿De dónde viene?**: Resolución de BUG-0001 — Reporte de estilos y responsividad en FormDesigner.
 **¿Qué debería hacer?**:
 - En pantallas pequeñas (como tabletas), los paneles laterales se ocultan para dar prioridad al lienzo central.
 - Los campos del formulario, como cuadros de texto, no rebasan los bordes de la pantalla.
 - La pantalla ya no muestra barras de desplazamiento horizontales molestas que afecten la navegación.
+
+**Estado**: ✅ Listo
+
+---
+
+## [2026-06-22] — Estabilización del Catálogo de Formularios para Diseños de Procesos
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA) — Rama DevDavid
+**¿Qué es?**: Se corrigió un problema que hacía que la lista de formularios disponibles apareciera vacía al intentar vincular un formulario a una tarea en el diseñador de procesos. El sistema ahora permite encontrar y asignar tanto los formularios que ya están activos y listos para usar, como aquellos que aún están en estado de borrador. Además, se añadió una protección para que, si el sistema no encuentra un proceso específico, simplemente muestre todos los formularios disponibles en lugar de fallar y ocultarlos.
+**¿Para qué sirve?**: Para que los analistas y administradores puedan asignar correctamente qué formulario debe llenar un usuario en cada paso de un proceso de negocio. Al recuperar la visibilidad de los borradores, pueden diseñar el flujo de trabajo sin tener que finalizar y certificar primero los formularios, agilizando el diseño de nuevos trámites.
+**¿De dónde viene?**: Historia de Usuario US-005, Criterios de Aceptación CA-39 y CA-40 — Handoff del Arquitecto Líder (Estabilización del Catálogo de Formularios Activos para Vinculación BPMN).
+**¿Qué debería hacer?**:
+- Al entrar al diseñador de procesos y hacer clic en una tarea, la lista desplegable de formularios ("Form Key") ya no aparece vacía.
+- La lista muestra todos los formularios en estado borrador y activos.
+- El sistema no se rompe si el proceso no tiene todavía un nombre técnico correcto, sino que muestra la lista completa de formularios.
 
 **Estado**: ✅ Listo

@@ -47,15 +47,19 @@ public class FormCatalogController {
         // @Traceability: US-005, CA-40
         String pattern = null;
         if (processKey != null && !processKey.trim().isEmpty()) {
-            BpmnProcessDesignDTO process = bpmnDesignService.obtenerPorTechnicalId(processKey);
-            pattern = process.getFormPattern();
+            try {
+                BpmnProcessDesignDTO process = bpmnDesignService.obtenerPorTechnicalId(processKey);
+                pattern = process.getFormPattern();
+            } catch (Exception e) {
+                pattern = null;
+            }
         }
 
         List<FormDesignDTO> activeForms = formDesignService.listarCatalogo();
 
         final String finalPattern = pattern;
         List<Map<String, Object>> response = activeForms.stream()
-            .filter(form -> "ACTIVE".equalsIgnoreCase(form.getStatus()))
+            .filter(form -> "ACTIVE".equalsIgnoreCase(form.getStatus()) || "DRAFT".equalsIgnoreCase(form.getStatus()))
             .map(form -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", form.getTechnicalName());

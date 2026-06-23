@@ -474,7 +474,7 @@
 | CA-21 a CA-25 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | handoff_*_US005_CA21_CA25 |
 | CA-26 a CA-30 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | handoff_*_US005_CA26_CA30 |
 | CA-31 a CA-35 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | handoff_*_US005_CA31_CA35 |
-| CA-36 a CA-40 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | handoff_*_US005_CA36_CA40 |
+| CA-36 a CA-40 | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ be875759 | ❌ | S-3 | us005-bpmn-form-binding.e2e.spec.ts |
 | CA-41 a CA-45 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | handoff_*_US005_CA41_CA45 |
 | CA-46 a CA-50 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | handoff_*_US005_CA46_CA50 |
 | CA-51 a CA-55 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | S-3 | handoff_*_US005_CA51_CA55 |

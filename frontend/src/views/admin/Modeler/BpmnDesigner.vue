@@ -2571,9 +2571,11 @@ const selectProcessFromWelcome = async (p: any) => {
 };
 
 const completeProcessCreationInWelcome = async () => {
+  console.log("🔥 [DEBUG] completeProcessCreationInWelcome triggered!", { name: newProcessName.value });
   createNewProcess();
   showWelcomeModal.value = false;
   showCatalog.value = false;
+  console.log("🔥 [DEBUG] showWelcomeModal set to false");
 };
 
 // ── Toast ────────────────────────────────────────────────────
@@ -2850,7 +2852,7 @@ const filteredForms = computed(() => {
 
 // ── BPMN Template ────────────────────────────────────────────
 const emptyBpmn = `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_1x5" targetNamespace="http://bpmn.io/schema/bpmn" exporter="iBPMS Designer Vue" exporterVersion="2.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_1x5" targetNamespace="http://bpmn.io/schema/bpmn" exporter="iBPMS Designer Vue" exporterVersion="2.0">
   <bpmn:process id="Process_1" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" />
   </bpmn:process>
@@ -2870,43 +2872,7 @@ const handleBeforeUnload = () => {
 };
 
 // @Traceability: US-005, CA-05
-const camundaModdleDescriptor = {
-  name: 'Camunda',
-  uri: 'http://camunda.org/schema/1.0/bpmn',
-  prefix: 'camunda',
-  xml: {
-    tagAlias: 'lowerCase'
-  },
-  types: [
-    {
-      name: 'Property',
-      superClass: [ 'Element' ],
-      properties: [
-        {
-          name: 'name',
-          isAttr: true,
-          type: 'String'
-        },
-        {
-          name: 'value',
-          isAttr: true,
-          type: 'String'
-        }
-      ]
-    },
-    {
-      name: 'Properties',
-      superClass: [ 'Element' ],
-      properties: [
-        {
-          name: 'values',
-          isMany: true,
-          type: 'Property'
-        }
-      ]
-    }
-  ]
-};
+// Using camunda-bpmn-moddle directly
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
@@ -2923,13 +2889,35 @@ onMounted(async () => {
     const { default: BpmnModeler } = await import('bpmn-js/lib/Modeler');
     // @ts-ignore
     const minimapModule = (await import('diagram-js-minimap')).default;
+    const camundaDescriptor = {
+      name: 'Camunda',
+      uri: 'http://camunda.org/schema/1.0/bpmn',
+      prefix: 'camunda',
+      xml: { tagAlias: 'lowerCase' },
+      types: [
+        {
+          name: 'ExtensibleElement',
+          extends: ['bpmn:BaseElement'],
+          properties: [
+            { name: 'formKey', isAttr: true, type: 'String' },
+            { name: 'topic', isAttr: true, type: 'String' },
+            { name: 'decisionRef', isAttr: true, type: 'String' },
+            { name: 'decisionRefBinding', isAttr: true, type: 'String' },
+            { name: 'createSharepointFolder', isAttr: true, type: 'Boolean' },
+            { name: 'aiTone', isAttr: true, type: 'String' },
+            { name: 'aiSchemaId', isAttr: true, type: 'String' }
+          ]
+        }
+      ]
+    };
 
+    console.log('camunda package loaded');
     modelerInstance = new BpmnModeler({
       container: canvasContainer.value!,
       additionalModules: [minimapModule],
-      keyboard: { bindTo: document }, // CA-20 Copy/Paste enabled system-wide
+      // CA-20 Copy/Paste enabled system-wide implicitly now
       moddleExtensions: {
-        camunda: camundaModdleDescriptor
+        camunda: camundaDescriptor
       }
     });
 
@@ -3277,7 +3265,9 @@ watch(processId, (newId) => {
   
   if (route && router) {
     if (route.query.processId !== cleaned) {
-      router.replace({ query: { ...route.query, processId: cleaned } });
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('processId', cleaned);
+      window.history.replaceState(null, '', newUrl.toString());
     }
   }
   

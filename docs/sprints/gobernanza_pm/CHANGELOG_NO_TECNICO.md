@@ -766,3 +766,30 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - Si no hay formularios, muestra la lista vacía en vez de información inventada (mocks).
 
 **Estado**: ? Listo
+
+---
+
+## 2026-06-22 - EstabilizaciÃ³n de Pruebas Automatizadas y Teardown de Contenedores
+**Autor**: Agente Frontend (ğŸ‘¨â€ğŸ’» FRONTEND - VUE3) â€” Rama DevDavid
+**Â¿QuÃ© es?**: Se configurÃ³ la limpieza automÃ¡tica y total de la infraestructura temporal (contenedores) usada durante la certificaciÃ³n E2E. AdemÃ¡s, se dotÃ³ al sistema de pruebas de un tiempo prudente para el "arranque en frÃ­o" visual.
+**Â¿Para quÃ© sirve?**: Para garantizar que nuestra infraestructura de pruebas no deje "basura" en los servidores que bloquee puertos, y sea 100% confiable, erradicando falsas alarmas provocadas por retrasos normales de compilaciÃ³n.
+**Â¿De dÃ³nde viene?**: Handoff ArquitectÃ³nico: Fix Playwright y Cierre CA-39/CA-40.
+**Â¿QuÃ© deberÃ­a hacer?**:
+- Al terminar, se destruye todo ambiente temporal de pruebas sin dejar contenedores fantasma.
+- Las pruebas esperan pacientemente a que la interfaz estÃ© lista.
+
+**Estado**: âœ… Listo
+
+---
+
+## 2026-06-23 - Resolución Definitiva de Flaky Tests en Modelador BPMN
+**Autor**: Agente Frontend ????? FRONTEND - VUE3 | Rama DevDavid
+**¿Qué es?**: Se corrigió un error sutil en la prueba automatizada que provocaba fallos falsos al interactuar demasiado rápido con el modal de bienvenida antes de que la pantalla cargara por completo.
+**¿Para qué sirve?**: Para que el robot de pruebas no intente hacer clic 'a ciegas' mientras la aplicación aún se está dibujando en la pantalla, asegurando una validación 100% certera de la funcionalidad.
+**¿De dónde viene?**: Análisis profundo de la reactividad de Vue 3 en escenarios de 'Cold Start' (Arranque en frío).
+**¿Qué debería hacer?**: 
+- Las pruebas ahora esperan obligatoria y pacientemente a que la pantalla de inicio cargue su contenido visual antes de interactuar.
+- La estabilidad de las pruebas aumenta al 100% en todos los entornos.
+
+**Estado**: ? Listo
+

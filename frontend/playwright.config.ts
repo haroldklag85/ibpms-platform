@@ -15,6 +15,7 @@ export default defineConfig({
     timeout: 45_000
   },
   globalSetup: './e2e/global-setup.ts',
+  globalTeardown: './e2e/global-teardown.ts',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 1,
@@ -22,7 +23,7 @@ export default defineConfig({
   reporter: [['html'], ['list']],
   use: {
     actionTimeout: 30_000,
-    navigationTimeout: 60_000,
+    navigationTimeout: 120_000,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',

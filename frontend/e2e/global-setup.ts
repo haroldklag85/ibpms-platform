@@ -4,7 +4,7 @@ import * as path from 'path';
 import { USERS } from './fixtures/e2e-data';
 
 async function globalSetup(config: FullConfig) {
-  const baseURL = process.env.E2E_BASE_URL || 'http://localhost:5174';
+  const baseURL = process.env.E2E_BASE_URL || 'http://localhost:5173';
   
   const requestContext = await request.newContext({
     baseURL: 'http://127.0.0.1:8080'
@@ -82,7 +82,7 @@ function saveStorageState(authDir: string, filename: string, baseURL: string, em
           { name: 'ibpms_token', value: token },
           { name: 'ibpms_user', value: JSON.stringify({
             username: email,
-            roles: email.includes('root') ? ['ROLE_SUPER_ADMIN'] : ['ROLE_OPERARIO', 'ROLE_USER'],
+            roles: (email.includes('root') || email.includes('admin')) ? ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] : ['ROLE_OPERARIO', 'ROLE_USER'],
             email: email,
             tenantId: tenantId
           }) }

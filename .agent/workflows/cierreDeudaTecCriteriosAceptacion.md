@@ -128,6 +128,9 @@ El Arquitecto Líder DEBE incluir la siguiente sección en TODOS los Handoffs de
 > 2. Si no responde, arráncalo con: `cd backend && mvn spring-boot:run -pl ibpms-core -Dspring-boot.run.profiles=default`.
 > 3. Verifica los servicios Docker: `docker ps` → PostgreSQL (`5433`), Redis (`6379`) y RabbitMQ (`5672`) deben estar `Up (healthy)`.
 > **PROHIBIDO** levantar el backend vía Docker o modificar el `docker-compose.yml`.
+> 
+> 🛑 **REGLA FUNDAMENTAL E IRROMPIBLE DE TEARDOWN DOCKER (SOLO PARA AGENTES QA):**
+> Todo Agente QA que ejecute pruebas E2E que levanten contenedores temporales (ej. `docker-compose.e2e.yml`) TIENE LA OBLIGACIÓN ESTRICTA Y MILIMÉTRICA de garantizar su destrucción al finalizar o fallar la ejecución. Es obligatorio configurar una rutina de Teardown Global en el framework (ej. `global-teardown.ts` en Playwright) que ejecute silenciosamente `docker compose -f docker-compose.e2e.yml down -v --remove-orphans`. Queda absolutamente prohibido dejar contenedores fantasma (ej. `postgres-e2e-1`) corriendo y bloqueando puertos del host.
 
 ### Fase 0: Alineación Arquitectónica Obligatoria (Gate de Entrada)
 

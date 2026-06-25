@@ -807,3 +807,22 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 - Hacer clic en un subproceso (Call Activity) abre correctamente el proceso hijo en una nueva pesta�a.
 
 **Estado**: ? Listo
+
+---
+
+## 2026-06-24 - Certificacion UAT Manual del Disenador BPMN y Catalogo de Formularios (Journey J-02)
+**Autor**: Harold (Tester Humano) asistido por Agente QA - Sprint PM-01, Rama DevDavid
+**Que es?**: Se realizo una certificacion manual paso a paso del flujo completo de diseno de procesos BPMN y creacion de formularios. Harold (el tester humano) ejecuto 5 misiones de las 7 planificadas, verificando visualmente cada pantalla, cada peticion HTTP y cada respuesta del servidor.
+**Para que sirve?**: Para confirmar desde la perspectiva de un usuario real que el sistema funciona correctamente: que los formularios se crean y guardan en la base de datos, que el disenador de procesos BPMN carga correctamente, y que los datos falsos (mocks) fueron eliminados del catalogo.
+**De donde viene?**: Certificacion UAT Manual Journey J-02 (Sprint PM-01). Cubre historias US-005 (Disenador BPMN) y US-003 (Catalogo y Creacion de Formularios).
+**Que deberia hacer?**:
+- Misiones completadas y verificadas:
+  - Mision 0 (Infraestructura): Docker, Backend y Frontend operativos - PASS
+  - Mision 1 (Login y Navegacion): Autenticacion exitosa, menu lateral funcional - PASS
+  - Mision 2 (Catalogo de Formularios): Muestra datos reales de la base de datos, zero mocks confirmado tras correccion de BUG-J02-003 - PASS
+  - Mision 3 (Crear Formulario): Harold creo 3 formularios de prueba exitosamente con persistencia real (POST 201 Created) - PASS
+  - Mision 4 (Disenador BPMN Canvas): Modal de bienvenida, canvas BPMN, StartEvent y propiedades funcionan correctamente - PASS
+- Misiones pendientes (se retomaran en proxima sesion): Mision 5 (Dropdown FormKey CA-39/CA-40), Mision 6 (Persistencia vinculacion), Mision 7 (RBAC)
+- Bugs encontrados y corregidos: BUG-J02-001 (ruta 404), BUG-J02-002 (link roto), BUG-J02-003 (datos falsos en catalogo) - todos cerrados en commit ef18729d
+
+**Estado**: En progreso (5 de 7 misiones completadas)

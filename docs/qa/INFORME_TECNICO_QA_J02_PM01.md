@@ -80,40 +80,79 @@
 ---
 
 ### Misión 2: Catálogo de Formularios (US-003)
-- **Estado**: 🔴 FAIL — Bug de Mock P0 BLOQUEANTE
-- **Fecha/Hora**: 2026-06-24 19:58 COT
-- **Pasos**:
+- **Estado**: ✅ PASS (después de re-test post-fix)
+- **Fecha/Hora original**: 2026-06-24 19:58 COT (FAIL)
+- **Fecha/Hora re-test**: 2026-06-24 21:00 COT (PASS)
+
+#### Ejecución Original (pre-fix) — FAIL
 
 | Paso | Acción | Resultado Esperado | Resultado Real | Veredicto |
 |:----:|--------|-------------------|----------------|:---------:|
-| 2.1 | Navegar a `/admin/modeler/forms` | Catálogo renderiza con formularios reales de PostgreSQL | ⚠️ Catálogo renderiza y muestra 3 formularios, PERO Harold reporta que **no corresponden a los formularios reales en la BD**. Los forms mostrados son datos hardcodeados en el backend | ⚠️ FAIL |
-| 2.2 | Verificar petición HTTP GET en DevTools (F12 → Red) | Petición GET al backend con respuesta JSON de formularios reales | ❌ **No se logra evidenciar la URL que obtiene los forms ni GET del backend** en la pestaña Network. Las peticiones visibles son solo cargas de scripts/recursos estáticos | 🔴 FAIL |
-| 2.3 | Verificar que los datos son reales (no hardcodeados) | Formularios con datos reales de PostgreSQL | ❌ **Los datos son HARDCODEADOS**. Harold confirma: "se presume que los datos visualizados son datos hard-core, se tiene forms reales que no se visualizan" | 🔴 FAIL |
+| 2.1 | Navegar a `/admin/modeler/forms` | Catálogo renderiza con formularios reales de PostgreSQL | ⚠️ Catálogo renderizaba 3 formularios hardcodeados que no correspondían a la BD real | ⚠️ FAIL |
+| 2.2 | Verificar petición HTTP GET en DevTools | Petición GET al backend con respuesta JSON real | ❌ No se evidenciaba petición HTTP GET real al backend | 🔴 FAIL |
+| 2.3 | Verificar que los datos son reales | Formularios reales de PostgreSQL | ❌ Datos hardcodeados confirmados (FRM-001, FRM-002, FRM-003) | 🔴 FAIL |
 
-- **Investigación Forense del Código** (confirmada por análisis del código fuente):
-  - **El frontend está LIMPIO** — `FormList.vue` (L147-158) hace una llamada real vía `integrationStore.get('/forms')` → `apiClient.get()` → `GET /api/v1/forms`
-  - **El BUG está en el BACKEND** — `FormDirectoryService.java` (L13-17) tiene una variable llamada literalmente `mockDirectory` con 3 formularios hardcodeados en memoria
-  - **Comentario del desarrollador en L12:** *"Estructura en memoria según requerimiento de Misión (Evasión de BD compleja para acelerar Boot)"*
-  - **Datos hardcodeados confirmados:**
-    - `FRM-001` → "Solicitud de Crédito Express" (author: System)
-    - `FRM-002` → "Alta de Empleado (Onboarding)" (author: Admin)
-    - `FRM-003` → "Reclamación Seguro (PQR)" (author: AuditAgent)
-  - **No se ejecuta NINGUNA consulta SQL** a PostgreSQL en `FormDirectoryService.searchForms()`
-  - **INCONSISTENCIA DETECTADA:** Existe un endpoint SEPARADO `GET /api/v1/forms/active` (en `FormCatalogController.java`) que SÍ consulta la BD real vía `FormDesignService.listarCatalogo()`. Este endpoint es usado por el dropdown BPMN (Misión 5), pero NO por el catálogo `FormList.vue`.
-- **Bugs descubiertos**: BUG-J02-003 (P0 — Bug de Mock BLOQUEANTE)
-- **Evidencia**: 2 capturas de Harold (DevTools Network, catálogo con datos hardcodeados)
-- **Veredicto de misión**: 🔴 **FAIL** — US-003 NO puede certificarse con datos mock. La variable `mockDirectory` en el backend es evidencia irrefutable.
+#### RE-TEST (post-fix commit `ef18729d`) — ✅ PASS
+
+| Paso | Acción | Resultado Esperado | Resultado Real | Veredicto |
+|:----:|--------|-------------------|----------------|:---------:|
+| 2.1 | Navegar a `/admin/modeler/forms` | Catálogo renderiza con formularios reales de PostgreSQL | ✅ Catálogo muestra 3 formularios REALES de la BD: `qa_form_complex_schema` (Complex QA Form), `DATOSPERSONALES` (DatosPersonales), `SOLICITUD_ONBOARDING_(V1)` (Solicitud Onboarding V1). Son DIFERENTES a los hardcodeados anteriores. | ✅ PASS |
+| 2.2 | Verificar petición HTTP GET en DevTools | Petición GET al backend con respuesta JSON real | ✅ DevTools muestra petición `GET https://localhost:5173/api/v1/forms` → Status **200 OK**, Content-Type `application/json`. El request va al puerto 5173 (proxy Vite) que reenvía al backend :8080. Comportamiento normal. | ✅ PASS |
+| 2.3 | Verificar que los datos son reales | Formularios reales de PostgreSQL | ✅ JSON de respuesta muestra array con 3 objetos reales: author, name, uri, type (SIMPLE), version (1), updatedAt con timestamps reales y distintos. **Zero mocks confirmado.** | ✅ PASS |
+
+- **Validación de Contrato API**:
+  - Endpoint: `GET /api/v1/forms` → ✅ Respuesta 200 OK con array JSON de formularios
+  - Observación: La URL en DevTools muestra `:5173` (proxy Vite), no `:8080` directamente. Esto es comportamiento estándar del dev server, no una discrepancia de contrato.
+- **Bugs descubiertos**: BUG-J02-003 → ✅ **CORREGIDO Y VERIFICADO** en commit `ef18729d`
+- **Evidencia post-fix**: 2 capturas de Harold (DevTools Headers con 200 OK, DevTools Response con JSON real)
+- **Veredicto de misión**: ✅ **PASS** — Catálogo muestra datos reales de PostgreSQL. Zero mocks confirmado por evidencia DevTools.
 
 ---
 
 ### Misión 3: Crear un Formulario Nuevo (US-003)
-- **Estado**: 🟠 BLOQUEADA — Depende de resolución de BUG-J02-003
-- **Justificación**: Esta misión requiere crear un formulario y verificar que aparece en el catálogo. Dado que el catálogo sirve datos hardcodeados (BUG-J02-003), no es posible verificar la persistencia real. Se pospone hasta que el Arquitecto corrija el bug.
+- **Estado**: ✅ PASS
+- **Fecha/Hora**: 2026-06-24 21:14 COT
+- **Pasos**:
+
+| Paso | Acción | Resultado Esperado | Resultado Real | Veredicto |
+|:----:|--------|-------------------|----------------|:---------:|
+| 3.1 | Click en "+ Crear Nuevo" o navegar a `/admin/modeler/forms/designer` | Diseñador de formularios abre | ✅ Diseñador abre con modal "Crear Nuevo Formulario (Dual-Pattern)". Muestra 2 opciones: **Formulario Simple** y **iForm Maestro** (relevante para CA-40). Paleta de componentes visible a la izquierda. | ✅ PASS |
+| 3.2 | Configurar nombre "UAT_Formulario_Prueba_Harold" | Campo acepta el texto | ✅ Harold creó múltiples formularios de prueba: UAT_Formulario_Prueba_DavidR, DavidR2, DavidR3. Nombres aceptados sin error. | ✅ PASS |
+| 3.3 | Agregar al menos un campo al formulario | Campo aparece en el lienzo | ✅ Campos agregados visualmente al formulario. La respuesta JSON del POST confirma `formFields` con definiciones de campos. | ✅ PASS |
+| 3.4 | Guardar el formulario | Toast de éxito + POST/PUT exitoso en DevTools | ✅ DevTools confirma: `POST /api/v1/forms` → **201 Created**. Respuesta con UUID real (`11fc5702-...`), version 1, timestamps reales. Diálogo de validación E2E (CA-29): **"VALIDACIÓN EXITOSA"** + "BACKEND HTTP RESPONSE 201 CREATED!" | ✅ PASS |
+| 3.5 | Regresar al catálogo y verificar persistencia | Formulario nuevo aparece en la lista | ✅ Catálogo muestra **6 formularios** (3 originales + 3 creados por Harold). Los nuevos: `UATDAVID` (21:08), `UATDAVID2` (21:10), `UATV3` (21:10) — todos con timestamps reales distintos. **Persistencia E2E confirmada.** | ✅ PASS |
+
+- **Validación de Contrato API**:
+  - Endpoint: `POST /api/v1/forms` → ✅ Respuesta 201 Created con JSON de formulario creado
+  - Response incluye: id (UUID), name, technicalName, pattern, version, authorId, updatedAt, formFields
+- **Observaciones**:
+  - El modal "Dual-Pattern" confirma que la arquitectura Simple/Maestro (CA-40) está implementada en el diseñador
+  - La validación E2E integrada (CA-29) se ejecuta automáticamente al guardar — buen diseño defensivo
+- **Bugs descubiertos**: Ninguno
+- **Evidencia**: 3 capturas de Harold (modal Dual-Pattern, DevTools POST 201, catálogo con 6 forms)
+- **Veredicto de misión**: ✅ **PASS** — Creación y persistencia E2E de formularios funciona correctamente con datos reales.
 
 ---
 
 ### Misión 4: Diseñador BPMN — Apertura y Canvas (US-005)
-- **Estado**: ⏳ PENDIENTE
+- **Estado**: ✅ PASS
+- **Fecha/Hora**: 2026-06-24 21:21 COT
+- **Pasos**:
+
+| Paso | Acción | Resultado Esperado | Resultado Real | Veredicto |
+|:----:|--------|-------------------|----------------|:---------:|
+| 4.1 | Navegar a `/admin/modeler/bpmn` | Modal de bienvenida aparece | ✅ Modal "Bienvenido al Diseñador iBPMS" carga correctamente. Muestra **Procesos Recientes** (Datos v0 DRAFT, Datos2 v0 DRAFT) y panel "Crear Nuevo Proceso" con campo nombre (placeholder "Ej. Proceso de Facturación") y selector de patrón (Simple/iForm). | ✅ PASS |
+| 4.2 | Ingresar "UAT_Proceso_Harold" | Campo acepta el texto | ✅ Nombre "UAT_Proceso_Harold" ingresado. Patrón "Simple" seleccionado (verde). | ✅ PASS |
+| 4.3 | Click en "Crear y Diseñar Proceso" | Canvas BPMN renderiza con StartEvent | ✅ Canvas renderiza con StartEvent (círculo). URL actualiza a `/admin/modeler/bpmn?processId=uatprocesoharold`. Toolbar de 5 fases visible: Inicio, Modelado, Simulación, Trazabilidad, Despliegue. Título "UAT_Proceso_Harold" con badges BORRADOR + SANDBOX. Panel Camunda Properties muestra: Nombre de Negocio, ID Técnico, SLA Global (72h), History TTL (180d). **Linter activo (CA-77)** advierte "El diagrama debe contener al menos un Evento de Fin (EndEvent)". | ✅ PASS |
+| 4.4 | Click en el StartEvent | StartEvent se selecciona con panel de propiedades | ✅ StartEvent seleccionado con menú contextual de elementos BPMN (UserTask, Gateway, EndEvent, etc.). Panel de propiedades muestra: Nombre del Evento, Id de Evento (StartEvent_1), y sección **"FormKey (Start Event)"** con dropdown "Sin FormKey". | ✅ PASS |
+
+- **Observaciones**:
+  - El dropdown **FormKey** ya es visible en el StartEvent — esto confirma que la infraestructura para CA-39 está presente y será verificada en Misión 5
+  - El Linter de gobernanza (CA-77) detecta automáticamente advertencias estructurales — buen diseño defensivo
+  - Existen procesos previos reales en "Procesos Recientes" (Datos, Datos2) — confirma persistencia real
+- **Bugs descubiertos**: Ninguno
+- **Evidencia**: 4 capturas de Harold (modal vacío, modal con nombre, canvas BPMN, StartEvent seleccionado)
+- **Veredicto de misión**: ✅ **PASS** — Diseñador BPMN carga, canvas renderiza, elementos interactivos, propiedades visibles.
 
 ---
 
@@ -136,9 +175,9 @@
 
 | # | ID | Tipo | Severidad | Misión | Descripción | Causa Raíz | Estado |
 |---|-----|------|-----------|--------|-------------|------------|--------|
-| 1 | BUG-J02-001 | Bug Funcional | P3 (Baja) | M1 | Ruta `/admin/modeler/` retorna 404. No existe ruta padre ni redirect para el módulo Modelador. Las 5 sub-rutas (`/bpmn`, `/forms`, etc.) están definidas como hermanas planas sin padre. | `frontend/src/router/index.ts` — Las rutas L70-98 son siblings directos de `/`. No hay ruta para `admin/modeler` sin sufijo. Catch-all en L216-220 captura y muestra `NotFound404.vue` | 🟡 Abierto |
-| 2 | BUG-J02-002 | Bug Funcional | P3 (Baja) | M1 | En `BpmnDesigner.vue`, un `window.open()` genera link a `/admin/modeler?processId=...` (sin sub-ruta `/bpmn`), lo que causa 404 al abrir Call Activities en nueva pestaña. | `frontend/src/views/admin/Modeler/BpmnDesigner.vue:4197` — Referencia a ruta inexistente `/admin/modeler?processId=` en lugar de `/admin/modeler/bpmn?processId=` | 🟡 Abierto |
-| 3 | **BUG-J02-003** | **🔴 Bug de Mock** | **P0 (BLOQUEANTE)** | M2 | El catálogo de formularios (`FormList.vue`) muestra datos HARDCODEADOS del backend. `FormDirectoryService.java` tiene una variable `mockDirectory` con 3 formularios fijos en memoria. NO consulta PostgreSQL. Los formularios reales de la BD no aparecen en el catálogo. | **`backend/.../service/form/FormDirectoryService.java:13-17`** — Variable `mockDirectory = List.of(...)` con 3 formularios hardcodeados. Método `searchForms()` (L19-28) filtra esta lista en memoria. Comentario L12: *"Evasión de BD compleja para acelerar Boot"*. El controller `FormDirectoryController.java` (L26-30) sirve `GET /api/v1/forms` desde este mock. | 🔴 **BLOQUEANTE — Requiere Handoff al Arquitecto** |
+| 1 | BUG-J02-001 | Bug Funcional | P3 (Baja) | M1 | Ruta `/admin/modeler/` retorna 404. No existe ruta padre ni redirect para el módulo Modelador. | `frontend/src/router/index.ts` — Faltaba ruta padre. | ✅ **CERRADO** — Fix en commit `ef18729d`. Redirect `/admin/modeler` → `/admin/modeler/bpmn` agregado. |
+| 2 | BUG-J02-002 | Bug Funcional | P3 (Baja) | M1 | En `BpmnDesigner.vue`, `window.open()` genera link a `/admin/modeler?processId=...` causando 404. | `frontend/src/views/admin/Modeler/BpmnDesigner.vue:4197` | ✅ **CERRADO** — Fix en commit `ef18729d`. Link corregido a `/admin/modeler/bpmn?processId=...` |
+| 3 | **BUG-J02-003** | **🔴 Bug de Mock** | **P0 (BLOQUEANTE)** | M2 | El catálogo de formularios mostraba datos HARDCODEADOS. `FormDirectoryService.java` tenía variable `mockDirectory` con 3 forms fijos en memoria. | `backend/.../service/form/FormDirectoryService.java:13-17` — `mockDirectory` eliminado, ahora usa `FormDesignService.listarCatalogo()` para consultar PostgreSQL. | ✅ **CERRADO** — Fix en commit `ef18729d`. Zero mocks confirmado por Arquitecto. |
 
 ---
 

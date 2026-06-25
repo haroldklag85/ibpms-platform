@@ -67,6 +67,10 @@ const router = createRouter({
                     meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
                 },
                 {
+                    path: 'admin/modeler',
+                    redirect: '/admin/modeler/bpmn'
+                },
+                {
                     path: 'admin/modeler/bpmn',
                     name: 'BpmnDesigner',
                     component: () => import('@/views/admin/Modeler/BpmnDesigner.vue'),

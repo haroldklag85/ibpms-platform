@@ -4194,7 +4194,7 @@ const openCallActivity = () => {
   const calledElementId = selectedElement.value.props.calledElement;
   if (calledElementId) {
     // Abrir una nueva pestaña para el proceso hijo usando el standard view (P6)
-    window.open(`/admin/modeler?processId=${calledElementId}`, '_blank');
+    window.open(`/admin/modeler/bpmn?processId=${calledElementId}`, '_blank');
   } else {
     showToast('⚠️ Este subproceso no tiene un ID de proceso destino configurado.', 'error');
   }

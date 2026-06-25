@@ -793,3 +793,17 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 
 **Estado**: ? Listo
 
+
+---
+
+## 2026-06-24 - Corrección de Catálogo de Formularios y Enrutamiento en Diseñador BPMN
+**Autor**: Agente Backend (?? BACKEND - JAVA) / Agente Frontend (?? FRONTEND - VUE3) - Rama DevDavid
+**¿Qué es?**: Se eliminaron datos simulados (mocks) en el catálogo de formularios para mostrar información real de la base de datos. Adicionalmente, se corrigieron enlaces rotos y rutas de navegación dentro del diseñador de procesos BPMN que llevaban a páginas no encontradas (error 404).
+**¿Para qué sirve?**: Para que al diseñar un proceso y asignar formularios a las tareas, el sistema liste los formularios verdaderos creados por la organización. También asegura que los usuarios puedan navegar fluidamente dentro del área de modelado sin toparse con pantallas de error al acceder a subprocesos o al diseñador principal.
+**¿De dónde viene?**: Resolución de bugs críticos detectados durante la Certificación UAT Manual (Sprint PM-01). Reporte de Agente QA (BUG-J02-001, BUG-J02-002, BUG-J02-003).
+**¿Qué debería hacer?**: 
+- El menú de selección de formularios en el diseñador muestra datos reales de PostgreSQL.
+- Ingresar a la sección de modelador no resulta en un error 404, redirigiendo correctamente a la herramienta.
+- Hacer clic en un subproceso (Call Activity) abre correctamente el proceso hijo en una nueva pestaña.
+
+**Estado**: ? Listo

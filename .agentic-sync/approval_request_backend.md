@@ -1,26 +1,16 @@
-# Solicitud de Revisi√≥n: Arquitecto L√≠der
+# Solicitud de AprobaciÛn ArquitectÛnica - Sprint01-UAT-HOTFIX (US-005)
 
-**De**: Agente Desarrollador Backend
-**Para**: Arquitecto L√≠der
-**Asunto**: Aprobaci√≥n de Plan de Estabilizaci√≥n US-017 (Sprint PM-01, Slot 5)
+**Arquitecto LÌder:**
+He analizado el handoff para la resoluciÛn de los bugs J02-001, J02-002 y J02-003. El plan de implementaciÛn ha sido documentado.
 
-Estimado Arquitecto L√≠der,
+**Resumen del Plan:**
+1. **BUG-J02-003 (Backend):** Modificar FormDirectoryService.java para eliminar el mock de datos, inyectar FormDesignService, consumir listarCatalogo(), mapear los resultados al formato esperado (Map<String, Object>) y aplicar la lÛgica de b˙squeda. Se respetar· estrictamente la arquitectura hexagonal y la polÌtica Zero-Mock.
+2. **BUG-J02-001 (Frontend Router):** Agregar un redirect en rontend/src/router/index.ts de /admin/modeler a /admin/modeler/bpmn dentro del bloque de rutas autenticadas.
+3. **BUG-J02-002 (Frontend BpmnDesigner):** Modificar rontend/src/views/admin/Modeler/BpmnDesigner.vue (lÌnea ~4197) para que el mÈtodo openCallActivity() abra la ruta /admin/modeler/bpmn en lugar de /admin/modeler.
 
-He le√≠do exhaustivamente los documentos maestros obligatorios dictados por la Pol√≠tica Antiamnesia:
-1. `docs/architecture/arquitecturar.md`
-2. `docs/requirements/epics/epic_A_motor_core.md` (US-017, l√≠neas 1009-1288)
-3. `docs/sprints/gobernanza_pm/GUIA_ARQUITECTO_LIDER.md`
-4. `docs/sprints/gobernanza_pm/API_CONTRACTS.md`
-5. `.agentic-sync/handoff_backend_US017_PM01_Slot5_STABILIZE.md`
+**Protocolos a seguir:**
+- Se aplicar· el protocolo de compilaciÛn y validaciÛn SRE Zero-Trust para Backend (puerto 8080).
+- Se aplicar· el protocolo de build Zero-Trust para Frontend.
+- Se actualizar· el CHANGELOG_NO_TECNICO.md.
 
-Ya he creado la rama de trabajo `sprint-8/pm-01/us-017-stabilize` partiendo de `devDavid`.
-
-## Resumen del Plan de Implementaci√≥n Propuesto
-
-1. **Conflictos en Coverage Matrix (P0)**: Resolver√© los conflictos en `.agentic-sync/coverage_matrix.md` adoptando la VERSI√ìN HEAD (que incluye datos de Sprint 6.2 y eval√∫a 26 CAs) para las 3 zonas conflictivas, y borrar√© la duplicaci√≥n final.
-2. **Violaci√≥n Hexagonal (P0)**: Corregir√© `FormSubmissionUseCase.java` para que importe √∫nica y exclusivamente `domain.model.FormEvent` y `domain.port.FormEventRepository`, delegando el mapeo a las clases adapter de `infrastructure/persistence/`, acatando el ADR-001.
-3. **Liquibase (P1)**: Verificar√© `db.changelog-master.yaml` para comprobar que la migraci√≥n 016 es sobreescrita adecuadamente por la 40 (`form_event_store`), previniendo duplicidad de tablas del Event Store.
-4. **Verificaci√≥n de 18 CAs y Compatibilidad (P1)**: Comprobar√© la funcionalidad y compilaci√≥n de `FormCompletionService`, `AutoClaimService`, `RejectionLogService` verificando los flujos de CQRS, Drafts, Auto-Claim, entre otros; as√≠ como su integraci√≥n arm√≥nica con US-002 y US-008.
-5. **Cierre y Auditor√≠a (P2)**: Actualizar√© la matriz de cobertura real, rellenar√© el CHANGELOG_NO_TECNICO.md con lenguaje de negocio, y har√© uso estricto del protocolo Zero-Trust SRE para auditor√≠a de compilaci√≥n (`mvn clean compile`).
-
-**Solicito formalmente su aprobaci√≥n o feedback para proceder con la ejecuci√≥n (Modo EXECUTION).**
+Por favor, otorga tu aprobaciÛn formal para proceder con la ejecuciÛn en modo EXECUTION.

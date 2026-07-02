@@ -526,7 +526,28 @@
                 <AppTooltip :content="bpmnTooltips.FORM_KEY" />
               </label>
               <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Formulario renderizado en Workdesk</p>
-              <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border bg-indigo-50/30 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300">
+              <!-- BUG-J02-004: Filtro rápido de tipo de formulario -->
+              <div class="flex gap-1 mb-2">
+                <button 
+                  v-for="filterOpt in [
+                    { value: 'ALL', label: 'Todos', icon: '📋' },
+                    { value: 'SIMPLE', label: 'Simple', icon: '🟢' },
+                    { value: 'MAESTRO', label: 'Maestro', icon: '🔵' }
+                  ]" 
+                  :key="filterOpt.value"
+                  @click="formTypeFilter = filterOpt.value"
+                  :class="[
+                    'px-2 py-1 text-[10px] font-medium rounded-md border transition-all duration-150',
+                    formTypeFilter === filterOpt.value
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                      : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  ]"
+                  type="button"
+                >
+                  {{ filterOpt.icon }} {{ filterOpt.label }}
+                </button>
+              </div>
+              <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono rounded-lg p-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 transition-colors duration-150 appearance-none cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500">
                 <option value="">-- Sin FormKey --</option>
                 <option v-for="form in filteredForms" :key="form.key" :value="form.key">
                   {{ form.type === 'MAESTRO' ? '🔵' : '🟢' }} {{ form.name }} ({{ form.key }})
@@ -594,7 +615,28 @@
                 <AppTooltip :content="bpmnTooltips.FORM_KEY" />
               </label>
               <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Formulario de inicio del proceso</p>
-              <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border bg-indigo-50/30 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300">
+              <!-- BUG-J02-004: Filtro rápido de tipo de formulario -->
+              <div class="flex gap-1 mb-2">
+                <button 
+                  v-for="filterOpt in [
+                    { value: 'ALL', label: 'Todos', icon: '📋' },
+                    { value: 'SIMPLE', label: 'Simple', icon: '🟢' },
+                    { value: 'MAESTRO', label: 'Maestro', icon: '🔵' }
+                  ]" 
+                  :key="filterOpt.value"
+                  @click="formTypeFilter = filterOpt.value"
+                  :class="[
+                    'px-2 py-1 text-[10px] font-medium rounded-md border transition-all duration-150',
+                    formTypeFilter === filterOpt.value
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                      : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  ]"
+                  type="button"
+                >
+                  {{ filterOpt.icon }} {{ filterOpt.label }}
+                </button>
+              </div>
+              <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono rounded-lg p-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 transition-colors duration-150 appearance-none cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500">
                 <option value="">-- Sin FormKey --</option>
                 <option v-for="form in filteredForms" :key="form.key" :value="form.key">
                   {{ form.type === 'MAESTRO' ? '🔵' : '🟢' }} {{ form.name }} ({{ form.key }})
@@ -2844,10 +2886,27 @@ const openAuditLogs = async () => {
   }
 };
 
+// BUG-J02-004: Filtro visual adicional para acceso rápido Simple/Maestro
+const formTypeFilter = ref<'ALL' | 'SIMPLE' | 'MAESTRO'>('ALL');
+
 const filteredForms = computed(() => {
-  if (processPattern.value === 'SIMPLE') return availableForms.value.filter(f => f.type === 'SIMPLE');
-  if (processPattern.value === 'IFORM_MAESTRO') return availableForms.value.filter(f => f.type === 'MAESTRO');
-  return availableForms.value;
+  let forms = availableForms.value;
+
+  // Filtro 1: Por patrón del proceso (lógica existente — mantener)
+  if (processPattern.value === 'SIMPLE') {
+    forms = forms.filter(f => f.type === 'SIMPLE');
+  } else if (processPattern.value === 'IFORM_MAESTRO') {
+    forms = forms.filter(f => f.type === 'MAESTRO');
+  }
+
+  // Filtro 2: Filtro visual adicional del usuario (BUG-J02-004)
+  if (formTypeFilter.value === 'SIMPLE') {
+    forms = forms.filter(f => f.type === 'SIMPLE');
+  } else if (formTypeFilter.value === 'MAESTRO') {
+    forms = forms.filter(f => f.type === 'MAESTRO');
+  }
+
+  return forms;
 });
 
 // ── BPMN Template ────────────────────────────────────────────
@@ -4223,6 +4282,7 @@ defineExpose({
   preFlightStatus,
   onDiagramEdit,
   processPattern,
+  formTypeFilter,
   filteredForms,
   availableConnectors,
   toast,

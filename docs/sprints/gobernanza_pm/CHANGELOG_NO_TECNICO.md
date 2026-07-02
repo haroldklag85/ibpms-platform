@@ -1,4 +1,4 @@
-﻿# ðŸ“– BitÃ¡cora de Avances â€” IBPMS Platform
+# ðŸ“– BitÃ¡cora de Avances â€” IBPMS Platform
 
 > **Â¿QuÃ© es este documento?**
 >
@@ -791,13 +791,28 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - Las pruebas ahora esperan obligatoria y pacientemente a que la pantalla de inicio cargue su contenido visual antes de interactuar.
 - La estabilidad de las pruebas aumenta al 100% en todos los entornos.
 
-**Estado**: ? Listo
+**Estado**: ✅ Listo
+
+---
+
+## 2026-07-01 — Filtro Visual de Tipos de Formulario y Mejora de Estilos en el Modelador de Procesos
+**Autor**: Agente Frontend (🎨 FRONTEND - VUE3) — Rama DevDavid
+**¿Qué es?**: Se agregaron tres botones de filtro rápido ("Todos", "Simple" y "Maestro") junto al selector de formularios dentro del diseñador de procesos de negocio. Además, se mejoraron los estilos visuales del selector de formularios para que sea más legible, accesible y coherente con el resto del diseño del sistema.
+**¿Para qué sirve?**: Para que los analistas de procesos puedan filtrar rápidamente qué tipo de formulario necesitan al diseñar una tarea: formularios simples (independientes) o formularios maestros (mutantes). Antes, el filtro se aplicaba de forma invisible según la configuración del proceso, lo que confundía al usuario al no ver todos los formularios disponibles. Ahora, con un solo clic en los botones, el analista ve exactamente los formularios que necesita. Los estilos mejorados hacen que el selector sea más fácil de leer y tenga un aspecto profesional.
+**¿De dónde viene?**: Resolución de BUG-J02-004 (filtro de tipos de formulario faltante) y BUG-J02-005 (estilos del selector de formularios) — Certificación UAT Jornada 02, Misión M5.
+**¿Qué debería hacer?**:
+- Al abrir las propiedades de una tarea en el modelador, aparecen tres botones junto al selector de formularios: "Todos", "Simple" y "Maestro"
+- Al presionar "Simple", solo se muestran los formularios simples; al presionar "Maestro", solo los maestros; al presionar "Todos", se muestran todos
+- El selector de formularios tiene un aspecto visual limpio, con bordes redondeados, sombra sutil y resaltado al pasar el cursor
+- Este filtro funciona tanto para tareas de usuario como para el evento de inicio del proceso
+
+**Estado**: ✅ Listo
 
 
 ---
 
 ## 2026-06-24 - Corrección de Catálogo de Formularios y Enrutamiento en Diseñador BPMN
-**Autor**: Agente Backend (?? BACKEND - JAVA) / Agente Frontend (?? FRONTEND - VUE3) - Rama DevDavid
+**Autor**: Agente Backend (⚙️ BACKEND - JAVA) / Agente Frontend (🎨 FRONTEND - VUE3) - Rama DevDavid
 **¿Qué es?**: Se eliminaron datos simulados (mocks) en el catálogo de formularios para mostrar información real de la base de datos. Adicionalmente, se corrigieron enlaces rotos y rutas de navegación dentro del diseñador de procesos BPMN que llevaban a páginas no encontradas (error 404).
 **¿Para qué sirve?**: Para que al diseñar un proceso y asignar formularios a las tareas, el sistema liste los formularios verdaderos creados por la organización. También asegura que los usuarios puedan navegar fluidamente dentro del área de modelado sin toparse con pantallas de error al acceder a subprocesos o al diseñador principal.
 **¿De dónde viene?**: Resolución de bugs críticos detectados durante la Certificación UAT Manual (Sprint PM-01). Reporte de Agente QA (BUG-J02-001, BUG-J02-002, BUG-J02-003).

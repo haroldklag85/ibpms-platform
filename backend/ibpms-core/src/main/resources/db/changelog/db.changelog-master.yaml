@@ -164,3 +164,5 @@ databaseChangeLog:
   # Sprint-6: Seed test tenants (T-100)
   - include:
       file: db/changelog/changes/060-seed-test-tenants.sql
+  - include:
+      file: db/changelog/changes/061-bugj02006-seed-permissions.sql

@@ -1,16 +1,27 @@
-# Solicitud de AprobaciÛn ArquitectÛnica - Sprint01-UAT-HOTFIX (US-005)
+# üìù Solicitud de Aprobaci√≥n Backend ‚Äî BUG-J02-006
 
-**Arquitecto LÌder:**
-He analizado el handoff para la resoluciÛn de los bugs J02-001, J02-002 y J02-003. El plan de implementaciÛn ha sido documentado.
+**Para**: Arquitecto L√≠der
+**De**: Agente Backend
+**Asunto**: Aprobaci√≥n de Plan de Implementaci√≥n para BUG-J02-006 (Men√∫ vac√≠o para ROLE_USER_INTERNAL)
 
-**Resumen del Plan:**
-1. **BUG-J02-003 (Backend):** Modificar FormDirectoryService.java para eliminar el mock de datos, inyectar FormDesignService, consumir listarCatalogo(), mapear los resultados al formato esperado (Map<String, Object>) y aplicar la lÛgica de b˙squeda. Se respetar· estrictamente la arquitectura hexagonal y la polÌtica Zero-Mock.
-2. **BUG-J02-001 (Frontend Router):** Agregar un redirect en rontend/src/router/index.ts de /admin/modeler a /admin/modeler/bpmn dentro del bloque de rutas autenticadas.
-3. **BUG-J02-002 (Frontend BpmnDesigner):** Modificar rontend/src/views/admin/Modeler/BpmnDesigner.vue (lÌnea ~4197) para que el mÈtodo openCallActivity() abra la ruta /admin/modeler/bpmn en lugar de /admin/modeler.
+## 1. Resultados de la Investigaci√≥n
+Ejecut√© las queries SQL en `ibpms-postgres-uat`. Encontr√©:
+1. `ROLE_USER_INTERNAL` existe en la base de datos (ID: `026fc129-2a40-42fe-b74f-8065f690886b`).
+2. La tabla `ibpms_security_permission` est√° **completamente vac√≠a** (0 filas).
+3. `ROLE_USER_INTERNAL` no tiene permisos asignados en `ibpms_security_role_permissions`.
+4. El motivo por el cual `ROLE_SUPER_ADMIN` s√≠ puede ver el men√∫ es porque hay una excepci√≥n expl√≠cita en `MenuLayoutService.java` (l√≠nea 77) para `SUPER_ADMIN`.
+5. Los usuarios `admin@alpha.com` y `operario_c@alpha.com` (`DAVID TEST`) tienen el `ROLE_USER_INTERNAL`.
 
-**Protocolos a seguir:**
-- Se aplicar· el protocolo de compilaciÛn y validaciÛn SRE Zero-Trust para Backend (puerto 8080).
-- Se aplicar· el protocolo de build Zero-Trust para Frontend.
-- Se actualizar· el CHANGELOG_NO_TECNICO.md.
+## 2. Plan Propuesto: Opci√≥n A
+Proponemos utilizar la **Opci√≥n A**, ya que es escalable, no impacta la l√≥gica existente en Java, respeta el ADR-001 (Arquitectura Hexagonal) y **no introduce hard-code**.
 
-Por favor, otorga tu aprobaciÛn formal para proceder con la ejecuciÛn en modo EXECUTION.
+### Pasos:
+1. Crear el changeset Liquibase `47-bugj02006-seed-permissions.sql`.
+2. Insertar el permiso `WORKDESK_ACCESS` (cuyo nombre contiene "WORKDESK", emparejando con `MACRO_MODULES`).
+3. Asignar el permiso a `ROLE_USER_INTERNAL` en `ibpms_security_role_permissions`.
+4. A√±adir el archivo en `db.changelog-master.yaml`.
+5. Limpiar el cach√© de Redis para invalidar la clave `menuTopology` de los usuarios afectados.
+6. Arrancar Spring Boot y verificar emp√≠ricamente mediante un HTTP request.
+
+## 3. Veredicto
+Solicito autorizaci√≥n formal para proceder con la ejecuci√≥n de este plan.

@@ -870,3 +870,19 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - El usuario verá reflejados sus nuevos accesos en el menú al iniciar sesión.
 
 **Estado**: ✅ Listo
+
+---
+
+## 2026-07-06 — HOTFIX CRÍTICO: Reparación del Diseñador de Flujos de Trabajo
+**Autor**: Arquitecto Líder (Rama DevDavid)
+**¿Qué es?**: Se reparó un error crítico que impedía agregar componentes (tareas, eventos, compuertas) al diseñador de procesos BPMN. Al intentar arrastrar cualquier elemento al lienzo, el sistema mostraba un error y no permitía diseñar.
+**¿Para qué sirve?**: Para devolver la funcionalidad completa del diseñador de procesos. Sin este arreglo, era imposible crear o editar flujos de trabajo en la plataforma.
+**¿De dónde viene?**: El motor de diseño necesita un catálogo completo de tipos de componentes para funcionar. Se estaba usando un catálogo artesanal con solo 7 tipos en lugar del catálogo oficial con más de 100 tipos. Al eliminar este catálogo incompleto y usar el oficial, el diseñador volvió a funcionar correctamente.
+**¿Qué debería hacer?**:
+- Abrir el diseñador BPMN → Crear nuevo proceso → Arrastrar tareas y eventos sin errores
+- Todas las propiedades (formularios, temas, decisiones) siguen funcionando
+- El filtro de tipos de formulario (Simple/Maestro) sigue visible y operativo
+
+**Estado**: ✅ Listo
+
+**Estado**: ✅ Listo

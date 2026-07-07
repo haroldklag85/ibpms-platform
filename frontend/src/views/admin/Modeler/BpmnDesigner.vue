@@ -2948,27 +2948,9 @@ onMounted(async () => {
     const { default: BpmnModeler } = await import('bpmn-js/lib/Modeler');
     // @ts-ignore
     const minimapModule = (await import('diagram-js-minimap')).default;
-    const camundaDescriptor = {
-      name: 'Camunda',
-      uri: 'http://camunda.org/schema/1.0/bpmn',
-      prefix: 'camunda',
-      xml: { tagAlias: 'lowerCase' },
-      types: [
-        {
-          name: 'ExtensibleElement',
-          extends: ['bpmn:BaseElement'],
-          properties: [
-            { name: 'formKey', isAttr: true, type: 'String' },
-            { name: 'topic', isAttr: true, type: 'String' },
-            { name: 'decisionRef', isAttr: true, type: 'String' },
-            { name: 'decisionRefBinding', isAttr: true, type: 'String' },
-            { name: 'createSharepointFolder', isAttr: true, type: 'Boolean' },
-            { name: 'aiTone', isAttr: true, type: 'String' },
-            { name: 'aiSchemaId', isAttr: true, type: 'String' }
-          ]
-        }
-      ]
-    };
+    // @Traceability: HOTFIX-P0 — Usar descriptor oficial en lugar de artesanal (eliminación de hard-code)
+    // El paquete camunda-bpmn-moddle@7.0.1 incluye 100+ tipos Camunda necesarios para bpmn-js 18.x
+    const camundaModdleDescriptor = (await import('camunda-bpmn-moddle/resources/camunda.json')).default;
 
     console.log('camunda package loaded');
     modelerInstance = new BpmnModeler({
@@ -2976,7 +2958,7 @@ onMounted(async () => {
       additionalModules: [minimapModule],
       // CA-20 Copy/Paste enabled system-wide implicitly now
       moddleExtensions: {
-        camunda: camundaDescriptor
+        camunda: camundaModdleDescriptor
       }
     });
 

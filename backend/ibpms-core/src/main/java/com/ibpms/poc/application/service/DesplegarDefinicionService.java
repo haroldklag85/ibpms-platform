@@ -1,9 +1,11 @@
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.application.dto.DeploymentRequestDTO;
+import com.ibpms.poc.application.dto.LaneInfo;
 import com.ibpms.poc.application.port.in.DesplegarDefinicionUseCase;
 import com.ibpms.poc.application.port.out.ProcesoBpmPort;
 import com.ibpms.poc.application.port.out.RbacPort;
+import com.ibpms.poc.application.port.out.BpmnLanePort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,10 +16,12 @@ public class DesplegarDefinicionService implements DesplegarDefinicionUseCase {
 
     private final ProcesoBpmPort procesoBpmPort;
     private final RbacPort rbacPort;
+    private final BpmnLanePort bpmnLanePort;
 
-    public DesplegarDefinicionService(ProcesoBpmPort procesoBpmPort, RbacPort rbacPort) {
+    public DesplegarDefinicionService(ProcesoBpmPort procesoBpmPort, RbacPort rbacPort, BpmnLanePort bpmnLanePort) {
         this.procesoBpmPort = procesoBpmPort;
         this.rbacPort = rbacPort;
+        this.bpmnLanePort = bpmnLanePort;
     }
 
     @Override
@@ -59,6 +63,7 @@ public class DesplegarDefinicionService implements DesplegarDefinicionUseCase {
                 org.w3c.dom.Element processElement = (org.w3c.dom.Element) processNodes.item(i);
                 String processId = processElement.getAttribute("id");
                 List<String> activeLaneIds = new ArrayList<>();
+                List<LaneInfo> parsedLanes = new ArrayList<>();
 
                 org.w3c.dom.NodeList laneNodes = processElement.getElementsByTagName("bpmn:lane");
                 if (laneNodes.getLength() == 0) {
@@ -73,6 +78,9 @@ public class DesplegarDefinicionService implements DesplegarDefinicionUseCase {
                     if (laneId != null && !laneId.isEmpty()) {
                         activeLaneIds.add(laneId);
                         String friendlyName = (laneName != null && !laneName.isEmpty()) ? laneName : laneId;
+                        
+                        parsedLanes.add(new LaneInfo(laneId, friendlyName));
+                        
                         String roleName = "BPMN_" + processId + "_" + friendlyName.replaceAll("\\s+", "_");
                         String description = "Autogenerado desde el Carril '" + friendlyName + "' del proceso '"
                                 + processId + "'";
@@ -80,6 +88,10 @@ public class DesplegarDefinicionService implements DesplegarDefinicionUseCase {
                         rbacPort.bindLaneToProfile(processId, laneId, roleName, description);
                     }
                 }
+                
+                // === INICIO: Extensión Lane Actor Assignment (US-005/US-036) ===
+                bpmnLanePort.syncLanesFromDeployment(processId, null, parsedLanes);
+                // === FIN: Extensión Lane Actor Assignment ===
                 
                 // @Traceability: US-005, CA-06 Purga de Roles Zombies
                 rbacPort.purgeZombieLanes(processId, activeLaneIds);

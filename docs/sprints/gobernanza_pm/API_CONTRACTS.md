@@ -1344,12 +1344,102 @@ El PM-IA puede solicitar una auditoría de contratos en cualquier momento, espec
 
 ---
 
+### 5.9 Lane Management (Gestión de Lanes BPMN + Integración RBAC)
+
+#### GET /api/v1/admin/lanes
+- **Estado**: ❌ Missing
+- **US**: US-005 / US-036 (Extensión: Lane Actor Assignment + RBAC Lane Integration)
+- **CA**: Extensión PO — Lane Actor Assignment
+- **Descripción**: Listar los lanes de un proceso BPMN desplegado, registrados como entidades de primer nivel en `ibpms_bpmn_lane`
+- **Auth**: Bearer JWT (requiere rol ADMIN)
+- **Headers**:
+  - `Authorization`: Bearer {accessToken}
+- **Query Params**:
+  - `processKey`: string (requerido) — Clave del proceso BPMN
+- **Response 200**:
+  ```json
+  [
+    {
+      "id": "UUID — ID del lane en ibpms_bpmn_lane",
+      "processKey": "string — clave del proceso BPMN",
+      "laneXmlId": "string — ID del lane en el XML BPMN",
+      "laneName": "string — nombre legible del lane",
+      "actorDescription": "string | null — descripción del actor asignado",
+      "linkedRoleName": "string | null — nombre del rol RBAC vinculado"
+    }
+  ]
+  ```
+- **Response 400**: Si falta el queryParam `processKey`
+- **Notas**: Los lanes se registran automáticamente al desplegar un BPMN con Pool+Lanes. La tabla `ibpms_bpmn_lane` se puebla en `generarRolesDesdeLanes()`. Array vacío si el proceso no tiene lanes.
+- **Última actualización**: 2026-07-14
+
+---
+
+#### GET /api/v1/admin/roles/{roleId}/lane-assignments
+- **Estado**: ❌ Missing
+- **US**: US-005 / US-036 (Extensión: RBAC Lane Integration)
+- **CA**: Extensión PO — RBAC Lane Integration con granularidad I/E
+- **Descripción**: Obtener las asignaciones lane↔rol para un rol específico, con granularidad Initiate/Execute por lane
+- **Auth**: Bearer JWT (requiere rol ADMIN)
+- **Headers**:
+  - `Authorization`: Bearer {accessToken}
+- **Path Params**:
+  - `{roleId}`: UUID — ID del rol en `ibpms_security_role`
+- **Response 200**:
+  ```json
+  [
+    {
+      "laneId": "UUID — ID del lane en ibpms_bpmn_lane",
+      "laneName": "string — nombre legible del lane",
+      "processKey": "string — clave del proceso BPMN",
+      "canInitiate": "boolean — puede iniciar tareas en este lane",
+      "canExecute": "boolean — puede ejecutar tareas en este lane"
+    }
+  ]
+  ```
+- **Response 404**: Si el `roleId` no existe
+- **Notas**: Consume `ibpms_lane_role_assignment` JOIN `ibpms_bpmn_lane`. Usado por el modal de edición de rol en IdentityGovernance.vue para mostrar la vista jerárquica Proceso→Lanes.
+- **Última actualización**: 2026-07-14
+
+---
+
+#### PUT /api/v1/admin/roles/{roleId}/lane-assignments
+- **Estado**: ❌ Missing
+- **US**: US-005 / US-036 (Extensión: RBAC Lane Integration)
+- **CA**: Extensión PO — Guardar asignaciones Lane↔Rol con I/E
+- **Descripción**: Guardar o actualizar las asignaciones lane↔rol para un rol específico (reemplaza todas las asignaciones existentes del rol)
+- **Auth**: Bearer JWT (requiere rol ADMIN)
+- **Headers**:
+  - `Authorization`: Bearer {accessToken}
+  - `Content-Type`: application/json
+- **Path Params**:
+  - `{roleId}`: UUID — ID del rol en `ibpms_security_role`
+- **Request Body**:
+  ```json
+  [
+    {
+      "laneId": "UUID — ID del lane en ibpms_bpmn_lane",
+      "canInitiate": "boolean — puede iniciar tareas en este lane",
+      "canExecute": "boolean — puede ejecutar tareas en este lane"
+    }
+  ]
+  ```
+- **Response 200**: Asignaciones guardadas exitosamente (sin body)
+- **Response 404**: Si el `roleId` no existe
+- **Response 400**: Si algún `laneId` no existe en `ibpms_bpmn_lane`
+- **Notas**: Estrategia DELETE+INSERT: elimina asignaciones previas del rol y crea las nuevas. Usa constraint `UNIQUE(lane_id, role_id)` para idempotencia. El campo `assigned_by` se obtiene del JWT.
+- **Última actualización**: 2026-07-14
+
+---
+
+
 ## 8. Historial de Cambios del Documento
 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 1.0.0 | 2026-06-02 | PM-IA / Arquitecto Líder | Creación inicial con inventario assumed |
 | 1.1.0 | 2026-06-09 | Arquitecto Líder | Agregar contratos US-017 CQRS (complete, draft GET/PUT/DELETE) — PM-01 Slot 5 |
+| 1.2.0 | 2026-07-14 | Arquitecto Líder | Agregar 3 endpoints Lane-Role Assignment (GET lanes, GET/PUT lane-assignments) — Iteración 84-DEV-LANE-ROLE |
 
 ---
 

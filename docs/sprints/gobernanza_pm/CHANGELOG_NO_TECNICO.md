@@ -898,3 +898,17 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - Evita posibles fallos o confusiones impidiendo que se creen carriles duplicados en el mismo diseño de proceso.
 
 **Estado**: ✅ Listo
+
+---
+
+## 2026-07-14 — Conexión de Carriles BPMN con Roles de Seguridad
+**Autor**: Agente Backend (Rama DevDavid)
+**¿Qué es?**: Se construyó el puente lógico y los servicios que permiten al sistema leer los "carriles" (lanes) de un diagrama de proceso y guardarlos en la base de datos de manera organizada. Además, se crearon las conexiones internas (APIs) para que los administradores puedan asignar qué rol de seguridad puede iniciar o ejecutar las tareas de cada carril.
+**¿Para qué sirve?**: Para que cuando se diseñe un proceso con diferentes responsables (por ejemplo, "Solicitante", "Revisor", "Aprobador"), el sistema sepa exactamente qué personas de la empresa pueden hacer ese trabajo. Esto evita que alguien sin autorización apruebe algo que no le corresponde, conectando los diagramas visuales con los permisos reales de los usuarios.
+**¿De dónde viene?**: Historias de Usuario US-005 (Modelador de Procesos) y US-036 (Seguridad y Roles).
+**¿Qué debería hacer?**:
+- Al cargar un nuevo proceso en el sistema, detecta automáticamente todos sus carriles y los registra.
+- Permite a los administradores consultar la lista de carriles de cualquier proceso.
+- Permite asignar o quitar roles a un carril específico para controlar quién puede iniciar el proceso o ejecutar sus tareas.
+
+**Estado**: ✅ Listo

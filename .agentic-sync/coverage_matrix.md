@@ -488,12 +488,14 @@
 | CA-68 | 🔴 | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 73-DEV | handoff_*_US005_CA68 | OBS-1: Entity/DDL mismatch |
 | CA-69 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 73-DEV | handoff_*_US005_CA69 | Deploy Request lifecycle |
 | CA-70 | ✅ | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 73-DEV | handoff_*_US005_CA70 | Topic catalog + Pre-Flight |
+| CA-71 a CA-72 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | 84-DEV | handoff_*_US005_US036_84DEV_FIX | Corrección Lane-Role (D-01 a D-14) |
 
 ### Resumen US-005
-- **Total CAs con Handoff:** 70 | **Back+Front ✅:** 68/70 (97%) | **QA:** CA-12 ✅🔧 (hotfix Arquitecto)
+- **Total CAs con Handoff:** 72 | **Back+Front ✅:** 70/72 (97%) | **QA:** CA-12 ✅🔧 (hotfix Arquitecto)
 - **Observaciones abiertas:** OBS-1 🔴 (CA-68 Entity/DDL), OBS-2 🟡 (CA-65 Contrato API)
 - **Auditoría 73-DEV:** 🟡 APROBADO CON OBSERVACIONES
 - **Auditoría 74-DEV:** ✅ CA-12 CERRADO
+- **Auditoría 84-DEV:** ✅ APROBADO (Correcciones PM-IA D-01 a D-14)
 
 ---
 

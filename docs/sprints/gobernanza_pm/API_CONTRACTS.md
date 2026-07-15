@@ -1347,7 +1347,7 @@ El PM-IA puede solicitar una auditoría de contratos en cualquier momento, espec
 ### 5.9 Lane Management (Gestión de Lanes BPMN + Integración RBAC)
 
 #### GET /api/v1/admin/lanes
-- **Estado**: ❌ Missing
+- **Estado**: ✅ Implemented
 - **US**: US-005 / US-036 (Extensión: Lane Actor Assignment + RBAC Lane Integration)
 - **CA**: Extensión PO — Lane Actor Assignment
 - **Descripción**: Listar los lanes de un proceso BPMN desplegado, registrados como entidades de primer nivel en `ibpms_bpmn_lane`
@@ -1376,7 +1376,7 @@ El PM-IA puede solicitar una auditoría de contratos en cualquier momento, espec
 ---
 
 #### GET /api/v1/admin/roles/{roleId}/lane-assignments
-- **Estado**: ❌ Missing
+- **Estado**: ✅ Implemented
 - **US**: US-005 / US-036 (Extensión: RBAC Lane Integration)
 - **CA**: Extensión PO — RBAC Lane Integration con granularidad I/E
 - **Descripción**: Obtener las asignaciones lane↔rol para un rol específico, con granularidad Initiate/Execute por lane
@@ -1404,7 +1404,7 @@ El PM-IA puede solicitar una auditoría de contratos en cualquier momento, espec
 ---
 
 #### PUT /api/v1/admin/roles/{roleId}/lane-assignments
-- **Estado**: ❌ Missing
+- **Estado**: ✅ Implemented
 - **US**: US-005 / US-036 (Extensión: RBAC Lane Integration)
 - **CA**: Extensión PO — Guardar asignaciones Lane↔Rol con I/E
 - **Descripción**: Guardar o actualizar las asignaciones lane↔rol para un rol específico (reemplaza todas las asignaciones existentes del rol)

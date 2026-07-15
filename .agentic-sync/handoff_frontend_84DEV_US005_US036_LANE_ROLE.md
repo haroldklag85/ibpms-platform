@@ -10,7 +10,7 @@
 | **Iteración** | `84-DEV-LANE-ROLE` |
 | **US** | US-005 (Extensión: Lane Actor Assignment) + US-036 (Extensión: RBAC Lane Integration) |
 | **CAs** | Extensión funcional aprobada por PO — No son CAs numerados existentes |
-| **Rama Git** | `feature/lane-role-assignment` |
+| **Rama Git** | `DevDavid` |
 | **Agente** | Frontend |
 | **Dependencias** | ✅ Backend completado y pusheado (MS-2 + MS-3 deben estar mergeados primero) |
 | **SSOT** | `docs/requirements/v1_user_stories_index.md` → Epic B (US-005) + Epic E (US-036) |
@@ -270,7 +270,7 @@ Build obligatorio: Ejecuta el protocolo Zero-Trust UI documentado en `.agents/sk
 > 4. Dile al Humano: *"Humano, he dejado mi solicitud de revisión en `.agentic-sync/approval_request_FRONTEND.md`. Ve al chat del Arquitecto Líder y regrésame su respuesta formal."*
 > 5. Espera el veredicto del Arquitecto. Si aprueba, pasa a `EXECUTION`.
 > 6. Actualiza `docs/sprints/gobernanza_pm/CHANGELOG_NO_TECNICO.md` antes del commit final.
-> 7. `git commit` y `git push` en la rama `feature/lane-role-assignment`. PROHIBIDO git stash.
+> 7. `git commit` y `git push` en la rama `DevDavid`. Usa mensajes de commit EXTREMADAMENTE específicos explicando el porqué de los cambios. PROHIBIDO git stash.
 
 > 📚 **SKILLS OBLIGATORIOS:**
 > - `.agents/skills/tdd_first/SKILL.md`

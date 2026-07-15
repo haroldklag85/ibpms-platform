@@ -10,7 +10,7 @@
 | **Iteración** | `84-DEV-LANE-ROLE` |
 | **US** | US-005 (Extensión: Lane Actor Assignment) + US-036 (Extensión: RBAC Lane Integration) |
 | **CAs** | Extensión funcional aprobada por PO — Validar 7 escenarios E2E |
-| **Rama Git** | `feature/lane-role-assignment` |
+| **Rama Git** | `DevDavid` |
 | **Agente** | QA |
 | **Dependencias** | ✅ TODOS los anteriores completados (Infra + Backend + Frontend pusheados) |
 | **SSOT** | `docs/requirements/v1_user_stories_index.md` → Epic B (US-005) + Epic E (US-036) |
@@ -122,7 +122,7 @@
 > 4. Dile al Humano: *"Humano, he dejado mi solicitud en `.agentic-sync/approval_request_QA.md`. Ve al chat del Arquitecto Líder y regrésame su respuesta."*
 > 5. Espera el veredicto. Si aprueba, pasa a `EXECUTION`.
 > 6. Actualiza `docs/sprints/gobernanza_pm/CHANGELOG_NO_TECNICO.md` antes del commit.
-> 7. `git commit` y `git push` en la rama `feature/lane-role-assignment`. PROHIBIDO git stash.
+> 7. `git commit` y `git push` en la rama `DevDavid`. Usa mensajes de commit EXTREMADAMENTE específicos. PROHIBIDO git stash.
 
 > 📚 **SKILLS OBLIGATORIOS:**
 > - `.agents/skills/qa_e2e_validation_audit/SKILL.md` — Ley de Correspondencia Gherkin

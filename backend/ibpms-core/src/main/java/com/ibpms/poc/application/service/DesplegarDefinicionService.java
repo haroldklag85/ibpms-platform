@@ -6,6 +6,7 @@ import com.ibpms.poc.application.port.in.DesplegarDefinicionUseCase;
 import com.ibpms.poc.application.port.out.ProcesoBpmPort;
 import com.ibpms.poc.application.port.out.RbacPort;
 import com.ibpms.poc.application.port.out.BpmnLanePort;
+import com.ibpms.poc.application.port.out.BpmnDesignPort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,11 +18,13 @@ public class DesplegarDefinicionService implements DesplegarDefinicionUseCase {
     private final ProcesoBpmPort procesoBpmPort;
     private final RbacPort rbacPort;
     private final BpmnLanePort bpmnLanePort;
+    private final BpmnDesignPort bpmnDesignPort;
 
-    public DesplegarDefinicionService(ProcesoBpmPort procesoBpmPort, RbacPort rbacPort, BpmnLanePort bpmnLanePort) {
+    public DesplegarDefinicionService(ProcesoBpmPort procesoBpmPort, RbacPort rbacPort, BpmnLanePort bpmnLanePort, BpmnDesignPort bpmnDesignPort) {
         this.procesoBpmPort = procesoBpmPort;
         this.rbacPort = rbacPort;
         this.bpmnLanePort = bpmnLanePort;
+        this.bpmnDesignPort = bpmnDesignPort;
     }
 
     @Override
@@ -90,7 +93,10 @@ public class DesplegarDefinicionService implements DesplegarDefinicionUseCase {
                 }
                 
                 // === INICIO: Extensión Lane Actor Assignment (US-005/US-036) ===
-                bpmnLanePort.syncLanesFromDeployment(processId, null, parsedLanes);
+                java.util.UUID processDesignId = bpmnDesignPort.findByTechnicalId(processId)
+                    .map(design -> design.getId())
+                    .orElse(null);
+                bpmnLanePort.syncLanesFromDeployment(processId, processDesignId, parsedLanes);
                 // === FIN: Extensión Lane Actor Assignment ===
                 
                 // @Traceability: US-005, CA-06 Purga de Roles Zombies

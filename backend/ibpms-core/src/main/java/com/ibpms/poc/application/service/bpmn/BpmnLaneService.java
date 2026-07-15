@@ -10,23 +10,37 @@ import com.ibpms.poc.infrastructure.jpa.entity.security.LaneRoleAssignmentEntity
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.BpmnLaneJpaRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.LaneRoleAssignmentJpaRepository;
+import com.ibpms.poc.infrastructure.jpa.repository.security.RoleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import jakarta.persistence.EntityManager;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class BpmnLaneService implements BpmnLanePort {
 
     private final BpmnLaneJpaRepository bpmnLaneRepository;
     private final LaneRoleAssignmentJpaRepository laneRoleAssignmentRepository;
+    private final RoleRepository roleRepository;
+    private final EntityManager entityManager;
 
-    public BpmnLaneService(BpmnLaneJpaRepository bpmnLaneRepository, LaneRoleAssignmentJpaRepository laneRoleAssignmentRepository) {
+    public BpmnLaneService(BpmnLaneJpaRepository bpmnLaneRepository, 
+                           LaneRoleAssignmentJpaRepository laneRoleAssignmentRepository,
+                           RoleRepository roleRepository,
+                           EntityManager entityManager) {
         this.bpmnLaneRepository = bpmnLaneRepository;
         this.laneRoleAssignmentRepository = laneRoleAssignmentRepository;
+        this.roleRepository = roleRepository;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -46,6 +60,11 @@ public class BpmnLaneService implements BpmnLanePort {
     @Override
     @Transactional
     public void syncLanesFromDeployment(String processKey, UUID processDesignId, List<LaneInfo> lanes) {
+        if (processDesignId == null) {
+            log.warn("syncLanesFromDeployment: processDesignId is null for processKey={}. Skipping lane sync to avoid ConstraintViolationException.", processKey);
+            return;
+        }
+        
         List<BpmnLaneEntity> existingLanes = bpmnLaneRepository.findByProcessDesign_TechnicalId(processKey);
         Set<String> xmlLaneIds = lanes.stream().map(LaneInfo::laneXmlId).collect(Collectors.toSet());
 
@@ -78,18 +97,6 @@ public class BpmnLaneService implements BpmnLanePort {
     }
 
     @Override
-    @Transactional
-    public void assignRoleToLane(UUID laneId, UUID roleId, boolean canInitiate, boolean canExecute) {
-        // Implementation for single assignment if needed
-    }
-
-    @Override
-    @Transactional
-    public void removeRoleFromLane(UUID laneId, UUID roleId) {
-        // Implementation for single removal if needed
-    }
-
-    @Override
     public List<LaneRoleAssignmentDTO> getAssignmentsByRoleId(UUID roleId) {
         return laneRoleAssignmentRepository.findByRole_Id(roleId).stream()
                 .map(assignment -> new LaneRoleAssignmentDTO(
@@ -102,22 +109,36 @@ public class BpmnLaneService implements BpmnLanePort {
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional
     public void replaceAssignmentsForRole(UUID roleId, List<LaneRoleAssignmentRequest> assignments) {
+        if (!roleRepository.existsById(roleId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found: " + roleId);
+        }
+        
+        for (LaneRoleAssignmentRequest req : assignments) {
+            if (!bpmnLaneRepository.existsById(req.laneId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Lane not found: " + req.laneId());
+            }
+        }
+
         laneRoleAssignmentRepository.deleteByRole_Id(roleId);
         
-        RoleEntity role = new RoleEntity();
-        role.setId(roleId);
+        RoleEntity role = entityManager.getReference(RoleEntity.class, roleId);
         
         List<LaneRoleAssignmentEntity> newAssignments = assignments.stream().map(req -> {
             LaneRoleAssignmentEntity entity = new LaneRoleAssignmentEntity();
-            BpmnLaneEntity lane = new BpmnLaneEntity();
-            lane.setId(req.laneId());
+            BpmnLaneEntity lane = entityManager.getReference(BpmnLaneEntity.class, req.laneId());
             entity.setLane(lane);
             entity.setRole(role);
             entity.setCanInitiate(req.canInitiate());
             entity.setCanExecute(req.canExecute());
-            entity.setAssignedBy("system");
+            
+            String currentUser = SecurityContextHolder.getContext().getAuthentication() != null
+                ? SecurityContextHolder.getContext().getAuthentication().getName()
+                : "system";
+            entity.setAssignedBy(currentUser);
+            
             return entity;
         }).collect(Collectors.toList());
         

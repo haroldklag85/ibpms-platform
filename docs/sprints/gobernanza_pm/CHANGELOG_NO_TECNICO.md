@@ -912,3 +912,17 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - Permite asignar o quitar roles a un carril específico para controlar quién puede iniciar el proceso o ejecutar sus tareas.
 
 **Estado**: ✅ Listo
+
+---
+
+## 2026-07-14 — Resolución de Defectos en Asignación de Roles (PM-IA)
+**Autor**: Agente Backend (Rama DevDavid)
+**¿Qué es?**: Se corrigieron 6 defectos técnicos relacionados con cómo el sistema guarda y verifica a los responsables de un proceso. Se agregó validación estricta para asegurar que los roles y carriles existen antes de intentar conectarlos, y se mejoró la forma en que el sistema registra internamente estas asignaciones para usar al usuario conectado en lugar de un "sistema" genérico.
+**¿Para qué sirve?**: Para garantizar que cuando un administrador configura quién debe hacer qué tarea, los permisos se asignen correctamente y el sistema avise si hay algún error, evitando fallos silenciosos y previniendo caídas del servidor.
+**¿De dónde viene?**: Corrección de defectos de la Iteración Correctiva 84-DEV-LANE-ROLE-FIX tras auditoría forense.
+**¿Qué debería hacer?**:
+- El sistema alerta correctamente si se intenta asignar tareas a un rol o carril que no existe.
+- Las asignaciones registran correctamente quién las realizó para efectos de auditoría.
+- Se previenen errores internos de guardado en despliegues.
+
+**Estado**: ✅ Listo

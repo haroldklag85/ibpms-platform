@@ -4,7 +4,6 @@ import com.ibpms.poc.application.dto.BpmnLaneDTO;
 import com.ibpms.poc.application.dto.LaneRoleAssignmentDTO;
 import com.ibpms.poc.application.dto.LaneRoleAssignmentRequest;
 import com.ibpms.poc.application.port.out.BpmnLanePort;
-import com.ibpms.poc.application.service.bpmn.BpmnLaneService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,11 +15,9 @@ import java.util.UUID;
 public class LaneAdminController {
 
     private final BpmnLanePort bpmnLanePort;
-    private final BpmnLaneService bpmnLaneService;
 
-    public LaneAdminController(BpmnLanePort bpmnLanePort, BpmnLaneService bpmnLaneService) {
+    public LaneAdminController(BpmnLanePort bpmnLanePort) {
         this.bpmnLanePort = bpmnLanePort;
-        this.bpmnLaneService = bpmnLaneService;
     }
 
     @GetMapping("/lanes")
@@ -39,7 +36,7 @@ public class LaneAdminController {
     public ResponseEntity<Void> saveLaneAssignments(
             @PathVariable UUID roleId,
             @RequestBody List<LaneRoleAssignmentRequest> assignments) {
-        bpmnLaneService.replaceAssignmentsForRole(roleId, assignments);
+        bpmnLanePort.replaceAssignmentsForRole(roleId, assignments);
         return ResponseEntity.ok().build();
     }
 }

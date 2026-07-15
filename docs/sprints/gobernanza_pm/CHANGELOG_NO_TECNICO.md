@@ -885,4 +885,16 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 
 **Estado**: ✅ Listo
 
+---
+
+## 2026-07-14 — Estructura para Asignación de Roles en Tareas del Proceso
+**Autor**: Agente Infra/BD (Rama feature/lane-role-assignment)
+**¿Qué es?**: Se prepararon las tablas y reglas internas de la base de datos que permitirán conectar los "carriles" de un proceso (quién hace qué) con los roles reales del sistema (ej. Analista, Supervisor). Se agregaron protecciones para asegurar que no se puedan asignar roles que no existen ni duplicar carriles en un mismo proceso.
+**¿Para qué sirve?**: Para garantizar que, cuando en un futuro cercano se configure visualmente quién debe ejecutar una tarea en el diseñador de procesos, esa información se guarde de forma segura y estrictamente relacionada con los roles de seguridad reales de la empresa. Esto es el cimiento para que el sistema asigne las tareas a las personas correctas de forma automática.
+**¿De dónde viene?**: Historias de Usuario US-005 (Modelador de Procesos) y US-036 (Seguridad y Roles), siguiendo la arquitectura establecida en el Sprint PM-01.
+**¿Qué debería hacer?**:
+- El sistema ya cuenta con la estructura interna para guardar qué rol ejecuta las tareas de cada carril.
+- Protege la información impidiendo que se asigne trabajo a roles que no existen.
+- Evita posibles fallos o confusiones impidiendo que se creen carriles duplicados en el mismo diseño de proceso.
+
 **Estado**: ✅ Listo

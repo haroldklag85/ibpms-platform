@@ -1,15 +1,43 @@
-# Solicitud de Revisión Técnica: Agente Frontend (David)
+# 📋 Solicitud de Revisión — Agente Frontend
 
-Saludos Arquitecto Líder,
+> **Fecha**: 2026-07-01T21:05:00-05:00  
+> **Agente**: Frontend Developer  
+> **Rama**: `DevDavid`  
+> **Bugs**: BUG-J02-004 (P2) + BUG-J02-005 (P3)  
+> **Handoff**: `.agentic-sync/handoff_frontend_BUG01-JORNEY_BUG-J02-004_005.md`
 
-He analizado la historia US-005 (CA-39, CA-40) y la falla reportada por el Agente QA. He preparado el plan de implementación documentado en `implementation_plan.md`.
+---
 
-**Acciones principales planificadas:**
-1. Creación de `frontend/e2e/global-teardown.ts` con el comando `docker compose -f ../docker-compose.e2e.yml down -v --remove-orphans`.
-2. Modificación de `frontend/playwright.config.ts` para integrar `globalTeardown`.
-3. Estabilización del test E2E `us005-bpmn-form-binding.e2e.spec.ts`, asegurando timeouts adecuados para el cold start de Vite y verificando el cargado de la base de datos real.
+## Resumen del Plan
 
-Solicito su **Aprobación Formal** para pasar a la fase de Ejecución (modo EXECUTION) y realizar el commit final en `DevDavid`.
+Se realizarán **7 cambios quirúrgicos** en un único archivo: `frontend/src/views/admin/Modeler/BpmnDesigner.vue`.
 
-Atentamente,
-Agente Frontend
+### BUG-J02-004 — Filtro Visual Simple/Maestro
+1. **Nueva ref** `formTypeFilter` de tipo `'ALL' | 'SIMPLE' | 'MAESTRO'` (default: `'ALL'`).
+2. **Modificar `filteredForms` computed**: Combinar el filtro existente por `processPattern` (Filtro 1) con el nuevo filtro visual del usuario (Filtro 2). Se preserva 100% la lógica existente.
+3. **Insertar toggle de 3 botones** (Todos / 🟢 Simple / 🔵 Maestro) en 2 lugares:
+   - Sección UserTask (antes del `<select>` FormKey, línea 529)
+   - Sección StartEvent (antes del `<select>` FormKey, línea 597)
+4. **Exponer** `formTypeFilter` en `defineExpose`.
+
+### BUG-J02-005 — CSS Dropdown FormKey
+5. **Reemplazar clases CSS** del `<select>` FormKey en UserTask (línea 529).
+6. **Reemplazar clases CSS** del `<select>` FormKey en StartEvent (línea 597).
+
+Mejoras CSS aplicadas:
+- `rounded-lg`, `p-2.5`, `bg-white`, `text-gray-900`, `shadow-sm`
+- `focus:ring-2 focus:ring-indigo-500`, `transition-colors`, `hover:border-indigo-400`
+- `appearance-none`, `cursor-pointer`
+
+## Impacto de Regresión
+- **BAJO**: Cambios puramente aditivos y cosméticos.
+- La lógica de `processPattern` se preserva intacta.
+- No se modifican endpoints, servicios ni lógica de negocio.
+
+## Verificación Planificada
+- `npm run build` para validar compilación.
+- Verificación visual de los toggles y estilos CSS.
+
+---
+
+**Solicito aprobación formal del Arquitecto Líder para proceder a modo EXECUTION.**

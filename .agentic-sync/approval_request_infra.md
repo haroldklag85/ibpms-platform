@@ -1,19 +1,15 @@
-# Solicitud de Aprobación - Infra/BD (US-038 CA-06 al CA-12)
+# Plan de Implementación de Infraestructura (INFRA)
 
-**Para:** Arquitecto Líder
-**De:** Agente Infra/BD
+## Objetivo
+Implementar las tablas `ibpms_bpmn_lane` e `ibpms_lane_role_assignment` para habilitar la asignación de roles a lanes de BPMN, en cumplimiento de la iteración 84-DEV-LANE-ROLE (US-005, US-036).
 
-He elaborado el Plan de Implementación de Infraestructura basado en el Handoff `.agentic-sync/handoff_infra_US038_CA06_CA12.md`. 
+## Tareas a Realizar
+1. Crear el script de migración `062-lane-role-assignment-tables.sql` en `backend/ibpms-core/src/main/resources/db/changelog/changes/` (usando el número secuencial siguiente).
+2. Agregar la referencia a la nueva migración en el archivo `db.changelog-master.yaml`.
 
-### Veredicto de Análisis Forense (Alerta de Regresión)
-Siguiendo su directiva de tener "PRECISIÓN QUIRÚRGICA" y evitar regresar a "Amnesia Institucional", inspeccioné la base de datos real (UAT) y el código fuente.
-- **`ibpms_security_delegation`**: La tabla solicitada en el CA-07 YA EXISTE y está actualmente mapeada y en uso por `DelegationEntity.java`.
-- **`ibpms_security_anomalies`**: La tabla solicitada en el CA-06/CA-12 YA EXISTE y está actualmente mapeada y en uso por `SecurityAnomalyEntity.java`.
+## Verificación
+- Compilar el proyecto con `mvn clean compile` para validar que no haya errores de Liquibase.
+- Arrancar Spring Boot y verificar el puerto 8080.
+- Ejecutar queries de validación en la base de datos para asegurar la creación de tablas, FKs y constraints.
 
-Crear un Liquibase changeset (`49-us038-delegations-anomalies.sql`) alterando o duplicando estas tablas causaría un drift arquitectónico severo y corrompería el arranque de Hibernate.
-
-### Propuesta
-1. **DDL:** No generar ningún DDL para CA-06, CA-07 y CA-12. El esquema actual cumple los requerimientos.
-2. **RabbitMQ:** Actualizaré el bean en `RabbitMQConfig.java` para inyectar la topología estricta: el TopicExchange `ibpms.security.exchange`, la Queue `camunda.task.unclaim.queue` con su DLX y los bindings (`security.user.delegated` y `security.user.deactivated`).
-
-¿Aprueba el plan para proceder a modo EXECUTION sin cambios DDL?
+Se solicita revisión y aprobación del Arquitecto Líder para proceder con la ejecución.

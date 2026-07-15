@@ -770,6 +770,73 @@
                <li>Cámbiala a <strong>User Task</strong> (para asociar formularios) o <strong>Service Task</strong> (para conectar APIs/conectores).</li>
              </ul>
           </div>
+          <!-- INICIO: Panel de Propiedades Lane (US-005/US-036 Extension) -->
+          <div v-else-if="selectedElement && (selectedElement.type === 'bpmn:Lane' || selectedElement.type === 'bpmn:Participant')" class="properties-panel-content">
+            <h4 class="panel-section-title">
+              <i class="pi pi-users" style="margin-right: 6px;"></i>
+              Propiedades del {{ selectedElement.type === 'bpmn:Lane' ? 'Lane' : 'Participante' }}
+            </h4>
+
+            <!-- 1. Nombre del Lane -->
+            <div class="form-group">
+              <label for="lane-name">Nombre del Lane</label>
+              <input
+                id="lane-name"
+                type="text"
+                class="form-control"
+                :value="selectedElement.businessObject?.name || ''"
+                @input="syncElementProperties('name', $event.target.value)"
+                placeholder="Ej: Departamento de Contabilidad"
+                data-testid="lane-name-input"
+              />
+            </div>
+
+            <!-- 2. Actor / Participante (descripción libre) -->
+            <div class="form-group">
+              <label for="lane-actor">Actor / Participante</label>
+              <input
+                id="lane-actor"
+                type="text"
+                class="form-control"
+                :value="selectedElement.businessObject?.get('camunda:assignee') || ''"
+                @input="syncElementProperties('camunda:assignee', $event.target.value)"
+                placeholder="Ej: Departamento de Contabilidad"
+                data-testid="lane-actor-input"
+              />
+            </div>
+
+            <!-- 3. Rol Vinculado (Dropdown de roles RBAC existentes) -->
+            <div class="form-group">
+              <label for="lane-linked-role">Rol RBAC Vinculado</label>
+              <select
+                id="lane-linked-role"
+                class="form-control"
+                :value="selectedElement.businessObject?.get('camunda:candidateGroups') || ''"
+                @change="syncElementProperties('camunda:candidateGroups', $event.target.value)"
+                data-testid="lane-linked-role-select"
+              >
+                <option value="">— Sin rol vinculado —</option>
+                <option
+                  v-for="role in rbacStore.roles"
+                  :key="role.id"
+                  :value="role.name"
+                >
+                  {{ role.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- 4. Indicador visual de vinculación -->
+            <div class="lane-link-badge" data-testid="lane-link-badge">
+              <span v-if="selectedElement.businessObject?.get('camunda:candidateGroups')" class="badge badge-success">
+                ✅ Rol vinculado: {{ selectedElement.businessObject.get('camunda:candidateGroups') }}
+              </span>
+              <span v-else class="badge badge-warning">
+                ⚠️ Sin rol RBAC vinculado
+              </span>
+            </div>
+          </div>
+          <!-- FIN: Panel de Propiedades Lane -->
           <div v-else-if="selectedElement.id && !['bpmn:UserTask', 'bpmn:ServiceTask', 'bpmn:BusinessRuleTask', 'bpmn:CallActivity', 'bpmn:StartEvent'].includes(selectedElement.type)" class="p-4 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500 text-center">
              ℹ️ No hay propiedades de Camunda editables para este elemento.
           </div>
@@ -1535,6 +1602,7 @@
 // @Traceability: US-005, CA-40
 import { useTimeStore } from '@/stores/timeStore';
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
+import { useRbacStore } from '@/stores/rbacStore';
 import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent, nextTick, getCurrentInstance } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRoute, useRouter } from 'vue-router';
@@ -1549,6 +1617,7 @@ const Vue3Lottie = defineAsyncComponent(() => import('vue3-lottie').then(m => m.
 
 const corruptNodeId = ref<string | null>(null);
 const authStore = useAuthStore();
+const rbacStore = useRbacStore();
 const integrationStore = useIntegrationStore(); // @Traceability: US-005, CA-40
 const timeStore = useTimeStore(); // Prevent runtime TypeError on undefined timeStore
 const route = useRoute();
@@ -2935,6 +3004,9 @@ const handleBeforeUnload = () => {
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
+  if (rbacStore.roles.length === 0) {
+    rbacStore.fetchRoles();
+  }
   // @Traceability: US-005, CA-07
   timeStore.startEngine();
 

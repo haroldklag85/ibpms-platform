@@ -252,6 +252,23 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
+    // US-005/US-036 Extension: Lane-Role Assignment
+    async function fetchLanesByProcess(processKey) {
+        const response = await apiClient.get(`/admin/lanes`, {
+            params: { processKey }
+        });
+        return response.data; // List<BpmnLaneDTO>
+    }
+
+    async function saveLaneRoleAssignments(roleId, assignments) {
+        await apiClient.put(`/admin/roles/${roleId}/lane-assignments`, assignments);
+    }
+
+    async function fetchLaneAssignmentsByRole(roleId) {
+        const response = await apiClient.get(`/admin/roles/${roleId}/lane-assignments`);
+        return response.data; // List<LaneRoleAssignmentDTO>
+    }
+
     async function toggleProcessPublicStatus(processId, isPublic) {
         try {
             await apiClient.put(`/design/processes/${processId}/public`, { isPublic })
@@ -334,8 +351,10 @@ export const useRbacStore = defineStore('rbac', () => {
         fetchDelegations,
         createDelegation,
         revokeDelegation,
-        revokeUserSession,
         fetchSystemProcesses,
+        fetchLanesByProcess,
+        saveLaneRoleAssignments,
+        fetchLaneAssignmentsByRole,
         toggleProcessPublicStatus,
         fetchCisoReports,
         generateCisoReport,

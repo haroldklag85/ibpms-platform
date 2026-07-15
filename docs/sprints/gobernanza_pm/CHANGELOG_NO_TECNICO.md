@@ -926,3 +926,16 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - Se previenen errores internos de guardado en despliegues.
 
 **Estado**: ✅ Listo
+
+---
+
+## 2026-07-14 — Resolución de Defectos Visuales en Asignación de Roles (PM-IA)
+**Autor**: Agente Frontend (Rama DevDavid)
+**¿Qué es?**: Se corrigió un problema donde el sistema no informaba al usuario si ocurría un error al cargar o guardar los permisos (roles) de un proceso. Además, se eliminó un falso mensaje de éxito que aparecía cuando fallaba la eliminación de un rol, lo cual ocultaba problemas reales.
+**¿Para qué sirve?**: Para garantizar que los administradores siempre sepan la verdad. Si algo falla al configurar quién puede hacer qué tarea, el sistema mostrará inmediatamente una alerta roja con el error exacto, evitando que los usuarios crean que guardaron un cambio cuando en realidad no fue así.
+**¿De dónde viene?**: Corrección de defectos visuales de la Iteración Correctiva 84-DEV-LANE-ROLE-FIX.
+**¿Qué debería hacer?**:
+- Si falla la carga o guardado de los permisos de un carril, aparece una alerta visible con el error detallado.
+- Si falla la eliminación de un rol, el sistema no lo quita de la pantalla engañando al usuario, sino que muestra la alerta de error y lo mantiene visible.
+
+**Estado**: ✅ Listo

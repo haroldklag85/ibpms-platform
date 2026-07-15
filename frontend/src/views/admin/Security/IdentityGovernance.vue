@@ -1158,8 +1158,9 @@ const toggleProcessExpansion = async (procId: string) => {
                         roleForm.value.laneMatrix[lane.id] = { initiate: false, execute: false };
                     }
                 }
-            } catch (e) {
+            } catch (e: any) {
                 console.error("Error fetching lanes for process", procId, e);
+                showToast('Error al cargar los carriles del proceso: ' + (e?.response?.data?.message || e.message || 'Error desconocido'), 'error');
             }
         }
     }
@@ -1188,7 +1189,10 @@ const openRoleModal = async (role: any = null) => {
                     };
                 }
             }
-        } catch (e) { console.error("Error loading lane assignments", e); }
+        } catch (e: any) { 
+            console.error("Error loading lane assignments", e); 
+            showToast('Error al cargar asignaciones de carriles: ' + (e?.response?.data?.message || e.message || 'Error desconocido'), 'error');
+        }
         roleForm.value = { ...role, parentRole: '', matrix, laneMatrix, topology: role.topology || { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } }; 
     }
     else { 
@@ -1207,9 +1211,9 @@ const deleteRole = async (role: any) => {
             await apiClient.delete(`/admin/roles/${role.id}`);
             systemRoles.value = systemRoles.value.filter(r => r.id !== role.id);
             showToast(`Rol ${role.name} eliminado exitosamente.`, 'success');
-        } catch(e) {
-            systemRoles.value = systemRoles.value.filter(r => r.id !== role.id);
-            showToast('Fallback local: Rol eliminado.', 'success');
+        } catch(e: any) {
+            console.error('Error deleting role from API:', e);
+            showToast('Error al eliminar el rol: ' + (e?.response?.data?.message || e.message || 'Error desconocido'), 'error');
         }
     }
 };
@@ -1265,8 +1269,9 @@ const saveRole = async () => {
                 }
             }
             await rbacStore.saveLaneRoleAssignments(roleForm.value.id, laneAssignments);
-        } catch (e) {
+        } catch (e: any) {
             console.error("Error saving lane assignments", e);
+            showToast('Error al guardar asignaciones de carriles: ' + (e?.response?.data?.message || e.message || 'Error desconocido'), 'error');
         }
 
         showRoleModal.value = false;

@@ -18541,23 +18541,6 @@ export interface operations {
 }
 
 // US-005/US-036 Extension: Lane-Role Assignment Types
-export interface BpmnLaneDTO {
-  id: string; // UUID
-  processKey: string;
-  laneXmlId: string;
-  laneName: string;
-  actorDescription: string | null;
-  linkedRoleName: string | null;
-}
-
-export interface LaneRoleAssignmentDTO {
-  laneId: string; // UUID
-  laneName: string;
-  processKey: string;
-  canInitiate: boolean;
-  canExecute: boolean;
-}
-
 export interface LaneRoleAssignmentRequest {
   laneId: string; // UUID
   canInitiate: boolean;

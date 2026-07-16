@@ -83,7 +83,7 @@ export const useIntegrationStore = defineStore('integrationStore', {
       return this.get(`/design/processes/${id}/variables`);
     },
     getExternalTaskTopics() {
-      return this.get(`/design/external-task-topics`);
+      return this.get(`/design/processes/external-task-topics`);
     },
     saveDataMappings(key: string, taskId: string, payload: any) {
       return this.post(`/design/processes/${key}/tasks/${taskId}/mappings`, payload);

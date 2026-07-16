@@ -1259,6 +1259,7 @@ onMounted(async () => {
     if (formId) {
         const res = await formStore.fetchForm(formId);
         if (res.success) {
+            showPatternModal.value = false;
             showToast(res.message, 'success');
             // @Traceability: US-003 - CA-86
             if (route.query.showHistory === 'true') {

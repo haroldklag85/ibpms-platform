@@ -771,72 +771,65 @@
              </ul>
           </div>
           <!-- INICIO: Panel de Propiedades Lane (US-005/US-036 Extension) -->
-          <div v-else-if="selectedElement && (selectedElement.type === 'bpmn:Lane' || selectedElement.type === 'bpmn:Participant')" class="properties-panel-content">
-            <h4 class="panel-section-title">
-              <i class="pi pi-users" style="margin-right: 6px;"></i>
-              Propiedades del {{ selectedElement.type === 'bpmn:Lane' ? 'Lane' : 'Participante' }}
-            </h4>
-
-            <!-- 1. Nombre del Lane -->
-            <div class="form-group">
-              <label for="lane-name">Nombre del Lane</label>
+          <div v-else-if="selectedElement && (selectedElement.type === 'bpmn:Lane' || selectedElement.type === 'bpmn:Participant')" class="space-y-5">
+            <!-- Nombre del Lane -->
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Nombre del {{ selectedElement.type === 'bpmn:Lane' ? 'Lane' : 'Participante' }}
+              </label>
               <input
-                id="lane-name"
                 type="text"
-                class="form-control"
-                :value="selectedElement.businessObject?.name || ''"
-                @input="syncElementProperties('name', $event.target.value)"
+                v-model="selectedElement.name"
+                @change="syncElementProperties('name', selectedElement.name)"
+                class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border"
                 placeholder="Ej: Departamento de Contabilidad"
                 data-testid="lane-name-input"
               />
             </div>
-
-            <!-- 2. Actor / Participante (descripción libre) -->
-            <div class="form-group">
-              <label for="lane-actor">Actor / Participante</label>
+            <!-- Actor / Participante -->
+            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+              <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2">
+                👤 Actor / Participante
+              </label>
+              <p class="text-[10px] text-gray-500 mb-2">Persona o departamento responsable de este carril.</p>
               <input
-                id="lane-actor"
                 type="text"
-                class="form-control"
-                :value="selectedElement.businessObject?.get('camunda:assignee') || ''"
-                @input="syncElementProperties('camunda:assignee', $event.target.value)"
+                v-model="selectedElement.props.assignee"
+                @change="syncElementProperties('camunda:assignee', selectedElement.props.assignee)"
+                class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border"
                 placeholder="Ej: Departamento de Contabilidad"
                 data-testid="lane-actor-input"
               />
             </div>
-
-            <!-- 3. Rol Vinculado (Dropdown de roles RBAC existentes) -->
-            <div class="form-group">
-              <label for="lane-linked-role">Rol RBAC Vinculado</label>
+            <!-- Rol RBAC Vinculado -->
+            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+              <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+                <span>🔐 Rol RBAC Vinculado</span>
+              </label>
+              <p class="text-[10px] text-gray-500 mb-2">Rol del sistema de seguridad asociado a este carril.</p>
               <select
-                id="lane-linked-role"
-                class="form-control"
-                :value="selectedElement.businessObject?.get('camunda:candidateGroups') || ''"
-                @change="syncElementProperties('camunda:candidateGroups', $event.target.value)"
+                v-model="selectedElement.props.candidateGroups"
+                @change="syncElementProperties('camunda:candidateGroups', selectedElement.props.candidateGroups)"
+                class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border"
                 data-testid="lane-linked-role-select"
               >
-                <option value="">— Sin rol vinculado —</option>
-                <option
-                  v-for="role in rbacStore.roles"
-                  :key="role.id"
-                  :value="role.name"
-                >
+                <option value="">-- Sin rol vinculado --</option>
+                <option v-for="role in rbacStore.roles" :key="role.id" :value="role.name">
                   {{ role.name }}
                 </option>
               </select>
             </div>
-
-            <!-- 4. Indicador visual de vinculación -->
-            <div class="lane-link-badge" data-testid="lane-link-badge">
-              <span v-if="selectedElement.businessObject?.get('camunda:candidateGroups')" class="badge badge-success">
-                ✅ Rol vinculado: {{ selectedElement.businessObject.get('camunda:candidateGroups') }}
+            <!-- Indicador visual de vinculación -->
+            <div class="flex items-center gap-2 px-1" data-testid="lane-link-badge">
+              <span v-if="selectedElement.props.candidateGroups" class="inline-flex items-center px-2.5 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                ✅ Rol vinculado: {{ selectedElement.props.candidateGroups }}
               </span>
-              <span v-else class="badge badge-warning">
+              <span v-else class="inline-flex items-center px-2.5 py-1 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
                 ⚠️ Sin rol RBAC vinculado
               </span>
             </div>
           </div>
-          <!-- FIN: Panel de Propiedades Lane -->
+          <!-- FIN: Panel de Propiedades Lane (US-005/US-036 Extension) -->
           <div v-else-if="selectedElement.id && !['bpmn:UserTask', 'bpmn:ServiceTask', 'bpmn:BusinessRuleTask', 'bpmn:CallActivity', 'bpmn:StartEvent'].includes(selectedElement.type)" class="p-4 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500 text-center">
              ℹ️ No hay propiedades de Camunda editables para este elemento.
           </div>
@@ -3132,6 +3125,8 @@ onMounted(async () => {
             topic: safeGet(bo, 'camunda:topic') || '',
             decisionRef: safeGet(bo, 'camunda:decisionRef') || '', // CA-12 DMN Reference
             dmnBinding: safeGet(bo, 'camunda:decisionRefBinding') || 'deployment', // CA-12: Default seguro
+            assignee: safeGet(bo, 'camunda:assignee') || '',
+            candidateGroups: safeGet(bo, 'camunda:candidateGroups') || '',
             aiTokenLimit: 4000,
             aiTone: 'NEUTRAL'
           }
@@ -3142,7 +3137,7 @@ onMounted(async () => {
         const match = delegateExpr.match(/\$\{(.+)Adapter\}/);
         selectedConnector.value = match ? match[1] : '';
       } else {
-        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', decisionRef: '', dmnBinding: 'deployment' } };
+        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', decisionRef: '', dmnBinding: 'deployment', assignee: '', candidateGroups: '' } };
         // @Traceability: US-005, CA-77 Panel de Propiedades Contextual
         selectedFormKey.value = '';
         selectedConnector.value = '';

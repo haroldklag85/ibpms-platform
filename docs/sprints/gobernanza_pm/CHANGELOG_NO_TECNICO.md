@@ -952,3 +952,23 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - Si el formulario no existe, informa el error correctamente sin colapsar.
 
 **Estado**: ✅ Listo
+
+---
+
+## 2026-07-15 — Corrección de 4 Defectos de Interfaz en el Modelador de Procesos y Formularios
+**Autor**: Agente Frontend (Rama DevDavid)
+**¿Qué es?**: Se corrigieron 4 problemas detectados en las Pruebas de Aceptación de Usuario (UAT) que afectaban la experiencia visual y funcional del Modelador de Procesos y del Diseñador de Formularios:
+1. **Campos del carril (Lane) bloqueados**: Los campos de "Actor" y "Rol" dentro de un carril BPMN no permitían escribir ni seleccionar valores.
+2. **Apariencia visual rota en el panel de carriles**: Los botones y campos del panel de carriles se veían desordenados porque usaban un estilo visual incompatible con el resto de la aplicación.
+3. **Errores de comunicación con el servidor (404)**: Tres direcciones internas de comunicación entre la interfaz y el servidor estaban mal escritas, provocando errores al consultar instancias de proceso y temas de tareas externas.
+4. **Lienzo de formularios en blanco**: Al abrir un formulario existente, la pantalla se quedaba en blanco porque un diálogo de selección de plantillas no se cerraba automáticamente.
+
+**¿Para qué sirve?**: Para que los usuarios del Modelador puedan asignar correctamente actores y roles de seguridad a los carriles de un proceso, ver el panel de propiedades con un aspecto visual consistente, y abrir formularios existentes sin encontrar pantallas en blanco ni errores de conexión.
+**¿De dónde viene?**: Corrección de los Bugs B-01, B-02, B-03 y B-04 (Frontend) del reporte de Pruebas UAT, vinculados a las Historias de Usuario US-005 y US-036 (Asignación de Roles a Carriles).
+**¿Qué debería hacer?**:
+- Al seleccionar un carril en el modelador, el panel lateral muestra campos editables de nombre, actor y rol con apariencia visual limpia y moderna.
+- Al escribir en los campos del carril, los valores se guardan correctamente en el diagrama BPMN.
+- Al consultar instancias de proceso o tareas externas, la aplicación se comunica correctamente con el servidor sin errores.
+- Al abrir un formulario existente, el diseñador muestra inmediatamente el contenido del formulario sin pantallas en blanco.
+
+**Estado**: ✅ Listo

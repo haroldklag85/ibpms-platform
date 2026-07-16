@@ -330,7 +330,7 @@ export const api = {
     getProcessVariables: (id: string) => apiClient.get(`/design/processes/${id}/variables`), // CA-49
     // CA-17: Variables BPMN para coherencia
     getBpmnVariables: (processKey: string) => apiClient.get(`/design/processes/${processKey}/variables`),
-    getExternalTaskTopics: () => apiClient.get(`/design/external-task-topics`), // CA-70
+    getExternalTaskTopics: () => apiClient.get(`/design/processes/external-task-topics`), // CA-70
     saveDataMappings: (key: string, taskId: string, payload: any) => apiClient.post(`/design/processes/${key}/tasks/${taskId}/mappings`, payload), // CA-68
 
     // 7. BAM Analytics - Process Health (Pantalla 5)

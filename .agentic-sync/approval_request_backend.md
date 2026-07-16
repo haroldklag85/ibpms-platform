@@ -1,17 +1,17 @@
-# Solicitud de Revisión de Arquitectura - BACKEND (MC-1)
+# Solicitud de Revisión - Backend (Iteración 84 UAT BUGS)
 
-**Iteración:** 84-DEV-LANE-ROLE-FIX
-**Agente:** Backend Senior (Rama: DevDavid)
+**De:** Agente Backend
+**Para:** Arquitecto Líder
 
-**Plan de Implementación propuesto:**
-He elaborado el plan para resolver los defectos D-01, D-02, D-03, D-05, D-06 y D-07, respetando estrictamente el blast radius limitado a los 4 archivos autorizados. 
+He evaluado el requerimiento B-04 (Endpoint GET por `technicalName` para el Motor de Formularios UI) y he preparado el plan de implementación en mi entorno `implementation_plan.md`. 
+Las precondiciones han sido validadas exitosamente:
+- Backend responde a actuator/health con `UP`.
+- Contenedores Docker (PostgreSQL, Redis, RabbitMQ) están sanos.
 
-* `DesplegarDefinicionService`: Inyección de `BpmnDesignPort` para resolver `processDesignId` (D-01).
-* `BpmnLaneService`: 
-    * Inyección de `RoleRepository` y `EntityManager` para validar existencias (D-03) y usar referencias JPA en lugar del antipatrón proxy (D-07).
-    * Uso de `SecurityContextHolder` para asentar correctamente la auditoría (D-02).
-    * Guard clause en `syncLanesFromDeployment` para evitar `ConstraintViolationException` (D-01).
-* `BpmnLanePort`: Declaración de `replaceAssignmentsForRole` y limpieza de métodos fantasma (D-05, D-06).
-* `LaneAdminController`: Inyección pura de `BpmnLanePort` (interfaz), eliminando acoplamiento a implementaciones concretas (D-06).
+**Resumen del plan:**
+1. En `FormDesignService`, exponer un método `obtenerPorTechnicalName(String technicalName)` que recupere la última versión usando `findTopByTechnicalNameOrderByVersionDesc`.
+2. En `FormDesignController`, agregar el endpoint `@GetMapping("/{technicalName}")` devolviendo un `ResponseEntity<FormDesignDTO>`. En caso de estar ausente, retornará HTTP 404 Not Found.
 
-Por favor Arquitecto Líder, ¿apruebas este plan para que proceda a la fase de EXECUTION?
+Solicito la **aprobación formal** de este plan para pasar al modo `EXECUTION`.
+
+¡Gracias!

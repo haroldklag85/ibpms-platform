@@ -65,6 +65,14 @@ public class FormDesignService {
     }
 
     /**
+     * Obtiene el formulario activo/más reciente por su nombre técnico (UAT B-04).
+     */
+    @Transactional(readOnly = true)
+    public Optional<FormDesignDTO> obtenerPorTechnicalName(String technicalName) {
+        return formDesignPort.findTopByTechnicalNameOrderByVersionDesc(technicalName);
+    }
+
+    /**
      * Listar todas las versiones pasadas y activas de un formulario base.
      */
     @Transactional(readOnly = true)

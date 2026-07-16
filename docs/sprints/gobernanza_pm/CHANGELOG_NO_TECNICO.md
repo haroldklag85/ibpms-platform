@@ -939,3 +939,16 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - Si falla la eliminación de un rol, el sistema no lo quita de la pantalla engañando al usuario, sino que muestra la alerta de error y lo mantiene visible.
 
 **Estado**: ✅ Listo
+
+---
+
+## 2026-07-15 — Corrección de Carga de Formularios (Bug B-04)
+**Autor**: Agente Backend (Rama DevDavid)
+**¿Qué es?**: Se corrigió un problema de comunicación entre el sistema y la base de datos donde la interfaz no podía recuperar el diseño de los formularios por su "nombre técnico", mostrando un error en pantalla en lugar del formulario.
+**¿Para qué sirve?**: Para garantizar que los usuarios puedan ver y llenar los formularios correctamente cuando inician un proceso o ejecutan una tarea, evitando interrupciones en el flujo de trabajo.
+**¿De dónde viene?**: Corrección del Bug B-04 (Endpoint GET Form Design Technical Name No Funciona) del reporte de Pruebas UAT.
+**¿Qué debería hacer?**:
+- Al intentar cargar un formulario por su nombre técnico, el sistema devuelve la estructura del formulario exitosamente.
+- Si el formulario no existe, informa el error correctamente sin colapsar.
+
+**Estado**: ✅ Listo

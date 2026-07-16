@@ -1,4 +1,4 @@
-package com.ibpms.poc.api.controller.telemetry;
+package com.ibpms.poc.infrastructure.web.telemetry;
 
 import com.ibpms.poc.api.controller.telemetry.dto.ProcessIncidentMetricDto;
 import com.ibpms.poc.api.controller.telemetry.dto.ProcessInstanceMetricDto;

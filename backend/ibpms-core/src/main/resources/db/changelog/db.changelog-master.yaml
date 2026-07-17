@@ -168,3 +168,5 @@ databaseChangeLog:
       file: db/changelog/changes/061-bugj02006-seed-permissions.sql
   - include:
       file: db/changelog/changes/062-lane-role-assignment-tables.sql
+  - include:
+      file: db/changelog/changes/063-seed-bpmn-release-manager-role.sql

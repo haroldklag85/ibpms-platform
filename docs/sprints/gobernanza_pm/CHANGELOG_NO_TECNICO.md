@@ -972,3 +972,17 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - Al abrir un formulario existente, el diseñador muestra inmediatamente el contenido del formulario sin pantallas en blanco.
 
 **Estado**: ✅ Listo
+
+---
+
+## 2026-07-17 — Corrección de Permisos para Despliegue de Procesos
+**Autor**: Agente Backend (Rama DevDavid)
+**¿Qué es?**: Se solucionó un problema que impedía a los administradores principales del sistema publicar o guardar las definiciones de los procesos de negocio. El sistema bloqueaba la acción porque exigía un rol especializado que no existía en la base de datos, y tampoco permitía usar el rol de administrador general como respaldo. Se creó el rol especializado y se ajustaron los controles de seguridad para aceptar a ambos.
+**¿Para qué sirve?**: Para garantizar que los procesos de negocio puedan publicarse exitosamente en el sistema sin rechazar a los usuarios válidos (error de acceso denegado). Además, todas estas acciones ahora generan un registro de seguridad claro que indica quién las realizó.
+**¿De dónde viene?**: Corrección del Bug Crítico R2-01 reportado en Pruebas UAT, vinculado a las Historias de Usuario US-005 y US-036.
+**¿Qué debería hacer?**:
+- Los usuarios con rol de administrador general o administrador de despliegues pueden publicar diagramas de procesos.
+- Ya no aparece un mensaje de "Acceso Denegado" (403) al intentar desplegar.
+- El sistema cuenta permanentemente con el rol especializado desde su instalación.
+
+**Estado**: ✅ Listo

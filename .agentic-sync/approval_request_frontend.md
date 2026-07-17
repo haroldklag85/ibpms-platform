@@ -1,13 +1,33 @@
-# Solicitud de Revisión: Frontend - Iteración 84-DEV-LANE-ROLE-FIX
+# Solicitud de Revisión Arquitectónica — Frontend UAT R2
 
-**Para:** Arquitecto Líder
-**De:** Agente Frontend (DevDavid)
+**Fecha:** 2026-07-17T17:49:00-05:00  
+**Agente:** Frontend Developer  
+**Rama:** `DevDavid`  
+**Handoff:** `handoff_frontend_84DEV_UAT_R2.md`
 
-He analizado el handoff `US005_US036_84DEV_FIX` y tengo un plan de implementación listo (ver `implementation_plan.md` en mi memoria interna).
+---
 
-**Resumen del plan:**
-1. **D-09 (Toasts faltantes):** Actualizaré los 4 bloques catch en `IdentityGovernance.vue` (`toggleProcessExpand`, `openRoleModal`, `deleteRole`, y `saveRole`). El cambio más crítico es corregir `deleteRole` para que **no** elimine localmente el rol si la API falla, notificando el error correctamente mediante `showToast`.
-2. **D-08 (Tipos Duplicados):** Eliminaré manualmente las interfaces `BpmnLaneDTO` y `LaneRoleAssignmentDTO` al final de `api-schema.d.ts` (líneas 18544-18559 aprox), conservando `LaneRoleAssignmentRequest` (L18561-18565) porque no es autogenerada.
-3. **Build:** Comprobaré que el proyecto compila con `npm run build` sin errores de importaciones huérfanas o tipos incompatibles en TypeScript.
+## Resumen del Plan
 
-Solicito tu **Aprobación Formal** para pasar a modo EXECUTION y aplicar estos cambios en los 2 archivos con precisión quirúrgica, y realizar los commits requeridos.
+Solicito aprobación para implementar **2 correcciones quirúrgicas** en el frontend:
+
+### Bug R2-02: Interceptor 403 destruye menú
+- **Archivo:** `frontend/src/services/apiClient.ts` (líneas 248-266)
+- **Causa raíz:** El bloque `else` catch-all del interceptor 403 ejecuta `purgeTopology()` para cualquier 403 no reconocido, incluyendo 403 operacionales (deploy sin permisos).
+- **Corrección:** Cambiar el `else` a `else if` con validación explícita de `code === 'ACCESS_REVOKED' || code === 'ROLE_REVOKED'`. Los 403 operacionales ahora solo se loguean sin destruir el menú.
+- **Garantía:** Los bloques de `SECURITY_VIOLATION`/`PROMPT_INJECTION` (CA-05) y `PRIVILEGES_CHANGED` (CA-7) NO se modifican.
+
+### Bug R2-03: fetchForm mapea campos inexistentes
+- **Archivo:** `frontend/src/stores/useFormDesignerStore.ts` (líneas 284-296)
+- **Causa raíz:** El frontend usa `schemaVariables`, `title`, y `versionId` que NO existen en `FormDesignDTO.java`.
+- **Verificación DTO:** Se leyó `FormDesignDTO.java` y se confirmaron los campos reales: `formFields`, `name`, `version`.
+- **Corrección:** Reemplazar `schemaVariables` → `formFields`, `title` → `name`, `versionId` → `version`.
+
+### Archivos NO modificados (cumplimiento de prohibición)
+- ❌ `BpmnDesigner.vue`
+- ❌ `IdentityGovernance.vue`
+- ❌ CSS/HTML del panel Lane
+
+## Solicitud Formal
+
+Arquitecto Líder, solicito su aprobación para proceder con la ejecución de estos cambios. El plan detallado con diffs está documentado en el `implementation_plan.md` de mi sesión de trabajo.

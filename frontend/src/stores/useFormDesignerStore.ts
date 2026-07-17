@@ -281,19 +281,19 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const fetchForm = async (formId: string) => {
     try {
         const response = await apiClient.get(`/forms/${formId}`);
-        if (response.data && response.data.schemaVariables) {
-            canvasFields.value = typeof response.data.schemaVariables === 'string' 
-               ? JSON.parse(response.data.schemaVariables) 
-               : response.data.schemaVariables;
+        if (response.data && response.data.formFields) {
+            canvasFields.value = typeof response.data.formFields === 'string' 
+               ? JSON.parse(response.data.formFields) 
+               : response.data.formFields;
             
-            formTitle.value = response.data.title || response.data.name || formTitle.value;
+            formTitle.value = response.data.name || formTitle.value;
             formPattern.value = response.data.pattern || null;
             
             if (response.data.isQaCertified) certificationState.value = 'certified';
             else if (response.data.certifiedSchemaHash) certificationState.value = 'revoked';
             
             currentFormId.value = formId;
-            currentSchemaVersion.value = response.data.versionId || response.data.version || 1;
+            currentSchemaVersion.value = response.data.version || 1;
             formKey.value = response.data.technicalName || '';
 
             return { success: true, message: `Formulario ${formId} cargado desde API` };

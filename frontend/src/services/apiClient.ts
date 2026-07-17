@@ -245,24 +245,27 @@ apiClient.interceptors.response.use(
                const authStore = useAuthStore();
                authStore.logout();
                window.location.href = '/login?alert=Sesión Invalidada por Seguridad';
+            } else if (error.response.data?.code === 'ACCESS_REVOKED' || error.response.data?.code === 'ROLE_REVOKED') {
+                // CA-32: Auto-Curación Zero-Trust — solo ante revocación explícita
+                console.warn('CA-32: Revocación de acceso confirmada (403). Purgando topología local.');
+                const menuStore = useMenuStore();
+                menuStore.purgeTopology();
+                
+                const body = document.querySelector('body');
+                if (body && !document.getElementById('privilege-update-toast')) {
+                    const toast = document.createElement('div');
+                    toast.id = 'privilege-update-toast';
+                    toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
+                    toast.innerHTML = 'Sus accesos han sido actualizados por el Administrador';
+                    body.appendChild(toast);
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 500);
+                    }, 4000);
+                }
             } else {
-               // CA-32: Auto-Curación Zero-Trust
-               console.warn('CA-32: Revocación de acceso detectada (403). Purgando topología local.');
-               const menuStore = useMenuStore();
-               menuStore.purgeTopology();
-               
-               const body = document.querySelector('body');
-               if (body && !document.getElementById('privilege-update-toast')) {
-                   const toast = document.createElement('div');
-                   toast.id = 'privilege-update-toast';
-                   toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
-                   toast.innerHTML = 'Sus accesos han sido actualizados por el Administrador';
-                   body.appendChild(toast);
-                   setTimeout(() => {
-                       toast.style.opacity = '0';
-                       setTimeout(() => toast.remove(), 500);
-                   }, 4000);
-               }
+                // 403 operacional (deploy, acceso denegado a recurso) — NO purgar menú
+                console.warn('CA-32: 403 operacional (no es revocación de privilegios). URL: ' + error.config?.url);
             }
         }
         return Promise.reject(error);

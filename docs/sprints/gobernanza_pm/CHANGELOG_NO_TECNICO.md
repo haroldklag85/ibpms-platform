@@ -986,3 +986,19 @@ Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
 - El sistema cuenta permanentemente con el rol especializado desde su instalación.
 
 **Estado**: ✅ Listo
+
+---
+
+## 2026-07-17 — Corrección de Menú que Desaparecía y Formularios que No Cargaban
+**Autor**: Agente Frontend (Rama DevDavid)
+**¿Qué es?**: Se corrigieron dos problemas que afectaban la experiencia de los usuarios:
+1. **El menú de navegación desaparecía inesperadamente.** Cuando el sistema detectaba que un usuario no tenía permiso para una acción específica (por ejemplo, desplegar un proceso), eliminaba por error todo el menú de la aplicación, obligando al usuario a cerrar sesión y volver a entrar. Ahora, el menú solo se resetea cuando el administrador efectivamente revoca los permisos del usuario, no por cualquier restricción operativa.
+2. **Los formularios diseñados no se podían abrir para edición.** Al intentar cargar un formulario previamente guardado, la pantalla quedaba en blanco porque el sistema buscaba los datos del formulario con nombres equivocados. Se corrigió para que lea la información exactamente como la entrega el servidor.
+**¿Para qué sirve?**: Para que los usuarios puedan navegar sin perder su menú por acciones normales del sistema, y para que los formularios diseñados se abran correctamente mostrando todos sus campos, título y versión.
+**¿De dónde viene?**: Corrección de Bugs Críticos R2-02 y R2-03 reportados en Pruebas UAT, vinculados a las Historias de Usuario US-005 y US-036.
+**¿Qué debería hacer?**:
+- El menú de navegación permanece visible aunque el usuario reciba un mensaje de "acceso denegado" en alguna acción específica.
+- Los formularios previamente guardados se abren correctamente mostrando su nombre, campos y versión.
+- Solo cuando un administrador revoque explícitamente los permisos de un usuario, el menú se actualiza.
+
+**Estado**: ✅ Listo

@@ -28,6 +28,13 @@ apiClient.interceptors.request.use(
         if (config.headers && !config.headers['X-Correlation-ID']) {
             config.headers['X-Correlation-ID'] = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
         }
+
+        // Interceptor Architecture Fix for FormData (multipart)
+        // Allows Axios to auto-generate the correct boundary without inline hacks
+        if (config.data instanceof FormData && config.headers) {
+            delete config.headers['Content-Type'];
+        }
+        
         return config;
     },
     (error) => {
@@ -304,7 +311,7 @@ export const api = {
     // @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
     saveProcessDraft: (id: string, payload: any) => apiClient.put(`/design/processes/${id}/draft`, payload),
     validateProcess: (payload: any) => apiClient.post(`/design/processes/validate`, payload),
-    deployProcess: (payload: FormData) => apiClient.post(`/design/processes/deploy`, payload, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    deployProcess: (payload: FormData) => apiClient.post(`/design/processes/deploy`, payload),
     requestDeployment: (id: string, payload?: any) => apiClient.post(`/design/processes/${id}/request-deployment`, payload),
     getCatalogProcesses: () => apiClient.get(`/design/processes/catalog`),
     getBpmnTemplates: () => apiClient.get(`/design/processes/templates`),

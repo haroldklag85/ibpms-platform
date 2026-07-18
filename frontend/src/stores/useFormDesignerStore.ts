@@ -292,11 +292,18 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             if (response.data.isQaCertified) certificationState.value = 'certified';
             else if (response.data.certifiedSchemaHash) certificationState.value = 'revoked';
             
-            currentFormId.value = formId;
+            currentFormId.value = response.data.id || formId;
             currentSchemaVersion.value = response.data.version || 1;
             formKey.value = response.data.technicalName || '';
 
             return { success: true, message: `Formulario ${formId} cargado desde API` };
+        } else if (response.data) {
+            formTitle.value = response.data.name || formTitle.value;
+            formPattern.value = response.data.pattern || null;
+            formKey.value = response.data.technicalName || '';
+            currentFormId.value = response.data.id || formId;
+            currentSchemaVersion.value = response.data.version || 1;
+            return { success: true, message: 'Formulario cargado (sin campos previos).' };
         }
         return { success: false, message: 'El formulario no contiene un esquema válido.' };
     } catch(e) {
@@ -397,6 +404,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
 
   const saveForm = async (formId: string) => {
     try {
+        const targetId = currentFormId.value || formId;
         const payload = {
             name: formTitle.value,
             technicalName: formKey.value || formTitle.value.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
@@ -405,7 +413,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             zodSchema: '',
             formFields: canvasFields.value
         };
-        const response = await apiClient.post(`/forms/${formId}`, payload);
+        const response = await apiClient.post(`/forms/${targetId}`, payload);
         if (response.data) {
             currentSchemaVersion.value = response.data.versionId || response.data.version || 1;
             currentFormId.value = response.data.id;
@@ -666,7 +674,8 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     } else {
       tpl += `${indent}<div ${vIfDir}class="field-${(field.id || field.camundaVariable || 'field').toLowerCase()}">\n`;
       const ttip = field.tooltipText ? ` <span title="${field.tooltipText}" class="cursor-help text-indigo-500 font-bold ml-1 text-xs outline-none">ⓘ</span>` : '';
-      tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}${ttip}</label>\n`;
+      const fallbackLabel = field.label || field.id || field.camundaVariable || 'Campo';
+      tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${fallbackLabel}${field.required ? '*' : ''}${ttip}</label>\n`;
       
       // CA-56 Print Mode Wrapper
       tpl += `${indent}  <div v-if="!isPrintMode">\n`;

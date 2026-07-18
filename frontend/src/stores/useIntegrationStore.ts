@@ -35,7 +35,6 @@ export const useIntegrationStore = defineStore('integrationStore', {
       const formData = new FormData();
       const blob = new Blob([payload.xml], { type: 'application/xml' });
       formData.append('file', blob, 'process.bpmn');
-      
       return this.post(`/design/processes/validate`, formData);
     },
     deployProcess(payload: any) {

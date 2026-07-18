@@ -72,7 +72,7 @@ public class FormCatalogController {
                     long stagesCount = 0;
                     if (form.getFormFields() != null) {
                         stagesCount = form.getFormFields().stream()
-                            .map(FormFieldMetadataDTO::getStage)
+                            .map(f -> (String) f.get("stage"))
                             .filter(Objects::nonNull)
                             .filter(s -> !s.trim().isEmpty())
                             .distinct()

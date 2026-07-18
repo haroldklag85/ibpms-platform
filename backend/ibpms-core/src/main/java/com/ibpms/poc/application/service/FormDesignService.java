@@ -173,7 +173,7 @@ public class FormDesignService {
         return formDefinitionPort.findByFormIdOrderByVersionIdDesc(formId);
     }
 
-    private String generateJsonSchema(List<com.ibpms.poc.application.dto.FormFieldMetadataDTO> fields) {
+    private String generateJsonSchema(List<java.util.Map<String, Object>> fields) {
         try {
             com.fasterxml.jackson.databind.node.ObjectNode schemaNode = objectMapper.createObjectNode();
             schemaNode.put("$schema", "http://json-schema.org/draft-07/schema#");
@@ -183,13 +183,13 @@ public class FormDesignService {
             com.fasterxml.jackson.databind.node.ArrayNode requiredArray = objectMapper.createArrayNode();
 
             if (fields != null) {
-                for (com.ibpms.poc.application.dto.FormFieldMetadataDTO field : fields) {
-                    String name = field.getCamundaVariable();
+                for (java.util.Map<String, Object> field : fields) {
+                    String name = (String) field.get("camundaVariable");
                     if (name == null || name.isBlank()) {
                         continue;
                     }
                     com.fasterxml.jackson.databind.node.ObjectNode propNode = objectMapper.createObjectNode();
-                    String type = field.getType();
+                    String type = (String) field.get("type");
                     if ("number".equalsIgnoreCase(type) || "integer".equalsIgnoreCase(type)) {
                         propNode.put("type", "integer");
                     } else if ("boolean".equalsIgnoreCase(type)) {
@@ -201,7 +201,8 @@ public class FormDesignService {
                     propertiesNode.set(name, propNode);
 
                     // Validar si es obligatorio por su regla Zod
-                    if (field.getZodRule() != null && (field.getZodRule().contains(".min(1)") || field.getZodRule().contains(".nonempty"))) {
+                    String zodRule = (String) field.get("zodRule");
+                    if (zodRule != null && (zodRule.contains(".min(1)") || zodRule.contains(".nonempty"))) {
                         requiredArray.add(name);
                     }
                 }

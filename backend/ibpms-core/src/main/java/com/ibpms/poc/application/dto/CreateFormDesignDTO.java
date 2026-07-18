@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
+import java.util.Map;
 
 public class CreateFormDesignDTO {
 
@@ -18,7 +19,7 @@ public class CreateFormDesignDTO {
 
     private String vueTemplate;
     private String zodSchema;
-    private List<FormFieldMetadataDTO> formFields;
+    private List<Map<String, Object>> formFields;
 
     public String getName() {
         return name;
@@ -60,11 +61,11 @@ public class CreateFormDesignDTO {
         this.zodSchema = zodSchema;
     }
 
-    public List<FormFieldMetadataDTO> getFormFields() {
+    public List<Map<String, Object>> getFormFields() {
         return formFields;
     }
 
-    public void setFormFields(List<FormFieldMetadataDTO> formFields) {
+    public void setFormFields(List<Map<String, Object>> formFields) {
         this.formFields = formFields;
     }
 }

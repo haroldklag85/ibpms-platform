@@ -1115,11 +1115,12 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Justificación del Despliegue <span class="text-red-500">*</span></label>
             <textarea v-model="deployComment" rows="3" minlength="10" placeholder="Justificación del despliegue..." class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2.5 border text-sm"></textarea>
+            <p class="text-[10px] text-gray-500 mt-1">Mínimo 10 caracteres requeridos</p>
           </div>
             <!-- @Traceability: US-005, CA-33 - Checkbox 'forceDeploy' eliminado. Hard-Stop obligatorio. -->
           <div class="flex justify-end space-x-3 pt-2">
             <button @click="showDeployModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
-            <button data-testid="btn-confirm-deploy" @click="confirmDeploy" :disabled="isDeploying" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50">
+            <button data-testid="btn-confirm-deploy" @click="confirmDeploy" :disabled="isDeploying || deployComment.trim().length < 10" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50">
               {{ isDeploying ? 'Desplegando...' : 'Confirmar Despliegue' }}
             </button>
           </div>

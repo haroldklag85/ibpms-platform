@@ -611,7 +611,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     let tpl = '';
     
     if (field.type.startsWith('button_')) {
-        tpl += `${indent}<div class="mt-6 field-${field.id.toLowerCase()} no-print" v-if="(typeof isAuditMode === 'undefined' ? false : !isAuditMode) && (typeof stage === 'undefined' ? true : stage !== 'AUDIT')">\n`;
+        tpl += `${indent}<div class="mt-6 field-${(field.id || field.camundaVariable || 'field').toLowerCase()} no-print" v-if="(typeof isAuditMode === 'undefined' ? false : !isAuditMode) && (typeof stage === 'undefined' ? true : stage !== 'AUDIT')">\n`;
         if (field.type === 'button_submit') {
           tpl += `${indent}  <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded shadow font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2" :disabled="isAsyncLoading"><span v-if="isAsyncLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>✅ ${field.label}</button>\n`;
         } else if (field.type === 'button_draft') {
@@ -639,7 +639,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
       : `row.${field.camundaVariable || field.id}`;
 
     if (field.type === 'container' || field.type === 'field_array') {
-       let containerClass = `${field.type === 'field_array' ? 'border-2 border-indigo-100' : 'border'} rounded-md p-4 bg-gray-50 field-${field.id.toLowerCase()}`;
+       let containerClass = `${field.type === 'field_array' ? 'border-2 border-indigo-100' : 'border'} rounded-md p-4 bg-gray-50 field-${(field.id || field.camundaVariable || 'field').toLowerCase()}`;
        if (field.type === 'container' && field.columns && field.columns > 1) {
            containerClass += ` grid grid-cols-${field.columns} gap-4`; // CA-55
        }
@@ -664,7 +664,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
        }
        tpl += `${indent}</div>\n`;
     } else {
-      tpl += `${indent}<div ${vIfDir}class="field-${field.id.toLowerCase()}">\n`;
+      tpl += `${indent}<div ${vIfDir}class="field-${(field.id || field.camundaVariable || 'field').toLowerCase()}">\n`;
       const ttip = field.tooltipText ? ` <span title="${field.tooltipText}" class="cursor-help text-indigo-500 font-bold ml-1 text-xs outline-none">ⓘ</span>` : '';
       tpl += `${indent}  <label class="block text-sm font-medium text-gray-700">${field.label}${field.required ? '*' : ''}${ttip}</label>\n`;
       

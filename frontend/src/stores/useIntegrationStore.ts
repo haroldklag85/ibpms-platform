@@ -36,12 +36,10 @@ export const useIntegrationStore = defineStore('integrationStore', {
       const blob = new Blob([payload.xml], { type: 'application/xml' });
       formData.append('file', blob, 'process.bpmn');
       
-      return this.post(`/design/processes/validate`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      return this.post(`/design/processes/validate`, formData);
     },
     deployProcess(payload: any) {
-      return this.post(`/design/processes/deploy`, payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+      return this.post(`/design/processes/deploy`, payload);
     },
     getCatalogProcesses() {
       return this.get(`/design/processes/catalog`);
@@ -131,9 +129,7 @@ export const useIntegrationStore = defineStore('integrationStore', {
     },
     // @Traceability: US-005, CA-69
     requestDeployment(payload: FormData) {
-      return this.post('/design/processes/deploy-request', payload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      return this.post('/design/processes/deploy-request', payload);
     },
     deployToSandbox(id: string, payload: any) {
       return this.post(`/design/processes/${id}/sandbox`, payload);

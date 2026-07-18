@@ -64,22 +64,75 @@ Cada entrada **DEBE** incluir:
 4. **Estado** usando exclusivamente los 3 indicadores: âœ… Listo | ðŸ”¨ En progreso | âš ï¸ Con observaciones
 
 Si el estado es **âš ï¸ Con observaciones**, agregar un campo adicional:
+4. **Estado** usando exclusivamente los 3 indicadores: ✅ Listo | 🔨 En progreso | ⚠️ Con observaciones
+
+Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 ```
-**Observaciones**: [QuÃ© falta, quÃ© se debe revisar, o quÃ© limitaciÃ³n tiene]
+**Observaciones**: [Qué falta, qué se debe revisar, o qué limitación tiene]
 ```
 
 ---
 
-## ðŸ“‹ Registro de Avances
+## 📋 Registro de Avances
 
 ---
 
-## 2026-06-05 â€” ReparaciÃ³n del Guardado de Procesos BPMN
+> [!WARNING]
+> **REPORTE ESPECIAL DE AUDITORÍA FORENSE: SPRINT DE ESTABILIZACIÓN Y CORRECCIÓN DE BUGS UAT**
+> **Fecha del Informe**: 2026-07-17
+> **Contexto**: Durante las recientes iteraciones de pruebas UAT sobre la funcionalidad de Despliegue BPMN y Diseñador de Formularios, se detectó un patrón crítico de fallos recurrentes introducidos por los agentes de IA (Amnesia institucional, asunciones erróneas y hard-code). Este reporte documenta milimétricamente las correcciones quirúrgicas realizadas bajo el rol de desarrollador **David Rodriguez (dorodrig)** en la rama **DevDavid** para salvar la integridad del sistema.
+
+## 2026-07-17 — Iteración 4 (R4): Corrección Arquitectónica de Despliegue y Recuperación de Formularios Corruptos
+**Autor**: David Rodriguez (dorodrig) — Commit: `bf4f21b5`
+**¿Qué es?**: Se solucionaron tres fallos sistémicos severos que bloqueaban por completo las Pruebas UAT. 
+1. Se reparó el mecanismo de guardado de formularios que generaba un "Error 400" debido a que el sistema estaba enviando un nombre de texto en lugar de un código único (UUID) a la base de datos. 
+2. Se arregló el error "415 Unsupported Media Type" en el despliegue de procesos BPMN, implementando una solución limpia mediante "Interceptores Globales" que permite adjuntar correctamente el archivo físico del diagrama.
+3. Se mitigó un error crítico donde el diseñador de formularios cargaba la pantalla totalmente en blanco, ocultando las herramientas de diseño.
+**¿Para qué sirve?**: Para garantizar que los administradores puedan publicar nuevos procesos operativos y guardar diseños de formularios sin que el sistema colapse y rechace sus operaciones.
+**¿De dónde viene?**: Fallos persistentes UAT R4-01, R4-02 y R4-03.
+**Reporte de Novedades de los Agentes (Fallos Claves Detectados)**: 
+- **Pérdida de Contexto (Amnesia)**: El agente de backend, en iteraciones pasadas, implementó un objeto de datos (FormFieldMetadataDTO) sumamente rígido que literalmente *mutiló y borró* los nombres, IDs y textos de ayuda de la base de datos al momento de guardar el formulario original, causando irreversiblemente el bug de la pantalla en blanco.
+- **Soluciones Fantasma (Hard-code)**: El agente frontend intentó solucionar los problemas de envío de archivos forzando código en duro (`Content-Type: undefined`) en cada botón del sistema, violando drásticamente las reglas de arquitectura limpia.
+**¿Qué debería hacer?**: El usuario puede volver a desplegar diagramas BPMN con éxito. Los formularios antiguos que fueron corrompidos por el agente ahora muestran campos por defecto ("Campo") en lugar de romper y bloquear la pantalla.
+**Estado**: ✅ Listo
+
+---
+
+## 2026-07-17 — Iteración 3 (R3): Refactorización de Metadatos de Formularios y Cabeceras
+**Autor**: David Rodriguez (dorodrig) — Commit: `b9c2a9e1`
+**¿Qué es?**: Se modificó la estructura interna de la base de datos para que el sistema acepte formularios con cualquier tipo de campo dinámico y flexible, en lugar de estar amarrado a 6 propiedades rígidas. También se eliminó una inyección manual de formatos de archivo que un agente anterior había forzado erróneamente.
+**¿Para qué sirve?**: Para que cuando un administrador diseñe un formulario con campos nuevos o muy personalizados, la base de datos no los mutile ni los elimine por "no reconocerlos", salvaguardando la integridad de la información ingresada.
+**¿De dónde viene?**: Fallos bloqueantes UAT R3-01 y R3-02.
+**Reporte de Novedades de los Agentes (Fallos Claves Detectados)**: 
+- **Imaginación / Asunciones**: El agente asumió por su cuenta que un formulario siempre tendría exactamente 6 atributos básicos y forzó a la base de datos a desechar cualquier otro dato. Se tuvo que aplicar una matriz dinámica (`List<Map<String, Object>>`) para detener la pérdida de datos.
+**Estado**: ✅ Listo
+
+---
+
+## 2026-07-17 — Iteración 2 (R2): Recuperación del Menú Principal y Permisos de Despliegue
+**Autor**: David Rodriguez (dorodrig) — Commits: `f5c13fb9`, `2d338d6a`, `849f837c`
+**¿Qué es?**: Se corrigió un error catastrófico en la interfaz donde, si el usuario intentaba realizar una acción sin tener el permiso necesario, el sistema entraba en pánico y borraba por completo el menú lateral de la aplicación. Adicionalmente, se configuró correctamente la base de datos para que el sistema reconozca al rol maestro de publicación de procesos ("BPMN_Release_Manager").
+**¿Para qué sirve?**: Para que un error natural de "Acceso Denegado" sea solo una pequeña advertencia en pantalla, y no la destrucción completa de la interfaz de usuario, permitiéndole al usuario continuar trabajando normalmente.
+**¿De dónde viene?**: Fallos severos UAT R2-01, R2-02 y R2-03.
+**Reporte de Novedades de los Agentes (Fallos Claves Detectados)**: 
+- **Desatención de Arquitectura**: El agente modificó el sistema de seguridad interno (Interceptor 403) introduciendo una regla suicida: "Si falla un permiso, borra todo el menú de la aplicación". Esto demostró una desconexión total con la lógica de negocio y sentido común de usabilidad.
+**Estado**: ✅ Listo
+
+---
+
+## 2026-07-14 — Iteración 1 (R1): Cierre de Deuda Técnica en Carriles y Roles
+**Autor**: David Rodriguez (dorodrig) — Commits: `990bde6e`, `a180d1ef`, `03ce2b06`
+**¿Qué es?**: Se arreglaron múltiples defectos técnicos que impedían asignar responsables a los carriles (áreas de trabajo) dentro de un diagrama de proceso. Se implementó una validación estricta y matemática para asegurar que nadie pueda asignar tareas a roles inventados.
+**¿Para qué sirve?**: Para garantizar que las tareas de los procesos de negocio lleguen exactamente a los humanos correctos (por ejemplo, "Analista Financiero") y no se queden atascadas en un limbo debido a un rol que en realidad no existe en la empresa.
+**¿De dónde viene?**: Iteración 84-DEV-LANE-ROLE-FIX, Errores UAT D-01 a D-09.
+**Reporte de Novedades de los Agentes (Fallos Claves Detectados)**: 
+- **Imaginación / Alucinación Extrema**: El agente estaba guardando asignaciones fantasma de roles que jamás se crearon en la base de datos de seguridad, tejiendo relaciones inútiles que luego hacían colapsar las pantallas del sistema.
+**Estado**: ✅ Listo
+
+---
+
+## 2026-06-05 — Reparación del Guardado de Procesos BPMN
 **Autor**: Agente Backend (Sprints PM-01)
-**Â¿QuÃ© es?**: Se solucionÃ³ un problema crÃ­tico que impedÃ­a guardar los diagramas de procesos de negocio. Se mejorÃ³ la forma en que el sistema almacena y recupera la informaciÃ³n de los diseÃ±os en la base de datos para que sea mÃ¡s confiable.
-**Â¿Para quÃ© sirve?**: Para garantizar que cuando un analista diseÃ±a o modifica un proceso en el modelador visual, el sistema lo guarde correctamente sin generar errores. Esto es fundamental porque sin procesos guardados correctamente, el sistema no puede asignar tareas a los usuarios.
-**Â¿De dÃ³nde viene?**: CorrecciÃ³n de un problema tÃ©cnico detectado (OBS-1, originado en US-005) para asegurar que el sistema y la base de datos se comuniquen perfectamente.
-**Â¿QuÃ© deberÃ­a hacer?**:
 - El sistema guarda los diseÃ±os de procesos sin interrupciones.
 - Mantiene un registro del historial sin errores cuando ocurren cambios en los procesos.
 - Todo el mÃ³dulo de modelado funciona correctamente con el almacenamiento central.

@@ -707,7 +707,7 @@
                        </tr>
                     </tbody>
                  </table>
-                 <div v-if="loadingSchema" class="flex justify-center py-2"><AppSkeleton class="w-3/4 h-4 rounded" /></div>
+                 <div v-if="loadingSchema" class="flex justify-center py-2"><div class="w-3/4 h-4 rounded bg-gray-200 dark:bg-gray-600 animate-pulse"></div></div>
               </div>
             </div>
           </div>
@@ -2696,13 +2696,31 @@ const availableForms = ref<any[]>([]);
 const fetchForms = async () => {
   try {
     // @Traceability: US-005, CA-40
-    const fetchPromise = integrationStore.getForms(processId.value);
-    // Timeout de seguridad: si el interceptor 401 suspende la promesa, no quedar colgados
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('TIMEOUT: /forms/active no respondió en 8s')), 8000)
-    );
-    const { data } = await Promise.race([fetchPromise, timeoutPromise]) as any;
-    // Assuming backend returns array of objects with { id, name, type }
+    // Usamos fetch nativo con el token JWT para evitar el interceptor 401 de apiClient
+    // que puede retornar new Promise(() => {}) suspendiendo indefinidamente la llamada.
+    const token = localStorage.getItem('ibpms_token') || sessionStorage.getItem('ibpms_token') || '';
+    const params = processId.value ? `?processKey=${encodeURIComponent(processId.value)}` : '';
+    const url = `/api/v1/forms/active${params}`;
+
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    const resp = await fetch(url, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+    });
+    clearTimeout(timerId);
+
+    if (!resp.ok) {
+      console.error(`[BpmnDesigner] ❌ Error cargando formularios: HTTP ${resp.status} ${url}`);
+      availableForms.value = [];
+      return;
+    }
+    const data = await resp.json();
     if (!Array.isArray(data)) {
       console.warn('[BpmnDesigner] /forms/active retornó datos inesperados (no es array):', data);
       availableForms.value = [];
@@ -2713,12 +2731,14 @@ const fetchForms = async () => {
       name: f.name || f.title,
       type: f.type === 'MASTER' ? 'MAESTRO' : (f.type || 'SIMPLE')
     }));
-    console.info(`[BpmnDesigner] ✅ Catálogo de formularios cargado: ${availableForms.value.length} formularios disponibles.`);
+    console.info(`[BpmnDesigner] ✅ Formularios cargados: ${availableForms.value.length} disponibles.`);
   } catch (err: any) {
     // @Traceability: US-005, CA-39 - Eliminación de mock fallback (Zero-Mock Policy)
-    const status = err?.response?.status;
-    const url = err?.config?.url || '/forms/active';
-    console.error(`[BpmnDesigner] ❌ Error cargando catálogo de formularios [HTTP ${status || 'N/A'}] ${url}:`, err?.message || err);
+    if (err?.name === 'AbortError') {
+      console.error('[BpmnDesigner] ❌ fetchForms cancelado por timeout (10s). Backend no responde.');
+    } else {
+      console.error('[BpmnDesigner] ❌ Error inesperado en fetchForms:', err?.message || err);
+    }
     availableForms.value = [];
   }
 };
@@ -3151,6 +3171,12 @@ onMounted(async () => {
         const delegateExpr = safeGet(bo, 'camunda:delegateExpression') || '';
         const match = delegateExpr.match(/\$\{(.+)Adapter\}/);
         selectedConnector.value = match ? match[1] : '';
+        // @Traceability: US-005, CA-40 — Lazy-load retry: si el catálogo está vacío al
+        // seleccionar una UserTask (porque fetchForms falló en onMounted), se reintenta.
+        if (shape.type === 'bpmn:UserTask' && availableForms.value.length === 0) {
+          fetchForms();
+        }
+
       } else {
         selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', decisionRef: '', dmnBinding: 'deployment', assignee: '', candidateGroups: '' } };
         // @Traceability: US-005, CA-77 Panel de Propiedades Contextual

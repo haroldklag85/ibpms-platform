@@ -148,8 +148,12 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
                     break;
                 }
             }
+            // @Traceability: US-005 — Arquitectura IBPMS: el StartEvent es un punto de partida topológico.
+            // Los formularios y eventos (API, webhook, timer) se vinculan a Tasks dentro del proceso.
+            // El camunda:formKey en StartEvent es OPCIONAL: solo requerido si el proceso se inicia
+            // manualmente desde el Tasklist de Camunda con formulario de inicio. No es un hard-stop.
             if (!hasValidStartForm && !startEvents.isEmpty()) {
-                response.addError("StartEvent", "El StartEvent carece de camunda:formKey obligatorio para iniciar instancia de forma manual");
+                response.addWarning("StartEvent", "Recomendación: El StartEvent no tiene camunda:formKey configurado. Si el proceso se inicia por API, webhook, timer o evento externo, esto es correcto y esperado. Configure formKey solo si desea un formulario de inicio manual en el StartEvent.");
             }
 
             Collection<BusinessRuleTask> brTasks = modelInstance.getModelElementsByType(BusinessRuleTask.class);
@@ -213,9 +217,10 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
                     }
                 }
             }
+            // @Traceability: US-005, CA-05 — ReglaNomenclatura es una buena práctica de gobernanza,
+            // no un requisito técnico de despliegue. Se mantiene como advertencia visible para el diseñador.
             if (!hasNomenclature) {
-                // @Traceability: US-005, CA-05
-                response.addError("Process", "Debe definir cómo se llamarán los casos de este proceso.");
+                response.addWarning("Process", "Recomendación de Gobernanza (CA-05): Defina la propiedad 'ReglaNomenclatura' en las Extension Properties del proceso para estandarizar el nombre de los casos generados. Acceda al Panel de Propiedades → Proceso → Regla de Nomenclatura.");
             }
 
             // @Traceability: US-005, CA-15

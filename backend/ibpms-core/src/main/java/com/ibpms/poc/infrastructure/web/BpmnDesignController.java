@@ -169,16 +169,12 @@ public class BpmnDesignController {
         try {
             DeploymentValidationResponse validation = preFlightAnalyzerService.analizar(file.getInputStream());
 
+            // @Traceability: US-005, CA-33 — Solo los ERRORES semánticos son bloqueantes (valid=false).
+            // Los WARNINGS son recomendaciones de gobernanza (ej. ReglaNomenclatura, formKey en StartEvent)
+            // y se retornan dentro de la respuesta 201 exitosa. El diseñador los verá en la consola inferior.
+            // Arquitectura IBPMS: StartEvent = punto topológico, formularios y eventos viven en Tasks.
             if (!validation.isValid() && !isSandbox) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(validation);
-            }
-
-            // @Traceability: US-005, CA-33 Reglas de Linting del Pre-Flight (Bloqueo Duro)
-            if (!validation.getWarnings().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
-                    "error", "Hard-Stop (CA-33): El Pre-Flight tiene advertencias que deben ser resueltas obligatoriamente antes de desplegar.",
-                    "warnings", validation.getWarnings()
-                ));
             }
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(

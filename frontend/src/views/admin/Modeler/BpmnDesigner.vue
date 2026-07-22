@@ -194,7 +194,7 @@
             </button>
             <button data-testid="btn-deploy" v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)"
                     @click="showDeployModal = true" 
-                    :disabled="isDeploying || preFlightStatus !== 'VALIDATED'" 
+                    :disabled="isDeploying || (preFlightStatus !== 'VALIDATED' && preFlightStatus !== 'WARNING')" 
                     class="bg-indigo-600 text-white px-2 py-1 rounded shadow text-[11px] font-bold hover:bg-indigo-700 disabled:opacity-50 transition flex items-center gap-1">
               🚀 Desplegar
             </button>

@@ -20,10 +20,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-
+// @Traceability: US-036 CA-10 — Filtro de autenticación M2M via API Key.
+// ServiceAccountRepository es un bean Spring Data JPA que siempre está disponible.
+// NOTA: @ConditionalOnBean no es compatible con @Component (solo con @Configuration/@Bean).
+// Se eliminó para evitar IllegalStateException en el arranque de Spring Boot.
 @Component
-@ConditionalOnBean(ServiceAccountRepository.class)
 public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
     private static final String API_KEY_HEADER = "X-API-KEY";

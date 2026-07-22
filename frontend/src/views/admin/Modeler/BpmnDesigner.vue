@@ -2696,19 +2696,33 @@ const availableForms = ref<any[]>([]);
 const fetchForms = async () => {
   try {
     // @Traceability: US-005, CA-40
-    const { data } = await integrationStore.getForms(processId.value);
+    const fetchPromise = integrationStore.getForms(processId.value);
+    // Timeout de seguridad: si el interceptor 401 suspende la promesa, no quedar colgados
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('TIMEOUT: /forms/active no respondió en 8s')), 8000)
+    );
+    const { data } = await Promise.race([fetchPromise, timeoutPromise]) as any;
     // Assuming backend returns array of objects with { id, name, type }
+    if (!Array.isArray(data)) {
+      console.warn('[BpmnDesigner] /forms/active retornó datos inesperados (no es array):', data);
+      availableForms.value = [];
+      return;
+    }
     availableForms.value = data.map((f: any) => ({
       key: f.id,
       name: f.name || f.title,
       type: f.type === 'MASTER' ? 'MAESTRO' : (f.type || 'SIMPLE')
     }));
-  } catch (err) {
+    console.info(`[BpmnDesigner] ✅ Catálogo de formularios cargado: ${availableForms.value.length} formularios disponibles.`);
+  } catch (err: any) {
     // @Traceability: US-005, CA-39 - Eliminación de mock fallback (Zero-Mock Policy)
-    console.error('[BpmnDesigner] Error cargando catálogo de formularios:', err);
+    const status = err?.response?.status;
+    const url = err?.config?.url || '/forms/active';
+    console.error(`[BpmnDesigner] ❌ Error cargando catálogo de formularios [HTTP ${status || 'N/A'}] ${url}:`, err?.message || err);
     availableForms.value = [];
   }
 };
+
 
 const availableConnectors = ref<any[]>([]);
 

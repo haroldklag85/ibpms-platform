@@ -87,7 +87,30 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
         response.setValid(true);
 
         try {
-            BpmnModelInstance modelInstance = Bpmn.readModelFromStream(bpmnStream);
+            // @Traceability: US-005, CA-01 - Sanitización del stream antes de parsear
+            // El Blob del navegador puede incluir BOM (U+FEFF) o whitespace inicial
+            // que causa SAXException en Bpmn.readModelFromStream().
+            byte[] rawBytes = bpmnStream.readAllBytes();
+            String xmlContent = new String(rawBytes, java.nio.charset.StandardCharsets.UTF_8);
+
+            // Eliminar BOM (Byte Order Mark: \uFEFF) si está presente al inicio
+            if (xmlContent.startsWith("\uFEFF")) {
+                xmlContent = xmlContent.substring(1);
+                log.debug("[PreFlight] BOM detectado y eliminado del stream BPMN.");
+            }
+            // Eliminar whitespace inicial antes de la declaración XML
+            xmlContent = xmlContent.trim();
+
+            log.debug("[PreFlight] XML recibido (primeros 300 chars): {}", 
+                      xmlContent.length() > 300 ? xmlContent.substring(0, 300) : xmlContent);
+
+            // Recrear stream limpio desde el String sanitizado
+            java.io.InputStream cleanStream = new java.io.ByteArrayInputStream(
+                xmlContent.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+            );
+
+            BpmnModelInstance modelInstance = Bpmn.readModelFromStream(cleanStream);
+
 
             Collection<EndEvent> endEvents = modelInstance.getModelElementsByType(EndEvent.class);
             if (endEvents == null || endEvents.isEmpty()) {

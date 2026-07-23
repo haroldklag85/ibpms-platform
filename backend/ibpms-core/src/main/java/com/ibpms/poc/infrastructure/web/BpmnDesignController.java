@@ -236,8 +236,8 @@ public class BpmnDesignController {
     @GetMapping("/{processDefinitionKey}/instances/migratable")
     public ResponseEntity<List<MigratableInstanceDTO>> getMigratableInstances(
             @PathVariable("processDefinitionKey") String processDefinitionKey,
-            @RequestParam("sourceVersion") Integer sourceVersion,
-            @RequestParam("targetVersion") Integer targetVersion) {
+            @RequestParam(value = "sourceVersion", required = false, defaultValue = "0") Integer sourceVersion,
+            @RequestParam(value = "targetVersion", required = false, defaultValue = "0") Integer targetVersion) {
         
         List<MigratableInstanceDTO> report = processMigrationService.evaluateTopologyTarget(
                 processDefinitionKey, sourceVersion, targetVersion);

@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
+
 @Entity
 @Table(name = "ibpms_data_mappings")
+@Traceability(US = "US-005", CA = {"CA-68"})
 public class DataMappingEntity {
 
     @Id

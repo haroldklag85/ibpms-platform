@@ -23,15 +23,30 @@ public class DmnSyntaxGuardUseCase {
 
     /**
      * CA-09: Previene Limite de Tokens
-     * Trunca brutalmente el Prompt Humano a 1000 caracteres antes de encolarlo a OpenAI.
+     * Trunca brutalmente el Prompt Humano a 4096 caracteres antes de encolarlo a OpenAI.
      */
     public String validateAndTruncatePrompt(String humanPrompt) {
         if (humanPrompt == null) return "";
-        if (humanPrompt.length() > 1000) {
-            log.warn("[GUARDRAIL] Prompt Humano truncado (>1000 chars). Previniendo Token Limit Exhaustion.");
-            return humanPrompt.substring(0, 1000);
+        if (humanPrompt.length() > 4096) {
+            log.warn("[GUARDRAIL] Prompt Humano truncado (>4096 chars). Previniendo Token Limit Exhaustion.");
+            return humanPrompt.substring(0, 4096);
         }
         return humanPrompt;
+    }
+    
+    /**
+     * GAP-06: Aplicar lowercase() en comparaciones FEEL generadas
+     */
+    public String applyFeelLowercase(String dmnXml) {
+        if (dmnXml == null) return null;
+        // Busca texto entre comillas dobles en sentencias FEEL
+        StringBuffer sb = new StringBuffer();
+        Matcher m = Pattern.compile("\"([^\"]+)\"").matcher(dmnXml);
+        while (m.find()) {
+            m.appendReplacement(sb, "\"" + m.group(1).toLowerCase() + "\"");
+        }
+        m.appendTail(sb);
+        return sb.toString();
     }
 
     /**
@@ -63,6 +78,27 @@ public class DmnSyntaxGuardUseCase {
         if (dmnXml.contains("<text></text>")) {
             log.error("[GUARDRAIL] El LLM devolvió disyunciones `<text>` vacías.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El documento contiene disyunciones o celdas matemáticas vacías. Operación cancelada por sanidad operativa.");
+        }
+
+        // GAP-06: Rechazar Date-Math
+        if (dmnXml.contains("date and time(") || dmnXml.contains("duration(") || dmnXml.contains("now()")) {
+            log.error("[GUARDRAIL] Intento de usar Date-Math en DMN detectado.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "El Modelo DMN contiene funciones Date-Math (date and time, duration, now). En V1 solo se toleran comparaciones numéricas o de texto planas.");
+        }
+
+        // GAP-07: Overlap Check Básico (detectar si rangos [X..Y] y [A..B] se solapan en filas consecutivas)
+        Matcher rangeMatcher = Pattern.compile("[\\[\\(](\\d+(?:\\.\\d+)?)\\.\\.(\\d+(?:\\.\\d+)?)[\\]\\)]").matcher(dmnXml);
+        Double prevEnd = null;
+        while (rangeMatcher.find()) {
+            try {
+                double start = Double.parseDouble(rangeMatcher.group(1));
+                double end = Double.parseDouble(rangeMatcher.group(2));
+                if (prevEnd != null && start <= prevEnd) {
+                    log.error("[GUARDRAIL] Overlap Detectado: Rango inicia en {} pero el anterior terminaba en {}", start, prevEnd);
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Se ha detectado un solapamiento (overlap) de rangos matemáticos en las reglas generadas.");
+                }
+                prevEnd = end;
+            } catch (NumberFormatException ignored) {}
         }
 
         log.info("[GUARDRAIL] Verificación de Sanidad Matemática completada. XML Correcto.");

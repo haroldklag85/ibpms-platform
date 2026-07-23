@@ -21,18 +21,32 @@ public class TaskRescueProducer {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void triggerMassiveUnclaim(String userId) {
-        log.info("[RABBIT-MQ] Publicando evento asíncrono MASSIVE_UNCLAIM para el usuario: {}", userId);
+    public void triggerDelegationUnclaim(String userId) {
+        log.info("[RABBIT-MQ] Publicando evento asíncrono DELEGATION_UNCLAIM para el usuario: {}", userId);
         
-        // Payload mínimo
         Map<String, String> payload = Map.of(
-                "action", "UNCLAIM_ALL",
+                "action", "UNCLAIM_ALL_DELEGATION",
                 "userId", userId
         );
         
         rabbitTemplate.convertAndSend(
-                TaskRescueRabbitConfig.EXCHANGE_NAME,
-                TaskRescueRabbitConfig.ROUTING_KEY,
+                "ibpms.security.exchange",
+                "security.user.delegated",
+                payload
+        );
+    }
+
+    public void triggerDeactivationUnclaim(String userId) {
+        log.info("[RABBIT-MQ] Publicando evento asíncrono DEACTIVATION_UNCLAIM para el usuario: {}", userId);
+        
+        Map<String, String> payload = Map.of(
+                "action", "UNCLAIM_ALL_DEACTIVATION",
+                "userId", userId
+        );
+        
+        rabbitTemplate.convertAndSend(
+                "ibpms.security.exchange",
+                "security.user.deactivated",
                 payload
         );
     }

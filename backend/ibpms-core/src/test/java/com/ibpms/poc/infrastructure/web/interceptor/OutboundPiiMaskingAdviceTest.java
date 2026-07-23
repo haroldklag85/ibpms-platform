@@ -32,7 +32,7 @@ public class OutboundPiiMaskingAdviceTest {
 
     @Test
     void test_OutboundPiiMasking_Sterilizes_SSN_and_CC() throws Exception {
-        // Arrange (CA-4P)
+        // @Traceability: US-000 - CA-4
         ServerHttpRequest req = mock(ServerHttpRequest.class);
         ServerHttpResponse res = mock(ServerHttpResponse.class);
         MethodParameter returnType = mock(MethodParameter.class);

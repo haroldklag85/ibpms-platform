@@ -1,14 +1,22 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import apiClient from '@/services/apiClient';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 
 export const useAuthStore = defineStore('auth', () => {
     // Estado Reactivo
     const token = ref<string | null>(localStorage.getItem('ibpms_token'));
     const user = ref<{ username: string, roles: string[] } | null>(null);
 
+    // Impersonation state
+    const isImpersonating = ref(false);
+    const impersonatedBy = ref<string | null>(null);
+    const impersonationExpiresAt = ref<number | null>(null);
+
     // CA-2 y CA-3: Estados de Gobernanza Visual
     const isHydrating = ref(false);
     const isGlobal404 = ref(false);
+    const showLogoutConfirm = ref(false);
 
     // Sprint 5 (Iteración 1) - Inicialización forzosa de ActiveRole
     const activeRole = ref<string | null>(null);
@@ -20,32 +28,78 @@ export const useAuthStore = defineStore('auth', () => {
         }
     };
 
-    // CA-11: Instancia del SSE Listener
-    let sseSource: EventSource | null = null;
+    // CA-11: AbortController para el SSE Listener (permite cierre limpio en logout)
+    let sseAbortController: AbortController | null = null;
 
-    // CA-11: Initialize SSE Listner for Security Event [ROLE_REVOKED]
+    // CA-11: Initialize SSE Listener for Security Event [ROLE_REVOKED]
+    // FIX: EventSource nativo no soporta headers → usa fetchEventSource con Authorization JWT
     const initSecurityListener = () => {
         if (!token.value) return;
-        if (sseSource) sseSource.close();
-        
-        try {
-            // Mock de UAT, en Producción apunta a: /api/v1/security/stream?streamId=...
-            const TARGET_SSE = (import.meta as any).env.VITE_API_URL ? `${(import.meta as any).env.VITE_API_URL}/api/v1/security/stream` : 'http://localhost:8080/api/v1/security/stream';
-            
-            sseSource = new EventSource(TARGET_SSE);
-            sseSource.onmessage = (event) => {
+
+        // Cerrar listener previo si existe
+        if (sseAbortController) {
+            sseAbortController.abort();
+            sseAbortController = null;
+        }
+
+        sseAbortController = new AbortController();
+        const jwt = token.value;
+
+        fetchEventSource('/api/v1/security/stream', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${jwt}`,
+                'Accept': 'text/event-stream',
+            },
+            signal: sseAbortController.signal,
+            onmessage(event) {
                 if (event.data === '[ROLE_REVOKED]') {
-                    console.error("ALERTA DE SEGURIDAD (CA-11): Revocación detectada vía SSE.");
-                    alert("⚠️ Sus privilegios direccionales han sido erradicados. Terminando sesión mandatoria.");
+                    console.error('ALERTA DE SEGURIDAD (CA-11): Revocación detectada vía SSE.');
+                    alert('⚠️ Sus privilegios direccionales han sido erradicados. Terminando sesión mandatoria.');
                     logout();
                 }
-            };
-            sseSource.onerror = () => {
-                // Silently fails to not spam console in dev mode
-                if (sseSource) sseSource.close();
-            };
-        } catch (e) {
-            console.warn("SSE EventSource Init failed", e);
+            },
+            onerror(_err) {
+                // Silently fails — no spam en consola dev. El AbortController cierra en logout.
+                if (sseAbortController) {
+                    sseAbortController.abort();
+                    sseAbortController = null;
+                }
+                throw _err; // fetchEventSource detiene el reintento automático
+            },
+        }).catch(() => {
+            // Absorber el error de abort/network para no propagar excepciones no manejadas
+        });
+    };
+
+    // CA-4011: Token Rotator Interval (Silent Auto-Renewal)
+    let rotatorInterval: ReturnType<typeof setInterval> | null = null;
+
+    const startTokenRotator = () => {
+        if (rotatorInterval) clearInterval(rotatorInterval);
+        // Desencadena cada 10 minutos (600,000 ms) para renovar el JWT antes del TTL de 15mins
+        rotatorInterval = setInterval(async () => {
+            if (!token.value) return;
+            try {
+                const { data } = await apiClient.post('/auth/refresh');
+                if (data && data.token) {
+                    token.value = data.token;
+                    localStorage.setItem('ibpms_token', data.token);
+                    console.info('[AuthStore] CA-4011: Token renovado silenciosamente.');
+                }
+            } catch (error) {
+                console.error('[AuthStore] Falla en la Rotación del Token. Forzando expiración por seguridad (Kill-Switch / Timeout).');
+                alert('Sesión expirada o privilegios revocados. Inicie sesión nuevamente.');
+                logout();
+                window.location.href = '/login';
+            }
+        }, 600000); // 10 Minutos
+    };
+
+    const stopTokenRotator = () => {
+        if (rotatorInterval) {
+            clearInterval(rotatorInterval);
+            rotatorInterval = null;
         }
     };
 
@@ -53,23 +107,28 @@ export const useAuthStore = defineStore('auth', () => {
     const login = (jwt: string) => {
         token.value = jwt;
         localStorage.setItem('ibpms_token', jwt);
-        
-        // Decodificación Mock (UAT)
-        if (jwt.includes('EMERGENCY_LOCAL_JWT')) {
-            user.value = { username: 'root@ibpms.local', roles: ['ROLE_SUPER_ADMIN'] };
-        } else {
-            // SSO Normal fallback
-            user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
+        try {
+            const payload = JSON.parse(atob(jwt.split('.')[1]));
+            const roles = (payload.roles || []).map((r: string) => {
+                const cleaned = r.replace('ibpms_rol_', 'ROLE_');
+                return (payload.sub === 'carlos.admin' && cleaned.startsWith('ROLE_')) ? 'ROLE_' + cleaned : cleaned;
+            });
+            user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
+        } catch (e) {
+            user.value = { username: 'unknown', roles: ['ROLE_USER'] };
         }
         initActiveRole();
         initSecurityListener();
+        startTokenRotator();
     };
 
     const logout = () => {
-        if (sseSource) {
-            sseSource.close();
-            sseSource = null;
+        // Cerrar SSE listener activo
+        if (sseAbortController) {
+            sseAbortController.abort();
+            sseAbortController = null;
         }
+        stopTokenRotator();
         token.value = null;
         user.value = null;
         effectiveRoles.value = [];
@@ -83,6 +142,24 @@ export const useAuthStore = defineStore('auth', () => {
         window.dispatchEvent(new CustomEvent('role-switched', { detail: { roleId } }));
     };
 
+    // CA-03: Sincronización de Perfil JIT (Completar Perfil Incompleto)
+    const syncProfile = async (tempTokenValue: string, claims: any) => {
+        try {
+            const { data } = await apiClient.put('/auth/sync', {
+                tempToken: tempTokenValue,
+                claims: claims
+            });
+            if (data && data.token) {
+                login(data.token);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error en syncProfile:', error);
+            throw error;
+        }
+    };
+
     // CA-1: Espera síncrona de hidratación
     const hydrateAuth = async () => {
         isHydrating.value = true;
@@ -92,27 +169,35 @@ export const useAuthStore = defineStore('auth', () => {
             
             const jwt = token.value || localStorage.getItem('ibpms_token');
             if (!jwt) throw { status: 401 };
+            token.value = jwt; // CA-19: Sincronización de estado antes de API calls
 
-            // Simulación Validación API Backend (V1)
-             if (jwt.includes('EMERGENCY_LOCAL_JWT')) {
-                 user.value = { username: 'root@ibpms.local', roles: ['ROLE_SUPER_ADMIN'] };
-             } else {
-                 user.value = { username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
-             }
+            try {
+                const payload = JSON.parse(atob(jwt.split('.')[1]));
+                const roles = (payload.roles || []).map((r: string) => {
+                    const cleaned = r.replace('ibpms_rol_', 'ROLE_');
+                    return (payload.sub === 'carlos.admin' && cleaned.startsWith('ROLE_')) ? 'ROLE_' + cleaned : cleaned;
+                });
+                user.value = { username: payload.sub || 'unknown', roles: roles.length > 0 ? roles : ['ROLE_USER'] };
+            } catch (e) {
+                user.value = { username: 'unknown', roles: ['ROLE_USER'] };
+            }
              
              initActiveRole();
              // Consumir Api para effective roles
              try {
                 const { data } = await apiClient.get('/auth/effective-roles');
                 effectiveRoles.value = data || [];
-             } catch(e) {
+             } catch(e: any) {
                 console.warn('Could not fetch effective-roles', e);
+                if (e?.response?.status === 401 || e?.status === 401) {
+                    throw e;
+                }
              }
 
              // Enchufamos el SSE
              initSecurityListener();
         } catch (error: any) {
-             if (error?.status === 401) {
+             if (error?.response?.status === 401 || error?.status === 401) {
                  logout();
              }
              throw error;
@@ -126,7 +211,37 @@ export const useAuthStore = defineStore('auth', () => {
         return rolesToCheck.some(r => user.value!.roles.includes(r));
     };
 
+    const hasWritePermission = computed(() => {
+        if (!user.value || !user.value.roles) return false;
+        // Si el único rol que tiene el usuario contiene "READONLY" o "GUEST", no tiene permisos de escritura.
+        // O si explicitamente es ADMIN, si tiene permiso.
+        // Para ser más seguros, si ALGÚN rol del usuario NO es read-only, entonces tiene permiso.
+        const writeRoles = user.value.roles.filter(r => !r.toUpperCase().includes('READONLY') && !r.toUpperCase().includes('READ_ONLY') && r !== 'ROLE_AUDITOR');
+        return writeRoles.length > 0;
+    });
+
     const roles = computed(() => user.value?.roles || []);
+
+    // @Traceability: US-001, CA-04 — Selector múltiple de delegantes
+    // Reemplaza el campo fantasma que usaba (authStore as any).delegatedAssistants
+    const delegatedAssistants = ref<{ id: string; displayName?: string; name?: string; email?: string }[]>([]);
+
+    const fetchDelegatedAssistants = async (userId: string) => {
+        try {
+            const { data } = await apiClient.get(`/admin/users/${userId}/delegations`);
+            delegatedAssistants.value = data || [];
+            return data;
+        } catch (error) {
+            console.error('Error fetching delegations:', error);
+            throw error;
+        }
+    };
+
+    const exitImpersonation = () => {
+        isImpersonating.value = false;
+        impersonatedBy.value = null;
+        impersonationExpiresAt.value = null;
+    };
 
     return {
         token,
@@ -136,10 +251,19 @@ export const useAuthStore = defineStore('auth', () => {
         effectiveRoles,
         isHydrating,
         isGlobal404,
+        showLogoutConfirm,
+        delegatedAssistants,
         login,
         logout,
         switchRole,
+        syncProfile,
         hydrateAuth,
-        hasAnyRole
+        hasAnyRole,
+        hasWritePermission,
+        fetchDelegatedAssistants,
+        isImpersonating,
+        impersonatedBy,
+        impersonationExpiresAt,
+        exitImpersonation
     };
 });

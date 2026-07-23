@@ -90,4 +90,28 @@ public class RbacAuthorizationService implements RbacPort {
             assignmentRepository.save(assignment);
         }
     }
+
+    // @Traceability: US-005, CA-06 Purga de Roles Zombies
+    @Override
+    @Transactional
+    public void purgeZombieLanes(String processKey, List<String> activeLaneIds) {
+        // 1. Obtener todas las asignaciones históricas de este proceso
+        List<ProfileBpmnAssignmentEntity> existingAssignments = assignmentRepository.findByBpmnProcessKey(processKey);
+
+        // 2. Filtrar las asignaciones que ya no existen en la lista de activeLaneIds (V2)
+        for (ProfileBpmnAssignmentEntity assignment : existingAssignments) {
+            if (!activeLaneIds.contains(assignment.getBpmnLaneId())) {
+                // Eliminar asignación (el carril fue borrado)
+                assignmentRepository.delete(assignment);
+
+                // Opcional: Si el perfil queda sin ninguna otra asignación, eliminar el perfil también
+                IbpmsProfileEntity profile = assignment.getProfile();
+                List<ProfileBpmnAssignmentEntity> remainingAssignments = assignmentRepository.findByProfile_Id(profile.getId());
+                // remainingAssignments incluye la actual en la memoria, así que validamos si su tamaño es 1
+                if (remainingAssignments.size() <= 1) {
+                    profileRepository.delete(profile);
+                }
+            }
+        }
+    }
 }

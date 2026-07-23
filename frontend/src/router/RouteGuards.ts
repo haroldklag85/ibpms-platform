@@ -36,7 +36,7 @@ export const rbacGuard = async (
             await authStore.hydrateAuth();
         } catch (e: any) {
             // CA-4: Expiración de Token (401) depura Storage y patea al login.
-            if (e?.status === 401) {
+            if (e?.response?.status === 401 || e?.status === 401) {
                 authStore.logout();
                 return next('/login');
             }
@@ -45,13 +45,13 @@ export const rbacGuard = async (
 
     // 2. Verificación RBAC Estricta (Solo si la ruta especifica .roles)
     if (to.meta.roles && Array.isArray(to.meta.roles)) {
-        const userRoles = authStore.roles;
+        const activeRole = authStore.activeRole;
 
-        // Si exige roles pero el usuario no tiene rol o sus roles no intersectan con la lista
-        const hasAccess = userRoles.some(r => (to.meta.roles as string[]).includes(r));
+        // Validar el acceso contra el rol seleccionado actualmente (activeRole)
+        const hasAccess = activeRole ? (to.meta.roles as string[]).includes(activeRole) : false;
         
         if (!hasAccess) {
-            console.warn(`[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL ${to.path}. Roles provistos: ${userRoles.join(', ')}`);
+            console.warn(`[SECURITY 403] Interceptor Obscurity CA-3 Activado. Ocultando URL ${to.path}. Rol activo provisto: ${activeRole || 'Ninguno'}`);
             // CA-3: Falso 404. Se mantiene URL intacta en barra de navegación, el render pasa a NotFound.
             authStore.isGlobal404 = true;
             return next(); // Pasa la barrera del Router, pero el DOM colapsa en App.vue

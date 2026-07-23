@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/integrations/execute")
+@Traceability(US = "US-023", CA = {"CA-77"})
 public class ApiConnectorController {
 
     private static final Logger log = LoggerFactory.getLogger(ApiConnectorController.class);

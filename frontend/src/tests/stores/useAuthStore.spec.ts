@@ -1,6 +1,19 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { useAuthStore } from '@/stores/authStore';
+import apiClient from '@/services/apiClient';
+
+// @Traceability: US-005, CA-15
+vi.mock('@/services/apiClient', () => {
+    return {
+        default: {
+            get: vi.fn(),
+            post: vi.fn().mockResolvedValue({ data: {} }),
+            put: vi.fn().mockResolvedValue({ data: {} }),
+            delete: vi.fn().mockResolvedValue({ data: {} })
+        }
+    };
+});
 
 // Bloque 1: Aislamiento Pinia y Security Context (US-036)
 describe('AuthStore - Security & RBAC', () => {
@@ -8,6 +21,8 @@ describe('AuthStore - Security & RBAC', () => {
         setActivePinia(createPinia());
         localStorage.clear();
         vi.restoreAllMocks();
+        // @Traceability: US-005, CA-15
+        vi.spyOn(apiClient, 'get').mockResolvedValue({ data: [] });
     });
 
     afterEach(() => {
@@ -35,23 +50,25 @@ describe('AuthStore - Security & RBAC', () => {
         // El test mock actual asume fallback a carlos.admin por el mock, pero NO es super admin.
         // Validemos el RBAC degradation (No debe tener ROLE_SUPER_ADMIN)
         expect(store.hasAnyRole(['ROLE_SUPER_ADMIN'])).toBe(false);
-        expect(store.user?.username).toBe('carlos.admin');
+        expect(store.user?.username).toBe('unknown');
     });
 
     it('debería asignar rol administrativo solo si el JWT porta las claims validadas (EMERGENCY_LOCAL_JWT)', async () => {
-        localStorage.setItem('ibpms_token', 'valid_EMERGENCY_LOCAL_JWT_mock');
+        const validJwt = 'header.eyJzdWIiOiJyb290QGlicG1zLmxvY2FsIiwgInJvbGVzIjpbIlJPTEVfU1VQRVJfQURNSU4iXX0=.signature';
+        localStorage.setItem('ibpms_token', validJwt);
         const store = useAuthStore();
         
         await store.hydrateAuth();
         
-        expect(store.token).toBe('valid_EMERGENCY_LOCAL_JWT_mock');
+        expect(store.token).toBe(validJwt);
         expect(store.hasAnyRole(['ROLE_SUPER_ADMIN'])).toBe(true);
         expect(store.user?.username).toBe('root@ibpms.local');
     });
 
     it('debería erradicar el estado por completo al ejecutar logout (Prevención DOM Thrashing y Fugas)', () => {
         const store = useAuthStore();
-        store.login('some_valid_jwt_EMERGENCY_LOCAL_JWT');
+        const validJwt = 'header.eyJzdWIiOiJyb290QGlicG1zLmxvY2FsIiwgInJvbGVzIjpbIlJPTEVfU1VQRVJfQURNSU4iXX0=.signature';
+        store.login(validJwt);
         
         expect(store.token).not.toBeNull();
         expect(store.user).not.toBeNull();

@@ -10,6 +10,8 @@ import com.ibpms.poc.domain.port.OrphanPayloadRepository;
 import com.ibpms.poc.domain.port.TriageTaskRepository;
 import com.ibpms.poc.domain.port.WebhookTransactionRepository;
 import com.ibpms.poc.infrastructure.config.WebhookProperties;
+import com.ibpms.poc.infrastructure.jpa.entity.TenantConfigEntity;
+import com.ibpms.poc.infrastructure.jpa.repository.TenantConfigRepository;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.slf4j.Logger;
@@ -26,7 +28,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * Core orchestrator for Webhook Intake processing (US-004).
+ * @Traceability: US-004
+ * Core orchestrator for Webhook Intake processing.
  * Sequential validation pipeline: Idempotency → Auto-responder block →
  * Payload validation → Domain whitelist → HMAC/Bearer → Size limit →
  * ClamAV scan → Pre-Triage instantiation.
@@ -36,7 +39,7 @@ public class WebhookIntakeService {
 
     private static final Logger log = LoggerFactory.getLogger(WebhookIntakeService.class);
 
-    /** Regex patterns for system/auto-responder email addresses (CA-2). */
+    /** @Traceability: US-004 - CA-2: Regex patterns for system/auto-responder email addresses. */
     private static final List<Pattern> AUTO_RESPONDER_PATTERNS = List.of(
             Pattern.compile("^no-reply@.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile("^noreply@.*", Pattern.CASE_INSENSITIVE),
@@ -53,6 +56,8 @@ public class WebhookIntakeService {
     private final WebhookProperties webhookProperties;
 
     private final TriageTaskRepository triageTaskRepo;
+    private final IntegrationEventPublisher integrationEventPublisher;
+    private final TenantConfigRepository tenantConfigRepo;
 
     public WebhookIntakeService(
             WebhookTransactionRepository transactionRepo,
@@ -61,7 +66,9 @@ public class WebhookIntakeService {
             TriageTaskRepository triageTaskRepo,
             ClamAvScanner clamAvScanner,
             RuntimeService runtimeService,
-            WebhookProperties webhookProperties) {
+            WebhookProperties webhookProperties,
+            IntegrationEventPublisher integrationEventPublisher,
+            TenantConfigRepository tenantConfigRepo) {
         this.transactionRepo = transactionRepo;
         this.orphanRepo = orphanRepo;
         this.domainRepo = domainRepo;
@@ -69,6 +76,8 @@ public class WebhookIntakeService {
         this.clamAvScanner = clamAvScanner;
         this.runtimeService = runtimeService;
         this.webhookProperties = webhookProperties;
+        this.integrationEventPublisher = integrationEventPublisher;
+        this.tenantConfigRepo = tenantConfigRepo;
     }
 
     /**
@@ -81,20 +90,20 @@ public class WebhookIntakeService {
     public WebhookResponse processIncomingWebhook(WebhookPayload payload) {
         log.info("Processing incoming webhook, messageId=[{}]", payload.messageId());
 
-        // Step 1: Idempotency check (CA-1)
+        // @Traceability: US-004 - CA-1: Idempotency check
         if (transactionRepo.existsByMessageId(payload.messageId())) {
             log.info("Duplicate webhook detected for messageId=[{}]. Returning silent 200.", payload.messageId());
             return WebhookResponse.idempotent();
         }
 
-        // Step 2: Auto-responder block (CA-2)
+        // @Traceability: US-004 - CA-2: Auto-responder block
         if (isAutoResponder(payload.senderEmail())) {
             log.warn("Auto-responder blocked: [{}]", payload.senderEmail());
             return WebhookResponse.rejected("AUTO_RESPONDER_BLOCKED",
                     "System accounts (no-reply, mailer-daemon) are not allowed.");
         }
 
-        // Step 3: Extract domain and validate whitelist (CA-4)
+        // @Traceability: US-004 - CA-4: Extract domain and validate whitelist
         String domain = extractDomain(payload.senderEmail());
         String tenantId = payload.tenantId() != null ? payload.tenantId() : "default";
         if (!domainRepo.existsByDomainAndTenantIdAndIsActiveTrue(domain, tenantId)) {
@@ -103,7 +112,7 @@ public class WebhookIntakeService {
             return WebhookResponse.forbidden("Domain not authorized: " + domain);
         }
 
-        // Step 4: Payload size validation (CA-7)
+        // @Traceability: US-004 - CA-7: Payload size validation
         long payloadSize = calculatePayloadSize(payload);
         if (payloadSize > webhookProperties.getPayload().getMaxSizeBytes()) {
             log.warn("Payload exceeds size limit: {} > {}", payloadSize,
@@ -111,7 +120,7 @@ public class WebhookIntakeService {
             return WebhookResponse.tooLarge(payloadSize, webhookProperties.getPayload().getMaxSizeBytes());
         }
 
-        // Step 5: ClamAV anti-malware scan (CA-11)
+        // @Traceability: US-004 - CA-11: ClamAV anti-malware scan
         if (payload.attachmentBytes() != null && payload.attachmentBytes().length > 0) {
             ClamAvScanner.ScanResult scanResult = clamAvScanner.scan(
                     payload.attachmentBytes(),
@@ -136,7 +145,7 @@ public class WebhookIntakeService {
             }
         }
 
-        // Step 6: Persist transaction and create Pre-Triage task (CA-8/CA-9)
+        // @Traceability: US-004 - CA-8, CA-9: Persist transaction and create Pre-Triage task
         try {
             Map<String, Object> camundaVars = Map.of(
                     "sender", payload.senderEmail(),
@@ -155,7 +164,23 @@ public class WebhookIntakeService {
             tx.setCamundaProcessInstanceId(instance.getProcessInstanceId());
             transactionRepo.save(tx);
 
-            // DB Record for human triage (CA-8/CA-9 hybrid approach)
+            String fileHash = null;
+            String scanStatus = null;
+            if (payload.attachmentBytes() != null && payload.attachmentBytes().length > 0) {
+                scanStatus = "CLEAN";
+                try {
+                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                    byte[] hash = digest.digest(payload.attachmentBytes());
+                    fileHash = Base64.getEncoder().encodeToString(hash);
+                } catch (Exception ignored) {}
+            }
+
+            // @Traceability: US-004, CA-18
+            int slaHours = tenantConfigRepo.findById(tenantId)
+                                         .map(TenantConfigEntity::getWebhookSlaHours)
+                                         .orElse(48); // Fallback base seguro
+
+            // @Traceability: US-004 - CA-8, CA-9: DB Record for human triage hybrid approach
             TriageTask triageTask = TriageTask.builder()
                     .id(UUID.randomUUID())
                     .camundaProcessInstanceId(instance.getProcessInstanceId())
@@ -163,8 +188,10 @@ public class WebhookIntakeService {
                     .senderEmail(payload.senderEmail())
                     .subject(payload.subject())
                     .attachmentCount(payload.attachmentBytes() != null ? 1 : 0)
+                    .scanStatus(scanStatus)
+                    .fileSha256Hash(fileHash)
                     .status("PENDING")
-                    .slaDeadline(ZonedDateTime.now().plusHours(4)) // Enforced baseline 4-hour SLA
+                    .slaDeadline(ZonedDateTime.now().plusHours(slaHours)) // Dynamic SLA
                     .createdAt(ZonedDateTime.now())
                     .updatedAt(ZonedDateTime.now())
                     .build();
@@ -179,12 +206,22 @@ public class WebhookIntakeService {
             log.error("Failed to instantiate Pre-Triage process for messageId=[{}]: {}",
                     payload.messageId(), e.getMessage());
             persistTransaction(payload, "REJECTED", "ENGINE_FAILURE");
+            
+            // GAP 4: Emergency email notification
+            integrationEventPublisher.publishIntegrationEvent(
+                UUID.randomUUID(),
+                "{\"emergency\": \"ENGINE_FAILURE\", \"messageId\": \"" + payload.messageId() + "\"}",
+                "sysadmin@domain.com",
+                null
+            );
+
             return WebhookResponse.engineFailure(e.getMessage());
         }
     }
 
     /**
-     * Validates HMAC signature against the shared secret (CA-10).
+     * @Traceability: US-004 - CA-10
+     * Validates HMAC signature against the shared secret.
      */
     public boolean validateHmacSignature(String rawBody, String signatureHeader) {
         if (!"HMAC".equalsIgnoreCase(webhookProperties.getSecurity().getMode())) {
@@ -211,8 +248,10 @@ public class WebhookIntakeService {
     }
 
     /**
-     * Purges orphan payloads older than 30 days (CA-13).
+     * @Traceability: US-004 - CA-13
+     * Purges orphan payloads older than 30 days.
      */
+    @org.springframework.scheduling.annotation.Scheduled(cron = "0 0 3 * * ?")
     @Transactional
     public void purgeExpiredOrphanPayloads() {
         ZonedDateTime cutoff = ZonedDateTime.now().minusDays(30);
@@ -220,12 +259,18 @@ public class WebhookIntakeService {
         orphanRepo.deleteByCreatedAtBefore(cutoff);
     }
 
-    // ========== Private helpers ==========
+    // ========== Public Validation Helpers ==========
 
-    private boolean isAutoResponder(String email) {
+    public boolean isIdempotent(String messageId) {
+        return transactionRepo.existsByMessageId(messageId);
+    }
+
+    public boolean isAutoResponder(String email) {
         if (email == null) return true;
         return AUTO_RESPONDER_PATTERNS.stream().anyMatch(p -> p.matcher(email).matches());
     }
+
+    // ========== Private helpers ==========
 
     private String extractDomain(String email) {
         if (email == null || !email.contains("@")) return "";

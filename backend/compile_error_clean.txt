@@ -1,0 +1,6 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------< com.ibpms:ibpms-poc >-------------------------
+[INFO] Building ibpms-poc 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------

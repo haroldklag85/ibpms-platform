@@ -8,6 +8,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.ibpms.poc.application.util.SecurityContextUtils;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -69,8 +71,7 @@ public class BpmnCopilotController {
     @DeleteMapping("/session")
     @PreAuthorize("hasAnyAuthority('ROLE_PROCESS_ARCHITECT', 'ROLE_BPMN_DESIGNER')")
     public ResponseEntity<Void> wipeCopilotMemory(@RequestParam String sessionId) {
-        // En V1 extraemos Tenant_ID asumiendo un Auth Context Mockeado
-        String tenantId = "tenant_hq_corp"; 
+        String tenantId = SecurityContextUtils.getTenantId();
         
         copilotUseCase.triggerRagSessionWipe(tenantId, sessionId);
         return ResponseEntity.ok().build();

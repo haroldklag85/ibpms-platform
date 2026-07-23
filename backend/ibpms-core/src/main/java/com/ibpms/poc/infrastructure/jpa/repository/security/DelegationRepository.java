@@ -12,6 +12,6 @@ import java.util.UUID;
 public interface DelegationRepository extends JpaRepository<DelegationEntity, UUID> {
     
     // Consulta activa de delegaciones temporales (sustituto)
-    @org.springframework.data.jpa.repository.Query("SELECT d FROM DelegationEntity d WHERE d.substitute.id = :substituteId AND d.isActive = true AND :currentTime BETWEEN d.startDate AND d.endDate")
+    @org.springframework.data.jpa.repository.Query("SELECT d FROM DelegationEntity d JOIN FETCH d.delegator WHERE d.substitute.id = :substituteId AND d.isActive = true AND :currentTime BETWEEN d.startDate AND d.endDate")
     List<DelegationEntity> findActiveDelegationsForSubstitute(UUID substituteId, LocalDateTime currentTime);
 }

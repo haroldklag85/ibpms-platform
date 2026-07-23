@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface ProfileBpmnAssignmentRepository extends JpaRepository<ProfileBpmnAssignmentEntity, UUID> {
     List<ProfileBpmnAssignmentEntity> findByProfile_Id(UUID profileId);
+    // @Traceability: US-005, CA-06 Purga de Roles Zombies
+    List<ProfileBpmnAssignmentEntity> findByBpmnProcessKey(String bpmnProcessKey);
 }

@@ -1,3 +1,4 @@
+// @Traceability: US-029, CA-16
 package com.ibpms.poc.infrastructure.jpa.entity;
 
 import com.ibpms.poc.domain.model.EventType;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Entity
@@ -50,5 +51,5 @@ public class FormEventEntity {
     private UUID originalEventId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private java.time.ZonedDateTime createdAt;
+    private ZonedDateTime createdAt;
 }

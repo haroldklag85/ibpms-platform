@@ -1,0 +1,67 @@
+--- frontend/src/components/auth/BreakGlassLogin.vue
++++ frontend/src/components/auth/BreakGlassLogin.vue
+@@ -46,3 +46,4 @@
+         <textarea 
+           v-model="emergencyForm.justification"
+           required 
++          data-testid="justification-input"
+           rows="3"
+@@ -71,4 +72,4 @@
+-    <div v-if="error" data-testid="login-error-banner" class="mt-4 p-3 bg-red-100 border-l-4 border-red-600 rounded flex items-start gap-3">
+-       <span class="material-symbols-outlined text-red-600 text-[18px]">error</span>
+-       <p class="text-[11px] text-red-800 font-bold leading-tight">{{ error }}</p>
++    <div v-if="error" data-testid="login-error-banner" :class="['mt-4 p-3 border-l-4 rounded flex items-start gap-3', bannerClasses]">
++       <span :class="['material-symbols-outlined text-[18px]', iconClasses]">error</span>
++       <p class="text-[11px] font-bold leading-tight">{{ error }}</p>
+     </div>
+@@ -79,2 +80,2 @@
+-import { ref } from 'vue';
++import { ref, computed } from 'vue';
+ import { useAuthStore } from '@/stores/authStore';
+@@ -87,2 +88,3 @@
+ const error = ref('');
++const errorCode = ref('');
+ 
+@@ -97,2 +99,3 @@
+   error.value = '';
++  errorCode.value = '';
+   
+@@ -109,2 +112,24 @@
+ 
++const bannerClasses = computed(() => {
++  const errStr = error.value;
++  const code = errorCode.value;
++  if (code === 'USER_NOT_FOUND' || errStr.includes('No existe una cuenta asociada')) {
++    return 'bg-amber-100 border-amber-600 text-amber-800';
++  }
++  if (code === 'ACCOUNT_DISABLED' || errStr.includes('desactivada') || errStr.includes('deshabilitada')) {
++    return 'bg-gray-100 border-gray-600 text-gray-800';
++  }
++  if (code === 'NETWORK_ERROR' || errStr.includes('Error de conexión con el servidor')) {
++    return 'bg-red-900 border-red-950 text-red-100';
++  }
++  return 'bg-red-100 border-red-600 text-red-800';
++});
++
++const iconClasses = computed(() => {
++  const errStr = error.value;
++  const code = errorCode.value;
++  if (code === 'USER_NOT_FOUND' || errStr.includes('No existe una cuenta asociada')) {
++    return 'text-amber-600';
++  }
++  if (code === 'ACCOUNT_DISABLED' || errStr.includes('desactivada') || errStr.includes('deshabilitada')) {
++    return 'text-gray-600';
++  }
++  if (code === 'NETWORK_ERROR' || errStr.includes('Error de conexión con el servidor')) {
++    return 'text-red-400';
++  }
++  return 'text-red-600';
++});
++
+ const handleEmergencyLogin = async () => {
+@@ -114,3 +139,4 @@
+     console.error('Error Break-Glass:', err);
+-    error.value = err.response?.data?.message || 'Error de conexión con el servidor. Verifique que el backend esté activo.';
++    error.value = err.response?.data?.message || 'Error de conexión con el servidor. Verifique que el backend esté activo.';
++    errorCode.value = err.response?.data?.code || (err.response ? '' : 'NETWORK_ERROR');
+   } finally {

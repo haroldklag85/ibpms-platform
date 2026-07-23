@@ -19,7 +19,7 @@ describe('Dead Letter Queue Dashboard (DLQ) CA-8', () => {
 
     beforeEach(() => {
         // Leemos el componente fuente para análisis estático
-        const componentPath = path.resolve(__dirname, '../../../../../src/views/admin/Integration/DlqDashboard.vue');
+        const componentPath = path.resolve(process.cwd(), 'src/views/admin/Integration/DlqDashboard.vue');
         componentSource = fs.readFileSync(componentPath, 'utf-8');
     });
 
@@ -76,13 +76,13 @@ describe('Dead Letter Queue Dashboard (DLQ) CA-8', () => {
         expect(retryModalText).toContain('CA-5');
     });
 
-    it('TEST-F05: Debe verificar que la ruta está protegida con requiredRole ADMIN_IT', () => {
+    it('TEST-F05: Debe verificar que la ruta está protegida con roles array conteniendo ROLE_ADMIN_IT y ROLE_SUPER_ADMIN', () => {
         // Leemos router.ts
-        const routerPath = path.resolve(__dirname, '../../../../../src/router/index.ts');
+        const routerPath = path.resolve(process.cwd(), 'src/router/index.ts');
         const routerSource = fs.readFileSync(routerPath, 'utf-8');
 
-        // Regex simple para atrapar la defincion de la ruta dlq
-        const dlqRoutePattern = /path:\s*['"`]\/admin\/integration\/dlq['"`][\s\S]*?meta:\s*\{[^}]*requiredRole:\s*['"`]ADMIN_IT['"`]/g;
+        // Regex simple para atrapar la definicion de la ruta dlq, con o sin slash inicial
+        const dlqRoutePattern = /path:\s*['"`]\/?admin\/integration\/dlq['"`][\s\S]*?meta:\s*\{[^}]*roles:\s*\[\s*['"`]ROLE_ADMIN_IT['"`]\s*,\s*['"`]ROLE_SUPER_ADMIN['"`]\s*\]/;
         expect(dlqRoutePattern.test(routerSource)).toBe(true);
     });
 });

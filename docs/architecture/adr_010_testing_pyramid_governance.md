@@ -16,8 +16,9 @@ Durante las iteraciones tácticas tempranas (Ej: Iteración 69-DEV y certificaci
 
 Para mitigar el riesgo arquitectónico y alinear el código con la infraestructura Cloud-Native (V2), se instaura la **Gobernanza de Pirámide de Testing en 4 niveles** como política innegociable para cualquier Pull Request (PR) o commit a `main`:
 
-1.  **Reemplazo Definitivo de H2 por Testcontainers:**
-    *   **Backend:** Se elimina explícitamente H2. Todos los tests marcados como `@SpringBootTest` o `@DataJpaTest` deben levantar contenedores efímeros vía `@ServiceConnection` abstrayendo PostgreSQL 16 y RabbitMQ 3 (`TestcontainersBaseIT.java`).
+1.  **Reemplazo Definitivo de H2 y Testcontainers por Infraestructura Estática Real:**
+    *   **Backend (Por Defecto y CI/CD):** Se elimina explícitamente el uso de bases de datos en memoria (H2) por generar falsos positivos. Asimismo, **se prohíbe el uso de Testcontainers** para crear instancias efímeras debido a las limitaciones críticas de recursos computacionales y RAM en las estaciones de trabajo locales.
+    *   **Mandato Arquitectónico:** Todos los tests de Integración (marcados con `@SpringBootTest` o `@DataJpaTest`) deben apuntar obligatoriamente a la base de datos y broker estáticos levantados previamente por el archivo `docker-compose.e2e.yml` (Puertos estándar: Postgres 5433, Rabbit 5673, Redis 6380), a través de las credenciales de `application-test.yml`. Esto preserva el protocolo Zero-Mock (uso de infraestructura genuina) pero evita el colapso de la máquina.
 2.  **Test de Contrato BDD (REST Assured):**
     *   Se complementa `MockMvc` implementando `REST Assured` para validar de forma íntegra el flujo HTTP (black-box), inyectando JWTs malformados o faltantes para certificar la respuesta del filtro de autenticación perimetral (Ej. `DlqAdminControllerApiIT`).
 3.  **Playwright Component Testing (CT):**

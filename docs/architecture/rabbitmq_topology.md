@@ -12,3 +12,6 @@ Este mapa declara la infraestructura del Topic Exchange y Dead Letter Exchange d
 | **Queue** | Business | `ibpms.integrations.webhook` | Llamadas webhook outbound a través del Hub. | `x-dead-letter-exchange: ibpms.exchange.dlx` |
 | **Queue** | Business | `ibpms.bpmn.events` | Señales genéricas BPMN. | `x-dead-letter-exchange: ibpms.exchange.dlx` |
 | **Queue** | Business | `ibpms.task.rescue` | Rescate de tareas para Anti-Cherry-Picking y reasignación en cola prioritaria. | `x-dead-letter-exchange: ibpms.exchange.dlx` |
+| **Exchange** | Topic | `ibpms.events.forms` | Exchange para eventos de formularios (e.g., mutaciones de schema). | - |
+| **Exchange** | Direct | `ibpms.dlx.forms` | Dead Letter Exchange para eventos de formularios. | - |
+| **Queue** | Business | `ibpms.dmn.form-schema-invalidation` | Re-evaluación de modelos DMN tras cambios en el schema del formulario (`form.schema.changed.{form_id}`). | `x-dead-letter-exchange: ibpms.dlx.forms` |

@@ -7,8 +7,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import org.hibernate.annotations.Type;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -52,8 +55,9 @@ public class BpmnProcessDesignEntity {
     @Column(name = "xml_draft", columnDefinition = "TEXT")
     private String xmlDraft;
 
+    @Type(JsonType.class)
     @Column(name = "generic_form_whitelist", columnDefinition = "jsonb")
-    private String genericFormWhitelist;
+    private Map<String, Object> genericFormWhitelist;
 
     @Column(name = "max_nodes", nullable = false)
     private int maxNodes;
@@ -70,6 +74,9 @@ public class BpmnProcessDesignEntity {
     @Version
     @Column(name = "opt_lock_version")
     private Long optLockVersion;
+
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic = false;
 
     // Getters and Setters
     public UUID getId() {
@@ -144,11 +151,11 @@ public class BpmnProcessDesignEntity {
         this.xmlDraft = xmlDraft;
     }
 
-    public String getGenericFormWhitelist() {
+    public Map<String, Object> getGenericFormWhitelist() {
         return genericFormWhitelist;
     }
 
-    public void setGenericFormWhitelist(String genericFormWhitelist) {
+    public void setGenericFormWhitelist(Map<String, Object> genericFormWhitelist) {
         this.genericFormWhitelist = genericFormWhitelist;
     }
 
@@ -182,5 +189,13 @@ public class BpmnProcessDesignEntity {
 
     public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean isPublic) {
+        this.isPublic = isPublic;
     }
 }

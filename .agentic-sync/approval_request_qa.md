@@ -1,23 +1,21 @@
-# 🔍 Solicitud de Aprobación QA — Sprint 5.1
+# Solicitud de Aprobación de Plan de Pruebas — US-005, CA-30
 
-> **De:** Agente SDET / QA Lead
-> **Para:** Arquitecto Líder
-> **Fecha:** 2026-04-18
-> **Sprint:** 5.1 (Remediación y Deuda Técnica)
+**Para**: Arquitecto Líder
+**De**: Ingeniero de Automatización QA
+**Fecha**: 2026-05-26
+**Asunto**: Aprobación de plan de pruebas para la validación de complejidad BPMN en Fase Roja de TDD (CA-30 de la US-005)
 
-## 📋 Resumen del Plan Propuesto
+## Resumen del Plan de Trabajo
 
-Basado en el handoff `handoff_qa_sprint5_1.md`, he elaborado el plan de implementación en mi memoria (Implementation Plan Artifact) para certificar las vulnerabilidades y fallos corregidos en el Backend y documentados en la rama `sprint-5/iteracion4`.
+1. **Objetivo**: Modificar la prueba de complejidad en `frontend/src/views/admin/Modeler/BpmnDesigner.spec.ts` para que valide estrictamente los nuevos mensajes contractuales en la fase roja de TDD.
+2. **Método de Prueba**:
+   - En lugar de inyectar estáticamente el mensaje mediante `wrapper.vm.showToast`, se simulará la carga real del archivo a través del evento de cambio (`change`) del input `input-import-bpmn` utilizando un archivo BPMN simulado con 102 nodos.
+   - El test asertará que `wrapper.vm.toast.msg` contenga:
+     - `"⚠️ Mala Práctica de Diseño: Este proceso supera los 100 nodos"`
+     - `"Procesos complejos son difíciles de mantener, propensos a errores y degradan el rendimiento del motor"`
+3. **Fase Roja**: Dado que el componente `BpmnDesigner.vue` aún conserva el mensaje de advertencia anterior, el test debe fallar inicialmente para cumplir con el principio TDD.
+4. **Trazabilidad**: Se incluirá la marca:
+   `// @Traceability: US-005, CA-30 Límite de Complejidad Parametrizable`
+5. **Git Flow**: Commitear y empujar el test modificado directamente a la rama `sprint-6` una vez verificado el fallo esperado.
 
-### Alcance Principal:
-1. **Nivel 1 (Componentes & Unit - Vitest):** Aserciones para `TaskPreviewModal` (read-only), `ClaimAuditTrail` (chronological timeline), validación de confirmaciones de liberación en `WorkdeskGrid`, sanitización estricta XSS de DMN y testeo del volcado de estado de interceptor 400 Zod en `useFormStore`.
-2. **Nivel 2 (Flujos E2E - Playwright):** Validación del JWT simulado de claim, fuerza de liberación (force-unclaim 200 vs 403), audit trail y multi-contexts de inquilinos (Tenant Isolation CA-6) para certificar que el hueco IDOR está efectivamente cerrado, junto con visualizaciones de Zod y Rollback (Camunda fail).
-
-### Adherencia a Gobernanza:
-- Cumplimiento de la Pirámide ADR-010.
-- Ejecuciones de compuertas `npm run test:unit`, `npm run build` y Playwright antes de emitir commits (Cero-Trust QA).
-- Cierre formal actualizando la `coverage_matrix.md` y emitiendo el acta oficial.
-
-## 🛑 Permiso de Ejecución
-
-Sr. Arquitecto, solicito su visto bueno para proceder al modo `EXECUTION`. ¿Aprueba usted el plan de aserciones propuesto y me autoriza a aplicar TDD/Clean Code para estas certificaciones?
+Solicito formalmente su revisión y aprobación para proceder con la ejecución de estas modificaciones.

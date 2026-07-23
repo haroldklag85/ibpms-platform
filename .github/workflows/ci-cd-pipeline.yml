@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - 'sprint-*'
   pull_request:
     branches:
       - main
+      - 'sprint-*'
   workflow_dispatch:
 
 env:
@@ -63,6 +65,9 @@ jobs:
 
       - name: Linter & Static Analysis
         run: npm run lint --if-present
+
+      - name: Execute Anti-Mock Scanner (Zero-Mock Gate)
+        run: node scripts/anti-mock-scanner.js
 
       - name: Execute Vitest Crash Tests (Zero Exit Code required)
         run: npm run test -- --run

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 /**
  * Adaptador Driving: Controlador para utilidades de IA integradas a los
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/ai")
+@Traceability(US = "US-027", CA = {"CA-02"})
 public class AiDmnController {
 
     private final GenerarDmnAiUseCase generarDmnAiUseCase;

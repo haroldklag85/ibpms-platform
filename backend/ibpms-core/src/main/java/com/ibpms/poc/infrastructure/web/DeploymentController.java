@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/deployments")
-@PreAuthorize("hasAnyRole('RELEASE_MANAGER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('RELEASE_MANAGER', 'SUPER_ADMIN')")
 public class DeploymentController {
 
     private final DesplegarDefinicionUseCase desplegarDefinicionUseCase;

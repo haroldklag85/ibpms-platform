@@ -8,12 +8,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/agile/projects")
+@Traceability(US = "US-030", CA = {"CA-02", "CA-07"})
 public class AgileProjectController {
 
     private final AgileProjectService projectService;
@@ -23,21 +26,22 @@ public class AgileProjectController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
-    public ResponseEntity<AgileProject> createProject(@Valid @RequestBody CreateAgileProjectRequest request) {
-        // Obtenmos el usuario del contexto, para este ejemplo hardcodeado
-        String createdBy = "admin"; 
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    public ResponseEntity<AgileProject> createProject(
+            @Valid @RequestBody CreateAgileProjectRequest request,
+            Authentication authentication) {
+        String createdBy = authentication.getName();
         return ResponseEntity.ok(projectService.createProject(request.name(), request.description(), createdBy));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<Page<AgileProject>> listProjects(Pageable pageable) {
         return ResponseEntity.ok(projectService.listProjects(pageable));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<AgileProject> getProject(@PathVariable UUID id) {
         return ResponseEntity.ok(projectService.getProject(id));
     }

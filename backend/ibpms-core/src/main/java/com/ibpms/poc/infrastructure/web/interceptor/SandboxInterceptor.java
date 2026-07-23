@@ -25,6 +25,7 @@ public class SandboxInterceptor {
         this.redisTemplate = redisTemplate;
     }
 
+    // @Traceability: US-005, CA-63 Modo Sandbox, CA-67 Aislamiento DoS Sandbox
     @Around("@annotation(com.ibpms.poc.infrastructure.web.annotation.SandboxOperation)")
     public Object enforceSandboxLimits(ProceedingJoinPoint joinPoint) throws Throwable {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -33,6 +34,27 @@ public class SandboxInterceptor {
         String sandboxHeader = request.getHeader("X-Sandbox-Mode");
         if (sandboxHeader == null || !sandboxHeader.equalsIgnoreCase("true")) {
             throw new IllegalStateException("Esta operación requiere modo Sandbox activo (X-Sandbox-Mode=true).");
+        }
+
+        // CA-67: Control de Payload (Max 2MB)
+        for (Object arg : joinPoint.getArgs()) {
+            if (arg instanceof org.springframework.web.multipart.MultipartFile) {
+                org.springframework.web.multipart.MultipartFile file = (org.springframework.web.multipart.MultipartFile) arg;
+                if (file.getSize() > 2 * 1024 * 1024) { // 2MB
+                    throw new com.ibpms.poc.domain.exception.PayloadTooLargeException("El archivo excede el límite de Sandbox (2MB).");
+                }
+            }
+        }
+
+        // CA-67: Rate Limiting (Máx 10 peticiones por minuto)
+        String clientIp = request.getRemoteAddr();
+        String rateLimitKey = "sandbox_rate_limit:" + clientIp;
+        Long reqCount = redisTemplate.opsForValue().increment(rateLimitKey);
+        if (reqCount != null && reqCount == 1) {
+            redisTemplate.expire(rateLimitKey, Duration.ofMinutes(1));
+        }
+        if (reqCount != null && reqCount > 10) {
+            throw new com.ibpms.poc.domain.exception.TooManyRequestsException("Rate limit de Sandbox superado (10 req/min).");
         }
 
         // CA-67: Control de Límite (Max 3 simulaciones)

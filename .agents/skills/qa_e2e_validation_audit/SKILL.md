@@ -20,13 +20,15 @@ A partir de este momento, TIENES ESTRICTAMENTE PROHIBIDO asumir que el código f
 
 ## 1. PROHIBIDO EL REPORTE CIEGO (PIRÁMIDE DE TESTING COMPLETA)
 
-Antes de reportar cualquier resultado al Arquitecto o al Humano, **DEBES** ejecutar la suite de pruebas correspondiente a tu auditoría, respetando el ADR 011:
+Antes de reportar cualquier resultado al Arquitecto o al Humano, **DEBES** ejecutar la suite de pruebas correspondiente a tu auditoría, respetando el ADR 011 y el modelo de segmentación de pruebas:
 
 1. **Frontend Unit/Components (Vitest):** `cd frontend && npm run test:unit`
-2. **Backend Unit/Integration (JUnit/Mockito):** `cd backend/ibpms-core && mvn test`
-3. **Plataforma E2E (Playwright):** `npx playwright test --reporter=html`
+2. **Backend Unit Tests (Surefire - pure unit):** `cd backend/ibpms-core && mvn test` (ejecución ultra-rápida en milisegundos)
+3. **Backend Integration Tests (Failsafe - Spring/DB context):** `cd backend/ibpms-core && mvn verify` (ejecutados en paralelo usando 4 forks)
+4. **Plataforma E2E (Playwright):** `PLAYWRIGHT_USE_GPU=true npx playwright test --config=playwright.e2e.config.ts` (paralelizado en workers acelerados por GPU)
+   *   **Tuning de Hardware (GPU/VRAM):** Si ejecutas en la estación local OMEN con GPU dedicada, debes aplicar obligatoriamente la aceleración por hardware cargando las directivas del skill en [gpu_acceleration_tuning/SKILL.md](file:///home/haroltandrsgmezagu/proyectos/ibpms-platform/.agents/skills/gpu_acceleration_tuning/SKILL.md) e inyectando `PLAYWRIGHT_USE_GPU=true` en tu comando.
 
-Este comando ejecutará los tests Playwright que verificarán:
+Este comando ejecutará las pruebas correspondientes que verificarán:
 *   Flujos de usuario completos (login, navegación, CRUD, formularios).
 *   Respuestas de red reales contra el backend Docker activo.
 *   Renderizado correcto de componentes Vue en el viewport.
@@ -65,11 +67,10 @@ Si durante tu validación detectas que:
 ## 5. PROHIBICIÓN DE CERTIFICACIÓN SIN BACKEND VIVO
 
 Tienes **ESTRICTAMENTE PROHIBIDO** ejecutar tests E2E contra mocks estáticos o un backend apagado. Antes de correr la suite:
-1.  Verifica que el Docker Daemon esté activo: `docker info > /dev/null 2>&1 || echo "DOCKER_OFFLINE"`
-2.  Si `DOCKER_OFFLINE`: Intenta levantar Docker Desktop/Engine (ver protocolo en `.agents/skills/backend_sre_compilation_audit/SKILL.md` § 0).
-3.  Si Docker responde, verifica el contenedor: `docker compose ps ibpms-core`
-4.  Si el contenedor no está corriendo, intenta levantarlo: `docker compose up -d ibpms-core` y espera a que Tomcat reporte puerto 8080.
-5.  Si tras 2 intentos el backend no arranca, **NO ejecutes tests**. Reporta el bloqueo al Humano en `.agentic-sync/infra_blocker_[fecha].md`.
+1.  Verifica que el entorno nativo esté activo. **Tienes estrictamente prohibido usar `docker compose up ibpms-core`** (Ley Global 2).
+2.  Levanta la infraestructura E2E y el backend nativamente usando el script oficial: `start-e2e.bat` (o `.sh`).
+3.  Espera a que Tomcat reporte puerto 8080 en la consola nativa.
+4.  Si tras 2 intentos el backend no arranca en el Host, **NO ejecutes tests**. Reporta el bloqueo al Humano en `.agentic-sync/infra_blocker_[fecha].md`.
 
 **Tus tests NO son válidos hasta que Playwright lo demuestre con evidencia física.**
 Una vez que valides los resultados, documenta el reporte en `.agentic-sync/qa_report_[US-XXX].md`, asegúrate de estar en la rama correspondiente (`sprint-X/...`), realiza `git commit` y notifica al Humano Enrutador.

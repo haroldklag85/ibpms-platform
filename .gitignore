@@ -44,8 +44,10 @@ coverage/
 # ==========================================
 test-results/
 playwright-report/
+playwright-e2e-report/
 blob-report/
 .cache/
+trace_output/
 
 # ==========================================
 # 6. PYTHON (RPA / Judicial Scraper)
@@ -89,3 +91,5 @@ Thumbs.db
 .classpath
 .project
 .settings/
+.agents/
+

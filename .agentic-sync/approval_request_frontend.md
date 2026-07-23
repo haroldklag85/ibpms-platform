@@ -1,28 +1,33 @@
-# Solicitud de Revisión Arquitectónica — Frontend Sprint 5.1
+# Solicitud de Revisión Arquitectónica — Frontend UAT R2
 
-> **Agente:** Desarrollador Frontend Senior
-> **Fecha:** 2026-04-18
-> **Handoff Fuente:** `.agentic-sync/handoff_frontend_sprint5_1.md`
-> **Rama:** `sprint-5/iteracion4`
+**Fecha:** 2026-07-17T17:49:00-05:00  
+**Agente:** Frontend Developer  
+**Rama:** `DevDavid`  
+**Handoff:** `handoff_frontend_84DEV_UAT_R2.md`
+
+---
 
 ## Resumen del Plan
 
-He culminado la etapa de investigación e inventariado el alcance para remediación e integración de los contratos Backend Sprint 5.1. 
+Solicito aprobación para implementar **2 correcciones quirúrgicas** en el frontend:
 
-**Componentes Nuevos (UI & TDD obligatorios):**
-1. **`TaskPreviewModal.vue`** (CA-5): Mostrará la vista Read-Only para tareas Claimables extraída desde `/preview` (Store: `fetchTaskPreview`).
-2. **`ClaimAuditTrail.vue`** (CA-9): Anidado como lista de pasos/timeline, extraído de `/audit-trail` (Store: `fetchAuditTrail`). 
+### Bug R2-02: Interceptor 403 destruye menú
+- **Archivo:** `frontend/src/services/apiClient.ts` (líneas 248-266)
+- **Causa raíz:** El bloque `else` catch-all del interceptor 403 ejecuta `purgeTopology()` para cualquier 403 no reconocido, incluyendo 403 operacionales (deploy sin permisos).
+- **Corrección:** Cambiar el `else` a `else if` con validación explícita de `code === 'ACCESS_REVOKED' || code === 'ROLE_REVOKED'`. Los 403 operacionales ahora solo se loguean sin destruir el menú.
+- **Garantía:** Los bloques de `SECURITY_VIOLATION`/`PROMPT_INJECTION` (CA-05) y `PRIVILEGES_CHANGED` (CA-7) NO se modifican.
 
-**Modificaciones a Existentes:**
-- **`WorkdeskGrid.vue`**: Invocará el Launch del `TaskPreviewModal` en las tareas 'AVAILABLE' y sustituirá el popup aburrido global del `handleUnclaim` por un Dialog Modal defensivo (CA-7).
-- **`useFormStore.ts` & `DynamicForm.vue`**: Se extenderá el `catch` de 400 Bad Request en el store, parseando la validación Zod cruzada con la RFC 7807 del Backend (`errors: [{field, message}]`). Este flujo alimentará la caja indicadora nativa debajo de cada campo en `DynamicField.vue` (CA-2).
-- **`DmnIntelligence.vue`**: Se implementará sanitización nativa invocando e importando `dompurify` (con tipings correspondientes) antes de delegar cualquier string raw del LLM al renderizador XML subyacente. 
+### Bug R2-03: fetchForm mapea campos inexistentes
+- **Archivo:** `frontend/src/stores/useFormDesignerStore.ts` (líneas 284-296)
+- **Causa raíz:** El frontend usa `schemaVariables`, `title`, y `versionId` que NO existen en `FormDesignDTO.java`.
+- **Verificación DTO:** Se leyó `FormDesignDTO.java` y se confirmaron los campos reales: `formFields`, `name`, `version`.
+- **Corrección:** Reemplazar `schemaVariables` → `formFields`, `title` → `name`, `versionId` → `version`.
 
-### QA & Calidad
-- Todos los componentes nuevos tendrán el Unit Testing correspondiente en `component-tests` con Vitest `mount()`.
-- Se comprobará mediante un build exhaustivo el compilado.
+### Archivos NO modificados (cumplimiento de prohibición)
+- ❌ `BpmnDesigner.vue`
+- ❌ `IdentityGovernance.vue`
+- ❌ CSS/HTML del panel Lane
 
-## Preguntas Abiertas
-Ninguna, el Handoff es sumamente explícito.
+## Solicitud Formal
 
-Al esperar tu sello formal, procederé de inmediato con TDD iterativo.
+Arquitecto Líder, solicito su aprobación para proceder con la ejecución de estos cambios. El plan detallado con diffs está documentado en el `implementation_plan.md` de mi sesión de trabajo.

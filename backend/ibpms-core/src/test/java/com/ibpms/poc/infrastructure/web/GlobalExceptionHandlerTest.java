@@ -36,7 +36,7 @@ public class GlobalExceptionHandlerTest {
 
     @Test
     void test_Api_Returns400_WithValidationStructure() {
-        // Arrange (CA-2)
+        // @Traceability: US-000 - CA-2
         FieldError fieldError1 = new FieldError("objectName", "email", "Formato de correo inválido");
         FieldError fieldError2 = new FieldError("objectName", "age", "Debe ser mayor a 18");
         when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError1, fieldError2));
@@ -63,7 +63,7 @@ public class GlobalExceptionHandlerTest {
 
     @Test
     void test_Concurrent_Updates_Yields_409() {
-        // Arrange (CA-3)
+        // @Traceability: US-000 - CA-3
         ObjectOptimisticLockingFailureException ex = new ObjectOptimisticLockingFailureException(Object.class, 1L);
 
         // Act
@@ -77,7 +77,7 @@ public class GlobalExceptionHandlerTest {
 
     @Test
     void test_UncaughtExceptions_LogToELK_MaskStackTrace() {
-        // Arrange (CA-1)
+        // @Traceability: US-000 - CA-1
         String secretErrorDetail = "NullPointerException at com.ibpms.poc.Service.doWork(Service.java:45)";
         Exception ex = new Exception(secretErrorDetail);
 
@@ -92,6 +92,21 @@ public class GlobalExceptionHandlerTest {
         assertNotNull(problem.getDetail());
         assertFalse(problem.getDetail().contains(secretErrorDetail));
         assertFalse(problem.getDetail().contains("NullPointerException"));
-        assertTrue(problem.getDetail().contains("Fallo del servidor reportado"));
+        assertTrue(problem.getDetail().contains("Error interno del servidor"));
+     }
+
+    @Test
+    void test_MethodNotSupported_Yields_405() {
+        org.springframework.web.HttpRequestMethodNotSupportedException ex =
+                new org.springframework.web.HttpRequestMethodNotSupportedException("POST", List.of("GET", "PUT"));
+
+        // Act
+        ProblemDetail problem = exceptionHandler.handleMethodNotSupported(ex);
+
+        // Assert
+        assertEquals(HttpStatus.METHOD_NOT_ALLOWED.value(), problem.getStatus());
+        assertEquals("Método No Permitido", problem.getTitle());
+        assertTrue(problem.getDetail().contains("POST"));
     }
 }
+

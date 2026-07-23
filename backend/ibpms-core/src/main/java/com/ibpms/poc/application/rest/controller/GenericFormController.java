@@ -22,6 +22,7 @@ public class GenericFormController {
         this.genericFormService = genericFormService;
     }
 
+    // @Traceability: US-039 - CA-2, CA-5
     @GetMapping("/{id}/generic-form-context")
     @Operation(summary = "Get Generic Form Context", description = "Retrieves schema, allowed results, and prefill data using whitelist")
     @PreAuthorize("isAuthenticated()")

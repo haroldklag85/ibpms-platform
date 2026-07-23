@@ -39,7 +39,7 @@ class TriageTaskServiceTest {
                 .createdAt(ZonedDateTime.now())
                 .build();
 
-        when(repository.findById(taskId)).thenReturn(Optional.of(pendingTask));
+        when(repository.findByIdForUpdate(taskId)).thenReturn(Optional.of(pendingTask));
         when(repository.save(any(TriageTask.class))).thenAnswer(i -> i.getArgument(0));
 
         TriageTask result = service.approveTask(taskId, "onboarding_process");
@@ -59,7 +59,7 @@ class TriageTaskServiceTest {
                 .createdAt(ZonedDateTime.now())
                 .build();
 
-        when(repository.findById(taskId)).thenReturn(Optional.of(pendingTask));
+        when(repository.findByIdForUpdate(taskId)).thenReturn(Optional.of(pendingTask));
         when(repository.save(any(TriageTask.class))).thenAnswer(i -> i.getArgument(0));
 
         TriageTask result = service.rejectTask(taskId, "Spam evadido");

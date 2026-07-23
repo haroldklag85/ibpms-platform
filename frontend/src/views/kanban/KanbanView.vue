@@ -1,12 +1,23 @@
+<!-- @Traceability: US-008 - CA-01, CA-02, CA-06, CA-03 -->
 <template>
-  <div class="h-full flex flex-col pt-2 bg-white">
+  <div class="h-full flex flex-col pt-2 bg-white" data-testid="kanban-board">
     <div class="flex justify-between items-center mb-6 px-6">
-      <h2 class="text-2xl font-bold text-gray-800">Tablero Kanban Interactívo</h2>
       <div class="flex items-center space-x-3">
+         <h2 class="text-2xl font-bold text-gray-800">Tablero Kanban Interactivo</h2>
+         <span v-if="isReadonly" class="px-2 py-1 bg-gray-200 text-gray-600 text-xs font-bold rounded">Modo Lectura</span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button v-if="canManageColumns" @click="showAddColModal = true" class="px-4 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 shadow-sm transition">
+          + Agregar Columna
+        </button>
         <button @click="loadBoard" class="px-4 py-2 bg-ibpms text-white rounded text-sm hover:bg-gray-800 shadow-sm transition">
           🔄 Recargar Tablero
         </button>
-        <span v-if="syncStatus" class="text-xs text-ibpms-brand font-medium animate-pulse">{{ syncStatus }}</span>
+        <div class="sync-indicator text-sm font-medium" data-testid="kanban-sync-status">
+          <span v-if="syncStatus === 'saving'" class="text-yellow-600 animate-pulse">⏳ Guardando...</span>
+          <span v-else-if="syncStatus === 'ok'" class="text-green-600">✅ OK</span>
+          <span v-else-if="syncStatus === 'error'" class="text-red-600">❌ Error</span>
+        </div>
       </div>
     </div>
 
@@ -14,81 +25,182 @@
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-ibpms-brand"></div>
     </div>
 
-    <!-- Área de Arrastre con Desplazamiento Horizontal (Tablero) -->
     <div v-else class="flex-1 overflow-x-auto overflow-y-hidden pb-4 px-6">
       <div class="flex space-x-6 h-full items-start">
         
         <KanbanColumn 
-          v-for="col in board.columns" 
+          v-for="col in kanbanStore.columns" 
           :key="col.id" 
           :column="col"
-          :items="getItemsForColumn(col.id)"
+          :items="col.items"
+          :disabled="isReadonly"
           @itemMoved="handleItemMove"
+          @openTask="handleOpenTask"
         />
 
       </div>
     </div>
+
+    <!-- Modals -->
+    <BlockedReasonModal 
+      :show="showBlockModal" 
+      :taskTitle="taskToBlock?.title" 
+      @confirm="confirmBlock" 
+      @cancel="cancelBlock" 
+    />
+    
+    <AddColumnModal
+      :show="showAddColModal"
+      @confirm="confirmAddColumn"
+      @cancel="showAddColModal = false"
+    />
+
+    <TaskPreviewModal 
+      v-if="selectedTask" 
+      :taskId="selectedTask.originalTaskId || selectedTask.id" 
+      :readOnly="isReadonly || selectedTask.status === 'DONE'"
+      @close="selectedTask = null" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { api } from '@/services/apiClient';
-import type { KanbanBoard, KanbanItem } from '@/types/Kanban';
+// Tablero Kanban (US-008): Cumple con ADR-010 (Zero-Mock) consumiendo los endpoints de kanban-tasks de forma directa.
+import { ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { useKanbanStore } from '@/stores/kanbanStore';
 import KanbanColumn from '@/components/kanban/KanbanColumn.vue';
+import { useAuthStore } from '@/stores/authStore';
+import BlockedReasonModal from '@/components/kanban/BlockedReasonModal.vue';
+import AddColumnModal from '@/components/kanban/AddColumnModal.vue';
+import TaskPreviewModal from '@/components/workdesk/TaskPreviewModal.vue';
 
-const isLoading = ref(true);
+const route = useRoute();
+const kanbanStore = useKanbanStore();
+const authStore = useAuthStore();
+
+const boardId = computed(() => (route.params.projectId as string) || 'default-board');
+
 const syncStatus = ref('');
 
-// Tablero de Prueba (Mock para este Sprint).
-// Próximamente se obtendrá vía Axios (KanbanService)
-const board = ref<KanbanBoard>({
-  boardId: "board_operaciones",
-  columns: [
-    { id: "TODO", title: "Por Hacer", color: "bg-gray-100" },
-    { id: "DOING", title: "En Progreso", color: "bg-blue-50" },
-    { id: "DONE", title: "Finalizado", color: "bg-green-50" }
-  ],
-  items: [
-    { id: "T-001", title: "Revisar Nómina Enero", status: "TODO", priority: 10, assignee: "Pedro P." },
-    { id: "T-002", title: "Auditoría Legal Incidente", status: "DOING", priority: 80, assignee: "Carlos R." },
-    { id: "T-003", title: "Carga de Documentos", status: "DOING", priority: 40, assignee: "Ana L." },
-    { id: "T-004", title: "Envío Tarjeta Crédito", status: "DONE", priority: 20 }
-  ]
+// Lógica RBAC real para determinar modo sólo lectura
+const isReadonly = computed(() => {
+  const roles = authStore.user?.roles || [];
+  // Si no tiene permisos de operario o superior, es modo lectura
+  return !roles.some(r => ['ROLE_SUPER_ADMIN', 'SUPERVISOR', 'OPERATOR', 'Global Admin'].includes(r));
 });
 
-const getItemsForColumn = (columnId: string) => {
-  return board.value.items.filter(i => i.status === columnId);
+// Auth for columns
+const canManageColumns = computed(() => {
+  const roles = authStore.user?.roles || [];
+  return roles.includes('SUPERVISOR') || roles.includes('SUPER_ADMIN') || roles.includes('Global Admin');
+});
+
+// Block Modal State
+const showBlockModal = ref(false);
+const taskToBlock = ref<any>(null);
+
+// Add Col Modal State
+const showAddColModal = ref(false);
+
+// Task Preview State
+const selectedTask = ref<any>(null);
+
+const isLoading = computed(() => kanbanStore.loading);
+
+const handleOpenTask = (task: any) => {
+  selectedTask.value = task;
 };
 
-// Evento emitido cuando un Item es soltado (Dropped) en una Columna Diferente.
-const handleItemMove = async ({ item, newStatus }: { item: KanbanItem, newStatus: string }) => {
-  try {
-    // 1. Mostrar estado de sincronización.
-    syncStatus.value = `Sincronizando Muvimiento T-${item.id}...`;
-    
-    // 2. Ejecutar la llamada Axios que actualiza esto en Backend (PATCH /api/v1/kanban/items/{id}/status)
-    await api.updateKanbanStatus(item.id, newStatus);
+const handleItemMove = async ({ item, newStatus }: { item: any, newStatus: string }) => {
+  if (isReadonly.value) return;
 
-    // 3. Modificamos el estado Local Reactivo si el Service responde OK.
-    const targetItem = board.value.items.find(i => i.id === item.id);
-    if(targetItem) {
-      targetItem.status = newStatus;
+  if (newStatus === 'BLOCKED') {
+     taskToBlock.value = item;
+     showBlockModal.value = true;
+     return;
+  }
+
+  try {
+    syncStatus.value = 'saving';
+    await kanbanStore.moveTask(item.id, newStatus);
+    syncStatus.value = 'ok';
+  } catch(error: any) {
+    syncStatus.value = 'error';
+    if (error.response?.status === 409) {
+      showConflictToast('Conflicto: esta tarea fue reclamada por otro usuario. Se revirtió el movimiento.');
+    } else if (error.response?.status === 403) {
+      showConflictToast('Esta tarea está completada y no puede modificarse.');
+    } else if (error.response?.status === 400) {
+      showConflictToast('Transición de estado no válida.');
     }
-    syncStatus.value = `Guardado OK`;
-  } catch(error) {
-    console.error('No se pudo mover la tarea en remoto Kanban', error);
-    syncStatus.value = `Error Sincronización`;
   } finally {
     setTimeout(() => syncStatus.value = '', 2000);
   }
 };
 
-const loadBoard = () => {
-  isLoading.value = true;
+const confirmBlock = async (reason: string) => {
+    if (!taskToBlock.value) return;
+    
+    try {
+        syncStatus.value = 'saving';
+        await kanbanStore.moveTask(taskToBlock.value.id, 'BLOCKED', reason);
+        syncStatus.value = 'ok';
+    } catch(error) {
+        syncStatus.value = 'error';
+    } finally {
+        showBlockModal.value = false;
+        taskToBlock.value = null;
+        setTimeout(() => syncStatus.value = '', 2000);
+    }
+};
+
+const cancelBlock = () => {
+    showBlockModal.value = false;
+    taskToBlock.value = null;
+    kanbanStore.fetchBoard(boardId.value); // rollback visually
+};
+
+const confirmAddColumn = async (name: string) => {
+  try {
+    syncStatus.value = 'saving';
+    await kanbanStore.addColumn(boardId.value, name);
+    syncStatus.value = 'ok';
+    showAddColModal.value = false;
+  } catch (error) {
+    syncStatus.value = 'error';
+    alert(kanbanStore.error || 'Error al agregar columna');
+  } finally {
+    setTimeout(() => syncStatus.value = '', 2000);
+  }
+};
+
+// @Traceability: US-008, CA-XX (Remediación Timeout DOM J-04)
+const loadBoard = async () => {
+  kanbanStore.loading = true;
+  try {
+    await kanbanStore.fetchBoard(boardId.value);
+  } catch (err) {
+    console.error("Error cargando Kanban:", err);
+  } finally {
+    kanbanStore.loading = false; // CRÍTICO: Liberar la UI
+  }
+};
+
+// @Traceability: CA-4 — Toast visual para conflictos 409
+const showConflictToast = (message: string) => {
+  const existing = document.getElementById('kanban-conflict-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'kanban-conflict-toast';
+  toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
+  toast.textContent = message;
+  document.body.appendChild(toast);
   setTimeout(() => {
-    isLoading.value = false;
-  }, 600);
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, 4000);
 };
 
 onMounted(() => {

@@ -5,7 +5,13 @@ import com.ibpms.poc.infrastructure.jpa.repository.bpm.BusinessHoursRepository;
 import com.ibpms.poc.infrastructure.jpa.repository.bpm.HolidayRepository;
 import org.camunda.bpm.engine.impl.calendar.MapBusinessCalendarManager;
 import org.camunda.bpm.spring.boot.starter.configuration.impl.AbstractCamundaConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+
+import org.camunda.bpm.engine.impl.cfg.multitenancy.TenantIdProvider;
+import org.camunda.bpm.engine.impl.cfg.multitenancy.TenantIdProviderCaseInstanceContext;
+import org.camunda.bpm.engine.impl.cfg.multitenancy.TenantIdProviderHistoricDecisionInstanceContext;
+import org.camunda.bpm.engine.impl.cfg.multitenancy.TenantIdProviderProcessInstanceContext;
 
 /**
  * Inyectador Arquitectónico de Camunda: Sustituye el CalendarManager base
@@ -22,9 +28,14 @@ public class CamundaEngineConfiguration extends AbstractCamundaConfiguration {
         this.businessHoursRepository = businessHoursRepository;
     }
 
+    @Bean
+    public CustomBusinessCalendar customBusinessCalendar() {
+        return new CustomBusinessCalendar(holidayRepository, businessHoursRepository);
+    }
+
     @Override
     public void preInit(org.camunda.bpm.engine.spring.SpringProcessEngineConfiguration processEngineConfiguration) {
-        CustomBusinessCalendar customCalendar = new CustomBusinessCalendar(holidayRepository, businessHoursRepository);
+        CustomBusinessCalendar customCalendar = customBusinessCalendar();
 
         MapBusinessCalendarManager calendarManager = new MapBusinessCalendarManager();
         // Anclamos nuestro resolutor a las palabras clave reservadas del Engine
@@ -33,5 +44,26 @@ public class CamundaEngineConfiguration extends AbstractCamundaConfiguration {
         calendarManager.addBusinessCalendar("cycle", customCalendar);
         
         processEngineConfiguration.setBusinessCalendarManager(calendarManager);
+
+        // @Traceability: US-005, CA-78 Sandbox Multi-tenancy
+        processEngineConfiguration.setTenantIdProvider(new TenantIdProvider() {
+            @Override
+            public String provideTenantIdForProcessInstance(TenantIdProviderProcessInstanceContext ctx) {
+                if (ctx.getProcessDefinition().getTenantId() != null) {
+                    return ctx.getProcessDefinition().getTenantId();
+                }
+                return null;
+            }
+
+            @Override
+            public String provideTenantIdForCaseInstance(TenantIdProviderCaseInstanceContext ctx) {
+                return null;
+            }
+
+            @Override
+            public String provideTenantIdForHistoricDecisionInstance(TenantIdProviderHistoricDecisionInstanceContext ctx) {
+                return null;
+            }
+        });
     }
 }

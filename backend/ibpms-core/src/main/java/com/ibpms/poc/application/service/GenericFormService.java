@@ -1,15 +1,13 @@
 package com.ibpms.poc.application.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ibpms.poc.application.port.out.GenericProcessDefinitionPort;
+import com.ibpms.poc.application.port.out.GenericTaskPort;
 import com.ibpms.poc.application.rest.dto.GenericFormContextResponse;
 import com.ibpms.poc.application.rest.dto.GenericFormSubmitRequest;
-import com.ibpms.poc.infrastructure.jpa.entity.BpmnProcessDesignEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.BpmnProcessDesignRepository;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
-import org.camunda.bpm.engine.TaskService;
-import org.camunda.bpm.engine.task.Task;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,32 +23,32 @@ import java.util.Arrays;
 @Service
 public class GenericFormService {
 
-    private final TaskService taskService;
+    private final GenericTaskPort genericTaskPort;
+    private final GenericProcessDefinitionPort genericProcessDefinitionPort;
     private final ObjectMapper objectMapper;
-    private final BpmnProcessDesignRepository processDesignRepository;
-    // Autowired dependencies simplified for execution
     
     private static final List<String> DEFAULT_WHITELIST = Arrays.asList("Case_ID", "Instance_Name", "Priority", "Created_At");
 
-    public GenericFormService(TaskService taskService,
-                              ObjectMapper objectMapper,
-                              BpmnProcessDesignRepository processDesignRepository) {
-        this.taskService = taskService;
+    public GenericFormService(GenericTaskPort genericTaskPort,
+                              GenericProcessDefinitionPort genericProcessDefinitionPort,
+                              ObjectMapper objectMapper) {
+        this.genericTaskPort = genericTaskPort;
+        this.genericProcessDefinitionPort = genericProcessDefinitionPort;
         this.objectMapper = objectMapper;
-        this.processDesignRepository = processDesignRepository;
     }
 
+    @Traceability(US = "US-039", CA = {"CA-2", "CA-5"})
     @Transactional(readOnly = true)
     public GenericFormContextResponse getGenericFormContext(String taskId) {
-        Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
-        if (task == null) {
+        if (!genericTaskPort.taskExists(taskId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found");
         }
 
-        Map<String, Object> allVariables = taskService.getVariables(taskId);
+        Map<String, Object> allVariables = genericTaskPort.getTaskVariables(taskId);
+        String processDefId = genericTaskPort.getProcessDefinitionId(taskId);
         
         // Simulating retrieval of whitelist from BpmnProcessDesignRepository using processDefinitionKey
-        List<String> whitelist = fetchWhitelist(task.getProcessDefinitionId());
+        List<String> whitelist = fetchWhitelist(processDefId);
         if (whitelist == null || whitelist.isEmpty()) {
             whitelist = DEFAULT_WHITELIST;
         }
@@ -83,16 +81,23 @@ public class GenericFormService {
         return new GenericFormContextResponse(schema, prefillData, allowedResults);
     }
 
+    @Traceability(US = "US-039", CA = {"CA-8"})
     @Transactional
     public void submitGenericForm(String taskId, GenericFormSubmitRequest request, String userId) {
-        Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
-        if (task == null) {
+        if (!genericTaskPort.taskExists(taskId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found");
         }
 
         // Implicit Locking: User must be Assignee
-        if (task.getAssignee() == null || !task.getAssignee().equals(userId)) {
+        String assignee = genericTaskPort.getTaskAssignee(taskId);
+        if (assignee == null || !assignee.equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Implicit locking violation: Only assignee can submit");
+        }
+
+        List<String> ALLOWED_RESULTS = List.of("APPROVED", "REJECTED", "PENDING_INFO", "ESCALATED");
+        if (!ALLOWED_RESULTS.contains(request.getManagementResult())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                "managementResult must be one of: " + ALLOWED_RESULTS);
         }
 
         // CA-8 validation
@@ -118,20 +123,20 @@ public class GenericFormService {
             switch(panicAction) {
                 case "APPROVED":
                     variables.put("generic_form_result", "APPROVED");
-                    taskService.complete(taskId, variables);
+                    genericTaskPort.completeTask(taskId, variables);
                     break;
                 case "RETURNED":
                     variables.put("generic_form_result", "RETURNED");
-                    taskService.complete(taskId, variables);
+                    genericTaskPort.completeTask(taskId, variables);
                     break;
                 case "CANCELLED":
-                    taskService.handleBpmnError(taskId, "TASK_CANCELLED_BY_OPERATOR", request.getPanicJustification(), variables);
+                    genericTaskPort.handleTaskBpmnError(taskId, "TASK_CANCELLED_BY_OPERATOR", request.getPanicJustification(), variables);
                     break;
                 default:
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid panic action");
             }
         } else {
-            taskService.complete(taskId, variables);
+            genericTaskPort.completeTask(taskId, variables);
         }
     }
 
@@ -141,20 +146,11 @@ public class GenericFormService {
     }
 
     private List<String> fetchWhitelist(String processDefinitionId) {
+        if (processDefinitionId == null) return DEFAULT_WHITELIST;
         // Obtenemos la llave tecnica del proceso (quitando el version tag de processDefinitionId, por simplicidad en Camunda 7 el key es el technicalId)
         String processKey = processDefinitionId.split(":")[0];
         
-        return processDesignRepository.findByTechnicalId(processKey)
-            .map(BpmnProcessDesignEntity::getGenericFormWhitelist)
-            .map(whitelistStr -> {
-                if (whitelistStr != null && !whitelistStr.isBlank()) {
-                    try {
-                        return objectMapper.readValue(whitelistStr, new TypeReference<List<String>>() {});
-                    } catch (Exception e) {
-                        return DEFAULT_WHITELIST;
-                    }
-                }
-                return DEFAULT_WHITELIST;
-            }).orElse(DEFAULT_WHITELIST);
+        List<String> whitelist = genericProcessDefinitionPort.getGenericFormWhitelist(processKey);
+        return whitelist != null ? whitelist : DEFAULT_WHITELIST;
     }
 }

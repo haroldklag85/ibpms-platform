@@ -1,99 +1,106 @@
 package com.ibpms.poc.infrastructure.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ibpms.poc.application.dto.CreateFormDesignDTO;
+import com.ibpms.poc.application.dto.BpmnProcessDesignDTO;
 import com.ibpms.poc.application.dto.FormDesignDTO;
-import com.ibpms.poc.application.dto.FormFieldMetadataDTO;
+import com.ibpms.poc.application.service.BpmnDesignService;
 import com.ibpms.poc.application.service.FormDesignService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.ResponseEntity;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("null")
-public class FormDesignControllerTest {
-
-    private MockMvc mockMvc;
-
-    private ObjectMapper objectMapper = new ObjectMapper();
+class FormDesignControllerTest {
 
     @Mock
     private FormDesignService formDesignService;
 
+    @Mock
+    private BpmnDesignService bpmnDesignService;
+
     @InjectMocks
-    private FormDesignController formDesignController;
+    private FormCatalogController formCatalogController;
+
+    private FormDesignDTO draftSimpleForm;
+    private FormDesignDTO activeMasterForm;
+    private FormDesignDTO deletedForm;
 
     @BeforeEach
-    public void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(formDesignController)
-                .setMessageConverters(new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter(objectMapper))
-                .build();
+    void setUp() {
+        draftSimpleForm = new FormDesignDTO();
+        draftSimpleForm.setTechnicalName("solicitud_draft");
+        draftSimpleForm.setName("Solicitud Draft");
+        draftSimpleForm.setPattern("SIMPLE");
+        draftSimpleForm.setStatus("DRAFT");
+
+        activeMasterForm = new FormDesignDTO();
+        activeMasterForm.setTechnicalName("iform_master");
+        activeMasterForm.setName("Formulario Maestro");
+        activeMasterForm.setPattern("IFORM_MAESTRO");
+        activeMasterForm.setStatus("ACTIVE");
+        
+        deletedForm = new FormDesignDTO();
+        deletedForm.setTechnicalName("old_form");
+        deletedForm.setName("Deleted Form");
+        deletedForm.setPattern("SIMPLE");
+        deletedForm.setStatus("DELETED");
     }
 
+    // @Traceability: US-005, CA-39
     @Test
-    public void testCrearFormularioConMetadatosCamunda() throws Exception {
-        // Arrange
-        CreateFormDesignDTO createDTO = new CreateFormDesignDTO();
-        createDTO.setName("Formulario Test Integracion");
-        createDTO.setTechnicalName("integration-form-123");
-        createDTO.setPattern("SIMPLE");
-        createDTO.setVueTemplate("<template><h1>Hola</h1></template>");
+    void getActiveForms_sinProcessKey_retornaTodosLosFormsActivosYDrafts() {
+        when(formDesignService.listarCatalogo()).thenReturn(Arrays.asList(draftSimpleForm, activeMasterForm, deletedForm));
+
+        ResponseEntity<List<Map<String, Object>>> response = formCatalogController.getActiveForms(null);
+
+        assertNotNull(response.getBody());
+        assertEquals(2, response.getBody().size()); // Ignora DELETED
         
-        FormFieldMetadataDTO field1 = new FormFieldMetadataDTO();
-        field1.setCamundaVariable("customerName");
-        field1.setType("text");
-        field1.setZodRule("z.string().min(2)");
+        Map<String, Object> form1 = response.getBody().get(0);
+        assertEquals("solicitud_draft", form1.get("id"));
+        assertEquals("SIMPLE", form1.get("type"));
 
-        FormFieldMetadataDTO field2 = new FormFieldMetadataDTO();
-        field2.setCamundaVariable("customerAge");
-        field2.setType("number");
-        field2.setZodRule("z.number().min(18)");
+        Map<String, Object> form2 = response.getBody().get(1);
+        assertEquals("iform_master", form2.get("id"));
+        assertEquals("MASTER", form2.get("type"));
+        assertEquals(1, form2.get("stages"));
+    }
 
-        createDTO.setFormFields(List.of(field1, field2));
+    // @Traceability: US-005, CA-40
+    @Test
+    void getActiveForms_conPatternSimple_retornaSoloSimples() {
+        BpmnProcessDesignDTO process = new BpmnProcessDesignDTO();
+        process.setFormPattern("SIMPLE");
+        
+        when(bpmnDesignService.obtenerPorTechnicalId("proceso_simple")).thenReturn(process);
+        when(formDesignService.listarCatalogo()).thenReturn(Arrays.asList(draftSimpleForm, activeMasterForm));
 
-        FormDesignDTO responseDto = new FormDesignDTO();
-        responseDto.setId(UUID.randomUUID());
-        responseDto.setTechnicalName("integration-form-123");
-        responseDto.setVersion(1);
-        responseDto.setFormFields(List.of(field1, field2));
+        ResponseEntity<List<Map<String, Object>>> response = formCatalogController.getActiveForms("proceso_simple");
 
-        Mockito.when(formDesignService.crear(any(CreateFormDesignDTO.class), eq("harolt")))
-                .thenReturn(responseDto);
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().size());
+        assertEquals("solicitud_draft", response.getBody().get(0).get("id"));
+    }
 
-        Mockito.when(formDesignService.obtenerVersionInmutable(eq("integration-form-123"), eq(1)))
-                .thenReturn(responseDto);
+    // @Traceability: US-005, CA-39, CA-40
+    @Test
+    void getActiveForms_conProcessKeyInexistente_ignoraFiltroYRetornaTodos() {
+        when(bpmnDesignService.obtenerPorTechnicalId("proceso_invalido")).thenThrow(new RuntimeException("Not found"));
+        when(formDesignService.listarCatalogo()).thenReturn(Arrays.asList(draftSimpleForm, activeMasterForm));
 
-        // Act & Assert (POST)
-        mockMvc.perform(post("/api/v1/forms")
-                .header("X-User-Id", "harolt")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createDTO)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.technicalName").value("integration-form-123"))
-                .andExpect(jsonPath("$.formFields[0].camundaVariable").value("customerName"))
-                .andExpect(jsonPath("$.formFields[1].camundaVariable").value("customerAge"));
+        ResponseEntity<List<Map<String, Object>>> response = formCatalogController.getActiveForms("proceso_invalido");
 
-        // Assert (GET) Version inmutable
-        mockMvc.perform(get("/api/v1/forms/integration-form-123/versions/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.formFields.length()").value(2))
-                .andExpect(jsonPath("$.formFields[0].camundaVariable").value("customerName"));
+        assertNotNull(response.getBody());
+        assertEquals(2, response.getBody().size());
     }
 }

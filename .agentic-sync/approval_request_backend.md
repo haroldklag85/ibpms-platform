@@ -1,20 +1,23 @@
-# Solicitud de Revisión de Arquitectura: Sprint 5.1 (Remediación Deuda Técnica)
+# Solicitud de Revisión de Arquitectura - Iteración 84-DEV-LANE-ROLE-UAT-R2
 
-**Fecha/Hora:** 2026-04-18
-**Agente Requirente:** Backend Agent (Antigravity)
-**Estado:** PENDIENTE DE APROBACIÓN LÍDER
-**Rama:** `sprint-5/iteracion4`
+## Contexto
+Se requiere solventar el Bug Crítico R2-01 donde el despliegue BPMN retorna 403. Esto se debe a la ausencia del rol `BPMN_Release_Manager` y a la falta de fallback para `SUPER_ADMIN`.
 
-## Resumen del Plan de Implementación (Remediación)
+## Plan de Implementación (Cambios Atómicos)
 
-De acuerdo a las directivas operativas de remediación de Cierre de Deuda Técnica (US-002, US-007, US-029), el `implementation_plan` ha sido trazado abordando las fallas de seguridad persistentes e irregularidades en bases de datos:
+1. **Modificación en `BpmnDesignController.java`:**
+   - Importar y añadir la anotación `@Slf4j` a nivel de clase para habilitar el registro (log).
+   - En `deployBpmnProcess` (~L120), modificar la validación de roles para incluir `SUPER_ADMIN`: 
+     `boolean hasRole = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("BPMN_Release_Manager") || a.getAuthority().contains("SUPER_ADMIN"));`
+   - En `deployBpmnProcess`, tras la validación de permisos exitosa (~L148), agregar log de auditoría:
+     `log.info("Deploy autorizado para usuario={} con rol={}", auth != null ? auth.getName() : "anonymous", hasRole ? "BPMN_Release_Manager/SUPER_ADMIN" : "sandbox_mode");`
+   - En `reviewDeployRequest` (~L500), cambiar `@PreAuthorize` para soportar ambos roles: `@PreAuthorize("hasAnyRole('BPMN_Release_Manager', 'SUPER_ADMIN')")`.
+   - En `requestDeploymentApproval` (~L603), actualizar el valor retornado `"assignedGroup"` a `"BPMN_Release_Manager, SUPER_ADMIN"`.
 
-1. **Security & Context:** Desplazamiento total de identificadores estáticos (`"e2e_user"`, strings hardcodeados) por inyección dinámica desde el `SecurityContextAdapter` (Spring Security), mitigando un inminente IDOR en la gestión DMN de `DmnGovernanceController` y en el `/claim` transversal. Segmentación estricta en el repositorio (Cache y BD) por `tenantId`.
-2. **Data Persistence & Isolation:** Supresión de Repositories "mock" (`MockEventSourcingRepository`) en el componente BFF en pro del uso del Repositorio JPA real. Incorporación del Changelog para `claim_audit_log` enfocado a auditar el `force-unclaim`.
-3. **Data Loss & Sanitization:** Implementación de `PiiSanitizer` (Regex pre-LLM invocation). 
-4. **Resiliency:** Consolidación de un `DmnDraftCleanupScheduler` y enmascaramiento estandarizado `ConstraintViolationException` (Zod Server-side format) a RFC 7807 en el `GlobalExceptionHandler`.
+2. **Creación del Seed Data (`063-seed-bpmn-release-manager-role.sql`):**
+   - Crear el archivo en `backend/ibpms-core/src/main/resources/db/changelog/changes/` con el script de inserción para `ROLE_BPMN_Release_Manager`.
 
-## Confirmación
-No se introducirán Features nuevos. Toda modificación está enfocada 100% a estabilizar las fallas reportadas. Cuento con las tácticas de JUnit (`@WebMvcTest` y `@DataJpaTest`) mapeadas en TDD para la certificación frente al QA.
+3. **Registro en Liquibase (`db.changelog-master.yaml`):**
+   - Agregar el nuevo script SQL al final del archivo maestro de Liquibase.
 
-Por favor, Arquitecto Líder, verifique los detalles técnicos depositados en el `implementation_plan.md` asociado y emita el veredicto para transición a la fase de EXECUTION en el componente Backend.
+Por favor, Arquitecto Líder, confirmar si aprueba este plan para proceder con la ejecución.

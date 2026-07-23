@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.ibpms.poc.application.service.form.FormDirectoryService;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +13,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/forms")
+@Traceability(US = "US-008", CA = {"CA-68"})
 public class FormDirectoryController {
 
     private final FormDirectoryService directoryService;

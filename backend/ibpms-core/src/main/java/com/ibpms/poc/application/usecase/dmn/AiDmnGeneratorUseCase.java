@@ -2,6 +2,8 @@ package com.ibpms.poc.application.usecase.dmn;
 
 import com.ibpms.poc.application.service.cache.AiDmnCacheService;
 import com.ibpms.poc.application.service.security.AiRateLimiterService;
+import com.ibpms.poc.application.service.PromptNormalizer;
+import com.ibpms.poc.application.service.PromptPiiScrubber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -21,15 +23,21 @@ public class AiDmnGeneratorUseCase {
     private final AiDmnCacheService cacheService;
     private final DmnSyntaxGuardUseCase syntaxGuard;
     private final com.ibpms.poc.application.service.dmn.DmnHitPolicyMutatorService policyMutator;
+    private final PromptNormalizer promptNormalizer;
+    private final PromptPiiScrubber promptPiiScrubber;
 
     public AiDmnGeneratorUseCase(AiRateLimiterService rateLimiterService, 
                                  AiDmnCacheService cacheService,
                                  DmnSyntaxGuardUseCase syntaxGuard,
-                                 com.ibpms.poc.application.service.dmn.DmnHitPolicyMutatorService policyMutator) {
+                                 com.ibpms.poc.application.service.dmn.DmnHitPolicyMutatorService policyMutator,
+                                 PromptNormalizer promptNormalizer,
+                                 PromptPiiScrubber promptPiiScrubber) {
         this.rateLimiterService = rateLimiterService;
         this.cacheService = cacheService;
         this.syntaxGuard = syntaxGuard;
         this.policyMutator = policyMutator;
+        this.promptNormalizer = promptNormalizer;
+        this.promptPiiScrubber = promptPiiScrubber;
     }
 
     @Async
@@ -39,6 +47,14 @@ public class AiDmnGeneratorUseCase {
         try {
             // CA-09: Pre-filtro: Recorte bestial de Prompt para no reventar Token Limit
             String prompt = syntaxGuard.validateAndTruncatePrompt(rawPrompt);
+            
+            // GAP-04 (CA-05): Seudonimización PII de Variables
+            PromptPiiScrubber.ScrubResult scrubResult = promptPiiScrubber.scrub(prompt);
+            String safePrompt = scrubResult.getScrubbedPrompt();
+
+            // GAP-17 (CA-20): Normalización Prompt para Caché
+            String normalizedPrompt = promptNormalizer.normalize(safePrompt);
+
             // CA-02: 1. Defensa Denial of Wallet (Rate Limiting)
             if (!rateLimiterService.tryConsumeToken(userId)) {
                 emitter.send(SseEmitter.event().name("error")
@@ -48,7 +64,7 @@ public class AiDmnGeneratorUseCase {
             }
 
             // CA-02: 2. Escudo Criptográfico (Cache SHA-256 Hit)
-            String cachedDmn = cacheService.checkCacheHit(prompt);
+            String cachedDmn = cacheService.checkCacheHit(normalizedPrompt);
             if (cachedDmn != null) {
                 emitter.send(SseEmitter.event().name("message").data(cachedDmn));
                 emitter.send(SseEmitter.event().name("done").data("[DONE]"));
@@ -83,13 +99,20 @@ public class AiDmnGeneratorUseCase {
 
             // CA-08/CA-09: Post-filtro: Validar el XML Parcial devuelto por IA
             String xmlDevuelto = finalPayloadAccumulator.toString();
-            syntaxGuard.validateAiOutputXml(xmlDevuelto);
+            
+            // GAP-04 (CA-05): Restaurar nombres de variables PII
+            String xmlRestaurado = promptPiiScrubber.restore(xmlDevuelto, scrubResult.getReverseDictionary());
+            
+            // GAP-06: Aplicar lowercase en comparaciones FEEL
+            xmlRestaurado = syntaxGuard.applyFeelLowercase(xmlRestaurado);
+            
+            syntaxGuard.validateAiOutputXml(xmlRestaurado);
 
             // CA-07: Mutator Categórico de Catch-All y HitPolicy FIRST
-            String guardedDmnXml = policyMutator.enforceMathGuardrails(xmlDevuelto);
+            String guardedDmnXml = policyMutator.enforceMathGuardrails(xmlRestaurado);
 
             // 4. Guardado Efímero en Caché usando el DMN Mutado Definitivo
-            cacheService.putCache(prompt, guardedDmnXml);
+            cacheService.putCache(normalizedPrompt, guardedDmnXml);
             
             // 5. Señal de Terminación Universal de Streams de IA
             emitter.send(SseEmitter.event().name("done").data("[DONE]"));

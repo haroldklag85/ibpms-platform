@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /**
  * Entidad Plana de Solo Lectura para la arquitectura CQRS (Workdesk Global Inbox).
@@ -21,7 +22,8 @@ import java.time.LocalDateTime;
 @Filter(name = "assigneeSecurityFilter", condition = "assignee = :currentUserId OR assignee IS NULL")
 @Getter
 @Setter
-public class WorkdeskProjectionEntity {
+public class WorkdeskProjectionEntity implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @Id
     private String id; // Hash unificado

@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 @RestController
 @RequestMapping("/api/v1/workdesk/tasks")
+@Traceability(US = "US-003", CA = {"CA-06"})
 public class KanbanTaskController {
 
     private final DelegateTaskUseCase delegateTaskUseCase;

@@ -1,5 +1,6 @@
 package com.ibpms.poc.api.controller.ai;
 
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/prompts")
+@Traceability(US = "US-032", CA = {"CA-07"})
 public class PromptLibraryController {
 
     /**

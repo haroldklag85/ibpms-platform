@@ -1,0 +1,100 @@
+package com.ibpms.poc.infrastructure.persistence;
+
+import com.ibpms.poc.application.port.out.KanbanTaskPort;
+import com.ibpms.poc.domain.model.kanban.KanbanState;
+import com.ibpms.poc.domain.model.kanban.KanbanTask;
+import com.ibpms.poc.infrastructure.jpa.entity.KanbanBoardEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.KanbanTaskEntity;
+import com.ibpms.poc.infrastructure.jpa.repository.KanbanTaskRepository;
+import org.springframework.stereotype.Component;
+
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Component
+public class KanbanTaskJpaAdapter implements KanbanTaskPort {
+
+    private final KanbanTaskRepository repository;
+
+    public KanbanTaskJpaAdapter(KanbanTaskRepository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public KanbanTask save(KanbanTask task) {
+        KanbanTaskEntity entity;
+        if (task.getId() != null) {
+            entity = repository.findById(task.getId()).orElse(new KanbanTaskEntity());
+        } else {
+            entity = new KanbanTaskEntity();
+        }
+
+        entity.setId(task.getId());
+        
+        KanbanBoardEntity board = new KanbanBoardEntity();
+        board.setId(task.getBoardId());
+        entity.setBoard(board);
+        
+        entity.setTitle(task.getTitle());
+        entity.setDescription(task.getDescription());
+        entity.setStatus(task.getStatus().name());
+        entity.setAssignee(task.getAssignee());
+        entity.setPriority(task.getPriority());
+        entity.setBlockedReason(task.getBlockedReason());
+
+        if (task.getSlaDueDate() != null) {
+            entity.setSlaDueDate(task.getSlaDueDate().toLocalDateTime());
+        } else {
+            entity.setSlaDueDate(null);
+        }
+
+        entity = repository.save(entity);
+        return toDomain(entity);
+    }
+
+    @Override
+    public Optional<KanbanTask> findById(UUID id) {
+        return repository.findById(id).map(this::toDomain);
+    }
+
+    @Override
+    public List<KanbanTask> findByBoardId(UUID boardId) {
+        return repository.findByBoardIdOrderByUpdatedAtDesc(boardId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    private KanbanTask toDomain(KanbanTaskEntity entity) {
+        KanbanTask task = new KanbanTask();
+        task.setId(entity.getId());
+        task.setBoardId(entity.getBoard().getId());
+        task.setTitle(entity.getTitle());
+        task.setDescription(entity.getDescription());
+        
+        try {
+            task.setStatus(KanbanState.valueOf(entity.getStatus()));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            task.setStatus(KanbanState.TODO);
+        }
+
+        task.setAssignee(entity.getAssignee());
+        task.setPriority(entity.getPriority());
+        task.setBlockedReason(entity.getBlockedReason());
+
+        if (entity.getSlaDueDate() != null) {
+            task.setSlaDueDate(entity.getSlaDueDate().atZone(ZoneId.systemDefault()));
+        }
+        if (entity.getCreatedAt() != null) {
+            task.setCreatedAt(entity.getCreatedAt().atZone(ZoneId.systemDefault()));
+        }
+        if (entity.getUpdatedAt() != null) {
+            task.setUpdatedAt(entity.getUpdatedAt().atZone(ZoneId.systemDefault()));
+        }
+
+        return task;
+    }
+}

@@ -40,6 +40,7 @@ public class DataSegregationService {
      * @param userRoles   Los Roles o Grupos a los que pertenece el usuario verificados en JWT (calculados cruzando RoleHierarchy).
      * @return Una instancia de {@link TaskQuery} amurallada sobre la cual se puede continuar la operación (Ej: count, appaginate, singleResult).
      */
+    // @Traceability: US-036 - CA-05 Privacidad Visual de Colas (Data Segregation Local)
     public TaskQuery getSecureTaskQuery(String currentUser, List<String> userRoles) {
         TaskQuery query = taskService.createTaskQuery()
                 .active();

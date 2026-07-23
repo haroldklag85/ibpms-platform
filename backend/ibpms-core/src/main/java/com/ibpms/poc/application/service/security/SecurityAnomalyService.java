@@ -24,6 +24,17 @@ public class SecurityAnomalyService {
         return repository.findByStatusOrderByTimestampDesc(status != null ? status : "OPEN");
     }
 
+    public SecurityAnomalyEntity registerAnomaly(String type, String suspectUserId, String resourceId) {
+        SecurityAnomalyEntity anomaly = new SecurityAnomalyEntity(
+            type, 
+            suspectUserId, 
+            resourceId, 
+            LocalDateTime.now(), 
+            "OPEN"
+        );
+        return repository.save(anomaly);
+    }
+
     public SecurityAnomalyEntity resolveAnomaly(UUID anomalyId, String resolverUserId) {
         SecurityAnomalyEntity anomaly = repository.findById(anomalyId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Anomalía de Seguridad Forense no encontrada."));

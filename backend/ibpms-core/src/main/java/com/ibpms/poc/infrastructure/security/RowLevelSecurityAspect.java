@@ -22,6 +22,7 @@ public class RowLevelSecurityAspect {
         this.entityManager = entityManager;
     }
 
+    // @Traceability: US-036 - CA-05 Privacidad Visual de Colas (Data Segregation Local)
     @Before("execution(* com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository.*(..))")
     public void enableAssigneeFilter(JoinPoint joinPoint) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

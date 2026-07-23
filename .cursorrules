@@ -67,15 +67,21 @@ Tienes prohibido asumir que tu código funciona solo por inferencia estática. T
 - **⛔ Anti-Patrón `git stash`:** Si en cualquier punto del flujo recibes la instrucción de usar `git stash save` como cierre de tu trabajo, DEBES RECHAZARLA e informar que viola la LEY GLOBAL de Zero-Trust Git. El cierre correcto es SIEMPRE: `git add .` → `git commit -m "..."` → `git push origin <rama-de-sprint>`.
 
 - Si eres BACKEND: 
-  Tu entorno de compilación vive EXCLUSIVAMENTE en Docker, no en tu OS anfitrión.
-  1. Ejecuta `docker compose up -d --build ibpms-core` en la raíz.
-  2. Haz streaming de los logs para auditar el arranque: `docker compose logs -f ibpms-core`.
-  Solo si la consola de Docker dice "Started on port 8080" puedes dar la tarea por completada. Si ves `Web server failed to start` o `Connection Refused`, estás en CÓDIGO ROJO. Revisa tus variables o asunciones, y sigue tu doctrina oficial al pie de la letra en: `.agents/skills/backend_sre_compilation_audit/SKILL.md`.
+  Tu entorno de compilación vive EXCLUSIVAMENTE en el HOST NATIVO (Máquina local). Tienes ESTRICTAMENTE PROHIBIDO ejecutar contenedores de Docker para compilar Java (`docker exec` o `docker compose up ibpms-core`).
+  1. Ejecuta `docker-compose up -d postgres rabbitmq redis azurite` (solo si la infraestructura no está viva).
+  2. Abre una terminal en `backend/ibpms-core/` y ejecuta directamente `mvn spring-boot:run`.
+  Solo si la consola nativa dice "Started on port 8080" puedes dar la tarea por completada. Sigue tu doctrina oficial al pie de la letra en: `.agents/skills/backend_sre_compilation_audit/SKILL.md`.
 
 - Si eres FRONTEND: Antes de confirmar éxito, obligatoriamente debes demostrar que la UI no está rota ejecutando `npm run build` (o el equivalente Vite/Vue) y asegurar un "Build Successful".
 
 - Si eres QA / DevOps: 
   Tu validación opera estrictamente bajo la Gobernanza de Pirámide de Testing (ADR 011). Tienes PROHIBIDO certificar validez funcional sin ejecutar explícitamente el Nivel 4 (Playwright E2E o REST Assured) y adjuntar evidencia física de logs de red reales. El uso de mocks en memoria es intolerable. Sigue tu doctrina en: `.agents/skills/qa_e2e_validation_audit/SKILL.md`.
+
+- **REGLA DE SEGMENTACIÓN DE PRUEBAS (Test Suite Partitioning):**
+  Queda estrictamente prohibido mezclar la nomenclatura de tests unitarios y de integración en el Backend:
+  1. **Tests Unitarios (`*Test.java`):** Lógica pura en memoria sin arrancar Spring Boot (sin `@SpringBootTest`, `@WebMvcTest`, `@DataJpaTest`). Deben correr en milisegundos y ser ejecutados por `maven-surefire-plugin` (`mvn test`).
+  2. **Tests de Integración (`*IT.java`):** Tests de infraestructura que cargan contexto Spring, bases de datos o servicios. Son ejecutados por `maven-failsafe-plugin` (`mvn verify`) en paralelo usando 4 forks para optimizar el rendimiento.
+  CUALQUIER test unitario que inicie Spring Boot violando esta regla será bloqueado por el validador pre-commit.
 
 - **REGLA DE ORO (Test-Driven Governance V2):**
   Ninguna Historia de Usuario, refactor de módulo o creación de "Feature" nueva podrá considerarse "Done" si el Agente a cargo no la entrega escudada por sus tres capas: 
@@ -127,7 +133,7 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 
 ### Nivel 5 (Condicional por Rol): Documentos de Arquitectura y Layout
 - **Cuándo leerlo:** Solo cuando tu rol lo requiera. No es lectura universal.
-- **Si eres Backend:** Consulta `docs/architecture/c4-model.md` (diagramas C4), `docs/architecture/ibpms_core_erd.md` (Entidad-Relación) y `docs/architecture/ui_components_schema.md` (JSON Schema de formularios) antes de crear Entidades, Puertos o Adaptadores.
+- **Si eres Backend:** Consulta `docs/architecture/c4-model.md` (diagramas C4), `docs/architecture/ibpms_core_erd.md` (Entidad-Relación), `docs/architecture/ui_components_schema.md` (JSON Schema de formularios) y `docs/architecture/adr-017-api-documentation-standard.md` (Estándar de APIs) antes de crear o modificar Entidades, Puertos, Adaptadores o RestControllers.
 - **Si eres Frontend:** Consulta obligatoriamente `scaffolding/workflows/v1_master_layout_policies.md` (15 reglas de geometría, responsive, A11y, Z-Index) antes de construir o modificar cualquier componente visual.
 - **Regla:** Estos documentos complementan los 4 niveles anteriores pero NO los reemplazan. En caso de discrepancia entre un diagrama C4 y el Gherkin, **SIEMPRE PREVALECE EL GHERKIN** (Nivel 2).
 
@@ -138,3 +144,19 @@ Si usted tiene una duda sobre qué construir o cómo validar una feature, debe c
 3. **Trazabilidad Inversa (Anti-Amnesia Institucional):** Todo hallazgo de auditoría que haya sido RESUELTO y viva en un artefacto satélite (`us{X}_functional_analysis.md`, `us{X}_gap_remediation_brief.md`, `audit_*_report.md`) **DEBE** graduarse como un Criterio de Aceptación formal dentro de la User Story correspondiente en su archivo de Épica (`docs/requirements/epics/epic_X_*.md`). Si un hallazgo resuelto no existe en el SSOT, la próxima auditoría lo redescubrirá como nuevo. Ver workflow: `.agent/workflows/graduacionAuditoriaAlSsot.md`.
 
 > **Objetivo Final:** Su obligación como Agente es apegarse 100% al alcance pre-verificado (SSOT). **Si no está escrito en estos 4 archivos base (+ los condicionales de su rol), no es un requerimiento de la V1.** Construya lo que se pide; nada más, nada menos.
+
+## 7. Zero-Mock & Real Database Enforcement
+- **Prohibición de Red Estática:** Queda ESTRICTAMENTE PROHIBIDO para cualquier Agente Frontend o Backend utilizar, habilitar o sugerir interceptores de red (ej. `mockAdapter.ts`) para simular respuestas del servidor. 
+- **Fail-Fast de Integración:** Si un endpoint o funcionalidad de la BD no está listo, la aplicación debe fallar ("Fail-Fast" con HTTP 404/500), y programar *Graceful Degradation*, no inyectar datos JSON estáticos fijos.
+- **Validación QA Real:** Todo Agente de QA (Playwright/Vitest) tiene la LEY MÁXIMA de validar operaciones E2E mutando y consultando sobre la base de datos real bajo contexto de contenerización Docker (`docker-compose.e2e.yml`). Falsos positivos originados por UI Mockeada son un quiebre de la Ley Global 2.
+
+---
+# 🛑 LEY GLOBAL 4: INMUTABILIDAD DE REGRESIÓN (TEST-DRIVEN DECAY PREVENTION)
+
+Modificar un test antiguo (de un Sprint previo) simplemente para que vuelva a pasar es un anti-patrón crítico conocido como "Test-Driven Decay". Las pruebas son contratos inmutables de negocio.
+
+- **Inmutabilidad de Aserciones:** Queda ESTRICTAMENTE PROHIBIDO modificar los bloques lógicos de validación (`assert`, `expect`, `Given-When-Then`) de una prueba de regresión certificada en Sprints anteriores, a menos que el Usuario apruebe explícitamente un cambio en la Historia de Usuario.
+- **Upgrades de Infraestructura (Excepción Controlada):** Solo está permitido modificar el `Setup` o la configuración de infraestructura de un test (Ej. migrar de Mocks en memoria a Testcontainers/Liquibase). En este caso, el comportamiento funcional del test DEBE mantenerse intacto.
+- **Prohibición de Pruebas Mentirosas:** Si un test E2E o de Integración de un Sprint anterior falla durante el Sprint actual, el agente DEBE asumir que el nuevo código introdujo una regresión. **Se arregla el código, NUNCA se ajusta el test para que pase en verde.**
+- **Auditoría de Aserciones:** Antes de cerrar una tarea de estabilización de QA, el agente QA DEBE demostrar (mediante un diff) que no redujo la cobertura de las aserciones del negocio original.
+

@@ -1,9 +1,11 @@
 import { vi } from 'vitest';
 import { config } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
+import i18n from '@/i18n';
 
 // Inicialización Global de Pinia para los Tests del Sprint 5 (Evitar caídas de montaje)
 config.global.plugins = [
+    i18n,
     createTestingPinia({
         createSpy: vi.fn,
         stubActions: false, // Permitir que las acciones originen cambios de estado
@@ -27,6 +29,18 @@ config.global.stubs = {
 
 // Interceptar imports fallidos de UI que rompen JSDOM antes que el Vite Bundler llame a los spec.ts
 vi.mock('frappe-gantt/dist/frappe-gantt.css', () => ({}));
+
+vi.mock('@guolao/vue-monaco-editor', async (importOriginal) => {
+    const actual = await importOriginal<any>();
+    return {
+        ...actual,
+        loader: {
+            ...actual.loader,
+            config: vi.fn(),
+            init: vi.fn()
+        }
+    };
+});
 
 class MockEventSource {
     url: string;

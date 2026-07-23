@@ -2,6 +2,7 @@ package com.ibpms.poc.application.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class FormDesignDTO {
@@ -15,7 +16,7 @@ public class FormDesignDTO {
     private String zodSchema;
     private String authorId;
     private LocalDateTime updatedAt;
-    private List<FormFieldMetadataDTO> formFields;
+    private List<Map<String, Object>> formFields;
 
     // Getters
     public UUID getId() {
@@ -58,7 +59,7 @@ public class FormDesignDTO {
         return updatedAt;
     }
 
-    public List<FormFieldMetadataDTO> getFormFields() {
+    public List<Map<String, Object>> getFormFields() {
         return formFields;
     }
 
@@ -103,7 +104,7 @@ public class FormDesignDTO {
         this.updatedAt = updatedAt;
     }
 
-    public void setFormFields(List<FormFieldMetadataDTO> formFields) {
+    public void setFormFields(List<Map<String, Object>> formFields) {
         this.formFields = formFields;
     }
 }

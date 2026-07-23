@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    # @Traceability: BUG-FIX: fix postgres port to 5434 based on architecture
+    url: jdbc:postgresql://127.0.0.1:5434/ibpms_e2e
+    username: ibpms
+    password: ibpms_e2e_pass
+    hikari:
+      maximum-pool-size: 40
+      minimum-idle: 10
+      connection-timeout: 20000
+  # HO-01: Auto-carga del seed al iniciar con perfil e2e
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:seed-e2e.sql
+      continue-on-error: true
+  # Activar Liquibase en e2e para crear tablas no-mapeadas como ibpms_tenant
+  liquibase:
+    enabled: true
+  jpa:
+    defer-datasource-initialization: false
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6380
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5673
+
+camunda:
+  bpm:
+    client:
+      base-url: http://localhost:8080/api/v1/engine-rest

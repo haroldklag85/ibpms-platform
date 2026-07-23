@@ -8,7 +8,9 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/agile/timeboxes")
+@Traceability(US = "US-030", CA = {"CA-01"})
 public class AgileTimeboxController {
 
     private final AgileTimeboxService timeboxService;
@@ -31,10 +34,11 @@ public class AgileTimeboxController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
-    public ResponseEntity<AgileTimebox> createTimebox(@Valid @RequestBody CreateTimeboxRequest request) {
-        // Iteración 2: createdBy hardcoded hasta que se integre con SecurityContext
-        String createdBy = "admin";
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    public ResponseEntity<AgileTimebox> createTimebox(
+            @Valid @RequestBody CreateTimeboxRequest request,
+            Authentication authentication) {
+        String createdBy = authentication.getName();
         AgileTimebox created = timeboxService.createTimebox(
                 request.projectId(),
                 request.name(),
@@ -47,13 +51,13 @@ public class AgileTimeboxController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<List<AgileTimebox>> listTimeboxes(@RequestParam UUID projectId) {
         return ResponseEntity.ok(timeboxService.listTimeboxes(projectId));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
     public ResponseEntity<AgileTimebox> getTimebox(@PathVariable UUID id) {
         return ResponseEntity.ok(timeboxService.getTimebox(id));
     }

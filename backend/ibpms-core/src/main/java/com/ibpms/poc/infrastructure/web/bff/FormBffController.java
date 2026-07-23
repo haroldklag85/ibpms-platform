@@ -31,7 +31,7 @@ public class FormBffController {
         return ResponseEntity.ok(bffCoreService.generateMegaDtoFormContext(taskId, userId));
     }
 
-    @PostMapping("/{id}/complete")
+    @PostMapping("/{id}/complete-bff")
     public ResponseEntity<?> completeTask(
             @PathVariable("id") String taskId, 
             @RequestHeader(value = "X-User-Id", defaultValue = "user") String userId,

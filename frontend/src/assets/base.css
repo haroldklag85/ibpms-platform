@@ -23,4 +23,13 @@
     @apply antialiased text-gray-900 bg-ibpms-light transition-all duration-300;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+
+  *:focus-visible {
+    outline: 2px solid var(--color-indigo-500, #6366f1);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
 }

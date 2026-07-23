@@ -17,6 +17,22 @@
     </div>
 
     <div v-else>
+      <!-- REM-039-C: Banner de Restauración de Borrador (Patrón CA-85) -->
+      <div v-if="store.showDraftBanner" class="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg class="h-5 w-5 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <p class="text-sm text-amber-800">
+            Se detectó un borrador no enviado. ¿Desea restaurarlo?
+          </p>
+        </div>
+        <div class="flex gap-2 flex-shrink-0">
+          <button @click="store.restoreDraft()" class="text-sm bg-amber-600 text-white px-3 py-1.5 rounded-md hover:bg-amber-700 font-medium transition-colors">Restaurar</button>
+          <button @click="store.dismissDraft()" class="text-sm bg-white text-gray-600 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 font-medium transition-colors">Descartar</button>
+        </div>
+      </div>
+
       <GenericFormBody />
     </div>
 
@@ -27,7 +43,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useGenericFormStore } from '@/stores/genericFormStore'
 
 import GenericFormBody from '@/components/forms/generic/GenericFormBody.vue'
@@ -35,6 +51,14 @@ import PanicJustificationModal from '@/components/forms/generic/PanicJustificati
 
 const route = useRoute()
 const store = useGenericFormStore()
+
+onBeforeRouteLeave((to, from, next) => {
+  if (store.observations || store.result) {
+    const answer = window.confirm('Tiene cambios sin guardar. ¿Desea salir sin guardar?')
+    if (!answer) return next(false)
+  }
+  next()
+})
 
 onMounted(async () => {
   const taskIdParam = route.params.taskId as string || 'TEST-TASK-001'

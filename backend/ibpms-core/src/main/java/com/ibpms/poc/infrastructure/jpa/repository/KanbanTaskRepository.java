@@ -10,4 +10,7 @@ import java.util.UUID;
 @Repository
 public interface KanbanTaskRepository extends JpaRepository<KanbanTaskEntity, UUID> {
     List<KanbanTaskEntity> findByBoardIdOrderByUpdatedAtDesc(UUID boardId);
+    
+    @org.springframework.data.jpa.repository.Query("SELECT t FROM KanbanTaskEntity t JOIN t.board b WHERE b.ownerId = :tenantId")
+    List<KanbanTaskEntity> findTasksByTenantId(String tenantId);
 }

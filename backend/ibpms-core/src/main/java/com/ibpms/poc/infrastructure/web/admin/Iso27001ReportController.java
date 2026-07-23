@@ -24,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 @RequestMapping("/api/v1/admin/reports/iso27001")
 @Tag(name = "Reporte CISO ISO 27001", description = "Generación on-demand de reportes de cumplimiento (CA-24)")
 @PreAuthorize("hasRole('ADMIN_IT')")
+// @Traceability: US-036 - CA-24
 public class Iso27001ReportController {
 
     private static final Logger log = LoggerFactory.getLogger(Iso27001ReportController.class);

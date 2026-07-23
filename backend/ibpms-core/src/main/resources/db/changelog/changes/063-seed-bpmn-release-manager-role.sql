@@ -1,0 +1,5 @@
+-- 063-seed-bpmn-release-manager-role.sql
+-- US-005/US-036: Seed del rol BPMN_Release_Manager para deploy granular
+INSERT INTO ibpms_security_role (id, name, description, is_template, is_active, source)
+SELECT gen_random_uuid(), 'ROLE_BPMN_Release_Manager', 'Rol especializado para despliegue de definiciones BPMN', false, true, 'SYSTEM'
+WHERE NOT EXISTS (SELECT 1 FROM ibpms_security_role WHERE name = 'ROLE_BPMN_Release_Manager');

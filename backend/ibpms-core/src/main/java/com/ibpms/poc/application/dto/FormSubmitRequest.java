@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import java.util.Map;
 import java.util.UUID;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
 @Builder
@@ -23,4 +25,7 @@ public class FormSubmitRequest {
     private UUID idempotencyKey;
     
     private Map<String, Object> gatewayVariables;
+
+    @JsonProperty("_visibleFields")
+    private List<String> visibleFields;
 }

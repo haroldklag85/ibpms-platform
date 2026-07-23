@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/08-create-form-engine-tables.sql
+  - include:
+      file: db/changelog/18-create-form-definitions.sql
+  - include:
+      file: db/changelog/25-us028-qa-certification-columns.sql
+  - include:
+      file: db/changelog/35-arq02804-split-certification.sql
+  - include:
+      file: db/changelog/changes/48-us003-form-design-remediation.sql
+  - include:
+      file: db/changelog/changes/51-us029-form-definitions-seed.sql

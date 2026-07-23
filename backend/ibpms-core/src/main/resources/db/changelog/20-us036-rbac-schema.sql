@@ -67,8 +67,8 @@ CREATE TABLE ibpms_audit_reports (
     CONSTRAINT pk_ibpms_audit_reports PRIMARY KEY (id)
 );
 
--- Ensure ibpms_audit_log exists for general logs as per CA-22 and CA-8 (from US-034/036)
-CREATE TABLE IF NOT EXISTS ibpms_audit_log (
+-- Ensure ibpms_security_audit_log exists for general logs as per CA-22 and CA-8 (from US-034/036)
+CREATE TABLE IF NOT EXISTS ibpms_security_audit_log (
     id UUID NOT NULL,
     user_id VARCHAR(100),
     action VARCHAR(100) NOT NULL,
@@ -77,5 +77,5 @@ CREATE TABLE IF NOT EXISTS ibpms_audit_log (
     endpoint_invocado VARCHAR(255),
     ip_origen VARCHAR(100),
     timestamp_utc TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ibpms_audit_log PRIMARY KEY (id)
+    CONSTRAINT pk_ibpms_security_audit_log PRIMARY KEY (id)
 );

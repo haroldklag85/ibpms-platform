@@ -1,7 +1,7 @@
 package com.ibpms.poc.application.dto;
 
 /**
- * CA-27: Vocabulario estandarizado de acciones WebSocket para el Workdesk.
+ * @Traceability(US = "US-001", CA = {"CA-27"}) Vocabulario estandarizado de acciones WebSocket para el Workdesk.
  * Payload atómico (CA-13) — solo instrucción + ID + payload parcial opcional.
  */
 public class WsWorkdeskEventDTO {

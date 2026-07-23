@@ -10,9 +10,10 @@ import java.util.UUID;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     Optional<UserEntity> findByUsername(String username);
-    Optional<UserEntity> findByEmail(String email);
+    Optional<UserEntity> findFirstByEmail(String email);
+    Optional<UserEntity> findByEmail(String email); // Keep this to avoid breaking other things, but findFirst is safer
     
     // Optimizador para Kill-Switch sin traer toda la entidad
-    @org.springframework.data.jpa.repository.Query("SELECT u.isActive FROM UserEntity u WHERE u.username = :username")
+    @org.springframework.data.jpa.repository.Query("SELECT (u.status = 'ACTIVE') FROM UserEntity u WHERE u.username = :username")
     Optional<Boolean> isUserActive(String username);
 }

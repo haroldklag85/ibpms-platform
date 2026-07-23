@@ -1,5 +1,8 @@
 # Auditoría Consolidada de Arquitectura: Brechas, Patrones y Alineación C4 (iBPMS)
 
+> [!CAUTION]
+> **HALLAZGOS GRADUADOS AL SSOT:** Las brechas y decisiones de diseño consolidadas en este documento de auditoría arquitectónica fueron solventadas y graduadas como Criterios de Aceptación formales en los archivos de Épica correspondientes (`docs/requirements/epics/`). Este archivo es ahora histórico y de solo lectura.
+
 > **Origen:** Este documento consolida `architecture_review.md` y `c4_audit_report.md` (eliminados tras la fusión).
 > **Última Auditoría:** 2026-04-09 — Saneamiento arquitectónico integral.
 
@@ -162,3 +165,17 @@ La arquitectura iBPMS V1 **es robusta y escalable**. El Patrón Strangler facili
 | P3 | Transactional Outbox: implementar en V1 o diferir a V2 | **Implementar en V1** mediante **Spring Modulith Event Publication Registry**. Sin Debezium ni overhead externo. | `implementation_plan.md` L157, esta auditoría C-2. |
 | P4 | Pureza Hexagonal del Kanban (ADR-007) | **POJOs puros obligatorios** en la capa de Dominio. Entidades JPA restringidas a la capa de Infraestructura/Persistencia. MapStruct para conversión bidireccional. | `adr_007_cmmn_vs_kanban.md` Sección 4, punto 2. |
 | P5 | Purgar Kafka de V1 | **Verificado: 0 menciones erróneas.** Todas las referencias a Kafka están correctamente acotadas como "V2 / futuro" o como ejemplo de prohibición (ADR-001). | `implementation_plan.md`, `c4-model.md` (limpios). |
+
+---
+
+## 8. Certificación Final Iteración 3 (Sprint 6.2)
+
+> **Veredicto QA:** GO Oficial UAT (Aprobado). Ejecución de la suite completa de 53 escenarios.
+
+| Área Validada | Veredicto | Detalle Arquitectónico |
+|---------------|-----------|------------------------|
+| **(US-039) Security Framework** | ✅ APROBADO | Interceptor de Opacidad **CA-3** validado y ajustado (Soporte Multi-Role en `Vue Router`). Rutas protegidas rutean a falso 404 para evasión y ceguera de pentesting. Funciones Core de Auth y JWT rotación activas. |
+| **(US-003) Garbage Collector** | ✅ APROBADO | Reparado deshidratador de estado local. `LocalStorageGarbageCollector` procesa metadatos `_timestamp` para purga de drafts stales > 7 días en Board Frontend. |
+| **Integración SSE (CORS)** | ✅ APROBADO | Adaptación Zero-Trust: Refactorizados endpoints de EventSource en Store y Copilotos DMN/BPMN para enrutar a proxies relativos (`/api/v1/*`), eludiendo explícitamente barreras CORS no configuradas. |
+
+**Hito:** Con la estabilización final de la pantalla de *Identity Governance* (Pantalla 14), la iteración técnica queda formalmente finalizada habilitando el Handoff al Release UAT.

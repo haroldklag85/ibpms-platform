@@ -14,7 +14,19 @@
     "US-002": { "file": "epics/epic_A_motor_core.md", "epic": "A", "title": "Reclamar una Tarea de Grupo (Claim Task)", "status": "pending" },
     "US-003": { "file": "epics/epic_B_formularios_bpmn.md", "epic": "B", "title": "Instanciar y Generar un Formulario iForm", "status": "completed" },
     "US-004": { "file": "epics/epic_A_motor_core.md", "epic": "A", "title": "Iniciar un Proceso mediante Webhook (Plugin O365)", "status": "pending" },
-    "US-005": { "file": "epics/epic_B_formularios_bpmn.md", "epic": "B", "title": "Desplegar y Versionar un Modelo de Proceso BPMN", "status": "completed" },
+    "US-005": {
+      "file": "epics/epic_B_formularios_bpmn.md",
+      "epic": "B",
+      "title": "Desplegar y Versionar un Modelo de Proceso BPMN",
+      "status": "completed",
+      "cas": {
+        "CA-75": "PENDIENTE",
+        "CA-76": "PENDIENTE",
+        "CA-77": "PENDIENTE",
+        "CA-78": "PENDIENTE",
+        "CA-79": "PENDIENTE"
+      }
+    },
     "US-006": { "file": "epics/epic_B_formularios_bpmn.md", "epic": "B", "title": "Diseñar la Estructura Base (WBS) de una Plantilla", "status": "pending" },
     "US-007": { "file": "epics/epic_B_formularios_bpmn.md", "epic": "B", "title": "Generador Cognitivo de DMN (NLP a Tablas de Decisión)", "status": "pending" },
     "US-008": { "file": "epics/epic_A_motor_core.md", "epic": "A", "title": "Mover Tarjeta en Tablero Kanban", "status": "pending" },

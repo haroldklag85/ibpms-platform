@@ -18,7 +18,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
 
 /**
- * Adapter-In REST de Server-Sent Events para Taller DMN. (Hit-The-Canvas). CA-01
+ * @Traceability: US-007 - CA-1
+ * Adapter-In REST de Server-Sent Events para Taller DMN. (Hit-The-Canvas).
  */
 @Tag(name = "AI DMN Generator", description = "Motor Generativo Asíncrono para Tablas de Decisión")
 @RestController
@@ -35,6 +36,7 @@ public class AiDmnGeneratorController {
     /**
      * Endpoint Generativo. Al producir TEXT_EVENT_STREAM_VALUE el navegador Vue habilita la interfaz nativa EventSource.
      */
+    // @Traceability: US-007 - CA-18: Contrato API DMN
     @Operation(
             summary = "Streaming Generativo de DMN",
             description = "Emite tokens de configuración DMN usando Server-Sent Events para prevenir Gateway Timeouts.",

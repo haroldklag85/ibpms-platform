@@ -9,7 +9,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,57 +28,69 @@ public class AgileTaskController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
-    public ResponseEntity<AgileTask> createTask(
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-03"})
+    public ResponseEntity<TaskResponse> createTask(
         @PathVariable UUID projectId,
-        @Valid @RequestBody CreateTaskRequest request) {
-        String createdBy = "admin";
-        return ResponseEntity.ok(taskService.createTask(
-            projectId, request.title(), request.description(), request.effort(), createdBy));
+        @Valid @RequestBody CreateTaskRequest request,
+        Authentication authentication) {
+        String createdBy = authentication.getName();
+        AgileTask task = taskService.createTask(
+            projectId, request.title(), request.description(), request.effort(), request.assigneeIds(), request.tags(), request.notes(), createdBy);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(TaskResponse.from(task));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
-    public ResponseEntity<Page<AgileTask>> listTasks(
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-08"})
+    public ResponseEntity<Page<TaskResponse>> listTasks(
         @PathVariable UUID projectId,
-        @RequestParam(required = false, defaultValue = "false") boolean showCompleted,
+        @RequestParam(required = false, defaultValue = "false") boolean includeCompleted,
         Pageable pageable) {
-        return ResponseEntity.ok(taskService.listTasks(projectId, showCompleted, pageable));
+        Page<AgileTask> page = taskService.listTasks(projectId, includeCompleted, pageable);
+        return ResponseEntity.ok(page.map(TaskResponse::from));
     }
 
     @GetMapping("/{taskId}")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
-    public ResponseEntity<AgileTask> getTaskDetail(
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-03"})
+    public ResponseEntity<TaskResponse> getTaskDetail(
         @PathVariable UUID projectId,
         @PathVariable UUID taskId) {
-        return ResponseEntity.ok(taskService.getTask(taskId));
+        return ResponseEntity.ok(TaskResponse.from(taskService.getTask(taskId)));
     }
 
-    @PatchMapping("/{taskId}")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
-    public ResponseEntity<AgileTask> updateTask(
+    @PutMapping("/{taskId}")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-03"})
+    public ResponseEntity<TaskResponse> updateTask(
         @PathVariable UUID projectId,
         @PathVariable UUID taskId,
-        @Valid @RequestBody UpdateTaskRequest request) {
-        String updatedBy = "admin"; // Simulado
-        return ResponseEntity.ok(taskService.updateTask(
-            taskId, request.title(), request.description(), request.effort(), request.status(), request.slaDeadline(), updatedBy));
+        @Valid @RequestBody UpdateTaskRequest request,
+        Authentication authentication) {
+        String updatedBy = authentication.getName();
+        AgileTask task = taskService.updateTask(
+            taskId, request.title(), request.description(), request.effort(), request.status(), request.slaDeadline(), request.assigneeIds(), request.tags(), request.notes(), updatedBy);
+        return ResponseEntity.ok(TaskResponse.from(task));
     }
 
-    // CA-4: Eliminar con auditoría forense (Soft delete)
+    // CA-4: Eliminar con auditoría forense (Soft delete -> Hard delete)
     @DeleteMapping("/{taskId}")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-04"})
     public ResponseEntity<Void> deleteTask(
         @PathVariable UUID projectId,
-        @PathVariable UUID taskId) {
-        String deletedBy = "admin"; // Simulado
+        @PathVariable UUID taskId,
+        Authentication authentication) {
+        String deletedBy = authentication.getName();
         taskService.deleteTask(taskId, deletedBy);
         return ResponseEntity.noContent().build();
     }
 
     // CA-6: Reordenar por drag & drop
     @PatchMapping("/reorder")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERARIO', 'SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-06"})
     public ResponseEntity<Void> reorderTasks(
         @PathVariable UUID projectId,
         @Valid @RequestBody ReorderRequest request) {
@@ -85,8 +99,9 @@ public class AgileTaskController {
     }
 
     // CA-5 + CA-14: Asignación masiva interactiva
-    @PostMapping("/bulk-assign")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'ADMIN')")
+    @PatchMapping("/bulk-assign")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'SUPER_ADMIN')")
+    @Traceability(US = "US-030", CA = {"CA-05", "CA-14"})
     public ResponseEntity<Void> bulkAssign(
         @PathVariable UUID projectId,
         @Valid @RequestBody BulkAssignRequest request) {
@@ -99,7 +114,10 @@ public class AgileTaskController {
     public record CreateTaskRequest(
         @NotBlank(message = "El título es obligatorio") String title,
         String description,
-        BigDecimal effort
+        BigDecimal effort,
+        java.util.Set<String> assigneeIds,
+        java.util.Set<String> tags,
+        String notes
     ) {}
 
     public record UpdateTaskRequest(
@@ -107,7 +125,10 @@ public class AgileTaskController {
         String description,
         BigDecimal effort,
         String status,
-        java.time.ZonedDateTime slaDeadline
+        java.time.ZonedDateTime slaDeadline,
+        java.util.Set<String> assigneeIds,
+        java.util.Set<String> tags,
+        String notes
     ) {}
 
     public record ReorderRequest(
@@ -118,4 +139,44 @@ public class AgileTaskController {
         @NotEmpty(message = "Debe enviar tareas") List<UUID> taskIds,
         @NotBlank(message = "El usuario asignado es obligatorio") String userId
     ) {}
+
+    public record TaskResponse(
+            UUID id,
+            UUID projectId,
+            String title,
+            String description,
+            BigDecimal effortEstimated,
+            String status,
+            Integer position,
+            java.time.ZonedDateTime slaDeadline,
+            java.time.ZonedDateTime lastActivityAt,
+            String createdBy,
+            java.util.Set<String> assigneeIds,
+            java.util.Set<String> tags,
+            String notes,
+            long daysInactive
+    ) {
+        public static TaskResponse from(AgileTask task) {
+            long days = 0;
+            if (task.getLastActivityAt() != null) {
+                days = java.time.temporal.ChronoUnit.DAYS.between(task.getLastActivityAt(), java.time.ZonedDateTime.now());
+            }
+            return new TaskResponse(
+                    task.getId(),
+                    task.getProjectId(),
+                    task.getTitle(),
+                    task.getDescription(),
+                    task.getEffortEstimated(),
+                    task.getStatus(),
+                    task.getPosition(),
+                    task.getSlaDeadline(),
+                    task.getLastActivityAt(),
+                    task.getCreatedBy(),
+                    task.getAssigneeIds(),
+                    task.getTags(),
+                    task.getNotes(),
+                    days
+            );
+        }
+    }
 }

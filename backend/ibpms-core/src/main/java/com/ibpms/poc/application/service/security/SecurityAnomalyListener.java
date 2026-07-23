@@ -24,7 +24,7 @@ public class SecurityAnomalyListener {
     }
 
     /**
-     * CA-11: Desacoplamiento de Rollback. 
+     * Seguridad: Desacoplamiento de Rollback. 
      * Las anomalías se insertan en un Hilo separado con REQUIRES_NEW.
      * Si la API central hace abort (Ej: por el SoD), el logger persiste.
      */

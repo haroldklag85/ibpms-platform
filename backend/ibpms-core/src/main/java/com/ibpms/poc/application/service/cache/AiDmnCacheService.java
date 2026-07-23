@@ -56,4 +56,9 @@ public class AiDmnCacheService {
         redisMockCache.put(hashKey, generatedDmnXml);
         log.debug("[SRE-CACHE] DMN inyectado a Redis con llave {}.", hashKey.substring(0, 8));
     }
+
+    public void evictAll() {
+        redisMockCache.clear();
+        log.info("[SRE-CACHE] Toda la caché de DMN ha sido invalidada a petición.");
+    }
 }

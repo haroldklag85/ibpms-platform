@@ -12,4 +12,5 @@ public interface FormEventRepository {
     List<FormEvent> findAll();
     List<FormEvent> findByProcessInstanceIdAndEventType(String processInstanceId, EventType eventType);
     void deleteAll();
+    void deleteByCreatedAtBefore(java.time.ZonedDateTime cutoffDate);
 }

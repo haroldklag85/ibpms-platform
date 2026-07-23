@@ -1,31 +1,53 @@
-# Análisis Funcional Definitivo: US-004 (Iniciar un Proceso mediante Webhook / O365 Listener)
+# Análisis Funcional: US-004 - Iniciar un Proceso mediante Webhook (Plugin O365 Listener)
+
+**Ejecutado por:** `[⚙️ PRODUCT OWNER]` | **Fecha:** 2026-04-17
+**Workflow Aplicado:** `/analisisEntendimientoUs.md`
+**Fuente de Verdad (SSOT):** `docs/requirements/epics/epic_A_motor_core.md` (CA-1 al CA-10)
+
+---
 
 ## 1. Resumen del Entendimiento
-La US-004 es la puerta de entrada (Gateway Inbound) de flujos no controlados por operadores físicos en el Portal iBPMS. Define la arquitectura con la que sistemas de terceros (Outlook, MS Graph, Zendesk) disparan nuevos procesos de Camunda (Start Event) mediante REST POST de forma desatendida. Incorpora capas fuertes de defensa perimetral para proteger al Motor BPM.
+La **US-004** define la compuerta de ingesta automatizada (Intake) del iBPMS. Permite que sistemas externos, específicamente buzones de correo institucionales a través de Microsoft Graph (O365) o API Management, inyecten peticiones a la plataforma de forma autónoma. Su enfoque central es altamente receloso de la sanidad de los datos, implementando filtros, validaciones perimetrales y mecanismos anti-corrupción antes de tocar al motor BPMN (Camunda).
 
 ## 2. Objetivo Principal
-Automatizar en un 100% la fase de inicio de los procesos transaccionales masivos (radicación "Zero-Touch"), mientras se resguarda violentamente a Camunda de Mail-Loops, payloads basura malformados (Catastrophic JSONs) y denegaciones de servicio causadas por buzones colapsados en internet.
+Asegurar que la inyección automática de casos desde internet sea resiliente y totalmente segura para el motor de procesos, delegando a un Humano la autorización y curación pre-operativa (Intake Triage) de la solicitud antes de instanciar un verdadero "Caso de Negocio" en Camunda.
 
-## 3. Alcance Funcional Definido
-**Inicia:** Desde que la petición POST atraviesa el perímetro externo hacia la ruta pública `/intake`.
-**Termina:** Con la instancia creada exitosamente, el encolamiento en RabbitMQ del payload (si Camunda está Offline) o el rechazo tajante del Payload en Perímetro (HTTP 4xx). Termina también en la asignación de una "Tarea de Pre-Triaje" humano.
+## 3. Alcance Funcional
+El alcance técnico abarca **desde el perímetro de red (API de ingesta) hasta la creación de una tarea de pre-validador (Triage)** en la bandeja correspondiente:
+*   **INICIA:** En la exposición de un Endpoint público REST (Webhook) para consumo de APIM / MS Graph.
+*   **TERMINA:** Con la creación exitosa de un "Caso de Triaje genérico" que espera validación humana en la Pantalla 16.
+*(Nota: El avance y completitud del flujo interno del caso posterior a la aprobación escapa de esta historia, al igual que la configuración lógica dentro de la suite de Microsoft).*
 
 ## 4. Lista de Funcionalidades Incluidas
-- **Idempotencia Asíncrona:** Descartar payloads duplicados síncronos basándose en `id_mensaje`.
-- **Filtro Anti-Robots:** Rechazo tajante a cuentas `no-reply` o automáticas.
-- **Trazabilidad de Payloads Huérfanos:** Persistencia cruda (Data Lake temporal) de JSONs malformados para depuración IT (HTTP 400).
-- **Lista Blanca DNS:** Si el dominio emisor no está matriculado en BD de la compañía, aborta en capa 0 (HTTP 403).
-- **Safety Net RabbitMQ:** Buffer SRE elástico si el Engine BPMS de Camunda muere por completo.
-- **Topes de Payload:** Límites estrictos configurables (Ej: 10 MB) para descarga rápida.
-- **Intake Triage Humano:** No enruta y despacha el trámite pesado al área inmediatamente; fuerza una validación humana puente.
-- **Auth Híbrida:** HMAC Secrets para Graph y Bearer normal para Legacy.
+La US garantiza la construcción técnica de las siguientes características obligatorias:
+*   **Idempotencia Transaccional:** Rechazo en O(1) de requests repetidos usando el `id_mensaje` (CA-1). 
+*   **Anti-Loops de Correos:** Filtro semántico (Hard-Block) de bots y auto-responders en la puerta, devolviendo `HTTP 400` (CA-2).
+*   **Auditoría de Basura (Orphaned Payloads):** Tabla transaccional forense para payloads malformados JSON que rebotan (CA-3).
+*   **Aprobación en Lista Blanca (Whitelist):** Verificación forzosa del dominio del remitente contra la base de datos de clientes habilitados (CA-4).
+*   **Notificaciones Activas a TI:** Disparo de email de alerta crítica al SysAdmin si ocurre una falla interna a nivel del BPMN (CA-5).
+*   **Resiliencia Total (RabbitMQ):** Almacenaje temporal en Broker/Cola si Camunda cae, eliminando pérdida de información entrante (Zero Data Loss) (CA-6).
+*   **Hard-Limit Perimetral:** Bloqueo ajustable por peso de archivos adjuntos, lanzando HTTP 413 si excede la métrica de 10MB (CA-7).
+*   **Intake Triage (Bandeja Previa):** Desvío de la ingesta hacia una tarea de "Pre-Triaje" humano (Pantalla 16) en lugar de automatización ciega hacia procesos complejos (CA-8 & CA-9).
+*   **Seguridad Criptográfica (HMAC/Bearer):** Validación severa de llaves compartidas contra MS Graph y switch opcional para soportar sistemas legados (CA-10).
 
 ## 5. Lista de Brechas, Gaps o Ambigüedades Detectadas
-- **Fuga Lógica en Pre-Triaje (⚠️ CA-8 & CA-9):** Obliga a crear una "Tarea de Pre-Triaje" en la Pantalla 16 para que un humano verifique qué es el correo y oprima *[Aprobar y Crear Caso]*. Al hacerlo no nombra **qué rol asume esta tarea** ni a qué Swimlane/Pool se envía; ¿Mesa de Ayuda? Si este rol falla o no está asignado, los Webhooks válidos se irán a un limbo oscuro administrativo perpetuo.
-- **Idempotencia Infinita (⚠️ CA-1):** Manda a verificar en la tabla de transacciones de entrada el `id_mensaje`. No indica un TTL temporal para esta memoria caché/idempotente (Redis). Si el sistema recuerda `id_mensajes` toda la vida, la tabla transaccional crecerá indiscriminadamente en producción hasta ahogar las métricas. Se requiere el establecimiento de un índice limitante temporal (Ej: Guardar hash del id_mensaje por máximo 7 días).
+Al comparar los CAs contra la consistencia global del sistema, identifico los siguientes vacíos (GAP) para graduar:
+*   **GAP-1 (Manejo de Limpieza Anti-Malware):** El CA-7 estipula límite máximo de peso de anexos (10MB) pero **NO aclara** si estos archivos pasan por sanitización Anti-Malware (ClamAV) en la frontera o si se guardan "crudos" en el disco, abriendo un riesgo de inyección.
+*   **GAP-2 (Administración del Whitelist):** El CA-4 habla de la validación del dominio (`@ejemplo.com`) contra los clientes matriculados. Falta definir en qué interface administrativa y módulo se añade y administra esta lista blanca.
 
-## 6. Lista de Exclusiones (Fuera de Alcance V1)
-- Lógicas semánticas mediante IA (AI Triaging) como OCR de adjuntos y tipificación automática textual en el Webhook. Solo validación estructural e inicio manual en Triaje.
+## 6. Lista de Exclusiones (Fuera de Alcance)
+*   **Procesamiento Inteligente (NLP/IA):** Mapeo inteligente de los datos libres del correo hacia variables BPMN estructuradas. Esto pertenece a las US de IA (Agents).
+*   **Desarrollo en Microsoft Azure:** Configuración perimetral de Microsoft 365, Power Automate o Logic Apps. La US incluye solo la API Endpoint receptora pasiva alojada en iBPMS.
+*   **Autoruta Ciega (Straight-Through Processing):** Iniciación directa de flujos de negocio sin aprobación humana; la política del CA-8 fuerza obligatoriamente el Triaje Humano, por lo tanto, la autoruta está vedada en esta V1.
 
 ## 7. Observaciones de Alineación o Riesgos
-**Riesgo Crítico de Negocio:** La falta de definición respecto a *quién toma el Intake Triage* generará cuellos de botella el Día 1 en Producción si miles de transacciones se van a una bandeja que nadie tiene permiso "Default" para ver.
+### Clasificación MoSCoW
+*   **Must Have:** Central para las integraciones corporativas pasivas del sistema. Bloque innegociable de la V1.
+
+### Resumen de Dependencias con otras User Stories
+*   **Dependencia con US-001 (Workdesk de Pendientes):** Existe un vacío funcional de visibilidad (GAP-3). La tarea del Pre-Triaje (CA-8/9) se pinta en la Pantalla 16 (Intake Triage), pero sus SLAs y semáforos DEBEN consolidarse centralizadamente visuales también en la grilla maestra construida por la US-001. De lo contrario, los operadores ignorarán los correos entrantes.
+*   **Dependencia con US-036 (RBAC & Portal Administrativo):** Para que las validaciones del CA-4 (Whitelist de dominios) y CA-7 (Límite de 10MB parametrizable) y CA-10 (switch HMAC a Bearer) puedan ser controlados, la US-036 debe exponer formularios reactivos de configuración (Variables de Tenant).
+*   **Dependencia con US-000 (Arquitectura Transversal):** La estrategia de captura de errores silenciosa e impedimentos HTTP de inyección basura (CA-1, CA-2 y CA-3) utilizarán obligatoriamente las lógicas de atrapadores (ExceptionHandler) estructuradas por la US-000 de arquitectura base.
+
+### Dependencia Bloqueante Absoluta (Riesgo Técnico)
+*   La historia detalla un proceso Event-Driven **(RabbitMQ / Cola de contingencia CA-6)**. El equipo de Backend NO PUEDE proceder con el esquema transaccional de esta US si la infraestructura del Broker (Exchanges y DLQs) no ha sido desplegada en Kubernetes/Docker previamente. Si Camunda falla y el DLQ no existe, perderíamos todos los Webhooks encolados irremediablemente.

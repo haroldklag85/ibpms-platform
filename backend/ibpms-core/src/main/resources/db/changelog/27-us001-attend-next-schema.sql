@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS ibpms_feature_toggles (
     enabled BOOLEAN NOT NULL DEFAULT false,
     changed_by VARCHAR(100) NOT NULL,
     changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    description VARCHAR(255),
     CONSTRAINT uq_toggle_tenant_key UNIQUE (tenant_id, toggle_key)
 );
 

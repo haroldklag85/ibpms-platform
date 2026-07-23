@@ -78,8 +78,14 @@ public class FormEventRepositoryJpa implements FormEventRepository {
     public void deleteAll() {
         springDataRepository.deleteAll();
     }
+
+    @Override
+    public void deleteByCreatedAtBefore(java.time.ZonedDateTime cutoffDate) {
+        springDataRepository.deleteByCreatedAtBefore(cutoffDate);
+    }
 }
 
 interface SpringDataFormEventRepository extends JpaRepository<FormEventEntity, UUID> {
     List<FormEventEntity> findByProcessInstanceIdAndEventType(String processInstanceId, EventType eventType);
+    void deleteByCreatedAtBefore(java.time.ZonedDateTime cutoffDate);
 }

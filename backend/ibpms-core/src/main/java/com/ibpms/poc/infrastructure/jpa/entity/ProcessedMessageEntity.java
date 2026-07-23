@@ -5,14 +5,20 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.UUID;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 
 @Entity
 @Table(name = "ibpms_processed_messages")
 public class ProcessedMessageEntity {
 
     @Id
-    @Column(name = "idempotency_key", length = 36)
-    private String idempotencyKey;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
+    @Column(name = "idempotency_key", nullable = false, unique = true)
+    private UUID idempotencyKey;
 
     @Column(name = "processed_at", nullable = false)
     private LocalDateTime processedAt;
@@ -24,15 +30,17 @@ public class ProcessedMessageEntity {
         this.processedAt = LocalDateTime.now();
     }
 
-    public ProcessedMessageEntity(String idempotencyKey, String queueName) {
+    public ProcessedMessageEntity(UUID idempotencyKey, String queueName) {
         this.idempotencyKey = idempotencyKey;
         this.queueName = queueName;
         this.processedAt = LocalDateTime.now();
     }
 
     // Getters
-    public String getIdempotencyKey() { return idempotencyKey; }
-    public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+    public UUID getIdempotencyKey() { return idempotencyKey; }
+    public void setIdempotencyKey(UUID idempotencyKey) { this.idempotencyKey = idempotencyKey; }
     public LocalDateTime getProcessedAt() { return processedAt; }
     public void setProcessedAt(LocalDateTime processedAt) { this.processedAt = processedAt; }
     public String getQueueName() { return queueName; }

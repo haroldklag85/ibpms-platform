@@ -38,9 +38,30 @@ public class CamundaBpmAdapter implements ProcesoBpmPort {
     }
 
     @Override
+    // @Traceability: US-005, CA-78 Sandbox Multi-tenancy
     public String iniciarProceso(String definitionKey, String businessKey, Map<String, Object> variables) {
         try {
-            ProcessInstance instance = runtimeService.startProcessInstanceByKey(definitionKey, businessKey, variables);
+            String tenantId = null;
+            try {
+                org.springframework.web.context.request.RequestAttributes attrs = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+                if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes) {
+                    jakarta.servlet.http.HttpServletRequest request = ((org.springframework.web.context.request.ServletRequestAttributes) attrs).getRequest();
+                    if ("true".equalsIgnoreCase(request.getHeader("X-Sandbox-Mode"))) {
+                        tenantId = "sandbox_tenant";
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            ProcessInstance instance;
+            if (tenantId != null) {
+                instance = runtimeService.createProcessInstanceByKey(definitionKey)
+                        .businessKey(businessKey)
+                        .setVariables(variables)
+                        .processDefinitionTenantId(tenantId)
+                        .execute();
+            } else {
+                instance = runtimeService.startProcessInstanceByKey(definitionKey, businessKey, variables);
+            }
             return instance.getId();
         } catch (Exception e) {
             throw new RuntimeException("Error al iniciar proceso BPM: " + e.getMessage(), e);
@@ -58,21 +79,55 @@ public class CamundaBpmAdapter implements ProcesoBpmPort {
     }
 
     @Override
+    // @Traceability: US-005, CA-78 Sandbox Multi-tenancy
     public void desplegarDefinicion(String resourceName, byte[] bpmnContent) {
-        repositoryService.createDeployment()
+        String tenantId = null;
+        try {
+            org.springframework.web.context.request.RequestAttributes attrs = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+            if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes) {
+                jakarta.servlet.http.HttpServletRequest request = ((org.springframework.web.context.request.ServletRequestAttributes) attrs).getRequest();
+                if ("true".equalsIgnoreCase(request.getHeader("X-Sandbox-Mode"))) {
+                    tenantId = "sandbox_tenant";
+                }
+            }
+        } catch (Exception ignored) {}
+
+        org.camunda.bpm.engine.repository.DeploymentBuilder builder = repositoryService.createDeployment()
                 .addString(resourceName, new String(bpmnContent, java.nio.charset.StandardCharsets.UTF_8))
-                .enableDuplicateFiltering(true)
-                .deploy();
+                .enableDuplicateFiltering(true);
+
+        if (tenantId != null) {
+            builder.tenantId(tenantId);
+        }
+
+        builder.deploy();
     }
 
     @Override
+    // @Traceability: US-005, CA-78 Sandbox Multi-tenancy
     public void desplegarProceso(String resourceName, String xmlString) {
         try {
-            repositoryService.createDeployment()
+            String tenantId = null;
+            try {
+                org.springframework.web.context.request.RequestAttributes attrs = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+                if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes) {
+                    jakarta.servlet.http.HttpServletRequest request = ((org.springframework.web.context.request.ServletRequestAttributes) attrs).getRequest();
+                    if ("true".equalsIgnoreCase(request.getHeader("X-Sandbox-Mode"))) {
+                        tenantId = "sandbox_tenant";
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            org.camunda.bpm.engine.repository.DeploymentBuilder builder = repositoryService.createDeployment()
                     .addString(resourceName, xmlString)
                     .name("Despliegue Web Dinamico")
-                    .enableDuplicateFiltering(true)
-                    .deploy();
+                    .enableDuplicateFiltering(true);
+
+            if (tenantId != null) {
+                builder.tenantId(tenantId);
+            }
+
+            builder.deploy();
         } catch (Exception e) {
             throw new IllegalArgumentException("Error al desplegar modelo en el motor BPM: " + e.getMessage(), e);
         }

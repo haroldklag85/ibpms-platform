@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.domain.model.TriageTask;
@@ -25,7 +26,12 @@ public class TriageTaskService {
     }
 
     public Page<TriageTask> listTasks(String status, Pageable pageable) {
-        return triageTaskRepository.findByStatus(status != null ? status : "PENDING", pageable);
+        com.ibpms.poc.domain.model.DomainPage<TriageTask> domainPage = triageTaskRepository.findByStatus(
+                status != null ? status : "PENDING",
+                pageable.getPageNumber(),
+                pageable.getPageSize()
+        );
+        return new org.springframework.data.domain.PageImpl<>(domainPage.content(), pageable, domainPage.totalElements());
     }
 
     @Transactional

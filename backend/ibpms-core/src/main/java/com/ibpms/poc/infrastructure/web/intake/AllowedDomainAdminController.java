@@ -1,7 +1,7 @@
 package com.ibpms.poc.infrastructure.web.intake;
 
 import com.ibpms.poc.domain.model.AllowedDomain;
-import com.ibpms.poc.domain.port.AllowedDomainRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -24,10 +24,7 @@ import java.util.UUID;
 public class AllowedDomainAdminController {
 
     private static final Logger log = LoggerFactory.getLogger(AllowedDomainAdminController.class);
-    private final AllowedDomainRepository repository;
-
-    public AllowedDomainAdminController(AllowedDomainRepository repository) {
-        this.repository = repository;
+    public AllowedDomainAdminController() {
     }
 
     @GetMapping

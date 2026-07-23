@@ -11,6 +11,7 @@
         <p class="text-sm text-gray-500 mt-1">Configuración de Seguridad Dual: Roles manuales e infiriendo del BPMN.</p>
       </div>
       <div class="flex gap-3">
+        <!-- @Traceability: US-036 - CA-24 -->
         <button 
           @click="generateIsoReport" 
           :disabled="isGeneratingReport"
@@ -40,11 +41,14 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue'
 import RbacTabs from './RbacTabs.vue'
 import SecurityAuditLog from './SecurityAuditLog.vue'
 import { useRbacStore } from '@/stores/rbacStore'
-import apiClient from '@/services/apiClient'
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const store = useRbacStore()
 const isGeneratingReport = ref(false)
@@ -54,9 +58,10 @@ onMounted(() => {
 })
 
 const generateIsoReport = async () => {
+    // @Traceability(US = "US-036", CA = {"CA-24"})
     isGeneratingReport.value = true
     try {
-        const response = await apiClient.post('/admin/reports/iso27001/generate', {}, {
+        const response = await integrationStore.post('/admin/reports/iso27001/generate', {}, {
             responseType: 'blob' // Force interpreted as binary
         })
         

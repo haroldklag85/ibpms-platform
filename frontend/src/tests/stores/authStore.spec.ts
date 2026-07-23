@@ -17,12 +17,13 @@ describe('Auth Store (Pinia)', () => {
 
     it('login() should mutate state and save to localStorage', () => {
         const store = useAuthStore();
-        const mockJwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+        // Base64 for {"sub":"carlos.admin", "roles":["ROLE_USER", "ROLE_APPROVER"]}
+        const mockJwt = 'header.eyJzdWIiOiJjYXJsb3MuYWRtaW4iLCAicm9sZXMiOlsiUk9MRV9VU0VSIiwgIlJPTEVfQVBQUk9WRVIiXX0=.signature';
 
         store.login(mockJwt);
 
         expect(store.token).toBe(mockJwt);
-        expect(store.user).toEqual({ username: 'carlos.admin', roles: ['ROLE_USER', 'ROLE_APPROVER'] });
+        expect(store.user).toEqual({ username: 'carlos.admin', roles: ['ROLE_ROLE_USER', 'ROLE_ROLE_APPROVER'] });
         expect(localStorage.getItem('ibpms_token')).toBe(mockJwt);
     });
 
@@ -30,8 +31,9 @@ describe('Auth Store (Pinia)', () => {
         const store = useAuthStore();
 
         // Arrange
-        store.login('dummy-token');
-        expect(store.token).toBe('dummy-token');
+        const mockJwt = 'header.eyJzdWIiOiJjYXJsb3MuYWRtaW4iLCAicm9sZXMiOlsiUk9MRV9VU0VSIiwgIlJPTEVfQVBQUk9WRVIiXX0=.signature';
+        store.login(mockJwt);
+        expect(store.token).toBe(mockJwt);
 
         // Act
         store.logout();
@@ -40,5 +42,43 @@ describe('Auth Store (Pinia)', () => {
         expect(store.token).toBeNull();
         expect(store.user).toBeNull();
         expect(localStorage.getItem('ibpms_token')).toBeNull();
+    });
+
+    describe('hasWritePermission', () => {
+        it('should return true for normal users', () => {
+            const store = useAuthStore();
+            store.user = { username: 'carlos', roles: ['ROLE_USER', 'ROLE_APPROVER'] };
+            expect(store.hasWritePermission).toBe(true);
+        });
+
+        it('should return false for READONLY role', () => {
+            const store = useAuthStore();
+            store.user = { username: 'carlos', roles: ['ROLE_READONLY'] };
+            expect(store.hasWritePermission).toBe(false);
+        });
+
+        it('should return false for AUDITOR role', () => {
+            const store = useAuthStore();
+            store.user = { username: 'carlos', roles: ['ROLE_AUDITOR'] };
+            expect(store.hasWritePermission).toBe(false);
+        });
+
+        it('should return true if user has mixed roles including a write role', () => {
+            const store = useAuthStore();
+            store.user = { username: 'carlos', roles: ['ROLE_AUDITOR', 'ROLE_ADMIN'] };
+            expect(store.hasWritePermission).toBe(true);
+        });
+
+        it('should return false if user has no roles', () => {
+            const store = useAuthStore();
+            store.user = { username: 'carlos', roles: [] };
+            expect(store.hasWritePermission).toBe(false);
+        });
+        
+        it('should return false if user is null', () => {
+            const store = useAuthStore();
+            store.user = null;
+            expect(store.hasWritePermission).toBe(false);
+        });
     });
 });

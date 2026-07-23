@@ -41,19 +41,25 @@ public class DmnSimulatorUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(DmnSimulatorUseCase.class);
 
-    // Motor aislado sin configuración de Base de Datos
     private final DmnEngine standaloneEngine;
+    private final com.ibpms.poc.application.service.security.DmnSimulatorRateLimiterService rateLimiterService;
 
-    public DmnSimulatorUseCase() {
+    public DmnSimulatorUseCase(com.ibpms.poc.application.service.security.DmnSimulatorRateLimiterService rateLimiterService) {
         this.standaloneEngine = DmnEngineConfiguration
                 .createDefaultDmnEngineConfiguration()
                 .buildEngine();
+        this.rateLimiterService = rateLimiterService;
     }
 
     /**
      * Parsea el XML crudo entrante y lo somete al DmnEngine usando variables dummy.
      */
-    public Object simulateDmnEvaluation(String rawXml, Map<String, Object> dummyVariables) {
+    public Object simulateDmnEvaluation(String rawXml, Map<String, Object> dummyVariables, String userId) {
+        // GAP-20: Rate Limiter para Simulator
+        if (!rateLimiterService.tryConsumeToken(userId)) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Rate Limit Excedido. Máximo 20 simulaciones por minuto.");
+        }
+
         log.info("[SRE-SIMULATOR] Iniciando Evaluación Dry-Run sobre Motor Camunda Aislado");
         
         try (InputStream dmnStream = new ByteArrayInputStream(rawXml.getBytes(StandardCharsets.UTF_8))) {
@@ -72,7 +78,10 @@ public class DmnSimulatorUseCase {
             log.info("[SRE-SIMULATOR] Simulación Exitosa. Result: {}", evaluationResult.getResultList());
 
             // Devolver las salidas crudas (Reglas matched u outputs) al FrontEnd
-            return evaluationResult.getResultList();
+            return Map.of(
+                "status", "SUCCESS",
+                "simulationResult", evaluationResult.getResultList()
+            );
 
         } catch (Exception e) {
             log.error("[SRE-SIMULATOR] Error durante el Dry-Run: {}", e.getMessage());

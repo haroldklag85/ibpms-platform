@@ -1,3 +1,4 @@
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
 import org.springframework.http.HttpStatus;
@@ -6,6 +7,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 import java.net.URI;
 import java.util.List;
@@ -20,10 +22,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
  * Todas las respuestas de error siguen el mismo formato JSON estándar.
  */
 @RestControllerAdvice
+@org.springframework.core.annotation.Order(org.springframework.core.Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
+@Traceability(US = "US-000", CA = {"CA-01", "CA-02", "CA-03", "CA-04", "CA-37"})
 public class GlobalExceptionHandler {
 
     /** 400 — Error de validación de campos (@Valid) */
+    // @Traceability: US-000 - CA-2
     @ApiResponse(responseCode = "400", description = "Error de validación de campos en el Payload", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationError(MethodArgumentNotValidException ex) {
@@ -73,13 +78,47 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    /** 404 — Recurso no encontrado */
+    /** 400 — JSON mal formado o no leíble */
+    @ApiResponse(responseCode = "400", description = "JSON mal formado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ProblemDetail handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setType(URI.create("https://ibpms.com/errors/bad-request"));
+        problem.setTitle("Petición inválida");
+        problem.setDetail("La solicitud contiene JSON mal formado: " + (ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage()));
+        return problem;
+    }
+
+    /** 404 — Recurso no encontrado (EntityNotFoundException) */
     @ApiResponse(responseCode = "404", description = "El recurso solicitado no fue encontrado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
     public ProblemDetail handleNotFound(jakarta.persistence.EntityNotFoundException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
         problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/not-found")));
         problem.setTitle("Recurso no encontrado");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 404 — Definición de Proceso no encontrada (US-007 Ejecución BPMN) */
+    // @Traceability: US-007, ADR-001 (Hexagonal)
+    @ExceptionHandler(com.ibpms.poc.domain.exception.ProcessDefinitionNotFoundException.class)
+    public ProblemDetail handleProcessDefinitionNotFound(com.ibpms.poc.domain.exception.ProcessDefinitionNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/process-not-found")));
+        problem.setTitle("Definición de proceso no encontrada");
+        problem.setDetail(ex.getMessage());
+        problem.setProperty("processDefinitionKey", ex.getProcessDefinitionKey());
+        return problem;
+    }
+
+    /** 404 — Ruta Estática no encontrada (Spring Boot 3.2+ Dispatcher) */
+    @ApiResponse(responseCode = "404", description = "El endpoint o ruta estática no fue encontrada", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ProblemDetail handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/not-found")));
+        problem.setTitle("Endpoint o Recurso Inexistente");
         problem.setDetail(ex.getMessage());
         return problem;
     }
@@ -118,6 +157,7 @@ public class GlobalExceptionHandler {
     }
 
     // CA-3: Bloqueo de Concurrencia Optimista (409)
+    // @Traceability: US-000 - CA-3
     @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
     public ProblemDetail handleConcurrency(org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
@@ -138,15 +178,128 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /** 403 — Acceso Denegado (Fallos genéricos de @PreAuthorize) */
+    @ApiResponse(responseCode = "403", description = "Acceso denegado: Privilegios insuficientes", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(org.springframework.security.access.AccessDeniedException ex) {
+        ex.printStackTrace(); // TEMP DIAGNOSTIC
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/forbidden")));
+        problem.setTitle("Acceso Denegado");
+        problem.setDetail("No tienes suficientes privilegios para acceder a este recurso.");
+        return problem;
+    }
+
+    /** Maneja ResponseStatusException devolviendo el status y razón específicos */
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ProblemDetail handleResponseStatusException(org.springframework.web.server.ResponseStatusException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(ex.getStatusCode());
+        problem.setType(URI.create("https://ibpms.com/errors/status"));
+        problem.setTitle(ex.getReason() != null ? ex.getReason() : "Error " + ex.getStatusCode().value());
+        problem.setDetail(ex.getReason());
+        return problem;
+    }
+
+    // @Traceability: US-005, CA-65 Validaciones de Contrato API y prevención de JSONParseException
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ProblemDetail handleMediaTypeNotSupported(org.springframework.web.HttpMediaTypeNotSupportedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        problem.setType(URI.create("https://ibpms.com/errors/unsupported-media-type"));
+        problem.setTitle("Tipo de Contenido no Soportado");
+        problem.setDetail("El endpoint no acepta el Content-Type enviado. Asegúrese de enviar multipart/form-data si está subiendo archivos.");
+        return problem;
+    }
+
+    /** 405 — Método No Permitido */
+    @ApiResponse(responseCode = "405", description = "El método HTTP no está soportado por este recurso", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ProblemDetail handleMethodNotSupported(org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.METHOD_NOT_ALLOWED);
+        problem.setType(URI.create("https://ibpms.com/errors/method-not-allowed"));
+        problem.setTitle("Método No Permitido");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ProblemDetail handleMissingParams(org.springframework.web.bind.MissingServletRequestParameterException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setType(URI.create("https://ibpms.com/errors/missing-parameter"));
+        problem.setTitle("Parámetro Requerido Faltante");
+        problem.setDetail("El parámetro '" + ex.getParameterName() + "' es obligatorio y no fue provisto.");
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.MultipartException.class)
+    public ProblemDetail handleMultipartException(org.springframework.web.multipart.MultipartException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setType(URI.create("https://ibpms.com/errors/multipart-error"));
+        problem.setTitle("Error procesando archivo");
+        problem.setDetail("No se pudo leer el archivo adjunto o no se envió correctamente.");
+        return problem;
+    }
+
+    /** 429 — Recurso Agotado / Límite de Sandbox superado */
+    // @Traceability: US-005, CA-67
+    @ExceptionHandler(com.ibpms.poc.domain.exception.ResourceExhaustedException.class)
+    public ProblemDetail handleResourceExhausted(com.ibpms.poc.domain.exception.ResourceExhaustedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.TOO_MANY_REQUESTS);
+        problem.setType(URI.create("https://ibpms.com/errors/resource-exhausted"));
+        problem.setTitle("Límite de Sandbox superado");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 429 — Demasiadas Solicitudes (Rate Limiting) */
+    // @Traceability: US-005, CA-67
+    @ExceptionHandler(com.ibpms.poc.domain.exception.TooManyRequestsException.class)
+    public ProblemDetail handleTooManyRequests(com.ibpms.poc.domain.exception.TooManyRequestsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.TOO_MANY_REQUESTS);
+        problem.setType(URI.create("https://ibpms.com/errors/too-many-requests"));
+        problem.setTitle("Demasiadas solicitudes");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** 413 — Payload Demasiado Grande */
+    // @Traceability: US-005, CA-67
+    @ExceptionHandler(com.ibpms.poc.domain.exception.PayloadTooLargeException.class)
+    public ProblemDetail handlePayloadTooLarge(com.ibpms.poc.domain.exception.PayloadTooLargeException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.PAYLOAD_TOO_LARGE);
+        problem.setType(URI.create("https://ibpms.com/errors/payload-too-large"));
+        problem.setTitle("Archivo demasiado grande");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
     /** 500 — Error interno genérico (CA-37) */
+    // @Traceability: US-000 - CA-1
+    // @Traceability: US-000 - CA-4
+    // @Traceability: ADR-014 Observabilidad 5xx
     @ApiResponse(responseCode = "500", description = "Error interno - Blindado", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
-        log.error("💥 ERROR CRITICO DEL SISTEMA ENVIADO A ELK: ", ex); // Delegación a Logback/ELK
+        // @Traceability(US="US-000", CA="CA-NOISE", DESC="Supresión de ruido de red (Broken pipe/SSE) proveniente de DevDavid")
+        if (ex instanceof java.io.IOException || ex.getClass().getSimpleName().equals("ClientAbortException")) {
+            String msg = ex.getMessage();
+            if (msg != null && (msg.contains("Broken pipe") || msg.contains("Connection reset"))) {
+                log.warn("Client disconnected abruptly (Broken pipe/Connection reset). Suppressing error.");
+                return null;
+            }
+        }
+
+        // @Traceability(US="US-000", CA="CA-OBS", DESC="ADR-014: Trazabilidad Distribuida (TraceID) con MDC para APM/ELK")
+        String traceId = org.slf4j.MDC.get("traceId");
+        if (traceId == null) {
+            traceId = java.util.UUID.randomUUID().toString();
+            org.slf4j.MDC.put("traceId", traceId);
+        }
+        log.error("💥 ERROR CRITICO DEL SISTEMA ENVIADO A ELK [TraceID: {}]: ", traceId, ex); // Delegación a Logback/ELK
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setType(URI.create("about:blank"));
         problem.setTitle("Error interno del servidor");
         problem.setDetail("Error interno del servidor"); // Enmascaramiento total de PII, tal como exige CA-37
+        problem.setProperty("traceId", traceId); // Expuesto para el Frontend (ADR-014)
         return problem;
     }
     /** 504 — Tiempo de Espera Agotado (SLA CA-24, CA-31) */

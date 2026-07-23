@@ -42,6 +42,13 @@ public final class SecurityContextUtils {
             if (tenantId != null && !tenantId.isBlank()) {
                 return tenantId;
             }
+        } else if (auth instanceof org.springframework.security.authentication.UsernamePasswordAuthenticationToken upToken) {
+            if (upToken.getDetails() instanceof java.util.Map<?, ?> detailsMap) {
+                Object tenantId = detailsMap.get("tenant_id");
+                if (tenantId != null && !tenantId.toString().isBlank()) {
+                    return tenantId.toString();
+                }
+            }
         }
         
         throw new IllegalStateException("SecurityContext no provee un Tenant_ID válido desde el JWT.");

@@ -9,4 +9,7 @@ public class FormFieldMetadataDTO {
     private String zodRule;
     private Integer columns;     // CA-55: Layout Grid Span
     private String timerMode;    // CA-58: Configuración focal o stop-watch
+    
+    // @Traceability: US-005, CA-39
+    private String stage;
 }

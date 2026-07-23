@@ -1,3 +1,4 @@
+/* // @Traceability: US-005, CA-42 - Activity Timeline */
 package com.ibpms.poc.infrastructure.jpa.entity.ai;
 
 import jakarta.persistence.*;
@@ -29,8 +30,7 @@ public class ForensicIsoOverrideEntity {
     private String ignoredWarningCode;
 
     // XML Forzado que transgrede las normas
-    @Lob
-    @Column(name = "forced_xml", nullable = false)
+    @Column(name = "forced_xml", columnDefinition = "TEXT", nullable = false)
     private String forcedXml;
 
     @Column(name = "metrics_json", columnDefinition = "TEXT")

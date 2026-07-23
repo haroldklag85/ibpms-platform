@@ -15,11 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-import com.ibpms.poc.infrastructure.jpa.repository.security.TokenBlacklistRepository;
-import com.ibpms.poc.infrastructure.jpa.entity.security.TokenBlacklistEntity;
-import java.time.LocalDateTime;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import com.ibpms.poc.application.service.security.TokenBlacklistService;
 import java.util.Map;
 import java.util.HashMap;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -29,14 +25,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 public class UserAdminController {
 
     private final UserService userService;
-    private final TokenBlacklistRepository blacklistRepository;
+    private final TokenBlacklistService blacklistService;
     private final DelegationService delegationService;
 
     public UserAdminController(UserService userService,
-                               TokenBlacklistRepository blacklistRepository,
+                               TokenBlacklistService blacklistService,
                                DelegationService delegationService) {
         this.userService = userService;
-        this.blacklistRepository = blacklistRepository;
+        this.blacklistService = blacklistService;
         this.delegationService = delegationService;
     }
 
@@ -68,6 +64,7 @@ public class UserAdminController {
         return ResponseEntity.noContent().build();
     }
 
+    // @Traceability: US-036 - CA-02 El Guardián Absoluto (Prohibición Global de Delete Físico)
     // US-036 p2: Soft-Delete Guard Enforced
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteUser(@PathVariable UUID id) {
@@ -88,9 +85,23 @@ public class UserAdminController {
      * los roles del donante en el contexto JWT del receptor durante la ventana activa.
      */
     @PostMapping("/{id}/delegate")
-    public ResponseEntity<DelegationEntity> delegate(
+    public ResponseEntity<?> delegate(
             @PathVariable UUID id,
             @RequestBody DelegationRequestDTO dto) {
+        
+        String currentUserEmail = com.ibpms.poc.application.util.SecurityContextUtils.getAssignee();
+        boolean isSuperAdmin = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+
+        com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity donor = userService.findById(id).orElse(null);
+        if (donor == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Donante no encontrado"));
+        }
+
+        if (!isSuperAdmin && !donor.getEmail().equals(currentUserEmail)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "IDOR detectado: No tienes permisos para delegar los permisos de este usuario."));
+        }
+
         DelegationEntity created = delegationService.createDelegation(id, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -98,25 +109,10 @@ public class UserAdminController {
     // CA-14: Exorcismo JWT (Kill Session Extremo)
     @PostMapping("/{id}/kill-session")
     public ResponseEntity<Map<String, String>> killSession(@PathVariable UUID id, @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        // En un caso real, la firma vendría del cliente o de un gestor de tokens activos.
-        // Aquí demostramos la inserción de un token a la lista mediante el header interceptado o paramétrico.
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            try {
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] hash = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                StringBuilder hexString = new StringBuilder();
-                for (byte b : hash) {
-                    hexString.append(String.format("%02x", b));
-                }
-                TokenBlacklistEntity blackToken = new TokenBlacklistEntity(hexString.toString(), LocalDateTime.now().plusDays(1), null);
-                blacklistRepository.save(blackToken);
-            } catch (NoSuchAlgorithmException e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            }
-        }
+        // En lugar de añadir el token del admin a la lista negra (lo cual cerraría la sesión del admin),
+        // dependemos de la desactivación del usuario en la base de datos.
         
-        // También cerramos la transaccionalidad desactivando al usuario base transitoriamente
+        // Cerramos la transaccionalidad desactivando al usuario base transitoriamente
         userService.deactivateUser(id);
         
         Map<String, String> response = new HashMap<>();

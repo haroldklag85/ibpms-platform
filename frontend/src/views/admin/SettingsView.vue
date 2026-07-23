@@ -43,7 +43,7 @@
         </div>
 
         <div v-else-if="currentTab === 'users'" class="animate-fade-in h-full">
-           <RbacManager :users="mockUsers" @edit-roles="openRoleModal" />
+           <RbacManager :users="activeUsers" @edit-roles="openRoleModal" />
         </div>
 
         <div v-else class="flex flex-col items-center justify-center h-full text-gray-400">
@@ -79,7 +79,7 @@
 
           <div v-if="draftType === 'OUTBOUND'">
              <label class="block text-sm font-medium text-gray-700 mb-1">Target URL (Webhook Externo)</label>
-             <input type="url" placeholder="https://api.empresa.com/webhook" class="w-full font-mono text-sm px-3 py-2 border rounded shadow-sm">
+             <input type="url" placeholder="https://integrationStore.empresa.com/webhook" class="w-full font-mono text-sm px-3 py-2 border rounded shadow-sm">
           </div>
 
           <div v-if="draftType === 'INBOUND'">
@@ -104,22 +104,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
+import { ref, onMounted } from 'vue';
 import IntegrationsList from '@/components/admin/IntegrationsList.vue';
 import RbacManager from '@/components/admin/RbacManager.vue';
 import type { WebhookConfig, WebhookDirection } from '@/types/Integration';
 import type { UserProfile } from '@/types/Security';
 
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
+
 const currentTab = ref('users'); // Empezar probando el Tab de Usuarios
 const isSlideOpen = ref(false);
 const draftType = ref<WebhookDirection>('OUTBOUND');
 
-// Mock Data Users
-const mockUsers = ref<UserProfile[]>([
-  { userId: "c.romero", fullName: "Carlos Romero", email: "c.romero@empresa.com", department: "Operaciones", assignedRoles: ["RECLAMADOR", "BASICO"], isActive: true },
-  { userId: "a.luna", fullName: "Ana Luna", email: "a.luna@empresa.com", department: "Sistemas (TI)", assignedRoles: ["ADMIN_PLATAFORMA", "SUPERVISOR"], isActive: true },
-  { userId: "e.perez", fullName: "Elena Pérez", email: "e.perez@empresa.com", department: "Finanzas", assignedRoles: ["APROBADOR_PAGOS"], isActive: false }
-]);
+// Real Data Users
+const activeUsers = ref<UserProfile[]>([]);
+
+onMounted(async () => {
+  try {
+    const { data } = await integrationStore.get('/admin/users');
+    activeUsers.value = data || [];
+  } catch (err) {
+    console.error('Failed to load users:', err);
+  }
+});
 
 const openRoleModal = (user: UserProfile) => {
   alert(`Desplegando modal de asignación de roles para: ${user.fullName}`);

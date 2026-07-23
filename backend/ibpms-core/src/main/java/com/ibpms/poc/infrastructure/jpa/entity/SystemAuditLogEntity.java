@@ -1,3 +1,4 @@
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.infrastructure.jpa.entity;
 
 import jakarta.persistence.Column;
@@ -27,16 +28,27 @@ public class SystemAuditLogEntity {
     @Column(name = "message_count")
     private Integer messageCount;
 
+    @Column(name = "correlation_id")
+    private String correlationId;
+
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "active_roles_json", columnDefinition = "jsonb")
+    private String activeRolesJson;
+
     public SystemAuditLogEntity() {
         this.id = UUID.randomUUID().toString();
         this.timestamp = LocalDateTime.now();
     }
 
-    public SystemAuditLogEntity(String userId, String action, Integer messageCount) {
+
+
+    public SystemAuditLogEntity(String userId, String action, Integer messageCount, String correlationId, String activeRolesJson) {
         this.id = UUID.randomUUID().toString();
         this.userId = userId;
         this.action = action;
         this.messageCount = messageCount;
+        this.correlationId = correlationId;
+        this.activeRolesJson = activeRolesJson;
         this.timestamp = LocalDateTime.now();
     }
 
@@ -50,4 +62,8 @@ public class SystemAuditLogEntity {
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
     public Integer getMessageCount() { return messageCount; }
     public void setMessageCount(Integer messageCount) { this.messageCount = messageCount; }
+    public String getCorrelationId() { return correlationId; }
+    public void setCorrelationId(String correlationId) { this.correlationId = correlationId; }
+    public String getActiveRolesJson() { return activeRolesJson; }
+    public void setActiveRolesJson(String activeRolesJson) { this.activeRolesJson = activeRolesJson; }
 }

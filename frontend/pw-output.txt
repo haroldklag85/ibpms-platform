@@ -1,0 +1,83 @@
+
+Running 1 test using 1 worker
+
+  x  1 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:215:3 › T-06: Workdesk Delegation UI Compliance › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() (8.2s)
+  x  2 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:215:3 › T-06: Workdesk Delegation UI Compliance › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() (retry #1) (6.1s)
+
+
+  1) [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:215:3 › T-06: Workdesk Delegation UI Compliance › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('.bg-red-50').filter({ hasText: 'No tiene permisos para ver el escritorio de este usuario.' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.bg-red-50').filter({ hasText: 'No tiene permisos para ver el escritorio de este usuario.' })[22m
+
+
+      247 |     // En Workdesk.vue, el error se renderiza en un div con clase bg-red-50
+      248 |     const errorToast = page.locator('.bg-red-50', { hasText: 'No tiene permisos para ver el escritorio de este usuario.' });
+    > 249 |     await expect(errorToast).toBeVisible({ timeout: 5000 });
+          |                              ^
+      250 |
+      251 |     // Validar que NO se haya llamado a alert()
+      252 |     expect(alertCalled).toBe(false);
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:249:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-f8d75-estra-Toast-sin-usar-alert--authenticated\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us001-hexago-f8d75-estra-Toast-sin-usar-alert--authenticated\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-f8d75-estra-Toast-sin-usar-alert--authenticated\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us001-hexago-f8d75-estra-Toast-sin-usar-alert--authenticated\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('.bg-red-50').filter({ hasText: 'No tiene permisos para ver el escritorio de este usuario.' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.bg-red-50').filter({ hasText: 'No tiene permisos para ver el escritorio de este usuario.' })[22m
+
+
+      247 |     // En Workdesk.vue, el error se renderiza en un div con clase bg-red-50
+      248 |     const errorToast = page.locator('.bg-red-50', { hasText: 'No tiene permisos para ver el escritorio de este usuario.' });
+    > 249 |     await expect(errorToast).toBeVisible({ timeout: 5000 });
+          |                              ^
+      250 |
+      251 |     // Validar que NO se haya llamado a alert()
+      252 |     expect(alertCalled).toBe(false);
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:249:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-f8d75-estra-Toast-sin-usar-alert--authenticated-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us001-hexago-f8d75-estra-Toast-sin-usar-alert--authenticated-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-f8d75-estra-Toast-sin-usar-alert--authenticated-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us001-hexago-f8d75-estra-Toast-sin-usar-alert--authenticated-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:215:3 › T-06: Workdesk Delegation UI Compliance › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() 

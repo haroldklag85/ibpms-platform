@@ -7,9 +7,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.ibpms.poc.crosscutting.annotations.Traceability;
 
 @RestController
 @RequestMapping("/api/v1/audit")
+@Traceability(US = "US-005", CA = {"CA-09"})
 public class AuditLogController {
 
     private final AuditLogUseCase auditUseCase;

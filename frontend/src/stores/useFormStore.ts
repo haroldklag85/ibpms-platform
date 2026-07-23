@@ -1,10 +1,20 @@
+import { useTimeStore } from '@/stores/timeStore';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { z } from 'zod';
 import { api } from '@/services/apiClient';
+import { useConnectionStore } from '@/stores/connectionStore';
+
+const isNetworkOrServerError = (e: any) => {
+    if (!e) return false;
+    const isNetErr = e.message === 'Network Error' || e.code === 'ERR_NETWORK' || !e.response;
+    const is5xx = e.response && e.response.status >= 500;
+    return isNetErr || is5xx;
+};
 
 export const useFormStore = defineStore('formStore', () => {
     const formData = ref<Record<string, any>>({});
+    const timeStore = useTimeStore();
     const isDirty = ref(false);
     const isSubmitting = ref(false);
     const validationErrors = ref<Record<string, string>>({});
@@ -12,17 +22,37 @@ export const useFormStore = defineStore('formStore', () => {
     // CA-29: Soft-Undo
     const isUndoAvailable = ref(false);
     const undoTimeLeft = ref(0);
-    let undoTimer: ReturnType<typeof setInterval> | null = null;
-    let pendingSubmitDraft: { taskId: string; payload: any } | null = null;
+    let pendingSubmitDraft: { taskId: string; payload: any; versionId?: string } | null = null;
 
     // CA-31 & CA-32: Idempotency Retry Limit
-    const requiresRetry = ref(false);
-    const retryCount = ref(0);
     const idempotencyKey = ref('');
 
-    const setFormData = (data: Record<string, any>) => {
+    const setFormData = (data: Record<string, any>, taskId?: string) => {
         formData.value = { ...data };
         isDirty.value = true;
+        
+        // Amnesia Cero: Persistir draft en local
+        if (taskId) {
+            localStorage.setItem(`ibpms_draft_${taskId}`, JSON.stringify(data));
+        }
+    };
+
+    const loadLocalDraft = (taskId: string) => {
+        const draft = localStorage.getItem(`ibpms_draft_${taskId}`);
+        if (draft) {
+            try {
+                formData.value = JSON.parse(draft);
+                isDirty.value = true;
+                return true;
+            } catch(e) {
+                console.error('Error loading draft', e);
+            }
+        }
+        return false;
+    };
+
+    const clearLocalDraft = (taskId: string) => {
+        localStorage.removeItem(`ibpms_draft_${taskId}`);
     };
 
     const validateForm = (schema: z.ZodSchema): boolean => {
@@ -51,36 +81,51 @@ export const useFormStore = defineStore('formStore', () => {
         }
     };
 
-    const submitForm = async (taskId: string, payload: any, enableUndo: boolean = true, isRetry: boolean = false) => {
+    // @Traceability: US-003 - CA-72
+    const submitForm = async (taskId: string, payload: any, enableUndo: boolean = true, isRetry: boolean = false, versionId?: string) => {
         isSubmitting.value = true;
+        const connectionStore = useConnectionStore();
         try {
             if (enableUndo && !isRetry) {
                 // Emulamos el envio retrasandolo para permitir soft-undo
-                pendingSubmitDraft = { taskId, payload };
+                pendingSubmitDraft = { taskId, payload, versionId };
                 startUndoTimer(5);
                 return;
             }
             
             if (!isRetry) {
                 idempotencyKey.value = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-                retryCount.value = 0;
+                connectionStore.retryCount = 0;
             } else {
-                retryCount.value++;
+                connectionStore.retryCount++;
             }
 
-            const config = { headers: { 'Idempotency-Key': idempotencyKey.value } };
+            const config = {
+                headers: {
+                    'Idempotency-Key': idempotencyKey.value,
+                    ...(versionId ? { 'If-Match': versionId } : {})
+                }
+            };
             // Envío normal o Retry
             await api.completeTask(taskId, payload, config);
             
+            clearLocalDraft(taskId);
+            localStorage.removeItem(`ibpms_network_fallback_${taskId}`);
             isDirty.value = false;
             formData.value = {};
             validationErrors.value = {};
-            requiresRetry.value = false;
-            retryCount.value = 0;
+            connectionStore.requiresRetry = false;
+            connectionStore.retryCount = 0;
         } catch (e: any) {
             console.error('Failed to submit form', e);
+            
+            // CA-72: Fallback to LocalStorage on network/server error
+            if (isNetworkOrServerError(e)) {
+                localStorage.setItem(`ibpms_network_fallback_${taskId}`, JSON.stringify(payload));
+            }
+
             if (e.response && e.response.status === 400 && e.response.data && Array.isArray(e.response.data.errors)) {
-                // CA-2 Validation Field-by-Field
+                // @Traceability: US-000 - CA-2
                 const backendErrors: Record<string, string> = {};
                 e.response.data.errors.forEach((err: any) => {
                     backendErrors[err.field] = err.message;
@@ -88,10 +133,10 @@ export const useFormStore = defineStore('formStore', () => {
                 validationErrors.value = backendErrors;
                 throw new Error('ValidationFailed(RFC7807)');
             } else if (e.response && (e.response.status === 504 || typeof e.response.status === 'undefined')) {
-                if (retryCount.value < 3) {
-                    requiresRetry.value = true;
+                if (connectionStore.retryCount < 3) {
+                    connectionStore.requiresRetry = true;
                 } else {
-                    requiresRetry.value = false;
+                    connectionStore.requiresRetry = false;
                 }
             } else if (e.response && e.response.status === 409 && e.response.data && e.response.data.type === 'SESSION_CONFLICT') {
                 window.dispatchEvent(new CustomEvent('session-conflict-dispatch'));
@@ -102,24 +147,27 @@ export const useFormStore = defineStore('formStore', () => {
         }
     };
 
+    // Handle undo countdown using timeStore tick
+    watch(() => timeStore.currentTick, (tick) => {
+        if (isUndoAvailable.value && tick % 1000 < 500) {
+            undoTimeLeft.value--;
+            if (undoTimeLeft.value <= 0) {
+                commitPendingSubmit().catch((e) => {
+                    // @Traceability: US-003 - CA-72
+                    // Suppress unhandled rejection since commitPendingSubmit already logs and handles local fallback serialization
+                });
+            }
+        }
+    }); // @Traceability: Retro-Remediación ADR-006
+
     const startUndoTimer = (seconds: number) => {
         isUndoAvailable.value = true;
         undoTimeLeft.value = seconds;
-        
-        if (undoTimer) clearInterval(undoTimer);
-        
-        undoTimer = setInterval(() => {
-            undoTimeLeft.value--;
-            if (undoTimeLeft.value <= 0) {
-                commitPendingSubmit();
-            }
-        }, 1000);
     };
 
     const softUndo = () => {
         if (!isUndoAvailable.value) return false;
         
-        if (undoTimer) clearInterval(undoTimer);
         isUndoAvailable.value = false;
         undoTimeLeft.value = 0;
         pendingSubmitDraft = null;
@@ -127,19 +175,31 @@ export const useFormStore = defineStore('formStore', () => {
         return true; // Undo exito
     };
 
+    // @Traceability: US-003 - CA-72
     const commitPendingSubmit = async () => {
         if (!pendingSubmitDraft) return;
         
-        if (undoTimer) clearInterval(undoTimer);
         isUndoAvailable.value = false;
         
         try {
-            const config = { headers: { 'Idempotency-Key': idempotencyKey.value || ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2)) } };
+            const config = {
+                headers: {
+                    'Idempotency-Key': idempotencyKey.value || ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2)),
+                    ...(pendingSubmitDraft.versionId ? { 'If-Match': pendingSubmitDraft.versionId } : {})
+                }
+            };
             await api.completeTask(pendingSubmitDraft.taskId, pendingSubmitDraft.payload, config);
+            clearLocalDraft(pendingSubmitDraft.taskId);
+            localStorage.removeItem(`ibpms_network_fallback_${pendingSubmitDraft.taskId}`);
             isDirty.value = false;
             formData.value = {};
-        } catch (e) {
+        } catch (e: any) {
             console.error('Final commit failed', e);
+            
+            // CA-72: Fallback to LocalStorage on network/server error
+            if (isNetworkOrServerError(e)) {
+                localStorage.setItem(`ibpms_network_fallback_${pendingSubmitDraft.taskId}`, JSON.stringify(pendingSubmitDraft.payload));
+            }
             throw e;
         } finally {
             pendingSubmitDraft = null;
@@ -154,10 +214,10 @@ export const useFormStore = defineStore('formStore', () => {
         validationErrors,
         isUndoAvailable,
         undoTimeLeft,
-        requiresRetry,
-        retryCount,
         idempotencyKey,
         setFormData,
+        loadLocalDraft,
+        clearLocalDraft,
         validateForm,
         saveDraft,
         submitForm,

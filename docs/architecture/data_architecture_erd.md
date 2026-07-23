@@ -62,6 +62,20 @@ erDiagram
         timestamp created_at
     }
 
+    ibpms_form_definitions {
+        uuid id PK "UUID nativo PostgreSQL"
+        uuid form_id "Agrupador lógico del formulario"
+        int version_id "Secuencial por form_id"
+        jsonb schema_content "Esquema AST Zod serializado"
+        varchar(50) created_by "Usuario creador"
+        timestamp created_at "Inmutable"
+        varchar(64) hash_sha256 "SHA-256 del schema"
+        boolean is_qa_certified "Sello QA (US-028)"
+        varchar(64) certified_schema_hash "Hash al certificar"
+        varchar(100) certified_by "QA certificador"
+        timestamp certified_at "Fecha certificación"
+    }
+
     ibpms_document {
         char(36) id PK "UUID SGDEA"
         char(36) case_id FK "Contexto de negocio"
@@ -83,11 +97,13 @@ erDiagram
 
     ibpms_audit_log {
         uuid id PK "UUID nativo PostgreSQL"
-        varchar(50) entity_type "CASE o TASK"
+        varchar(50) entity_type "CASE, TASK, DOC, FORM_DEFINITION"
         char(36) entity_id "ID de la Entidad afectada"
-        varchar(100) event_type "Ej: STATUS_CHANGED, VARIABLE_UPDATED"
+        varchar(100) event_type "Ej: STATUS_CHANGED, QA_CERTIFIED"
         varchar(100) performed_by "Autor del cambio"
-        json event_data "Diff del cambio real (Para trazabilidad Timeline)"
+        json event_data "Diff del cambio real (Timeline)"
+        bytea payload_snapshot "Snapshot binario GZIP (US-028)"
+        jsonb details "Metadatos estructurados (US-028)"
         timestamp created_at
     }
 
@@ -99,6 +115,7 @@ erDiagram
     ibpms_task ||--o{ ibpms_audit_log : "registra historial (1:N) vía Javers"
     ibpms_case ||--o| ibpms_ui_template : "usa vista (N:1)"
     ibpms_task }o--o{ sys_role : "asignado a grupos lógicos"
+    ibpms_form_definitions ||--o{ ibpms_audit_log : "traza certificación QA (1:N)"
 ```
 
 ---
@@ -176,6 +193,7 @@ A continuación se detalla la estructura física de las tablas del esquema princ
 | `created_at` | `TIMESTAMP` | | NO | Timestmap milisegundo de disponibilidad generacional a Bandeja. |
 | `deleted_at` | `TIMESTAMP` | | SÍ | Indicador de eliminación lógica de tarea caducada. |
 
+
 **Tabla:** `ibpms_ui_template` (Nuevo - V1.5)
 | Columna | Tipo de Dato | Llave | Nulable | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
@@ -185,6 +203,23 @@ A continuación se detalla la estructura física de las tablas del esquema princ
 | `raw_code` | `TEXT` | | NO | Código crudo editable desde el IDE web/Monaco. |
 | `version` | `VARCHAR(50)` | | NO | SemVer de la UI. |
 | `created_at` | `TIMESTAMP` | | NO | Default current time. |
+
+**Tabla:** `ibpms_form_definitions` (US-003 + US-028 — Definiciones Versionadas de Formularios)
+| Columna | Tipo de Dato | Llave | Nulable | Descripción |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `UUID` | PK | NO | UUID nativo PostgreSQL (`gen_random_uuid()`). |
+| `form_id` | `UUID` | UK | NO | Agrupador lógico del formulario (todas las versiones comparten este ID). |
+| `version_id` | `INT` | UK | NO | Secuencial monotónico por `form_id`. Constraint: `UNIQUE(form_id, version_id)`. |
+| `schema_content` | `JSONB` | | NO | Esquema AST completo del formulario (estructura Zod serializada). |
+| `created_by` | `VARCHAR(50)` | | NO | Usuario o sistema que creó esta versión. |
+| `created_at` | `TIMESTAMP` | | NO | Default `CURRENT_TIMESTAMP`. Inmutable. |
+| `hash_sha256` | `VARCHAR(64)` | UK | NO | Hash SHA-256 del `schema_content`. Constraint: `UNIQUE(form_id, hash_sha256)`. |
+| `is_qa_certified` | `BOOLEAN` | | NO | Sello QA (US-028 CA-11/CA-12). Default `FALSE`. |
+| `certified_schema_hash` | `VARCHAR(64)` | | SÍ | Hash del esquema al momento de la certificación (CA-12 revocación por mutación). |
+| `certified_by` | `VARCHAR(100)` | | SÍ | Usuario QA que otorgó el sello. |
+| `certified_at` | `TIMESTAMP` | | SÍ | Timestamp de la última certificación exitosa. |
+
+> **Changesets Liquibase:** `18-create-form-definitions.sql` (DDL base) + `25-us028-qa-certification-columns.sql` (ALTER certificación QA).
 
 ### 4.3. Esquema de Metadatos y Optimización
 
@@ -216,9 +251,13 @@ A continuación se detalla la estructura física de las tablas del esquema princ
 | Columna | Tipo de Dato | Llave | Nulable | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `CHAR(36)` | PK | NO | UUID v4. |
-| `entity_type` | `VARCHAR(50)` | | NO | Enfoque impactado (`CASE`, `TASK`, `DOC`). |
+| `entity_type` | `VARCHAR(50)` | | NO | Enfoque impactado (`CASE`, `TASK`, `DOC`, `FORM_DEFINITION`). |
 | `entity_id` | `CHAR(36)` | | NO | Vínculo físico sobre dicha entidad superior. |
-| `event_type` | `VARCHAR(100)` | | NO | Tipo textual preprogramado de la alteración (`STATUS_CHANGED`, etc) |
+| `event_type` | `VARCHAR(100)` | | NO | Tipo textual preprogramado de la alteración (`STATUS_CHANGED`, `QA_CERTIFIED`, `QA_CERT_REVOKED`, `QA_CERT_CONFLICT`, etc). |
 | `performed_by`| `VARCHAR(100)` | | NO | Sujeto ejecutor final, puede ser `Auto-Timer` o `User UUID`. |
 | `event_data` | `JSON` | | SÍ | **Potenciado por Javers:** Guarda las instantáneas exactas del Payload ("Before/After") para certificar inmutabilidad ISO. |
+| `payload_snapshot` | `BYTEA` | | SÍ | Snapshot binario del payload completo (US-028 CA-15). Puede estar comprimido con GZIP. |
+| `is_compressed` | `BOOLEAN` | | SÍ | Indica si `payload_snapshot` está comprimido con GZIP (>32KB raw). Default `FALSE`. |
+| `truncated` | `BOOLEAN` | | SÍ | Indica si el payload fue truncado a 32KB por exceder 64KB comprimido. Default `FALSE`. |
+| `details` | `JSONB` | | SÍ | Metadatos estructurados adicionales del evento (US-028 CA-15). |
 | `created_at` | `TIMESTAMP` | | NO | **Regla DDL de Interfaz Física: POSTGRESQL TABLE PARTITION BY RANGE.** Fecha. |

@@ -1,0 +1,40 @@
+diff --git a/ibpms-platform/backend/ibpms-core/src/test/java/com/ibpms/poc/application/usecase/dmn/DmnArchitectureComplianceTest.java b/ibpms-platform/backend/ibpms-core/src/test/java/com/ibpms/poc/application/usecase/dmn/DmnArchitectureComplianceTest.java
+index 1000000..2000000
+--- a/ibpms-platform/backend/ibpms-core/src/test/java/com/ibpms/poc/application/usecase/dmn/DmnArchitectureComplianceTest.java
++++ b/ibpms-platform/backend/ibpms-core/src/test/java/com/ibpms/poc/application/usecase/dmn/DmnArchitectureComplianceTest.java
+@@ -8,3 +8,21 @@
+-import java.util.List;
+ 
+ import static org.junit.jupiter.api.Assertions.fail;
+ 
+@@ -19,13 +19,20 @@
+-        List<String> lines = Files.readAllLines(path);
+-        for (String line : lines) {
+-            String trimmed = line.trim();
+-            if (trimmed.startsWith("import ")) {
+-                if (trimmed.contains("com.ibpms.poc.infrastructure.jpa") || trimmed.contains("jakarta.persistence")) {
+-                    fail("Architectural violation (ADR-001): DmnGovernanceUseCase imports infrastructure/JPA class: " + trimmed);
+-                }
+-            }
+-        }
++        String content = Files.readString(path);
++        
++        // Remove block comments (/* ... */) and line comments (// ...)
++        String cleanContent = content
++            .replaceAll("/\\*(?s).*?\\*/", "")
++            .replaceAll("//.*", "");
++
++        // Forbidden classes and packages representing persistence or infrastructure leak (ADR-001)
++        String[] forbiddenTokens = {
++            "DmnModelEntity",
++            "DmnModelRepository",
++            "jakarta.persistence",
++            "javax.persistence",
++            "org.springframework.data.jpa"
++        };
++
++        for (String token : forbiddenTokens) {
++            if (cleanContent.contains(token)) {
++                fail("Architectural violation (ADR-001): DmnGovernanceUseCase contains forbidden import or usage of: " + token);
++            }
++        }

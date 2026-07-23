@@ -375,13 +375,53 @@ Feature: AI Agent Factory, B2B Token Arbitrage & BPMN FinOps Resilience
     And permitirá inyectar recargas manuales (Top-Ups) sumando créditos a la billetera vitalicia del Tenant.
     And la integración nativa de pasarelas de pago automáticas (Stripe/PayPal) queda diferida para V2.
 
-Scenario: Downgrade Automático por Falta de Fondos Premium (Fallback Cognitivo)
+  Scenario: Downgrade Automático por Falta de Fondos Premium (Fallback Cognitivo) (CA-09)
     Given un Agente IA configurado para usar un modelo Premium (Ej: Gemini Ultra) y el interruptor Overage apagado
     When el Agente intenta inferir y el Billing Engine rechaza la transacción por fondos insuficientes en su Tier
     Then el Backend TIENE PROHIBIDO suspender la tarea BPMN de manera inmediata levantando el incidente.
     And el motor intentará un "Downgrade Fallback" automático hacia el modelo Estándar (Ej: Gemini Flash) SI Y SOLO SI este Tier aún posee cuota mensual gratuita.
     And si el modelo Estándar logra resolverlo, el proceso avanza estampando en la auditoría: `[PROCESADO_POR_FALLBACK]`.
     And solo si el modelo Estándar también agota sus tokens (Bolsa en 0), el Worker levantará el incidente en Camunda (`ESPERANDO_SALDO_IA`), priorizando siempre la continuidad operativa.
+
+  # ==============================================================================
+  # E. MATRIZ DE SKILLS COGNITIVOS Y TOOL CALLING ZERO-TRUST
+  # ==============================================================================
+  Scenario: Binding Agente-Skill mediante Configuración Dinámica (CA-10)
+    Given la necesidad de dotar de "brazos y piernas" a un Agente IA
+    When el Administrador configure un Agente en el Command Center
+    Then el sistema presentará un catálogo con un "Top 7" de Skills Estratégicos pre-cargados (Ej: `skill-creator`, `taskflow`, `github`, `slack`, `notion`, `himalaya`, `healthcheck`).
+    And el Administrador podrá marcar (Allowlist) explícitamente qué skills puede invocar este agente específico.
+    And en tiempo de ejecución, el Backend ensamblará un array `skills[]` con los IDs permitidos, inyectando exclusivamente estos en el System Prompt.
+    And si un agente no tiene un skill explícitamente asignado, tendrá RESTRICCIÓN TOTAL para invocarlo o leer su código (Zero-Trust Security).
+
+  Scenario: Configuration-as-Code para Skills (Prompt-driven RAG) (CA-11)
+    Given que el Agente IA necesita ejecutar una herramienta permitida
+    Then el iBPMS no mapeará las funciones a schemas JSON rígidos tradicionales.
+    And inyectará un bloque XML `<available_skills>` y la herramienta estándar genérica de lectura de archivos.
+    And el Agente usará la herramienta de lectura para cargar dinámicamente el archivo `SKILL.md` correspondiente desde el sandbox del sistema.
+    And el agente seguirá las directivas operativas estipuladas dentro del `SKILL.md` (Configuration as Code) para ejecutar la acción.
+
+  Scenario: Creación Autónoma de Skills mediante Meta-Skill (CA-12)
+    Given que el negocio necesita integrar una nueva herramienta que no existe en el catálogo base
+    When el Administrador interactúe con un Agente Administrativo (`ADMIN_AGENT`)
+    Then este agente deberá tener asignado el meta-skill `skill-creator`.
+    And podrá interpretar la solicitud del usuario (Ej. "Crea un skill para conectar con Salesforce") y autogenerar el directorio con el archivo `SKILL.md` y sus scripts auxiliares.
+    And el nuevo skill quedará registrado en el catálogo central y disponible para ser asignado (Allowlisted) a otros agentes operativos de la plataforma.
+
+  Scenario: Automatización RPA Cognitiva y Navegación Autónoma (CA-13)
+    Given un Proceso BPMN que requiere extraer datos o rellenar formularios en un portal Legacy sin API disponible
+    When el Orquestador asigne la tarea a un Agente Operativo con acceso al Browser Skill
+    Then el Agente no ejecutará scripts pre-grabados rígidos, sino navegación visual y DOM-parsing interactivo (Playwright/Puppeteer CDP Proxy).
+    And el Agente usará el método `snapshot` para recibir el árbol ARIA o versión "AI-Friendly" del portal, decidiendo autónomamente dónde hacer clic o qué escribir.
+    And si la estructura del DOM cambia levemente con el tiempo, la IA será resiliente y logrará su objetivo deduciendo el nuevo layout, erradicando la fragilidad clásica del RPA tradicional.
+    And el clúster de navegadores headless será administrado y depurado automáticamente por el ciclo de vida del backend (`browser-lifecycle-cleanup`).
+
+  Scenario: Integración de Catálogos Corporativos vía Model Context Protocol (MCP) (CA-14)
+    Given que el iBPMS expone herramientas de negocio altamente complejas o que provienen de ecosistemas externos (Ej: Jira, SAP, Github)
+    When el Agente requiera utilizar una de estas herramientas
+    Then la plataforma no codificará la integración de manera estática y fuertemente acoplada.
+    And adoptará el estándar `Model Context Protocol (MCP)`, levantando servidores locales o remotos que expongan sus funciones y esquemas dinámicamente al agente (Client-Server architecture).
+    And el Agente usará la interfaz de "Channel Bridge" para descubrir, parsear parámetros e invocar los MCP Servers disponibles bajo su `Allowlist` (Zero-Trust).
 
 ```
 ---

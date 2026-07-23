@@ -1,0 +1,596 @@
+Total lines in log: 4889
+Found 11 failure/error marks:
+
+========================================
+Line 933: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 51.69 s <<< FAILURE! -- in com.ibpms.poc.api.controller.BpmnModelControllerTest
+========================================
+   923: at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:415) ~[postgresql-42.6.1.jar:42.6.1]
+   924: at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:335) ~[postgresql-42.6.1.jar:42.6.1]
+   925: at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:321) ~[postgresql-42.6.1.jar:42.6.1]
+   926: at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:297) ~[postgresql-42.6.1.jar:42.6.1]
+   927: at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:292) ~[postgresql-42.6.1.jar:42.6.1]
+   928: at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94) ~[HikariCP-5.0.1.jar:na]
+   929: at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java) ~[HikariCP-5.0.1.jar:na]
+   930: at liquibase.executor.jvm.JdbcExecutor$ExecuteStatementCallback.doInStatement(JdbcExecutor.java:462) ~[liquibase-core-4.24.0.jar:na]
+   931: ... 215 common frames omitted
+   932: 
+-> 933: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 51.69 s <<< FAILURE! -- in com.ibpms.poc.api.controller.BpmnModelControllerTest
+   934: [ERROR] com.ibpms.poc.api.controller.BpmnModelControllerTest.givenMalformedXml_whenDeployingModel_thenReturnsSafeAbort -- Time elapsed: 0.011 s <<< ERROR!
+   935: java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@76a54c6d testClass = com.ibpms.poc.api.controller.BpmnModelControllerTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@356746dc key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   936: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:180)
+   937: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   938: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   939: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   940: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   941: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   942: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   943: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   944: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   945: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   946: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   947: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   948: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   949: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   950: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   951: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   952: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   953: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   954: Caused by: org.springframework.context.ApplicationContextException: Unable to start web server
+   955: at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.onRefresh(ServletWebServerApplicationContext.java:165)
+   956: at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:618)
+   957: at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+   958: at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+   959: at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+   960: at org.springframework.boot.SpringApplication.run(SpringApplication.java:334)
+   961: at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$3(SpringBootContextLoader.java:137)
+   962: at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
+   963: at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46)
+   964: at org.springframework.boot.SpringApplication.withHook(SpringApplication.java:1454)
+   965: at org.springframework.boot.test.context.SpringBootContextLoader$ContextLoaderHook.run(SpringBootContextLoader.java:553)
+   966: at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:137)
+   967: at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:108)
+   968: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:225)
+   969: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:152)
+   970: ... 17 more
+   971: Caused by: org.springframework.boot.web.server.WebServerException: Unable to start embedded Tomcat
+   972: at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.initialize(TomcatWebServer.java:145)
+
+========================================
+Line 934: [ERROR] com.ibpms.poc.api.controller.BpmnModelControllerTest.givenMalformedXml_whenDeployingModel_thenReturnsSafeAbort -- Time elapsed: 0.011 s <<< ERROR!
+========================================
+   924: at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:335) ~[postgresql-42.6.1.jar:42.6.1]
+   925: at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:321) ~[postgresql-42.6.1.jar:42.6.1]
+   926: at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:297) ~[postgresql-42.6.1.jar:42.6.1]
+   927: at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:292) ~[postgresql-42.6.1.jar:42.6.1]
+   928: at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94) ~[HikariCP-5.0.1.jar:na]
+   929: at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java) ~[HikariCP-5.0.1.jar:na]
+   930: at liquibase.executor.jvm.JdbcExecutor$ExecuteStatementCallback.doInStatement(JdbcExecutor.java:462) ~[liquibase-core-4.24.0.jar:na]
+   931: ... 215 common frames omitted
+   932: 
+   933: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 51.69 s <<< FAILURE! -- in com.ibpms.poc.api.controller.BpmnModelControllerTest
+-> 934: [ERROR] com.ibpms.poc.api.controller.BpmnModelControllerTest.givenMalformedXml_whenDeployingModel_thenReturnsSafeAbort -- Time elapsed: 0.011 s <<< ERROR!
+   935: java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@76a54c6d testClass = com.ibpms.poc.api.controller.BpmnModelControllerTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@356746dc key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   936: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:180)
+   937: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   938: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   939: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   940: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   941: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   942: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   943: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   944: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   945: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   946: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   947: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   948: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   949: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   950: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   951: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   952: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   953: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   954: Caused by: org.springframework.context.ApplicationContextException: Unable to start web server
+   955: at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.onRefresh(ServletWebServerApplicationContext.java:165)
+   956: at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:618)
+   957: at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+   958: at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+   959: at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+   960: at org.springframework.boot.SpringApplication.run(SpringApplication.java:334)
+   961: at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$3(SpringBootContextLoader.java:137)
+   962: at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
+   963: at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46)
+   964: at org.springframework.boot.SpringApplication.withHook(SpringApplication.java:1454)
+   965: at org.springframework.boot.test.context.SpringBootContextLoader$ContextLoaderHook.run(SpringBootContextLoader.java:553)
+   966: at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:137)
+   967: at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:108)
+   968: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:225)
+   969: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:152)
+   970: ... 17 more
+   971: Caused by: org.springframework.boot.web.server.WebServerException: Unable to start embedded Tomcat
+   972: at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.initialize(TomcatWebServer.java:145)
+   973: at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.<init>(TomcatWebServer.java:105)
+
+========================================
+Line 1794: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 68.36 s <<< FAILURE! -- in com.ibpms.poc.api.controller.FormCompletionIntegrationTest
+========================================
+   1784: at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144) ~[na:na]
+   1785: at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[na:na]
+   1786: at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
+   1787: Caused by: java.io.EOFException: null
+   1788: at org.postgresql.core.PGStream.receiveChar(PGStream.java:467) ~[postgresql-42.6.1.jar:42.6.1]
+   1789: at org.postgresql.core.v3.ConnectionFactoryImpl.enableSSL(ConnectionFactoryImpl.java:589) ~[postgresql-42.6.1.jar:42.6.1]
+   1790: at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:191) ~[postgresql-42.6.1.jar:42.6.1]
+   1791: at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:258) ~[postgresql-42.6.1.jar:42.6.1]
+   1792: ... 14 common frames omitted
+   1793: 
+-> 1794: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 68.36 s <<< FAILURE! -- in com.ibpms.poc.api.controller.FormCompletionIntegrationTest
+   1795: [ERROR] com.ibpms.poc.api.controller.FormCompletionIntegrationTest.testFailFast_WhenPayloadBreaksSchema_ReturnsBadRequest -- Time elapsed: 0.054 s <<< ERROR!
+   1796: java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@1171f441 testClass = com.ibpms.poc.api.controller.FormCompletionIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@5b35db9b key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@218d3f30, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@3cbe2b1e], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   1797: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:180)
+   1798: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   1799: at org.springframework.test.context.web.ServletTestExecutionListener.setUpRequestContextIfNecessary(ServletTestExecutionListener.java:191)
+   1800: at org.springframework.test.context.web.ServletTestExecutionListener.prepareTestInstance(ServletTestExecutionListener.java:130)
+   1801: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   1802: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   1803: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   1804: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   1805: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   1806: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   1807: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   1808: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   1809: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   1810: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   1811: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   1812: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   1813: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   1814: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   1815: Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'formCompletionController' defined in file [C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\backend\ibpms-core\target\classes\com\ibpms\poc\api\controller\FormCompletionController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'formCompletionService' defined in file [C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\backend\ibpms-core\target\classes\com\ibpms\poc\application\service\FormCompletionService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'autoClaimService' defined in file [C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\backend\ibpms-core\target\classes\com\ibpms\poc\application\service\AutoClaimService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'org.camunda.bpm.engine.spring.SpringProcessEngineServicesConfiguration': Unsatisfied dependency expressed through field 'processEngine': Error creating bean with name 'processEngineFactoryBean': FactoryBean threw exception on object creation
+   1816: at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:798)
+   1817: at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237)
+   1818: at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355)
+   1819: at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1192)
+   1820: at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+   1821: at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+   1822: at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325)
+   1823: at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+   1824: at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323)
+   1825: at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199)
+   1826: at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:975)
+   1827: at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:959)
+   1828: at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:624)
+   1829: at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+   1830: at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+   1831: at org.springframework.boot.SpringApplication.run(SpringApplication.java:334)
+   1832: at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$3(SpringBootContextLoader.java:137)
+   1833: at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
+
+========================================
+Line 1795: [ERROR] com.ibpms.poc.api.controller.FormCompletionIntegrationTest.testFailFast_WhenPayloadBreaksSchema_ReturnsBadRequest -- Time elapsed: 0.054 s <<< ERROR!
+========================================
+   1785: at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[na:na]
+   1786: at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
+   1787: Caused by: java.io.EOFException: null
+   1788: at org.postgresql.core.PGStream.receiveChar(PGStream.java:467) ~[postgresql-42.6.1.jar:42.6.1]
+   1789: at org.postgresql.core.v3.ConnectionFactoryImpl.enableSSL(ConnectionFactoryImpl.java:589) ~[postgresql-42.6.1.jar:42.6.1]
+   1790: at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:191) ~[postgresql-42.6.1.jar:42.6.1]
+   1791: at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:258) ~[postgresql-42.6.1.jar:42.6.1]
+   1792: ... 14 common frames omitted
+   1793: 
+   1794: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 68.36 s <<< FAILURE! -- in com.ibpms.poc.api.controller.FormCompletionIntegrationTest
+-> 1795: [ERROR] com.ibpms.poc.api.controller.FormCompletionIntegrationTest.testFailFast_WhenPayloadBreaksSchema_ReturnsBadRequest -- Time elapsed: 0.054 s <<< ERROR!
+   1796: java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@1171f441 testClass = com.ibpms.poc.api.controller.FormCompletionIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@5b35db9b key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@218d3f30, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@3cbe2b1e], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   1797: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:180)
+   1798: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   1799: at org.springframework.test.context.web.ServletTestExecutionListener.setUpRequestContextIfNecessary(ServletTestExecutionListener.java:191)
+   1800: at org.springframework.test.context.web.ServletTestExecutionListener.prepareTestInstance(ServletTestExecutionListener.java:130)
+   1801: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   1802: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   1803: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   1804: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   1805: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   1806: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   1807: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   1808: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   1809: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   1810: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   1811: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   1812: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   1813: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   1814: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   1815: Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'formCompletionController' defined in file [C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\backend\ibpms-core\target\classes\com\ibpms\poc\api\controller\FormCompletionController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'formCompletionService' defined in file [C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\backend\ibpms-core\target\classes\com\ibpms\poc\application\service\FormCompletionService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'autoClaimService' defined in file [C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\backend\ibpms-core\target\classes\com\ibpms\poc\application\service\AutoClaimService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'org.camunda.bpm.engine.spring.SpringProcessEngineServicesConfiguration': Unsatisfied dependency expressed through field 'processEngine': Error creating bean with name 'processEngineFactoryBean': FactoryBean threw exception on object creation
+   1816: at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:798)
+   1817: at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237)
+   1818: at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355)
+   1819: at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1192)
+   1820: at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+   1821: at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+   1822: at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325)
+   1823: at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+   1824: at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323)
+   1825: at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199)
+   1826: at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:975)
+   1827: at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:959)
+   1828: at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:624)
+   1829: at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+   1830: at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+   1831: at org.springframework.boot.SpringApplication.run(SpringApplication.java:334)
+   1832: at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$3(SpringBootContextLoader.java:137)
+   1833: at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
+   1834: at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46)
+
+========================================
+Line 2058: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.038 s <<< FAILURE! -- in com.ibpms.poc.api.controller.FormSchemaControllerTest
+========================================
+   2048: at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+   2049: at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2050: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2051: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2052: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2053: at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2054: at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2055: at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2056: at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2057: 
+-> 2058: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.038 s <<< FAILURE! -- in com.ibpms.poc.api.controller.FormSchemaControllerTest
+   2059: [ERROR] com.ibpms.poc.api.controller.FormSchemaControllerTest.givenMalformedJson_whenPostingFormSchema_thenBouncesBeforePersistence -- Time elapsed: 0 s <<< ERROR!
+   2060: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@41e7ec46 testClass = com.ibpms.poc.api.controller.FormSchemaControllerTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@1ccd54a5 key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2061: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
+   2062: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   2063: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   2064: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   2065: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   2066: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   2067: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   2068: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   2069: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   2070: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   2071: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   2072: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   2073: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   2074: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   2075: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   2076: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   2077: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2078: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2079: 
+   2080: [INFO] Running com.ibpms.poc.api.controller.SecurityIntegrationTest
+   2081: 2026-05-31T21:45:40.618-05:00  WARN 6300 --- [ibpms-core] [           main] o.s.test.context.TestContextManager      : Caught exception while allowing TestExecutionListener [org.springframework.test.context.support.DependencyInjectionTestExecutionListener] to prepare test instance [com.ibpms.poc.api.controller.SecurityIntegrationTest@559cbe98]
+   2082: 
+   2083: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@76990f7c testClass = com.ibpms.poc.api.controller.SecurityIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@e53a01a key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2084: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145) ~[spring-test-6.1.4.jar:6.1.4]
+   2085: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130) ~[spring-test-6.1.4.jar:6.1.4]
+   2086: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142) ~[spring-test-6.1.4.jar:6.1.4]
+   2087: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98) ~[spring-test-6.1.4.jar:6.1.4]
+   2088: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260) ~[spring-test-6.1.4.jar:6.1.4]
+   2089: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163) ~[spring-test-6.1.4.jar:6.1.4]
+   2090: at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$10(ClassBasedTestDescriptor.java:378) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+   2091: at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.executeAndMaskThrowable(ClassBasedTestDescriptor.java:383) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+   2092: at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$11(ClassBasedTestDescriptor.java:378) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+   2093: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197) ~[na:na]
+   2094: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179) ~[na:na]
+   2095: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708) ~[na:na]
+   2096: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509) ~[na:na]
+   2097: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[na:na]
+
+========================================
+Line 2059: [ERROR] com.ibpms.poc.api.controller.FormSchemaControllerTest.givenMalformedJson_whenPostingFormSchema_thenBouncesBeforePersistence -- Time elapsed: 0 s <<< ERROR!
+========================================
+   2049: at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2050: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2051: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2052: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2053: at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2054: at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2055: at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2056: at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2057: 
+   2058: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.038 s <<< FAILURE! -- in com.ibpms.poc.api.controller.FormSchemaControllerTest
+-> 2059: [ERROR] com.ibpms.poc.api.controller.FormSchemaControllerTest.givenMalformedJson_whenPostingFormSchema_thenBouncesBeforePersistence -- Time elapsed: 0 s <<< ERROR!
+   2060: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@41e7ec46 testClass = com.ibpms.poc.api.controller.FormSchemaControllerTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@1ccd54a5 key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2061: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
+   2062: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   2063: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   2064: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   2065: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   2066: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   2067: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   2068: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   2069: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   2070: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   2071: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   2072: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   2073: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   2074: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   2075: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   2076: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   2077: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2078: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2079: 
+   2080: [INFO] Running com.ibpms.poc.api.controller.SecurityIntegrationTest
+   2081: 2026-05-31T21:45:40.618-05:00  WARN 6300 --- [ibpms-core] [           main] o.s.test.context.TestContextManager      : Caught exception while allowing TestExecutionListener [org.springframework.test.context.support.DependencyInjectionTestExecutionListener] to prepare test instance [com.ibpms.poc.api.controller.SecurityIntegrationTest@559cbe98]
+   2082: 
+   2083: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@76990f7c testClass = com.ibpms.poc.api.controller.SecurityIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@e53a01a key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2084: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145) ~[spring-test-6.1.4.jar:6.1.4]
+   2085: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130) ~[spring-test-6.1.4.jar:6.1.4]
+   2086: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142) ~[spring-test-6.1.4.jar:6.1.4]
+   2087: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98) ~[spring-test-6.1.4.jar:6.1.4]
+   2088: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260) ~[spring-test-6.1.4.jar:6.1.4]
+   2089: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163) ~[spring-test-6.1.4.jar:6.1.4]
+   2090: at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$10(ClassBasedTestDescriptor.java:378) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+   2091: at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.executeAndMaskThrowable(ClassBasedTestDescriptor.java:383) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+   2092: at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$11(ClassBasedTestDescriptor.java:378) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+   2093: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197) ~[na:na]
+   2094: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179) ~[na:na]
+   2095: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708) ~[na:na]
+   2096: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509) ~[na:na]
+   2097: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[na:na]
+   2098: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310) ~[na:na]
+
+========================================
+Line 2237: [ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 0.034 s <<< FAILURE! -- in com.ibpms.poc.api.controller.SecurityIntegrationTest
+========================================
+   2227: at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+   2228: at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2229: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2230: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2231: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2232: at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2233: at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2234: at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2235: at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2236: 
+-> 2237: [ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 0.034 s <<< FAILURE! -- in com.ibpms.poc.api.controller.SecurityIntegrationTest
+   2238: [ERROR] com.ibpms.poc.api.controller.SecurityIntegrationTest.givenInvalidToken_whenAccessingWorkdesk_thenReturns401 -- Time elapsed: 0.002 s <<< ERROR!
+   2239: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@76990f7c testClass = com.ibpms.poc.api.controller.SecurityIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@e53a01a key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2240: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
+   2241: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   2242: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   2243: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   2244: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   2245: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   2246: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   2247: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   2248: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   2249: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   2250: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   2251: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   2252: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   2253: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   2254: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   2255: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   2256: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2257: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2258: 
+   2259: [ERROR] com.ibpms.poc.api.controller.SecurityIntegrationTest.givenUnauthenticatedRequest_whenAccessingWorkdesk_thenReturns401 -- Time elapsed: 0 s <<< ERROR!
+   2260: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@76990f7c testClass = com.ibpms.poc.api.controller.SecurityIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@e53a01a key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2261: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
+   2262: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   2263: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   2264: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   2265: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   2266: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   2267: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   2268: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   2269: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   2270: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   2271: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   2272: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   2273: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   2274: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   2275: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   2276: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+
+========================================
+Line 2238: [ERROR] com.ibpms.poc.api.controller.SecurityIntegrationTest.givenInvalidToken_whenAccessingWorkdesk_thenReturns401 -- Time elapsed: 0.002 s <<< ERROR!
+========================================
+   2228: at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2229: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2230: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2231: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2232: at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2233: at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2234: at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2235: at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2236: 
+   2237: [ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 0.034 s <<< FAILURE! -- in com.ibpms.poc.api.controller.SecurityIntegrationTest
+-> 2238: [ERROR] com.ibpms.poc.api.controller.SecurityIntegrationTest.givenInvalidToken_whenAccessingWorkdesk_thenReturns401 -- Time elapsed: 0.002 s <<< ERROR!
+   2239: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@76990f7c testClass = com.ibpms.poc.api.controller.SecurityIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@e53a01a key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2240: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
+   2241: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   2242: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   2243: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   2244: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   2245: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   2246: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   2247: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   2248: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   2249: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   2250: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   2251: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   2252: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   2253: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   2254: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   2255: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   2256: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2257: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2258: 
+   2259: [ERROR] com.ibpms.poc.api.controller.SecurityIntegrationTest.givenUnauthenticatedRequest_whenAccessingWorkdesk_thenReturns401 -- Time elapsed: 0 s <<< ERROR!
+   2260: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@76990f7c testClass = com.ibpms.poc.api.controller.SecurityIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@e53a01a key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2261: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
+   2262: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   2263: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   2264: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   2265: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   2266: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   2267: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   2268: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   2269: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   2270: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   2271: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   2272: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   2273: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   2274: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   2275: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   2276: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   2277: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+========================================
+Line 2259: [ERROR] com.ibpms.poc.api.controller.SecurityIntegrationTest.givenUnauthenticatedRequest_whenAccessingWorkdesk_thenReturns401 -- Time elapsed: 0 s <<< ERROR!
+========================================
+   2249: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   2250: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   2251: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   2252: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   2253: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   2254: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   2255: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   2256: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2257: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2258: 
+-> 2259: [ERROR] com.ibpms.poc.api.controller.SecurityIntegrationTest.givenUnauthenticatedRequest_whenAccessingWorkdesk_thenReturns401 -- Time elapsed: 0 s <<< ERROR!
+   2260: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@76990f7c testClass = com.ibpms.poc.api.controller.SecurityIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@e53a01a key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2261: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
+   2262: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   2263: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   2264: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   2265: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   2266: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   2267: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   2268: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   2269: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   2270: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   2271: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   2272: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   2273: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   2274: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   2275: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   2276: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   2277: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2278: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2279: 
+   2280: [INFO] Running com.ibpms.poc.application.api.ProjectExecutionControllerTest
+   2281: 2026-05-31T21:45:40.695-05:00  INFO 6300 --- [ibpms-core] [           main] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+   2282: 2026-05-31T21:45:40.695-05:00  INFO 6300 --- [ibpms-core] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+   2283: 2026-05-31T21:45:40.696-05:00  INFO 6300 --- [ibpms-core] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+   2284: 2026-05-31T21:45:40.707-05:00  INFO 6300 --- [ibpms-core] [           main] c.i.p.a.api.ProjectExecutionController   : Fijando Línea Base para el proyecto: PROJECT-101
+   2285: [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.085 s -- in com.ibpms.poc.application.api.ProjectExecutionControllerTest
+   2286: [INFO] Running com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest
+   2287: 2026-05-31T21:45:40.757-05:00  WARN 6300 --- [ibpms-core] [           main] o.s.test.context.TestContextManager      : Caught exception while allowing TestExecutionListener [org.springframework.test.context.support.DependencyInjectionTestExecutionListener] to prepare test instance [com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest@770d3790]
+   2288: 
+   2289: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@7c38268b testClass = com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@3257da14 key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2290: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145) ~[spring-test-6.1.4.jar:6.1.4]
+   2291: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130) ~[spring-test-6.1.4.jar:6.1.4]
+   2292: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142) ~[spring-test-6.1.4.jar:6.1.4]
+   2293: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98) ~[spring-test-6.1.4.jar:6.1.4]
+   2294: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260) ~[spring-test-6.1.4.jar:6.1.4]
+   2295: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163) ~[spring-test-6.1.4.jar:6.1.4]
+   2296: at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$10(ClassBasedTestDescriptor.java:378) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+   2297: at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.executeAndMaskThrowable(ClassBasedTestDescriptor.java:383) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+   2298: at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$11(ClassBasedTestDescriptor.java:378) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+
+========================================
+Line 2365: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.034 s <<< FAILURE! -- in com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest
+========================================
+   2355: at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+   2356: at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2357: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2358: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2359: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2360: at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2361: at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2362: at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2363: at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2364: 
+-> 2365: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.034 s <<< FAILURE! -- in com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest
+   2366: [ERROR] com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest.shouldAssignDistinctTasksConcurrently -- Time elapsed: 0.001 s <<< ERROR!
+   2367: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@7c38268b testClass = com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@3257da14 key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2368: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
+   2369: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   2370: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   2371: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   2372: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   2373: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   2374: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   2375: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   2376: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   2377: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   2378: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   2379: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   2380: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   2381: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   2382: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   2383: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   2384: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2385: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2386: 
+   2387: [INFO] Running com.ibpms.poc.application.service.BulkClaimServiceTest
+   2388: [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.587 s -- in com.ibpms.poc.application.service.BulkClaimServiceTest
+   2389: [INFO] Running com.ibpms.poc.application.service.CompletarTareaServiceSoDTest
+   2390: [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.412 s -- in com.ibpms.poc.application.service.CompletarTareaServiceSoDTest
+   2391: [INFO] Running com.ibpms.poc.application.service.copilot.CopilotSemanticRulesTest
+   2392: [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.722 s -- in com.ibpms.poc.application.service.copilot.CopilotSemanticRulesTest
+   2393: [INFO] Running com.ibpms.poc.application.service.DmnCognitiveServiceTest
+   2394: [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.059 s -- in com.ibpms.poc.application.service.DmnCognitiveServiceTest
+   2395: [INFO] Running com.ibpms.poc.application.service.FormCompletionServiceTest
+   2396: [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.185 s -- in com.ibpms.poc.application.service.FormCompletionServiceTest
+   2397: [INFO] Running com.ibpms.poc.application.service.GhostJobSchedulerTest
+   2398: [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.153 s -- in com.ibpms.poc.application.service.GhostJobSchedulerTest
+   2399: [INFO] Running com.ibpms.poc.application.service.JwtBlacklistServiceTest
+   2400: 2026-05-31T21:45:49.757-05:00  WARN 6300 --- [ibpms-core] [           main] c.i.p.a.service.JwtBlacklistService      : Capa de Blacklist (Redis) inaccesible al verificar usuario [user-fail]. Aplicando política FAIL-OPEN.
+   2401: 2026-05-31T21:45:49.767-05:00  WARN 6300 --- [ibpms-core] [           main] c.i.p.a.service.JwtBlacklistService      : SUDO Action: Inyectando token/jti [test-jti-123] en la Blacklist de Invalidación (Redis).
+   2402: 2026-05-31T21:45:49.773-05:00  WARN 6300 --- [ibpms-core] [           main] c.i.p.a.service.JwtBlacklistService      : SUDO Action: Exorcización. Revocando todas las sesiones para el usuario [user-123]
+   2403: [INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.904 s -- in com.ibpms.poc.application.service.JwtBlacklistServiceTest
+   2404: [INFO] Running com.ibpms.poc.application.service.KanbanColumnServiceTest
+
+========================================
+Line 2366: [ERROR] com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest.shouldAssignDistinctTasksConcurrently -- Time elapsed: 0.001 s <<< ERROR!
+========================================
+   2356: at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2357: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2358: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2359: at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122) ~[surefire-junit-platform-3.2.5.jar:3.2.5]
+   2360: at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2361: at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2362: at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2363: at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.2.5.jar:3.2.5]
+   2364: 
+   2365: [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.034 s <<< FAILURE! -- in com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest
+-> 2366: [ERROR] com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest.shouldAssignDistinctTasksConcurrently -- Time elapsed: 0.001 s <<< ERROR!
+   2367: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@7c38268b testClass = com.ibpms.poc.application.service.AttendNextConcurrencyIntegrationTest, locations = [], classes = [com.ibpms.poc.Application], contextInitializerClasses = [], activeProfiles = ["test"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [[ImportsContextCustomizer@3257da14 key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@6ed7c178, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@452e2210, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@e7906af, org.springframework.boot.test.web.reactive.server.WebTestClientContextCustomizer@69dfa79d, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@35277c6c, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@dadd8045, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@41030faf], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+   2368: at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
+   2369: at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
+   2370: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:142)
+   2371: at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:98)
+   2372: at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+   2373: at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:163)
+   2374: at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+   2375: at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+   2376: at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+   2377: at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+   2378: at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+   2379: at java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.forEachRemaining(StreamSpliterators.java:310)
+   2380: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:735)
+   2381: at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+   2382: at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+   2383: at java.base/java.util.Optional.orElseGet(Optional.java:364)
+   2384: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2385: at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+   2386: 
+   2387: [INFO] Running com.ibpms.poc.application.service.BulkClaimServiceTest
+   2388: [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.587 s -- in com.ibpms.poc.application.service.BulkClaimServiceTest
+   2389: [INFO] Running com.ibpms.poc.application.service.CompletarTareaServiceSoDTest
+   2390: [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.412 s -- in com.ibpms.poc.application.service.CompletarTareaServiceSoDTest
+   2391: [INFO] Running com.ibpms.poc.application.service.copilot.CopilotSemanticRulesTest
+   2392: [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.722 s -- in com.ibpms.poc.application.service.copilot.CopilotSemanticRulesTest
+   2393: [INFO] Running com.ibpms.poc.application.service.DmnCognitiveServiceTest
+   2394: [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.059 s -- in com.ibpms.poc.application.service.DmnCognitiveServiceTest
+   2395: [INFO] Running com.ibpms.poc.application.service.FormCompletionServiceTest
+   2396: [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.185 s -- in com.ibpms.poc.application.service.FormCompletionServiceTest
+   2397: [INFO] Running com.ibpms.poc.application.service.GhostJobSchedulerTest
+   2398: [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.153 s -- in com.ibpms.poc.application.service.GhostJobSchedulerTest
+   2399: [INFO] Running com.ibpms.poc.application.service.JwtBlacklistServiceTest
+   2400: 2026-05-31T21:45:49.757-05:00  WARN 6300 --- [ibpms-core] [           main] c.i.p.a.service.JwtBlacklistService      : Capa de Blacklist (Redis) inaccesible al verificar usuario [user-fail]. Aplicando política FAIL-OPEN.
+   2401: 2026-05-31T21:45:49.767-05:00  WARN 6300 --- [ibpms-core] [           main] c.i.p.a.service.JwtBlacklistService      : SUDO Action: Inyectando token/jti [test-jti-123] en la Blacklist de Invalidación (Redis).
+   2402: 2026-05-31T21:45:49.773-05:00  WARN 6300 --- [ibpms-core] [           main] c.i.p.a.service.JwtBlacklistService      : SUDO Action: Exorcización. Revocando todas las sesiones para el usuario [user-123]
+   2403: [INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.904 s -- in com.ibpms.poc.application.service.JwtBlacklistServiceTest
+   2404: [INFO] Running com.ibpms.poc.application.service.KanbanColumnServiceTest
+   2405: [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.183 s -- in com.ibpms.poc.application.service.KanbanColumnServiceTest

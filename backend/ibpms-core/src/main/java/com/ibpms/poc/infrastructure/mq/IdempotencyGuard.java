@@ -37,13 +37,14 @@ public class IdempotencyGuard {
             String queueName = amqpMessage.getMessageProperties().getConsumerQueue();
 
             if (idempotencyKey != null) {
-                if (idempotencyRepository.existsById(idempotencyKey)) {
+                java.util.UUID uuidKey = java.util.UUID.fromString(idempotencyKey);
+                if (idempotencyRepository.findByIdempotencyKey(uuidKey).isPresent()) {
                     log.warn("Mensaje duplicado descartado silenciosamente (ACK). IdempotencyKey: {}, Queue: {}", idempotencyKey, queueName);
                     return null; // ACK silencioso
                 }
                 // Si no existe, permitimos el flujo y luego lo registramos (si no salta exception)
                 Object result = joinPoint.proceed();
-                idempotencyRepository.save(new ProcessedMessageEntity(idempotencyKey, queueName != null ? queueName : "unknown"));
+                idempotencyRepository.save(new ProcessedMessageEntity(uuidKey, queueName != null ? queueName : "unknown"));
                 return result;
             }
         }

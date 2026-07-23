@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface OutboundConfigRepository extends JpaRepository<OutboundConfigEntity, UUID> {
+    java.util.Optional<OutboundConfigEntity> findByName(String name);
 }

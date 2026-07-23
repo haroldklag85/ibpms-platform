@@ -18,6 +18,11 @@
 
       <div v-else-if="mode === 'print'" class="mb-4 pb-2 border-b border-gray-400">
           <h2 class="text-2xl font-bold text-black uppercase tracking-wide">Reporte de Expediente</h2>
+          <button v-if="mode === 'print'" 
+                  @click="window.print()" 
+                  class="mt-2 mb-4 bg-gray-800 text-white px-4 py-2 rounded-md text-sm print:hidden">
+            🖨️ Imprimir Expediente
+          </button>
       </div>
 
       <!-- Renderizador estricto de solo lectura -->
@@ -50,8 +55,7 @@ defineProps<{
 
 <style scoped>
 @media print {
-   .print-mode {
-       page-break-inside: avoid;
-   }
+    .print-mode { page-break-inside: avoid; }
+    nav, aside, .sidebar, .navbar { display: none !important; }
 }
 </style>

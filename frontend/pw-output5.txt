@@ -1,0 +1,93 @@
+
+Running 7 tests using 1 worker
+
+  ok 1 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:49:3 › T-04: Attend-Next Hexagonal Compliance › CU-HEX-01 | POST /workdesk/attend-next retorna 200 con tarea asignada (311ms)
+  ok 2 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:75:3 › T-04: Attend-Next Hexagonal Compliance › CU-HEX-02 | POST /workdesk/attend-next/skip retorna 200 con siguiente tarea (225ms)
+  ok 3 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:104:3 › T-05: Feature Toggle Hexagonal Compliance › CU-HEX-03 | GET /workdesk/feature-toggles/FORCE_ROUTING retorna 200 con {enabled: boolean} (144ms)
+  ok 4 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:123:3 › T-05: Feature Toggle Hexagonal Compliance › CU-HEX-04 | PUT /workdesk/feature-toggles/FORCE_ROUTING con SUPER_ADMIN retorna 200 (127ms)
+  ok 5 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:149:3 › T-05: Feature Toggle Hexagonal Compliance › CU-HEX-05 | PUT /workdesk/feature-toggles/FORCE_ROUTING sin ROLE_SUPER_ADMIN retorna 403 (84ms)
+  ok 6 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:174:3 › T-06: Workdesk Delegation UI Compliance › CU-HEX-06 | UI Workdesk: dropdown de delegantes no vacío (4.1s)
+GLOBAL INBOX RESPONSE STATUS: 403
+GLOBAL INBOX RESPONSE STATUS: 403
+  x  7 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:220:3 › T-06: Workdesk Delegation UI Compliance - Unauthorized User › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() (7.1s)
+GLOBAL INBOX RESPONSE STATUS: 403
+  x  8 [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:220:3 › T-06: Workdesk Delegation UI Compliance - Unauthorized User › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() (retry #1) (6.3s)
+
+
+  1) [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:220:3 › T-06: Workdesk Delegation UI Compliance - Unauthorized User › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('div.bg-red-50').filter({ hasText: 'Acceso denegado: No tiene autorización' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('div.bg-red-50').filter({ hasText: 'Acceso denegado: No tiene autorización' })[22m
+
+
+      256 |     // Esperar a que el backend rechace la petición y aparezca el Toast de error (store.errorMessage)
+      257 |     const errorToast = page.locator('div.bg-red-50', { hasText: 'Acceso denegado: No tiene autorización' });
+    > 258 |     await expect(errorToast).toBeVisible({ timeout: 5000 });
+          |                              ^
+      259 |     const toastText = await errorToast.innerText();
+      260 |     console.log('TOAST TEXT:', toastText);
+      261 |
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:258:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('div.bg-red-50').filter({ hasText: 'Acceso denegado: No tiene autorización' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('div.bg-red-50').filter({ hasText: 'Acceso denegado: No tiene autorización' })[22m
+
+
+      256 |     // Esperar a que el backend rechace la petición y aparezca el Toast de error (store.errorMessage)
+      257 |     const errorToast = page.locator('div.bg-red-50', { hasText: 'Acceso denegado: No tiene autorización' });
+    > 258 |     await expect(errorToast).toBeVisible({ timeout: 5000 });
+          |                              ^
+      259 |     const toastText = await errorToast.innerText();
+      260 |     console.log('TOAST TEXT:', toastText);
+      261 |
+        at C:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:258:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\certification-us001-hexago-c675e-estra-Toast-sin-usar-alert--authenticated-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [authenticated] › e2e\certification\us001-hexagonal-compliance.e2e.spec.ts:220:3 › T-06: Workdesk Delegation UI Compliance - Unauthorized User › CU-HEX-07 | Seleccionar delegante no autorizado (403) muestra Toast sin usar alert() 
+  6 passed (24.9s)

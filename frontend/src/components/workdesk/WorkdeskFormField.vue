@@ -84,6 +84,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+// @Traceability: US-003 - CA-79, CA-90
 // @ts-ignore
 import jexl from 'jexl';
 

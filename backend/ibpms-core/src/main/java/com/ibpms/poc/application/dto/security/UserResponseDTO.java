@@ -9,6 +9,7 @@ public class UserResponseDTO {
     private String username;
     private String email;
     private Boolean isActive;
+    private String status;
     private Boolean isExternalIdp;
     private List<String> roles; // Solo retornamos los nombres de los roles por seguridad / simplicidad
 
@@ -17,6 +18,7 @@ public class UserResponseDTO {
     public String getUsername() { return username; }
     public String getEmail() { return email; }
     public Boolean getIsActive() { return isActive; }
+    public String getStatus() { return status; }
     public Boolean getIsExternalIdp() { return isExternalIdp; }
     public List<String> getRoles() { return roles; }
 
@@ -25,6 +27,7 @@ public class UserResponseDTO {
     public void setUsername(String username) { this.username = username; }
     public void setEmail(String email) { this.email = email; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public void setStatus(String status) { this.status = status; }
     public void setIsExternalIdp(Boolean isExternalIdp) { this.isExternalIdp = isExternalIdp; }
     public void setRoles(List<String> roles) { this.roles = roles; }
 }

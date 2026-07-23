@@ -1,0 +1,16 @@
+{
+  "name": "QA-Inspector",
+  "description": "Agente automatizado para pruebas, validación de código y cobertura en ibpms-platform.",
+  "model": "gemini-3.1-pro",
+  "system_prompt_file": "C:\\Users\\USER\\Desktop\\Proyectos\\Harold Ibpms\\ibpms-platform\\docs\\qa\\qa_agent_megaprompt.md",
+  "capabilities": [
+    "file_read",
+    "file_write",
+    "terminal_execute"
+  ],
+  "permissions": {
+    "auto_run_tests": true,
+    "modify_source_code": false, 
+    "modify_test_files": true
+  }
+}

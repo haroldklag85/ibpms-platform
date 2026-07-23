@@ -1,3 +1,4 @@
+<!-- @Traceability: Remediación Deuda Técnica - CA-11 / ADR-006 (Pinia Centralizado) -->
 <template>
   <div class="inline-flex items-center space-x-2 px-2 py-1 rounded text-xs font-semibold" :class="colorClasses">
     <span class="w-2 h-2 rounded-full animate-pulse" :class="dotClasses"></span>
@@ -6,7 +7,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed } from 'vue';
+import { useTimeStore } from '@/stores/timeStore';
 import { useSlaEngine, UrgencyType } from '@/composables/useSlaEngine';
 
 const props = defineProps<{
@@ -14,23 +16,12 @@ const props = defineProps<{
   slaDeadline: string;
 }>();
 
-const currentTick = ref(Date.now());
-let timerInterval: ReturnType<typeof setInterval>;
-
-onMounted(() => {
-  timerInterval = setInterval(() => {
-    currentTick.value = Date.now();
-  }, 1000);
-});
-
-onUnmounted(() => {
-  clearInterval(timerInterval);
-});
+const timeStore = useTimeStore();
 
 const { calculateUrgency } = useSlaEngine();
 
 const urgency = computed(() => {
-  return calculateUrgency(props.slaDeadline, props.creationDate, currentTick.value);
+  return calculateUrgency(props.slaDeadline, props.creationDate, timeStore.currentTick);
 });
 
 const colorClasses = computed(() => {

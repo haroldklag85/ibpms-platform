@@ -3379,14 +3379,27 @@ onMounted(async () => {
   });
 });
 
-onBeforeUnmount(() => {
-  // @Traceability: US-005, CA-07
+onBeforeUnmount(async () => {
+  // @Traceability: US-005, CA-07, CA-19
   timeStore.stopEngine();
 
   if (heartbeatInterval) clearInterval(heartbeatInterval); // CA-66
-  // CA-04: Purga RAG al destruir el componente Vue nativo (Vue router leave)
-  // TODO: integrationStore.destroyCopilotSession(sessionId);
   window.removeEventListener('beforeunload', handleBeforeUnload);
+
+  // @Traceability: US-005, CA-19 — Guardar XML antes de destruir el modeler.
+  // Si el usuario navega a otra sección antes de que el auto-save de 30s dispare,
+  // los elementos BPMN se perderían. Este save garantiza persistencia en navegación.
+  if (modelerInstance && processId.value && !isNewProcess.value) {
+    try {
+      const { xml } = await modelerInstance.saveXML({ format: true });
+      if (xml && xml !== lastSavedXml.value) {
+        await integrationStore.saveProcessDraft(processId.value, { xml });
+        console.info('[BpmnDesigner] ✅ XML guardado al navegar fuera del Modeler (CA-19 on-unmount).');
+      }
+    } catch (saveErr) {
+      console.warn('[BpmnDesigner] ⚠️ No se pudo guardar el draft al salir:', saveErr);
+    }
+  }
 
   if (modelerInstance) {
     modelerInstance.destroy();
@@ -3394,6 +3407,7 @@ onBeforeUnmount(() => {
   }
   if (autoSaveInterval) clearInterval(autoSaveInterval);
 });
+
 
 // ── Auto-slug processId from name ────────────────────────────
 // @Traceability: US-005, CA-15

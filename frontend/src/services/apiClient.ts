@@ -154,7 +154,9 @@ apiClient.interceptors.response.use(
         // @Traceability: US-000 - CA-03 (Bloqueo de Concurrencia Optimista)
         // Interceptar CA-3: Bloqueo de Concurrencia Optimista
         if (error.response && error.response.status === 409) {
-            if(error.response.data?.type?.includes("optimistic-lock")) {
+            const url = error.config?.url || '';
+            const isHeartbeat = url.includes('/lock/heartbeat');
+            if (!isHeartbeat && error.response.data?.type?.includes("optimistic-lock")) {
                 console.warn('Bloqueo de Concurrencia UI Disparado');
                 const event = new CustomEvent('optimistic-lock-dispatch');
                 window.dispatchEvent(event);

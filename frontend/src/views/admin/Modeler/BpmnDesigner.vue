@@ -1490,6 +1490,7 @@
 </template>
 
 <script setup lang="ts">
+import camundaModdleDescriptor from 'camunda-bpmn-moddle/resources/camunda.json';
 // @Traceability: US-005, CA-40
 import { useTimeStore } from '@/stores/timeStore';
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
@@ -2875,43 +2876,7 @@ const handleBeforeUnload = () => {
 };
 
 // @Traceability: US-005, CA-05
-const camundaModdleDescriptor = {
-  name: 'Camunda',
-  uri: 'http://camunda.org/schema/1.0/bpmn',
-  prefix: 'camunda',
-  xml: {
-    tagAlias: 'lowerCase'
-  },
-  types: [
-    {
-      name: 'Property',
-      superClass: [ 'Element' ],
-      properties: [
-        {
-          name: 'name',
-          isAttr: true,
-          type: 'String'
-        },
-        {
-          name: 'value',
-          isAttr: true,
-          type: 'String'
-        }
-      ]
-    },
-    {
-      name: 'Properties',
-      superClass: [ 'Element' ],
-      properties: [
-        {
-          name: 'values',
-          isMany: true,
-          type: 'Property'
-        }
-      ]
-    }
-  ]
-};
+// camundaModdleDescriptor importada desde camunda-bpmn-moddle
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
@@ -3377,27 +3342,43 @@ const debouncedValidate = debounce(async () => {
     return; // Block backend pre-flight request if linter fails
   }
 
+  // @Traceability: US-005, CA-05 - Reset state and markers before validation
   preFlightStatus.value = 'PENDING';
+  preFlightErrors.value = [];
+  preFlightWarnings.value = [];
   
-  // Clear previous CA-46 highlights
   const canvas = modelerInstance.get('canvas');
   const elementRegistry = modelerInstance.get('elementRegistry');
   if (elementRegistry && typeof elementRegistry.getAll === 'function') {
     elementRegistry.getAll().forEach((el: any) => {
       try { canvas.removeMarker(el.id, 'highlight-warning'); } catch(e) {}
+      try { canvas.removeMarker(el.id, 'highlight-error'); } catch(e) {}
     });
   }
 
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
     const { data } = await integrationStore.validateProcess({ xml });
-    // CA-9 & CA-46: Soporte de warnings no-bloqueantes
-    if (data && data.warnings && data.warnings.length > 0) {
+    
+    // @Traceability: US-005, CA-05 - Validate return errors or valid flag in 200 OK response
+    if (data && (data.valid === false || (data.errors && data.errors.length > 0))) {
+      preFlightStatus.value = 'ERROR';
+      preFlightErrors.value = data.errors.map((e: any) => e.message || e);
+      if (data.errors) {
+        data.errors.forEach((e: any) => {
+          if (e.node) {
+            try { canvas.addMarker(e.node, 'highlight-error'); } catch(err) {}
+          }
+        });
+      }
+    } else if (data && data.warnings && data.warnings.length > 0) {
       preFlightStatus.value = 'WARNING';
-      // CA-46: Paint specific nodes
-      if (data.warningNodeIds) {
-        data.warningNodeIds.forEach((id: string) => {
-          try { canvas.addMarker(id, 'highlight-warning'); } catch(e) {}
+      preFlightWarnings.value = data.warnings.map((w: any) => w.message || w);
+      if (data.warnings) {
+        data.warnings.forEach((w: any) => {
+          if (w.node) {
+            try { canvas.addMarker(w.node, 'highlight-warning'); } catch(err) {}
+          }
         });
       }
     } else {
@@ -3406,8 +3387,17 @@ const debouncedValidate = debounce(async () => {
   } catch (err: any) {
     if (err.response && err.response.status === 422) {
       preFlightStatus.value = 'ERROR';
+      preFlightErrors.value = err.response.data?.errors?.map((e: any) => e.message || e) || ['El archivo XML no pasó la validación estricta del motor semántico.'];
+      if (err.response.data?.errors) {
+        err.response.data.errors.forEach((e: any) => {
+          if (e.node) {
+            try { canvas.addMarker(e.node, 'highlight-error'); } catch(markerErr) {}
+          }
+        });
+      }
     } else {
       preFlightStatus.value = 'WARNING'; // Asume advertencia si falla el check semántico por timeout pero el XML es nativamente válido
+      preFlightWarnings.value = [err.response?.data?.message || err.message || 'Error en validación backend.'];
     }
   }
 }, 2000);
@@ -3419,10 +3409,13 @@ const onDiagramEdit = () => {
 };
 
 const lastSavedXml = ref<string>('');
+const isSaving = ref(false);
 
 // @Traceability: US-005, CA-15
 const saveDraft = async (isManual = false) => {
   if (!modelerInstance) return;
+  if (isSaving.value) return;
+  isSaving.value = true;
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
     
@@ -3443,6 +3436,8 @@ const saveDraft = async (isManual = false) => {
       showToast(`❌ Error al guardar borrador: ${serverMsg}`, 'error');
     }
     console.error('[AutoSave] Failed:', err);
+  } finally {
+    isSaving.value = false;
   }
 };
 
@@ -3554,19 +3549,55 @@ const requestDeploy = async () => {
 };
 
 // @Traceability: US-005, CA-80, CA-81, CA-82, CA-83, CA-84 - ADR-001
+// @Traceability: US-005, CA-80, CA-81, CA-82, CA-83, CA-84 - ADR-001
 const runPreFlightBackend = async () => {
   preFlightErrors.value = [];
   preFlightWarnings.value = [];
   if (!modelerInstance) return;
+  
+  const canvas = modelerInstance.get('canvas');
+  const elementRegistry = modelerInstance.get('elementRegistry');
+  if (elementRegistry && typeof elementRegistry.getAll === 'function') {
+    elementRegistry.getAll().forEach((el: any) => {
+      try { canvas.removeMarker(el.id, 'highlight-warning'); } catch(e) {}
+      try { canvas.removeMarker(el.id, 'highlight-error'); } catch(e) {}
+    });
+  }
+
   try {
     const { xml } = await modelerInstance.saveXML({ format: true });
     const { data } = await integrationStore.validateProcess({ xml });
-    if (data && data.warnings && data.warnings.length > 0) {
-      preFlightWarnings.value = data.warnings;
+    
+    // @Traceability: US-005, CA-05 - Map both 200 OK errors and warnings
+    if (data && (data.valid === false || (data.errors && data.errors.length > 0))) {
+      preFlightErrors.value = data.errors.map((e: any) => e.message || e);
+      if (data.errors) {
+        data.errors.forEach((e: any) => {
+          if (e.node) {
+            try { canvas.addMarker(e.node, 'highlight-error'); } catch(err) {}
+          }
+        });
+      }
+    } else if (data && data.warnings && data.warnings.length > 0) {
+      preFlightWarnings.value = data.warnings.map((w: any) => w.message || w);
+      if (data.warnings) {
+        data.warnings.forEach((w: any) => {
+          if (w.node) {
+            try { canvas.addMarker(w.node, 'highlight-warning'); } catch(err) {}
+          }
+        });
+      }
     }
   } catch (err: any) {
     if (err.response && err.response.status === 422) {
-      preFlightErrors.value = err.response.data?.errors || ['El archivo XML no pasó la validación estricta del motor semántico.'];
+      preFlightErrors.value = err.response.data?.errors?.map((e: any) => e.message || e) || ['El archivo XML no pasó la validación estricta del motor semántico.'];
+      if (err.response.data?.errors) {
+        err.response.data.errors.forEach((e: any) => {
+          if (e.node) {
+            try { canvas.addMarker(e.node, 'highlight-error'); } catch(markerErr) {}
+          }
+        });
+      }
     } else {
       preFlightWarnings.value = [err.response?.data?.message || err.message || 'Error en validación backend.'];
     }
@@ -4352,6 +4383,15 @@ defineExpose({
 }
 :deep(.bjs-container .highlight-warning .djs-visual > :nth-child(1)) {
   fill: #fffbeb !important;
+}
+
+/* CA-05: Estilo CSS para Nodos en Error de Pre-Flight (Error Red) */
+:deep(.bjs-container .highlight-error .djs-outline) {
+  stroke: #ef4444 !important;
+  stroke-width: 3px !important;
+}
+:deep(.bjs-container .highlight-error .djs-visual > :nth-child(1)) {
+  fill: #fef2f2 !important;
 }
 
 /* CA-08: Halo Verde para Generaciones de IA Atómicas */

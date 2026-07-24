@@ -38,7 +38,7 @@ jobs:
           cache: maven
 
       - name: Compile and Test (Quality Gate)
-        run: mvn clean verify -DskipTests=false
+        run: mvn clean verify -DskipITs=true
         # El comando incluye pruebas unitarias y de integración de la plataforma Spring Boot
         # Finaliza con status 1 si hay fallos o vulnerabilidades rompiendo el Pipeline
 

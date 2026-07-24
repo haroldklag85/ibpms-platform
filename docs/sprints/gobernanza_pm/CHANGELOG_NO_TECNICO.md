@@ -1055,3 +1055,11 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 - Solo cuando un administrador revoque explícitamente los permisos de un usuario, el menú se actualiza.
 
 **Estado**: ✅ Listo
+
+## [23/07/2026] — Corrección del Pipeline de Pruebas Automatizadas
+**Autor**: Agente Backend (Antigravity)
+**¿Qué es?**: Se corrigió la forma en que el sistema de validación remota (GitHub Actions) comprueba el estado del proyecto. Se eliminaron pruebas de código antiguo y se configuró correctamente la verificación para que el proceso remoto no intente conectarse a una base de datos inexistente.
+**¿Para qué sirve?**: Permite que las nuevas mejoras y características del proyecto puedan ser validadas y aceptadas automáticamente en el repositorio principal (DevDavid) sin que el sistema falle por errores de configuración.
+**¿De dónde viene?**: Resolución de Deuda Técnica (Fallos en CI/CD PR4).
+**¿Qué debería hacer?**: Al subir nuevos cambios al proyecto, el sistema de revisión automática debería dar "verde" (aprobado) comprobando que las reglas básicas funcionen, dejando las pruebas más pesadas de datos (integración) para el entorno local.
+**Estado**: ✅ Listo

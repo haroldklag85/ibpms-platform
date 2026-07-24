@@ -93,3 +93,12 @@ Thumbs.db
 .settings/
 .agents/
 
+
+# ==========================================
+# 9. DOCUMENTOS CONFIDENCIALES — PROPIEDAD INTELECTUAL
+# ==========================================
+# ADVERTENCIA: Estos archivos contienen estrategia legal-técnica confidencial
+# sobre protección de PI. Jamás deben subirse a ningún repositorio remoto,
+# incluido el repositorio de la empresa aliada durante la migración.
+docs/IP_PROTECTION_STRATEGY.md
+

@@ -90,6 +90,17 @@ public class FormDesignController {
     }
 
     /**
+     * Obtener formulario activo o el más reciente por su technicalName.
+     * B-04: Resuelve error 404/405 en Frontend al cargar diseño.
+     */
+    @GetMapping("/{technicalName}")
+    public ResponseEntity<FormDesignDTO> getForm(@PathVariable String technicalName) {
+        return formDesignService.obtenerPorTechnicalName(technicalName)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
      * Guardar/Actualizar. (Incrementa versión si ya está activo el V1).
      */
     @PostMapping("/{id}")

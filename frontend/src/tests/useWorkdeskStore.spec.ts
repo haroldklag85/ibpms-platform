@@ -322,4 +322,64 @@ describe('useWorkdeskStore.ts - Iteration 79-DEV (CA-06, CA-13, CA-26, CA-27)', 
             expect(true).toBe(true);
         }
     });
+
+    // ===================================================================
+    // CA-19: Ghost Warning (inactivity auto-unclaim)
+    // @Traceability: US-002, CA-19
+    // ===================================================================
+    it('Test 32: CA-19 ghostWarning state se inicializa en evento GHOST_WARNING', () => {
+        expect(store.ghostWarning).toBeNull();
+
+        // Simulate _handleGhostWarning (invoked by WS switch)
+        store._handleGhostWarning({
+            taskId: 'TK-GW1',
+            taskName: 'Solicitud de Póliza',
+            remainingMinutes: 5,
+        });
+
+        expect(store.ghostWarning).not.toBeNull();
+        expect(store.ghostWarning!.taskId).toBe('TK-GW1');
+        expect(store.ghostWarning!.taskName).toBe('Solicitud de Póliza');
+        expect(store.ghostWarning!.remainingMinutes).toBe(5);
+        expect(store.ghostWarning!.visible).toBe(true);
+    });
+
+    it('Test 33: CA-19 extendTimeout llama POST y limpia ghostWarning', async () => {
+        const { default: apiClient } = await import('@/services/apiClient');
+        const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { success: true } });
+
+        // Set ghost warning state
+        store.ghostWarning = {
+            taskId: 'TK-EXT1',
+            taskName: 'Caso Urgente',
+            remainingMinutes: 3,
+            visible: true,
+        };
+
+        await store.extendTimeout('TK-EXT1');
+
+        expect(postSpy).toHaveBeenCalledWith('/workbox/tasks/TK-EXT1/extend-timeout');
+        expect(store.ghostWarning).toBeNull();
+    });
+
+    it('Test 34: CA-19 extendTimeout maneja 422 en tercer intento (límite de extensiones)', async () => {
+        const { default: apiClient } = await import('@/services/apiClient');
+        vi.spyOn(apiClient, 'post').mockRejectedValue({
+            response: { status: 422, data: { message: 'Extension limit reached' } }
+        });
+
+        store.ghostWarning = {
+            taskId: 'TK-EXT2',
+            taskName: 'Tarea Limitada',
+            remainingMinutes: 2,
+            visible: true,
+        };
+
+        await store.extendTimeout('TK-EXT2');
+
+        // Ghost warning should NOT be cleared on 422 — the user needs to see the limit toast
+        // The _showExtendLimitToast is called instead
+        // ghostWarning persists because the limit toast tells them to complete the task
+        expect(store.ghostWarning).not.toBeNull();
+    });
 });

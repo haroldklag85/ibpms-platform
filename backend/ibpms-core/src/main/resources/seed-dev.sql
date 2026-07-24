@@ -6,7 +6,14 @@
 -- ==========================================================================
 
 -- ==========================================
--- 1. Usuarios de Seguridad (ibpms_security_user)
+-- 1. Catálogo de Tenants (ibpms_tenant)
+-- ==========================================
+INSERT INTO ibpms_tenant (slug, name) VALUES 
+  ('T-100', 'Tenant E2E Test')
+ON CONFLICT (slug) DO NOTHING;
+
+-- ==========================================
+-- 2. Usuarios de Seguridad (ibpms_security_user)
 -- ==========================================
 INSERT INTO ibpms_security_user (id, username, email, password_hash, is_active, is_external_idp, created_at) VALUES 
   (gen_random_uuid(), 'admin', 'admin@alpha.com', '$2b$10$1OHQ9PUOg9z6LChpq2gtF.6lfkZww5rBsFXjtBA4YBwZkwHVlgmri', true, false, CURRENT_TIMESTAMP),

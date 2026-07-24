@@ -27,6 +27,9 @@ public class AgileTaskJpaEntity {
     @Column(name = "team_id")
     private String teamId;
 
+    @Column(name = "tenant_id")
+    private String tenantId;
+
     @Column(name = "title", nullable = false)
     private String title;
 
@@ -95,6 +98,12 @@ public class AgileTaskJpaEntity {
         if (this.position == null) this.position = 0;
     }
 
+    /**
+     * ⚠️ DEUDA TÉCNICA (Sprint PM-01): Este @PreUpdate resetea lastActivityAt en CADA save(),
+     * lo que interfiere con la lógica de ghost timeout del CA-15. Pendiente refactorizar
+     * para que solo se actualice cuando hay una acción registrable real del usuario.
+     * Ref: approval_request_BACKEND.md — Decisión #4
+     */
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = ZonedDateTime.now();

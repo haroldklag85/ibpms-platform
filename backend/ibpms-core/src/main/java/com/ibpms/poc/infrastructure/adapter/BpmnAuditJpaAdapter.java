@@ -1,23 +1,26 @@
-// @Traceability: US-005, CA-42 - Activity Timeline
+// @Traceability: US-003 - ADR-001
 package com.ibpms.poc.infrastructure.adapter;
 
 import com.ibpms.poc.application.port.out.BpmnAuditPort;
 import com.ibpms.poc.infrastructure.jpa.entity.BpmnDesignAuditLogEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.BpmnDesignAuditLogRepository;
-import com.ibpms.poc.domain.model.BpmnDesignAuditEntry;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 public class BpmnAuditJpaAdapter implements BpmnAuditPort {
 
     private final BpmnDesignAuditLogRepository repository;
+    private final ObjectMapper objectMapper;
 
-    public BpmnAuditJpaAdapter(BpmnDesignAuditLogRepository repository) {
+    public BpmnAuditJpaAdapter(BpmnDesignAuditLogRepository repository, ObjectMapper objectMapper) {
         this.repository = repository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -29,28 +32,55 @@ public class BpmnAuditJpaAdapter implements BpmnAuditPort {
             enumAction = BpmnDesignAuditLogEntity.Action.PRE_FLIGHT; // default or handle
         }
         
+        Map<String, Object> detailsMap = null;
+        if (details != null && !details.isBlank()) {
+            try {
+                detailsMap = objectMapper.readValue(details, new TypeReference<Map<String, Object>>() {});
+            } catch (Exception e) {
+                // ignore or log
+            }
+        }
+
         BpmnDesignAuditLogEntity entity = new BpmnDesignAuditLogEntity(
             processDesignId,
             enumAction,
             userId,
             versionAffected,
-            details
+            detailsMap
         );
         repository.save(entity);
     }
-
     @Override
-    public List<BpmnDesignAuditEntry> getAuditLogsForProcess(UUID processDesignId) {
+    public java.util.List<com.ibpms.poc.domain.model.BpmnDesignAuditEntry> getAuditLogsForProcess(UUID processDesignId) {
         return repository.findByProcessDesignIdOrderByTimestampDesc(processDesignId).stream()
-                .map(entity -> new BpmnDesignAuditEntry(
-                    entity.getId(),
-                    entity.getProcessDesignId(),
-                    BpmnDesignAuditEntry.Action.valueOf(entity.getAction().name()),
-                    entity.getUserId(),
-                    entity.getTimestamp(),
-                    entity.getVersionAffected(),
-                    entity.getDetails()
-                ))
-                .collect(Collectors.toList());
+                .map(this::mapToDomain)
+                .toList();
+    }
+
+    private com.ibpms.poc.domain.model.BpmnDesignAuditEntry mapToDomain(BpmnDesignAuditLogEntity entity) {
+        String detailsStr = "";
+        if (entity.getDetails() != null) {
+            try {
+                detailsStr = objectMapper.writeValueAsString(entity.getDetails());
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        com.ibpms.poc.domain.model.BpmnDesignAuditEntry.Action action;
+        try {
+            action = com.ibpms.poc.domain.model.BpmnDesignAuditEntry.Action.valueOf(entity.getAction().name());
+        } catch (IllegalArgumentException e) {
+            action = com.ibpms.poc.domain.model.BpmnDesignAuditEntry.Action.PRE_FLIGHT;
+        }
+
+        return new com.ibpms.poc.domain.model.BpmnDesignAuditEntry(
+                entity.getId(),
+                entity.getProcessDesignId(),
+                action,
+                entity.getUserId(),
+                entity.getTimestamp(),
+                entity.getVersionAffected(),
+                detailsStr
+        );
     }
 }

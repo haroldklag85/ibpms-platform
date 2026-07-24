@@ -176,6 +176,7 @@ cat docs/architecture/[adr_relevante].md
 1. [Paso 1 con comando exacto]
 2. [Paso 2 con comando exacto]
 ...
+N-1. Actualizar `docs/sprints/gobernanza_pm/CHANGELOG_NO_TECNICO.md` con lenguaje no técnico (QUÉ y PARA QUÉ).
 N. Commit: `git add . && git commit -m "[tipo]([alcance]): [descripción]" && git push`
 ```
 
@@ -210,12 +211,14 @@ TU MISIÓN:
 1. [Tarea 1 con instrucciones claras]
 2. [Tarea 2 con instrucciones claras]
 3. Build/Compile: [comando exacto]
-4. Commit: [comando git exacto]
+4. Bitácora: Agrega la entrada correspondiente en `docs/sprints/gobernanza_pm/CHANGELOG_NO_TECNICO.md` siguiendo estrictamente su formato (Sin jerga, lenguaje para CEO).
+5. Commit: [comando git exacto]
 
 REGLAS INQUEBRANTABLES:
 - [Regla 1 específica al contexto]
 - [Regla 2 específica al contexto]
 - [Regla N]
+- Es OBLIGATORIO actualizar el CHANGELOG_NO_TECNICO.md antes del commit final, sin excepciones.
 \```
 ```
 

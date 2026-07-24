@@ -2091,14 +2091,16 @@ describe('Pantalla 6: BPMN Designer (Frontend QA)', () => {
             const wrapper = createWrapper();
             await flushPromises();
 
+            const replaceStateSpy = vi.spyOn(window.history, 'replaceState');
+
             // Modificar processId a un valor nuevo
             wrapper.vm.processId = 'proceso-nuevo-test';
             await wrapper.vm.$nextTick();
 
-            // Verificar que router.replace fue llamado con el valor limpiado
-            expect(mockReplace).toHaveBeenCalledWith({
-                query: expect.objectContaining({ processId: 'proceso-nuevo-test' })
-            });
+            // Verificar que replaceState fue llamado con la nueva URL
+            expect(replaceStateSpy).toHaveBeenCalled();
+            const lastCallArgs = replaceStateSpy.mock.calls[replaceStateSpy.mock.calls.length - 1];
+            expect(lastCallArgs[2]).toContain('processId=proceso-nuevo-test');
 
             wrapper.unmount();
         });

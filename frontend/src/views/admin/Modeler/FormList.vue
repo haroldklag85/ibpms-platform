@@ -93,25 +93,25 @@
       </div>
 
     </div>
-  </div>
 
-  <!-- MODAL DE CONFIRMACIÓN DE BORRADO (LEY 5) -->
-  <div v-if="showDeleteModal" class="delete-confirm-modal fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
-    <div id="deleteConfirmModal" class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full border border-gray-100">
-      <div class="flex items-center gap-3 text-red-600 mb-4">
-        <span class="material-symbols-outlined text-3xl">warning</span>
-        <h3 class="text-lg font-bold">Advertencia de Integridad</h3>
-      </div>
-      <p class="text-sm text-gray-600 mb-6">
-        ¿Está seguro de eliminar el formulario <strong>[{{ formIdToDelete }}]</strong> de la bóveda? Esta acción no se puede deshacer.
-      </p>
-      <div class="flex justify-end gap-3">
-        <button @click="showDeleteModal = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-semibold transition">
-          Cancelar
-        </button>
-        <button @click="executeDelete" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-semibold shadow-sm transition">
-          Sí, Confirmar
-        </button>
+    <!-- MODAL DE CONFIRMACIÓN DE BORRADO (LEY 5) -->
+    <div v-if="showDeleteModal" class="delete-confirm-modal fixed inset-0 bg-gray-900/60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
+      <div id="deleteConfirmModal" class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full border border-gray-100">
+        <div class="flex items-center gap-3 text-red-600 mb-4">
+          <span class="material-symbols-outlined text-3xl">warning</span>
+          <h3 class="text-lg font-bold">Advertencia de Integridad</h3>
+        </div>
+        <p class="text-sm text-gray-600 mb-6">
+          ¿Está seguro de eliminar el formulario <strong>[{{ formIdToDelete }}]</strong> de la bóveda? Esta acción no se puede deshacer.
+        </p>
+        <div class="flex justify-end gap-3">
+          <button @click="showDeleteModal = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-semibold transition">
+            Cancelar
+          </button>
+          <button @click="executeDelete" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-semibold shadow-sm transition">
+            Sí, Confirmar
+          </button>
+        </div>
       </div>
     </div>
   </div>

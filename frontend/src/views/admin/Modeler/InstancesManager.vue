@@ -111,7 +111,7 @@ const activeInstances = ref<any[]>([]);
 
 onMounted(async () => {
   try {
-    const { data } = await integrationStore.get(`/design/processes/${props.processId}/instances`);
+    const { data } = await integrationStore.get(`/design/processes/${props.processId}/instances/migratable`);
     activeInstances.value = data || [];
   } catch (error) {
     console.error('Error fetching instances:', error);

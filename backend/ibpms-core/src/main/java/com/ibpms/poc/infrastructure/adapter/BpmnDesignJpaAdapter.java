@@ -7,6 +7,10 @@ import com.ibpms.poc.infrastructure.jpa.entity.BpmnProcessDesignEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.BpmnProcessDesignRepository;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,9 +25,11 @@ import com.ibpms.poc.crosscutting.annotations.Traceability;
 public class BpmnDesignJpaAdapter implements BpmnDesignPort {
 
     private final BpmnProcessDesignRepository repository;
+    private final ObjectMapper objectMapper;
 
-    public BpmnDesignJpaAdapter(BpmnProcessDesignRepository repository) {
+    public BpmnDesignJpaAdapter(BpmnProcessDesignRepository repository, ObjectMapper objectMapper) {
         this.repository = repository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -64,7 +70,15 @@ public class BpmnDesignJpaAdapter implements BpmnDesignPort {
                 entity.getUpdatedAt(),
                 entity.getCreatedBy()
         );
-        domain.updateGenericFormConfig(entity.getGenericFormWhitelist());
+        String whitelistStr = null;
+        if (entity.getGenericFormWhitelist() != null) {
+            try {
+                whitelistStr = objectMapper.writeValueAsString(entity.getGenericFormWhitelist());
+            } catch (Exception e) {
+                // ignore or log
+            }
+        }
+        domain.updateGenericFormConfig(whitelistStr);
         return domain;
     }
 
@@ -90,7 +104,15 @@ public class BpmnDesignJpaAdapter implements BpmnDesignPort {
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
         entity.setCreatedBy(domain.getCreatedBy());
-        entity.setGenericFormWhitelist(domain.getGenericFormWhitelist());
+        Map<String, Object> whitelistMap = null;
+        if (domain.getGenericFormWhitelist() != null && !domain.getGenericFormWhitelist().isBlank()) {
+            try {
+                whitelistMap = objectMapper.readValue(domain.getGenericFormWhitelist(), new TypeReference<Map<String, Object>>() {});
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        entity.setGenericFormWhitelist(whitelistMap);
         // optLockVersion is managed by JPA
         return entity;
     }

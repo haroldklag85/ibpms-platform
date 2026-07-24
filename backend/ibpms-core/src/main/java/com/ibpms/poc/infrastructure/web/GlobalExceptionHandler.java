@@ -100,6 +100,18 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /** 404 — Definición de Proceso no encontrada (US-007 Ejecución BPMN) */
+    // @Traceability: US-007, ADR-001 (Hexagonal)
+    @ExceptionHandler(com.ibpms.poc.domain.exception.ProcessDefinitionNotFoundException.class)
+    public ProblemDetail handleProcessDefinitionNotFound(com.ibpms.poc.domain.exception.ProcessDefinitionNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setType(java.util.Objects.requireNonNull(URI.create("https://ibpms.com/errors/process-not-found")));
+        problem.setTitle("Definición de proceso no encontrada");
+        problem.setDetail(ex.getMessage());
+        problem.setProperty("processDefinitionKey", ex.getProcessDefinitionKey());
+        return problem;
+    }
+
     /** 404 — Ruta Estática no encontrada (Spring Boot 3.2+ Dispatcher) */
     @ApiResponse(responseCode = "404", description = "El endpoint o ruta estática no fue encontrada", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/problem+json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ProblemDetail.class)))
     @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)

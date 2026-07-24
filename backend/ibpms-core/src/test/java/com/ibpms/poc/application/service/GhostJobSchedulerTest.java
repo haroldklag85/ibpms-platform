@@ -35,7 +35,7 @@ public class GhostJobSchedulerTest {
         messagingTemplate = mock(SimpMessagingTemplate.class);
         claimProperties = mock(ClaimProperties.class);
         
-        when(claimProperties.getGhostTimeout()).thenReturn(240); // 4 horas
+        when(claimProperties.getTimeoutForTenant(any())).thenReturn(240); // 4 horas
         scheduler = new GhostJobScheduler(taskRepository, claimAuditService, messagingTemplate, claimProperties);
     }
 

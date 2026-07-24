@@ -3,11 +3,28 @@
     <div v-if="taskId" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
        <!-- CA-5 Read Only Modal -->
        <div class="bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh] w-full max-w-3xl overflow-hidden relative modal-content mt-12">
-           <!-- CA-18 Warning Banner -->
-           <div v-if="isAlreadyClaimed" class="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 w-full z-10 flex items-center shadow-sm">
-             <span class="mr-2">⚠️</span>
-             <p class="font-medium text-sm">Esta tarea fue reclamada por otro compañero y ya no está disponible</p>
-           </div>
+            <!-- CA-18 Warning Banner (improved with user name) -->
+            <div v-if="isAlreadyClaimed" class="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 w-full z-10 flex items-center shadow-sm" data-testid="claimed-by-other-banner">
+              <span class="mr-2">⚠️</span>
+              <p class="font-medium text-sm">
+                Esta tarea fue reclamada por
+                <strong v-if="claimedByName">{{ claimedByName }}</strong>
+                <span v-else>otro compañero</span>
+                y ya no está disponible
+              </p>
+            </div>
+
+            <!-- CA-16: Banner de nota del operario anterior -->
+            <div v-if="taskDetail?.mensajeInterno" class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 w-full z-10 flex items-start gap-3 shadow-sm" data-testid="internal-note-banner">
+              <span class="text-lg shrink-0">📝</span>
+              <div>
+                <p class="font-bold text-sm">Nota del operario anterior:</p>
+                <p class="text-sm italic mt-1">{{ taskDetail.mensajeInterno }}</p>
+                <span v-if="taskDetail.mensajeInternoAuthor" class="text-xs text-blue-600 mt-1 block">
+                  — {{ taskDetail.mensajeInternoAuthor }}{{ taskDetail.mensajeInternoAt ? ', ' + formatTimeAgo(taskDetail.mensajeInternoAt) : '' }}
+                </span>
+              </div>
+            </div>
            
            <header class="bg-indigo-50 border-b border-indigo-100 px-6 py-4 flex justify-between items-start">
                <div>
@@ -91,6 +108,7 @@ const taskDetail = ref<any>(null);
 const isLoading = ref(false);
 const isClaiming = ref(false);
 const isAlreadyClaimed = ref(false);
+const claimedByName = ref('');
 let wsSubscription: any = null;
 
 const setupWebSocket = () => {
@@ -102,6 +120,7 @@ const setupWebSocket = () => {
             const event = JSON.parse(message.body);
             if (event.action === 'REMOVE' && event.taskId === props.taskId) {
                 isAlreadyClaimed.value = true;
+                claimedByName.value = event.claimedByName || event.assignee || '';
             }
         } catch(e) {}
     });
@@ -150,6 +169,18 @@ watch(() => props.taskId, (newVal) => {
         taskDetail.value = null;
     }
 });
+
+// @Traceability: US-002, CA-16 — Relative time formatting for internal note
+const formatTimeAgo = (dateStr: string): string => {
+    const now = Date.now();
+    const past = new Date(dateStr).getTime();
+    const diffMin = Math.floor((now - past) / 60000);
+    if (diffMin < 1) return 'hace un momento';
+    if (diffMin < 60) return `hace ${diffMin} min`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `hace ${diffH}h`;
+    return `hace ${Math.floor(diffH / 24)}d`;
+};
 
 const handleClaim = async () => {
     if (!props.taskId) return;

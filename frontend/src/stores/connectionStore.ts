@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
-export type ConnectionStatus = 'ONLINE' | 'OFFLINE' | 'RECONNECTING' | 'DEGRADED' | 'RESTORED';
+export type ConnectionStatus = 'ONLINE' | 'OFFLINE' | 'RECONNECTING' | 'DEGRADED' | 'RESTORED' | 'SAVING';
 
 export const useConnectionStore = defineStore('connectionStore', () => {
     const status = ref<ConnectionStatus>('ONLINE');
@@ -11,8 +11,30 @@ export const useConnectionStore = defineStore('connectionStore', () => {
     const requiresRetry = ref(false);
     const retryCount = ref(0);
 
+    let savingTimeout: ReturnType<typeof setTimeout> | null = null;
+
     const setStatus = (newStatus: ConnectionStatus) => {
         status.value = newStatus;
+    };
+
+    const setSaving = (isSaving: boolean) => {
+        if (isSaving) {
+            if (!savingTimeout) {
+                savingTimeout = setTimeout(() => {
+                    if (status.value === 'ONLINE') {
+                        setStatus('SAVING');
+                    }
+                }, 5000);
+            }
+        } else {
+            if (savingTimeout) {
+                clearTimeout(savingTimeout);
+                savingTimeout = null;
+            }
+            if (status.value === 'SAVING') {
+                setStatus('ONLINE');
+            }
+        }
     };
 
     const silence = () => {
@@ -33,6 +55,7 @@ export const useConnectionStore = defineStore('connectionStore', () => {
             case 'RECONNECTING': return 'Reconectando...';
             case 'DEGRADED': return 'Modo sin conexión — los cambios se guardarán localmente';
             case 'RESTORED': return 'Conexión restaurada';
+            case 'SAVING': return 'Guardando cambios...';
             default: return '';
         }
     });
@@ -43,6 +66,7 @@ export const useConnectionStore = defineStore('connectionStore', () => {
             case 'RECONNECTING': return 'sync';
             case 'DEGRADED': return 'cloud_off';
             case 'RESTORED': return 'check_circle';
+            case 'SAVING': return 'refresh';
             default: return '';
         }
     });
@@ -53,6 +77,7 @@ export const useConnectionStore = defineStore('connectionStore', () => {
             case 'RECONNECTING': return 'bg-amber-50 text-amber-700 border-amber-200';
             case 'DEGRADED': return 'bg-orange-50 text-orange-700 border-orange-200';
             case 'RESTORED': return 'bg-green-50 text-green-700 border-green-200';
+            case 'SAVING': return 'bg-gray-800 text-white border-gray-700';
             default: return '';
         }
     });
@@ -63,6 +88,7 @@ export const useConnectionStore = defineStore('connectionStore', () => {
         requiresRetry,
         retryCount,
         setStatus,
+        setSaving,
         silence,
         unsilence,
         isVisible,

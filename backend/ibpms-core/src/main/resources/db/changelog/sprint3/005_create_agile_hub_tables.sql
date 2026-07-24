@@ -1,4 +1,3 @@
-/* // @Traceability: US-005, CA-42 - Activity Timeline */
 -- Liquibase Changelog: sprint3/005_create_agile_hub_tables.sql
 -- changeset architect:sprint3-005-agile-hub
 
@@ -50,9 +49,8 @@ CREATE TABLE ibpms_agile_tags (
 
 CREATE TABLE ibpms_agile_task_tags (
     task_id         UUID NOT NULL REFERENCES ibpms_agile_tasks(id) ON DELETE CASCADE,
-    tag_id          UUID REFERENCES ibpms_agile_tags(id),
-    tag             VARCHAR(50) NOT NULL,
-    PRIMARY KEY (task_id, tag)
+    tag_id          UUID NOT NULL REFERENCES ibpms_agile_tags(id),
+    PRIMARY KEY (task_id, tag_id)
 );
 
 CREATE TABLE ibpms_agile_sla_changelog (

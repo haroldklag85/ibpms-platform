@@ -67,22 +67,26 @@ const router = createRouter({
                     meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_IT'] }
                 },
                 {
+                    path: 'admin/modeler',
+                    redirect: '/admin/modeler/bpmn'
+                },
+                {
                     path: 'admin/modeler/bpmn',
                     name: 'BpmnDesigner',
                     component: () => import('@/views/admin/Modeler/BpmnDesigner.vue'),
-                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT', 'ROLE_PROCESS_ARCHITECT'] }
                 },
                 {
                     path: 'admin/modeler/forms',
                     name: 'FormList',
                     component: () => import('@/views/admin/Modeler/FormList.vue'),
-                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT', 'ROLE_PROCESS_ARCHITECT'] }
                 },
                 {
                     path: 'admin/modeler/forms/designer',
                     name: 'FormDesigner',
                     component: () => import('@/views/admin/Modeler/FormDesigner.vue'),
-                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT'] }
+                    meta: { requiresAuth: true, roles: ['ROLE_SUPER_ADMIN', 'ROLE_ANALYST_IT', 'ROLE_PROCESS_ARCHITECT'] }
                 },
                 {
                     path: 'admin/modeler/dmn',

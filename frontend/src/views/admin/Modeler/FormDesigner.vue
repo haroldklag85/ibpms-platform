@@ -117,10 +117,10 @@
     </header>
 
     <!-- ═══════ Main Layout ═══════ -->
-    <main class="flex-1 flex min-h-0 relative">
+    <main class="flex-1 flex flex-col md:flex-row min-h-0 relative w-full overflow-hidden">
       
       <!-- Toolbox Izquierda (Componentes Lego) -->
-      <aside v-show="!isFullScreen" class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0 transition-all">
+      <aside v-show="!isFullScreen" class="w-full md:w-64 bg-white border-r border-gray-200 flex flex-col shrink-0 transition-all hidden md:flex">
         <div class="p-3 border-b border-gray-100 bg-gray-50">
           <h3 class="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">🧩 Componentes</h3>
         </div>
@@ -150,7 +150,7 @@
       </aside>
 
       <!-- Lienzo Central (Canvas Drag & Drop) -->
-      <section class="flex-1 bg-gray-50/50 flex flex-col relative">
+      <section class="flex-1 w-full min-w-0 bg-gray-50/50 flex flex-col relative overflow-x-hidden overflow-y-auto box-border">
         <!-- Barra de Simulación del Stage (Solo para Maestro) -->
         <div v-if="formPattern === 'IFORM_MAESTRO'" class="absolute top-4 left-1/2 -translate-x-1/2 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-full shadow-sm text-xs font-bold flex items-center gap-3 z-10">
           <span>Simulation Stage:</span>
@@ -158,6 +158,7 @@
             <option value="START_EVENT">START_EVENT</option>
             <option value="ANALYSIS">ANALYSIS</option>
             <option value="DECISION">DECISION</option>
+            <option v-for="stage in availableStages" :key="stage" :value="stage">{{ stage }}</option>
             <option value="ALL">Mostrar Todos (Ideation)</option>
           </select>
         </div>
@@ -166,7 +167,7 @@
           <!-- CA-6 Shadow DOM (Isolation real via attachShadow & Teleport) -->
           <div ref="designerHostRef" class="w-full min-h-full"></div>
           <Teleport v-if="designerShadowContainer" :to="designerShadowContainer">
-            <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative" style="all: revert; box-sizing: border-box;">
+            <div class="shadow-dom-isolation-wrapper bg-white rounded-xl shadow-sm border border-gray-200 min-h-full p-8 max-w-4xl mx-auto flex flex-col relative w-full overflow-x-hidden box-border">
               <!-- @implNote Traceability: [DevDavid Merge] Integrando input editable preservando Teleport Shadow DOM -->
               <input v-model="formTitle" class="text-xl font-bold text-gray-800 mb-6 border-b pb-4 font-sans w-full bg-transparent outline-none hover:bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-200 transition-colors cursor-text" title="Clic para editar el nombre del formulario" />
 
@@ -189,7 +190,7 @@
               <template #item="{ element, index }">
                 <div 
                   v-show="(formPattern !== 'IFORM_MAESTRO' || activeStageSim === 'ALL' || element.stage === activeStageSim) && evaluateMockVis(element)"
-                  class="group relative border border-transparent hover:border-indigo-300 hover:bg-indigo-50/30 p-4 rounded-lg mb-4 transition"
+                  class="group relative border border-transparent hover:border-indigo-300 hover:bg-indigo-50/30 p-4 rounded-lg mb-4 transition w-full max-w-full box-border break-words"
                 >
                   
                   <!-- Controles del Campo (Hover) -->
@@ -241,6 +242,46 @@
                     <button v-if="element.type === 'button_reject'" class="w-full px-4 py-2 bg-red-600 text-white font-bold rounded-lg mt-3 cursor-pointer shadow-md">❌ {{ element.label }}</button>
 
                     
+                    <div v-if="element.type === 'field_array'" class="border border-emerald-200 bg-emerald-50/50 rounded-lg p-4 mt-2 min-h-[120px]">
+                      <h4 class="text-[10px] font-bold text-emerald-700 uppercase mb-2">📋 Grilla Repetible: {{ element.label }}</h4>
+                      <VueDraggable
+                         v-model="element.children"
+                         :group="{ name: 'form-builder', pull: true, put: true }"
+                         item-key="id"
+                         class="min-h-[100px] transition-all"
+                         :class="{'border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center': !element.children || element.children.length === 0}"
+                         animation="200"
+                         ghost-class="ghost-dropzone"
+                      >
+                         <template #item="{ element: child, index: childIdx }">
+                            <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition w-full max-w-full box-border overflow-x-hidden">
+                               <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
+                                 <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
+                                 <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
+                                 <button @click="removeField(element.children, childIdx)" class="px-2 py-1 text-red-500 hover:bg-red-50">🗑️</button>
+                               </div>
+                               <label class="text-xs font-bold text-gray-700 block">{{ child.label }} <span v-if="child.required" class="text-red-500">*</span></label>
+                               <input v-if="child.type === 'text'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                               <textarea v-if="child.type === 'textarea'" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" rows="1"></textarea>
+                               <input v-if="child.type === 'number'" type="number" :placeholder="child.placeholder" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" />
+                               <input v-if="child.type === 'date'" type="date" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" disabled />
+                               <input v-if="child.type === 'time'" type="time" class="form-input text-xs w-full mt-1 border-gray-300 rounded shadow-sm" disabled />
+                               <select v-if="child.type === 'select'" class="form-select text-xs w-full mt-1 border-gray-300 rounded shadow-sm">
+                                 <option disabled selected>{{ child.placeholder }}</option>
+                               </select>
+                               <div v-if="child.type === 'checkbox'" class="flex items-center gap-1 mt-1">
+                                  <input type="checkbox" class="rounded text-indigo-600 border-gray-300" disabled />
+                                  <span class="text-[10px] text-gray-700">{{ child.placeholder || child.label }}</span>
+                               </div>
+                               <button v-if="child.type === 'button_submit'" class="w-full px-2 py-1 bg-indigo-600 text-white font-bold rounded mt-2 text-[10px]">✅ {{ child.label }}</button>
+                            </div>
+                         </template>
+                         <template #footer>
+                            <div v-if="!element.children || element.children.length === 0" class="text-gray-400 font-bold text-xs pointer-events-none mt-2">Arrastre componentes aquí para conformar las columnas de la Grilla</div>
+                         </template>
+                      </VueDraggable>
+                    </div>
+
                     <div v-if="element.type === 'container'" class="border border-indigo-200 bg-indigo-50/50 rounded-lg p-4 mt-2 min-h-[120px]">
                       <VueDraggable
                          v-model="element.children"
@@ -252,7 +293,7 @@
                          ghost-class="ghost-dropzone"
                       >
                          <template #item="{ element: child, index: childIdx }">
-                            <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                            <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition w-full max-w-full box-border overflow-x-hidden">
                                <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
                                  <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
                                  <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
@@ -295,7 +336,7 @@
                              <VueDraggable v-model="pane.children" :group="{ name: 'form-builder', pull: true, put: true }" item-key="id" class="min-h-[120px] transition-all" :class="{'border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center': !pane.children || pane.children.length === 0}" animation="200" ghost-class="ghost-dropzone">
                                 <template #item="{ element: child, index: childIdx }">
                                    <!-- Sub-nivel Visual -->
-                                   <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                                   <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition w-full max-w-full box-border overflow-x-hidden">
                                       <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
                                         <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
                                         <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
@@ -336,7 +377,7 @@
                             <VueDraggable v-model="panel.children" :group="{ name: 'form-builder', pull: true, put: true }" item-key="id" class="min-h-[120px] transition-all" :class="{'border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center': !panel.children || panel.children.length === 0}" animation="200" ghost-class="ghost-dropzone">
                                <template #item="{ element: child, index: childIdx }">
                                   <!-- Sub-nivel Visual -->
-                                  <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition">
+                                  <div v-show="evaluateMockVis(child)" class="group/child relative bg-white border border-gray-200 p-3 rounded mb-2 hover:border-indigo-300 shadow-sm transition w-full max-w-full box-border overflow-x-hidden">
                                      <div class="absolute -top-3 right-2 hidden group-hover/child:flex bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden text-xs z-20">
                                        <button @click="editField(child)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-200">⚙️</button>
                                        <button @click="saveAsFragment(child)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 border-r border-gray-200">💾</button>
@@ -382,7 +423,7 @@
       </section>
 
       <!-- Monaco IDE (Bidireccional V2) -->
-      <aside v-show="!isFullScreen" class="w-2/5 min-w-[350px] bg-[#1e1e1e] border-l border-gray-800 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-20 shrink-0 transition-all">
+      <aside v-show="!isFullScreen" class="w-full lg:w-1/3 2xl:w-2/5 min-w-[300px] bg-[#1e1e1e] border-l border-gray-800 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-20 shrink-0 transition-all hidden lg:flex">
         
         <!-- Tabs -->
         <div class="flex bg-[#252526] text-xs font-mono font-medium text-gray-400 border-b border-[#3e3e42] shrink-0 overflow-x-auto">
@@ -985,9 +1026,19 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useLocalStorage } from '@vueuse/core';
 import VueDraggable from 'vuedraggable';
-import VueMonacoEditor from '@guolao/vue-monaco-editor';
+import VueMonacoEditor, { loader } from '@guolao/vue-monaco-editor';
 import { ZodBuilder, FormFieldMetadataDTO } from './ZodBuilder';
 import AppTooltip from '@/components/common/AppTooltip.vue';
+
+// @Traceability: BUG-MONACO-NLS — Pin Monaco CDN to v0.43.0 and disable NLS locale
+// fetching to prevent RegisterClientLocalizationsError in newer versions.
+// The `globalAPI: true` exposes `window.monaco` for editor marker decorations (CA-84).
+loader.config({
+  paths: {
+    vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs'
+  },
+  'vs/nls': { availableLanguages: {} }
+});
 import FormRenderer from '@/components/forms/FormRenderer.vue';
 // @ts-ignore
 import jexl from 'jexl';
@@ -1003,6 +1054,7 @@ const integrationStore = useIntegrationStore();
 const authStore = useAuthStore();
 const formStore = useFormDesignerStore();
 const {
+  availableStages,
   canvasFields,
   formTitle,
   formPattern,
@@ -1189,15 +1241,12 @@ onMounted(async () => {
     if (designerHostRef.value) {
         const shadowRoot = designerHostRef.value.attachShadow({ mode: 'open' });
         
-        // Inyectamos Tailwind (Vite dev server) o genérico
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = '/src/assets/index.tailwind.css'; // Fallback path
-        shadowRoot.appendChild(link);
-
-        const tailwindCdn = document.createElement('script');
-        tailwindCdn.src = 'https://cdn.tailwindcss.com?plugins=forms';
-        shadowRoot.appendChild(tailwindCdn);
+        // @Traceability: US-003, CA-06, BUG-FIX: Shadow DOM CSS injection - clone compiled Tailwind from document head
+        // El Shadow DOM aísla CSS completamente. Clonamos las hojas de estilo
+        // que Vite/PostCSS ya compiló e inyectó en el <head> del documento principal.
+        document.querySelectorAll('style, link[rel="stylesheet"]').forEach(node => {
+            shadowRoot.appendChild(node.cloneNode(true));
+        });
 
         const container = document.createElement('div');
         container.className = 'workdesk-form-designer-canvas h-full';
@@ -1210,6 +1259,7 @@ onMounted(async () => {
     if (formId) {
         const res = await formStore.fetchForm(formId);
         if (res.success) {
+            showPatternModal.value = false;
             showToast(res.message, 'success');
             // @Traceability: US-003 - CA-86
             if (route.query.showHistory === 'true') {
@@ -1514,6 +1564,8 @@ const onCamundaVariableChange = (e: Event) => {
     }
   }
 };
+
+
 
 declare const monaco: any;
 

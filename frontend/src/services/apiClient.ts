@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { useMenuStore } from '@/stores/useMenuStore';
+import type { StartProcessRequest } from '@/types/Process';
 
 // Instancia global con baseUrl que pasa por el Proxy de Vite (/api -> localhost:8080)
 const apiClient: AxiosInstance = axios.create({
@@ -27,6 +28,13 @@ apiClient.interceptors.request.use(
         if (config.headers && !config.headers['X-Correlation-ID']) {
             config.headers['X-Correlation-ID'] = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
         }
+
+        // Interceptor Architecture Fix for FormData (multipart)
+        // Allows Axios to auto-generate the correct boundary without inline hacks
+        if (config.data instanceof FormData && config.headers) {
+            delete config.headers['Content-Type'];
+        }
+        
         return config;
     },
     (error) => {
@@ -154,9 +162,7 @@ apiClient.interceptors.response.use(
         // @Traceability: US-000 - CA-03 (Bloqueo de Concurrencia Optimista)
         // Interceptar CA-3: Bloqueo de Concurrencia Optimista
         if (error.response && error.response.status === 409) {
-            const url = error.config?.url || '';
-            const isHeartbeat = url.includes('/lock/heartbeat');
-            if (!isHeartbeat && error.response.data?.type?.includes("optimistic-lock")) {
+            if(error.response.data?.type?.includes("optimistic-lock")) {
                 console.warn('Bloqueo de Concurrencia UI Disparado');
                 const event = new CustomEvent('optimistic-lock-dispatch');
                 window.dispatchEvent(event);
@@ -246,24 +252,27 @@ apiClient.interceptors.response.use(
                const authStore = useAuthStore();
                authStore.logout();
                window.location.href = '/login?alert=Sesión Invalidada por Seguridad';
+            } else if (error.response.data?.code === 'ACCESS_REVOKED' || error.response.data?.code === 'ROLE_REVOKED') {
+                // CA-32: Auto-Curación Zero-Trust — solo ante revocación explícita
+                console.warn('CA-32: Revocación de acceso confirmada (403). Purgando topología local.');
+                const menuStore = useMenuStore();
+                menuStore.purgeTopology();
+                
+                const body = document.querySelector('body');
+                if (body && !document.getElementById('privilege-update-toast')) {
+                    const toast = document.createElement('div');
+                    toast.id = 'privilege-update-toast';
+                    toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
+                    toast.innerHTML = 'Sus accesos han sido actualizados por el Administrador';
+                    body.appendChild(toast);
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 500);
+                    }, 4000);
+                }
             } else {
-               // CA-32: Auto-Curación Zero-Trust
-               console.warn('CA-32: Revocación de acceso detectada (403). Purgando topología local.');
-               const menuStore = useMenuStore();
-               menuStore.purgeTopology();
-               
-               const body = document.querySelector('body');
-               if (body && !document.getElementById('privilege-update-toast')) {
-                   const toast = document.createElement('div');
-                   toast.id = 'privilege-update-toast';
-                   toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
-                   toast.innerHTML = 'Sus accesos han sido actualizados por el Administrador';
-                   body.appendChild(toast);
-                   setTimeout(() => {
-                       toast.style.opacity = '0';
-                       setTimeout(() => toast.remove(), 500);
-                   }, 4000);
-               }
+                // 403 operacional (deploy, acceso denegado a recurso) — NO purgar menú
+                console.warn('CA-32: 403 operacional (no es revocación de privilegios). URL: ' + error.config?.url);
             }
         }
         return Promise.reject(error);
@@ -302,9 +311,8 @@ export const api = {
     // @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
     saveProcessDraft: (id: string, payload: any) => apiClient.put(`/design/processes/${id}/draft`, payload),
     validateProcess: (payload: any) => apiClient.post(`/design/processes/validate`, payload),
-    deployProcess: (payload: FormData) => apiClient.post(`/design/processes/deploy`, payload, { headers: { 'Content-Type': 'multipart/form-data' } }),
-    requestDeployment: (payload: FormData) => apiClient.post('/design/processes/deploy-request', payload, { headers: { 'Content-Type': 'multipart/form-data' } }),
-    getProcessXml: (key: string) => apiClient.get(`/design/processes/${key}/xml`),
+    deployProcess: (payload: FormData) => apiClient.post(`/design/processes/deploy`, payload),
+    requestDeployment: (id: string, payload?: any) => apiClient.post(`/design/processes/${id}/request-deployment`, payload),
     getCatalogProcesses: () => apiClient.get(`/design/processes/catalog`),
     getBpmnTemplates: () => apiClient.get(`/design/processes/templates`),
     archiveProcess: (id: string) => apiClient.post(`/design/processes/${id}/archive`), // CA-32
@@ -323,7 +331,8 @@ export const api = {
 
     // 6.5 Panel Solicitudes de Despliegue (CA-69)
     getDeployRequests: (key: string) => apiClient.get(`/design/processes/${key}/deploy-requests`),
-    reviewDeployRequest: (id: string, payload: { approved: boolean, comment?: string }) => apiClient.post(`/design/processes/deploy-requests/${id}/review`, payload),
+    approveDeployRequest: (id: string, payload?: any) => apiClient.post(`/design/deploy-requests/${id}/approve`, payload),
+    rejectDeployRequest: (id: string, payload: any) => apiClient.post(`/design/deploy-requests/${id}/reject`, payload),
 
     // Integraciones / Conectores (CA-45, CA-49, CA-68, CA-70)
     getIntegrationConnectors: () => apiClient.get(`/integrations/connectors`),
@@ -331,7 +340,7 @@ export const api = {
     getProcessVariables: (id: string) => apiClient.get(`/design/processes/${id}/variables`), // CA-49
     // CA-17: Variables BPMN para coherencia
     getBpmnVariables: (processKey: string) => apiClient.get(`/design/processes/${processKey}/variables`),
-    getExternalTaskTopics: () => apiClient.get(`/design/external-task-topics`), // CA-70
+    getExternalTaskTopics: () => apiClient.get(`/design/processes/external-task-topics`), // CA-70
     saveDataMappings: (key: string, taskId: string, payload: any) => apiClient.post(`/design/processes/${key}/tasks/${taskId}/mappings`, payload), // CA-68
 
     // 7. BAM Analytics - Process Health (Pantalla 5)
@@ -393,5 +402,33 @@ export const api = {
         return apiClient.post(`/agile/tasks/${taskId}/timebox`, payload, {
             headers: { 'Idempotency-Key': uuid }
         });
-    }
+    },
+
+    // -----------------------------------------------------------------
+    // US-007: Ejecución BPMN (Endpoints fuera de /api/v1, bajo /api/bpmn)
+    // @Traceability: US-007 — Ejecución BPMN, ADR-001 (Hexagonal)
+    // NOTA: baseURL override requerido porque estos endpoints NO están
+    //       bajo /api/v1 sino bajo /api/bpmn directamente.
+    // -----------------------------------------------------------------
+
+    /** Inicia una nueva instancia de proceso BPMN — POST /api/bpmn/instances → 201 */
+    startProcess: (payload: StartProcessRequest) =>
+        apiClient.post('/bpmn/instances', payload, { baseURL: '/api' }),
+
+    /** Completa una tarea BPMN directamente (ruta US-007) — POST /api/bpmn/tasks/{id}/complete → 204 */
+    completeBpmnTask: (taskId: string, variables?: Record<string, unknown>) => {
+        const idempotencyKey = (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        return apiClient.post(`/bpmn/tasks/${taskId}/complete`, variables ?? {}, {
+            baseURL: '/api',
+            headers: { 'Idempotency-Key': idempotencyKey }
+        });
+    },
+
+    // -----------------------------------------------------------------
+    // US-030: Telemetría BPMN (BAM)
+    // -----------------------------------------------------------------
+    getTelemetryInstances: (status?: string) => apiClient.get('/bpm/telemetry/instances', { params: { status } }),
+    getTelemetryIncidents: () => apiClient.get('/bpm/telemetry/incidents'),
 };

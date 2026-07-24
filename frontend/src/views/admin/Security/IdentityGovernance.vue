@@ -625,15 +625,37 @@
                                  </tr>
                              </thead>
                              <tbody class="divide-y divide-gray-100 bg-white">
-                                  <tr v-for="proc in systemProcesses" :key="proc.id" class="hover:bg-gray-50">
-                                      <td class="px-3 py-2 text-xs font-medium text-gray-700">{{ proc.name }}</td>
-                                      <td class="px-3 py-2 text-center">
-                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].initiate" :disabled="isCoreRole(roleForm)" class="text-indigo-600 focus:ring-indigo-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
-                                      </td>
-                                      <td class="px-3 py-2 text-center">
-                                          <input type="checkbox" v-model="roleForm.matrix[proc.id].execute" :disabled="isCoreRole(roleForm)" class="text-emerald-600 focus:ring-emerald-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
-                                      </td>
-                                  </tr>
+                                  <template v-for="proc in systemProcesses" :key="proc.id">
+                                      <tr class="hover:bg-gray-50 cursor-pointer transition-colors" @click="toggleProcessExpansion(proc.id)">
+                                          <td class="px-3 py-2 text-xs font-medium text-gray-700">
+                                              <span class="mr-1 text-gray-400 select-none">{{ expandedProcesses.has(proc.id) ? '▾' : '▸' }}</span>
+                                              {{ proc.name }}
+                                          </td>
+                                          <td class="px-3 py-2 text-center" @click.stop>
+                                              <input type="checkbox" v-model="roleForm.matrix[proc.id].initiate" :disabled="isCoreRole(roleForm)" class="text-indigo-600 focus:ring-indigo-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
+                                          </td>
+                                          <td class="px-3 py-2 text-center" @click.stop>
+                                              <input type="checkbox" v-model="roleForm.matrix[proc.id].execute" :disabled="isCoreRole(roleForm)" class="text-emerald-600 focus:ring-emerald-500 rounded h-4 w-4 bg-gray-50 border-gray-300 disabled:opacity-50" />
+                                          </td>
+                                      </tr>
+                                      <template v-if="expandedProcesses.has(proc.id)">
+                                          <tr v-if="!processLanes[proc.id] || processLanes[proc.id].length === 0" class="bg-gray-50/50">
+                                              <td colspan="3" class="px-8 py-2 text-[10px] text-gray-400 italic font-mono">Sin lanes definidos</td>
+                                          </tr>
+                                          <tr v-for="lane in processLanes[proc.id]" :key="lane.id" class="bg-indigo-50/40 hover:bg-indigo-50 transition-colors">
+                                              <td class="px-8 py-2 text-[11px] text-gray-600 border-l-4 border-indigo-400 flex items-center gap-1.5 font-medium">
+                                                  <span class="text-[12px] text-indigo-500 font-bold">≡</span>
+                                                  └ {{ lane.laneName }}
+                                              </td>
+                                              <td class="px-3 py-2 text-center">
+                                                  <input type="checkbox" :disabled="isCoreRole(roleForm)" v-model="roleForm.laneMatrix[lane.id].initiate" class="text-indigo-500 focus:ring-indigo-400 rounded h-3.5 w-3.5 bg-white border-gray-300 disabled:opacity-50" />
+                                              </td>
+                                              <td class="px-3 py-2 text-center">
+                                                  <input type="checkbox" :disabled="isCoreRole(roleForm)" v-model="roleForm.laneMatrix[lane.id].execute" class="text-emerald-500 focus:ring-emerald-400 rounded h-3.5 w-3.5 bg-white border-gray-300 disabled:opacity-50" />
+                                              </td>
+                                          </tr>
+                                      </template>
+                                  </template>
                              </tbody>
                          </table>
                      </div>
@@ -1097,8 +1119,10 @@ const matrixState = ref<Record<string, boolean>>({});
 
 const showRoleModal = ref(false);
 const roleModalTab = ref<'basic' | 'topology'>('basic');
+const processLanes = ref<Record<string, any[]>>({});
+const expandedProcesses = ref<Set<string>>(new Set());
 const editingRole = ref<any>(null);
-const roleForm = ref({ name: '', id: '', parentRole: '', matrix: {} as Record<string, { initiate: boolean, execute: boolean }>, topology: { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } });
+const roleForm = ref({ name: '', id: '', parentRole: '', matrix: {} as Record<string, { initiate: boolean, execute: boolean }>, laneMatrix: {} as Record<string, { initiate: boolean, execute: boolean }>, topology: { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } });
 
 const roleMatrixSchema = z.record(z.object({
     initiate: z.boolean(),
@@ -1120,9 +1144,33 @@ const onParentRoleChange = () => {
     showToast(`Matriz pre-llenada con herencia de ${parentId}`, 'success');
 };
 
-const openRoleModal = (role: any = null) => {
+const toggleProcessExpansion = async (procId: string) => {
+    if (expandedProcesses.value.has(procId)) {
+        expandedProcesses.value.delete(procId);
+    } else {
+        expandedProcesses.value.add(procId);
+        if (!processLanes.value[procId]) {
+            try {
+                const lanes = await rbacStore.fetchLanesByProcess(procId);
+                processLanes.value[procId] = lanes;
+                for (const lane of lanes) {
+                    if (!roleForm.value.laneMatrix[lane.id]) {
+                        roleForm.value.laneMatrix[lane.id] = { initiate: false, execute: false };
+                    }
+                }
+            } catch (e: any) {
+                console.error("Error fetching lanes for process", procId, e);
+                showToast('Error al cargar los carriles del proceso: ' + (e?.response?.data?.message || e.message || 'Error desconocido'), 'error');
+            }
+        }
+    }
+};
+
+const openRoleModal = async (role: any = null) => {
     editingRole.value = role;
     roleModalTab.value = 'basic';
+    expandedProcesses.value.clear();
+    const laneMatrix: Record<string, { initiate: boolean, execute: boolean }> = {};
     if(role) { 
         const matrix: Record<string, { initiate: boolean, execute: boolean }> = {};
         for(const p of systemProcesses.value) {
@@ -1131,14 +1179,28 @@ const openRoleModal = (role: any = null) => {
                 execute: matrixState.value[`${role.id}_${p.id}_E`] || false
             };
         }
-        roleForm.value = { ...role, parentRole: '', matrix, topology: role.topology || { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } }; 
+        try {
+            const assignments = await rbacStore.fetchLaneAssignmentsByRole(role.id);
+            if (assignments) {
+                for (const a of assignments) {
+                    laneMatrix[a.laneId] = {
+                        initiate: a.canInitiate,
+                        execute: a.canExecute
+                    };
+                }
+            }
+        } catch (e: any) { 
+            console.error("Error loading lane assignments", e); 
+            showToast('Error al cargar asignaciones de carriles: ' + (e?.response?.data?.message || e.message || 'Error desconocido'), 'error');
+        }
+        roleForm.value = { ...role, parentRole: '', matrix, laneMatrix, topology: role.topology || { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } }; 
     }
     else { 
         const matrix: Record<string, { initiate: boolean, execute: boolean }> = {};
         for(const p of systemProcesses.value) {
             matrix[p.id] = { initiate: false, execute: false };
         }
-        roleForm.value = { name: '', id: 'R_', parentRole: '', matrix, topology: { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } }; 
+        roleForm.value = { name: '', id: 'R_', parentRole: '', matrix, laneMatrix, topology: { WORKDESK: false, SERVICE_DELIVERY: false, BAM: false, MODELER: false, INTEGRATION: false, PROJECTS: false, ADMINISTRATION: false } }; 
     }
     showRoleModal.value = true;
 };
@@ -1149,9 +1211,9 @@ const deleteRole = async (role: any) => {
             await apiClient.delete(`/admin/roles/${role.id}`);
             systemRoles.value = systemRoles.value.filter(r => r.id !== role.id);
             showToast(`Rol ${role.name} eliminado exitosamente.`, 'success');
-        } catch(e) {
-            systemRoles.value = systemRoles.value.filter(r => r.id !== role.id);
-            showToast('Fallback local: Rol eliminado.', 'success');
+        } catch(e: any) {
+            console.error('Error deleting role from API:', e);
+            showToast('Error al eliminar el rol: ' + (e?.response?.data?.message || e.message || 'Error desconocido'), 'error');
         }
     }
 };
@@ -1191,6 +1253,25 @@ const saveRole = async () => {
         for(const p of systemProcesses.value) {
             matrixState.value[`${roleForm.value.id}_${p.id}_I`] = roleForm.value.matrix[p.id].initiate;
             matrixState.value[`${roleForm.value.id}_${p.id}_E`] = roleForm.value.matrix[p.id].execute;
+        }
+        
+        // Save lane assignments
+        try {
+            const laneAssignments = [];
+            for (const laneId in roleForm.value.laneMatrix) {
+                const { initiate, execute } = roleForm.value.laneMatrix[laneId];
+                if (initiate || execute) {
+                    laneAssignments.push({
+                        laneId,
+                        canInitiate: initiate,
+                        canExecute: execute
+                    });
+                }
+            }
+            await rbacStore.saveLaneRoleAssignments(roleForm.value.id, laneAssignments);
+        } catch (e: any) {
+            console.error("Error saving lane assignments", e);
+            showToast('Error al guardar asignaciones de carriles: ' + (e?.response?.data?.message || e.message || 'Error desconocido'), 'error');
         }
 
         showRoleModal.value = false;

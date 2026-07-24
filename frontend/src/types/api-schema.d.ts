@@ -3010,6 +3010,23 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        BpmnLaneDTO: {
+            /** Format: uuid */
+            id?: string;
+            processKey?: string;
+            laneXmlId?: string;
+            laneName?: string;
+            actorDescription?: string;
+            linkedRoleName?: string;
+        };
+        LaneRoleAssignmentDTO: {
+            /** Format: uuid */
+            laneId?: string;
+            laneName?: string;
+            processKey?: string;
+            canInitiate?: boolean;
+            canExecute?: boolean;
+        };
         ProblemDetail: {
             /** Format: uri */
             type?: string;
@@ -18521,4 +18538,11 @@ export interface operations {
             };
         };
     };
+}
+
+// US-005/US-036 Extension: Lane-Role Assignment Types
+export interface LaneRoleAssignmentRequest {
+  laneId: string; // UUID
+  canInitiate: boolean;
+  canExecute: boolean;
 }

@@ -1,6 +1,7 @@
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.domain.model.audit.ClaimAuditLog;
+import com.ibpms.poc.domain.model.enums.ClaimActionType;
 import com.ibpms.poc.application.port.out.ClaimAuditPort;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +36,7 @@ public class ClaimAuditService {
         ClaimAuditLog log = new ClaimAuditLog(
                 taskId,
                 supervisorId,
-                "FORCE_UNCLAIM",
+                ClaimActionType.FORCE_UNCLAIMED.name(),
                 tenantId,
                 Instant.now(),
                 null,

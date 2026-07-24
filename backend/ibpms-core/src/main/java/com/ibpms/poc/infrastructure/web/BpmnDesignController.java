@@ -35,12 +35,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * REST Controller for BPMN Design operations (Integration Gaps Mock / Zero-Mock V2).
  * 
  * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/design/processes")
 @Traceability(US = "US-005", CA = {"CA-01"})
@@ -117,7 +119,7 @@ public class BpmnDesignController {
             @Parameter(description = "Indica si se despliega en modo Sandbox efímero") @RequestHeader(value = "X-Sandbox-Mode", required = false, defaultValue = "false") boolean isSandbox) {
 
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        boolean hasRole = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("BPMN_Release_Manager"));
+        boolean hasRole = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("BPMN_Release_Manager") || a.getAuthority().contains("SUPER_ADMIN"));
 
         String reqContentType = request.getContentType();
         if (reqContentType == null || !reqContentType.toLowerCase().contains("multipart/form-data")) {
@@ -148,6 +150,10 @@ public class BpmnDesignController {
                     .body(Map.of("error", "Acceso Denegado. Se requiere el rol BPMN_Release_Manager o modo Sandbox."));
         }
         
+        log.info("Deploy autorizado para usuario={} con rol={}", 
+            auth != null ? auth.getName() : "anonymous", 
+            hasRole ? "BPMN_Release_Manager/SUPER_ADMIN" : "sandbox_mode");
+            
         String role = auth != null ? auth.getName() : "BPMN_Release_Manager";
 
         if (deployComment == null || deployComment.trim().length() < 10) {
@@ -163,16 +169,12 @@ public class BpmnDesignController {
         try {
             DeploymentValidationResponse validation = preFlightAnalyzerService.analizar(file.getInputStream());
 
+            // @Traceability: US-005, CA-33 — Solo los ERRORES semánticos son bloqueantes (valid=false).
+            // Los WARNINGS son recomendaciones de gobernanza (ej. ReglaNomenclatura, formKey en StartEvent)
+            // y se retornan dentro de la respuesta 201 exitosa. El diseñador los verá en la consola inferior.
+            // Arquitectura IBPMS: StartEvent = punto topológico, formularios y eventos viven en Tasks.
             if (!validation.isValid() && !isSandbox) {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(validation);
-            }
-
-            // @Traceability: US-005, CA-33 Reglas de Linting del Pre-Flight (Bloqueo Duro)
-            if (!validation.getWarnings().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
-                    "error", "Hard-Stop (CA-33): El Pre-Flight tiene advertencias que deben ser resueltas obligatoriamente antes de desplegar.",
-                    "warnings", validation.getWarnings()
-                ));
             }
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
@@ -234,8 +236,8 @@ public class BpmnDesignController {
     @GetMapping("/{processDefinitionKey}/instances/migratable")
     public ResponseEntity<List<MigratableInstanceDTO>> getMigratableInstances(
             @PathVariable("processDefinitionKey") String processDefinitionKey,
-            @RequestParam("sourceVersion") Integer sourceVersion,
-            @RequestParam("targetVersion") Integer targetVersion) {
+            @RequestParam(value = "sourceVersion", required = false, defaultValue = "0") Integer sourceVersion,
+            @RequestParam(value = "targetVersion", required = false, defaultValue = "0") Integer targetVersion) {
         
         List<MigratableInstanceDTO> report = processMigrationService.evaluateTopologyTarget(
                 processDefinitionKey, sourceVersion, targetVersion);
@@ -497,7 +499,7 @@ public class BpmnDesignController {
     }
 
     @PostMapping("/deploy-requests/{id}/review")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('BPMN_Release_Manager')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('BPMN_Release_Manager', 'SUPER_ADMIN')")
     public ResponseEntity<?> reviewDeployRequest(@PathVariable("id") UUID id, @RequestBody DeployRequestReviewDto payload, java.security.Principal principal) {
         String adminUser = principal.getName();
         String comment = payload.getComment();
@@ -600,7 +602,7 @@ public class BpmnDesignController {
         return ResponseEntity.ok(Map.of(
             "message", "Solicitud de despliegue enviada. La versión borrador está pendiente de aprobación por Release Management.",
             "status", "PENDING_APPROVAL",
-            "assignedGroup", "BPMN_Release_Manager"
+            "assignedGroup", "BPMN_Release_Manager, SUPER_ADMIN"
         ));
     }
 

@@ -57,6 +57,9 @@ public class RoleEntity {
     @Column(name = "lane_id", length = 255)
     private String laneId;
 
+    @Transient
+    private java.util.Map<String, Boolean> topology;
+
     public RoleEntity() {}
 
     public RoleEntity(String name, String description) {
@@ -88,4 +91,6 @@ public class RoleEntity {
     public void setProcessDefinitionId(String processDefinitionId) { this.processDefinitionId = processDefinitionId; }
     public String getLaneId() { return laneId; }
     public void setLaneId(String laneId) { this.laneId = laneId; }
+    public java.util.Map<String, Boolean> getTopology() { return topology; }
+    public void setTopology(java.util.Map<String, Boolean> topology) { this.topology = topology; }
 }

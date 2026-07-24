@@ -50,7 +50,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
   it('CA-12: Badge muestra "revoked" cuando certification state cambia', async () => {
     vi.mocked(apiClient.get).mockImplementation((url) => {
        if (url.includes('/forms/test-id')) {
-          return Promise.resolve({ data: { schemaVariables: "[]", isQaCertified: false, certifiedSchemaHash: 'hash123' } });
+          return Promise.resolve({ data: { formFields: "[]", isQaCertified: false, certifiedSchemaHash: 'hash123' } });
        }
        return Promise.resolve({ data: [] });
     });
@@ -66,7 +66,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
     
     vi.mocked(apiClient.get).mockImplementation((url) => {
        if (url.includes('/forms/test-id')) {
-          return Promise.resolve({ data: { schemaVariables: "[]", isQaCertified: true, versionId: 2 } });
+          return Promise.resolve({ data: { formFields: "[]", isQaCertified: true, version: 2 } });
        }
        return Promise.resolve({ data: [] });
     });
@@ -81,7 +81,7 @@ describe('US-028: Form Designer QA Certification (CA-12 to CA-17)', () => {
   it('CA-13: Indicador de versión muestra V{N} + estado', async () => {
     vi.mocked(apiClient.get).mockImplementation((url) => {
        if (url.includes('/forms/test-id')) {
-          return Promise.resolve({ data: { schemaVariables: "[]", isQaCertified: true, versionId: 5 } });
+          return Promise.resolve({ data: { formFields: "[]", isQaCertified: true, version: 5 } });
        }
        return Promise.resolve({ data: [] });
     });

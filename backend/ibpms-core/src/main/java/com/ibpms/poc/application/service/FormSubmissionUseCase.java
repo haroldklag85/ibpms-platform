@@ -3,15 +3,17 @@ package com.ibpms.poc.application.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
-import com.ibpms.poc.infrastructure.jpa.entity.FormEventStoreEntity;
-import com.ibpms.poc.infrastructure.jpa.repository.FormEventStoreRepository;
+import com.ibpms.poc.domain.model.FormEvent;
+import com.ibpms.poc.domain.model.EventType;
+import com.ibpms.poc.domain.port.FormEventRepository;
+import com.ibpms.poc.application.port.out.WorkdeskProjectionPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.TaskService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,6 +21,10 @@ import java.util.UUID;
  * Use case responsible for handling form submissions through CQRS architecture.
  * Implements the Saga and Append-Only patterns to persist form payload as an event
  * before executing the completion request in Camunda, allowing compensations on failure.
+ *
+ * @Traceability: US-017 CA-01 (Event Sourcing), CA-06 (Event Store Schema)
+ * ADR-001 Compliance: domain.model.FormEvent (POJO) + domain.port.FormEventRepository (port).
+ * Zero imports from infrastructure/jpa — mapping delegated to FormEventRepositoryJpa adapter.
  */
 @Slf4j
 @Service
@@ -26,10 +32,10 @@ import java.util.UUID;
 @Traceability(US = "US-017", CA = {"CA-01", "CA-06"})
 public class FormSubmissionUseCase {
 
-    private final FormEventStoreRepository formEventStoreRepository;
+    private final FormEventRepository formEventRepository;
     private final TaskService taskService;
     private final ObjectMapper objectMapper;
-    private final com.ibpms.poc.infrastructure.jpa.repository.WorkdeskProjectionRepository projectionRepository;
+    private final WorkdeskProjectionPort projectionPort;
 
     @Transactional
     public String submitForm(String taskId, Map<String, Object> payload, String userId) {
@@ -42,25 +48,38 @@ public class FormSubmissionUseCase {
             throw new IllegalArgumentException("Invalid JSON payload", e);
         }
 
-        // 1. Guarda evento FORM_SUBMITTED
-        FormEventStoreEntity submittedEvent = FormEventStoreEntity.builder()
+        // Get processInstanceId
+        String processInstanceId = "mock_process";
+        try {
+            org.camunda.bpm.engine.task.Task camundaTask = taskService.createTaskQuery().taskId(taskId).singleResult();
+            if (camundaTask != null && camundaTask.getProcessInstanceId() != null) {
+                processInstanceId = camundaTask.getProcessInstanceId();
+            }
+        } catch (Exception e) {
+            log.warn("Could not retrieve process instance id for task {}", taskId);
+        }
+
+        // 1. Guarda evento FORM_SUBMITTED (domain model — ADR-001 compliant)
+        FormEvent submittedEvent = FormEvent.builder()
                 .eventId(eventId)
-                .eventType("FORM_SUBMITTED")
+                .eventType(EventType.FORM_SUBMITTED)
                 .taskId(taskId)
+                .processInstanceId(processInstanceId)
+                .schemaVersion("1.0")
                 .userId(userId)
                 .payloadJson(payloadJson)
                 .idempotencyKey(UUID.randomUUID())
-                .createdAt(OffsetDateTime.now())
+                .createdAt(ZonedDateTime.now())
                 .build();
         
-        formEventStoreRepository.save(submittedEvent);
+        formEventRepository.save(submittedEvent);
 
         // 2. Intentar llamar a Camunda
         try {
             taskService.complete(taskId, payload);
             String projectionId = taskId.startsWith("wd_") ? taskId : "wd_" + taskId;
-            projectionRepository.deleteById(projectionId);
-            projectionRepository.deleteById(taskId);
+            projectionPort.deleteProjectionById(projectionId);
+            projectionPort.deleteProjectionById(taskId);
             return eventId.toString();
         } catch (Exception e) {
             log.error("Failed to complete task in Camunda, executing rollback event. TaskId: {}", taskId, e);
@@ -70,22 +89,24 @@ public class FormSubmissionUseCase {
             if (isMockTask) {
                 log.info("Simulating task completion for mock/seeded task: {}", taskId);
                 String projectionId = taskId.startsWith("wd_") ? taskId : "wd_" + taskId;
-                projectionRepository.deleteById(projectionId);
-                projectionRepository.deleteById(taskId);
+                projectionPort.deleteProjectionById(projectionId);
+                projectionPort.deleteProjectionById(taskId);
                 return eventId.toString();
             }
             
-            // 3. Fallback: Guarda evento FORM_SUBMIT_ROLLED_BACK
-            FormEventStoreEntity rollbackEvent = FormEventStoreEntity.builder()
+            // 3. Fallback: Guarda evento FORM_SUBMIT_ROLLED_BACK (append-only — NO delete)
+            FormEvent rollbackEvent = FormEvent.builder()
                     .eventId(UUID.randomUUID())
-                    .eventType("FORM_SUBMIT_ROLLED_BACK")
+                    .eventType(EventType.FORM_SUBMIT_ROLLED_BACK)
                     .taskId(taskId)
+                    .processInstanceId(processInstanceId)
+                    .schemaVersion("1.0")
                     .userId(userId)
                     .payloadJson(payloadJson)
                     .idempotencyKey(UUID.randomUUID())
-                    .createdAt(OffsetDateTime.now())
+                    .createdAt(ZonedDateTime.now())
                     .build();
-            formEventStoreRepository.save(rollbackEvent);
+            formEventRepository.save(rollbackEvent);
             throw new RuntimeException("Camunda task completion failed, fallback saved.", e);
         }
     }

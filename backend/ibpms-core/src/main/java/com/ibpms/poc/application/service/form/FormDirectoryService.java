@@ -9,22 +9,42 @@ import java.util.stream.Collectors;
 @Service
 public class FormDirectoryService {
 
-    // Estructura en memoria según requerimiento de Misión (Evasión de BD compleja para acelerar Boot)
-    private final List<Map<String, Object>> mockDirectory = List.of(
-        Map.of("id", "FRM-001", "name", "Solicitud de Crédito Express", "type", "FINANCIAL", "version", "1.0", "author", "System", "updatedAt", LocalDateTime.now().minusDays(1).toString()),
-        Map.of("id", "FRM-002", "name", "Alta de Empleado (Onboarding)", "type", "HR", "version", "2.1", "author", "Admin", "updatedAt", LocalDateTime.now().minusHours(5).toString()),
-        Map.of("id", "FRM-003", "name", "Reclamación Seguro (PQR)", "type", "LEGAL", "version", "1.5", "author", "AuditAgent", "updatedAt", LocalDateTime.now().toString())
-    );
+    private final com.ibpms.poc.application.service.FormDesignService formDesignService;
+
+    public FormDirectoryService(com.ibpms.poc.application.service.FormDesignService formDesignService) {
+        this.formDesignService = formDesignService;
+    }
 
     public List<Map<String, Object>> searchForms(String query) {
+        List<com.ibpms.poc.application.dto.FormDesignDTO> allActiveForms = formDesignService.listarCatalogo();
+
+        List<Map<String, Object>> directory = allActiveForms.stream()
+            .map(f -> {
+                Map<String, Object> map = new java.util.HashMap<>();
+                map.put("id", f.getTechnicalName());
+                map.put("name", f.getName());
+                map.put("type", f.getPattern());
+                map.put("version", f.getVersion() != null ? f.getVersion().toString() : "1.0");
+                map.put("author", f.getAuthorId());
+                map.put("updatedAt", f.getUpdatedAt() != null ? f.getUpdatedAt().toString() : java.time.LocalDateTime.now().toString());
+                return map;
+            })
+            .collect(Collectors.toList());
+
         if (query == null || query.isBlank()) {
-            return mockDirectory;
+            return directory;
         }
+        
         String lowerQuery = query.toLowerCase();
-        return mockDirectory.stream()
-            .filter(f -> ((String) f.get("name")).toLowerCase().contains(lowerQuery) 
-                      || ((String) f.get("id")).toLowerCase().contains(lowerQuery)
-                      || ((String) f.get("type")).toLowerCase().contains(lowerQuery))
+        return directory.stream()
+            .filter(f -> {
+                String name = (String) f.get("name");
+                String id = (String) f.get("id");
+                String type = (String) f.get("type");
+                return (name != null && name.toLowerCase().contains(lowerQuery))
+                    || (id != null && id.toLowerCase().contains(lowerQuery))
+                    || (type != null && type.toLowerCase().contains(lowerQuery));
+            })
             .collect(Collectors.toList());
     }
 }

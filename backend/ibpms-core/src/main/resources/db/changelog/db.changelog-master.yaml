@@ -1,4 +1,3 @@
-# // @Traceability: US-005, CA-42 - Activity Timeline
 databaseChangeLog:
   - include:
       file: db/changelog/001-initial-schema.xml
@@ -94,6 +93,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/39-us029-form-execution-schema.sql
   - include:
+      file: db/changelog/40-us029-fix-form-event-store.sql
+  - include:
       file: db/changelog/40-us029-draft-expiration.sql
   - include:
       file: db/changelog/41-us007-dmn-schema-complement.sql
@@ -137,8 +138,11 @@ databaseChangeLog:
 #      file: db/changelog/changes/54-us008-time-logs-and-kanban.sql
   - include:
       file: db/changelog/changes/015-create-tenant-config.sql
-  - include:
-      file: db/changelog/changes/016-create-cqrs-event-store.sql
+  # @Traceability: US-017 STABILIZE — Migración 016 deshabilitada porque crea tabla zombie
+  # ibpms_form_event_store (nombre antiguo). La tabla correcta form_event_store ya fue creada
+  # por sprint3/001 y corregida por la migración 40. Mantener activa causa tablas duplicadas.
+  # - include:
+  #     file: db/changelog/changes/016-create-cqrs-event-store.sql
   - include:
       file: db/changelog/changes/055-create-dmn-models.sql
 #  - include:
@@ -151,8 +155,18 @@ databaseChangeLog:
       context: dev,test
   - include:
       file: db/changelog/changes/058-create-deploy-requests.sql
+  # CA-15 (US-002 PM-01): Agrega tenant_id para ghost timeout per-tenant
+  - include:
+      file: db/changelog/changes/059-us002-add-tenant-id-to-agile-tasks.sql
+  # Sprint-6: US-029 draft payload tables + business hours + forensic overrides
   - include:
       file: db/changelog/changes/059-us029-draft-payload.sql
+  # Sprint-6: Seed test tenants (T-100)
   - include:
       file: db/changelog/changes/060-seed-test-tenants.sql
-
+  - include:
+      file: db/changelog/changes/061-bugj02006-seed-permissions.sql
+  - include:
+      file: db/changelog/changes/062-lane-role-assignment-tables.sql
+  - include:
+      file: db/changelog/changes/063-seed-bpmn-release-manager-role.sql

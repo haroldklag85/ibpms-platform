@@ -49,7 +49,7 @@ describe('apiClient Interceptors', () => {
     const mockError = {
         response: {
             status: 403,
-            data: { message: 'Forbidden' }
+            data: { message: 'Forbidden', code: 'ACCESS_REVOKED' }
         }
     };
 

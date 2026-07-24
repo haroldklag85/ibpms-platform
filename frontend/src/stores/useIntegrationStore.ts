@@ -35,13 +35,10 @@ export const useIntegrationStore = defineStore('integrationStore', {
       const formData = new FormData();
       const blob = new Blob([payload.xml], { type: 'application/xml' });
       formData.append('file', blob, 'process.bpmn');
-      
-      return this.post(`/design/processes/validate`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      return this.post(`/design/processes/validate`, formData);
     },
     deployProcess(payload: any) {
-      return this.post(`/design/processes/deploy`, payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+      return this.post(`/design/processes/deploy`, payload);
     },
     getCatalogProcesses() {
       return this.get(`/design/processes/catalog`);
@@ -83,13 +80,18 @@ export const useIntegrationStore = defineStore('integrationStore', {
       return this.get(`/design/processes/${id}/variables`);
     },
     getExternalTaskTopics() {
-      return this.get(`/design/external-task-topics`);
+      return this.get(`/design/processes/external-task-topics`);
     },
     saveDataMappings(key: string, taskId: string, payload: any) {
       return this.post(`/design/processes/${key}/tasks/${taskId}/mappings`, payload);
     },
+    // @Traceability: US-005, CA-39
     getForms(processKey?: string) {
-      return this.get('/forms/active', { params: { processKey } });
+      const params: Record<string, string> = {};
+      if (processKey && processKey.trim() !== '') {
+        params.processKey = processKey;
+      }
+      return this.get('/forms/active', { params });
     },
     getBpmnComplexityLimit() {
       return this.get('/admin/settings/bpmn-complexity-limit');
@@ -126,9 +128,7 @@ export const useIntegrationStore = defineStore('integrationStore', {
     },
     // @Traceability: US-005, CA-69
     requestDeployment(payload: FormData) {
-      return this.post('/design/processes/deploy-request', payload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      return this.post('/design/processes/deploy-request', payload);
     },
     deployToSandbox(id: string, payload: any) {
       return this.post(`/design/processes/${id}/sandbox`, payload);

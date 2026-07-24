@@ -7,8 +7,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import org.hibernate.annotations.Type;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -52,9 +55,9 @@ public class BpmnProcessDesignEntity {
     @Column(name = "xml_draft", columnDefinition = "TEXT")
     private String xmlDraft;
 
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Type(JsonType.class)
     @Column(name = "generic_form_whitelist", columnDefinition = "jsonb")
-    private String genericFormWhitelist;
+    private Map<String, Object> genericFormWhitelist;
 
     @Column(name = "max_nodes", nullable = false)
     private int maxNodes;
@@ -148,11 +151,11 @@ public class BpmnProcessDesignEntity {
         this.xmlDraft = xmlDraft;
     }
 
-    public String getGenericFormWhitelist() {
+    public Map<String, Object> getGenericFormWhitelist() {
         return genericFormWhitelist;
     }
 
-    public void setGenericFormWhitelist(String genericFormWhitelist) {
+    public void setGenericFormWhitelist(Map<String, Object> genericFormWhitelist) {
         this.genericFormWhitelist = genericFormWhitelist;
     }
 

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -140,7 +141,7 @@ public class FormDesignJpaAdapter implements FormDesignPort {
         dto.setZodSchema(e.getZodSchema());
         if (e.getFormFields() != null) {
             try {
-                dto.setFormFields(objectMapper.readValue(e.getFormFields(), new TypeReference<List<FormFieldMetadataDTO>>() {}));
+                dto.setFormFields((List<Map<String, Object>>) objectMapper.readValue(e.getFormFields(), List.class));
             } catch (JsonProcessingException ex) {
                 dto.setFormFields(Collections.emptyList());
             }

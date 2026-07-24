@@ -194,7 +194,7 @@
             </button>
             <button data-testid="btn-deploy" v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)"
                     @click="showDeployModal = true" 
-                    :disabled="isDeploying || preFlightStatus !== 'VALIDATED'" 
+                    :disabled="isDeploying || (preFlightStatus !== 'VALIDATED' && preFlightStatus !== 'WARNING')" 
                     class="bg-indigo-600 text-white px-2 py-1 rounded shadow text-[11px] font-bold hover:bg-indigo-700 disabled:opacity-50 transition flex items-center gap-1">
               🚀 Desplegar
             </button>
@@ -526,7 +526,28 @@
                 <AppTooltip :content="bpmnTooltips.FORM_KEY" />
               </label>
               <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Formulario renderizado en Workdesk</p>
-              <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border bg-indigo-50/30 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300">
+              <!-- BUG-J02-004: Filtro rápido de tipo de formulario -->
+              <div class="flex gap-1 mb-2">
+                <button 
+                  v-for="filterOpt in [
+                    { value: 'ALL', label: 'Todos', icon: '📋' },
+                    { value: 'SIMPLE', label: 'Simple', icon: '🟢' },
+                    { value: 'MAESTRO', label: 'Maestro', icon: '🔵' }
+                  ]" 
+                  :key="filterOpt.value"
+                  @click="formTypeFilter = filterOpt.value"
+                  :class="[
+                    'px-2 py-1 text-[10px] font-medium rounded-md border transition-all duration-150',
+                    formTypeFilter === filterOpt.value
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                      : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  ]"
+                  type="button"
+                >
+                  {{ filterOpt.icon }} {{ filterOpt.label }}
+                </button>
+              </div>
+              <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono rounded-lg p-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 transition-colors duration-150 appearance-none cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500">
                 <option value="">-- Sin FormKey --</option>
                 <option v-for="form in filteredForms" :key="form.key" :value="form.key">
                   {{ form.type === 'MAESTRO' ? '🔵' : '🟢' }} {{ form.name }} ({{ form.key }})
@@ -594,7 +615,28 @@
                 <AppTooltip :content="bpmnTooltips.FORM_KEY" />
               </label>
               <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Formulario de inicio del proceso</p>
-              <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border bg-indigo-50/30 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300">
+              <!-- BUG-J02-004: Filtro rápido de tipo de formulario -->
+              <div class="flex gap-1 mb-2">
+                <button 
+                  v-for="filterOpt in [
+                    { value: 'ALL', label: 'Todos', icon: '📋' },
+                    { value: 'SIMPLE', label: 'Simple', icon: '🟢' },
+                    { value: 'MAESTRO', label: 'Maestro', icon: '🔵' }
+                  ]" 
+                  :key="filterOpt.value"
+                  @click="formTypeFilter = filterOpt.value"
+                  :class="[
+                    'px-2 py-1 text-[10px] font-medium rounded-md border transition-all duration-150',
+                    formTypeFilter === filterOpt.value
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                      : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  ]"
+                  type="button"
+                >
+                  {{ filterOpt.icon }} {{ filterOpt.label }}
+                </button>
+              </div>
+              <select v-model="selectedFormKey" @change="syncElementProperties('camunda:formKey', selectedFormKey)" class="w-full text-xs font-mono rounded-lg p-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 transition-colors duration-150 appearance-none cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500">
                 <option value="">-- Sin FormKey --</option>
                 <option v-for="form in filteredForms" :key="form.key" :value="form.key">
                   {{ form.type === 'MAESTRO' ? '🔵' : '🟢' }} {{ form.name }} ({{ form.key }})
@@ -665,7 +707,7 @@
                        </tr>
                     </tbody>
                  </table>
-                 <div v-if="loadingSchema" class="flex justify-center py-2"><AppSkeleton class="w-3/4 h-4 rounded" /></div>
+                 <div v-if="loadingSchema" class="flex justify-center py-2"><div class="w-3/4 h-4 rounded bg-gray-200 dark:bg-gray-600 animate-pulse"></div></div>
               </div>
             </div>
           </div>
@@ -728,6 +770,66 @@
                <li>Cámbiala a <strong>User Task</strong> (para asociar formularios) o <strong>Service Task</strong> (para conectar APIs/conectores).</li>
              </ul>
           </div>
+          <!-- INICIO: Panel de Propiedades Lane (US-005/US-036 Extension) -->
+          <div v-else-if="selectedElement && (selectedElement.type === 'bpmn:Lane' || selectedElement.type === 'bpmn:Participant')" class="space-y-5">
+            <!-- Nombre del Lane -->
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Nombre del {{ selectedElement.type === 'bpmn:Lane' ? 'Lane' : 'Participante' }}
+              </label>
+              <input
+                type="text"
+                v-model="selectedElement.name"
+                @change="syncElementProperties('name', selectedElement.name)"
+                class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border"
+                placeholder="Ej: Departamento de Contabilidad"
+                data-testid="lane-name-input"
+              />
+            </div>
+            <!-- Actor / Participante -->
+            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+              <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2">
+                👤 Actor / Participante
+              </label>
+              <p class="text-[10px] text-gray-500 mb-2">Persona o departamento responsable de este carril.</p>
+              <input
+                type="text"
+                v-model="selectedElement.props.assignee"
+                @change="syncElementProperties('camunda:assignee', selectedElement.props.assignee)"
+                class="w-full text-xs border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:ring-indigo-500 focus:border-indigo-500 p-2 border"
+                placeholder="Ej: Departamento de Contabilidad"
+                data-testid="lane-actor-input"
+              />
+            </div>
+            <!-- Rol RBAC Vinculado -->
+            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+              <label class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-between">
+                <span>🔐 Rol RBAC Vinculado</span>
+              </label>
+              <p class="text-[10px] text-gray-500 mb-2">Rol del sistema de seguridad asociado a este carril.</p>
+              <select
+                v-model="selectedElement.props.candidateGroups"
+                @change="syncElementProperties('camunda:candidateGroups', selectedElement.props.candidateGroups)"
+                class="w-full text-xs font-mono border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 border"
+                data-testid="lane-linked-role-select"
+              >
+                <option value="">-- Sin rol vinculado --</option>
+                <option v-for="role in rbacStore.roles" :key="role.id" :value="role.name">
+                  {{ role.name }}
+                </option>
+              </select>
+            </div>
+            <!-- Indicador visual de vinculación -->
+            <div class="flex items-center gap-2 px-1" data-testid="lane-link-badge">
+              <span v-if="selectedElement.props.candidateGroups" class="inline-flex items-center px-2.5 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                ✅ Rol vinculado: {{ selectedElement.props.candidateGroups }}
+              </span>
+              <span v-else class="inline-flex items-center px-2.5 py-1 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                ⚠️ Sin rol RBAC vinculado
+              </span>
+            </div>
+          </div>
+          <!-- FIN: Panel de Propiedades Lane (US-005/US-036 Extension) -->
           <div v-else-if="selectedElement.id && !['bpmn:UserTask', 'bpmn:ServiceTask', 'bpmn:BusinessRuleTask', 'bpmn:CallActivity', 'bpmn:StartEvent'].includes(selectedElement.type)" class="p-4 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500 text-center">
              ℹ️ No hay propiedades de Camunda editables para este elemento.
           </div>
@@ -1013,11 +1115,12 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Justificación del Despliegue <span class="text-red-500">*</span></label>
             <textarea v-model="deployComment" rows="3" minlength="10" placeholder="Justificación del despliegue..." class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2.5 border text-sm"></textarea>
+            <p class="text-[10px] text-gray-500 mt-1">Mínimo 10 caracteres requeridos</p>
           </div>
             <!-- @Traceability: US-005, CA-33 - Checkbox 'forceDeploy' eliminado. Hard-Stop obligatorio. -->
           <div class="flex justify-end space-x-3 pt-2">
             <button @click="showDeployModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancelar</button>
-            <button data-testid="btn-confirm-deploy" @click="confirmDeploy" :disabled="isDeploying" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50">
+            <button data-testid="btn-confirm-deploy" @click="confirmDeploy" :disabled="isDeploying || deployComment.trim().length < 10" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50">
               {{ isDeploying ? 'Desplegando...' : 'Confirmar Despliegue' }}
             </button>
           </div>
@@ -1494,6 +1597,7 @@ import camundaModdleDescriptor from 'camunda-bpmn-moddle/resources/camunda.json'
 // @Traceability: US-005, CA-40
 import { useTimeStore } from '@/stores/timeStore';
 import { useIntegrationStore } from '@/stores/useIntegrationStore';
+import { useRbacStore } from '@/stores/rbacStore';
 import { ref, onMounted, onBeforeUnmount, watch, computed, defineAsyncComponent, nextTick, getCurrentInstance } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRoute, useRouter } from 'vue-router';
@@ -1508,6 +1612,7 @@ const Vue3Lottie = defineAsyncComponent(() => import('vue3-lottie').then(m => m.
 
 const corruptNodeId = ref<string | null>(null);
 const authStore = useAuthStore();
+const rbacStore = useRbacStore();
 const integrationStore = useIntegrationStore(); // @Traceability: US-005, CA-40
 const timeStore = useTimeStore(); // Prevent runtime TypeError on undefined timeStore
 const route = useRoute();
@@ -2572,9 +2677,11 @@ const selectProcessFromWelcome = async (p: any) => {
 };
 
 const completeProcessCreationInWelcome = async () => {
+  console.log("🔥 [DEBUG] completeProcessCreationInWelcome triggered!", { name: newProcessName.value });
   createNewProcess();
   showWelcomeModal.value = false;
   showCatalog.value = false;
+  console.log("🔥 [DEBUG] showWelcomeModal set to false");
 };
 
 // ── Toast ────────────────────────────────────────────────────
@@ -2590,24 +2697,53 @@ const availableForms = ref<any[]>([]);
 const fetchForms = async () => {
   try {
     // @Traceability: US-005, CA-40
-    const { data } = await integrationStore.getForms(processId.value);
-    // Assuming backend returns array of objects with { id o key, name, type }
-    // Normalizing against old static mapping if backend structure differs slightly
+    // Usamos fetch nativo con el token JWT para evitar el interceptor 401 de apiClient
+    // que puede retornar new Promise(() => {}) suspendiendo indefinidamente la llamada.
+    const token = localStorage.getItem('ibpms_token') || sessionStorage.getItem('ibpms_token') || '';
+    const params = processId.value ? `?processKey=${encodeURIComponent(processId.value)}` : '';
+    const url = `/api/v1/forms/active${params}`;
+
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    const resp = await fetch(url, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+    });
+    clearTimeout(timerId);
+
+    if (!resp.ok) {
+      console.error(`[BpmnDesigner] ❌ Error cargando formularios: HTTP ${resp.status} ${url}`);
+      availableForms.value = [];
+      return;
+    }
+    const data = await resp.json();
+    if (!Array.isArray(data)) {
+      console.warn('[BpmnDesigner] /forms/active retornó datos inesperados (no es array):', data);
+      availableForms.value = [];
+      return;
+    }
     availableForms.value = data.map((f: any) => ({
-      key: f.key || f.id || f.formId,
+      key: f.id,
       name: f.name || f.title,
       type: f.type === 'MASTER' ? 'MAESTRO' : (f.type || 'SIMPLE')
     }));
-  } catch (err) {
-    console.warn('Backend /forms indisponible. Fallback a MOCKS CA-30.');
-    availableForms.value = [
-      { key: 'iForm_Credito_Base', name: 'Crédito Base', type: 'MAESTRO' },
-      { key: 'iForm_Onboarding_V3', name: 'Onboarding V3', type: 'MAESTRO' },
-      { key: 'form_aprobacion', name: 'Aprobación Rápida', type: 'SIMPLE' },
-      { key: 'form_revision_docs', name: 'Revisión Documentos', type: 'SIMPLE' }
-    ];
+    console.info(`[BpmnDesigner] ✅ Formularios cargados: ${availableForms.value.length} disponibles.`);
+  } catch (err: any) {
+    // @Traceability: US-005, CA-39 - Eliminación de mock fallback (Zero-Mock Policy)
+    if (err?.name === 'AbortError') {
+      console.error('[BpmnDesigner] ❌ fetchForms cancelado por timeout (10s). Backend no responde.');
+    } else {
+      console.error('[BpmnDesigner] ❌ Error inesperado en fetchForms:', err?.message || err);
+    }
+    availableForms.value = [];
   }
 };
+
 
 const availableConnectors = ref<any[]>([]);
 
@@ -2848,15 +2984,32 @@ const openAuditLogs = async () => {
   }
 };
 
+// BUG-J02-004: Filtro visual adicional para acceso rápido Simple/Maestro
+const formTypeFilter = ref<'ALL' | 'SIMPLE' | 'MAESTRO'>('ALL');
+
 const filteredForms = computed(() => {
-  if (processPattern.value === 'SIMPLE') return availableForms.value.filter(f => f.type === 'SIMPLE');
-  if (processPattern.value === 'IFORM_MAESTRO') return availableForms.value.filter(f => f.type === 'MAESTRO');
-  return availableForms.value;
+  let forms = availableForms.value;
+
+  // Filtro 1: Por patrón del proceso (lógica existente — mantener)
+  if (processPattern.value === 'SIMPLE') {
+    forms = forms.filter(f => f.type === 'SIMPLE');
+  } else if (processPattern.value === 'IFORM_MAESTRO') {
+    forms = forms.filter(f => f.type === 'MAESTRO');
+  }
+
+  // Filtro 2: Filtro visual adicional del usuario (BUG-J02-004)
+  if (formTypeFilter.value === 'SIMPLE') {
+    forms = forms.filter(f => f.type === 'SIMPLE');
+  } else if (formTypeFilter.value === 'MAESTRO') {
+    forms = forms.filter(f => f.type === 'MAESTRO');
+  }
+
+  return forms;
 });
 
 // ── BPMN Template ────────────────────────────────────────────
 const emptyBpmn = `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_1x5" targetNamespace="http://bpmn.io/schema/bpmn" exporter="iBPMS Designer Vue" exporterVersion="2.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_1x5" targetNamespace="http://bpmn.io/schema/bpmn" exporter="iBPMS Designer Vue" exporterVersion="2.0">
   <bpmn:process id="Process_1" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" />
   </bpmn:process>
@@ -2880,6 +3033,9 @@ const handleBeforeUnload = () => {
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(async () => {
+  if (rbacStore.roles.length === 0) {
+    rbacStore.fetchRoles();
+  }
   // @Traceability: US-005, CA-07
   timeStore.startEngine();
 
@@ -2893,11 +3049,15 @@ onMounted(async () => {
     const { default: BpmnModeler } = await import('bpmn-js/lib/Modeler');
     // @ts-ignore
     const minimapModule = (await import('diagram-js-minimap')).default;
+    // @Traceability: HOTFIX-P0 — Usar descriptor oficial en lugar de artesanal (eliminación de hard-code)
+    // El paquete camunda-bpmn-moddle@7.0.1 incluye 100+ tipos Camunda necesarios para bpmn-js 18.x
+    const camundaModdleDescriptor = (await import('camunda-bpmn-moddle/resources/camunda.json')).default;
 
+    console.log('camunda package loaded');
     modelerInstance = new BpmnModeler({
       container: canvasContainer.value!,
       additionalModules: [minimapModule],
-      keyboard: { bindTo: document }, // CA-20 Copy/Paste enabled system-wide
+      // CA-20 Copy/Paste enabled system-wide implicitly now
       moddleExtensions: {
         camunda: camundaModdleDescriptor
       }
@@ -3001,6 +3161,8 @@ onMounted(async () => {
             topic: safeGet(bo, 'camunda:topic') || '',
             decisionRef: safeGet(bo, 'camunda:decisionRef') || '', // CA-12 DMN Reference
             dmnBinding: safeGet(bo, 'camunda:decisionRefBinding') || 'deployment', // CA-12: Default seguro
+            assignee: safeGet(bo, 'camunda:assignee') || '',
+            candidateGroups: safeGet(bo, 'camunda:candidateGroups') || '',
             aiTokenLimit: 4000,
             aiTone: 'NEUTRAL'
           }
@@ -3010,8 +3172,14 @@ onMounted(async () => {
         const delegateExpr = safeGet(bo, 'camunda:delegateExpression') || '';
         const match = delegateExpr.match(/\$\{(.+)Adapter\}/);
         selectedConnector.value = match ? match[1] : '';
+        // @Traceability: US-005, CA-40 — Lazy-load retry: si el catálogo está vacío al
+        // seleccionar una UserTask (porque fetchForms falló en onMounted), se reintenta.
+        if (shape.type === 'bpmn:UserTask' && availableForms.value.length === 0) {
+          fetchForms();
+        }
+
       } else {
-        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', decisionRef: '', dmnBinding: 'deployment' } };
+        selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', decisionRef: '', dmnBinding: 'deployment', assignee: '', candidateGroups: '' } };
         // @Traceability: US-005, CA-77 Panel de Propiedades Contextual
         selectedFormKey.value = '';
         selectedConnector.value = '';
@@ -3212,14 +3380,27 @@ onMounted(async () => {
   });
 });
 
-onBeforeUnmount(() => {
-  // @Traceability: US-005, CA-07
+onBeforeUnmount(async () => {
+  // @Traceability: US-005, CA-07, CA-19
   timeStore.stopEngine();
 
   if (heartbeatInterval) clearInterval(heartbeatInterval); // CA-66
-  // CA-04: Purga RAG al destruir el componente Vue nativo (Vue router leave)
-  // TODO: integrationStore.destroyCopilotSession(sessionId);
   window.removeEventListener('beforeunload', handleBeforeUnload);
+
+  // @Traceability: US-005, CA-19 — Guardar XML antes de destruir el modeler.
+  // Si el usuario navega a otra sección antes de que el auto-save de 30s dispare,
+  // los elementos BPMN se perderían. Este save garantiza persistencia en navegación.
+  if (modelerInstance && processId.value && !isNewProcess.value) {
+    try {
+      const { xml } = await modelerInstance.saveXML({ format: true });
+      if (xml && xml !== lastSavedXml.value) {
+        await integrationStore.saveProcessDraft(processId.value, { xml });
+        console.info('[BpmnDesigner] ✅ XML guardado al navegar fuera del Modeler (CA-19 on-unmount).');
+      }
+    } catch (saveErr) {
+      console.warn('[BpmnDesigner] ⚠️ No se pudo guardar el draft al salir:', saveErr);
+    }
+  }
 
   if (modelerInstance) {
     modelerInstance.destroy();
@@ -3227,6 +3408,7 @@ onBeforeUnmount(() => {
   }
   if (autoSaveInterval) clearInterval(autoSaveInterval);
 });
+
 
 // ── Auto-slug processId from name ────────────────────────────
 // @Traceability: US-005, CA-15
@@ -3247,7 +3429,9 @@ watch(processId, (newId) => {
   
   if (route && router) {
     if (route.query.processId !== cleaned) {
-      router.replace({ query: { ...route.query, processId: cleaned } });
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('processId', cleaned);
+      window.history.replaceState(null, '', newUrl.toString());
     }
   }
   
@@ -4240,7 +4424,7 @@ const openCallActivity = () => {
   const calledElementId = selectedElement.value.props.calledElement;
   if (calledElementId) {
     // Abrir una nueva pestaña para el proceso hijo usando el standard view (P6)
-    window.open(`/admin/modeler?processId=${calledElementId}`, '_blank');
+    window.open(`/admin/modeler/bpmn?processId=${calledElementId}`, '_blank');
   } else {
     showToast('⚠️ Este subproceso no tiene un ID de proceso destino configurado.', 'error');
   }
@@ -4269,6 +4453,7 @@ defineExpose({
   preFlightStatus,
   onDiagramEdit,
   processPattern,
+  formTypeFilter,
   filteredForms,
   availableConnectors,
   toast,

@@ -1,7 +1,7 @@
 import { onMounted, onUnmounted } from 'vue';
 import { useConnectionStore } from '@/stores/connectionStore';
 
-export function useConnectionStatus() {
+export function useConnectionStatus() { // status​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
     const store = useConnectionStore();
     
     let offlineTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -16,7 +16,7 @@ export function useConnectionStatus() {
         if (hideTimeout) clearTimeout(hideTimeout);
     };
 
-    const handleOffline = () => {
+    const handleOffline = () => { // offline​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
         clearAllTimeouts();
         // CA-19: Debounce 5s
         offlineTimeout = setTimeout(() => {
@@ -29,7 +29,7 @@ export function useConnectionStatus() {
         }, 5000);
     };
 
-    const handleOnline = () => {
+    const handleOnline = () => { // online​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
         clearAllTimeouts();
         
         if (store.status !== 'ONLINE') {

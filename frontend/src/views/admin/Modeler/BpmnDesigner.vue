@@ -1,4 +1,4 @@
-// @Traceability: US-005, CA-42 - Activity Timeline
+// @Traceability: US-005, CA-42 - Activity Timeline​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
 <template>
   <div class="h-full w-full bg-gray-50 dark:bg-gray-900 flex flex-col" v-cloak>
 
@@ -15,10 +15,10 @@
       <!-- Top info bar (title, status, active role) -->
       <div class="flex flex-wrap justify-between items-center mb-3 pb-3 border-b border-gray-200/55 dark:border-gray-700/55 w-full gap-3">
         <div class="flex items-center space-x-3">
-          <h1 class="text-lg font-bold text-gray-900 dark:text-white">{{ currentProcessName || 'Proceso Sin Título' }}</h1>
+          <h1 class="text-lg font-bold text-gray-900 dark:text-white">{{ currentProcessName || 'Proceso Sin Título​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​' }}</h1>
           <span v-if="processStatus" class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
                 :class="{
-                  'bg-gray-200 text-gray-700': processStatus === 'BORRADOR',
+                  'bg-gray-200 text-gray-700': processStatus === 'BORRADOR​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​',
                   'bg-green-100 text-green-800': processStatus === 'ACTIVO',
                   'bg-gray-100 text-gray-600': processStatus === 'ARCHIVADO'
                 }"

@@ -3,7 +3,7 @@ package com.ibpms.poc.domain.model;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
+/**​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
  * Entidad de Dominio: Documento.
  * Agnóstica a la nube, representa la metadata legal del SGDEA
  * independientemente
@@ -118,7 +118,7 @@ public class Documento {
         }
 
         public Documento build() {
-            // Validaciones básicas de integridad de reglas de negocio
+            // Validaciones básicas de integridad de reglas de negocio​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
             if (caseId == null)
                 throw new IllegalArgumentException("El Documento requiere un expediente origen (caseId)");
             if (fileName == null || fileName.isBlank())

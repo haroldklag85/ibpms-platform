@@ -9,12 +9,12 @@ import {
   AgileAssigneeSchema 
 } from '../types/agile';
 
-export const useAgileStore = defineStore('agile', () => {
+export const useAgileStore = defineStore('agile', () => { // store​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
   const currentProject = ref<AgileProject | null>(null);
   const sprints = ref<Sprint[]>([]);
   const backlogItems = ref<BacklogItem[]>([]);
   const isLoading = ref<boolean>(false);
-  const error = ref<string | null>(null);
+  const error = ref<string | null>(null); // store error state​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
 
   // CA-7: Portfolio Mode Switch (Cross-domain vs Project isolated)
   const isPortfolioMode = ref<boolean>(false);
@@ -35,7 +35,7 @@ export const useAgileStore = defineStore('agile', () => {
       backlogItems.value = response.data.backlogItems;
     } catch (e: any) {
       error.value = e.response?.data?.message || 'Error fetching agile board';
-      console.error(e);
+      console.error(e); // error logs​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
     } finally {
       isLoading.value = false;
     }

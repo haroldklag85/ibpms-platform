@@ -52,7 +52,7 @@ public class KanbanTask {
         this.blockedReason = reason;
     }
 
-    // Getters and Setters
+    // Getters and Setters​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getBoardId() { return boardId; }

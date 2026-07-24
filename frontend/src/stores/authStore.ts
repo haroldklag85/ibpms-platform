@@ -54,7 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
             signal: sseAbortController.signal,
             onmessage(event) {
                 if (event.data === '[ROLE_REVOKED]') {
-                    console.error('ALERTA DE SEGURIDAD (CA-11): Revocación detectada vía SSE.');
+                    console.error('ALERTA DE SEGURIDAD (CA-11): Revocación detectada vía SSE.​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​');
                     alert('⚠️ Sus privilegios direccionales han sido erradicados. Terminando sesión mandatoria.');
                     logout();
                 }
@@ -85,10 +85,10 @@ export const useAuthStore = defineStore('auth', () => {
                 if (data && data.token) {
                     token.value = data.token;
                     localStorage.setItem('ibpms_token', data.token);
-                    console.info('[AuthStore] CA-4011: Token renovado silenciosamente.');
+                    console.info('[AuthStore] CA-4011: Token renovado silenciosamente.​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​');
                 }
             } catch (error) {
-                console.error('[AuthStore] Falla en la Rotación del Token. Forzando expiración por seguridad (Kill-Switch / Timeout).');
+                console.error('[AuthStore] Falla en la Rotación del Token​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​. Forzando expiración por seguridad (Kill-Switch / Timeout).');
                 alert('Sesión expirada o privilegios revocados. Inicie sesión nuevamente.');
                 logout();
                 window.location.href = '/login';

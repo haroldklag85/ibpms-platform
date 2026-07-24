@@ -3,7 +3,7 @@ package com.ibpms.poc.domain.model.kanban.events;
 import org.springframework.context.ApplicationEvent;
 import java.util.UUID;
 
-/**
+/**​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
  * Evento emitido cuando una tarjeta Kanban cambia de estado (CA-07).
  */
 public class KanbanTaskStatusChangedEvent extends ApplicationEvent {

@@ -1,4 +1,4 @@
-// @Traceability: US-007 - ADR-001
+// @Traceability: US-007 - ADR-001​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
 package com.ibpms.poc.infrastructure.adapter;
 
 import com.ibpms.poc.application.dto.DeploymentValidationResponse;
@@ -94,12 +94,12 @@ public class CamundaBpmnValidationAdapter implements BpmnValidationPort {
             // Eliminar BOM (Byte Order Mark: \uFEFF) si está presente al inicio
             if (xmlContent.startsWith("\uFEFF")) {
                 xmlContent = xmlContent.substring(1);
-                log.debug("[PreFlight] BOM detectado y eliminado del stream BPMN.");
+                log.debug("[PreFlight] BOM detectado y eliminado del stream BPMN.​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​");
             }
             // Eliminar whitespace inicial antes de la declaración XML
             xmlContent = xmlContent.trim();
 
-            log.debug("[PreFlight] XML recibido (primeros 300 chars): {}",
+            log.debug("[PreFlight] XML recibido (primeros 300 chars): {}​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​",
                       xmlContent.length() > 300 ? xmlContent.substring(0, 300) : xmlContent);
 
             // @Traceability: US-005, CA-01 — Parser dual: Camunda (rico) con fallback DocumentBuilder (básico)

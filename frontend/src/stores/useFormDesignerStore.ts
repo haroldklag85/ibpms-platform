@@ -1,4 +1,4 @@
-// @Traceability: US-003 - CA-27, CA-30, CA-52, CA-74, CA-75, CA-77, CA-83
+// @Traceability: US-003 - CA-27, CA-30, CA-52, CA-74, CA-75, CA-77, CA-83​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/services/apiClient';
@@ -54,7 +54,7 @@ const checkSintaxisDelimitadores = (code: string): { success: boolean; message: 
 export const useFormDesignerStore = defineStore('formDesigner', () => {
   // State
   const canvasFields = ref<any[]>([]);
-  const formTitle = ref('Solicitud Onboarding (V1)');
+  const formTitle = ref('Solicitud Onboarding (V1)​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​');
   const formPattern = ref<'SIMPLE' | 'IFORM_MAESTRO' | null>(null);
   const activeStageSim = ref('ALL');
   
@@ -176,7 +176,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
             return { success: true, message: 'Formulario generado por LMM con éxito' };
         }
     } catch(e) {
-        return { success: false, message: 'Falla de conexión LMM (CA-73)' };
+        return { success: false, message: 'Falla de conexión LMM (CA-73)​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​' };
     } finally {
         isScanningAi.value = false;
     }

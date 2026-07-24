@@ -55,6 +55,9 @@ test.describe('US-005 V2: Certificación Zero-Mock BPMN Modeler (Full Suite)', (
       localStorage.removeItem('ibpms_bpmn_draft_v1');
     });
 
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
+
     await page.goto('/admin/modeler/bpmn');
   });
 

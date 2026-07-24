@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./backend/ibpms-core
+        working-directory: ./backend
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -38,9 +38,10 @@ jobs:
           cache: maven
 
       - name: Compile and Test (Quality Gate)
-        run: mvn clean verify -DskipITs=true
-        # El comando incluye pruebas unitarias y de integración de la plataforma Spring Boot
-        # Finaliza con status 1 si hay fallos o vulnerabilidades rompiendo el Pipeline
+        run: mvn -B -pl ibpms-core -am clean verify -DskipITs=true
+        # -pl ibpms-core: target solo el módulo principal
+        # -am (also-make): construye dependencias del reactor (ibpms-dmn-engine)
+        # -DskipITs=true: omite tests de integración (Failsafe) — no hay BD en CI
 
   # 2. QUALITY GATE: Frontend Build & Test
   frontend-quality-gate:

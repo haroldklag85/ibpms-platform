@@ -1080,3 +1080,12 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 **¿De dónde viene?**: Iniciativa transversal de normalización y estandarización del código base (PI-001).
 **¿Qué debería hacer?**: La plataforma continuará funcionando exactamente igual para los usuarios, con el beneficio adicional de que el código interno cumple con los estándares más altos de codificación de texto, facilitando futuras migraciones y mantenimiento.
 **Estado**: ✅ Listo
+
+
+## [24/07/2026] - Estandarización de Comentarios y Formato en Frontend
+**Autor**: Agente Frontend (Antigravity)
+**¿Qué es?**: Se realizaron mejoras de estandarización de comentarios y formato en los componentes del Modelador de Procesos y los módulos de gestión de estado de la plataforma.
+**¿Para qué sirve?**: Garantiza que el código fuente de los componentes y gestores de estado mantenga una alta legibilidad, facilitando el mantenimiento y futuras escalabilidades.
+**¿De dónde viene?**: Iniciativa transversal de normalización y estandarización del código base (PI-001).
+**¿Qué debería hacer?**: La plataforma continuará funcionando exactamente igual para los usuarios, con una estructura interna de comentarios y configuraciones más limpia.
+**Estado**: ☑️ Listo

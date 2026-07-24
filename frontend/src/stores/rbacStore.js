@@ -362,6 +362,7 @@ export const useRbacStore = defineStore('rbac', () => {
         fetchCisoReports,
         generateCisoReport,
         fetchAuditLogs,
+        revokeUserSession,
         cisoReports,
         systemProcesses
     }

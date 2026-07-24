@@ -36,7 +36,7 @@ describe('rbacStore', () => {
         await store.toggleProcessPublicStatus(processId, true)
         
         expect(apiClient.put).toHaveBeenCalledWith(`/design/processes/${processId}/public`, { isPublic: true })
-        expect(apiClient.get).toHaveBeenCalledWith('/design/processes')
+        expect(apiClient.get).toHaveBeenCalledWith('/design/processes/catalog')
     })
 
     it('should generate CISO report (CA-16)', async () => {
@@ -74,7 +74,7 @@ describe('rbacStore', () => {
 
         await store.fetchAuditLogs()
 
-        expect(apiClient.get).toHaveBeenCalledWith('/admin/security/audit-logs')
+        expect(apiClient.get).toHaveBeenCalledWith('/admin/roles/audit-logs')
         expect(store.auditLogs).toEqual(mockLogs)
     })
 

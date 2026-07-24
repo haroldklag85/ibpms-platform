@@ -57,6 +57,19 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
   const formTitle = ref('Solicitud Onboarding (V1)');
   const formPattern = ref<'SIMPLE' | 'IFORM_MAESTRO' | null>(null);
   const activeStageSim = ref('ALL');
+  
+  const availableStages = computed(() => {
+    const stages = new Set<string>();
+    for (const field of canvasFields.value) {
+      if (field && typeof field.stage === 'string') {
+        if (field.stage !== 'ALL' && field.stage !== 'START_EVENT') {
+          stages.add(field.stage);
+        }
+      }
+    }
+    return Array.from(stages);
+  });
+
   const visualRules = ref<{fieldA: string, operator: string, fieldB: string, errorMessage: string}[]>([]);
   const formVersions = ref<any[]>([]);
   const isPublic = ref(false);
@@ -1319,6 +1332,7 @@ export const useFormDesignerStore = defineStore('formDesigner', () => {
     formTitle,
     formPattern,
     activeStageSim,
+    availableStages,
     visualRules,
     formVersions,
     isPublic,

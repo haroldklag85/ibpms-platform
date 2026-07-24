@@ -89,7 +89,7 @@ describe('CA-83: Sandbox de Pruebas Zod In-Browser / Fuzzing', () => {
           const fields = [
             { id: 'f_email_mal', type: 'email', label: 'Email Malformed', required: true, camundaVariable: 'emailMal' }
           ]
-          return Promise.resolve({ data: { schemaVariables: JSON.stringify(fields), isQaCertified: false, versionId: 1 } });
+          return Promise.resolve({ data: { formFields: JSON.stringify(fields), isQaCertified: false, version: 1 } });
         }
         return Promise.resolve({ data: [] });
       });

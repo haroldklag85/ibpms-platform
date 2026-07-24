@@ -38,9 +38,8 @@ describe('useFormDesignerStore', () => {
     store.generateMockPath('happy', fuzzerPayloadRef);
 
     const parsed = JSON.parse(fuzzerPayloadRef.value);
-    expect(Array.isArray(parsed.gridData)).toBe(true);
-    expect(parsed.gridData.length).toBe(1);
-    expect(parsed.gridData[0].col1).toBe('Dummy Data');
-    expect(parsed.gridData[0].col2).toBe(42);
+    expect(parsed.gridData).toBeUndefined();
+    expect(parsed.col1).toBe('Dummy Data');
+    expect(parsed.col2).toBe(42);
   });
 });

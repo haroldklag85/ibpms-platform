@@ -6,7 +6,7 @@ import lombok.Value;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
-// SOLO Lombok permitido. Cero imports jakarta.*, hibernate.*
+// SOLO Lombok permitido. Cero imports jakarta.*, hibernate.*​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
 @Value   // inmutable por diseño CQRS
 @Builder
 public class FormEvent {

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
+/**​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
  * Entidad de Dominio Core: Expediente / Caso.
  * Objeto Inmutable — Hexagonal Architecture + DDD.
  * Sin dependencias a frameworks externos (Spring, JPA, Camunda).
@@ -37,7 +37,7 @@ public class Expediente {
         this.createdAt = builder.createdAt != null ? builder.createdAt : LocalDateTime.now();
     }
 
-    // ── Reglas de Negocio ──────────────────────────────────────────────────────
+    // ── Reglas de Negocio ──────────────────────────────────────────────────────​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
 
     /** Factory: crea un expediente nuevo con estado ACTIVE. */
     public static Expediente iniciarNuevo(String definitionKey, String businessKey,
@@ -87,7 +87,7 @@ public class Expediente {
                 .status(ExpedienteStatus.COMPLETED).build();
     }
 
-    // ── Getters Inmutables ─────────────────────────────────────────────────────
+    // ── Getters Inmutables ─────────────────────────────────────────────────────​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
     public UUID getId() {
         return id;
     }

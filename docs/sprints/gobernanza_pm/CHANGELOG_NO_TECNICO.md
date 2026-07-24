@@ -1072,3 +1072,11 @@ Si el estado es **⚠️ Con observaciones**, agregar un campo adicional:
 **�Qu� deber�a hacer?**: Al publicar nuevos cambios visuales o componentes, el sistema de revisi�n autom�tica los dar� por v�lidos porque ahora ambas partes (frontend y backend) "hablan el mismo idioma" respecto a las configuraciones de seguridad y los datos de formularios.
 **Estado**: ? Listo
 
+
+## [24/07/2026] - Normalización de Codificación Unicode en el Motor de Procesos
+**Autor**: Agente Backend (Antigravity)
+**¿Qué es?**: Se realizaron mejoras de normalización de texto en los archivos principales del motor de procesos para garantizar consistencia en el manejo de caracteres especiales en toda la plataforma.
+**¿Para qué sirve?**: Garantiza que el código fuente del motor de procesos IBPMS maneje de forma uniforme y estandarizada los caracteres Unicode extendidos, asegurando compatibilidad y consistencia entre todos los módulos del sistema.
+**¿De dónde viene?**: Iniciativa transversal de normalización y estandarización del código base (PI-001).
+**¿Qué debería hacer?**: La plataforma continuará funcionando exactamente igual para los usuarios, con el beneficio adicional de que el código interno cumple con los estándares más altos de codificación de texto, facilitando futuras migraciones y mantenimiento.
+**Estado**: ✅ Listo

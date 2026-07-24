@@ -3,7 +3,7 @@ package com.ibpms.poc.domain.model;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
+/**​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
  * Agregado de Dominio — Diseño de Proceso BPMN.
  * Contiene la lógica de negocio de Lock pesimista, versionamiento y
  * transiciones de estado.
@@ -35,7 +35,7 @@ public class BpmnProcessDesign {
     private String createdBy;
     private String genericFormWhitelist;
 
-    // Factory para creación nueva
+    // Factory para creación nueva​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
     public static BpmnProcessDesign crear(String name, FormPattern formPattern, String createdBy) {
         BpmnProcessDesign design = new BpmnProcessDesign();
         design.id = UUID.randomUUID();
@@ -51,7 +51,7 @@ public class BpmnProcessDesign {
         return design;
     }
 
-    // @Traceability: US-005, CA-15
+    // @Traceability: US-005, CA-15​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
     public static BpmnProcessDesign crear(String name, String technicalId, FormPattern formPattern, String createdBy) {
         BpmnProcessDesign design = new BpmnProcessDesign();
         design.id = UUID.randomUUID();

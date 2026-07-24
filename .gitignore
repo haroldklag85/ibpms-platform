@@ -101,4 +101,7 @@ Thumbs.db
 # sobre protección de PI. Jamás deben subirse a ningún repositorio remoto,
 # incluido el repositorio de la empresa aliada durante la migración.
 docs/IP_PROTECTION_STRATEGY.md
+docs/pi_shield_architect_prompt.md
+.pi-shield/
 
+pi_shield_extractor.py

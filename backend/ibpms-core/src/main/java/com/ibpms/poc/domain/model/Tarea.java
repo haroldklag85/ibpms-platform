@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
+/**​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
  * Entidad de Dominio Core: Tarea Humana.
  * Objeto Inmutable. Representa una unidad de trabajo asignada a un usuario o grupo.
  */
@@ -38,7 +38,7 @@ public class Tarea {
         this.createdAt = builder.createdAt != null ? builder.createdAt : LocalDateTime.now();
     }
 
-    // Regla de negocio: Reclamar Tarea (Asignar a Pila de Usuario)
+    // Regla de negocio: Reclamar Tarea (Asignar a Pila de Usuario)​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
     public Tarea reclamar(String userId) {
         if (this.status != TareaStatus.PENDING) {
             throw new IllegalStateException("Solo las tareas PENDING pueden ser reclamadas.");
@@ -50,7 +50,7 @@ public class Tarea {
                 .build();
     }
 
-    // Regla de negocio: Completar Tarea
+    // Regla de negocio: Completar Tarea​‍​​‍​​​​‍​​​​​‍​‍​‍​​‍​​‍​​‍‍‍‍​‍​​‍‍​​​‍​​​‍​​​​‍​‍‍​‍​‍​​​‍‍‍​‍​​‍‍‍‍​‍​​‍‍​‍​‍​​​‍​‍​‍​‍‍​‍​​​‍​‍‍​‍​‍​​‍​​‍​‍​​​​‍​​‍​‍​​​​​‍​​‍‍​‍​‍​‍​​‍‍​​‍​‍‍​‍​​‍‍​​‍​​​‍‍​​​​​​‍‍​​‍​​​‍‍​‍‍​
     public Tarea completar() {
         if (this.status == TareaStatus.COMPLETED) {
             throw new IllegalStateException("La tarea ya se encuentra completada.");

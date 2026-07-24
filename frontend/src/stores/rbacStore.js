@@ -245,7 +245,8 @@ export const useRbacStore = defineStore('rbac', () => {
     // --- CA-15: Public Process Management ---
     async function fetchSystemProcesses() {
         try {
-            const response = await apiClient.get('/design/processes')
+            // CA-15: El endpoint real del catálogo es /catalog (BpmnDesignController @GetMapping("/catalog"))
+            const response = await apiClient.get('/design/processes/catalog')
             systemProcesses.value = response.data
         } catch (error) {
             console.error("Error obteniendo procesos del sistema", error)
@@ -321,7 +322,9 @@ export const useRbacStore = defineStore('rbac', () => {
     // --- CA-17: Audit Logs ---
     async function fetchAuditLogs() {
         try {
-            const response = await apiClient.get('/admin/security/audit-logs')
+            // CA-17: El endpoint real de audit-logs de roles está en /admin/roles/audit-logs
+            // (RoleAdminController @GetMapping("/audit-logs") bajo @RequestMapping("/api/v1/admin/roles"))
+            const response = await apiClient.get('/admin/roles/audit-logs')
             auditLogs.value = response.data
         } catch (error) {
             console.error("Error obteniendo logs de auditoría", error)
@@ -359,6 +362,7 @@ export const useRbacStore = defineStore('rbac', () => {
         fetchCisoReports,
         generateCisoReport,
         fetchAuditLogs,
+        revokeUserSession,
         cisoReports,
         systemProcesses
     }

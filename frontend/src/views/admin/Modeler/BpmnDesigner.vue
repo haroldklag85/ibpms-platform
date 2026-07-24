@@ -194,7 +194,7 @@
             </button>
             <button data-testid="btn-deploy" v-show="['BPMN_Release_Manager', 'Super_Admin', 'ROLE_SUPER_ADMIN', 'ROLE_PROCESS_ARCHITECT'].includes(activeRole)"
                     @click="showDeployModal = true" 
-                    :disabled="isDeploying || preFlightStatus !== 'VALIDATED'" 
+                    :disabled="isDeploying || (preFlightStatus !== 'VALIDATED' && preFlightStatus !== 'WARNING')" 
                     class="bg-indigo-600 text-white px-2 py-1 rounded shadow text-[11px] font-bold hover:bg-indigo-700 disabled:opacity-50 transition flex items-center gap-1">
               🚀 Desplegar
             </button>
@@ -707,7 +707,7 @@
                        </tr>
                     </tbody>
                  </table>
-                 <div v-if="loadingSchema" class="flex justify-center py-2"><AppSkeleton class="w-3/4 h-4 rounded" /></div>
+                 <div v-if="loadingSchema" class="flex justify-center py-2"><div class="w-3/4 h-4 rounded bg-gray-200 dark:bg-gray-600 animate-pulse"></div></div>
               </div>
             </div>
           </div>
@@ -2696,19 +2696,53 @@ const availableForms = ref<any[]>([]);
 const fetchForms = async () => {
   try {
     // @Traceability: US-005, CA-40
-    const { data } = await integrationStore.getForms(processId.value);
-    // Assuming backend returns array of objects with { id, name, type }
+    // Usamos fetch nativo con el token JWT para evitar el interceptor 401 de apiClient
+    // que puede retornar new Promise(() => {}) suspendiendo indefinidamente la llamada.
+    const token = localStorage.getItem('ibpms_token') || sessionStorage.getItem('ibpms_token') || '';
+    const params = processId.value ? `?processKey=${encodeURIComponent(processId.value)}` : '';
+    const url = `/api/v1/forms/active${params}`;
+
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    const resp = await fetch(url, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+    });
+    clearTimeout(timerId);
+
+    if (!resp.ok) {
+      console.error(`[BpmnDesigner] ❌ Error cargando formularios: HTTP ${resp.status} ${url}`);
+      availableForms.value = [];
+      return;
+    }
+    const data = await resp.json();
+    if (!Array.isArray(data)) {
+      console.warn('[BpmnDesigner] /forms/active retornó datos inesperados (no es array):', data);
+      availableForms.value = [];
+      return;
+    }
     availableForms.value = data.map((f: any) => ({
       key: f.id,
       name: f.name || f.title,
       type: f.type === 'MASTER' ? 'MAESTRO' : (f.type || 'SIMPLE')
     }));
-  } catch (err) {
+    console.info(`[BpmnDesigner] ✅ Formularios cargados: ${availableForms.value.length} disponibles.`);
+  } catch (err: any) {
     // @Traceability: US-005, CA-39 - Eliminación de mock fallback (Zero-Mock Policy)
-    console.error('[BpmnDesigner] Error cargando catálogo de formularios:', err);
+    if (err?.name === 'AbortError') {
+      console.error('[BpmnDesigner] ❌ fetchForms cancelado por timeout (10s). Backend no responde.');
+    } else {
+      console.error('[BpmnDesigner] ❌ Error inesperado en fetchForms:', err?.message || err);
+    }
     availableForms.value = [];
   }
 };
+
 
 const availableConnectors = ref<any[]>([]);
 
@@ -3137,6 +3171,12 @@ onMounted(async () => {
         const delegateExpr = safeGet(bo, 'camunda:delegateExpression') || '';
         const match = delegateExpr.match(/\$\{(.+)Adapter\}/);
         selectedConnector.value = match ? match[1] : '';
+        // @Traceability: US-005, CA-40 — Lazy-load retry: si el catálogo está vacío al
+        // seleccionar una UserTask (porque fetchForms falló en onMounted), se reintenta.
+        if (shape.type === 'bpmn:UserTask' && availableForms.value.length === 0) {
+          fetchForms();
+        }
+
       } else {
         selectedElement.value = { id: '', type: '', name: '', props: { aiTokenLimit: 4000, aiTone: 'NEUTRAL', sla: '', calledElement: '', topic: '', decisionRef: '', dmnBinding: 'deployment', assignee: '', candidateGroups: '' } };
         // @Traceability: US-005, CA-77 Panel de Propiedades Contextual
@@ -3339,14 +3379,27 @@ onMounted(async () => {
   });
 });
 
-onBeforeUnmount(() => {
-  // @Traceability: US-005, CA-07
+onBeforeUnmount(async () => {
+  // @Traceability: US-005, CA-07, CA-19
   timeStore.stopEngine();
 
   if (heartbeatInterval) clearInterval(heartbeatInterval); // CA-66
-  // CA-04: Purga RAG al destruir el componente Vue nativo (Vue router leave)
-  // TODO: integrationStore.destroyCopilotSession(sessionId);
   window.removeEventListener('beforeunload', handleBeforeUnload);
+
+  // @Traceability: US-005, CA-19 — Guardar XML antes de destruir el modeler.
+  // Si el usuario navega a otra sección antes de que el auto-save de 30s dispare,
+  // los elementos BPMN se perderían. Este save garantiza persistencia en navegación.
+  if (modelerInstance && processId.value && !isNewProcess.value) {
+    try {
+      const { xml } = await modelerInstance.saveXML({ format: true });
+      if (xml && xml !== lastSavedXml.value) {
+        await integrationStore.saveProcessDraft(processId.value, { xml });
+        console.info('[BpmnDesigner] ✅ XML guardado al navegar fuera del Modeler (CA-19 on-unmount).');
+      }
+    } catch (saveErr) {
+      console.warn('[BpmnDesigner] ⚠️ No se pudo guardar el draft al salir:', saveErr);
+    }
+  }
 
   if (modelerInstance) {
     modelerInstance.destroy();
@@ -3354,6 +3407,7 @@ onBeforeUnmount(() => {
   }
   if (autoSaveInterval) clearInterval(autoSaveInterval);
 });
+
 
 // ── Auto-slug processId from name ────────────────────────────
 // @Traceability: US-005, CA-15

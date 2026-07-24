@@ -1,9 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import IdentityGovernance from '../IdentityGovernance.vue'
 import { useRbacStore } from '@/stores/rbacStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useRoute, useRouter } from 'vue-router'
+
+vi.mock('vue-router', () => ({
+  useRoute: vi.fn(() => ({ query: {} })),
+  useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() }))
+}))
 
 // Mocking dependencies
 vi.mock('@/services/apiClient', () => ({
@@ -104,9 +110,12 @@ describe('IdentityGovernance.vue - Phase 2 (US-036)', () => {
     expect(wrapper.vm.isCoreRole('SYSTEM_ADMIN')).toBe(true)
     expect(wrapper.vm.isCoreRole('ANALYST')).toBe(false)
 
+    const rbacStore = useRbacStore()
+    vi.spyOn(rbacStore, 'fetchLaneAssignmentsByRole').mockResolvedValue([])
+
     // Abrir modal con rol fundacional
-    wrapper.vm.openRoleModal({ id: 'SUPER_ADMIN', name: 'Super Administrador', topology: {} })
-    await wrapper.vm.$nextTick()
+    await wrapper.vm.openRoleModal({ id: 'SUPER_ADMIN', name: 'Super Administrador', topology: {} })
+    await flushPromises()
     
     expect(wrapper.vm.showRoleModal).toBe(true)
     

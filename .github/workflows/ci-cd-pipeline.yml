@@ -124,8 +124,15 @@ jobs:
             -Dspring.datasource.url=jdbc:postgresql://localhost:5434/ibpms \
             -Dspring.datasource.username=ibpms \
             -Dspring.datasource.password=ibpms_pass \
+            -Dspring.datasource.driver-class-name=org.postgresql.Driver \
             -Dspring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect \
-            -Dspring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+            -Dspring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect \
+            -Dspring.jpa.hibernate.ddl-auto=update \
+            -Dspring.liquibase.enabled=true \
+            -Dspring.data.redis.host=localhost \
+            -Dspring.data.redis.port=6380 \
+            -Dspring.rabbitmq.host=localhost \
+            -Dspring.rabbitmq.port=5673
         # -pl ibpms-core: target solo el módulo principal
         # -am (also-make): construye dependencias del reactor (ibpms-dmn-engine)
         # -DskipITs=true: omite tests de integración (Failsafe) — no hay BD en CI

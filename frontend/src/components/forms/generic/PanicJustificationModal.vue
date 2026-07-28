@@ -26,6 +26,7 @@
                     placeholder="Escribe la justificación aquí..."
                   ></textarea>
                   <p v-if="store.panicJustification.length > 0 && store.panicJustification.length < 20" class="mt-1 text-xs text-red-500">Mínimo 20 caracteres (actual: {{ store.panicJustification.length }}).</p>
+                  <p v-if="showInlineError" class="mt-1 text-xs text-red-600 font-bold">Error: Se requieren al menos 20 caracteres para justificar la acción.</p>
                 </div>
               </div>
             </div>
@@ -35,7 +36,6 @@
               type="button" 
               class="inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
               :class="buttonClass"
-              :disabled="!isValid"
               @click="confirmAction"
             >
               Confirmar {{ translatedAction }}
@@ -55,13 +55,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useGenericFormStore } from '@/stores/genericFormStore'
 import { z } from 'zod'
 
 const store = useGenericFormStore()
 
 const justificationSchema = z.string().min(20)
+const showInlineError = ref(false)
 
 const isValid = computed(() => {
   return justificationSchema.safeParse(store.panicJustification).success
@@ -95,7 +96,6 @@ const iconColorClass = computed(() => {
 })
 
 const buttonClass = computed(() => {
-  if (!isValid.value) return 'bg-gray-400 cursor-not-allowed'
   switch (store.panicAction) {
     case 'APPROVED': return 'bg-green-600 hover:bg-green-500 focus-visible:outline-green-600'
     case 'RETURNED': return 'bg-amber-600 hover:bg-amber-500 focus-visible:outline-amber-600'
@@ -105,16 +105,20 @@ const buttonClass = computed(() => {
 })
 
 const confirmAction = async () => {
-  if (isValid.value) {
-    await store.submitForm()
-    store.showPanicModal = false
-    // Emitir evento para volver a la bandeja si fuera necesario
+  if (!isValid.value) {
+    showInlineError.value = true
+    return
   }
+  showInlineError.value = false
+  await store.submitForm()
+  store.showPanicModal = false
+  // Emitir evento para volver a la bandeja si fuera necesario
 }
 
 const cancel = () => {
   store.showPanicModal = false
   store.panicAction = null
   store.panicJustification = ''
+  showInlineError.value = false
 }
 </script>

@@ -1,0 +1,89 @@
+{
+  "sidebar": {
+    "home": "Inicio",
+    "workdesk": "Mesa de Trabajo",
+    "administration": "Administración y Gobernanza",
+    "serviceDelivery": "Prestación de Servicio",
+    "projectBuilder": "Constructor de Proyectos",
+    "analytics": "Analítica",
+    "integrationHub": "Hub de Integraciones",
+    "sgdea": "Gestión Documental",
+    "collapse": "Colapsar menú",
+    "expand": "Expandir menú",
+    "groupA": "Grupo A: Operación Diaria",
+    "groupB": "Grupo B: Gobierno, Seguridad e Incidentes",
+    "groupC": "Grupo C: Diseño y Modelado Low-Code",
+    "groupD": "Grupo D: Integraciones y Automatización",
+    "portal": "Portal",
+    "kanban": "Tablero Kanban",
+    "customer360": "Customer 360",
+    "projectManager": "Gestor de Proyectos",
+    "agileHub": "Hub Ágil",
+    "intakeTriage": "Triaje",
+    "intakeManual": "Intake Manual",
+    "bamDashboard": "BAM Dashboard",
+    "identityGovernance": "Gobernanza de Identidad",
+    "pmoSettings": "PMO",
+    "settings": "Configuración Global",
+    "bpmnDesigner": "Modelador BPMN",
+    "formsList": "Catálogo Formularios",
+    "formDesigner": "Diseñador Formularios",
+    "dmnCopilot": "DMN Intelligence",
+    "promptLibrary": "Librería Prompts",
+    "genericForm": "Formulario Genérico",
+    "visualMapper": "Visual Mapper",
+    "connectorCatalog": "Catálogo",
+    "connectorBuilder": "Builder",
+    "dlqDashboard": "DLQ Dashboard",
+    "inboundMailboxes": "Buzones SAC",
+    "documentVault": "SGD Bóveda",
+    "incidentCenter": "Centro Incidentes",
+    "instancesManager": "Gestión de Instancias"
+  },
+  "header": {
+    "search": "Buscar expedientes...",
+    "compact": "Compacto",
+    "standard": "Estándar",
+    "logout": "Cerrar sesión",
+    "viewAs": "Ver como...",
+    "language": "Idioma"
+  },
+  "roles": {
+    "title": "Rol activo",
+    "switchSuccess": "Rol cambiado exitosamente"
+  },
+  "impersonation": {
+    "banner": "Estás viendo el sistema como",
+    "exit": "Volver a mi sesión",
+    "selectUser": "Seleccionar usuario",
+    "searchUsers": "Buscar usuario por nombre...",
+    "notImpersonable": "No se puede impersonar a administradores"
+  },
+  "errors": {
+    "fatalServer": "Error crítico del servidor",
+    "sessionExpired": "Tu sesión ha expirado",
+    "sessionExpiredDesc": "Por tu seguridad, hemos bloqueado la sesión. Ingresa tu contraseña para continuar.",
+    "reconnect": "Reconectar",
+    "invalidCredentials": "Credenciales inválidas. Sesión cerrada.",
+    "notFound": "Página no encontrada",
+    "notFoundDesc": "La página que buscas no existe o fue movida."
+  },
+  "emptyState": {
+    "noTasks": "Sin tareas pendientes",
+    "noTasksDesc": "¡Buen trabajo! No tienes tareas asignadas.",
+    "noAccess": "Sin acceso",
+    "noAccessDesc": "No tienes permisos para ver este contenido.",
+    "noResults": "Sin resultados",
+    "noResultsDesc": "No se encontraron registros con los filtros aplicados.",
+    "errorTitle": "Algo salió mal",
+    "errorDesc": "Ocurrió un error inesperado. Intenta de nuevo."
+  },
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "undo": "Deshacer",
+    "password": "Contraseña"
+  }
+}

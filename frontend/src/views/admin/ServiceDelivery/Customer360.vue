@@ -148,8 +148,11 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref } from 'vue';
-import { api } from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const searchQuery = ref('');
 const isLoading = ref(false);
@@ -164,7 +167,7 @@ const searchCustomer = async () => {
   activeCases.value = [];
 
   try {
-    const response = await api.getCustomer360(searchQuery.value);
+    const response = await integrationStore.getCustomer360(searchQuery.value);
     
     // Asignamos la data provista por el Integration Gap (con fallback seguro en local si backend manda un cascarón vacío)
     customerInfo.value = {

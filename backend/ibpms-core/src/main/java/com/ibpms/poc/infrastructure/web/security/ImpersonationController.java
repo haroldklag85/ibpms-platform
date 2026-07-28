@@ -36,7 +36,7 @@ public class ImpersonationController {
     }
 
     @PostMapping("/exit")
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> exitImpersonation(HttpServletRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         // Extraer impersonatedBy desde los detalles del contexto

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, readonly } from 'vue';
 
 /**
+ * @Traceability(US = "US-001", CA = {"CA-11", "CA-25"})
  * CA-05: SLA Ticking Engine Vivo (requestAnimationFrame global)
  * CA-11: Anti DOM-Thrashing — un solo heartbeat, TODAS las tarjetas heredan pasivamente.
  * CA-25: Recálculo inmediato al volver de pestaña inactiva (visibilitychange).
@@ -47,6 +48,7 @@ export const useTimeStore = defineStore('timeStore', () => {
         document.removeEventListener('visibilitychange', _onVisibilityChange);
     };
 
+    // @Traceability(US = "US-001", CA = {"CA-25"})
     // CA-25: Al volver de tab inactiva, recálculo INMEDIATO
     const _onVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
@@ -55,6 +57,7 @@ export const useTimeStore = defineStore('timeStore', () => {
         }
     };
 
+    // @Traceability(US = "US-001", CA = {"CA-31"})
     // CA-25: Exponer el tiempo de inactividad al Workdesk para CA-31
     const getInactivityMs = (): number => {
         return Date.now() - lastUpdateTime;

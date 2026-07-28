@@ -25,8 +25,7 @@ public class RoleAuditLogEntity {
     @Column(name = "action", nullable = false, length = 20)
     private String action;
 
-    @Lob
-    @Column(name = "delta_json", nullable = false)
+    @Column(name = "delta_json", nullable = false, columnDefinition = "TEXT")
     private String deltaJson;
 
     public RoleAuditLogEntity() {}

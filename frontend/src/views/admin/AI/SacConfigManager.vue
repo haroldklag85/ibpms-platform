@@ -180,8 +180,11 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, reactive, onMounted } from 'vue';
-import apiClient from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 interface Mailbox {
   id: string;
@@ -216,7 +219,7 @@ const form = reactive({
 const loadMailboxes = async () => {
     isLoading.value = true;
     try {
-        const response = await apiClient.get('/mailboxes');
+        const response = await integrationStore.get('/mailboxes');
         mailboxes.value = response.data;
     } catch (e) {
         console.error(e);
@@ -258,7 +261,7 @@ const testLiveConnection = async () => {
             clientId: form.clientId,
             rawClientSecret: form.rawClientSecret
         };
-        const response = await apiClient.post('/mailboxes/test-connection', payload);
+        const response = await integrationStore.post('/mailboxes/test-connection', payload);
         connectionStatus.value = { success: true, msg: response.data.message || '200 OK: Validated with Graph' };
     } catch (e: any) {
         connectionStatus.value = { 
@@ -282,7 +285,7 @@ const submitMailbox = async () => {
             defaultBpmnProcessId: form.defaultBpmnProcessId,
             active: true
         };
-        await apiClient.post('/mailboxes', payload);
+        await integrationStore.post('/mailboxes', payload);
         successMsg.value = `El Buzón "${form.alias}" fue guardado y el Secret inyectado al Azure Key Vault.`;
         setTimeout(() => successMsg.value = '', 5000);
         closeModal();
@@ -299,7 +302,7 @@ const toggleMailboxStatus = async (mbox: Mailbox) => {
     const originalState = mbox.active;
     mbox.active = !mbox.active;
     try {
-        await apiClient.patch(`/mailboxes/${mbox.id}/status`, { active: mbox.active });
+        await integrationStore.patch(`/mailboxes/${mbox.id}/status`, { active: mbox.active });
         if(!mbox.active) {
              errorMsg.value = `¡ALERTA! Buzón ${mbox.alias} en PAUSA de Emergencia. Correos represados.`;
              setTimeout(() => errorMsg.value = '', 6000);

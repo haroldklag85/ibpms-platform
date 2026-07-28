@@ -1,4 +1,5 @@
 <template>
+  <!-- @Traceability: US-039 - CA-3 -->
   <div class="flex flex-col space-y-2 mt-4 pt-4 border-t border-gray-200">
     <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones de Pánico</h4>
     <div class="flex flex-wrap gap-3">

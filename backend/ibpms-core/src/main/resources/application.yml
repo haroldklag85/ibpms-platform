@@ -1,4 +1,7 @@
 spring:
+  jersey:
+    type: filter
+    application-path: /engine-rest
   cache:
     type: redis
   servlet:
@@ -117,6 +120,7 @@ spring:
     activate:
       on-profile: e2e
   datasource:
+    # @Traceability: BUG-FIX: fix postgres port to 5433 based on architecture
     url: jdbc:postgresql://localhost:5433/ibpms_e2e
     username: ibpms
     password: ibpms_e2e_pass

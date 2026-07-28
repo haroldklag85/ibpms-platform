@@ -144,9 +144,12 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { PropType, ref, computed } from 'vue';
-import { api } from '@/services/apiClient';
 import type { FormField } from '@/types/FormSchema';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const props = defineProps({
   field: {
@@ -235,7 +238,7 @@ const requestAiCorrection = async () => {
   if (!correctionPrompt.value.trim()) return;
   
   try {
-    const response = await api.correctAiText({ 
+    const response = await integrationStore.correctAiText({ 
       text: selectedText.value, 
       delta: correctionPrompt.value 
     });

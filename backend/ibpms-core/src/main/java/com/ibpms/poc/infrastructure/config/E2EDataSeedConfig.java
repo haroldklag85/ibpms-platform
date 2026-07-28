@@ -99,7 +99,7 @@ public class E2EDataSeedConfig implements CommandLineRunner {
             w1.setOriginalTaskId("tsk-9901");
             w1.setTitle("Workdesk Task de prueba (Rojo)");
             w1.setAssignee(null); // Unassigned
-            w1.setTenantId("tenant_alpha");
+            w1.setTenantId("T-100");
             w1.setStatus("OPEN");
             w1.setImpactLevel(9); // Critical
             w1.setSlaExpirationDate(LocalDateTime.now().plusHours(1)); // SLA RED
@@ -112,7 +112,7 @@ public class E2EDataSeedConfig implements CommandLineRunner {
             w2.setOriginalTaskId("kan-8802");
             w2.setTitle("Workdesk Task Despliegue J-04 (Verde)");
             w2.setAssignee("admin"); // Assumed some default test user
-            w2.setTenantId("tenant_alpha");
+            w2.setTenantId("T-100");
             w2.setStatus("IN_PROGRESS");
             w2.setImpactLevel(7);
             w2.setSlaExpirationDate(LocalDateTime.now().plusDays(3)); // SLA GREEN
@@ -125,7 +125,7 @@ public class E2EDataSeedConfig implements CommandLineRunner {
             w3.setOriginalTaskId("tsk-9903");
             w3.setTitle("Workdesk Task Revisión Contable (Amarillo)");
             w3.setAssignee("analista_n1");
-            w3.setTenantId("tenant_alpha");
+            w3.setTenantId("T-100");
             w3.setStatus("OPEN");
             w3.setImpactLevel(5);
             w3.setSlaExpirationDate(LocalDateTime.now().plusHours(10)); // SLA YELLOW
@@ -138,7 +138,7 @@ public class E2EDataSeedConfig implements CommandLineRunner {
             w4.setOriginalTaskId("tsk-9904");
             w4.setTitle("Workdesk Task Auditoría Interna (Gris)");
             w4.setAssignee("analista_n1");
-            w4.setTenantId("tenant_alpha");
+            w4.setTenantId("T-100");
             w4.setStatus("OPEN");
             w4.setImpactLevel(3);
             w4.setSlaExpirationDate(null); // SLA GRAY

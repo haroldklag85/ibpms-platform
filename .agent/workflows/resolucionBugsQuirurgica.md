@@ -17,7 +17,7 @@ Eres el responsable de recibir reportes de bugs del Humano Cartero, diagnosticar
 1. **PROHIBIDO alucinar o imaginar.** Si el reporte del bug no contiene información suficiente, DETENTE y pídele al Humano Cartero que proporcione más contexto (logs, screenshots, pasos de reproducción). NUNCA inventes la causa raíz.
 2. **PROHIBIDO alterar funcionalidades existentes.** Tu misión es reparar, NO refactorizar. Un parche que rompe otra funcionalidad es PEOR que el bug original.
 3. **PROHIBIDO escribir código productivo tú mismo.** Tu rol es diagnosticar, delegar y certificar. La escritura de código la hacen los agentes especializados.
-4. **PROHIBIDO trabajar en `main`.** Todas las correcciones se hacen en sub-ramas de `DevDavid`.
+4. **PROHIBIDO trabajar en `main` o CREAR RAMAS ADICIONALES.** Todas las correcciones se hacen directa y EXCLUSIVAMENTE sobre la rama `DevDavid`.
 5. **PROHIBIDO usar `git stash`.** Todo trabajo se consolida con `git commit` + `git push` (LEY GLOBAL 2).
 6. **Documentación obligatoria.** Todo código nuevo o modificado DEBE llevar el comentario `// @Traceability: US-XXX, CA-XX, BUG-FIX: [descripción]` (LEY GLOBAL 3).
 
@@ -102,24 +102,14 @@ Ejecuta el protocolo **Quadruple Check** del skill `hybrid_search_governance/SKI
 
 ---
 
-### FASE 2: Creación de Rama de Corrección
+### FASE 2: Sincronización de la Rama DevDavid
 
-1. Asegúrate de estar en la rama `DevDavid`:
+1. Asegúrate de estar en la rama `DevDavid` y sincronízala:
    ```bash
    git checkout DevDavid && git pull origin DevDavid
    ```
 
-2. Crea una sub-rama con nomenclatura estricta:
-   ```bash
-   git checkout -b DevDavid/bugfix/US-[XXX]-[descripcion-corta]
-   ```
-   **Ejemplo:** `DevDavid/bugfix/US-038-CA04-endpoint-mismatch`
-
-3. Si NO se pudo identificar la US, usa la convención:
-   ```bash
-   git checkout -b DevDavid/bugfix/[modulo]-[descripcion-corta]
-   ```
-   **Ejemplo:** `DevDavid/bugfix/security-breakglass-404`
+2. **PROHIBIDO CREAR RAMAS ADICIONALES.** Todo el trabajo de diagnóstico, corrección y los commits se realizarán directa y exclusivamente sobre `DevDavid`.
 
 ---
 
@@ -143,7 +133,7 @@ Basándote en el diagnóstico de la Fase 1, genera los Handoffs necesarios sigui
 **Emitido por:** 🔧 BUG-FIX LEAD (Orquestador de Correcciones)
 **Destinatario:** [Collar del receptor]
 **Fecha:** [ISO 8601]
-**Rama de corrección:** DevDavid/bugfix/[nombre]
+**Rama de corrección:** DevDavid
 **Prioridad:** [🔴 Alta | 🟡 Media | 🟢 Baja]
 **Dependencia:** [Handoffs previos requeridos, o "Ninguna"]
 ```
@@ -207,7 +197,7 @@ cat .agentic-sync/bug_diagnosis_[ID].md
 | 1 | El bug reportado ya no se reproduce | [Comando o acción para verificar] |
 | 2 | No se introdujeron regresiones | Build exitoso sin errores |
 | 3 | Código documentado con @Traceability | grep "@Traceability.*BUG-FIX" [archivo] |
-| 4 | Commit en rama de bugfix | git log -n 1 --oneline |
+| 4 | Commit en la rama DevDavid | git log -n 1 --oneline |
 ```
 
 #### Sección 6: Secuencia de Ejecución
@@ -215,10 +205,10 @@ cat .agentic-sync/bug_diagnosis_[ID].md
 ## 🚦 SECUENCIA DE EJECUCIÓN
 
 1. Leer lecturas obligatorias (Sección 2)
-2. Posicionarse en rama: `git checkout DevDavid/bugfix/[nombre]`
+2. Posicionarse en rama: `git checkout DevDavid && git pull origin DevDavid`
 3. [Pasos de corrección]
 N-1. Compilar/Build (referencia al SKILL del agente)
-N. Commit: `git add . && git commit -m "fix([alcance]): US-XXX BUG-FIX [descripción]" && git push`
+N. Commit: `git add . && git commit -m "fix([alcance]): US-XXX BUG-FIX [descripción]" && git push origin DevDavid`
 ```
 
 #### Sección 7: Instrucciones de Copiar y Pegar
@@ -235,10 +225,10 @@ ANTES DE HACER CUALQUIER COSA, lee obligatoriamente estos archivos:
 5. cat .agentic-sync/handoff_bugfix_[rol].md
 
 TU MISIÓN:
-1. Posicionarte en la rama: git checkout DevDavid/bugfix/[nombre]
+1. Posicionarte en la rama: git checkout DevDavid && git pull origin DevDavid
 2. [Instrucciones quirúrgicas]
 3. Build/Compile: [comando del SKILL]
-4. Commit: git add . && git commit -m "fix([alcance]): ..." && git push
+4. Commit: git add . && git commit -m "fix([alcance]): ..." && git push origin DevDavid
 
 REGLAS INQUEBRANTABLES:
 - PROHIBIDO modificar archivos fuera del alcance del handoff.
@@ -266,7 +256,7 @@ REGLAS INQUEBRANTABLES:
 
 Cuando el agente especializado termine y el Humano regrese con su mensaje:
 
-1. **Leer el diff:** `git diff DevDavid...DevDavid/bugfix/[nombre] --stat`
+1. **Leer el diff:** `git diff HEAD~1 HEAD --stat` (o revisar los commits recientes en DevDavid).
 2. **Verificar que SOLO se tocaron los archivos del diagnóstico.** Si se modificaron archivos fuera del alcance → RECHAZAR.
 3. **Verificar @Traceability:** `grep -r "@Traceability.*BUG-FIX" --include="*.java" --include="*.vue" --include="*.ts"`
 4. **Verificar que no hay regresiones:** El agente debió ejecutar su protocolo de compilación/build.
@@ -274,12 +264,7 @@ Cuando el agente especializado termine y el Humano regrese con su mensaje:
 
 **Si la corrección pasa la certificación:**
 - Generar `.agentic-sync/bugfix_certification_[ID].md` con el veredicto.
-- Hacer merge de la rama bugfix a DevDavid:
-  ```bash
-  git checkout DevDavid
-  git merge DevDavid/bugfix/[nombre] --no-ff -m "fix: merge bugfix [descripción]"
-  git push origin DevDavid
-  ```
+- Confirmar que los cambios ya están consolidados en `DevDavid`.
 
 **Si la corrección NO pasa (máx. 2 rechazos):**
 - Documentar las violaciones con archivo+línea.
@@ -298,7 +283,7 @@ Una vez certificado el parche en la Fase 4:
 
    **Bug:** [Descripción]
    **US/CA afectado:** US-XXX, CA-YY
-   **Rama:** DevDavid/bugfix/[nombre]
+   **Rama:** DevDavid
    **Agente ejecutor:** [Rol]
    **Archivos modificados:** [Lista]
    **Certificación Bug-Fix Lead:** ✅ PASS
@@ -321,13 +306,8 @@ Una vez certificado el parche en la Fase 4:
 ### FASE 6: Cierre y Trazabilidad
 
 Una vez que el Arquitecto apruebe:
-1. Confirmar que el merge a `DevDavid` está completo.
-2. Eliminar la rama de bugfix (limpieza):
-   ```bash
-   git branch -d DevDavid/bugfix/[nombre]
-   git push origin --delete DevDavid/bugfix/[nombre]
-   ```
-3. Notificar al Humano:
+1. Confirmar que los cambios en `DevDavid` han sido correctamente documentados y el parche es estable.
+2. Notificar al Humano:
    > "✅ Bug-Fix completado y doblemente certificado. La rama DevDavid está estable."
 
 ---

@@ -1,71 +1,23 @@
-# 📋 Solicitud de Revisión — Agente Backend → Arquitecto Líder
+# Solicitud de Revisión de Arquitectura - Iteración 84-DEV-LANE-ROLE-UAT-R2
 
-> **Fecha:** 2026-06-03T22:55:00-05:00
-> **Emisor:** Agente Backend Especialista
-> **Destinatario:** Arquitecto Líder
-> **Handoff origen:** `.agentic-sync/handoff_backend_US002_PM01.md`
-> **Plan detallado:** Disponible en el chat del Agente Backend (plan de implementación corregido)
+## Contexto
+Se requiere solventar el Bug Crítico R2-01 donde el despliegue BPMN retorna 403. Esto se debe a la ausencia del rol `BPMN_Release_Manager` y a la falta de fallback para `SUPER_ADMIN`.
 
----
+## Plan de Implementación (Cambios Atómicos)
 
-## Resumen Ejecutivo
+1. **Modificación en `BpmnDesignController.java`:**
+   - Importar y añadir la anotación `@Slf4j` a nivel de clase para habilitar el registro (log).
+   - En `deployBpmnProcess` (~L120), modificar la validación de roles para incluir `SUPER_ADMIN`: 
+     `boolean hasRole = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("BPMN_Release_Manager") || a.getAuthority().contains("SUPER_ADMIN"));`
+   - En `deployBpmnProcess`, tras la validación de permisos exitosa (~L148), agregar log de auditoría:
+     `log.info("Deploy autorizado para usuario={} con rol={}", auth != null ? auth.getName() : "anonymous", hasRole ? "BPMN_Release_Manager/SUPER_ADMIN" : "sandbox_mode");`
+   - En `reviewDeployRequest` (~L500), cambiar `@PreAuthorize` para soportar ambos roles: `@PreAuthorize("hasAnyRole('BPMN_Release_Manager', 'SUPER_ADMIN')")`.
+   - En `requestDeploymentApproval` (~L603), actualizar el valor retornado `"assignedGroup"` a `"BPMN_Release_Manager, SUPER_ADMIN"`.
 
-He completado la fase PLANNING para el handoff `US-002 (CA-15, CA-17, CA-19, CA-20)`. He verificado **línea por línea** los 13 archivos involucrados y he detectado **10 discrepancias críticas** entre las suposiciones del handoff y la realidad del código fuente.
+2. **Creación del Seed Data (`063-seed-bpmn-release-manager-role.sql`):**
+   - Crear el archivo en `backend/ibpms-core/src/main/resources/db/changelog/changes/` con el script de inserción para `ROLE_BPMN_Release_Manager`.
 
----
+3. **Registro en Liquibase (`db.changelog-master.yaml`):**
+   - Agregar el nuevo script SQL al final del archivo maestro de Liquibase.
 
-## ⚠️ Discrepancias Críticas Detectadas
-
-| # | Lo que asume el Handoff | Realidad Verificada |
-|---|---|---|
-| 1 | Existe enum `ClaimActionType` | **NO EXISTE** — todos los action types son `String` planos con inconsistencias ("FORCE_UNCLAIM" vs "FORCE_UNCLAIMED") |
-| 2 | Campo `consecutiveExtensions` | El campo se llama `timeoutExtensions` — **YA EXISTE** en domain model y JPA entity |
-| 3 | Existe `DocumentRepository` | **NO EXISTE** — solo `TempDocumentRepository` sin métodos de cleanup |
-| 4 | Domain model es `AgileTaskEntity` | Es `AgileTask` en `com.ibpms.poc.domain.model.agile` |
-| 5 | `ClaimAuditService.recordEvent(taskId, userId, ClaimActionType, details)` | Método real es `audit(UUID, String, String, String, String, String)` — 6 params con String |
-| 6 | `GhostJobScheduler` inyecta `AgileTaskService` + `WebSocketNotificationService` | Inyecta `SimpMessagingTemplate` directo, **NO tiene** `AgileTaskService` |
-| 7 | `AgileTask` tiene campo `tenantId` | **NO EXISTE** `tenantId` en el domain model |
-| 8 | Se necesita migración Liquibase para `consecutive_extensions` | Columna `timeout_extensions` ya existe — NO se necesita migración |
-| 9 | `WorkdeskNotificationService.notifySupervisor()` existe | **NO EXISTE** — solo 3 métodos: `notifyTaskClaimed`, `notifyTaskUnclaimed`, `notifyTaskForceUnclaimed` |
-| 10 | `TempDocumentEntity` tiene `createdAt` | Tiene `uploadedAt` (ZonedDateTime) |
-
----
-
-## Decisiones de Diseño que Requieren Aprobación
-
-### 1. CA-15 — Cómo habilitar per-tenant si `AgileTask` no tiene `tenantId`
-
-**Propuesta:** Agregar campo `tenantId` al domain model + JPA entity + migración Liquibase (`ALTER TABLE ibpms_agile_tasks ADD COLUMN tenant_id VARCHAR(64) DEFAULT 'default'`).
-
-**Alternativa (si se rechaza):** Usar `teamId` como proxy de tenant (menos preciso pero sin migración).
-
-### 2. CA-20 — Crear enum `ClaimActionType` sin cambiar la firma de `ClaimAuditService`
-
-**Propuesta:** Crear el enum pero seguir usando `String` en la firma del servicio. Los callers usarán `ClaimActionType.CLAIMED.name()` para typesafety. Migrar la firma completa a enum es un cambio de mayor alcance que propongo aplazar.
-
-### 3. CA-17 — Orphaned files: Usar status "UPLOADED" como criterio
-
-**Propuesta:** Los documentos con `status = "UPLOADED"` y `uploadedAt < now - 24h` se consideran orphaned. Los confirmados tienen `status = "CONFIRMED"`.
-
-### 4. `@PreUpdate` Bug Preexistente (Fuera de Scope)
-
-**Hallazgo:** `AgileTaskJpaEntity` tiene `@PreUpdate` que resetea `lastActivityAt = ZonedDateTime.now()` en **cada** `save()`. Esto invalida la lógica de ghost timeout porque cualquier update reinicia el reloj. **No lo corrijo en este scope** pero lo documento como deuda técnica.
-
----
-
-## Alcance Propuesto
-
-| Tipo | Cantidad | Archivos |
-|------|----------|----------|
-| MODIFY | 8 | GhostJobScheduler, AgileTask, AgileTaskJpaEntity, AgileTaskService, ClaimAuditService, TaskClaimApiController, TempDocumentRepository, WorkdeskNotificationService |
-| CREATE | 4 | ClaimActionType enum, TransitoryFileCleanupScheduler, migración Liquibase, AgileTaskServiceExtendTimeoutTest |
-| DELETE | 1 | TaskClaimControllerTest.java.disabled |
-| AMPLIAR | 2 | GhostJobSchedulerTest (+2 tests CA-15), TransitoryFileCleanupSchedulerTest (nuevo, 2 tests) |
-
----
-
-## Veredicto Solicitado
-
-Arquitecto Líder, solicito su aprobación para proceder a modo EXECUTION bajo el plan corregido. En particular necesito su veredicto sobre las 4 decisiones de diseño listadas arriba.
-
-**Respuesta esperada:** `APROBADO`, `APROBADO CON OBSERVACIONES`, o `RECHAZADO + razón`.
+Por favor, Arquitecto Líder, confirmar si aprueba este plan para proceder con la ejecución.

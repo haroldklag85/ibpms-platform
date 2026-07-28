@@ -8,7 +8,7 @@ export class TaskService {
      */
     static async getMyTasks(params?: TaskListRequest): Promise<TaskDto[]> {
         try {
-            const response = await apiClient.get<TaskDto[]>('/tareas', { params });
+            const response = await apiClient.get<TaskDto[]>('/tasks', { params });
             return response.data;
         } catch (error) {
             console.error('Error obteniendo mis tareas:', error);
@@ -23,7 +23,7 @@ export class TaskService {
         try {
             // Usamos el query params ?candidatas=true u otra convención del backend
             const modifiedParams = { ...params, assigned: false };
-            const response = await apiClient.get<TaskDto[]>('/tareas/candidatas', { params: modifiedParams });
+            const response = await apiClient.get<TaskDto[]>('/tasks/candidatas', { params: modifiedParams });
             return response.data;
         } catch (error) {
             console.error('Error obteniendo tareas candidatas:', error);
@@ -36,7 +36,7 @@ export class TaskService {
      */
     static async claimTask(taskId: string): Promise<void> {
         try {
-            await apiClient.post(`/tareas/${taskId}/claim`);
+            await apiClient.post(`/tasks/${taskId}/claim`);
         } catch (error) {
             console.error(`Error asignándose la tarea ${taskId}:`, error);
             throw error;
@@ -48,7 +48,7 @@ export class TaskService {
      */
     static async unclaimTask(taskId: string, reason?: string): Promise<void> {
         try {
-            await apiClient.post(`/tareas/${taskId}/unclaim`, { reason });
+            await apiClient.post(`/tasks/${taskId}/unclaim`, { reason });
         } catch (error) {
             console.error(`Error liberando la tarea ${taskId}:`, error);
             throw error;
@@ -60,7 +60,7 @@ export class TaskService {
      */
     static async reassignTask(taskId: string, targetUserId: string): Promise<void> {
         try {
-            await apiClient.post(`/tareas/${taskId}/reassign`, { assignee: targetUserId });
+            await apiClient.post(`/tasks/${taskId}/reassign`, { assignee: targetUserId });
         } catch (error) {
             console.error(`Error reasignando la tarea ${taskId}:`, error);
             throw error;
@@ -83,6 +83,21 @@ export class TaskService {
                 { id: 'user-003', name: 'Laura Ríos', role: 'Supervisor' },
                 { id: 'user-004', name: 'Miguel Torres', role: 'Operador SAC' }
             ];
+        }
+    }
+
+    /**
+     * CA-5 + CA-14: Asignación masiva interactiva
+     */
+    static async bulkAssign(projectId: string, taskIds: string[], userId: string): Promise<void> {
+        try {
+            await apiClient.post(`/agile/projects/${projectId}/tasks/bulk-assign`, {
+                taskIds,
+                userId
+            });
+        } catch (error) {
+            console.error('Error en asignación masiva de tareas:', error);
+            throw error;
         }
     }
 }

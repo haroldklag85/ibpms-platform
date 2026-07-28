@@ -1,5 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
+import { useMenuStore } from '@/stores/useMenuStore';
+import type { StartProcessRequest } from '@/types/Process';
 
 // Instancia global con baseUrl que pasa por el Proxy de Vite (/api -> localhost:8080)
 const apiClient: AxiosInstance = axios.create({
@@ -10,9 +12,6 @@ const apiClient: AxiosInstance = axios.create({
     timeout: 10000, // Timeout seguro
 });
 
-// [Handoff Requirement]: Backend no dispone de servidor live en pipeline local. Activamos Modo Mock Estricto.
-import { setupMockAdapter } from './mockAdapter';
-setupMockAdapter(apiClient);
 
 // Interceptor de Request para anexar el Bearer Token corporativo si existe
 apiClient.interceptors.request.use(
@@ -22,6 +21,20 @@ apiClient.interceptors.request.use(
         if (authStore.token && config.headers) {
             config.headers.Authorization = `Bearer ${authStore.token}`;
         }
+        if (authStore.activeRole && config.headers) {
+            config.headers['X-Active-Role'] = authStore.activeRole;
+        }
+        // @Traceability: US-038 - CA-09 (Trazabilidad Quirúrgica)
+        if (config.headers && !config.headers['X-Correlation-ID']) {
+            config.headers['X-Correlation-ID'] = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
+
+        // Interceptor Architecture Fix for FormData (multipart)
+        // Allows Axios to auto-generate the correct boundary without inline hacks
+        if (config.data instanceof FormData && config.headers) {
+            delete config.headers['Content-Type'];
+        }
+        
         return config;
     },
     (error) => {
@@ -46,34 +59,107 @@ apiClient.interceptors.response.use(
             return Promise.reject(error); // Silently stops component logic without crash
         }
         
-        // CA-21, CA-1, CA-37: Alertas Rojas Imborrables / Captura Global 5xx
-        if (error.response && [500, 502, 503, 504].includes(error.response.status)) {
-            console.error('Fatal Level 0 Dispatching', error.response.status);
+        const config = error.config as InternalAxiosRequestConfig & { _retryCount?: number };
+        
+        // J-04: Optimistic UI / Backoff Exponencial para 429, 502 y 503
+        // @Traceability: US-003 - ADR-014 - Reintento de 502
+        if (config && error.response && [429, 502, 503].includes(error.response.status) && process.env.NODE_ENV !== 'test') {
+            config._retryCount = config._retryCount || 0;
+            if (config._retryCount < 3) {
+                config._retryCount += 1;
+                const backoff = Math.pow(2, config._retryCount) * 1000; // 2s, 4s, 8s
+                console.warn(`J-04: Reintento automático (${config._retryCount}/3) en ${backoff}ms por HTTP ${error.response.status}`);
+                return new Promise(resolve => {
+                    setTimeout(() => resolve(apiClient(config)), backoff);
+                });
+            }
+        }
+        
+        // @Traceability: US-000 - CA-01 (Degradación Grácil HTTP 500/503)
+        // ═══ ADR-014: Diferenciación Semántica de Errores 5xx ═══
+        if (error.response && error.response.status >= 500) {
+            const status = error.response.status;
+            const traceId = error.response.headers?.['x-correlation-id'] || 'N/A';
             
-            // CA-37: Generic 500 Error Toast
-            if (error.response.status === 500) {
+            if (status === 500) {
+                // Categoría 1: Bug en el backend — Toast imborrable con traceId
+                console.error(`[ADR-014] Error 500 — Trace: ${traceId}`);
+                
+                // CA-25: Fail-Safe Session Recovery
+                // Si el error 500 ocurre en un endpoint crítico de hidratación/auth, purgamos el token malformado
+                const url = error.config?.url || '';
+                if (url.includes('/auth/') || url.includes('/users/me/')) {
+                    console.warn('CA-25: Detectada anomalía crítica en Auth (500). Purgando sesión local para auto-recuperación.');
+                    localStorage.removeItem('ibpms_token');
+                    localStorage.removeItem('ibpms_user');
+                    // No redirigimos inmediatamente para permitir que el usuario vea el traceId si es necesario, 
+                    // pero el "REINICIAR CONTEXTO" ahora funcionará limpio.
+                }
+
+                const event = new CustomEvent('global-error-dispatch', { detail: { 
+                    code: 500,
+                    type: 'SERVER_ERROR',
+                    message: `Error interno del servidor (Trace: ${traceId}). Contacte soporte.`,
+                    dismissible: false
+                }});
+                window.dispatchEvent(event);
+                
+                // Toast DOM fallback (CA-37)
                 const body = document.querySelector('body');
                 if (body && !document.getElementById('server-error-toast')) {
                     const toast = document.createElement('div');
                     toast.id = 'server-error-toast';
-                    toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
-                    toast.innerHTML = '❌ Error interno del servidor. Inténtelo más tarde.';
+                    toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#ef4444; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold;';
+                    toast.innerHTML = `❌ Error interno del servidor (Trace: ${traceId}). Contacte soporte.`;
+                    body.appendChild(toast);
+                    // NO auto-remove: este toast es imborrable per ADR-014
+                }
+            } else if (status === 502 || status === 503) {
+                // Categoría 2: Servidor no disponible o Degradación Segura (Fail-Open)
+                console.warn(`[ADR-014] Servidor no disponible o en Degradación (${status})`);
+                
+                // CA-01: Detectar Modo de Degradación Segura (Redis Caído)
+                const isMutation = ['post', 'put', 'delete', 'patch'].includes(error.config?.method?.toLowerCase() || '');
+                if (status === 503 && isMutation) {
+                    console.error('CA-01: Sistema en Degradación Segura (Redis Fail-Open). Bloqueando mutación.');
+                    const event = new CustomEvent('global-error-dispatch', { detail: { 
+                        code: 503,
+                        type: 'DEGRADED_MODE',
+                        message: `Operación Denegada: Sistema en Degradación Segura (Modo Solo Lectura).`,
+                        dismissible: true
+                    }});
+                    window.dispatchEvent(event);
+                    return Promise.reject(error);
+                }
+
+                // Para operaciones seguras (GET), mostramos Toast silencioso (Fase 3 Vite Handoff) para no bloquear la UI
+                const body = document.querySelector('body');
+                if (body && !document.getElementById('silent-restart-toast')) {
+                    const toast = document.createElement('div');
+                    toast.id = 'silent-restart-toast';
+                    toast.style.cssText = 'position:fixed; top:10px; right:10px; background:#3b82f6; color:white; padding:8px 16px; border-radius:20px; z-index:99999; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); font-family:sans-serif; font-size:12px; opacity:0.9; transition:opacity 0.5s; pointer-events:none;';
+                    toast.innerHTML = `🔄 Servidor no disponible (${status})... verificando reconexión.`;
                     body.appendChild(toast);
                     setTimeout(() => {
                         toast.style.opacity = '0';
                         setTimeout(() => toast.remove(), 500);
                     }, 4000);
                 }
+            } else if (status === 504) {
+                // Categoría 3: Timeout del proxy — Toast dismissible
+                console.warn(`[ADR-014] Gateway Timeout (504)`);
+                const event = new CustomEvent('global-error-dispatch', { detail: { 
+                    code: 504,
+                    type: 'GATEWAY_TIMEOUT',
+                    message: 'Tiempo de espera agotado. Verifique que el servidor esté activo.',
+                    dismissible: true
+                }});
+                window.dispatchEvent(event);
             }
-            
-            const event = new CustomEvent('global-error-dispatch', { detail: { 
-                code: error.response.status,
-                message: `Colapso del Servidor / Integración Cíclica`
-            }});
-            window.dispatchEvent(event);
             return Promise.reject(error);
         }
 
+        // @Traceability: US-000 - CA-03 (Bloqueo de Concurrencia Optimista)
         // Interceptar CA-3: Bloqueo de Concurrencia Optimista
         if (error.response && error.response.status === 409) {
             if(error.response.data?.type?.includes("optimistic-lock")) {
@@ -84,10 +170,27 @@ apiClient.interceptors.response.use(
         }
 
         if (error.response && error.response.status === 401) {
-            const authStore = useAuthStore();
+            const url = error.config?.url || '';
+            const isCredentialCheck = url.includes('/auth/login') || 
+                                      url.includes('/auth/emergency-login') || 
+                                      url.includes('/auth/break-glass') || 
+                                      url.includes('/auth/change-password') ||
+                                      url.includes('/auth/effective-roles');
+            if (isCredentialCheck) {
+                return Promise.reject(error);
+            }
             console.warn('CA-27: Emitiendo Soft-Lock por Expiración de Token en Backend');
-            authStore.logout();
-            // Ya no redirigimos ni hacemos logout destructivo
+            const event = new CustomEvent('global-error-dispatch', { detail: { type: 'SESSION_EXPIRED' } });
+            window.dispatchEvent(event);
+            return new Promise(() => {}); // Interceptar y suspender en lugar de destruir estado
+        }
+        
+        // CA-3: Interceptar HTTP 428 (Perfil Incompleto)
+        if (error.response && error.response.status === 428) {
+            console.warn('[HTTP 428 Interceptor] Perfil incompleto detectado. Abriendo Guardrail JIT.');
+            const event = new CustomEvent('jit-428-dispatch', { detail: error.response.data });
+            window.dispatchEvent(event);
+            return new Promise(() => {}); // Suspend forever
         }
         
         // CA-30: Rate Limiting Preventivo (429)
@@ -149,6 +252,27 @@ apiClient.interceptors.response.use(
                const authStore = useAuthStore();
                authStore.logout();
                window.location.href = '/login?alert=Sesión Invalidada por Seguridad';
+            } else if (error.response.data?.code === 'ACCESS_REVOKED' || error.response.data?.code === 'ROLE_REVOKED') {
+                // CA-32: Auto-Curación Zero-Trust — solo ante revocación explícita
+                console.warn('CA-32: Revocación de acceso confirmada (403). Purgando topología local.');
+                const menuStore = useMenuStore();
+                menuStore.purgeTopology();
+                
+                const body = document.querySelector('body');
+                if (body && !document.getElementById('privilege-update-toast')) {
+                    const toast = document.createElement('div');
+                    toast.id = 'privilege-update-toast';
+                    toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#f59e0b; color:white; padding:12px 20px; border-radius:8px; z-index:99999; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); font-family:sans-serif; font-size:14px; font-weight:bold; transition:opacity 0.5s;';
+                    toast.innerHTML = 'Sus accesos han sido actualizados por el Administrador';
+                    body.appendChild(toast);
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 500);
+                    }, 4000);
+                }
+            } else {
+                // 403 operacional (deploy, acceso denegado a recurso) — NO purgar menú
+                console.warn('CA-32: 403 operacional (no es revocación de privilegios). URL: ' + error.config?.url);
             }
         }
         return Promise.reject(error);
@@ -167,7 +291,8 @@ export const api = {
 
     // US-002: Workbox Tasks
     claimTask: (taskId: string) => apiClient.post(`/workbox/tasks/${taskId}/claim`),
-    completeTask: (taskId: string, payload: any) => apiClient.post(`/workbox/tasks/${taskId}/complete`, payload),
+    // @Traceability: US-003 - CA-72
+    completeTask: (taskId: string, payload: any, config?: any) => apiClient.post(`/workbox/tasks/${taskId}/complete`, payload, config),
     saveTaskDraft: (taskId: string, payload: any) => apiClient.put(`/workbox/tasks/${taskId}/draft`, payload),
 
     // 1. AI Correct (Partial Regeneration CA-28)
@@ -183,9 +308,10 @@ export const api = {
     createProjectTemplate: (payload: any) => apiClient.post('/projects/templates', payload),
 
     // 5. BPMN Draft / Deploy / Versioning (Pantalla 6)
+    // @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
     saveProcessDraft: (id: string, payload: any) => apiClient.put(`/design/processes/${id}/draft`, payload),
     validateProcess: (payload: any) => apiClient.post(`/design/processes/validate`, payload),
-    deployProcess: (payload: FormData) => apiClient.post(`/design/processes/deploy`, payload, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    deployProcess: (payload: FormData) => apiClient.post(`/design/processes/deploy`, payload),
     requestDeployment: (id: string, payload?: any) => apiClient.post(`/design/processes/${id}/request-deployment`, payload),
     getCatalogProcesses: () => apiClient.get(`/design/processes/catalog`),
     getBpmnTemplates: () => apiClient.get(`/design/processes/templates`),
@@ -214,7 +340,7 @@ export const api = {
     getProcessVariables: (id: string) => apiClient.get(`/design/processes/${id}/variables`), // CA-49
     // CA-17: Variables BPMN para coherencia
     getBpmnVariables: (processKey: string) => apiClient.get(`/design/processes/${processKey}/variables`),
-    getExternalTaskTopics: () => apiClient.get(`/design/external-task-topics`), // CA-70
+    getExternalTaskTopics: () => apiClient.get(`/design/processes/external-task-topics`), // CA-70
     saveDataMappings: (key: string, taskId: string, payload: any) => apiClient.post(`/design/processes/${key}/tasks/${taskId}/mappings`, payload), // CA-68
 
     // 7. BAM Analytics - Process Health (Pantalla 5)
@@ -224,20 +350,33 @@ export const api = {
     getAiMetrics: () => apiClient.get('/analytics/ai-metrics'),
 
     // 9. Formularios (Pantalla 7 / CA-30)
-    getForms: () => apiClient.get('/forms'),
-    getFormVersions: (id: string) => apiClient.get(`/forms/${id}/versions`),
-    saveFormVersion: (id: string, payload: any) => apiClient.post(`/forms/${id}`, payload),
+    // @Traceability: US-005, CA-40
+    getForms: (processKey?: string) => apiClient.get('/forms/active', { params: { processKey } }),
+    getFormVersions: (id: string) => apiClient.get(`/design/form-definitions/${id}/versions`),
+    saveFormVersion: (id: string, payload: any) => apiClient.post(`/design/form-definitions/${id}`, payload),
 
     // 10. Kanban Status Update (Pantalla 3)
-    updateKanbanStatus: (id: string, status: string) => apiClient.patch(`/kanban/items/${id}/status`, { status }),
+    getKanbanBoard: () => apiClient.get('/kanban/board'), // This one is fine because KanbanStateController exposes /kanban/board
+    updateKanbanStatus: (id: string, payload: any) => apiClient.patch(`/kanban-tasks/tasks/${id}/state`, payload),
 
     // 10. AI Agents & Copilot (CA-8 US-005)
+    // @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
     translateDmnToRules: (payload: any) => apiClient.post('/ai/dmn/translate', payload),
     analyzeBpmnWithCopilot: (id: string, payload: any) => apiClient.post(`/ai/copilot/bpmn/${id}`, payload),
     generateDmnRules: (payload: any) => apiClient.post(`/dmn/generate`, payload),
+    updateDmnModel: (id: string, payload: any) => apiClient.put(`/dmn-models/${id}`, payload),
+
+    // Sprint 6.1: DMN Definitions
+    // @Traceability: US-007 - Generador Cognitivo de DMN (NLP a Tablas de Decisión)
+    getDmnDefinitions: () => apiClient.get('/dmn-models/definitions'),
 
     // Configuraciones Administrativas (CA-30)
     getBpmnComplexityLimit: () => apiClient.get('/admin/settings/bpmn-complexity-limit'),
+
+    // -------------------------------------------------------------
+    // US-048 (Iteración 2): Renovación Silenciosa
+    // -------------------------------------------------------------
+    refreshToken: () => apiClient.post('/auth/refresh'),
 
     // 11. Public Tracking (Pantalla 18)
     getPublicTracking: (trackingCode: string) => apiClient.get(`/public/tracking/${trackingCode}`),
@@ -248,7 +387,7 @@ export const api = {
     abortIncident: (id: string) => apiClient.delete(`/admin/incidents/${id}`),
     
     // CA-04: Limpieza de contexto IA al abandonar Sesión (Purga RAG)
-    destroyCopilotSession: () => fetch('/api/v1/ai/copilot/session', { method: 'DELETE', keepalive: true, headers: { 'Authorization': `Bearer ${localStorage.getItem('ibpms_token')}` } }),
+    destroyCopilotSession: (sessionId: string) => fetch(`/api/v1/ai/copilot/session?sessionId=${encodeURIComponent(sessionId)}`, { method: 'DELETE', keepalive: true, headers: { 'Authorization': `Bearer ${localStorage.getItem('ibpms_token')}` } }),
 
     // CA-09: Trazador Forense de Descartes ISO (Override)
     reportIsoOverride: (payload: any) => apiClient.post('/forensics/iso-override', payload),
@@ -263,5 +402,33 @@ export const api = {
         return apiClient.post(`/agile/tasks/${taskId}/timebox`, payload, {
             headers: { 'Idempotency-Key': uuid }
         });
-    }
+    },
+
+    // -----------------------------------------------------------------
+    // US-007: Ejecución BPMN (Endpoints fuera de /api/v1, bajo /api/bpmn)
+    // @Traceability: US-007 — Ejecución BPMN, ADR-001 (Hexagonal)
+    // NOTA: baseURL override requerido porque estos endpoints NO están
+    //       bajo /api/v1 sino bajo /api/bpmn directamente.
+    // -----------------------------------------------------------------
+
+    /** Inicia una nueva instancia de proceso BPMN — POST /api/bpmn/instances → 201 */
+    startProcess: (payload: StartProcessRequest) =>
+        apiClient.post('/bpmn/instances', payload, { baseURL: '/api' }),
+
+    /** Completa una tarea BPMN directamente (ruta US-007) — POST /api/bpmn/tasks/{id}/complete → 204 */
+    completeBpmnTask: (taskId: string, variables?: Record<string, unknown>) => {
+        const idempotencyKey = (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        return apiClient.post(`/bpmn/tasks/${taskId}/complete`, variables ?? {}, {
+            baseURL: '/api',
+            headers: { 'Idempotency-Key': idempotencyKey }
+        });
+    },
+
+    // -----------------------------------------------------------------
+    // US-030: Telemetría BPMN (BAM)
+    // -----------------------------------------------------------------
+    getTelemetryInstances: (status?: string) => apiClient.get('/bpm/telemetry/instances', { params: { status } }),
+    getTelemetryIncidents: () => apiClient.get('/bpm/telemetry/incidents'),
 };

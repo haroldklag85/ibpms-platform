@@ -94,33 +94,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useIntakeStore } from '@/stores/intakeStore';
+// @Traceability: US-004, CA-6, CA-8
+import { useTimeStore } from '@/stores/timeStore';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { useIntakeTriageStore } from '@/stores/useIntakeTriageStore';
 import TriageTaskCard from '@/components/intake/TriageTaskCard.vue';
 import ApproveRejectDialog from '@/components/intake/ApproveRejectDialog.vue';
 
-const intakeStore = useIntakeStore();
+const intakeStore = useIntakeTriageStore();
+const timeStore = useTimeStore();
 
 const isDialogOpen = ref(false);
 const dialogMode = ref<'APPROVE' | 'REJECT'>('APPROVE');
 const activeTaskId = ref('');
 
-let pollingInterval: ReturnType<typeof setInterval>;
 
 onMounted(() => {
   intakeStore.fetchTasks();
   
   // Realizar polling suave cada 30 segundos si se desea
-  pollingInterval = setInterval(() => {
-    // Only poll if not currently opening a modal/loading to avoid flicker
-    if (!intakeStore.isLoading && !isDialogOpen.value) {
-       intakeStore.fetchTasks(intakeStore.currentPage);
+  watch(() => timeStore.currentTick, (tick) => {
+    if (tick % 30000 < 1000) {
+      // Only poll if not currently opening a modal/loading to avoid flicker
+      if (!intakeStore.isLoading && !isDialogOpen.value) {
+         intakeStore.fetchTasks(intakeStore.currentPage);
+      }
     }
-  }, 30000);
+  }); // @Traceability: Retro-Remediación ADR-006
 });
 
 onUnmounted(() => {
-  clearInterval(pollingInterval);
+  
 });
 
 const refreshTasks = () => {

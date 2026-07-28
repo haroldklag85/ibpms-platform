@@ -42,9 +42,15 @@ public class SlaAdminControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(slaAdminController).build();
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        mockMvc = MockMvcBuilders.standaloneSetup(slaAdminController)
+                .setMessageConverters(
+                        new org.springframework.http.converter.StringHttpMessageConverter(),
+                        new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter(objectMapper)
+                )
+                .build();
     }
 
     @Test

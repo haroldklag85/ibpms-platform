@@ -11,6 +11,7 @@ export interface MenuItem {
 
 export interface MenuGroup {
     title: string;
+    icon?: string;
     roles?: string[];
     items: MenuItem[];
 }
@@ -19,74 +20,125 @@ export const useMenuStore = defineStore('menu', () => {
     const layout = ref<MenuGroup[]>([]);
     const isLoading = ref(false);
 
+    const mapIcon = (mdiIcon: string) => {
+        if (!mdiIcon) return 'circle';
+        const map: Record<string, string> = {
+            'mdi-home': 'home',
+            'mdi-desktop-mac': 'desktop_mac',
+            'mdi-check-decagram': 'verified',
+            'mdi-cog-box': 'settings',
+            'mdi-database-plus': 'add_database',
+            'mdi-brain': 'psychology',
+            'mdi-calendar-alert': 'event_busy',
+            'mdi-shield-alert': 'gpp_maybe',
+            'mdi-file-tree': 'account_tree',
+            'mdi-account-group': 'groups',
+            'mdi-filter': 'filter_alt',
+            'mdi-text-box-plus': 'post_add',
+            'mdi-account-details': 'manage_accounts',
+            'mdi-rocket': 'rocket_launch',
+            'mdi-hammer-wrench': 'build',
+            'mdi-view-dashboard-variant': 'dashboard',
+            'mdi-chart-timeline-variant': 'timeline',
+            'mdi-chart-bar': 'bar_chart',
+            'mdi-monitor-dashboard': 'query_stats',
+            'mdi-api': 'api',
+            'mdi-book-open-page-variant': 'menu_book',
+            'mdi-puzzle-edit': 'extension',
+            'mdi-sitemap': 'account_tree',
+            'mdi-alert-octagon': 'warning',
+            'mdi-folder-lock': 'folder_special',
+            'mdi-safe': 'lock',
+            'mdi-gavel': 'gavel',
+            'mdi-card-account-details': 'badge',
+            'mdi-timer-settings': 'timer'
+        };
+        return map[mdiIcon] || mdiIcon.replace('mdi-', '').replace(/-/g, '_');
+    };
+
     const fetchMenuLayout = async () => {
         // Cache: Si ya tenemos el layout, no lo pedimos de nuevo
         if (layout.value.length > 0) return;
         
         isLoading.value = true;
         try {
-             // Mock UAT (En V2, esto proviene de /api/v1/menu-layout)
-             const { data } = await apiClient.get('/api/v1/menu-layout').catch(() => ({
-                 data: [
-                    {
-                        title: 'Workdesk',
-                        items: [
-                           { path: '/workdesk', icon: 'inbox', label: 'Bandeja Unificada' },
-                           { path: '/inbox', icon: 'mail', label: 'Workdesk (Legacy)' },
-                           { path: '/kanban', icon: 'view_kanban', label: 'Tablero Kanban' }
-                        ]
-                    },
-                    {
-                        title: 'Intake (Pre-Triaje)',
-                        roles: ['Global Admin', 'ROLE_SUPER_ADMIN'],
-                        items: [
-                           { path: '/intake-triage', icon: 'mark_email_unread', label: 'Inbox Intake' }
-                        ]
-                    },
-                    {
-                        title: 'Directivo',
-                        roles: ['ROLE_SUPER_ADMIN', 'Global Admin'],
-                        items: [
-                           { path: '/admin/analytics/bam', icon: 'insights', label: 'BAM Analytics' }
-                           /* GAP-4 [US-045]: Oculto hasta Sprint de refinamiento */
-                           /* { path: '/admin/pmo/settings', icon: 'chronic', label: 'Centro PMO / SLA' } */
-                        ]
-                    },
-                    {
-                        title: 'Arquitectura',
-                        roles: ['ROLE_SUPER_ADMIN'],
-                        items: [
-                           { path: '/admin/modeler/bpmn', icon: 'account_tree', label: 'Venture Modeler' },
-                           { path: '/admin/modeler/dmn', icon: 'rule', label: 'DMN Copilot' },
-                           { path: '/admin/modeler/forms', icon: 'dynamic_form', label: 'Form Engine' }
-                        ]
-                    },
-                    {
-                        title: 'Administración',
-                        roles: ['ROLE_SUPER_ADMIN'],
-                        items: [
-                           { path: '/admin/security/identity', icon: 'shield_person', label: 'Seguridad (RBAC)' },
-                           /* GAP-4 [US-045] / GAP-6 [US-021]: Oculto hasta Sprint de refinamiento */
-                           /* { path: '/admin/integration/builder', icon: 'extension', label: 'Extensiones' }, */
-                           { path: '/admin/integration/dlq', icon: 'queue', label: 'DLQ Dashboard' },
-                           { path: '/admin/projects/manager', icon: 'folder_managed', label: 'Gestor Proyectos' },
-                           { path: '/admin/projects/agile-hub', icon: 'speed', label: 'Hub Ágil' },
-                           { path: '/admin/mailboxes', icon: 'mark_email_read', label: 'Buzones SAC' }
-                        ]
-                    }
-                 ]
+             // CA-31: Endpoint Dinámico (Anti-JWT Bloat)
+             // Si el endpoint falla o devuelve error, asumimos un layout vacío por Zero-Trust (y se disparará CA-26)
+             const { data } = await apiClient.get('/users/me/menu-layout').catch(() => ({
+                 data: []
              }));
-             layout.value = data;
+             
+             // Mapeo del formato del backend (MenuItemDTO) al formato del frontend (MenuGroup)
+             const mappedLayout: MenuGroup[] = [];
+             const rootItems: MenuItem[] = [];
+             
+             if (Array.isArray(data)) {
+                 for (const item of data) {
+                     const children = item.items !== undefined ? item.items : item.children;
+                     if (children !== undefined) {
+                         if (children.length > 0 || item.title === 'Workdesk' || item.title === 'groupA') {
+                             const mappedGroup: MenuGroup = {
+                                 title: item.title,
+                                 items: children.map((c: any) => ({
+                                     label: c.title || c.label,
+                                     icon: mapIcon(c.icon),
+                                     path: c.path
+                                 }))
+                             };
+                             if (item.icon) {
+                                 mappedGroup.icon = mapIcon(item.icon);
+                             }
+                             mappedLayout.push(mappedGroup);
+                         }
+                     } else if (item.path) {
+                         // Es un link directo (no tiene children y tiene path válido)
+                         rootItems.push({
+                             label: item.title,
+                             icon: mapIcon(item.icon),
+                             path: item.path
+                         });
+                     }
+                 }
+             }
+             
+             // Insertamos los links directos al inicio simulando el grupo "Workdesk"
+             if (rootItems.length > 0) {
+                 mappedLayout.unshift({
+                     title: 'Workdesk', 
+                     items: rootItems
+                 });
+             }
+
+             layout.value = mappedLayout;
+
+             // @Traceability: US-036 - CA-26 (UX Fallback)
+             // Si tras la hidratación el menú sigue vacío, redirigimos a una zona neutral
+             if (layout.value.length === 0) {
+                 console.warn("CA-26: Sin topología de menús detectada. Activando fallback de seguridad.");
+                 // Usamos un pequeño delay para asegurar que el ruteador esté listo
+                 setTimeout(() => {
+                     if (window.location.pathname !== '/') {
+                         window.location.href = '/';
+                     }
+                 }, 500);
+             }
         } catch (e) {
              console.error('No se pudo hidratar el Menú Dinámico', e);
+             layout.value = [];
         } finally {
              isLoading.value = false;
         }
     };
 
-    const clearMenuCache = () => {
+    // CA-32: Auto-Curación Zero-Trust. Reset del estado al inicial
+    const $reset = () => {
         layout.value = [];
+        isLoading.value = false;
     };
 
-    return { layout, isLoading, fetchMenuLayout, clearMenuCache };
+    const purgeTopology = () => {
+        $reset();
+    };
+
+    return { layout, isLoading, fetchMenuLayout, purgeTopology, $reset };
 });

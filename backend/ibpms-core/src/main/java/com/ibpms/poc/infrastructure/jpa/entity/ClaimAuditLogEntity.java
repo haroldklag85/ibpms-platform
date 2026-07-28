@@ -15,7 +15,7 @@ public class ClaimAuditLogEntity {
     @Column(name = "task_id", nullable = false)
     private UUID taskId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "supervisor_id", nullable = false)
     private String userId;
 
     @Column(name = "action_type", nullable = false)

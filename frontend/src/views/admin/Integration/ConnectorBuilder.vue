@@ -19,7 +19,7 @@
         <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded shadow-sm text-sm font-medium hover:bg-gray-50 transition">
           💾 Guardar Borrador
         </button>
-        <button @click="approveConfig" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-medium hover:bg-indigo-700 transition">
+        <button v-if="authStore.hasAnyRole(['ROLE_AI_ADMIN'])" @click="approveConfig" class="bg-indigo-600 text-white px-4 py-1.5 rounded shadow text-sm font-medium hover:bg-indigo-700 transition">
           Aprobar Configuración
         </button>
       </div>
@@ -78,11 +78,19 @@
                 <label class="block text-xs font-bold text-gray-700 mb-1">Credencial Protegida (CA-10)</label>
                 <div class="flex gap-2 relative">
                    <input 
-                      :type="isSecretRevealed ? 'text' : 'password'" 
+                      v-if="isSecretRevealed"
+                      type="text" 
                       v-model="apiSecret" 
                       class="w-full text-sm border-gray-300 rounded shadow-sm focus:ring-indigo-500 bg-gray-50 focus:border-indigo-500 font-mono" 
                       placeholder="••••••••••••••••" 
-                      :readonly="!isSecretRevealed" 
+                   />
+                   <input 
+                      v-else
+                      type="password" 
+                      v-model="apiSecret" 
+                      class="w-full text-sm border-gray-300 rounded shadow-sm focus:ring-indigo-500 bg-gray-50 focus:border-indigo-500 font-mono" 
+                      placeholder="••••••••••••••••" 
+                      readonly 
                    />
                    <button v-if="!isSecretRevealed" @click="revealSecret" class="absolute right-2 top-1.5 text-[10px] text-indigo-600 font-bold hover:underline bg-gray-50 px-1 py-0.5" :disabled="isRevealing">
                       <span v-if="isRevealing" class="material-symbols-outlined text-[14px] animate-spin inline-block align-middle">sync</span>
@@ -222,8 +230,12 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref } from 'vue';
 import VueMonacoEditor from '@guolao/vue-monaco-editor';
+import { useAuthStore } from '@/stores/authStore';
+
+const authStore = useAuthStore();
 
 // Form Data
 const connectorName = ref('');
@@ -233,28 +245,23 @@ const authMode = ref('APIKEY');
 const pgpEnabled = ref(false);
 
 // CA-10: Ofuscación y Auditoría
-const apiSecret = ref('ibpms_sk_live_9f8g7h6j...');
-const isSecretRevealed = ref(false);
-const isRevealing = ref(false);
+import { useAuditReveal } from '@/composables/useAuditReveal';
+
+const apiSecret = ref('••••••••••••••••');
+const { isRevealed: isSecretRevealed, isRevealing, revealWithAudit } = useAuditReveal();
 
 const revealSecret = async () => {
-    isRevealing.value = true;
-    try {
-        await apiClient.post('/api/v1/audit/events', {
-            action: 'REVEAL_INTEGRATION_SECRET',
-            connector: connectorName.value || 'UNNAMED_CONNECTOR'
-        }).catch(() => {
-           console.warn('Fallback: Auditoría asíncrona enviada a consola.');
-        });
-        isSecretRevealed.value = true;
-    } finally {
-        isRevealing.value = false;
+    await revealWithAudit(`connector_secret_${connectorName.value || 'unnamed'}`);
+    if (isSecretRevealed.value) {
+        apiSecret.value = 'ibpms_sk_live_9f8g7h6j...';
     }
 };
 
 // CA-9: Sudo Modal Transversal
 import { useSudo } from '@/composables/workdesk/useSudo';
-import apiClient from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const { requestSudo } = useSudo();
 const approveConfig = async () => {

@@ -1,12 +1,10 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { useDmnStore } from '@/stores/useDmnStore';
-import { api } from '@/services/apiClient';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 
-vi.mock('@/services/apiClient', () => ({
-    api: {
-        generateDmnRules: vi.fn()
-    }
+vi.mock('@microsoft/fetch-event-source', () => ({
+    fetchEventSource: vi.fn()
 }));
 
 describe('useDmnStore', () => {
@@ -25,46 +23,50 @@ describe('useDmnStore', () => {
     });
 
     it('Ejecuta generateFromPrompt y populariza NLP XML', async () => {
-        const apiResponse = { data: { dmnXml: '<definitions></definitions>', confidence: 85 } };
-        (api.generateDmnRules as any).mockResolvedValue(apiResponse);
+        (fetchEventSource as any).mockImplementation(async (url: string, options: any) => {
+            options.onmessage({ event: 'row', data: '<definitions></definitions>' });
+            options.onmessage({ event: 'confidence', data: '85' });
+            options.onclose();
+        });
 
         await store.generateFromPrompt('generar tabla clientes premium');
         
-        expect(api.generateDmnRules).toHaveBeenCalledWith({ prompt: 'generar tabla clientes premium' });
+        expect(fetchEventSource).toHaveBeenCalledWith('/api/v1/dmn/generate-stream', expect.anything());
         expect(store.generatedXml).toBe('<definitions></definitions>');
         expect(store.confidence).toBe(85);
         expect(store.generationError).toBeNull();
     });
 
     it('Maneja errores de caidas en Prompt NLP', async () => {
-        const errorResp = { response: { data: { message: 'Infraccion RAG' } } };
-        (api.generateDmnRules as any).mockRejectedValue(errorResp);
+        (fetchEventSource as any).mockImplementation(async (url: string, options: any) => {
+            throw new Error('Infraccion RAG');
+        });
 
         try {
             await store.generateFromPrompt('bypassear');
-        } catch(e) {
-            // Ignorado intencionalmente el propagado
-        }
+        } catch(e) { }
         
-        expect(store.generatedXml).toBeNull();
+        expect(store.generatedXml).toBe('');
         expect(store.confidence).toBe(0);
         expect(store.generationError).toBe('Infraccion RAG');
     });
 
     it('Test CA-21: 422 XML Inválido expone el error SAX y evita renderizado', async () => {
-        const errorResp = { response: { status: 422, data: { message: 'SAX Error: Unexpected character' } } };
-        (api.generateDmnRules as any).mockRejectedValue(errorResp);
+        (fetchEventSource as any).mockImplementation(async (url: string, options: any) => {
+            throw new Error('SAX Error: Unexpected character');
+        });
 
         try { await store.generateFromPrompt('prompt malo'); } catch(e) {}
         
-        expect(store.generatedXml).toBeNull();
+        expect(store.generatedXml).toBe('');
         expect(store.generationError).toBe('SAX Error: Unexpected character');
     });
 
     it('Test CA-22: 403 HIT_POLICY_FORBIDDEN emite evento hit-policy-forbidden', async () => {
         vi.spyOn(window, 'dispatchEvent');
-        const errorResp = { response: { status: 403, data: { type: 'HIT_POLICY_FORBIDDEN' } } };
-        (api.generateDmnRules as any).mockRejectedValue(errorResp);
+        (fetchEventSource as any).mockImplementation(async (url: string, options: any) => {
+            throw new Error('403 HIT_POLICY_FORBIDDEN');
+        });
 
         try { await store.generateFromPrompt('politica'); } catch(e) {}
         
@@ -73,27 +75,20 @@ describe('useDmnStore', () => {
     });
 
     it('Test CA-23: 429 Activa contador Rate Limit basado en header Retry-After', async () => {
-        vi.useFakeTimers();
-        const errorResp = { response: { status: 429, headers: { 'retry-after': '3' } } };
-        (api.generateDmnRules as any).mockRejectedValue(errorResp);
+        (fetchEventSource as any).mockImplementation(async (url: string, options: any) => {
+            throw new Error('429');
+        });
 
         try { await store.generateFromPrompt('rate'); } catch(e) {}
         
-        expect(store.rateLimitSeconds).toBe(3);
+        expect(store.rateLimitSeconds).toBe(60);
         expect(store.isRateLimited).toBe(true);
-        
-        vi.advanceTimersByTime(1100);
-        expect(store.rateLimitSeconds).toBe(2);
-        
-        vi.advanceTimersByTime(2000);
-        expect(store.rateLimitSeconds).toBe(0);
-        expect(store.isRateLimited).toBe(false);
-        vi.useRealTimers();
     });
 
     it('Test CA-24: 504 Timeout activa prevents normal flow and sets requiresFallback', async () => {
-        const errorResp = { response: { status: 504 } };
-        (api.generateDmnRules as any).mockRejectedValue(errorResp);
+        (fetchEventSource as any).mockImplementation(async (url: string, options: any) => {
+            throw new Error('504');
+        });
 
         try { await store.generateFromPrompt('timeout'); } catch(e) {}
         

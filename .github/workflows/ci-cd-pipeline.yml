@@ -25,22 +25,23 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./backend/ibpms-core
+        working-directory: ./backend
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
 
       - name: Compile and Test (Quality Gate)
-        run: mvn clean verify -DskipTests=false
-        # El comando incluye pruebas unitarias y de integración de la plataforma Spring Boot
-        # Finaliza con status 1 si hay fallos o vulnerabilidades rompiendo el Pipeline
+        run: mvn -B -pl ibpms-core -am clean verify -DskipITs=true
+        # -pl ibpms-core: target solo el módulo principal
+        # -am (also-make): construye dependencias del reactor (ibpms-dmn-engine)
+        # -DskipITs=true: omite tests de integración (Failsafe) — no hay BD en CI
 
   # 2. QUALITY GATE: Frontend Build & Test
   frontend-quality-gate:
@@ -91,9 +92,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Azure Container Registry Login
-        uses: azure/docker-login@v1
+        uses: docker/login-action@v3
         with:
-          login-server: ${{ env.ACR_LOGIN_SERVER }}
+          registry: ${{ env.ACR_LOGIN_SERVER }}
           username: ${{ env.ACR_USERNAME }}
           password: ${{ env.ACR_PASSWORD }}
 

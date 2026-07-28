@@ -1,0 +1,217 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: certification\us005-bpmn-form-binding.e2e.spec.ts >> US-005 CA-39/CA-40: BPMN Form Binding >> CA-39: El dropdown FormKey muestra formularios activos reales
+- Location: e2e\certification\us005-bpmn-form-binding.e2e.spec.ts:6:3
+
+# Error details
+
+```
+TimeoutError: locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('.djs-element[data-element-id^="StartEvent_"]').first()
+    - locator resolved to <g class="djs-element djs-shape" data-element-id="StartEvent_1" transform="matrix(1 0 0 1 179 159)">…</g>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e8] [cursor=pointer]: balance
+        - button "chevron_right" [ref=e9] [cursor=pointer]:
+          - generic [ref=e10]: chevron_right
+      - navigation [ref=e11]:
+        - link "home Portal" [ref=e12] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e13]: home
+          - generic: Portal
+        - generic "Sin Topología de Menús" [ref=e15]: security_update_warning
+      - generic [ref=e16]:
+        - button "logout Cerrar sesión" [ref=e17] [cursor=pointer]:
+          - generic [ref=e18]: logout
+          - generic: Cerrar sesión
+        - generic [ref=e20]: US
+    - main [ref=e21]:
+      - generic [ref=e22]:
+        - link "business_center iBPMS" [ref=e24] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e25]: business_center
+          - generic [ref=e26]: iBPMS
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - generic [ref=e30]: search
+            - textbox "Buscar expedientes..." [ref=e31]
+          - 'generic "Roles Activos: Process architect | Bpmn designer" [ref=e32]':
+            - generic [ref=e33]: verified_user
+            - generic [ref=e34]: Process architect | Bpmn designer
+          - button "admin_panel_settings Process architect expand_more" [ref=e36] [cursor=pointer]:
+            - generic [ref=e37]: admin_panel_settings
+            - generic [ref=e38]: Process architect
+            - generic [ref=e39]: expand_more
+          - generic [ref=e41]:
+            - button "compress" [ref=e42] [cursor=pointer]:
+              - generic [ref=e43]: compress
+            - button "view_agenda" [ref=e44] [cursor=pointer]:
+              - generic [ref=e45]: view_agenda
+            - button "expand" [ref=e46] [cursor=pointer]:
+              - generic [ref=e47]: expand
+          - button "🇪🇸" [ref=e48] [cursor=pointer]
+          - button "notifications" [ref=e49] [cursor=pointer]:
+            - generic [ref=e50]: notifications
+          - button "help" [ref=e52] [cursor=pointer]:
+            - generic [ref=e53]: help
+      - generic [ref=e55]:
+        - generic [ref=e57]:
+          - generic [ref=e58]: 👋
+          - generic [ref=e59]:
+            - paragraph [ref=e60]: Buenos días, @admin@alpha.com. ¿Qué necesitas iniciar hoy?
+            - paragraph [ref=e61]: Selecciona un proceso de tu catálogo a continuación.
+        - generic [ref=e62]:
+          - heading "Catálogo de Procesos" [level=3] [ref=e63]
+          - generic [ref=e64]: No hay procesos disponibles.
+  - button "power_settings_new" [ref=e65] [cursor=pointer]:
+    - generic [ref=e66]: power_settings_new
+```
+
+# Test source
+
+```ts
+  1   | import { test, expect } from '@playwright/test';
+  2   | 
+  3   | // @Traceability: US-005, CA-39, CA-40
+  4   | test.describe('US-005 CA-39/CA-40: BPMN Form Binding', () => {
+  5   | 
+  6   |   test('CA-39: El dropdown FormKey muestra formularios activos reales', async ({ page }) => {
+  7   |     // 1. Navegar al BPMN Designer
+  8   |     await page.goto('http://localhost:5173/admin/modeler/bpmn');
+  9   |     
+  10  |     // Manejar Modal de Bienvenida
+  11  |     const welcomeModal = page.locator('[data-testid="welcome-modal"]');
+  12  |     if (await welcomeModal.isVisible({ timeout: 5000 }).catch(() => false)) {
+  13  |       await page.locator('input[placeholder="Ej. Proceso de Facturación"]').fill('E2E Test Process');
+  14  |       await page.getByRole('button', { name: /Crear y Diseñar Proceso/i }).click();
+  15  |     }
+  16  | 
+  17  |     // Esperar a que el lienzo renderice
+  18  |     await page.waitForSelector('.djs-element', { state: 'visible', timeout: 15000 });
+  19  |     
+  20  |     // Seleccionar el Start Event o una tarea para ver sus propiedades
+  21  |     // Asumimos que el Start Event tiene "StartEvent_" en su data-element-id
+  22  |     const startEvent = page.locator('.djs-element[data-element-id^="StartEvent_"]').first();
+  23  |     if (await startEvent.isVisible()) {
+> 24  |       await startEvent.click();
+      |                        ^ TimeoutError: locator.click: Timeout 30000ms exceeded.
+  25  |     } else {
+  26  |       // Click en el lienzo centro
+  27  |       await page.mouse.click(400, 400);
+  28  |     }
+  29  | 
+  30  |     // 2. Localizar el select de formKey
+  31  |     // Basado en BpmnDesigner.vue: select v-model="selectedFormKey" con options "-- Sin FormKey --"
+  32  |     const formKeySelect = page.locator('select').filter({ hasText: '-- Sin FormKey --' });
+  33  |     await expect(formKeySelect).toBeVisible({ timeout: 10000 });
+  34  |     
+  35  |     // 3. Verificar opciones reales provenientes del backend
+  36  |     const optionsTexts = await formKeySelect.locator('option').allInnerTexts();
+  37  |     
+  38  |     // Mínimo debe haber "-- Sin FormKey --" más un formulario activo real
+  39  |     expect(optionsTexts.length).toBeGreaterThan(1);
+  40  |     
+  41  |     // 4. Verificar que no haya mocks
+  42  |     const allText = optionsTexts.join(' ');
+  43  |     expect(allText).not.toContain('Aprobación Rápida');
+  44  |     expect(allText).not.toContain('Crédito Base');
+  45  |   });
+  46  | 
+  47  |   test('CA-40: El dropdown filtra por patrón Simple vs Maestro', async ({ page }) => {
+  48  |     // 1. Navegar al BPMN Designer
+  49  |     await page.goto('http://localhost:5173/admin/modeler/bpmn');
+  50  |     
+  51  |     // Manejar Modal de Bienvenida
+  52  |     const welcomeModal = page.locator('[data-testid="welcome-modal"]');
+  53  |     if (await welcomeModal.isVisible({ timeout: 5000 }).catch(() => false)) {
+  54  |       await page.locator('input[placeholder="Ej. Proceso de Facturación"]').fill('E2E Test Process');
+  55  |       await page.getByRole('button', { name: /Crear y Diseñar Proceso/i }).click();
+  56  |     }
+  57  | 
+  58  |     await page.waitForSelector('.djs-element', { state: 'visible', timeout: 15000 });
+  59  |     
+  60  |     // 2. Verificar o cambiar patrón a SIMPLE en el panel global
+  61  |     // El select de patrón tiene textos: "🟢 Simple (Formularios independientes)"
+  62  |     const patternSelect = page.locator('select').filter({ hasText: '🟢 Simple' });
+  63  |     if (await patternSelect.isVisible()) {
+  64  |       await patternSelect.selectOption('SIMPLE');
+  65  |     }
+  66  |     
+  67  |     // 3. Seleccionar Start Event para ver el FormKey
+  68  |     const startEvent = page.locator('.djs-element[data-element-id^="StartEvent_"]').first();
+  69  |     if (await startEvent.isVisible()) {
+  70  |       await startEvent.click();
+  71  |     }
+  72  |     
+  73  |     const formKeySelect = page.locator('select').filter({ hasText: '-- Sin FormKey --' });
+  74  |     await expect(formKeySelect).toBeVisible();
+  75  |     
+  76  |     // Validar que las opciones se han filtrado correctamente (CA-40)
+  77  |     const optionsTexts = await formKeySelect.locator('option').allInnerTexts();
+  78  |     expect(optionsTexts.length).toBeGreaterThan(0);
+  79  |     // Si el filtro "SIMPLE" funciona, todos los forms deberían tener el ícono 🟢 (asumiendo que hay datos reales)
+  80  |     const hasSimpleForm = optionsTexts.some(text => text.includes('🟢'));
+  81  |     const hasMaestroForm = optionsTexts.some(text => text.includes('🔵'));
+  82  |     
+  83  |     // Sólo debería mostrar forms 🟢 si el patrón es SIMPLE, o la lista debe ser real
+  84  |     // En un entorno de E2E real, puede que no tengamos datos de ambos, pero comprobamos existencia
+  85  |     console.log('Opciones disponibles bajo patrón SIMPLE:', optionsTexts);
+  86  |   });
+  87  | 
+  88  |   test('E2E: Flujo completo crear form -> vincular a BPMN -> ver en dropdown', async ({ page }) => {
+  89  |     // Crear un nuevo formulario
+  90  |     await page.goto('http://localhost:5173/admin/modeler/forms/designer');
+  91  |     
+  92  |     const timestamp = Date.now();
+  93  |     const formName = `E2E Form ${timestamp}`;
+  94  |     const formKey = `e2e_form_${timestamp}`;
+  95  | 
+  96  |     // Llenar datos de formulario si los inputs están presentes
+  97  |     const nameInput = page.locator('input[placeholder="Nombre del formulario"], input[name="name"]').first();
+  98  |     if (await nameInput.isVisible({ timeout: 5000 }).catch(() => false)) {
+  99  |       await nameInput.fill(formName);
+  100 |       
+  101 |       const keyInput = page.locator('input[placeholder*="Ej:"], input[name="key"]').first();
+  102 |       await keyInput.fill(formKey);
+  103 |       
+  104 |       const saveBtn = page.getByRole('button', { name: /Guardar/i }).first();
+  105 |       await saveBtn.click();
+  106 |       
+  107 |       await page.waitForTimeout(1000); // Wait for save
+  108 |     }
+  109 |     
+  110 |     // Ir a BPMN
+  111 |     await page.goto('http://localhost:5173/admin/modeler/bpmn');
+  112 | 
+  113 |     // Manejar Modal de Bienvenida
+  114 |     const welcomeModal = page.locator('[data-testid="welcome-modal"]');
+  115 |     if (await welcomeModal.isVisible({ timeout: 5000 }).catch(() => false)) {
+  116 |       await page.locator('input[placeholder="Ej. Proceso de Facturación"]').fill('E2E Test Process');
+  117 |       await page.getByRole('button', { name: /Crear y Diseñar Proceso/i }).click();
+  118 |     }
+  119 | 
+  120 |     await page.waitForSelector('.djs-element', { state: 'visible', timeout: 15000 });
+  121 |     
+  122 |     const startEvent = page.locator('.djs-element[data-element-id^="StartEvent_"]').first();
+  123 |     if (await startEvent.isVisible()) {
+  124 |       await startEvent.click();
+```

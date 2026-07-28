@@ -21,7 +21,7 @@
       </button>
     </div>
 
-    <!-- Dropdown to select/search users (Mock logic as Identity Governance is separate) -->
+    <!-- Dropdown to select/search users -->
     <div v-if="isDropdownOpen" class="absolute left-0 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 z-50 p-2">
        <input 
           type="text" 
@@ -31,7 +31,7 @@
        />
        <ul class="max-h-40 overflow-y-auto w-full pr-1">
           <li 
-             v-for="user in filteredMockDirectory" 
+             v-for="user in filteredActiveDirectory" 
              :key="user.userId"
              @click="toggleAssignUser(user.userId)"
              class="cursor-pointer hover:bg-indigo-50 px-2 py-1.5 rounded flex items-center justify-between text-sm"
@@ -42,7 +42,7 @@
             </div>
             <span v-if="isAssigned(user.userId)" class="material-symbols-outlined text-indigo-600 text-[16px]">check_circle</span>
           </li>
-          <li v-if="filteredMockDirectory.length === 0" class="text-xs text-slate-500 text-center py-2">No se encontraron usuarios.</li>
+          <li v-if="filteredActiveDirectory.length === 0" class="text-xs text-slate-500 text-center py-2">No se encontraron usuarios.</li>
        </ul>
        <div class="border-t border-gray-200 mt-2 pt-2 flex justify-end">
           <button @click="saveAssignments" type="button" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs font-semibold shadow-sm hover:bg-indigo-700">Guardar</button>
@@ -52,9 +52,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import type { AgileAssignee } from '@/types/agile';
 import { useAgileStore } from '@/stores/agileStore';
+import { useUserStore } from '@/stores/useUserStore';
 
 const props = defineProps<{
   itemId: string;
@@ -62,24 +63,21 @@ const props = defineProps<{
 }>();
 
 const agileStore = useAgileStore();
+const userStore = useUserStore();
 const isDropdownOpen = ref(false);
 const searchQuery = ref('');
 
 // A local tracker for checkboxes inside the dropdown
 const pendingAssignments = ref<string[]>([...props.currentAssignees.map(a => a.userId)]);
 
-// Simulated Azure Active Directory users (In production this calls MS Graph)
-const mockDirectory = [
-  { userId: 'u-1', name: 'Alfonso Gómez', email: 'alfonso@ibpms.corp' },
-  { userId: 'u-2', name: 'María Rojas', email: 'maria@ibpms.corp' },
-  { userId: 'u-3', name: 'Javier Pérez', email: 'javier@ibpms.corp' },
-  { userId: 'u-4', name: 'Silvia Méndez', email: 'silvia@ibpms.corp' }
-];
+onMounted(async () => {
+   await userStore.fetchUsers();
+});
 
-const filteredMockDirectory = computed(() => {
-  if (!searchQuery.value) return mockDirectory;
+const filteredActiveDirectory = computed(() => {
+  if (!searchQuery.value) return userStore.users;
   const q = searchQuery.value.toLowerCase();
-  return mockDirectory.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+  return userStore.users.filter(u => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q));
 });
 
 const isAssigned = (userId: string) => pendingAssignments.value.includes(userId);

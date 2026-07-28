@@ -158,8 +158,11 @@
 </template>
 
 <script setup lang="ts">
+import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref } from 'vue';
-import { api } from '@/services/apiClient';
+
+// @Traceability: Retro-Remediación ADR-006
+const integrationStore = useIntegrationStore();
 
 const trackingCode = ref('');
 const isLoading = ref(false);
@@ -174,7 +177,7 @@ const searchTracking = async () => {
   trackingResult.value = null;
 
   try {
-    const response = await api.getPublicTracking(trackingCode.value);
+    const response = await integrationStore.getPublicTracking(trackingCode.value);
     
     // Simulate valid tracking code ending in 'A' for UX purposes if endpoint is still mocked by backend returning 200
     trackingResult.value = {

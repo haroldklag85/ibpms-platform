@@ -11,7 +11,7 @@ describe('WorkdeskTabs.vue (CA-22)', () => {
         pinia = createTestingPinia({
             createSpy: vi.fn,
             initialState: {
-                workdeskStore: { activeView: 'PERSONAL' }
+                workdesk: { activeView: 'PERSONAL' }
             }
         });
     });

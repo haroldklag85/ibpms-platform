@@ -1,3 +1,7 @@
+<<<<<<<< HEAD:backend/ibpms-core/src/test/java/com/ibpms/poc/application/service/webhook/IdempotencyWebhookTest.java
+package com.ibpms.poc.application.service.webhook;
+public class IdempotencyWebhookTest {}
+========
 package com.ibpms.poc.application.service.webhook;
 
 import com.ibpms.poc.application.service.WebhookIntakeService;
@@ -105,3 +109,4 @@ class IdempotencyWebhookTest {
     }
 }
 
+>>>>>>>> a3b8aa4e888453c396a4ed049c716c78b48769b9:backend/ibpms-core/src/test/java/com/ibpms/poc/application/service/webhook/IdempotencyWebhookTest.java.bak

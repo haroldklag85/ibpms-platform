@@ -112,6 +112,7 @@ export class ZodBuilder {
                     if (field.type === 'email') fieldSchema = (fieldSchema as z.ZodString).email('Debe ser un email válido');
                     if (field.type === 'url') fieldSchema = (fieldSchema as z.ZodString).url('Debe ser una URL válida');
                     
+                    // @Traceability: US-003 - CA-78
                     if (field.minLength !== undefined && field.minLength > 0) {
                         fieldSchema = (fieldSchema as z.ZodString).min(field.minLength, `Mínimo ${field.minLength} caracteres`);
                     } else if (field.required) {

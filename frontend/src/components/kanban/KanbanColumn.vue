@@ -1,5 +1,6 @@
+<!-- @Traceability: US-008 - CA-01, CA-02, CA-06, CA-03 -->
 <template>
-  <div class="flex flex-col flex-shrink-0 w-80 bg-gray-50 rounded-lg shadow-inner overflow-hidden border border-gray-200">
+  <div class="flex flex-col flex-shrink-0 w-80 bg-gray-50 rounded-lg shadow-inner overflow-hidden border border-gray-200" :data-testid="'kanban-column-' + column.id">
     
     <!-- Column Header -->
     <div class="px-4 py-3 flex justify-between items-center border-b" :class="column.color">
@@ -15,10 +16,11 @@
         item-key="id"
         group="kanban"
         ghost-class="opacity-50"
+        :disabled="disabled || column.name === 'DONE'"
         @change="onChange"
       >
         <template #item="{ element }">
-          <KanbanCard :item="element" />
+          <KanbanCard :item="element" @openTask="$emit('openTask', $event)" />
         </template>
         <!-- Slot vacío si no hay items -->
         <template #footer v-if="items.length === 0">
@@ -35,7 +37,7 @@
 <script setup lang="ts">
 import { PropType } from 'vue';
 import draggable from 'vuedraggable';
-import type { KanbanColumnDef, KanbanItem } from '@/types/Kanban';
+import type { KanbanColumn as KanbanColumnDef, KanbanItem } from '@/stores/kanbanStore';
 import KanbanCard from './KanbanCard.vue';
 
 const props = defineProps({
@@ -46,16 +48,20 @@ const props = defineProps({
   items: {
     type: Array as PropType<KanbanItem[]>,
     required: true
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 });
 
-const emit = defineEmits(['itemMoved']);
+const emit = defineEmits(['itemMoved', 'openTask']);
 
 const onChange = (evt: any) => {
   // Cuando VueDraggable suelta un item de otro grupo, emite un 'added'
   if (evt.added) {
     const movedItem: KanbanItem = evt.added.element;
-    emit('itemMoved', { item: movedItem, newStatus: props.column.id });
+    emit('itemMoved', { item: movedItem, newStatus: props.column.name });
   }
 };
 </script>

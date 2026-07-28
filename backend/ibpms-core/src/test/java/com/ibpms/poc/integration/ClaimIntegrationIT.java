@@ -1,10 +1,11 @@
 // @Traceability: US-007 - ADR-001
 package com.ibpms.poc.integration;
 
-import com.ibpms.poc.AbstractIntegrationTest;
+import com.ibpms.poc.AbstractIntegrationIT;
 
-
+import com.ibpms.poc.domain.model.agile.AgileProject;
 import com.ibpms.poc.domain.model.agile.AgileTask;
+import com.ibpms.poc.infrastructure.persistence.AgileProjectRepositoryJpa;
 import com.ibpms.poc.infrastructure.persistence.AgileTaskRepositoryJpa;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,7 +27,7 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Testcontainers
-public class ClaimIntegrationIT extends AbstractIntegrationTest {
+public class ClaimIntegrationIT extends AbstractIntegrationIT {
 
     @LocalServerPort
     private int port;
@@ -34,16 +36,30 @@ public class ClaimIntegrationIT extends AbstractIntegrationTest {
     private AgileTaskRepositoryJpa repository;
 
     @Autowired
+    private AgileProjectRepositoryJpa projectRepository;
+
+    @Autowired
     private com.ibpms.poc.infrastructure.security.JwtTokenProvider jwtTokenProvider;
 
     private String validToken;
     private String supervisorToken;
+    private UUID testProjectId;
 
     @BeforeEach
     public void setup() {
         RestAssured.port = port;
         repository.deleteAll(); // Limpiar
         
+        AgileProject project = new AgileProject();
+        project.setName("QA Agile Project");
+        project.setDescription("Project for Claim IT");
+        project.setMethodology("KANBAN_CONTINUOUS");
+        project.setStatus("ACTIVE");
+        project.setCreatedBy("admin");
+        project.setCreatedAt(ZonedDateTime.now());
+        AgileProject savedProject = projectRepository.save(project);
+        testProjectId = savedProject.getId();
+
         validToken = jwtTokenProvider.generateToken("user1", java.util.Collections.singletonList("ROLE_OPERARIO"), "tenantA");
         supervisorToken = jwtTokenProvider.generateToken("super1", java.util.Collections.singletonList("ROLE_SUPERVISOR"), "tenantA");
     }
@@ -51,9 +67,10 @@ public class ClaimIntegrationIT extends AbstractIntegrationTest {
     @Test
     public void testConcurrentClaim() throws InterruptedException {
         AgileTask task = new AgileTask();
-        task.setProjectId(UUID.randomUUID());
+        task.setProjectId(testProjectId);
         task.setTitle("Task 1");
         task.setStatus("AVAILABLE");
+        task.setCreatedBy("test_user");
         task = repository.save(task);
 
         UUID taskId = task.getId();
@@ -84,11 +101,12 @@ public class ClaimIntegrationIT extends AbstractIntegrationTest {
     @Test
     public void testForceUnclaimWithoutTeamMatch() {
         AgileTask task = new AgileTask();
-        task.setProjectId(UUID.randomUUID());
+        task.setProjectId(testProjectId);
         task.setTitle("Task 2");
         task.setStatus("CLAIMED");
         task.setTeamId("team-alpha"); // El supervisorToken es team-beta
         task.setAssigneeIds(new java.util.HashSet<>(java.util.Collections.singletonList("user1")));
+        task.setCreatedBy("test_user");
         task = repository.save(task);
 
         given()
@@ -98,16 +116,17 @@ public class ClaimIntegrationIT extends AbstractIntegrationTest {
             .post("/api/v1/tasks/{taskId}/force-unclaim", task.getId())
         .then()
             .statusCode(403)
-            .body("message", containsString("No tiene permisos"));
+            .body("detail", containsString("No tiene permisos"));
     }
 
     @Test
     public void testReleaseWithMessage() {
         AgileTask task = new AgileTask();
-        task.setProjectId(UUID.randomUUID());
+        task.setProjectId(testProjectId);
         task.setTitle("Task 3");
         task.setStatus("CLAIMED");
         task.setAssigneeIds(new java.util.HashSet<>(java.util.Collections.singletonList("user1")));
+        task.setCreatedBy("test_user");
         task = repository.save(task);
 
         given()
@@ -115,7 +134,7 @@ public class ClaimIntegrationIT extends AbstractIntegrationTest {
             .contentType(ContentType.JSON)
             .body(Map.of("message", "Devuelvo la tarea por falta de datos"))
         .when()
-            .post("/api/v1/tasks/{taskId}/release", task.getId())
+            .post("/api/v1/tasks/{taskId}/unclaim", task.getId())
         .then()
             .statusCode(200);
     }

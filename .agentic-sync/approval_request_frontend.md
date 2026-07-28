@@ -1,50 +1,33 @@
-# 📋 Solicitud de Revisión — Agente Frontend US-002 PM-01
+# Solicitud de Revisión Arquitectónica — Frontend UAT R2
 
-> **Emisor:** Agente Frontend Especialista
-> **Destinatario:** Arquitecto Líder
-> **Fecha:** 2026-06-04
-> **Rama:** `sprint-8/pm-01/us-002-claim`
+**Fecha:** 2026-07-17T17:49:00-05:00  
+**Agente:** Frontend Developer  
+**Rama:** `DevDavid`  
+**Handoff:** `handoff_frontend_84DEV_UAT_R2.md`
 
 ---
 
 ## Resumen del Plan
 
-He analizado exhaustivamente los 4 archivos objetivo y los 3 archivos de test existentes. El plan cubre **CA-16, CA-18, CA-19, CA-20 + Tests Vitest**.
+Solicito aprobación para implementar **2 correcciones quirúrgicas** en el frontend:
 
-### Divergencias Detectadas (Handoff vs Código Real)
+### Bug R2-02: Interceptor 403 destruye menú
+- **Archivo:** `frontend/src/services/apiClient.ts` (líneas 248-266)
+- **Causa raíz:** El bloque `else` catch-all del interceptor 403 ejecuta `purgeTopology()` para cualquier 403 no reconocido, incluyendo 403 operacionales (deploy sin permisos).
+- **Corrección:** Cambiar el `else` a `else if` con validación explícita de `code === 'ACCESS_REVOKED' || code === 'ROLE_REVOKED'`. Los 403 operacionales ahora solo se loguean sin destruir el menú.
+- **Garantía:** Los bloques de `SECURITY_VIOLATION`/`PROMPT_INJECTION` (CA-05) y `PRIVILEGES_CHANGED` (CA-7) NO se modifican.
 
-> ⚠️ **IMPORTANTE**: El handoff asume una estructura de código que NO COINCIDE con la realidad. He adaptado todos los snippets prescriptivos:
+### Bug R2-03: fetchForm mapea campos inexistentes
+- **Archivo:** `frontend/src/stores/useFormDesignerStore.ts` (líneas 284-296)
+- **Causa raíz:** El frontend usa `schemaVariables`, `title`, y `versionId` que NO existen en `FormDesignDTO.java`.
+- **Verificación DTO:** Se leyó `FormDesignDTO.java` y se confirmaron los campos reales: `formFields`, `name`, `version`.
+- **Corrección:** Reemplazar `schemaVariables` → `formFields`, `title` → `name`, `versionId` → `version`.
 
-| Aspecto | Handoff dice | Código Real | Adaptación |
-|---------|-------------|-------------|-----------|
-| Store pattern | Composition API | **Options API** | Uso `state()`, `actions:{}` |
-| Styling | CSS scoped custom | **Tailwind utility classes** | Clases Tailwind coherentes |
-| WebSocket | Native WS + `lastWsEvent` | **STOMP/SockJS** | Case en switch handler STOMP |
-| Audit field | `actionType` | `action` | Mapeo sobre `event.action` |
-| Test files | Crear nuevos | **Ya existen** | AMPLIAR archivos existentes |
-| CA-18 | No implementado | **Parcialmente implementado** | Mejorar con nombre usuario |
-
-### Cambios Planificados (7 archivos)
-
-1. **`useWorkdeskStore.ts`** — +`ghostWarning` state, +`extendTimeout()` action, +`GHOST_WARNING` case en WS switch, +`dismissGhostWarning()`, +helpers toast DOM
-2. **`ClaimAuditTrail.vue`** — Reemplazo de `getDotColor()`/`getActionBadge()` por `ACTION_STYLE_MAP` con 6 tipos + 2 legacy keys, template con iconos+labels
-3. **`TaskPreviewModal.vue`** — +Banner CA-16 (nota interna con `mensajeInterno`), +CA-18 mejora (nombre usuario `claimedByName`), +`formatTimeAgo()` helper
-4. **`Workdesk.vue`** — +Ghost Warning Toast (Transition, Teleport) con 2 botones acción, +`handleSaveDraft()` function
-5. **`TaskPreviewModal.spec.ts`** — +4 tests (CA-16×2, CA-18×2)
-6. **`ClaimAuditTrail.spec.ts`** — +3 tests (CA-20×3)
-7. **`useWorkdeskStore.spec.ts`** — +3 tests (CA-19×3)
-
-### Orden de Ejecución
-Store → ClaimAuditTrail → TaskPreviewModal → Workdesk → Tests → Build → Git
-
----
+### Archivos NO modificados (cumplimiento de prohibición)
+- ❌ `BpmnDesigner.vue`
+- ❌ `IdentityGovernance.vue`
+- ❌ CSS/HTML del panel Lane
 
 ## Solicitud Formal
 
-Arquitecto Líder: solicito su aprobación para proceder con la ejecución del plan descrito. Las adaptaciones al código real son necesarias dado que los snippets prescriptivos del handoff no aplican directamente por diferencias en el stack (Options API, Tailwind, STOMP).
-
-**¿Aprueba la ejecución?**
-
----
-
-_Agente Frontend Especialista — Antigravity_
+Arquitecto Líder, solicito su aprobación para proceder con la ejecución de estos cambios. El plan detallado con diffs está documentado en el `implementation_plan.md` de mi sesión de trabajo.

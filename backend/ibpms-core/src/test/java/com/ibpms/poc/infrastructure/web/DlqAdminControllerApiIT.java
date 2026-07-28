@@ -1,7 +1,7 @@
 // @Traceability: US-007 - ADR-001
 package com.ibpms.poc.infrastructure.web;
 
-import com.ibpms.poc.AbstractIntegrationTest;
+import com.ibpms.poc.AbstractIntegrationIT;
 
 
 import io.restassured.RestAssured;
@@ -35,7 +35,7 @@ import static io.restassured.RestAssured.given;
  * }</pre>
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class DlqAdminControllerApiIT extends AbstractIntegrationTest {
+class DlqAdminControllerApiIT extends AbstractIntegrationIT {
 
     @LocalServerPort
     private int port;

@@ -35,15 +35,18 @@ public class RoleService {
     private final UserRepository userRepository;
     private final RoleAuditLogRepository auditLogRepository;
     private final ObjectMapper objectMapper;
+    private final com.ibpms.poc.infrastructure.jpa.repository.security.PermissionRepository permissionRepository;
 
     public RoleService(RoleRepository roleRepository,
                        UserRepository userRepository,
                        RoleAuditLogRepository auditLogRepository,
-                       ObjectMapper objectMapper) {
+                       ObjectMapper objectMapper,
+                       com.ibpms.poc.infrastructure.jpa.repository.security.PermissionRepository permissionRepository) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.auditLogRepository = auditLogRepository;
         this.objectMapper = objectMapper;
+        this.permissionRepository = permissionRepository;
     }
 
     @SuppressWarnings("null")
@@ -114,8 +117,17 @@ public class RoleService {
         existing.setIsTemplate(patch.getIsTemplate());
         existing.setSource(patch.getSource());
         
-        // Clonar para el log antes de guardar cambios en la colección de permisos si los hubiera
-        // Nota: Si patch trae permisos, habría que mapearlos aquí también.
+        if (patch.getTopology() != null) {
+            existing.getPermissions().clear();
+            for (Map.Entry<String, Boolean> entry : patch.getTopology().entrySet()) {
+                if (Boolean.TRUE.equals(entry.getValue())) {
+                    String permName = entry.getKey() + "_ACCESS";
+                    com.ibpms.poc.infrastructure.jpa.entity.security.PermissionEntity perm = permissionRepository.findByName(permName)
+                        .orElseGet(() -> permissionRepository.save(new com.ibpms.poc.infrastructure.jpa.entity.security.PermissionEntity(permName, "Auto-generated permission for " + entry.getKey())));
+                    existing.getPermissions().add(perm);
+                }
+            }
+        }
         
         RoleEntity saved = roleRepository.save(existing);
         // En una implementación real, compararíamos existing (antes de flush) o pasaríamos el DTO original

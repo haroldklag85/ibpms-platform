@@ -1,6 +1,7 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/ibpms_e2e
+    # @Traceability: CICD-FIX-PR4: port 5434 alineado con docker-compose.e2e.yml (BD de tests E2E)
+    url: jdbc:postgresql://127.0.0.1:5434/ibpms_e2e
     username: ibpms
     password: ibpms_e2e_pass
     hikari:
@@ -20,10 +21,10 @@ spring:
     defer-datasource-initialization: false
   data:
     redis:
-      host: localhost
+      host: 127.0.0.1
       port: 6380
   rabbitmq:
-    host: localhost
+    host: 127.0.0.1
     port: 5673
 
 camunda:

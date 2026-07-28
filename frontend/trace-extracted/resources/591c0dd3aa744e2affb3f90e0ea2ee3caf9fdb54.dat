@@ -1,0 +1,1 @@
+{"type":"https://ibpms.com/errors/not-found","title":"Endpoint o Recurso Inexistente","status":404,"detail":"No static resource api/v1/design/processes/credito-consumo-v1/instances.","instance":"/api/v1/design/processes/credito-consumo-v1/instances"}

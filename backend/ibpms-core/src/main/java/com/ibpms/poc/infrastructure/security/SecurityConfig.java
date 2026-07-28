@@ -86,14 +86,14 @@ public class SecurityConfig {
                         // US-028: Form Certification & Definition endpoints (QA Integration Tests)
                         .requestMatchers("/api/v1/design/forms/*/versions").permitAll()
                         .requestMatchers("/api/v1/design/form-definitions/**").permitAll()
-                        .requestMatchers("/api/v1/forms/**").permitAll()
+                        .requestMatchers("/api/v1/forms", "/api/v1/forms/**").permitAll()
                         // CA-11: SSE Security Stream
                         .requestMatchers("/api/v1/security/stream").permitAll()
                         // @Traceability(US="US-J04-42", CA="CA-E2E-OBS", DESC="ADR-010 Observabilidad E2E: Bypass JWT para métricas ágiles")
                         .requestMatchers("/api/v1/agile/**").permitAll()
                         // @Traceability(US="US-CORE", CA="CA-CAMUNDA", DESC="ADR-003: Bypass JWT para interacción con motor REST embebido de Camunda 7")
                         .requestMatchers("/engine-rest/**", "/api/v1/engine-rest/**").permitAll()
-                        .requestMatchers("/api/v1/security/audit/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/api/v1/security/audit/**").hasAnyRole("SUPER_ADMIN", "AUDITOR_GLOBAL")
                         .anyRequest().authenticated());
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(getJwtAuthenticationConverter())));

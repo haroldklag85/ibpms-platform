@@ -51,6 +51,22 @@ public class BpmnProcessDesign {
         return design;
     }
 
+    // @Traceability: US-005, CA-15
+    public static BpmnProcessDesign crear(String name, String technicalId, FormPattern formPattern, String createdBy) {
+        BpmnProcessDesign design = new BpmnProcessDesign();
+        design.id = UUID.randomUUID();
+        design.name = name;
+        design.technicalId = technicalId;
+        design.formPattern = formPattern;
+        design.status = Status.DRAFT;
+        design.currentVersion = 0;
+        design.maxNodes = 100;
+        design.createdAt = LocalDateTime.now();
+        design.updatedAt = LocalDateTime.now();
+        design.createdBy = createdBy;
+        return design;
+    }
+
     // Factory para reconstitución desde BD
     public static BpmnProcessDesign reconstituir(UUID id, String name, String technicalId,
             FormPattern formPattern, Status status, int currentVersion,

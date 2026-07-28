@@ -1,0 +1,2 @@
+## 2026-06-01T22:35:45Z
+Please run all Vitest tests in `ibpms-platform/frontend` using `npx vitest run`. Capture the full output and write it to `c:\Users\HaroltAndrésGómezAgu\ProyectoAntigravity\ibpms-platform\frontend\.agents\worker_canvas_blank_2\test_results.txt`. If any tests fail or timeout (such as `src/tests/regression_hallazgo2.spec.ts` or `src/tests/components/shell/RoleSelectorDropdown.spec.ts`), analyze the failures and report them. Do not modify any source code files yet. Send a handoff message when done.

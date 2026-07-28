@@ -1,5 +1,8 @@
+<!-- @Traceability: US-008 - CA-01, CA-02, CA-06, CA-03 -->
 <template>
-  <div class="bg-white p-3 rounded shadow-sm border border-gray-200 cursor-move hover:shadow-md transition group">
+  <div class="bg-white p-3 rounded shadow-sm border border-gray-200 transition group" 
+       :class="{'cursor-move hover:shadow-md': item.status !== 'DONE', 'done-readonly': item.status === 'DONE'}"
+       :data-testid="'kanban-card-' + item.id">
     <div class="flex justify-between items-start mb-2">
       <span class="text-xs font-bold px-2 py-1 rounded" :class="priorityClass">
         {{ priorityLabel }}
@@ -12,17 +15,39 @@
     <h4 class="text-sm font-bold text-gray-800 mb-2">{{ item.title }}</h4>
     <p class="text-xs text-gray-500 font-mono">ID: {{ item.id }}</p>
 
+    <!-- Blocked Reason Chip -->
+    <div v-if="item.status === 'BLOCKED' && item.blockedReason" class="mt-2 text-xs bg-red-50 text-red-700 p-1.5 rounded border border-red-200">
+      <span class="font-bold">Motivo:</span> {{ item.blockedReason }}
+    </div>
+
     <!-- Acciones Ocultas mostradas al hover -->
     <div class="mt-3 pt-2 border-t flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-      <button class="text-xs text-ibpms-brand hover:underline font-medium">✏️ Abrir</button>
+      <button @click.stop="$emit('openTask', item)" class="text-xs text-ibpms-brand hover:underline font-medium">✏️ Abrir</button>
       <button class="text-xs text-red-500 hover:underline font-medium">🗑️ Descartar</button>
+    </div>
+    
+    <!-- SLA Timer -->
+    <div class="mt-2" style="pointer-events: auto;">
+      <UniversalSlaTimer 
+        :taskId="item.id" 
+        :currentState="item.status" 
+        :slaDueDate="item.slaDueDate" 
+        referenceType="TASK_AGILE"
+        :activeTimerId="activeTimerId"
+        @start="handleStartTimer"
+        @stop="handleStopTimer"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, PropType } from 'vue';
-import type { KanbanItem } from '@/types/Kanban';
+import type { KanbanItem } from '@/stores/kanbanStore';
+import { useKanbanStore } from '@/stores/kanbanStore';
+import UniversalSlaTimer from '@/components/common/UniversalSlaTimer.vue';
+
+const store = useKanbanStore();
 
 const props = defineProps({
   item: {
@@ -30,6 +55,8 @@ const props = defineProps({
     required: true
   }
 });
+
+const emit = defineEmits(['openTask']);
 
 const priorityClass = computed(() => {
   if (!props.item.priority) return 'bg-gray-100 text-gray-700';
@@ -40,4 +67,22 @@ const priorityLabel = computed(() => {
   if (!props.item.priority) return 'NORM';
   return props.item.priority > 50 ? 'URG' : 'NORM';
 });
+
+const activeTimerId = computed(() => store.activeTimers[props.item.id]);
+
+const handleStartTimer = async (taskId: string) => {
+  await store.startTimer(taskId);
+};
+
+const handleStopTimer = async (timerId: string) => {
+  await store.stopTimer(timerId);
+};
 </script>
+
+<style scoped>
+.done-readonly {
+  opacity: 0.7;
+  cursor: default;
+  pointer-events: none; /* Previene drag manual e interactividades extras */
+}
+</style>

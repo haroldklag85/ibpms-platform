@@ -74,7 +74,7 @@ describe('WorkdeskGrid.vue (CA-11 a CA-15 Reclamar y Liberar)', () => {
         expect(confirmBtn.exists()).toBe(true);
         await confirmBtn.trigger('click');
 
-        expect(store.unclaimTask).toHaveBeenCalledWith('t-2');
+        expect(store.unclaimTask).toHaveBeenCalledWith('t-2', '');
         expect((wrapper.vm as any).unclaimTargetId).toBeNull();
     });
 

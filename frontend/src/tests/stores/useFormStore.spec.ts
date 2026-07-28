@@ -1,8 +1,11 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { useFormStore } from '@/stores/useFormStore';
+import { useConnectionStore } from '@/stores/connectionStore';
 import { api } from '@/services/apiClient';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { z } from 'zod';
+
+import { ref } from 'vue';
 
 vi.mock('@/services/apiClient', () => ({
     api: {
@@ -11,14 +14,37 @@ vi.mock('@/services/apiClient', () => ({
     }
 }));
 
+const currentTickRef = ref(1700000000000); // stable initial timestamp ending in 000
+
+vi.mock('@/stores/timeStore', () => ({
+    useTimeStore: () => ({
+        get currentTick() {
+            return currentTickRef.value;
+        },
+        startEngine: vi.fn(),
+        stopEngine: vi.fn(),
+        getInactivityMs: vi.fn()
+    })
+}));
+
 describe('useFormStore', () => {
     let store: ReturnType<typeof useFormStore>;
+
+    const tickSeconds = async (seconds: number) => {
+        for (let i = 0; i < seconds; i++) {
+            currentTickRef.value += 1000;
+            vi.advanceTimersByTime(1000);
+            await Promise.resolve();
+            await Promise.resolve();
+        }
+    };
 
     beforeEach(() => {
         setActivePinia(createPinia());
         store = useFormStore();
         vi.clearAllMocks();
         vi.useFakeTimers();
+        currentTickRef.value = 1700000000000;
     });
 
     afterEach(() => {
@@ -64,7 +90,7 @@ describe('useFormStore', () => {
         expect(api.completeTask).not.toHaveBeenCalled(); // No debe llamarse aun
 
         // Avanzamos timer 2 segundos
-        vi.advanceTimersByTime(2000);
+        await tickSeconds(2);
         expect(store.undoTimeLeft).toBe(3);
 
         // Disparamos Undo
@@ -73,7 +99,7 @@ describe('useFormStore', () => {
         expect(store.isUndoAvailable).toBe(false);
 
         // Avanzamos hasta final para asegurar que completeTask nunca se llamó
-        vi.advanceTimersByTime(5000);
+        await tickSeconds(5);
         expect(api.completeTask).not.toHaveBeenCalled();
     });
 
@@ -81,8 +107,8 @@ describe('useFormStore', () => {
         (api.completeTask as any).mockResolvedValue({ status: 200 });
         store.submitForm('t-ok', { doc: 'doc1' }, true);
 
-        // Avanzamos 5.1s
-        vi.advanceTimersByTime(5100);
+        // Avanzamos 6s (suficiente para expirar los 5s)
+        await tickSeconds(6);
 
         // Como usamos una internal async on commit, wait it out en microtasks
         await Promise.resolve();
@@ -100,9 +126,10 @@ describe('useFormStore', () => {
             await store.submitForm('t-err', {}, false);
         } catch (e) {}
 
-        expect(store.requiresRetry).toBe(true);
+        const connectionStore = useConnectionStore();
+        expect(connectionStore.requiresRetry).toBe(true);
         expect(store.idempotencyKey).toBeTruthy();
-        expect(store.retryCount).toBe(0);
+        expect(connectionStore.retryCount).toBe(0);
     });
 
     it('Test CA-31 / CA-32: Retries mantienen misma idempotencyKey y frenan a los 3 reintentos', async () => {
@@ -113,21 +140,23 @@ describe('useFormStore', () => {
             return Promise.reject({ response: { status: 504 } });
         });
         
+        const connectionStore = useConnectionStore();
+        
         // Initial fall
         try { await store.submitForm('t-ret', {}, false); } catch(e){}
         const initialKey = store.idempotencyKey;
         
         // 3 manual retries (simulating NetworkRetryModal pressing retry)
         try { await store.submitForm('t-ret', {}, false, true); } catch(e){}
-        expect(store.retryCount).toBe(1);
+        expect(connectionStore.retryCount).toBe(1);
         expect(requestHeaders['Idempotency-Key']).toBe(initialKey);
         
         try { await store.submitForm('t-ret', {}, false, true); } catch(e){}
-        expect(store.retryCount).toBe(2);
+        expect(connectionStore.retryCount).toBe(2);
         
         try { await store.submitForm('t-ret', {}, false, true); } catch(e){}
-        expect(store.retryCount).toBe(3);
-        expect(store.requiresRetry).toBe(false); // Can't retry anymore
+        expect(connectionStore.retryCount).toBe(3);
+        expect(connectionStore.requiresRetry).toBe(false); // Can't retry anymore
     });
 
     it('Test CA-37: HTTP 500 expone error genérico sin stack trace', async () => {
@@ -145,9 +174,10 @@ describe('useFormStore', () => {
         try {
             await store.submitForm('t-500', {}, false);
         } catch (e: any) {
+            const connectionStore = useConnectionStore();
             // El store re-lanza el error. El componente debería mostrar mensaje genérico.
             // Verificamos que el store NO almacena el stack trace en ningún campo expuesto.
-            expect(store.requiresRetry).toBe(false); // 500 no es retry-able (solo 504)
+            expect(connectionStore.requiresRetry).toBe(false); // 500 no es retry-able (solo 504)
             // El componente debe filtrar — el store no tiene campo 'userFacingError'
             // pero garantizamos que NO expone info interna al DOM
             expect(JSON.stringify(store.$state)).not.toContain('NullPointerException');
@@ -168,6 +198,7 @@ describe('useFormStore', () => {
     });
 
     it('Test CA-2: HTTP 400 Backend mapea errores de Zod en validationErrors', async () => {
+        // @Traceability: US-000 - CA-2
         (api.completeTask as any).mockRejectedValue({
             response: {
                 status: 400,

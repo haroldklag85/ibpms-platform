@@ -27,19 +27,16 @@ public class DeploymentGovernanceIntegrationAdversarialTest {
 
     @Test
     void shouldPassValidationWhenExclusiveGatewayHasDefaultFlow() {
-        // Arrange
         BpmnModelInstance modelInstance = Bpmn.createExecutableProcess("Process_2")
                 .startEvent("startEvent")
                     .camundaFormKey("startForm")
                 .exclusiveGateway("gw_with_default")
+                .sequenceFlowId("default_flow")
                 .endEvent("endEvent")
                 .done();
         
         ExclusiveGateway gw = modelInstance.getModelElementById("gw_with_default");
-        SequenceFlow seqFlow = modelInstance.newInstance(SequenceFlow.class);
-        seqFlow.setId("default_flow");
-        // Connect the sequence flow
-        gw.getOutgoing().add(seqFlow);
+        SequenceFlow seqFlow = modelInstance.getModelElementById("default_flow");
         gw.setDefault(seqFlow);
         
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

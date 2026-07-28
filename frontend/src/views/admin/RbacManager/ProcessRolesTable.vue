@@ -41,19 +41,58 @@
             </div>
           </td>
           <td class="p-4 align-top">
-            <div class="space-y-1">
-              <div v-if="rol.members.length === 0" class="text-xs text-red-500 bg-red-50 border border-red-100 p-2 rounded flex items-center gap-1.5 font-medium">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                Orphan Lane: Nadie puede ejecutarlo.
-              </div>
-              <div v-for="user in rol.members" :key="user.id" class="flex gap-2 items-center bg-gray-50 px-2 py-1 rounded w-fit border border-gray-100">
-                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                 <span class="text-xs text-gray-700 font-medium">{{ user.email }}</span>
+            <div class="space-y-4">
+              <!-- CA-4 & CA-6: Matriz Iniciador vs Ejecutor con Herencia -->
+              <table v-if="rol.processPermissions && rol.processPermissions.length > 0" class="w-full text-xs border rounded-lg overflow-hidden">
+                <thead class="bg-gray-50 text-gray-500 font-bold uppercase text-[9px]">
+                  <tr>
+                    <th class="px-2 py-1 text-left">Rol/Grupo</th>
+                    <th class="px-2 py-1 text-center">Iniciar</th>
+                    <th class="px-2 py-1 text-center">Ejecutar</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 bg-white">
+                  <tr v-for="permission in rol.processPermissions" :key="permission.id" class="hover:bg-gray-50/50">
+                    <td class="px-2 py-2">
+                      <div class="flex flex-col">
+                        <span class="font-medium text-gray-700">{{ permission.roleName || 'Grupo' }}</span>
+                        <!-- CA-06: Indicador de Herencia Piramidal -->
+                        <span 
+                          v-if="permission.sourceRoleId && permission.sourceRoleId !== rol.id"
+                          class="text-[9px] text-indigo-500 font-bold flex items-center gap-0.5"
+                          title="Permiso heredado del ancestro"
+                        >
+                          ↳ Heredado
+                        </span>
+                        <span v-else class="text-[9px] text-emerald-500 font-medium">Propio</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                      <input
+                        type="checkbox"
+                        class="rounded text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                        :checked="permission.canInitiateProcess"
+                        :disabled="permission.sourceRoleId && permission.sourceRoleId !== rol.id"
+                        @change="togglePermission(rol, permission, 'canInitiateProcess')"
+                      />
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                      <input
+                        type="checkbox"
+                        class="rounded text-orange-600 focus:ring-orange-500 disabled:opacity-50"
+                        :checked="permission.canExecuteTasks"
+                        :disabled="permission.sourceRoleId && permission.sourceRoleId !== rol.id"
+                        @change="togglePermission(rol, permission, 'canExecuteTasks')"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <div v-if="!rol.processPermissions || rol.processPermissions.length === 0" class="text-[11px] text-amber-600 bg-amber-50 p-2 rounded border border-amber-100 italic">
+                Sin matriz de permisos definida para este carril.
               </div>
             </div>
-            <button class="text-emerald-600 hover:text-emerald-800 text-xs font-semibold mt-2 flex items-center gap-1">
-              + Escanear Mapeo LDAP
-            </button>
           </td>
         </tr>
       </tbody>
@@ -63,5 +102,22 @@
 
 <script setup>
 import { useRbacStore } from '@/stores/rbacStore'
+
 const store = useRbacStore()
+
+/** CA-4: Toggle granular permission and persist to backend */
+async function togglePermission(role, permission, field) {
+  const oldValue = permission[field]
+  permission[field] = !oldValue // Optimistic UI
+  
+  try {
+    await store.updateProcessPermission(role.id, {
+      ...permission,
+      [field]: !oldValue
+    })
+  } catch (err) {
+    permission[field] = oldValue // Rollback on error
+    alert('Error al actualizar permisos: ' + err.message)
+  }
+}
 </script>

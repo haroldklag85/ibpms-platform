@@ -2,7 +2,30 @@
   <Teleport to="body">
     <div v-if="taskId" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
        <!-- CA-5 Read Only Modal -->
-       <div class="bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh] w-full max-w-3xl overflow-hidden relative modal-content">
+       <div class="bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh] w-full max-w-3xl overflow-hidden relative modal-content mt-12">
+            <!-- CA-18 Warning Banner (improved with user name) -->
+            <div v-if="isAlreadyClaimed" class="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 w-full z-10 flex items-center shadow-sm" data-testid="claimed-by-other-banner">
+              <span class="mr-2">⚠️</span>
+              <p class="font-medium text-sm">
+                Esta tarea fue reclamada por
+                <strong v-if="claimedByName">{{ claimedByName }}</strong>
+                <span v-else>otro compañero</span>
+                y ya no está disponible
+              </p>
+            </div>
+
+            <!-- CA-16: Banner de nota del operario anterior -->
+            <div v-if="taskDetail?.mensajeInterno" class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 w-full z-10 flex items-start gap-3 shadow-sm" data-testid="internal-note-banner">
+              <span class="text-lg shrink-0">📝</span>
+              <div>
+                <p class="font-bold text-sm">Nota del operario anterior:</p>
+                <p class="text-sm italic mt-1">{{ taskDetail.mensajeInterno }}</p>
+                <span v-if="taskDetail.mensajeInternoAuthor" class="text-xs text-blue-600 mt-1 block">
+                  — {{ taskDetail.mensajeInternoAuthor }}{{ taskDetail.mensajeInternoAt ? ', ' + formatTimeAgo(taskDetail.mensajeInternoAt) : '' }}
+                </span>
+              </div>
+            </div>
+           
            <header class="bg-indigo-50 border-b border-indigo-100 px-6 py-4 flex justify-between items-start">
                <div>
                    <h2 class="text-xl font-bold text-indigo-900">{{ taskDetail?.title || 'Cargando detalle...' }}</h2>
@@ -59,9 +82,10 @@
                <button @click="$emit('close')" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md font-medium text-sm hover:bg-gray-100 transition">
                    Cancelar
                </button>
-               <button @click="handleClaim" :disabled="isLoading || isClaiming" class="px-5 py-2 bg-indigo-600 text-white rounded-md font-bold text-sm hover:bg-indigo-700 shadow-sm transition flex gap-2 items-center disabled:opacity-50" data-test="btn-claim">
-                   <span v-if="isClaiming" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                   {{ isClaiming ? 'Reclamando...' : 'Reclamar Tarea' }}
+               <button v-if="!(readOnly && taskDetail?.assignee)" @click="handleClaim" :disabled="isLoading || isClaiming || isAlreadyClaimed" class="px-5 py-2 bg-indigo-600 text-white rounded-md font-bold text-sm hover:bg-indigo-700 shadow-sm transition flex gap-2 items-center disabled:opacity-50 disabled:bg-gray-400 disabled:cursor-not-allowed" data-test="btn-claim">
+                   <span v-if="isAlreadyClaimed" class="text-sm">🔒</span>
+                   <span v-else-if="isClaiming" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                   {{ isAlreadyClaimed ? 'No Disponible' : (isClaiming ? 'Reclamando...' : 'Reclamar Tarea') }}
                </button>
            </footer>
        </div>
@@ -70,17 +94,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useWorkdeskStore } from '@/stores/useWorkdeskStore';
+import { useAuthStore } from '@/stores/authStore';
 import ClaimAuditTrail from './ClaimAuditTrail.vue';
 
-const props = defineProps<{ taskId: string | null }>();
+const props = defineProps<{ taskId: string | null; readOnly?: boolean }>();
 const emit = defineEmits(['close']);
 
 const store = useWorkdeskStore();
+const authStore = useAuthStore();
 const taskDetail = ref<any>(null);
 const isLoading = ref(false);
 const isClaiming = ref(false);
+const isAlreadyClaimed = ref(false);
+const claimedByName = ref('');
+let wsSubscription: any = null;
+
+const setupWebSocket = () => {
+    if (!props.taskId || !store.stompClient?.connected) return;
+    
+    const tenantId = (authStore as any).tenantId || 'default';
+    wsSubscription = store.stompClient.subscribe(`/topic/workdesk/${tenantId}`, (message) => {
+        try {
+            const event = JSON.parse(message.body);
+            if (event.action === 'REMOVE' && event.taskId === props.taskId) {
+                isAlreadyClaimed.value = true;
+                claimedByName.value = event.claimedByName || event.assignee || '';
+            }
+        } catch(e) {}
+    });
+};
+
+onUnmounted(() => {
+    if (wsSubscription) {
+        wsSubscription.unsubscribe();
+    }
+});
 
 const loadTask = async (id: string) => {
     isLoading.value = true;
@@ -99,16 +149,38 @@ const loadTask = async (id: string) => {
 };
 
 onMounted(() => {
-    if (props.taskId) loadTask(props.taskId);
+    if (props.taskId) {
+        loadTask(props.taskId);
+        setupWebSocket();
+    }
 });
 
 watch(() => props.taskId, (newVal) => {
+    if (wsSubscription) {
+        wsSubscription.unsubscribe();
+        wsSubscription = null;
+    }
+    isAlreadyClaimed.value = false;
+    
     if (newVal) {
         loadTask(newVal);
+        setupWebSocket();
     } else {
         taskDetail.value = null;
     }
 });
+
+// @Traceability: US-002, CA-16 — Relative time formatting for internal note
+const formatTimeAgo = (dateStr: string): string => {
+    const now = Date.now();
+    const past = new Date(dateStr).getTime();
+    const diffMin = Math.floor((now - past) / 60000);
+    if (diffMin < 1) return 'hace un momento';
+    if (diffMin < 60) return `hace ${diffMin} min`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `hace ${diffH}h`;
+    return `hace ${Math.floor(diffH / 24)}d`;
+};
 
 const handleClaim = async () => {
     if (!props.taskId) return;
@@ -116,8 +188,12 @@ const handleClaim = async () => {
     try {
         await store.claimTask(props.taskId);
         emit('close');
-    } catch(e) {
-        emit('close'); 
+    } catch(err) {
+        if (err.response && err.response.status === 409) {
+            isAlreadyClaimed.value = true;
+        } else {
+            emit('close'); 
+        }
     } finally {
         isClaiming.value = false;
     }

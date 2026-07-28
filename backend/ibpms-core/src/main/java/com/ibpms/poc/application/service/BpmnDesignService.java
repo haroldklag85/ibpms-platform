@@ -1,7 +1,9 @@
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.application.service;
 
 import com.ibpms.poc.application.dto.BpmnProcessDesignDTO;
 import com.ibpms.poc.application.dto.CreateBpmnProcessDesignDTO;
+import com.ibpms.poc.application.dto.BpmnDesignAuditLogDTO;
 import com.ibpms.poc.application.port.out.BpmnAuditPort;
 import com.ibpms.poc.application.port.out.BpmnDesignPort;
 import com.ibpms.poc.application.port.out.DeployRequestPort;
@@ -32,15 +34,18 @@ public class BpmnDesignService {
     private final BpmnAuditPort auditPort;
     private final ProcessLockPort processLockPort;
     private final DeployRequestPort deployRequestPort;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     public BpmnDesignService(BpmnDesignPort designPort,
                              BpmnAuditPort auditPort,
                              ProcessLockPort processLockPort,
-                             DeployRequestPort deployRequestPort) {
+                             DeployRequestPort deployRequestPort,
+                             org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.designPort = designPort;
         this.auditPort = auditPort;
         this.processLockPort = processLockPort;
         this.deployRequestPort = deployRequestPort;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     // --- CRUD ---
@@ -96,18 +101,33 @@ public class BpmnDesignService {
         auditPort.logAction(id, "SAVE_DRAFT", userId, domain.getCurrentVersion(), null);
     }
 
-    /**
-     * @Traceability: US-005 - Desplegar y Versionar un Modelo de Proceso (BPMN)
-     * Auto-Save del Borrador por su llave técnica, asegurando persistencia real.
-     */
+    // @Traceability: US-005, CA-15
     @Traceability(US = "US-005", CA = {"CA-10"})
     public void guardarBorradorPorTechnicalId(String processKey, String xml, String userId) {
         BpmnProcessDesign domain = designPort.findByTechnicalId(processKey)
-                .orElseThrow(() -> new IllegalArgumentException("Diseño BPMN no encontrado con technical_id: " + processKey));
+                .orElseGet(() -> {
+                    // Si el proceso es nuevo, lo creamos automáticamente en estado BORRADOR con versión 0
+                    String processName = capitalizeTechnicalId(processKey);
+                    return BpmnProcessDesign.crear(
+                            processName,
+                            processKey,
+                            BpmnProcessDesign.FormPattern.SIMPLE,
+                            userId
+                    );
+                });
         domain.updateDraft(xml);
         designPort.save(domain);
 
         auditPort.logAction(domain.getId(), "SAVE_DRAFT", userId, domain.getCurrentVersion(), null);
+    }
+
+    // @Traceability: US-005, CA-15
+    private String capitalizeTechnicalId(String slug) {
+        if (slug == null || slug.isEmpty()) return "Proceso Sin Título";
+        return java.util.Arrays.stream(slug.split("-"))
+                .filter(word -> !word.isEmpty())
+                .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1))
+                .collect(java.util.stream.Collectors.joining(" "));
     }
 
     // --- Configuración de Generic Form (CA-7) ---
@@ -216,6 +236,12 @@ public class BpmnDesignService {
 
     // --- Lock Pesimista Separado (CA-66, CA-64) ---
 
+    // @Traceability: US-005, CA-16
+    public java.util.Optional<com.ibpms.poc.application.port.out.ProcessLockPort.ProcessLockInfo> getLockInfo(String processKey) {
+        cleanStaleLock(processKey);
+        return processLockPort.findLock(processKey);
+    }
+
     public void acquireLockTechnicalKey(String processKey, String userId, String browserSessionId) {
         cleanStaleLock(processKey);
         processLockPort.findLock(processKey).ifPresent(lock -> {
@@ -250,6 +276,21 @@ public class BpmnDesignService {
         processLockPort.findLock(processKey).ifPresent(lock -> {
             processLockPort.deleteLock(processKey);
             auditByTechnicalId(processKey, "UNLOCK", adminUserId, "{\"type\": \"forced\", \"previousOwner\": \"" + lock.lockedBy() + "\"}");
+            try {
+                jdbcTemplate.update(
+                    "INSERT INTO ibpms_audit_log (id, entity_type, entity_id, event_type, performed_by, event_data, created_at) " +
+                    "VALUES (?, ?, ?, ?, ?, ?::json, ?)",
+                    UUID.randomUUID().toString(),
+                    "BPMN_PROCESS",
+                    processKey,
+                    "FORCE_UNLOCK",
+                    adminUserId,
+                    "{\"action\": \"force_unlock\", \"previousOwner\": \"" + lock.lockedBy() + "\"}",
+                    java.sql.Timestamp.valueOf(LocalDateTime.now())
+                );
+            } catch (Exception e) {
+                // Fail-safe to prevent breaking lock deletion on audit failure
+            }
         });
     }
 
@@ -293,5 +334,44 @@ public class BpmnDesignService {
         dto.setUpdatedAt(e.getUpdatedAt());
         dto.setCreatedBy(e.getCreatedBy());
         return dto;
+    }
+
+    // @Traceability: US-005, CA-42 - Activity Timeline
+    public List<BpmnDesignAuditLogDTO> getAuditLogsForProcess(String processKey) {
+        BpmnProcessDesign domain = designPort.findByTechnicalId(processKey)
+                .orElseThrow(() -> new IllegalArgumentException("Diseño BPMN no encontrado con technical_id: " + processKey));
+        
+        return auditPort.getAuditLogsForProcess(domain.getId()).stream()
+                .map(entry -> {
+                    BpmnDesignAuditLogDTO dto = new BpmnDesignAuditLogDTO();
+                    dto.setId(entry.getId());
+                    dto.setAction(mapDomainActionToFrontendAction(entry.getAction().name()));
+                    dto.setUserId(entry.getUserId());
+                    dto.setTimestamp(entry.getTimestamp());
+                    dto.setVersionAffected(entry.getVersionAffected());
+                    dto.setDetails(entry.getDetails());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private String mapDomainActionToFrontendAction(String domainAction) {
+        if (domainAction == null) return "";
+        switch (domainAction) {
+            case "IMPORT":
+            case "SAVE_DRAFT":
+                return "IMPORT XML";
+            case "DEPLOY":
+            case "DEPLOY_APPROVED":
+                return "DEPLOYED";
+            case "REQUEST_DEPLOY":
+                return "REQUEST DEPLOY";
+            case "ARCHIVE":
+                return "ARCHIVED";
+            case "ROLLBACK":
+                return "ROLLBACK";
+            default:
+                return domainAction;
+        }
     }
 }

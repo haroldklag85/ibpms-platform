@@ -1,4 +1,4 @@
-// @Traceability: US-003 - ADR-001
+// @Traceability: US-005, CA-42 - Activity Timeline
 package com.ibpms.poc.infrastructure.jpa.entity.agile;
 
 import jakarta.persistence.*;
@@ -86,8 +86,8 @@ public class AgileTaskJpaEntity {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "ibpms_agile_task_tags", joinColumns = @JoinColumn(name = "task_id"))
-    @Column(name = "tag")
-    private Set<String> tags;
+    @Column(name = "tag_id")
+    private Set<UUID> tags;
 
     @PrePersist
     protected void onCreate() {

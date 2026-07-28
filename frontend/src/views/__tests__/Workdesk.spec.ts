@@ -34,7 +34,7 @@ describe.skip('Workdesk.vue (US-001 Hybrid CQRS & SLA Ticking)', () => {
             assignee: 'test.user'
         }));
         store.pageInfo.totalElements = 10;
-        store.pageInfo.pageSize = 50;
+        store.pageInfo.pageSize = 15;
 
         const wrapper = mount(Workdesk, {
             global: { plugins: [pinia] }

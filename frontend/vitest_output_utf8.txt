@@ -1,0 +1,32 @@
+﻿
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mC:/Users/HaroltAndrésGómezAgu/ProyectoAntigravity/ibpms-platform/frontend[39m
+
+ [33m❯[39m src/views/admin/Modeler/BpmnDesigner.spec.ts [2m ([22m[2m25 tests[22m [2m|[22m [31m11 failed[39m[2m)[22m[33m 1582[2mms[22m[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mDebe contener los conectores V1 (O365, SharePoint, NetSuite) en el Dropdown de Connectors[39m
+[31m     → expected [] to include 'O365/Exchange'[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mPruebas para CA-25 (Zoom, Minimap y Navegación Visual)[2m > [22mPrueba 5 (Minimap Abierto): Debe verificar que el minimap se inicializa y se abre por defecto al montar el componente[39m
+[31m     → expected "spy" to be called at least once[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mPruebas para CA-77 (Linter en Frontend)[2m > [22mDebe ejecutar el linter y detectar la ausencia de StartEvent y EndEvent[39m
+[31m     → expected undefined not to be undefined[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mPruebas para CA-77 (Linter en Frontend)[2m > [22mDebe detectar nodos zombie (UserTask o Compuerta sin entrada o salida)[39m
+[31m     → Cannot read properties of undefined (reading '1')[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mPruebas para CA-77 (Linter en Frontend)[2m > [22mDebe detectar pasarelas exclusivas divergentes sin flujo por defecto[39m
+[31m     → Cannot read properties of undefined (reading '1')[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mPruebas para CA-40 (Inmutabilidad de Patrón y Carga Inicial)[2m > [22mDebe inicializar elementCount en import.done para bloquear/deshabilitar el selector de Patrón de Proceso si no está vacío[39m
+[31m     → expected undefined not to be undefined[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mPruebas para CA-40 (Inmutabilidad de Patrón y Carga Inicial)[2m > [22mDebe abrir el explorador de procesos (Catálogo) por defecto en el mounted si no existe un proceso activo en la query de la URL[39m
+[31m     → expected false to be true // Object.is equality[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mWelcomeModal (CA-40)[2m > [22mDebe ser showWelcomeModal true si no hay processId en la URL query[39m
+[31m     → expected false to be true // Object.is equality[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mWelcomeModal (CA-40)[2m > [22mDebe renderizar el elemento del WelcomeModal en el HTML[39m
+[31m     → expected false to be true // Object.is equality[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mWelcomeModal (CA-40)[2m > [22mDebe cerrar el welcome modal (showWelcomeModal = false) al seleccionar un proceso del catálogo[39m
+[31m     → expected false to be true // Object.is equality[39m
+[31m   [33m❯[31m src/views/admin/Modeler/BpmnDesigner.spec.ts[2m > [22mPantalla 6: BPMN Designer (Frontend QA)[2m > [22mWelcomeModal (CA-40)[2m > [22mDebe cerrar el welcome modal (showWelcomeModal = false) al completar la creación del proceso[39m
+[31m     → expected false to be true // Object.is equality[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m11 failed[39m[22m[2m | [22m[1m[32m14 passed[39m[22m[90m (25)[39m
+[2m   Start at [22m 19:25:20
+[2m   Duration [22m 4.47s[2m (transform 624ms, setup 186ms, collect 1.10s, tests 1.58s, environment 708ms, prepare 175ms)[22m
+

@@ -54,10 +54,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useSudo } from '@/composables/workdesk/useSudo';
 
-const { isSudoVisible, currentRequest, confirmSudo, cancelSudo } = useSudo();
+const { isSudoVisible, currentRequest, confirmSudo, cancelSudo, requestSudo } = useSudo();
 const password = ref('');
 const errorMsg = ref('');
 const isLoading = ref(false);
@@ -90,4 +90,19 @@ const handleSubmit = async () => {
 const handleCancel = () => {
     if (!isLoading.value) cancelSudo();
 };
+
+const handleSudoRequired = async (e: Event) => {
+    const customEvent = e as CustomEvent;
+    const actionName = customEvent.detail?.actionName || 'Acción Crítica';
+    const authorized = await requestSudo(actionName);
+    window.dispatchEvent(new CustomEvent('sudo-resolved', { detail: { authorized } }));
+};
+
+onMounted(() => {
+    window.addEventListener('sudo-required', handleSudoRequired);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('sudo-required', handleSudoRequired);
+});
 </script>

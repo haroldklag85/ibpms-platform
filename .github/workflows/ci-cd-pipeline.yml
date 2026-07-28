@@ -38,6 +38,7 @@ jobs:
           POSTGRES_USER: ibpms
           POSTGRES_PASSWORD: ibpms_pass
           POSTGRES_DB: ibpms
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5434:5432
         options: >
@@ -84,9 +85,10 @@ jobs:
 
       - name: Wait for Infrastructure Services
         run: |
+          export PGPASSWORD=ibpms_pass
           echo "Waiting for PostgreSQL on port 5434..."
           for i in $(seq 1 60); do
-            pg_isready -h localhost -p 5434 -U ibpms && echo "PostgreSQL ready" && break
+            pg_isready -h localhost -p 5434 -U ibpms -d ibpms && echo "PostgreSQL ready" && break
             sleep 2
           done
           echo "Waiting for Redis on port 6380..."
@@ -112,14 +114,15 @@ jobs:
           done
           psql -h localhost -p 5434 -U ibpms -d postgres -c "DROP DATABASE IF EXISTS ibpms;"
           psql -h localhost -p 5434 -U ibpms -d postgres -c "CREATE DATABASE ibpms;"
+          psql -h localhost -p 5434 -U ibpms -d ibpms -c "SELECT 1;"
         timeout-minutes: 5
 
       - name: Compile and Test (Quality Gate)
-        run: >
-          mvn -B -pl ibpms-core -am clean verify -DskipITs=true
-          -Dspring.datasource.url=jdbc:postgresql://localhost:5434/ibpms
-          -Dspring.datasource.username=ibpms
-          -Dspring.datasource.password=ibpms_pass
+        run: |
+          mvn -B -pl ibpms-core -am clean verify -DskipITs=true \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5434/ibpms \
+            -Dspring.datasource.username=ibpms \
+            -Dspring.datasource.password=ibpms_pass
         # -pl ibpms-core: target solo el módulo principal
         # -am (also-make): construye dependencias del reactor (ibpms-dmn-engine)
         # -DskipITs=true: omite tests de integración (Failsafe) — no hay BD en CI

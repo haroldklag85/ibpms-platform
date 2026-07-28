@@ -41,12 +41,12 @@ public class AgileProjectRepositoryJpa {
     }
 
     public void updateStatus(UUID projectId, String status) {
-        repository.updateStatus(projectId, status);
+        repository.updateStatus(projectId, status, java.time.ZonedDateTime.now());
     }
 }
 
 interface SpringDataAgileProjectRepository extends JpaRepository<AgileProjectJpaEntity, UUID> {
     @Modifying
-    @Query("UPDATE AgileProjectJpaEntity p SET p.status = :status, p.closedAt = CURRENT_TIMESTAMP WHERE p.id = :id")
-    void updateStatus(@Param("id") UUID id, @Param("status") String status);
+    @Query("UPDATE AgileProjectJpaEntity p SET p.status = :status, p.closedAt = :closedAt WHERE p.id = :id")
+    void updateStatus(@Param("id") UUID id, @Param("status") String status, @Param("closedAt") java.time.ZonedDateTime closedAt);
 }

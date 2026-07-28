@@ -34,7 +34,7 @@ public abstract class AbstractIntegrationIT {
         String redisHost = System.getenv().getOrDefault("REDIS_HOST", "localhost");
         String rabbitmqHost = System.getenv().getOrDefault("RABBITMQ_HOST", "localhost");
 
-        registry.add("spring.datasource.url", () -> "jdbc:postgresql://" + postgresHost + ":5434/ibpms_e2e");
+        registry.add("spring.datasource.url", () -> "jdbc:postgresql://" + postgresHost + ":5434/ibpms");
         registry.add("spring.datasource.username", () -> "ibpms");
         registry.add("spring.datasource.password", () -> "ibpms_e2e_pass");
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");

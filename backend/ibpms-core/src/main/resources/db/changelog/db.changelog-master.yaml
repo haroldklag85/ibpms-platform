@@ -170,3 +170,6 @@ databaseChangeLog:
       file: db/changelog/changes/062-lane-role-assignment-tables.sql
   - include:
       file: db/changelog/changes/063-seed-bpmn-release-manager-role.sql
+  - include:
+      file: db/changelog/changes/064-fix-kanban-board-v2-seed.sql
+      context: dev,test

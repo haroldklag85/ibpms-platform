@@ -33,13 +33,14 @@ jobs:
       SPRING_DATASOURCE_PASSWORD: ibpms_e2e_pass
     services:
       postgres:
-        image: postgres:15
+        image: ankane/pgvector:latest
         env:
           POSTGRES_USER: ibpms
           POSTGRES_PASSWORD: ibpms_e2e_pass
           POSTGRES_DB: ibpms_e2e
         ports:
           - 5434:5432
+          - 5433:5432
         options: >
           --health-cmd="pg_isready -U ibpms -d ibpms_e2e"
           --health-interval=10s

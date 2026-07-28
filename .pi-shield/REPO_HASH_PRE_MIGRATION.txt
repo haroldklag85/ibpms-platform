@@ -1,0 +1,3 @@
+﻿SHA256 hash de .pi-shield\repo_snapshot.zip:
+5112c5789ef520c3b1bb26ec794bd1795a946be7e955b23185537637903d0026
+CertUtil: -hashfile comando completado correctamente.

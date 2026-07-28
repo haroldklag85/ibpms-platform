@@ -23,6 +23,51 @@ jobs:
   backend-quality-gate:
     name: Backend Build & Maven Verify
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5434
+      REDIS_HOST: localhost
+      RABBITMQ_HOST: localhost
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5434/ibpms_e2e
+      SPRING_DATASOURCE_USERNAME: ibpms
+      SPRING_DATASOURCE_PASSWORD: ibpms_e2e_pass
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ibpms
+          POSTGRES_PASSWORD: ibpms_e2e_pass
+          POSTGRES_DB: ibpms_e2e
+        ports:
+          - 5434:5432
+        options: >
+          --health-cmd="pg_isready -U ibpms -d ibpms_e2e"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      rabbitmq:
+        image: rabbitmq:3-management-alpine
+        env:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+        ports:
+          - 5673:5672
+        options: >
+          --health-cmd="rabbitmq-diagnostics -q ping"
+          --health-interval=15s
+          --health-timeout=10s
+          --health-retries=5
     defaults:
       run:
         working-directory: ./backend
@@ -36,6 +81,24 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+
+      - name: Wait for Infrastructure Services
+        run: |
+          echo "Waiting for PostgreSQL on port 5434..."
+          for i in $(seq 1 30); do
+            nc -z localhost 5434 && echo "PostgreSQL ready" && break
+            sleep 2
+          done
+          echo "Waiting for Redis on port 6380..."
+          for i in $(seq 1 15); do
+            nc -z localhost 6380 && echo "Redis ready" && break
+            sleep 1
+          done
+          echo "Waiting for RabbitMQ on port 5673..."
+          for i in $(seq 1 20); do
+            nc -z localhost 5673 && echo "RabbitMQ ready" && break
+            sleep 2
+          done
 
       - name: Compile and Test (Quality Gate)
         run: mvn -B -pl ibpms-core -am clean verify -DskipITs=true

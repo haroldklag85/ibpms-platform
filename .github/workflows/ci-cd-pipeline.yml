@@ -28,19 +28,18 @@ jobs:
       POSTGRES_PORT: 5434
       REDIS_HOST: localhost
       RABBITMQ_HOST: localhost
-      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5434/ibpms_e2e
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5434/ibpms
       SPRING_DATASOURCE_USERNAME: ibpms
-      SPRING_DATASOURCE_PASSWORD: ibpms_e2e_pass
+      SPRING_DATASOURCE_PASSWORD: ibpms_pass
     services:
       postgres:
         image: ankane/pgvector:latest
         env:
           POSTGRES_USER: ibpms
-          POSTGRES_PASSWORD: ibpms_e2e_pass
-          POSTGRES_DB: ibpms_e2e
+          POSTGRES_PASSWORD: ibpms_pass
+          POSTGRES_DB: ibpms
         ports:
           - 5434:5432
-          - 5433:5432
         options: >
           --health-cmd="pg_isready -U ibpms"
           --health-interval=10s
@@ -105,18 +104,22 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
-          export PGPASSWORD=ibpms_e2e_pass
+          export PGPASSWORD=ibpms_pass
           for i in $(seq 1 30); do
             psql -h localhost -p 5434 -U ibpms -d postgres -c '\q' && break
             echo "Waiting for psql connection..."
             sleep 2
           done
-          psql -h localhost -p 5434 -U ibpms -d postgres -c "DROP DATABASE IF EXISTS ibpms_e2e;"
-          psql -h localhost -p 5434 -U ibpms -d postgres -c "CREATE DATABASE ibpms_e2e;"
+          psql -h localhost -p 5434 -U ibpms -d postgres -c "DROP DATABASE IF EXISTS ibpms;"
+          psql -h localhost -p 5434 -U ibpms -d postgres -c "CREATE DATABASE ibpms;"
         timeout-minutes: 5
 
       - name: Compile and Test (Quality Gate)
-        run: mvn -B -pl ibpms-core -am clean verify -DskipITs=true
+        run: >
+          mvn -B -pl ibpms-core -am clean verify -DskipITs=true
+          -Dspring.datasource.url=jdbc:postgresql://localhost:5434/ibpms
+          -Dspring.datasource.username=ibpms
+          -Dspring.datasource.password=ibpms_pass
         # -pl ibpms-core: target solo el módulo principal
         # -am (also-make): construye dependencias del reactor (ibpms-dmn-engine)
         # -DskipITs=true: omite tests de integración (Failsafe) — no hay BD en CI

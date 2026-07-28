@@ -42,7 +42,7 @@ jobs:
           - 5434:5432
           - 5433:5432
         options: >
-          --health-cmd="pg_isready -U ibpms -d ibpms_e2e"
+          --health-cmd="pg_isready -U ibpms"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -83,20 +83,11 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Reset PostgreSQL database
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-          export PGPASSWORD=ibpms_e2e_pass
-          psql -h localhost -p 5434 -U ibpms -c "DROP DATABASE IF EXISTS ibpms_e2e;"
-          psql -h localhost -p 5434 -U ibpms -c "CREATE DATABASE ibpms_e2e;"
-        timeout-minutes: 5
-
       - name: Wait for Infrastructure Services
         run: |
           echo "Waiting for PostgreSQL on port 5434..."
-          for i in $(seq 1 30); do
-            nc -z localhost 5434 && echo "PostgreSQL ready" && break
+          for i in $(seq 1 60); do
+            pg_isready -h localhost -p 5434 -U ibpms && echo "PostgreSQL ready" && break
             sleep 2
           done
           echo "Waiting for Redis on port 6380..."
@@ -109,6 +100,20 @@ jobs:
             nc -z localhost 5673 && echo "RabbitMQ ready" && break
             sleep 2
           done
+
+      - name: Reset PostgreSQL database
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          export PGPASSWORD=ibpms_e2e_pass
+          for i in $(seq 1 30); do
+            psql -h localhost -p 5434 -U ibpms -d postgres -c '\q' && break
+            echo "Waiting for psql connection..."
+            sleep 2
+          done
+          psql -h localhost -p 5434 -U ibpms -d postgres -c "DROP DATABASE IF EXISTS ibpms_e2e;"
+          psql -h localhost -p 5434 -U ibpms -d postgres -c "CREATE DATABASE ibpms_e2e;"
+        timeout-minutes: 5
 
       - name: Compile and Test (Quality Gate)
         run: mvn -B -pl ibpms-core -am clean verify -DskipITs=true

@@ -27,7 +27,7 @@ public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
      * hasta alcanzar un nodo sin padre (NULL), momento en que la recursión termina.
      */
     @Query(value = """
-            WITH RECURSIVE role_tree AS (
+            WITH RECURSIVE role_tree(id, parent_role_id) AS (
                 SELECT id, parent_role_id
                 FROM ibpms_security_role
                 WHERE id = :roleId
@@ -36,12 +36,12 @@ public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
                 FROM ibpms_security_role r
                 INNER JOIN role_tree rt ON r.id = rt.parent_role_id
             )
-            SELECT id FROM role_tree
+            SELECT CAST(id AS varchar) FROM role_tree
             """, nativeQuery = true)
     List<UUID> findRoleIdsInTree(@Param("roleId") UUID roleId);
 
     @Query(value = """
-            WITH RECURSIVE role_tree AS (
+            WITH RECURSIVE role_tree(id, parent_role_id, name) AS (
                 SELECT id, parent_role_id, name
                 FROM ibpms_security_role
                 WHERE name = :name

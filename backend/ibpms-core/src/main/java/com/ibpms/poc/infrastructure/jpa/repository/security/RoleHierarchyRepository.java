@@ -23,7 +23,7 @@ public interface RoleHierarchyRepository extends JpaRepository<RoleHierarchyEnti
      *   Input: Analista.id → Output: [Coordinador.id, Gerente.id]
      */
     @Query(value = """
-            WITH RECURSIVE role_tree AS (
+            WITH RECURSIVE role_tree(parent_role_id, child_role_id) AS (
                 SELECT parent_role_id, child_role_id
                 FROM ibpms_sec_role_hierarchy
                 WHERE child_role_id = :roleId
@@ -34,7 +34,7 @@ public interface RoleHierarchyRepository extends JpaRepository<RoleHierarchyEnti
                 FROM ibpms_sec_role_hierarchy rh
                 INNER JOIN role_tree rt ON rh.child_role_id = rt.parent_role_id
             )
-            SELECT DISTINCT parent_role_id FROM role_tree
+            SELECT DISTINCT CAST(parent_role_id AS varchar) FROM role_tree
             """, nativeQuery = true)
     List<UUID> findAllAncestorRoleIds(@Param("roleId") UUID roleId);
 

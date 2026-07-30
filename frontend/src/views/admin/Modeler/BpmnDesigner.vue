@@ -1864,15 +1864,47 @@ const onGlobalSimpleSlaChange = () => {
   updateGlobalSlaRaw();
 };
 
+// @Traceability: US-005, FIX-P0-POOL
+// FIX-P0: Cuando el diagrama tiene un Pool/Participant, canvas.getRootElement()
+// retorna la Collaboration, NO el Process. Si se modifica el ID o las propiedades
+// de la Collaboration como si fuera el Process, bpmn-js elimina silenciosamente
+// el <bpmn:process> al serializar, perdiendo todos los nodos internos.
+// Esta función resuelve el elemento Process correcto en ambos escenarios.
+const getProcessRootElement = () => {
+  if (!modelerInstance) return null;
+  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
+  if (!canvas) return null;
+  const rootElement = canvas.getRootElement();
+  
+  // Si el root es una Collaboration (hay Pool), buscar el Process subyacente
+  if (rootElement?.type === 'bpmn:Collaboration' || 
+      rootElement?.businessObject?.$type === 'bpmn:Collaboration') {
+    const elementRegistry = modelerInstance.get('elementRegistry');
+    const participants = elementRegistry.filter(
+      (e: any) => e.type === 'bpmn:Participant'
+    );
+    if (participants.length > 0) {
+      const processBO = participants[0].businessObject?.processRef;
+      if (processBO) {
+        // Buscar el shape del Process en el registry
+        const processShape = elementRegistry.get(processBO.id);
+        if (processShape) return processShape;
+        // Fallback: crear un shape-like wrapper para updateProperties
+        return { businessObject: processBO, id: processBO.id, type: 'bpmn:Process' };
+      }
+    }
+  }
+  
+  return rootElement; // Sin Pool, el root YA es el Process
+};
+
 const updateGlobalSlaRaw = () => {
   // @Traceability: US-005, CA-35
   if (!modelerInstance) return;
-  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
-  if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
-  const rootElement = canvas.getRootElement();
-  if (rootElement && rootElement.businessObject) {
-    modeling.updateProperties(rootElement, { "camunda:dueDate": globalSlaRaw.value });
+  const processElement = getProcessRootElement();
+  if (processElement && processElement.businessObject) {
+    modeling.updateProperties(processElement, { "camunda:dueDate": globalSlaRaw.value });
   }
 };
 
@@ -3442,13 +3474,13 @@ watch(processId, (newId) => {
   }
   
   // CA-17: Inyectar Naming Dual reactivamente en Root
+  // FIX-P0: Usar getProcessRootElement() para evitar sobrescribir el ID de la Collaboration
   if (modelerInstance && processId.value) {
     try {
       const modeling = modelerInstance.get('modeling');
-      const canvas = modelerInstance.get('canvas');
-      const rootElement = canvas.getRootElement();
-      if (rootElement && rootElement.businessObject) {
-         modeling.updateProperties(rootElement, { id: processId.value });
+      const processElement = getProcessRootElement();
+      if (processElement && processElement.businessObject) {
+         modeling.updateProperties(processElement, { id: processId.value });
       }
     } catch(e) { }
   }
@@ -3988,8 +4020,10 @@ const createNewProcess = () => {
             // CA-17 Inyección estricta
             try {
               const modeling = modelerInstance.get('modeling');
-              const rootElement = modelerInstance.get('canvas').getRootElement();
-              modeling.updateProperties(rootElement, { id: processId.value });
+              const processElement = getProcessRootElement();
+              if (processElement) {
+                modeling.updateProperties(processElement, { id: processId.value });
+              }
               updateProcessProperty('formPattern', processPattern.value); // CA-40
             } catch(e) {}
           }, 100);
@@ -3999,10 +4033,9 @@ const createNewProcess = () => {
           setTimeout(() => {
             try {
               const modeling = modelerInstance.get('modeling');
-              const canvas = modelerInstance.get('canvas');
-              const rootElement = canvas.getRootElement();
-              if (rootElement && rootElement.businessObject) {
-                modeling.updateProperties(rootElement, { id: processId.value });
+              const processElement = getProcessRootElement();
+              if (processElement && processElement.businessObject) {
+                modeling.updateProperties(processElement, { id: processId.value });
               }
               updateProcessProperty('formPattern', processPattern.value); // CA-40
             } catch(e) {}
@@ -4014,10 +4047,9 @@ const createNewProcess = () => {
         setTimeout(() => {
           try {
             const modeling = modelerInstance.get('modeling');
-            const canvas = modelerInstance.get('canvas');
-            const rootElement = canvas.getRootElement();
-            if (rootElement && rootElement.businessObject) {
-              modeling.updateProperties(rootElement, { id: processId.value });
+            const processElement = getProcessRootElement();
+            if (processElement && processElement.businessObject) {
+              modeling.updateProperties(processElement, { id: processId.value });
             }
             updateProcessProperty('formPattern', processPattern.value); // CA-40
           } catch(e) {}
@@ -4072,13 +4104,13 @@ const loadProcess = async (p: any) => {
       modelerInstance.get('canvas').zoom('fit-viewport');
 
       // Auto-correct process ID if there is a mismatch (e.g. legacy database XML holds Process_1)
+      // FIX-P0: Usar getProcessRootElement() para autocorrección
       try {
         const modeling = modelerInstance.get('modeling');
-        const canvas = modelerInstance.get('canvas');
-        const rootElement = canvas.getRootElement();
-        if (rootElement && rootElement.businessObject && rootElement.businessObject.id !== processId.value) {
-          console.warn(`[Autocorrect] Mismatch detectado: XML tiene ID "${rootElement.businessObject.id}" pero la base de datos espera "${processId.value}". Corrigiendo...`);
-          modeling.updateProperties(rootElement, { id: processId.value });
+        const processElement = getProcessRootElement();
+        if (processElement && processElement.businessObject && processElement.businessObject.id !== processId.value) {
+          console.warn(`[Autocorrect] Mismatch detectado: XML tiene ID "${processElement.businessObject.id}" pero la base de datos espera "${processId.value}". Corrigiendo...`);
+          modeling.updateProperties(processElement, { id: processId.value });
           await saveDraft(); // Persistent save of corrected XML
         }
       } catch (e) {
@@ -4234,12 +4266,10 @@ const zoomFit = () => {
 const updateGlobalSla = () => {
   // @Traceability: US-005, CA-35
   if (!modelerInstance) return;
-  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
-  if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
-  const rootElement = canvas.getRootElement();
-  if (rootElement && rootElement.businessObject) {
-    modeling.updateProperties(rootElement, { "camunda:dueDate": globalSlaRaw.value });
+  const processElement = getProcessRootElement();
+  if (processElement && processElement.businessObject) {
+    modeling.updateProperties(processElement, { "camunda:dueDate": globalSlaRaw.value });
   }
 };
 
@@ -4292,33 +4322,30 @@ const updateElementConnector = () => {
 
 const updateHistoryTTL = () => {
   if (!modelerInstance) return;
-  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
-  if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
-  const rootElement = canvas.getRootElement();
-  modeling.updateProperties(rootElement, {
+  const processElement = getProcessRootElement();
+  if (!processElement) return;
+  modeling.updateProperties(processElement, {
     'camunda:historyTimeToLive': processHistoryTTL.value !== null && processHistoryTTL.value !== undefined ? String(processHistoryTTL.value) : undefined
   });
 };
 
 const updateVersionTag = () => {
   if (!modelerInstance) return;
-  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
-  if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
-  const rootElement = canvas.getRootElement();
-  modeling.updateProperties(rootElement, {
+  const processElement = getProcessRootElement();
+  if (!processElement) return;
+  modeling.updateProperties(processElement, {
     'camunda:versionTag': processVersionTag.value || undefined
   });
 };
 
 const updateIsExecutable = () => {
   if (!modelerInstance) return;
-  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
-  if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
-  const rootElement = canvas.getRootElement();
-  modeling.updateProperties(rootElement, {
+  const processElement = getProcessRootElement();
+  if (!processElement) return;
+  modeling.updateProperties(processElement, {
     isExecutable: processIsExecutable.value
   });
 };
@@ -4327,11 +4354,10 @@ const updateIsExecutable = () => {
 const updateProcessProperty = (name: string, value: string) => {
   if (!modelerInstance) return;
   // @Traceability: US-005, CA-40
-  const canvas = modelerInstance.get ? modelerInstance.get('canvas') : null;
-  if (!canvas) return;
   const modeling = modelerInstance.get('modeling');
   const bpmnFactory = modelerInstance.get('bpmnFactory');
-  const rootElement = canvas.getRootElement();
+  const rootElement = getProcessRootElement();
+  if (!rootElement) return;
   const bo = rootElement.businessObject;
 
   let extensionElements = bo.get('extensionElements');

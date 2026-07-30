@@ -3358,14 +3358,27 @@ onMounted(async () => {
   }
 
   // Auto-save timer (CA-19)
+  // FIX-P1: Agregar guards post-await porque modelerInstance puede ser destruido
+  // por onBeforeUnmount mientras el watcher ejecuta saveXML() de forma asíncrona.
   watch(() => timeStore.currentTick, async (tick) => {
     if (tick % 30000 < 1000) {
       // @Traceability: US-005, CA-40
       if (!showWelcomeModal.value && modelerInstance && !isLocked.value) {
-        const { xml } = await modelerInstance.saveXML({ format: true });
-        if (xml !== lastSavedXml.value) {
-          await saveDraft();
-          autoSaveAgo.value = 0;
+        try {
+          const instance = modelerInstance; // Capturar referencia local pre-await
+          if (!instance) return;
+          const { xml } = await instance.saveXML({ format: true });
+          // Guard post-await: modelerInstance pudo ser destruido durante el await
+          if (!modelerInstance) return;
+          if (xml && xml !== lastSavedXml.value) {
+            await saveDraft();
+            autoSaveAgo.value = 0;
+          }
+        } catch (e) {
+          // Silenciar errores si el modeler fue destruido durante el tick
+          if (modelerInstance) {
+            console.warn('[AutoSave] Error en watcher de auto-guardado:', e);
+          }
         }
       }
     }
@@ -3379,28 +3392,22 @@ onMounted(async () => {
   });
 });
 
-onBeforeUnmount(async () => {
-  // @Traceability: US-005, CA-07, CA-19
+// @Traceability: US-005, CA-07, CA-19
+// FIX-P0: onBeforeUnmount DEBE ser síncrono. Vue 3 no awaita callbacks async
+// en lifecycle hooks. Si se usa async, Vue destruye el DOM del canvas SVG
+// MIENTRAS saveXML() está ejecutándose, produciendo XML corrupto que
+// sobrescribe el borrador válido en la BD. El auto-save watcher (cada 30s)
+// ya garantiza persistencia — el costo máximo es perder 30s de trabajo,
+// que es infinitamente preferible a CORROMPER todo el XML guardado.
+// Ref: sprint-6 (a3b8aa4e) usaba onBeforeUnmount síncrono sin saveXML.
+onBeforeUnmount(() => {
   timeStore.stopEngine();
-
   if (heartbeatInterval) clearInterval(heartbeatInterval); // CA-66
   window.removeEventListener('beforeunload', handleBeforeUnload);
-
-  // @Traceability: US-005, CA-19 — Guardar XML antes de destruir el modeler.
-  // Si el usuario navega a otra sección antes de que el auto-save de 30s dispare,
-  // los elementos BPMN se perderían. Este save garantiza persistencia en navegación.
-  if (modelerInstance && processId.value && !isNewProcess.value) {
-    try {
-      const { xml } = await modelerInstance.saveXML({ format: true });
-      if (xml && xml !== lastSavedXml.value) {
-        await integrationStore.saveProcessDraft(processId.value, { xml });
-        console.info('[BpmnDesigner] ✅ XML guardado al navegar fuera del Modeler (CA-19 on-unmount).');
-      }
-    } catch (saveErr) {
-      console.warn('[BpmnDesigner] ⚠️ No se pudo guardar el draft al salir:', saveErr);
-    }
+  // Liberar lock pesimista fire-and-forget (sin await, sin bloquear unmount)
+  if (processId.value && !isNewProcess.value) {
+    integrationStore.delete(`/design/processes/${processId.value}/lock`).catch(() => {});
   }
-
   if (modelerInstance) {
     modelerInstance.destroy();
     modelerInstance = null;

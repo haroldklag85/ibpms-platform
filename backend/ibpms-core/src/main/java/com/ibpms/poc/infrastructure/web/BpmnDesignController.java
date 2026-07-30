@@ -375,11 +375,25 @@ public class BpmnDesignController {
             }
             return ResponseEntity.ok(Map.of("xml", xml));
         } catch (IllegalArgumentException e) {
+            // @Traceability: US-005, CA-15, CA-64
+            // FIX-P1: El XML fallback DEBE incluir <bpmndi:BPMNDiagram> con coordenadas
+            // de layout visual. Sin esta sección, bpmn-js lanza
+            // "no process or collaboration to display".
             String defaultXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" id=\"Definitions_1\">\n" +
+                                "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" " +
+                                "xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\" " +
+                                "xmlns:dc=\"http://www.omg.org/spec/DD/20100524/DC\" " +
+                                "id=\"Definitions_1\" targetNamespace=\"http://bpmn.io/schema/bpmn\">\n" +
                                 "  <bpmn:process id=\"" + key + "\" isExecutable=\"true\">\n" +
                                 "    <bpmn:startEvent id=\"StartEvent_1\" />\n" +
                                 "  </bpmn:process>\n" +
+                                "  <bpmndi:BPMNDiagram id=\"BPMNDiagram_1\">\n" +
+                                "    <bpmndi:BPMNPlane id=\"BPMNPlane_1\" bpmnElement=\"" + key + "\">\n" +
+                                "      <bpmndi:BPMNShape id=\"_BPMNShape_StartEvent_1\" bpmnElement=\"StartEvent_1\">\n" +
+                                "        <dc:Bounds x=\"179\" y=\"159\" width=\"36\" height=\"36\" />\n" +
+                                "      </bpmndi:BPMNShape>\n" +
+                                "    </bpmndi:BPMNPlane>\n" +
+                                "  </bpmndi:BPMNDiagram>\n" +
                                 "</bpmn:definitions>";
             return ResponseEntity.ok(Map.of("xml", defaultXml));
         }

@@ -247,7 +247,14 @@ export const useRbacStore = defineStore('rbac', () => {
         try {
             // CA-15: El endpoint real del catálogo es /catalog (BpmnDesignController @GetMapping("/catalog"))
             const response = await apiClient.get('/design/processes/catalog')
-            systemProcesses.value = response.data
+            // @Traceability(US="US-036", CA="CA-04", FIX="BUG-RBAC-CHECKBOX-2026-08-03")
+            // Normalización: Backend (BpmnDesignController.java L324) retorna campo "key",
+            // pero el frontend (IdentityGovernance.vue) consume "proc.id" en 19 referencias.
+            // Se mapea key → id en la capa de Store para mantener contrato único (SSOT).
+            systemProcesses.value = response.data.map(proc => ({
+                ...proc,
+                id: proc.key
+            }))
         } catch (error) {
             console.error("Error obteniendo procesos del sistema", error)
         }

@@ -1102,9 +1102,29 @@ El problema tenía dos causas:
 
 
 ## [24/07/2026] - EstandarizaciÃ³n de Comentarios y Formato en Frontend
+## [24/07/2026] - Normalización de Codificación Unicode en el Motor de Procesos
+**Autor**: Agente Backend (Antigravity)
+**¿Qué es?**: Se realizaron mejoras de normalización de texto en los archivos principales del motor de procesos para garantizar consistencia en el manejo de caracteres especiales en toda la plataforma.
+**¿Para qué sirve?**: Garantiza que el código fuente del motor de procesos IBPMS maneje de forma uniforme y estandarizada los caracteres Unicode extendidos, asegurando compatibilidad y consistencia entre todos los módulos del sistema.
+**¿De dónde viene?**: Iniciativa transversal de normalización y estandarización del código base (PI-001).
+**¿Qué debería hacer?**: La plataforma continuará funcionando exactamente igual para los usuarios, con el beneficio adicional de que el código interno cumple con los estándares más altos de codificación de texto, facilitando futuras migraciones y mantenimiento.
+**Estado**: ✅ Listo
+
+
+## [24/07/2026] - Estandarización de Comentarios y Formato en Frontend
 **Autor**: Agente Frontend (Antigravity)
-**Â¿QuÃ© es?**: Se realizaron mejoras de estandarizaciÃ³n de comentarios y formato en los componentes del Modelador de Procesos y los mÃ³dulos de gestiÃ³n de estado de la plataforma.
-**Â¿Para quÃ© sirve?**: Garantiza que el cÃ³digo fuente de los componentes y gestores de estado mantenga una alta legibilidad, facilitando el mantenimiento y futuras escalabilidades.
-**Â¿De dÃ³nde viene?**: Iniciativa transversal de normalizaciÃ³n y estandarizaciÃ³n del cÃ³digo base (PI-001).
-**Â¿QuÃ© deberÃ­a hacer?**: La plataforma continuarÃ¡ funcionando exactamente igual para los usuarios, con una estructura interna de comentarios y configuraciones mÃ¡s limpia.
-**Estado**: â˜‘ï¸� Listo
+**¿Qué es?**: Se realizaron mejoras de estandarización de comentarios y formato en los componentes del Modelador de Procesos y los módulos de gestión de estado de la plataforma.
+**¿Para qué sirve?**: Garantiza que el código fuente de los componentes y gestores de estado mantenga una alta legibilidad, facilitando el mantenimiento y futuras escalabilidades.
+**¿De dónde viene?**: Iniciativa transversal de normalización y estandarización del código base (PI-001).
+**¿Qué debería hacer?**: La plataforma continuará funcionando exactamente igual para los usuarios, con una estructura interna de comentarios y configuraciones más limpia.
+**Estado**: ☑️ Listo
+
+---
+
+## [03/08/2026] — Corrección: Las Casillas de Permisos de Procesos en Roles se Marcaban Todas a la Vez
+**Autor**: PM-IA (Antigravity) — Aprobación: David Rodriguez
+**¿Qué es?**: Se corrigió un fallo en la pantalla de **Gobernanza y Control de Acceso** (Fábrica de Roles) donde al intentar asignar un proceso BPMN individual a un rol, todas las casillas de verificación se marcaban simultáneamente en lugar de solo la seleccionada.
+**¿Para qué sirve?**: Permite a los administradores asignar permisos de "Iniciar" y "Ejecutar" de cada proceso de negocio de forma **independiente** a cada rol. Por ejemplo, ahora se puede dar permiso a un rol para iniciar solo el proceso "David1" sin que automáticamente se le asignen todos los demás procesos.
+**¿De dónde viene?**: Bug reportado durante pruebas UAT humanas por David Rodriguez en la pantalla `/admin/security/identity` → Fábrica de Roles → Modificar Identificador → Matriz de Concesiones.
+**¿Qué debería hacer?**: Al hacer clic en una casilla de verificación en la Matriz de Concesiones, **solo esa casilla** debe marcarse o desmarcarse. Cada proceso BPMN (fila) y cada tipo de permiso (columna: Iniciar / Ejecutar) opera de forma completamente independiente.
+**Estado**: ✅ Listo

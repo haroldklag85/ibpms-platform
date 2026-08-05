@@ -177,10 +177,20 @@ public class BpmnDesignController {
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(validation);
             }
 
+            // FIX BUG-UAT-M5-01: Activar el proceso en BD tras deploy exitoso.
+            // Sin esto, el proceso quedaba en DRAFT y el Portal (GET /catalog?status=ACTIVE) retornaba vacío.
+            String processKey = originalFilename.replace(".bpmn", "");
+            try {
+                bpmnDesignService.activarProcesoPorTechnicalId(processKey);
+            } catch (Exception activationEx) {
+                log.warn("No se pudo activar el proceso '{}' en BD (puede no existir en ibpms_bpmn_process_design): {}", 
+                    processKey, activationEx.getMessage());
+            }
+
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "deployment_id", "dep-" + java.util.UUID.randomUUID().toString().substring(0, 8),
                 "process_definition_id", java.util.UUID.randomUUID().toString(),
-                "process_definition_key", originalFilename.replace(".bpmn", ""),
+                "process_definition_key", processKey,
                 "version", 1,
                 "deployed_at", java.time.Instant.now().toString(),
                 "deployed_by", role,

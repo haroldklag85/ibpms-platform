@@ -78,6 +78,25 @@ public class BpmnDesignService {
         return designPort.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
+    /**
+     * FIX BUG-UAT-M5-01: Activa un proceso en BD cambiando su status a ACTIVE.
+     * Invocado por POST /deploy tras un despliegue exitoso para que el proceso
+     * aparezca en GET /catalog?status=ACTIVE (Portal del Operario).
+     * Transición: DRAFT → PENDING_DEPLOY → ACTIVE (respeta máquina de estados del dominio).
+     */
+    public void activarProcesoPorTechnicalId(String processKey) {
+        BpmnProcessDesign domain = designPort.findByTechnicalId(processKey)
+                .orElseThrow(() -> new IllegalArgumentException("Proceso no encontrado: " + processKey));
+        // La máquina de estados requiere: DRAFT → requestDeploy() → PENDING_DEPLOY → deploy() → ACTIVE
+        if (domain.getStatus() == BpmnProcessDesign.Status.DRAFT) {
+            domain.requestDeploy();
+        }
+        if (domain.getStatus() == BpmnProcessDesign.Status.PENDING_DEPLOY) {
+            domain.deploy();
+        }
+        designPort.save(domain);
+    }
+
     public void archivar(UUID id, String userId) {
         BpmnProcessDesign domain = getDomainModel(id);
         domain.archive();

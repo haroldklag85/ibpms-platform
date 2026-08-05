@@ -26,6 +26,8 @@ import com.ibpms.poc.domain.model.DataMapping;
 import com.ibpms.poc.crosscutting.annotations.Traceability;
 import com.ibpms.poc.application.rest.dto.GenericFormConfigUpdateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ibpms.poc.infrastructure.jpa.entity.ExpedienteEntity;
+import com.ibpms.poc.infrastructure.jpa.repository.ExpedienteRepository;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -1152,3 +1152,11 @@ El problema tenía dos causas:
 **¿De dónde viene?**: Bug detectado durante pruebas UAT E2E (Misión 6) por David Rodriguez. El botón "Iniciar Proceso" era decorativo — no tenía funcionalidad conectada.
 **¿Qué debería hacer?**: Al hacer clic en "Iniciar Proceso": (1) El botón muestra "Iniciando..." mientras procesa, (2) Se crea un caso real en la base de datos, (3) Aparece un mensaje verde de confirmación, (4) El sistema redirige automáticamente a la Mesa de Trabajo en 1.5 segundos.
 **Estado**: ✅ Listo
+
+## [05/08/2026] — Corrección de Seguridad: El Catálogo de Procesos Ahora Solo Muestra los Procesos Autorizados para Cada Rol
+**Autor**: PM-IA (Antigravity) — Aprobación: David Rodriguez
+**¿Qué es?**: Se corrigió una **fuga de seguridad** donde cualquier usuario del sistema, sin importar su rol, podía ver todos los procesos de negocio disponibles en el Portal. Un operario veía procesos que estaban asignados a otros roles o departamentos.
+**¿Para qué sirve?**: Ahora el catálogo de procesos del Portal respeta el sistema de permisos configurado en la **Fábrica de Roles**. Cada usuario solo ve los procesos que su rol tiene autorizado "Iniciar". Los administradores (SUPER_ADMIN) siguen viendo todo el catálogo completo.
+**¿De dónde viene?**: Fuga de seguridad detectada durante pruebas UAT por David Rodriguez. Al cambiar el rol de un usuario de prueba y entrar con otro usuario diferente, el segundo usuario seguía viendo procesos que no le correspondían.
+**¿Qué debería hacer?**: Al ingresar al Portal, un operario solo debe ver los procesos que su rol tiene autorizado para "Iniciar" (configurado desde Fábrica de Roles → Modificar Identificador → Matriz de Concesiones → columna "Iniciar"). Si no tiene ningún permiso asignado, el Portal debe mostrar "No hay procesos disponibles".
+**Estado**: ✅ Listo

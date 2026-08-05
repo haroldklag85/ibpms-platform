@@ -28,6 +28,10 @@ import com.ibpms.poc.application.rest.dto.GenericFormConfigUpdateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibpms.poc.infrastructure.jpa.entity.ExpedienteEntity;
 import com.ibpms.poc.infrastructure.jpa.repository.ExpedienteRepository;
+import com.ibpms.poc.infrastructure.jpa.repository.security.UserRepository;
+import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.security.ProcessPermissionEntity;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -57,6 +61,7 @@ public class BpmnDesignController {
     private final DataMappingPort dataMappingPort;
     private final ObjectMapper objectMapper;
     private final ExpedienteRepository expedienteRepository;
+    private final UserRepository userRepository;
 
     public BpmnDesignController(PreFlightAnalyzerService preFlightAnalyzerService, 
                                 ProcessMigrationService processMigrationService,
@@ -64,7 +69,8 @@ public class BpmnDesignController {
                                 ExternalTaskTopicPort externalTaskTopicPort,
                                 DataMappingPort dataMappingPort,
                                 ObjectMapper objectMapper,
-                                ExpedienteRepository expedienteRepository) {
+                                ExpedienteRepository expedienteRepository,
+                                UserRepository userRepository) {
         this.preFlightAnalyzerService = preFlightAnalyzerService;
         this.processMigrationService = processMigrationService;
         this.bpmnDesignService = bpmnDesignService;
@@ -72,6 +78,7 @@ public class BpmnDesignController {
         this.dataMappingPort = dataMappingPort;
         this.objectMapper = objectMapper;
         this.expedienteRepository = expedienteRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -385,10 +392,16 @@ public class BpmnDesignController {
     })
     public ResponseEntity<List<Map<String, Object>>> getAllLatestProcesses(
             @Parameter(description = "Estado para filtrar el catálogo (ej: DRAFT, ACTIVE, ARCHIVED)")
-            @RequestParam(value = "status", required = false) String status) {
-        // @Traceability: US-005, CA-40
+            @RequestParam(value = "status", required = false) String status,
+            java.security.Principal principal) {
+
+        // FIX SEGURIDAD: Filtrar catálogo por permisos de proceso del rol del usuario
+        // @Traceability: US-005, CA-40, US-036 (RBAC)
+        java.util.Set<String> allowedProcessKeys = resolveAllowedProcessKeys(principal);
+
         List<Map<String, Object>> processes = bpmnDesignService.listarTodos().stream()
             .filter(dto -> status == null || status.equalsIgnoreCase(dto.getStatus()))
+            .filter(dto -> allowedProcessKeys == null || allowedProcessKeys.contains(dto.getTechnicalId()))
             .map(dto -> {
                 java.util.Map<String, Object> map = new java.util.HashMap<>();
                 map.put("key", dto.getTechnicalId());
@@ -401,6 +414,50 @@ public class BpmnDesignController {
             }).collect(java.util.stream.Collectors.toList());
         
         return ResponseEntity.ok(processes);
+    }
+
+    /**
+     * Resuelve los processDefinitionKeys que el usuario autenticado puede INICIAR.
+     * Retorna null si el usuario tiene rol SUPER_ADMIN (bypass total).
+     * Retorna Set vacío si el usuario no tiene permisos (no verá nada).
+     */
+    private java.util.Set<String> resolveAllowedProcessKeys(java.security.Principal principal) {
+        if (principal == null) {
+            log.warn("SECURITY: Acceso al catálogo sin autenticación — retornando catálogo vacío.");
+            return java.util.Collections.emptySet();
+        }
+
+        String username = principal.getName();
+        java.util.Optional<UserEntity> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            log.warn("SECURITY: Usuario [{}] no encontrado en BD — retornando catálogo vacío.", username);
+            return java.util.Collections.emptySet();
+        }
+
+        UserEntity user = userOpt.get();
+        java.util.Set<String> allowedKeys = new java.util.HashSet<>();
+        boolean isSuperAdmin = false;
+
+        for (RoleEntity role : user.getRoles()) {
+            // Bypass: SUPER_ADMIN ve todo el catálogo
+            if ("SUPER_ADMIN".equalsIgnoreCase(role.getName()) || "ROLE_SUPER_ADMIN".equalsIgnoreCase(role.getName())) {
+                isSuperAdmin = true;
+                break;
+            }
+            for (ProcessPermissionEntity perm : role.getProcessPermissions()) {
+                if (Boolean.TRUE.equals(perm.getCanInitiateProcess())) {
+                    allowedKeys.add(perm.getProcessDefinitionKey());
+                }
+            }
+        }
+
+        if (isSuperAdmin) {
+            log.info("SECURITY: Usuario [{}] tiene rol SUPER_ADMIN — catálogo completo.", username);
+            return null; // null = sin filtro
+        }
+
+        log.info("SECURITY: Usuario [{}] tiene acceso a {} procesos: {}", username, allowedKeys.size(), allowedKeys);
+        return allowedKeys;
     }
 
     /**

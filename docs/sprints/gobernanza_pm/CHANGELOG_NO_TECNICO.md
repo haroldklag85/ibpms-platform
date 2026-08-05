@@ -1128,3 +1128,11 @@ El problema tenía dos causas:
 **¿De dónde viene?**: Bug reportado durante pruebas UAT humanas por David Rodriguez en la pantalla `/admin/security/identity` → Fábrica de Roles → Modificar Identificador → Matriz de Concesiones.
 **¿Qué debería hacer?**: Al hacer clic en una casilla de verificación en la Matriz de Concesiones, **solo esa casilla** debe marcarse o desmarcarse. Cada proceso BPMN (fila) y cada tipo de permiso (columna: Iniciar / Ejecutar) opera de forma completamente independiente.
 **Estado**: ✅ Listo
+
+## [04/08/2026] — Corrección: Los Permisos de Roles y Menús se Perdían al Navegar entre Pantallas
+**Autor**: PM-IA (Antigravity) — Aprobación: David Rodriguez
+**¿Qué es?**: Se corrigió un fallo crítico en la pantalla de **Gobernanza y Control de Acceso** (Fábrica de Roles) donde al configurar los permisos de procesos (casillas Iniciar/Ejecutar) y la topología de menús de un rol, estos se perdían completamente al navegar a otra sección del sistema y regresar.
+**¿Para qué sirve?**: Ahora cuando un administrador configura qué procesos puede iniciar o ejecutar un rol, y qué módulos del menú puede ver, esa configuración **se guarda permanentemente en la base de datos** y se recupera correctamente al volver a abrir el rol.
+**¿De dónde viene?**: Bug detectado durante pruebas UAT E2E (Misión 4) por David Rodriguez. Al configurar el rol ROLE_OPERATIVO con permisos para el proceso UAT_Proceso_E2E_David, los checkboxes aparecían en blanco al navegar y regresar.
+**¿Qué debería hacer?**: Al editar un rol y hacer clic en "Consolidar Rol", todos los permisos de procesos y módulos de menú se guardan en la base de datos. Al volver a abrir ese rol (incluso después de navegar por todo el sistema), los checkboxes deben mostrar exactamente lo que se configuró previamente.
+**Estado**: ✅ Listo

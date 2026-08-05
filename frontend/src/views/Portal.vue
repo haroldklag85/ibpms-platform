@@ -92,7 +92,6 @@ import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
-import { api } from '@/services/apiClient';
 
 // @Traceability: Retro-Remediación ADR-006
 const integrationStore = useIntegrationStore();
@@ -113,13 +112,12 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
 }
 
 // FIX BUG-UAT-M6-01: Conectar botón "Iniciar Proceso" al backend
-// Endpoint: POST /api/bpmn/instances → BpmnExecutionController.startProcessInstance()
+// Endpoint: POST /api/v1/design/processes/{key}/start → BpmnDesignController.startProcessInstance()
 async function handleStartProcess(process: any) {
     const processKey = process.key || process.name;
     startingProcess.value = processKey;
     try {
-        const response = await api.startProcess({
-            processDefinitionKey: processKey,
+        const response = await integrationStore.post(`/design/processes/${processKey}/start`, {
             businessKey: `CASE-${Date.now()}`,
             variables: {}
         });

@@ -54,19 +54,77 @@ public class BpmnDesignController {
     private final ExternalTaskTopicPort externalTaskTopicPort;
     private final DataMappingPort dataMappingPort;
     private final ObjectMapper objectMapper;
+    private final ExpedienteRepository expedienteRepository;
 
     public BpmnDesignController(PreFlightAnalyzerService preFlightAnalyzerService, 
                                 ProcessMigrationService processMigrationService,
                                 BpmnDesignService bpmnDesignService,
                                 ExternalTaskTopicPort externalTaskTopicPort,
                                 DataMappingPort dataMappingPort,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper,
+                                ExpedienteRepository expedienteRepository) {
         this.preFlightAnalyzerService = preFlightAnalyzerService;
         this.processMigrationService = processMigrationService;
         this.bpmnDesignService = bpmnDesignService;
         this.externalTaskTopicPort = externalTaskTopicPort;
         this.dataMappingPort = dataMappingPort;
         this.objectMapper = objectMapper;
+        this.expedienteRepository = expedienteRepository;
+    }
+
+    /**
+     * FIX BUG-UAT-M6-01: Iniciar una instancia de proceso desde el Portal.
+     * Crea un ExpedienteEntity en la BD IBPMS sin depender de Camunda.
+     * Ruta bajo /api/v1/design/processes/{key}/start (permitAll en SecurityConfig).
+     *
+     * @Traceability: US-007 — Ejecución BPMN desde Portal del Operario
+     */
+    @PostMapping("/{key}/start")
+    public ResponseEntity<Map<String, Object>> startProcessInstance(
+            @PathVariable("key") String processDefinitionKey,
+            @RequestBody(required = false) Map<String, Object> body,
+            java.security.Principal principal) {
+
+        String username = principal != null ? principal.getName() : "anonymous";
+        String businessKey = body != null && body.containsKey("businessKey")
+                ? body.get("businessKey").toString()
+                : "CASE-" + System.currentTimeMillis();
+
+        log.info("POST /api/v1/design/processes/{}/start — Inicio de proceso [user={}]",
+                processDefinitionKey, username);
+
+        // Crear instancia en la tabla ibpms_case
+        ExpedienteEntity instance = new ExpedienteEntity();
+        instance.setId(UUID.randomUUID().toString());
+        instance.setDefinitionKey(processDefinitionKey);
+        instance.setBusinessKey(businessKey);
+        instance.setType("BPMN_PROCESS");
+        instance.setStatus("RUNNING");
+        instance.setProcessInstanceId(UUID.randomUUID().toString());
+
+        // Guardar variables como payload JSON si existen
+        if (body != null && body.containsKey("variables")) {
+            try {
+                instance.setPayload(objectMapper.writeValueAsString(body.get("variables")));
+            } catch (Exception e) {
+                log.warn("No se pudo serializar variables: {}", e.getMessage());
+                instance.setPayload("{}");
+            }
+        } else {
+            instance.setPayload("{}");
+        }
+
+        ExpedienteEntity saved = expedienteRepository.save(instance);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "processInstanceId", saved.getProcessInstanceId(),
+                "caseId", saved.getId(),
+                "businessKey", saved.getBusinessKey(),
+                "definitionKey", saved.getDefinitionKey(),
+                "status", saved.getStatus(),
+                "startedBy", username,
+                "startedAt", saved.getCreatedAt() != null ? saved.getCreatedAt().toString() : ""
+        ));
     }
 
     /**

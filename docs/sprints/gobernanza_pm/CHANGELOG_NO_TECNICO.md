@@ -1136,3 +1136,19 @@ El problema tenía dos causas:
 **¿De dónde viene?**: Bug detectado durante pruebas UAT E2E (Misión 4) por David Rodriguez. Al configurar el rol ROLE_OPERATIVO con permisos para el proceso UAT_Proceso_E2E_David, los checkboxes aparecían en blanco al navegar y regresar.
 **¿Qué debería hacer?**: Al editar un rol y hacer clic en "Consolidar Rol", todos los permisos de procesos y módulos de menú se guardan en la base de datos. Al volver a abrir ese rol (incluso después de navegar por todo el sistema), los checkboxes deben mostrar exactamente lo que se configuró previamente.
 **Estado**: ✅ Listo
+
+## [04/08/2026] — Corrección: El Catálogo de Procesos del Portal Aparecía Vacío para los Operarios
+**Autor**: PM-IA (Antigravity) — Aprobación: David Rodriguez
+**¿Qué es?**: Se corrigió un fallo donde al iniciar sesión como operario (ej. DAVID TEST), la pantalla del **Portal** mostraba el mensaje "No hay procesos disponibles" a pesar de que el proceso ya había sido desplegado exitosamente desde el Modelador BPMN.
+**¿Para qué sirve?**: Ahora cuando un administrador despliega un proceso BPMN, este queda registrado como **activo** en la base de datos automáticamente, permitiendo que los operarios lo vean y puedan iniciarlo desde su Portal.
+**¿De dónde viene?**: Bug detectado durante pruebas UAT E2E (Misión 5) por David Rodriguez. El despliegue mostraba un mensaje de éxito (toast verde) pero internamente no actualizaba el estado del proceso en la base de datos.
+**¿Qué debería hacer?**: Al desplegar un proceso BPMN exitosamente, este debe aparecer en el Catálogo de Procesos del Portal para todos los usuarios con el rol asignado. El operario debe ver la tarjeta del proceso con el botón "Iniciar Proceso".
+**Estado**: ✅ Listo
+
+## [04/08/2026] — Nueva Funcionalidad: El Botón "Iniciar Proceso" del Portal Ahora Crea Casos Reales
+**Autor**: PM-IA (Antigravity) — Aprobación: David Rodriguez
+**¿Qué es?**: Se conectó el botón **"Iniciar Proceso"** del Portal del operario con la base de datos real del sistema. Antes, el botón no realizaba ninguna acción al hacer clic. Ahora crea un caso (expediente) real en el sistema con un número de seguimiento único.
+**¿Para qué sirve?**: Los operarios ahora pueden iniciar trámites o procesos de negocio directamente desde su Portal con un solo clic. El sistema confirma la creación con un mensaje verde y redirige automáticamente a la Mesa de Trabajo donde aparecerán las tareas asignadas.
+**¿De dónde viene?**: Bug detectado durante pruebas UAT E2E (Misión 6) por David Rodriguez. El botón "Iniciar Proceso" era decorativo — no tenía funcionalidad conectada.
+**¿Qué debería hacer?**: Al hacer clic en "Iniciar Proceso": (1) El botón muestra "Iniciando..." mientras procesa, (2) Se crea un caso real en la base de datos, (3) Aparece un mensaje verde de confirmación, (4) El sistema redirige automáticamente a la Mesa de Trabajo en 1.5 segundos.
+**Estado**: ✅ Listo

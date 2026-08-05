@@ -28,6 +28,7 @@ public class ExpedienteEntity {
     private String status;
 
     @Column(name = "payload", columnDefinition = "json")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     private String payload;
 
     @Column(name = "process_instance_id", length = 36, columnDefinition = "bpchar")

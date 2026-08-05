@@ -34,8 +34,11 @@
             <h4 class="text-lg font-bold text-ibpms">{{ process.name || process.key }}</h4>
           </div>
           <p class="text-gray-600 text-sm mb-6">{{ process.description || 'Proceso BPMN disponible para instanciar.' }}</p>
-          <button class="w-full bg-gray-100 hover:bg-gray-200 text-ibpms font-medium py-2 px-4 rounded transition">
-            Iniciar Proceso
+          <button 
+            @click="handleStartProcess(process)"
+            :disabled="startingProcess === process.key"
+            class="w-full bg-gray-100 hover:bg-gray-200 text-ibpms font-medium py-2 px-4 rounded transition disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ startingProcess === process.key ? 'Iniciando...' : 'Iniciar Proceso' }}
           </button>
         </div>
       </div>
@@ -74,6 +77,13 @@
       </div>
     </div>
 
+    <!-- Toast de feedback -->
+    <div v-if="toastMessage" 
+      class="fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-medium z-50 transition-all"
+      :class="toastType === 'success' ? 'bg-green-600' : 'bg-red-600'">
+      {{ toastMessage }}
+    </div>
+
   </div>
 </template>
 
@@ -82,6 +92,7 @@ import { useIntegrationStore } from '@/stores/useIntegrationStore';
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
+import { api } from '@/services/apiClient';
 
 // @Traceability: Retro-Remediación ADR-006
 const integrationStore = useIntegrationStore();
@@ -91,6 +102,38 @@ const router = useRouter();
 const processDefinitions = ref<any[]>([]);
 const frequentProcesses = ref<any[]>([]);
 const loading = ref(true);
+const startingProcess = ref<string | null>(null);
+const toastMessage = ref('');
+const toastType = ref<'success' | 'error'>('success');
+
+function showToast(message: string, type: 'success' | 'error' = 'success') {
+    toastMessage.value = message;
+    toastType.value = type;
+    setTimeout(() => { toastMessage.value = ''; }, 4000);
+}
+
+// FIX BUG-UAT-M6-01: Conectar botón "Iniciar Proceso" al backend
+// Endpoint: POST /api/bpmn/instances → BpmnExecutionController.startProcessInstance()
+async function handleStartProcess(process: any) {
+    const processKey = process.key || process.name;
+    startingProcess.value = processKey;
+    try {
+        const response = await api.startProcess({
+            processDefinitionKey: processKey,
+            businessKey: `CASE-${Date.now()}`,
+            variables: {}
+        });
+        showToast(`✅ Proceso "${process.name || processKey}" iniciado correctamente. Redirigiendo a Mesa de Trabajo...`, 'success');
+        // Redirigir al Workdesk tras 1.5s para que el usuario vea el toast
+        setTimeout(() => { router.push('/workdesk'); }, 1500);
+    } catch (e: any) {
+        const errorMsg = e?.response?.data?.message || e?.response?.data?.error || e.message || 'Error desconocido';
+        console.error('Error al iniciar proceso', e);
+        showToast(`❌ Error al iniciar proceso: ${errorMsg}`, 'error');
+    } finally {
+        startingProcess.value = null;
+    }
+}
 
 onMounted(async () => {
     try {
@@ -104,3 +147,4 @@ onMounted(async () => {
     }
 });
 </script>
+

@@ -1,6 +1,7 @@
 package com.ibpms.poc.application.service.security;
 
 import com.ibpms.poc.infrastructure.jpa.entity.security.ProcessPermissionEntity;
+import com.ibpms.poc.infrastructure.jpa.entity.security.PermissionEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.RoleAuditLogEntity;
 import com.ibpms.poc.infrastructure.jpa.entity.security.UserEntity;
@@ -67,7 +68,29 @@ public class RoleService {
     }
 
     public List<RoleEntity> getAllRoles() {
-        return roleRepository.findAll();
+        List<RoleEntity> roles = roleRepository.findAll();
+        // FIX BUG-UAT-M4-01: Reconstruir topology @Transient desde PermissionEntity persistidas
+        // para que GET /admin/roles devuelva el estado real de la topología de menús.
+        for (RoleEntity role : roles) {
+            hydrateTopology(role);
+        }
+        return roles;
+    }
+
+    /**
+     * Reconstruye el campo @Transient topology a partir de las PermissionEntity
+     * persistidas en ibpms_security_role_permissions. Convierte WORKDESK_ACCESS → WORKDESK: true.
+     */
+    private void hydrateTopology(RoleEntity role) {
+        java.util.Map<String, Boolean> topology = new java.util.HashMap<>();
+        String[] modules = {"WORKDESK", "SERVICE_DELIVERY", "BAM", "MODELER", "INTEGRATION", "PROJECTS", "ADMINISTRATION"};
+        Set<String> permNames = role.getPermissions().stream()
+                .map(PermissionEntity::getName)
+                .collect(Collectors.toSet());
+        for (String mod : modules) {
+            topology.put(mod, permNames.contains(mod + "_ACCESS"));
+        }
+        role.setTopology(topology);
     }
 
     // @Traceability: Retro-Remediación ADR-001

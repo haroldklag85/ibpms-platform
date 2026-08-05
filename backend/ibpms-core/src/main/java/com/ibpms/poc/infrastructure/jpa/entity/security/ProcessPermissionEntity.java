@@ -2,6 +2,7 @@ package com.ibpms.poc.infrastructure.jpa.entity.security;
 
 import jakarta.persistence.*;
 import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "ibpms_security_process_permission")
@@ -22,6 +23,7 @@ public class ProcessPermissionEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
+    @JsonIgnore
     private RoleEntity role;
 
     public ProcessPermissionEntity() {}

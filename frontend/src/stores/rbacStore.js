@@ -338,6 +338,24 @@ export const useRbacStore = defineStore('rbac', () => {
         }
     }
 
+    // FIX BUG-UAT-M4-01: Obtener permisos efectivos de proceso para un rol desde BD
+    // Endpoint: GET /admin/roles/{id}/effective-permissions → RoleAdminController L75-78
+    async function fetchEffectivePermissions(roleId) {
+        try {
+            const response = await apiClient.get(`/admin/roles/${roleId}/effective-permissions`)
+            return response.data // List<ProcessPermissionEntity>
+        } catch (error) {
+            console.error('Error obteniendo permisos efectivos del rol', error)
+            return []
+        }
+    }
+
+    // FIX BUG-UAT-M4-01: Persistir permisos de proceso para un rol en BD
+    // Endpoint: PUT /admin/roles/{id}/process-permissions → RoleAdminController L85-90
+    async function saveProcessPermissions(roleId, permissions) {
+        await apiClient.put(`/admin/roles/${roleId}/process-permissions`, permissions)
+    }
+
     return {
         roles,
         users,
@@ -371,6 +389,8 @@ export const useRbacStore = defineStore('rbac', () => {
         fetchAuditLogs,
         revokeUserSession,
         cisoReports,
-        systemProcesses
+        systemProcesses,
+        fetchEffectivePermissions,
+        saveProcessPermissions
     }
 })

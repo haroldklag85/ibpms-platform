@@ -1172,6 +1172,22 @@ const openRoleModal = async (role: any = null) => {
     expandedProcesses.value.clear();
     const laneMatrix: Record<string, { initiate: boolean, execute: boolean }> = {};
     if(role) { 
+        // FIX BUG-UAT-M4-01: Hidratar matrixState desde BD (no desde memoria local volátil)
+        // Endpoint: GET /admin/roles/{id}/effective-permissions → ProcessPermissionEntity[]
+        let effectivePerms = [];
+        try {
+            effectivePerms = await rbacStore.fetchEffectivePermissions(role.id);
+        } catch (e: any) {
+            console.error('Error fetching effective permissions for role', e);
+        }
+        // Hidratar matrixState con datos reales de BD
+        for (const perm of effectivePerms) {
+            const procKey = perm.processDefinitionKey;
+            if (procKey) {
+                matrixState.value[`${role.id}_${procKey}_I`] = !!perm.canInitiateProcess;
+                matrixState.value[`${role.id}_${procKey}_E`] = !!perm.canExecuteTasks;
+            }
+        }
         const matrix: Record<string, { initiate: boolean, execute: boolean }> = {};
         for(const p of systemProcesses.value) {
             matrix[p.id] = {
@@ -1253,6 +1269,23 @@ const saveRole = async () => {
         for(const p of systemProcesses.value) {
             matrixState.value[`${roleForm.value.id}_${p.id}_I`] = roleForm.value.matrix[p.id].initiate;
             matrixState.value[`${roleForm.value.id}_${p.id}_E`] = roleForm.value.matrix[p.id].execute;
+        }
+        
+        // FIX BUG-UAT-M4-01: Persistir permisos de proceso en BD (antes solo se guardaba en memoria)
+        // Endpoint: PUT /admin/roles/{id}/process-permissions → RoleAdminController L85-90
+        try {
+            const roleId = editingRole.value?.id || roleForm.value.id;
+            const permissions = systemProcesses.value
+                .map(proc => ({
+                    processDefinitionKey: proc.id,
+                    canInitiateProcess: !!roleForm.value.matrix[proc.id]?.initiate,
+                    canExecuteTasks: !!roleForm.value.matrix[proc.id]?.execute
+                }))
+                .filter(p => p.canInitiateProcess || p.canExecuteTasks);
+            await rbacStore.saveProcessPermissions(roleId, permissions);
+        } catch (e: any) {
+            console.error('Error persistiendo permisos de proceso', e);
+            showToast('Error al guardar permisos de proceso: ' + (e?.response?.data?.message || e.message || 'Error desconocido'), 'error');
         }
         
         // Save lane assignments
